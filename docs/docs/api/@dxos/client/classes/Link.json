@@ -1,5 +1,5 @@
 {
-  "id": 113,
+  "id": 103,
   "name": "Link",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 114,
+      "id": 104,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,14 +28,14 @@
       ],
       "signatures": [
         {
-          "id": 115,
+          "id": 105,
           "name": "new Link",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 116,
+              "id": 106,
               "name": "M",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -79,7 +79,7 @@
               }
             },
             {
-              "id": 117,
+              "id": 107,
               "name": "L",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -97,7 +97,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 117,
+                    "id": 107,
                     "name": "L"
                   }
                 ],
@@ -109,7 +109,7 @@
               }
             },
             {
-              "id": 118,
+              "id": 108,
               "name": "R",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -127,7 +127,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 118,
+                    "id": 108,
                     "name": "R"
                   }
                 ],
@@ -141,7 +141,7 @@
           ],
           "parameters": [
             {
-              "id": 119,
+              "id": 109,
               "name": "itemManager",
               "kind": 32768,
               "kindString": "Parameter",
@@ -152,7 +152,7 @@
               }
             },
             {
-              "id": 120,
+              "id": 110,
               "name": "itemId",
               "kind": 32768,
               "kindString": "Parameter",
@@ -163,7 +163,7 @@
               }
             },
             {
-              "id": 121,
+              "id": 111,
               "name": "itemType",
               "kind": 32768,
               "kindString": "Parameter",
@@ -183,7 +183,7 @@
               }
             },
             {
-              "id": 122,
+              "id": 112,
               "name": "stateManager",
               "kind": 32768,
               "kindString": "Parameter",
@@ -196,7 +196,7 @@
                     "typeArguments": [
                       {
                         "type": "reference",
-                        "id": 116,
+                        "id": 106,
                         "name": "M"
                       }
                     ],
@@ -209,7 +209,7 @@
               }
             },
             {
-              "id": 123,
+              "id": 113,
               "name": "link",
               "kind": 32768,
               "kindString": "Parameter",
@@ -222,21 +222,21 @@
           ],
           "type": {
             "type": "reference",
-            "id": 113,
+            "id": 103,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 116,
+                "id": 106,
                 "name": "M"
               },
               {
                 "type": "reference",
-                "id": 117,
+                "id": 107,
                 "name": "L"
               },
               {
                 "type": "reference",
-                "id": 118,
+                "id": 108,
                 "name": "R"
               }
             ],
@@ -244,19 +244,19 @@
           },
           "overwrites": {
             "type": "reference",
-            "id": 18,
+            "id": 8,
             "name": "Entity.constructor"
           }
         }
       ],
       "overwrites": {
         "type": "reference",
-        "id": 17,
+        "id": 7,
         "name": "Entity.constructor"
       }
     },
     {
-      "id": 134,
+      "id": 124,
       "name": "_itemManager",
       "kind": 1024,
       "kindString": "Property",
@@ -277,12 +277,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 24,
+        "id": 14,
         "name": "Entity._itemManager"
       }
     },
     {
-      "id": 135,
+      "id": 125,
       "name": "_onUpdate",
       "kind": 1024,
       "kindString": "Property",
@@ -302,7 +302,7 @@
         "typeArguments": [
           {
             "type": "reference",
-            "id": 16,
+            "id": 6,
             "typeArguments": [
               {
                 "type": "intrinsic",
@@ -316,12 +316,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 27,
+        "id": 17,
         "name": "Entity._onUpdate"
       }
     },
     {
-      "id": 136,
+      "id": 126,
       "name": "id",
       "kind": 262144,
       "kindString": "Accessor",
@@ -334,7 +334,7 @@
         }
       ],
       "getSignature": {
-        "id": 137,
+        "id": 127,
         "name": "id",
         "kind": 524288,
         "kindString": "Get signature",
@@ -350,12 +350,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 29,
+        "id": 19,
         "name": "Entity.id"
       }
     },
     {
-      "id": 124,
+      "id": 114,
       "name": "isLink",
       "kind": 262144,
       "kindString": "Accessor",
@@ -368,7 +368,7 @@
         }
       ],
       "getSignature": {
-        "id": 125,
+        "id": 115,
         "name": "isLink",
         "kind": 524288,
         "kindString": "Get signature",
@@ -380,7 +380,7 @@
       }
     },
     {
-      "id": 144,
+      "id": 134,
       "name": "model",
       "kind": 262144,
       "kindString": "Accessor",
@@ -393,14 +393,14 @@
         }
       ],
       "getSignature": {
-        "id": 145,
+        "id": 135,
         "name": "model",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 19,
+          "id": 9,
           "name": "M"
         },
         "inheritedFrom": {
@@ -410,12 +410,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 37,
+        "id": 27,
         "name": "Entity.model"
       }
     },
     {
-      "id": 142,
+      "id": 132,
       "name": "modelMeta",
       "kind": 262144,
       "kindString": "Accessor",
@@ -428,7 +428,7 @@
         }
       ],
       "getSignature": {
-        "id": 143,
+        "id": 133,
         "name": "modelMeta",
         "kind": 524288,
         "kindString": "Get signature",
@@ -458,12 +458,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 35,
+        "id": 25,
         "name": "Entity.modelMeta"
       }
     },
     {
-      "id": 140,
+      "id": 130,
       "name": "modelType",
       "kind": 262144,
       "kindString": "Accessor",
@@ -476,7 +476,7 @@
         }
       ],
       "getSignature": {
-        "id": 141,
+        "id": 131,
         "name": "modelType",
         "kind": 524288,
         "kindString": "Get signature",
@@ -492,12 +492,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 33,
+        "id": 23,
         "name": "Entity.modelType"
       }
     },
     {
-      "id": 130,
+      "id": 120,
       "name": "source",
       "kind": 262144,
       "kindString": "Accessor",
@@ -510,18 +510,18 @@
         }
       ],
       "getSignature": {
-        "id": 131,
+        "id": 121,
         "name": "source",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 48,
+          "id": 38,
           "typeArguments": [
             {
               "type": "reference",
-              "id": 117,
+              "id": 107,
               "name": "L"
             }
           ],
@@ -530,7 +530,7 @@
       }
     },
     {
-      "id": 126,
+      "id": 116,
       "name": "sourceId",
       "kind": 262144,
       "kindString": "Accessor",
@@ -543,7 +543,7 @@
         }
       ],
       "getSignature": {
-        "id": 127,
+        "id": 117,
         "name": "sourceId",
         "kind": 524288,
         "kindString": "Get signature",
@@ -555,7 +555,7 @@
       }
     },
     {
-      "id": 132,
+      "id": 122,
       "name": "target",
       "kind": 262144,
       "kindString": "Accessor",
@@ -568,18 +568,18 @@
         }
       ],
       "getSignature": {
-        "id": 133,
+        "id": 123,
         "name": "target",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 48,
+          "id": 38,
           "typeArguments": [
             {
               "type": "reference",
-              "id": 118,
+              "id": 108,
               "name": "R"
             }
           ],
@@ -588,7 +588,7 @@
       }
     },
     {
-      "id": 128,
+      "id": 118,
       "name": "targetId",
       "kind": 262144,
       "kindString": "Accessor",
@@ -601,7 +601,7 @@
         }
       ],
       "getSignature": {
-        "id": 129,
+        "id": 119,
         "name": "targetId",
         "kind": 524288,
         "kindString": "Get signature",
@@ -613,7 +613,7 @@
       }
     },
     {
-      "id": 138,
+      "id": 128,
       "name": "type",
       "kind": 262144,
       "kindString": "Accessor",
@@ -626,7 +626,7 @@
         }
       ],
       "getSignature": {
-        "id": 139,
+        "id": 129,
         "name": "type",
         "kind": 524288,
         "kindString": "Get signature",
@@ -651,12 +651,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 31,
+        "id": 21,
         "name": "Entity.type"
       }
     },
     {
-      "id": 146,
+      "id": 136,
       "name": "subscribe",
       "kind": 2048,
       "kindString": "Method",
@@ -670,7 +670,7 @@
       ],
       "signatures": [
         {
-          "id": 147,
+          "id": 137,
           "name": "subscribe",
           "kind": 4096,
           "kindString": "Call signature",
@@ -685,7 +685,7 @@
           },
           "parameters": [
             {
-              "id": 148,
+              "id": 138,
               "name": "listener",
               "kind": 32768,
               "kindString": "Parameter",
@@ -693,7 +693,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 149,
+                  "id": 139,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -707,35 +707,35 @@
                   ],
                   "signatures": [
                     {
-                      "id": 150,
+                      "id": 140,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 151,
+                          "id": 141,
                           "name": "entity",
                           "kind": 32768,
                           "kindString": "Parameter",
                           "flags": {},
                           "type": {
                             "type": "reference",
-                            "id": 113,
+                            "id": 103,
                             "typeArguments": [
                               {
                                 "type": "reference",
-                                "id": 116,
+                                "id": 106,
                                 "name": "M"
                               },
                               {
                                 "type": "reference",
-                                "id": 117,
+                                "id": 107,
                                 "name": "L"
                               },
                               {
                                 "type": "reference",
-                                "id": 118,
+                                "id": 108,
                                 "name": "R"
                               }
                             ],
@@ -756,7 +756,7 @@
           "type": {
             "type": "reflection",
             "declaration": {
-              "id": 152,
+              "id": 142,
               "name": "__type",
               "kind": 65536,
               "kindString": "Type literal",
@@ -770,7 +770,7 @@
               ],
               "signatures": [
                 {
-                  "id": 153,
+                  "id": 143,
                   "name": "__type",
                   "kind": 4096,
                   "kindString": "Call signature",
@@ -793,14 +793,14 @@
           },
           "inheritedFrom": {
             "type": "reference",
-            "id": 40,
+            "id": 30,
             "name": "Entity.subscribe"
           }
         }
       ],
       "inheritedFrom": {
         "type": "reference",
-        "id": 39,
+        "id": 29,
         "name": "Entity.subscribe"
       }
     }
@@ -809,35 +809,35 @@
     {
       "title": "Constructors",
       "children": [
-        114
+        104
       ]
     },
     {
       "title": "Properties",
       "children": [
-        134,
-        135
+        124,
+        125
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        136,
-        124,
-        144,
-        142,
-        140,
-        130,
         126,
+        114,
+        134,
         132,
-        128,
-        138
+        130,
+        120,
+        116,
+        122,
+        118,
+        128
       ]
     },
     {
       "title": "Methods",
       "children": [
-        146
+        136
       ]
     }
   ],
@@ -850,7 +850,7 @@
   ],
   "typeParameters": [
     {
-      "id": 154,
+      "id": 144,
       "name": "M",
       "kind": 131072,
       "kindString": "Type parameter",
@@ -874,7 +874,7 @@
       }
     },
     {
-      "id": 155,
+      "id": 145,
       "name": "L",
       "kind": 131072,
       "kindString": "Type parameter",
@@ -895,7 +895,7 @@
       }
     },
     {
-      "id": 156,
+      "id": 146,
       "name": "R",
       "kind": 131072,
       "kindString": "Type parameter",
@@ -919,11 +919,11 @@
   "extendedTypes": [
     {
       "type": "reference",
-      "id": 16,
+      "id": 6,
       "typeArguments": [
         {
           "type": "reference",
-          "id": 116,
+          "id": 106,
           "name": "M"
         }
       ],

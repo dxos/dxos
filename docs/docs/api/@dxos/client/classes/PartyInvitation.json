@@ -1,5 +1,5 @@
 {
-  "id": 703,
+  "id": 693,
   "name": "PartyInvitation",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 704,
+      "id": 694,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -29,26 +29,26 @@
       ],
       "signatures": [
         {
-          "id": 705,
+          "id": 695,
           "name": "new PartyInvitation",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 706,
+              "id": 696,
               "name": "_descriptor",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 397,
+                "id": 387,
                 "name": "InvitationDescriptor"
               }
             },
             {
-              "id": 707,
+              "id": 697,
               "name": "_invitationPromise",
               "kind": 32768,
               "kindString": "Parameter",
@@ -58,7 +58,7 @@
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 646,
+                    "id": 636,
                     "name": "Party"
                   }
                 ],
@@ -68,7 +68,7 @@
               }
             },
             {
-              "id": 708,
+              "id": 698,
               "name": "_onAuthenticate",
               "kind": 32768,
               "kindString": "Parameter",
@@ -76,7 +76,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 709,
+                  "id": 699,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -91,14 +91,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 710,
+                      "id": 700,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 711,
+                          "id": 701,
                           "name": "secret",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -123,24 +123,24 @@
           ],
           "type": {
             "type": "reference",
-            "id": 703,
+            "id": 693,
             "name": "PartyInvitation"
           },
           "inheritedFrom": {
             "type": "reference",
-            "id": 798,
+            "id": 788,
             "name": "Invitation.constructor"
           }
         }
       ],
       "inheritedFrom": {
         "type": "reference",
-        "id": 797,
+        "id": 787,
         "name": "Invitation.constructor"
       }
     },
     {
-      "id": 714,
+      "id": 704,
       "name": "_descriptor",
       "kind": 1024,
       "kindString": "Property",
@@ -158,17 +158,17 @@
       ],
       "type": {
         "type": "reference",
-        "id": 397,
+        "id": 387,
         "name": "InvitationDescriptor"
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 806,
+        "id": 796,
         "name": "Invitation._descriptor"
       }
     },
     {
-      "id": 715,
+      "id": 705,
       "name": "_invitationPromise",
       "kind": 1024,
       "kindString": "Property",
@@ -189,7 +189,7 @@
         "typeArguments": [
           {
             "type": "reference",
-            "id": 646,
+            "id": 636,
             "name": "Party"
           }
         ],
@@ -199,12 +199,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 807,
+        "id": 797,
         "name": "Invitation._invitationPromise"
       }
     },
     {
-      "id": 716,
+      "id": 706,
       "name": "_onAuthenticate",
       "kind": 1024,
       "kindString": "Property",
@@ -223,7 +223,7 @@
       "type": {
         "type": "reflection",
         "declaration": {
-          "id": 717,
+          "id": 707,
           "name": "__type",
           "kind": 65536,
           "kindString": "Type literal",
@@ -238,14 +238,14 @@
           ],
           "signatures": [
             {
-              "id": 718,
+              "id": 708,
               "name": "__type",
               "kind": 4096,
               "kindString": "Call signature",
               "flags": {},
               "parameters": [
                 {
-                  "id": 719,
+                  "id": 709,
                   "name": "secret",
                   "kind": 32768,
                   "kindString": "Parameter",
@@ -268,12 +268,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 808,
+        "id": 798,
         "name": "Invitation._onAuthenticate"
       }
     },
     {
-      "id": 720,
+      "id": 710,
       "name": "descriptor",
       "kind": 262144,
       "kindString": "Accessor",
@@ -287,14 +287,14 @@
         }
       ],
       "getSignature": {
-        "id": 721,
+        "id": 711,
         "name": "descriptor",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 397,
+          "id": 387,
           "name": "InvitationDescriptor"
         },
         "inheritedFrom": {
@@ -304,12 +304,12 @@
       },
       "inheritedFrom": {
         "type": "reference",
-        "id": 812,
+        "id": 802,
         "name": "Invitation.descriptor"
       }
     },
     {
-      "id": 722,
+      "id": 712,
       "name": "authenticate",
       "kind": 2048,
       "kindString": "Method",
@@ -324,14 +324,14 @@
       ],
       "signatures": [
         {
-          "id": 723,
+          "id": 713,
           "name": "authenticate",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 724,
+              "id": 714,
               "name": "secret",
               "kind": 32768,
               "kindString": "Parameter",
@@ -350,19 +350,19 @@
           },
           "inheritedFrom": {
             "type": "reference",
-            "id": 815,
+            "id": 805,
             "name": "Invitation.authenticate"
           }
         }
       ],
       "inheritedFrom": {
         "type": "reference",
-        "id": 814,
+        "id": 804,
         "name": "Invitation.authenticate"
       }
     },
     {
-      "id": 712,
+      "id": 702,
       "name": "getParty",
       "kind": 2048,
       "kindString": "Method",
@@ -377,7 +377,7 @@
       ],
       "signatures": [
         {
-          "id": 713,
+          "id": 703,
           "name": "getParty",
           "kind": 4096,
           "kindString": "Call signature",
@@ -395,7 +395,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -407,7 +407,7 @@
       ]
     },
     {
-      "id": 727,
+      "id": 717,
       "name": "toJSON",
       "kind": 2048,
       "kindString": "Method",
@@ -422,7 +422,7 @@
       ],
       "signatures": [
         {
-          "id": 728,
+          "id": 718,
           "name": "toJSON",
           "kind": 4096,
           "kindString": "Call signature",
@@ -433,19 +433,19 @@
           },
           "inheritedFrom": {
             "type": "reference",
-            "id": 820,
+            "id": 810,
             "name": "Invitation.toJSON"
           }
         }
       ],
       "inheritedFrom": {
         "type": "reference",
-        "id": 819,
+        "id": 809,
         "name": "Invitation.toJSON"
       }
     },
     {
-      "id": 725,
+      "id": 715,
       "name": "wait",
       "kind": 2048,
       "kindString": "Method",
@@ -460,7 +460,7 @@
       ],
       "signatures": [
         {
-          "id": 726,
+          "id": 716,
           "name": "wait",
           "kind": 4096,
           "kindString": "Call signature",
@@ -478,7 +478,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -488,14 +488,14 @@
           },
           "inheritedFrom": {
             "type": "reference",
-            "id": 818,
+            "id": 808,
             "name": "Invitation.wait"
           }
         }
       ],
       "inheritedFrom": {
         "type": "reference",
-        "id": 817,
+        "id": 807,
         "name": "Invitation.wait"
       }
     }
@@ -504,30 +504,30 @@
     {
       "title": "Constructors",
       "children": [
-        704
+        694
       ]
     },
     {
       "title": "Properties",
       "children": [
-        714,
-        715,
-        716
+        704,
+        705,
+        706
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        720
+        710
       ]
     },
     {
       "title": "Methods",
       "children": [
-        722,
         712,
-        727,
-        725
+        702,
+        717,
+        715
       ]
     }
   ],
@@ -542,11 +542,11 @@
   "extendedTypes": [
     {
       "type": "reference",
-      "id": 796,
+      "id": 786,
       "typeArguments": [
         {
           "type": "reference",
-          "id": 646,
+          "id": 636,
           "name": "Party"
         }
       ],

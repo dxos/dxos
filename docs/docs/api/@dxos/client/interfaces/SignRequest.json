@@ -1,0 +1,85 @@
+{
+  "id": 489,
+  "name": "SignRequest",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Defined in:\n  "
+      },
+      {
+        "kind": "inline-tag",
+        "tag": "@link",
+        "text": "file://./../../dxos/client.proto"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 491,
+      "name": "payload",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+          "line": 179,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Uint8Array",
+        "qualifiedName": "Uint8Array",
+        "package": "typescript"
+      }
+    },
+    {
+      "id": 490,
+      "name": "publicKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "- The public key of the key that is supposed to be used for signing."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+          "line": 178,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 417,
+        "name": "PublicKey"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        491,
+        490
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+      "line": 174,
+      "character": 17
+    }
+  ]
+}

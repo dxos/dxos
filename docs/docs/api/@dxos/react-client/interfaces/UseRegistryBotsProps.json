@@ -1,0 +1,49 @@
+{
+  "id": 1258,
+  "name": "UseRegistryBotsProps",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 1259,
+      "name": "sortByKeywords",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/hooks/wns/registryBots.ts",
+          "line": 21,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L21"
+        }
+      ],
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "intrinsic",
+          "name": "string"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        1259
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/wns/registryBots.ts",
+      "line": 20,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L20"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": 486,
+  "name": "Profile",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Defined in:\n  "
+      },
+      {
+        "kind": "inline-tag",
+        "tag": "@link",
+        "text": "file://./../../dxos/client.proto"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 487,
+      "name": "publicKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+          "line": 86,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 417,
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 488,
+      "name": "username",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Options:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+          "line": 91,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "string"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        487,
+        488
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts",
+      "line": 85,
+      "character": 17
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": 913,
+  "name": "DevtoolsHook",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "A hook bound to window.__DXOS__."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 914,
+      "name": "client",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/devtools.ts",
+          "line": 19,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L19"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 850,
+        "name": "Client"
+      }
+    },
+    {
+      "id": 915,
+      "name": "openClientRpcServer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/devtools.ts",
+          "line": 20,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L20"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 916,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/proxies/devtools.ts",
+              "line": 20,
+              "character": 23,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L20"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 917,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                  }
+                ],
+                "name": "Promise",
+                "qualifiedName": "Promise",
+                "package": "typescript"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        914,
+        915
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/devtools.ts",
+      "line": 18,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L18"
+    }
+  ]
+}

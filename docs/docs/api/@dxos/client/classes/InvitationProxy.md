@@ -1,5 +1,6 @@
 # Class `InvitationProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/invitation-proxy.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:37`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L37)
+
 
 
 

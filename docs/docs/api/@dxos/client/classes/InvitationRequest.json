@@ -1,5 +1,5 @@
 {
-  "id": 822,
+  "id": 812,
   "name": "InvitationRequest",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 823,
+      "id": 813,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -29,26 +29,26 @@
       ],
       "signatures": [
         {
-          "id": 824,
+          "id": 814,
           "name": "new InvitationRequest",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 825,
+              "id": 815,
               "name": "_descriptor",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 397,
+                "id": 387,
                 "name": "InvitationDescriptor"
               }
             },
             {
-              "id": 826,
+              "id": 816,
               "name": "connected",
               "kind": 32768,
               "kindString": "Parameter",
@@ -65,7 +65,7 @@
               }
             },
             {
-              "id": 827,
+              "id": 817,
               "name": "finished",
               "kind": 32768,
               "kindString": "Parameter",
@@ -82,7 +82,7 @@
               }
             },
             {
-              "id": 828,
+              "id": 818,
               "name": "error",
               "kind": 32768,
               "kindString": "Parameter",
@@ -103,58 +103,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 822,
+            "id": 812,
             "name": "InvitationRequest"
           }
         }
       ]
     },
     {
-      "id": 829,
-      "name": "_hasConnected",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
-          "line": 14,
-          "character": 10,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L14"
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "boolean"
-      },
-      "defaultValue": "false"
-    },
-    {
-      "id": 830,
-      "name": "_isCanceled",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
-          "line": 16,
-          "character": 10,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L16"
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "boolean"
-      },
-      "defaultValue": "false"
-    },
-    {
-      "id": 834,
+      "id": 824,
       "name": "canceled",
       "kind": 1024,
       "kindString": "Property",
@@ -182,7 +138,7 @@
       "defaultValue": "..."
     },
     {
-      "id": 831,
+      "id": 821,
       "name": "connected",
       "kind": 1024,
       "kindString": "Property",
@@ -217,7 +173,7 @@
       }
     },
     {
-      "id": 833,
+      "id": 823,
       "name": "error",
       "kind": 1024,
       "kindString": "Property",
@@ -254,7 +210,7 @@
       }
     },
     {
-      "id": 832,
+      "id": 822,
       "name": "finished",
       "kind": 1024,
       "kindString": "Property",
@@ -289,7 +245,7 @@
       }
     },
     {
-      "id": 835,
+      "id": 825,
       "name": "descriptor",
       "kind": 262144,
       "kindString": "Accessor",
@@ -303,20 +259,20 @@
         }
       ],
       "getSignature": {
-        "id": 836,
+        "id": 826,
         "name": "descriptor",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 397,
+          "id": 387,
           "name": "InvitationDescriptor"
         }
       }
     },
     {
-      "id": 839,
+      "id": 829,
       "name": "hasConnected",
       "kind": 262144,
       "kindString": "Accessor",
@@ -330,7 +286,7 @@
         }
       ],
       "getSignature": {
-        "id": 840,
+        "id": 830,
         "name": "hasConnected",
         "kind": 524288,
         "kindString": "Get signature",
@@ -350,7 +306,7 @@
       }
     },
     {
-      "id": 837,
+      "id": 827,
       "name": "secret",
       "kind": 262144,
       "kindString": "Accessor",
@@ -364,7 +320,7 @@
         }
       ],
       "getSignature": {
-        "id": 838,
+        "id": 828,
         "name": "secret",
         "kind": 524288,
         "kindString": "Get signature",
@@ -378,7 +334,7 @@
       }
     },
     {
-      "id": 844,
+      "id": 834,
       "name": "cancel",
       "kind": 2048,
       "kindString": "Method",
@@ -393,7 +349,7 @@
       ],
       "signatures": [
         {
-          "id": 845,
+          "id": 835,
           "name": "cancel",
           "kind": 4096,
           "kindString": "Call signature",
@@ -414,7 +370,7 @@
       ]
     },
     {
-      "id": 846,
+      "id": 836,
       "name": "toString",
       "kind": 2048,
       "kindString": "Method",
@@ -429,7 +385,7 @@
       ],
       "signatures": [
         {
-          "id": 847,
+          "id": 837,
           "name": "toString",
           "kind": 4096,
           "kindString": "Call signature",
@@ -442,7 +398,7 @@
       ]
     },
     {
-      "id": 841,
+      "id": 831,
       "name": "wait",
       "kind": 2048,
       "kindString": "Method",
@@ -457,7 +413,7 @@
       ],
       "signatures": [
         {
-          "id": 842,
+          "id": 832,
           "name": "wait",
           "kind": 4096,
           "kindString": "Call signature",
@@ -472,7 +428,7 @@
           },
           "parameters": [
             {
-              "id": 843,
+              "id": 833,
               "name": "timeout",
               "kind": 32768,
               "kindString": "Parameter",
@@ -505,34 +461,32 @@
     {
       "title": "Constructors",
       "children": [
-        823
+        813
       ]
     },
     {
       "title": "Properties",
       "children": [
-        829,
-        830,
-        834,
-        831,
-        833,
-        832
+        824,
+        821,
+        823,
+        822
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        835,
-        839,
-        837
+        825,
+        829,
+        827
       ]
     },
     {
       "title": "Methods",
       "children": [
-        844,
-        846,
-        841
+        834,
+        836,
+        831
       ]
     }
   ],

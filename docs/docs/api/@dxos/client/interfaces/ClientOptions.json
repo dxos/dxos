@@ -1,0 +1,98 @@
+{
+  "id": 840,
+  "name": "ClientOptions",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 841,
+      "name": "rpcPort",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Only used when remote=true."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 59,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L59"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "RpcPort"
+      }
+    },
+    {
+      "id": 842,
+      "name": "signer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 64,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L64"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "HaloSigner"
+      }
+    },
+    {
+      "id": 843,
+      "name": "timeout",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 69,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L69"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "number"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        841,
+        842,
+        843
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+      "line": 55,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L55"
+    }
+  ]
+}

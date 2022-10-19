@@ -1,0 +1,18 @@
+{
+  "id": 469,
+  "name": "ItemID",
+  "kind": 4194304,
+  "kindString": "Type alias",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/core/protocols/dist/src/types.d.ts",
+      "line": 30,
+      "character": 20
+    }
+  ],
+  "type": {
+    "type": "intrinsic",
+    "name": "string"
+  }
+}

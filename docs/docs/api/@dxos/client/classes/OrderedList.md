@@ -1,5 +1,6 @@
 # Class `OrderedList`
-> Declared in [`packages/core/echo/object-model/dist/src/ordered-list.d.ts`]()
+> Declared in [`packages/core/echo/object-model/dist/src/ordered-list.d.ts:7`]()
+
 
 Utility class that wraps an  `ObjectModel`  and implements a linked list via key-values on a given property.
 
@@ -10,6 +11,9 @@ new OrderedList (_model: ObjectModel, _property: string) => OrderedList
 
 ## Properties
 ### `update: Event<string[]>`
+### `id:  get string`
+### `values:  get string[]`
+Get ordered values.
 
 ## Functions
 ```ts

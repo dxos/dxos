@@ -1,5 +1,6 @@
 # Class `PartyInvitation`
-> Declared in [`packages/sdk/client/src/packlets/api/echo.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/api/echo.ts:64`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L64)
+
 
 Invitation that is being redeemed.
 It works in non-interactive mode and requires no authentication.
@@ -13,6 +14,7 @@ new PartyInvitation (_descriptor: InvitationDescriptor, _invitationPromise: Prom
 ### `_descriptor: InvitationDescriptor`
 ### `_invitationPromise: Promise<Party>`
 ### `_onAuthenticate: function`
+### `descriptor:  get InvitationDescriptor`
 
 ## Functions
 ```ts

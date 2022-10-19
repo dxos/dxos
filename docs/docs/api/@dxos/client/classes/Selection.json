@@ -1,5 +1,5 @@
 {
-  "id": 209,
+  "id": 199,
   "name": "Selection",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 210,
+      "id": 200,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,21 +28,21 @@
       ],
       "signatures": [
         {
-          "id": 211,
+          "id": 201,
           "name": "new Selection",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 212,
+              "id": 202,
               "name": "T",
               "kind": 131072,
               "kindString": "Type parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 16,
+                "id": 6,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -50,7 +50,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 212,
+                    "id": 202,
                     "name": "T"
                   }
                 ],
@@ -58,7 +58,7 @@
               }
             },
             {
-              "id": 213,
+              "id": 203,
               "name": "R",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -71,7 +71,7 @@
           ],
           "parameters": [
             {
-              "id": 214,
+              "id": 204,
               "name": "_visitor",
               "kind": 32768,
               "kindString": "Parameter",
@@ -87,7 +87,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 215,
+                  "id": 205,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -101,14 +101,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 216,
+                      "id": 206,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 217,
+                          "id": 207,
                           "name": "options",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -124,12 +124,12 @@
                         "typeArguments": [
                           {
                             "type": "reference",
-                            "id": 212,
+                            "id": 202,
                             "name": "T"
                           },
                           {
                             "type": "reference",
-                            "id": 213,
+                            "id": 203,
                             "name": "R"
                           }
                         ],
@@ -141,7 +141,7 @@
               }
             },
             {
-              "id": 218,
+              "id": 208,
               "name": "_update",
               "kind": 32768,
               "kindString": "Parameter",
@@ -161,7 +161,7 @@
                     "type": "array",
                     "elementType": {
                       "type": "reference",
-                      "id": 16,
+                      "id": 6,
                       "typeArguments": [
                         {
                           "type": "reference",
@@ -186,7 +186,7 @@
               }
             },
             {
-              "id": 219,
+              "id": 209,
               "name": "_root",
               "kind": 32768,
               "kindString": "Parameter",
@@ -205,7 +205,7 @@
               }
             },
             {
-              "id": 220,
+              "id": 210,
               "name": "_reducer",
               "kind": 32768,
               "kindString": "Parameter",
@@ -220,16 +220,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 212,
+                "id": 202,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -239,119 +239,7 @@
       ]
     },
     {
-      "id": 225,
-      "name": "_createSubSelection",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "comment": {
-        "summary": [
-          {
-            "kind": "text",
-            "text": "Creates a derrived selection by aplying a mapping function to the result of the current selection."
-          }
-        ]
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
-          "line": 47,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 224,
-      "name": "_reducer",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
-          "line": 36,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 223,
-      "name": "_root",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
-          "line": 35,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
       "id": 222,
-      "name": "_update",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
-          "line": 34,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 221,
-      "name": "_visitor",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
-          "line": 33,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 232,
       "name": "root",
       "kind": 262144,
       "kindString": "Accessor",
@@ -364,7 +252,7 @@
         }
       ],
       "getSignature": {
-        "id": 233,
+        "id": 223,
         "name": "root",
         "kind": 524288,
         "kindString": "Get signature",
@@ -384,7 +272,7 @@
       }
     },
     {
-      "id": 234,
+      "id": 224,
       "name": "call",
       "kind": 2048,
       "kindString": "Method",
@@ -398,7 +286,7 @@
       ],
       "signatures": [
         {
-          "id": 235,
+          "id": 225,
           "name": "call",
           "kind": 4096,
           "kindString": "Call signature",
@@ -413,7 +301,7 @@
           },
           "parameters": [
             {
-              "id": 236,
+              "id": 226,
               "name": "visitor",
               "kind": 32768,
               "kindString": "Parameter",
@@ -423,12 +311,12 @@
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 212,
+                    "id": 202,
                     "name": "T"
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -438,16 +326,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 212,
+                "id": 202,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -457,7 +345,7 @@
       ]
     },
     {
-      "id": 245,
+      "id": 235,
       "name": "children",
       "kind": 2048,
       "kindString": "Method",
@@ -471,7 +359,7 @@
       ],
       "signatures": [
         {
-          "id": 246,
+          "id": 236,
           "name": "children",
           "kind": 4096,
           "kindString": "Call signature",
@@ -486,18 +374,18 @@
           },
           "parameters": [
             {
-              "id": 247,
+              "id": 237,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 48,
+                    "id": 38,
                     "typeArguments": [
                       {
                         "type": "intrinsic",
@@ -508,7 +396,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -516,7 +404,7 @@
               }
             },
             {
-              "id": 248,
+              "id": 238,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -531,11 +419,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -546,7 +434,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -556,7 +444,7 @@
       ]
     },
     {
-      "id": 226,
+      "id": 216,
       "name": "exec",
       "kind": 2048,
       "kindString": "Method",
@@ -570,7 +458,7 @@
       ],
       "signatures": [
         {
-          "id": 227,
+          "id": 217,
           "name": "exec",
           "kind": 4096,
           "kindString": "Call signature",
@@ -585,7 +473,7 @@
           },
           "parameters": [
             {
-              "id": 228,
+              "id": 218,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -600,16 +488,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 270,
+            "id": 260,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 212,
+                "id": 202,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -619,7 +507,7 @@
       ]
     },
     {
-      "id": 237,
+      "id": 227,
       "name": "filter",
       "kind": 2048,
       "kindString": "Method",
@@ -638,7 +526,7 @@
       ],
       "signatures": [
         {
-          "id": 238,
+          "id": 228,
           "name": "filter",
           "kind": 4096,
           "kindString": "Call signature",
@@ -653,18 +541,18 @@
           },
           "parameters": [
             {
-              "id": 239,
+              "id": 229,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 48,
+                    "id": 38,
                     "typeArguments": [
                       {
                         "type": "intrinsic",
@@ -675,7 +563,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -683,7 +571,7 @@
               }
             },
             {
-              "id": 240,
+              "id": 230,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -704,11 +592,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -719,7 +607,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -727,21 +615,21 @@
           }
         },
         {
-          "id": 241,
+          "id": 231,
           "name": "filter",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 242,
+              "id": 232,
               "name": "U",
               "kind": 131072,
               "kindString": "Type parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 16,
+                "id": 6,
                 "typeArguments": [
                   {
                     "type": "reference",
@@ -759,7 +647,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 242,
+                    "id": 232,
                     "name": "U"
                   }
                 ],
@@ -769,23 +657,23 @@
           ],
           "parameters": [
             {
-              "id": 243,
+              "id": 233,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 242,
+                    "id": 232,
                     "name": "U"
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -793,7 +681,7 @@
               }
             },
             {
-              "id": 244,
+              "id": 234,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -803,7 +691,7 @@
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 242,
+                    "id": 232,
                     "name": "U"
                   }
                 ],
@@ -813,16 +701,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 242,
+                "id": 232,
                 "name": "U"
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -832,7 +720,7 @@
       ]
     },
     {
-      "id": 252,
+      "id": 242,
       "name": "links",
       "kind": 2048,
       "kindString": "Method",
@@ -846,7 +734,7 @@
       ],
       "signatures": [
         {
-          "id": 253,
+          "id": 243,
           "name": "links",
           "kind": 4096,
           "kindString": "Call signature",
@@ -861,18 +749,18 @@
           },
           "parameters": [
             {
-              "id": 254,
+              "id": 244,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 48,
+                    "id": 38,
                     "typeArguments": [
                       {
                         "type": "intrinsic",
@@ -883,7 +771,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -891,7 +779,7 @@
               }
             },
             {
-              "id": 255,
+              "id": 245,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -906,11 +794,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 113,
+                "id": 103,
                 "typeArguments": [
                   {
                     "type": "reference",
@@ -939,7 +827,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -949,7 +837,7 @@
       ]
     },
     {
-      "id": 249,
+      "id": 239,
       "name": "parent",
       "kind": 2048,
       "kindString": "Method",
@@ -963,7 +851,7 @@
       ],
       "signatures": [
         {
-          "id": 250,
+          "id": 240,
           "name": "parent",
           "kind": 4096,
           "kindString": "Call signature",
@@ -978,18 +866,18 @@
           },
           "parameters": [
             {
-              "id": 251,
+              "id": 241,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 48,
+                    "id": 38,
                     "typeArguments": [
                       {
                         "type": "intrinsic",
@@ -1000,7 +888,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -1010,11 +898,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -1025,7 +913,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -1035,7 +923,7 @@
       ]
     },
     {
-      "id": 229,
+      "id": 219,
       "name": "query",
       "kind": 2048,
       "kindString": "Method",
@@ -1049,7 +937,7 @@
       ],
       "signatures": [
         {
-          "id": 230,
+          "id": 220,
           "name": "query",
           "kind": 4096,
           "kindString": "Call signature",
@@ -1065,7 +953,7 @@
           },
           "parameters": [
             {
-              "id": 231,
+              "id": 221,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -1080,16 +968,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 270,
+            "id": 260,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 212,
+                "id": 202,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -1099,7 +987,7 @@
       ]
     },
     {
-      "id": 256,
+      "id": 246,
       "name": "refs",
       "kind": 2048,
       "kindString": "Method",
@@ -1113,7 +1001,7 @@
       ],
       "signatures": [
         {
-          "id": 257,
+          "id": 247,
           "name": "refs",
           "kind": 4096,
           "kindString": "Call signature",
@@ -1128,18 +1016,18 @@
           },
           "parameters": [
             {
-              "id": 258,
+              "id": 248,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 48,
+                    "id": 38,
                     "typeArguments": [
                       {
                         "type": "intrinsic",
@@ -1150,7 +1038,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -1158,7 +1046,7 @@
               }
             },
             {
-              "id": 259,
+              "id": 249,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -1173,11 +1061,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 113,
+                "id": 103,
                 "typeArguments": [
                   {
                     "type": "reference",
@@ -1206,7 +1094,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -1216,7 +1104,7 @@
       ]
     },
     {
-      "id": 264,
+      "id": 254,
       "name": "source",
       "kind": 2048,
       "kindString": "Method",
@@ -1230,7 +1118,7 @@
       ],
       "signatures": [
         {
-          "id": 265,
+          "id": 255,
           "name": "source",
           "kind": 4096,
           "kindString": "Call signature",
@@ -1245,18 +1133,18 @@
           },
           "parameters": [
             {
-              "id": 266,
+              "id": 256,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 113,
+                    "id": 103,
                     "typeArguments": [
                       {
                         "type": "reference",
@@ -1285,7 +1173,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -1293,7 +1181,7 @@
               }
             },
             {
-              "id": 267,
+              "id": 257,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -1308,11 +1196,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -1323,7 +1211,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -1333,7 +1221,7 @@
       ]
     },
     {
-      "id": 260,
+      "id": 250,
       "name": "target",
       "kind": 2048,
       "kindString": "Method",
@@ -1347,7 +1235,7 @@
       ],
       "signatures": [
         {
-          "id": 261,
+          "id": 251,
           "name": "target",
           "kind": 4096,
           "kindString": "Call signature",
@@ -1362,18 +1250,18 @@
           },
           "parameters": [
             {
-              "id": 262,
+              "id": 252,
               "name": "this",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 209,
+                "id": 199,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 113,
+                    "id": 103,
                     "typeArguments": [
                       {
                         "type": "reference",
@@ -1402,7 +1290,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 213,
+                    "id": 203,
                     "name": "R"
                   }
                 ],
@@ -1410,7 +1298,7 @@
               }
             },
             {
-              "id": 263,
+              "id": 253,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -1425,11 +1313,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -1440,7 +1328,7 @@
               },
               {
                 "type": "reference",
-                "id": 213,
+                "id": 203,
                 "name": "R"
               }
             ],
@@ -1454,38 +1342,28 @@
     {
       "title": "Constructors",
       "children": [
-        210
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        225,
-        224,
-        223,
-        222,
-        221
+        200
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        232
+        222
       ]
     },
     {
       "title": "Methods",
       "children": [
-        234,
-        245,
-        226,
-        237,
-        252,
-        249,
-        229,
-        256,
-        264,
-        260
+        224,
+        235,
+        216,
+        227,
+        242,
+        239,
+        219,
+        246,
+        254,
+        250
       ]
     }
   ],
@@ -1498,14 +1376,14 @@
   ],
   "typeParameters": [
     {
-      "id": 268,
+      "id": 258,
       "name": "T",
       "kind": 131072,
       "kindString": "Type parameter",
       "flags": {},
       "type": {
         "type": "reference",
-        "id": 16,
+        "id": 6,
         "typeArguments": [
           {
             "type": "intrinsic",
@@ -1516,7 +1394,7 @@
       }
     },
     {
-      "id": 269,
+      "id": 259,
       "name": "R",
       "kind": 131072,
       "kindString": "Type parameter",

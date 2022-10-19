@@ -1,5 +1,6 @@
 # Class `Invitation`
-> Declared in [`packages/sdk/client/src/packlets/api/invitation.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/api/invitation.ts:12`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L12)
+
 
 Invitation that is being redeemed.
 It works in non-interactive mode and requires no authentication.
@@ -13,6 +14,7 @@ new Invitation <T> (_descriptor: InvitationDescriptor, _invitationPromise: Promi
 ### `_descriptor: InvitationDescriptor`
 ### `_invitationPromise: Promise<T>`
 ### `_onAuthenticate: function`
+### `descriptor:  get InvitationDescriptor`
 
 ## Functions
 ```ts

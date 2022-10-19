@@ -1,0 +1,139 @@
+{
+  "id": 1030,
+  "name": "HandleInvitationRedemptionOpts",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 1032,
+      "name": "invitationDescriptor",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+          "line": 28,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L28"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 387,
+        "name": "InvitationDescriptor"
+      }
+    },
+    {
+      "id": 1033,
+      "name": "onAuthenticate",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+          "line": 29,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L29"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 1034,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+              "line": 29,
+              "character": 18,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L29"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 1035,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "parameters": [
+                {
+                  "id": 1036,
+                  "name": "request",
+                  "kind": 32768,
+                  "kindString": "Parameter",
+                  "flags": {},
+                  "type": {
+                    "type": "reference",
+                    "name": "AuthenticateInvitationRequest"
+                  }
+                }
+              ],
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                ],
+                "name": "Promise",
+                "qualifiedName": "Promise",
+                "package": "typescript"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1031,
+      "name": "stream",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+          "line": 27,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "name": "RedeemedInvitation"
+          }
+        ],
+        "name": "Stream"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        1032,
+        1033,
+        1031
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+      "line": 26,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L26"
+    }
+  ]
+}

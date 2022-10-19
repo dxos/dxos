@@ -1,5 +1,6 @@
 # Class `Database`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:33`]()
+
 
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
 
@@ -10,7 +11,14 @@ new Database (_modelFactory: ModelFactory, _backend: DatabaseBackend, memberKey:
 Creates a new database instance.  `database.initialize()`  must be called afterwards to complete the initialization.
 
 ## Properties
-
+### `entityUpdate:  get Event<Entity<any>>`
+Fired immediately after any update in the entities.
+If the information about which entity got updated is not required prefer using  `update` .
+### `isReadOnly:  get boolean`
+### `state:  get State`
+### `update:  get Event<Entity<any>[]>`
+Fired when any item is updated.
+Contains a list of all entities changed from the last update.
 
 ## Functions
 ```ts

@@ -1,5 +1,5 @@
 {
-  "id": 1160,
+  "id": 1150,
   "name": "ClientServiceProxy",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 1161,
+      "id": 1151,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -29,14 +29,14 @@
       ],
       "signatures": [
         {
-          "id": 1162,
+          "id": 1152,
           "name": "new ClientServiceProxy",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1163,
+              "id": 1153,
               "name": "port",
               "kind": 32768,
               "kindString": "Parameter",
@@ -47,7 +47,7 @@
               }
             },
             {
-              "id": 1164,
+              "id": 1154,
               "name": "_timeout",
               "kind": 32768,
               "kindString": "Parameter",
@@ -61,42 +61,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 1160,
+            "id": 1150,
             "name": "ClientServiceProxy"
           }
         }
       ]
     },
     {
-      "id": 1165,
-      "name": "_client",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
-          "line": 14,
-          "character": 19,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L14"
-        }
-      ],
-      "type": {
-        "type": "reference",
-        "typeArguments": [
-          {
-            "type": "reference",
-            "name": "ClientServices"
-          }
-        ],
-        "name": "ProtoRpcPeer"
-      }
-    },
-    {
-      "id": 1166,
+      "id": 1156,
       "name": "services",
       "kind": 1024,
       "kindString": "Property",
@@ -121,7 +93,7 @@
       }
     },
     {
-      "id": 1173,
+      "id": 1163,
       "name": "close",
       "kind": 2048,
       "kindString": "Method",
@@ -136,7 +108,7 @@
       ],
       "signatures": [
         {
-          "id": 1174,
+          "id": 1164,
           "name": "close",
           "kind": 4096,
           "kindString": "Call signature",
@@ -165,7 +137,7 @@
       }
     },
     {
-      "id": 1167,
+      "id": 1157,
       "name": "open",
       "kind": 2048,
       "kindString": "Method",
@@ -180,14 +152,14 @@
       ],
       "signatures": [
         {
-          "id": 1168,
+          "id": 1158,
           "name": "open",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1169,
+              "id": 1159,
               "name": "onProgressCallback",
               "kind": 32768,
               "kindString": "Parameter",
@@ -197,7 +169,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 1170,
+                  "id": 1160,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -212,14 +184,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 1171,
+                      "id": 1161,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 1172,
+                          "id": 1162,
                           "name": "progress",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -268,21 +240,20 @@
     {
       "title": "Constructors",
       "children": [
-        1161
+        1151
       ]
     },
     {
       "title": "Properties",
       "children": [
-        1165,
-        1166
+        1156
       ]
     },
     {
       "title": "Methods",
       "children": [
-        1173,
-        1167
+        1163,
+        1157
       ]
     }
   ],

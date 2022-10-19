@@ -1,0 +1,47 @@
+{
+  "id": 634,
+  "name": "CreationInvitationOptions",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 635,
+      "name": "inviteeKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 18,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L18"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 417,
+        "name": "PublicKey"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        635
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+      "line": 17,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L17"
+    }
+  ]
+}

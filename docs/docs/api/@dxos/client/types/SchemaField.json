@@ -1,0 +1,121 @@
+{
+  "id": 355,
+  "name": "SchemaField",
+  "kind": 4194304,
+  "kindString": "Type alias",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+      "line": 8,
+      "character": 20
+    }
+  ],
+  "type": {
+    "type": "reflection",
+    "declaration": {
+      "id": 356,
+      "name": "__type",
+      "kind": 65536,
+      "kindString": "Type literal",
+      "flags": {},
+      "children": [
+        {
+          "id": 357,
+          "name": "key",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 9,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        },
+        {
+          "id": 360,
+          "name": "ref",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {
+            "isOptional": true
+          },
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 12,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 361,
+            "name": "SchemaRef"
+          }
+        },
+        {
+          "id": 359,
+          "name": "required",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 11,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "boolean"
+          }
+        },
+        {
+          "id": 358,
+          "name": "type",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {
+            "isOptional": true
+          },
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 10,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "name": "FieldType"
+          }
+        }
+      ],
+      "groups": [
+        {
+          "title": "Properties",
+          "children": [
+            357,
+            360,
+            359,
+            358
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+          "line": 8,
+          "character": 34
+        }
+      ]
+    }
+  }
+}

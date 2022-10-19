@@ -1,0 +1,112 @@
+{
+  "id": 291,
+  "name": "ItemFilterDeleted",
+  "kind": 8,
+  "kindString": "Enumeration",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Controls how deleted items are filtered."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 292,
+      "name": "HIDE_DELETED",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Do not return deleted items. Default behaviour."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts",
+          "line": 31,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 0
+      }
+    },
+    {
+      "id": 293,
+      "name": "SHOW_DELETED",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Return deleted and regular items."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts",
+          "line": 35,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 1
+      }
+    },
+    {
+      "id": 294,
+      "name": "SHOW_DELETED_ONLY",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Return only deleted items."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts",
+          "line": 39,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 2
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Enumeration Members",
+      "children": [
+        292,
+        293,
+        294
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts",
+      "line": 27,
+      "character": 20
+    }
+  ]
+}

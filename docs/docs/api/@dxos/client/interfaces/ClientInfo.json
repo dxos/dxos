@@ -1,0 +1,129 @@
+{
+  "id": 844,
+  "name": "ClientInfo",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 846,
+      "name": "echo",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 74,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L74"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 847,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "children": [
+            {
+              "id": 848,
+              "name": "parties",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {},
+              "sources": [
+                {
+                  "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+                  "line": 56,
+                  "character": 6,
+                  "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L56"
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              },
+              "defaultValue": "..."
+            }
+          ],
+          "groups": [
+            {
+              "title": "Properties",
+              "children": [
+                848
+              ]
+            }
+          ],
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+              "line": 55,
+              "character": 11,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L55"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 849,
+      "name": "halo",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 75,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L75"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 961,
+        "name": "HaloInfo"
+      }
+    },
+    {
+      "id": 845,
+      "name": "initialized",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 73,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L73"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        846,
+        849,
+        845
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+      "line": 72,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L72"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 # Class `PublicKey`
-> Declared in [`packages/common/keys/dist/src/public-key.d.ts`]()
+> Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
+
 
 The purpose of this class is to assure consistent use of keys throughout the project.
 Keys should be maintained as buffers in objects and proto definitions, and converted to hex

@@ -1,0 +1,37 @@
+{
+  "id": 1179,
+  "name": "ClientProvider",
+  "kind": 4194304,
+  "kindString": "Type alias",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+      "line": 18,
+      "character": 12,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L18"
+    },
+    {
+      "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+      "line": 62,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L62"
+    }
+  ],
+  "type": {
+    "type": "reference",
+    "typeArguments": [
+      {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "name": "Client"
+          }
+        ],
+        "name": "MaybePromise"
+      }
+    ],
+    "name": "MaybeFunction"
+  }
+}

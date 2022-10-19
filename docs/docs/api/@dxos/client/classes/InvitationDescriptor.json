@@ -1,5 +1,5 @@
 {
-  "id": 397,
+  "id": 387,
   "name": "InvitationDescriptor",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 407,
+      "id": 397,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,14 +28,14 @@
       ],
       "signatures": [
         {
-          "id": 408,
+          "id": 398,
           "name": "new InvitationDescriptor",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 409,
+              "id": 399,
               "name": "type",
               "kind": 32768,
               "kindString": "Parameter",
@@ -46,19 +46,19 @@
               }
             },
             {
-              "id": 410,
+              "id": 400,
               "name": "swarmKey",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             },
             {
-              "id": 411,
+              "id": 401,
               "name": "invitation",
               "kind": 32768,
               "kindString": "Parameter",
@@ -71,7 +71,7 @@
               }
             },
             {
-              "id": 412,
+              "id": 402,
               "name": "identityKey",
               "kind": 32768,
               "kindString": "Parameter",
@@ -80,12 +80,12 @@
               },
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             },
             {
-              "id": 413,
+              "id": 403,
               "name": "secret",
               "kind": 32768,
               "kindString": "Parameter",
@@ -102,14 +102,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 397,
+            "id": 387,
             "name": "InvitationDescriptor"
           }
         }
       ]
     },
     {
-      "id": 417,
+      "id": 407,
       "name": "identityKey",
       "kind": 1024,
       "kindString": "Property",
@@ -126,12 +126,12 @@
       ],
       "type": {
         "type": "reference",
-        "id": 427,
+        "id": 417,
         "name": "PublicKey"
       }
     },
     {
-      "id": 416,
+      "id": 406,
       "name": "invitation",
       "kind": 1024,
       "kindString": "Property",
@@ -153,7 +153,7 @@
       }
     },
     {
-      "id": 418,
+      "id": 408,
       "name": "secret",
       "kind": 1024,
       "kindString": "Property",
@@ -175,7 +175,7 @@
       }
     },
     {
-      "id": 415,
+      "id": 405,
       "name": "swarmKey",
       "kind": 1024,
       "kindString": "Property",
@@ -191,12 +191,12 @@
       ],
       "type": {
         "type": "reference",
-        "id": 427,
+        "id": 417,
         "name": "PublicKey"
       }
     },
     {
-      "id": 414,
+      "id": 404,
       "name": "type",
       "kind": 1024,
       "kindString": "Property",
@@ -216,7 +216,7 @@
       }
     },
     {
-      "id": 419,
+      "id": 409,
       "name": "hash",
       "kind": 262144,
       "kindString": "Accessor",
@@ -229,7 +229,7 @@
         }
       ],
       "getSignature": {
-        "id": 420,
+        "id": 410,
         "name": "hash",
         "kind": 524288,
         "kindString": "Get signature",
@@ -241,7 +241,7 @@
       }
     },
     {
-      "id": 425,
+      "id": 415,
       "name": "encode",
       "kind": 2048,
       "kindString": "Method",
@@ -255,7 +255,7 @@
       ],
       "signatures": [
         {
-          "id": 426,
+          "id": 416,
           "name": "encode",
           "kind": 4096,
           "kindString": "Call signature",
@@ -268,7 +268,7 @@
       ]
     },
     {
-      "id": 423,
+      "id": 413,
       "name": "toProto",
       "kind": 2048,
       "kindString": "Method",
@@ -282,7 +282,7 @@
       ],
       "signatures": [
         {
-          "id": 424,
+          "id": 414,
           "name": "toProto",
           "kind": 4096,
           "kindString": "Call signature",
@@ -295,7 +295,7 @@
       ]
     },
     {
-      "id": 421,
+      "id": 411,
       "name": "toQueryParameters",
       "kind": 2048,
       "kindString": "Method",
@@ -309,7 +309,7 @@
       ],
       "signatures": [
         {
-          "id": 422,
+          "id": 412,
           "name": "toQueryParameters",
           "kind": 4096,
           "kindString": "Call signature",
@@ -330,7 +330,7 @@
       ]
     },
     {
-      "id": 404,
+      "id": 394,
       "name": "decode",
       "kind": 2048,
       "kindString": "Method",
@@ -346,14 +346,14 @@
       ],
       "signatures": [
         {
-          "id": 405,
+          "id": 395,
           "name": "decode",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 406,
+              "id": 396,
               "name": "code",
               "kind": 32768,
               "kindString": "Parameter",
@@ -366,14 +366,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 397,
+            "id": 387,
             "name": "InvitationDescriptor"
           }
         }
       ]
     },
     {
-      "id": 401,
+      "id": 391,
       "name": "fromProto",
       "kind": 2048,
       "kindString": "Method",
@@ -389,14 +389,14 @@
       ],
       "signatures": [
         {
-          "id": 402,
+          "id": 392,
           "name": "fromProto",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 403,
+              "id": 393,
               "name": "invitation",
               "kind": 32768,
               "kindString": "Parameter",
@@ -409,14 +409,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 397,
+            "id": 387,
             "name": "InvitationDescriptor"
           }
         }
       ]
     },
     {
-      "id": 398,
+      "id": 388,
       "name": "fromQueryParameters",
       "kind": 2048,
       "kindString": "Method",
@@ -432,14 +432,14 @@
       ],
       "signatures": [
         {
-          "id": 399,
+          "id": 389,
           "name": "fromQueryParameters",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 400,
+              "id": 390,
               "name": "queryParameters",
               "kind": 32768,
               "kindString": "Parameter",
@@ -452,7 +452,7 @@
           ],
           "type": {
             "type": "reference",
-            "id": 397,
+            "id": 387,
             "name": "InvitationDescriptor"
           }
         }
@@ -463,34 +463,34 @@
     {
       "title": "Constructors",
       "children": [
-        407
+        397
       ]
     },
     {
       "title": "Properties",
       "children": [
-        417,
-        416,
-        418,
-        415,
-        414
+        407,
+        406,
+        408,
+        405,
+        404
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        419
+        409
       ]
     },
     {
       "title": "Methods",
       "children": [
-        425,
-        423,
-        421,
-        404,
-        401,
-        398
+        415,
+        413,
+        411,
+        394,
+        391,
+        388
       ]
     }
   ],

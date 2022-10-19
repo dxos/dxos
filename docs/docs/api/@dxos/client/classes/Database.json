@@ -1,5 +1,5 @@
 {
-  "id": 157,
+  "id": 147,
   "name": "Database",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 158,
+      "id": 148,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,7 +28,7 @@
       ],
       "signatures": [
         {
-          "id": 159,
+          "id": 149,
           "name": "new Database",
           "kind": 16384,
           "kindString": "Constructor signature",
@@ -51,7 +51,7 @@
           },
           "parameters": [
             {
-              "id": 160,
+              "id": 150,
               "name": "_modelFactory",
               "kind": 32768,
               "kindString": "Parameter",
@@ -62,7 +62,7 @@
               }
             },
             {
-              "id": 161,
+              "id": 151,
               "name": "_backend",
               "kind": 32768,
               "kindString": "Parameter",
@@ -73,131 +73,28 @@
               }
             },
             {
-              "id": 162,
+              "id": 152,
               "name": "memberKey",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 157,
+            "id": 147,
             "name": "Database"
           }
         }
       ]
     },
     {
-      "id": 208,
-      "name": "_assertInitialized",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
-          "line": 83,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 164,
-      "name": "_backend",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
-          "line": 35,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 165,
-      "name": "_itemManager",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
-          "line": 36,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
       "id": 163,
-      "name": "_modelFactory",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
-          "line": 34,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 166,
-      "name": "_state",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
-          "line": 37,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 173,
       "name": "entityUpdate",
       "kind": 262144,
       "kindString": "Accessor",
@@ -210,7 +107,7 @@
         }
       ],
       "getSignature": {
-        "id": 174,
+        "id": 164,
         "name": "entityUpdate",
         "kind": 524288,
         "kindString": "Get signature",
@@ -236,7 +133,7 @@
           "typeArguments": [
             {
               "type": "reference",
-              "id": 16,
+              "id": 6,
               "typeArguments": [
                 {
                   "type": "intrinsic",
@@ -251,7 +148,7 @@
       }
     },
     {
-      "id": 169,
+      "id": 159,
       "name": "isReadOnly",
       "kind": 262144,
       "kindString": "Accessor",
@@ -264,7 +161,7 @@
         }
       ],
       "getSignature": {
-        "id": 170,
+        "id": 160,
         "name": "isReadOnly",
         "kind": 524288,
         "kindString": "Get signature",
@@ -276,7 +173,7 @@
       }
     },
     {
-      "id": 167,
+      "id": 157,
       "name": "state",
       "kind": 262144,
       "kindString": "Accessor",
@@ -289,7 +186,7 @@
         }
       ],
       "getSignature": {
-        "id": 168,
+        "id": 158,
         "name": "state",
         "kind": 524288,
         "kindString": "Get signature",
@@ -301,7 +198,7 @@
       }
     },
     {
-      "id": 171,
+      "id": 161,
       "name": "update",
       "kind": 262144,
       "kindString": "Accessor",
@@ -314,7 +211,7 @@
         }
       ],
       "getSignature": {
-        "id": 172,
+        "id": 162,
         "name": "update",
         "kind": 524288,
         "kindString": "Get signature",
@@ -334,7 +231,7 @@
               "type": "array",
               "elementType": {
                 "type": "reference",
-                "id": 16,
+                "id": 6,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -350,7 +247,7 @@
       }
     },
     {
-      "id": 206,
+      "id": 196,
       "name": "createDataServiceHost",
       "kind": 2048,
       "kindString": "Method",
@@ -364,7 +261,7 @@
       ],
       "signatures": [
         {
-          "id": 207,
+          "id": 197,
           "name": "createDataServiceHost",
           "kind": 4096,
           "kindString": "Call signature",
@@ -377,7 +274,7 @@
       ]
     },
     {
-      "id": 179,
+      "id": 169,
       "name": "createItem",
       "kind": 2048,
       "kindString": "Method",
@@ -391,7 +288,7 @@
       ],
       "signatures": [
         {
-          "id": 180,
+          "id": 170,
           "name": "createItem",
           "kind": 4096,
           "kindString": "Call signature",
@@ -406,7 +303,7 @@
           },
           "typeParameter": [
             {
-              "id": 181,
+              "id": 171,
               "name": "M",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -424,7 +321,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 181,
+                    "id": 171,
                     "name": "M"
                   }
                 ],
@@ -434,7 +331,7 @@
           ],
           "parameters": [
             {
-              "id": 182,
+              "id": 172,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -446,7 +343,7 @@
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 181,
+                    "id": 171,
                     "name": "M"
                   }
                 ],
@@ -459,11 +356,11 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 181,
+                    "id": 171,
                     "name": "M"
                   }
                 ],
@@ -478,7 +375,7 @@
       ]
     },
     {
-      "id": 183,
+      "id": 173,
       "name": "createLink",
       "kind": 2048,
       "kindString": "Method",
@@ -492,14 +389,14 @@
       ],
       "signatures": [
         {
-          "id": 184,
+          "id": 174,
           "name": "createLink",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 185,
+              "id": 175,
               "name": "M",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -517,7 +414,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 185,
+                    "id": 175,
                     "name": "M"
                   }
                 ],
@@ -525,7 +422,7 @@
               }
             },
             {
-              "id": 186,
+              "id": 176,
               "name": "S",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -543,7 +440,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 186,
+                    "id": 176,
                     "name": "S"
                   }
                 ],
@@ -551,7 +448,7 @@
               }
             },
             {
-              "id": 187,
+              "id": 177,
               "name": "T",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -569,7 +466,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 187,
+                    "id": 177,
                     "name": "T"
                   }
                 ],
@@ -579,7 +476,7 @@
           ],
           "parameters": [
             {
-              "id": 188,
+              "id": 178,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -589,17 +486,17 @@
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 185,
+                    "id": 175,
                     "name": "M"
                   },
                   {
                     "type": "reference",
-                    "id": 186,
+                    "id": 176,
                     "name": "S"
                   },
                   {
                     "type": "reference",
-                    "id": 187,
+                    "id": 177,
                     "name": "T"
                   }
                 ],
@@ -612,21 +509,21 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 113,
+                "id": 103,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 185,
+                    "id": 175,
                     "name": "M"
                   },
                   {
                     "type": "reference",
-                    "id": 186,
+                    "id": 176,
                     "name": "S"
                   },
                   {
                     "type": "reference",
-                    "id": 187,
+                    "id": 177,
                     "name": "T"
                   }
                 ],
@@ -641,7 +538,7 @@
       ]
     },
     {
-      "id": 204,
+      "id": 194,
       "name": "createSnapshot",
       "kind": 2048,
       "kindString": "Method",
@@ -655,7 +552,7 @@
       ],
       "signatures": [
         {
-          "id": 205,
+          "id": 195,
           "name": "createSnapshot",
           "kind": 4096,
           "kindString": "Call signature",
@@ -668,7 +565,7 @@
       ]
     },
     {
-      "id": 177,
+      "id": 167,
       "name": "destroy",
       "kind": 2048,
       "kindString": "Method",
@@ -682,7 +579,7 @@
       ],
       "signatures": [
         {
-          "id": 178,
+          "id": 168,
           "name": "destroy",
           "kind": 4096,
           "kindString": "Call signature",
@@ -703,7 +600,7 @@
       ]
     },
     {
-      "id": 189,
+      "id": 179,
       "name": "getItem",
       "kind": 2048,
       "kindString": "Method",
@@ -717,7 +614,7 @@
       ],
       "signatures": [
         {
-          "id": 190,
+          "id": 180,
           "name": "getItem",
           "kind": 4096,
           "kindString": "Call signature",
@@ -732,7 +629,7 @@
           },
           "parameters": [
             {
-              "id": 191,
+              "id": 181,
               "name": "itemId",
               "kind": 32768,
               "kindString": "Parameter",
@@ -752,7 +649,7 @@
               },
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -767,7 +664,7 @@
       ]
     },
     {
-      "id": 175,
+      "id": 165,
       "name": "initialize",
       "kind": 2048,
       "kindString": "Method",
@@ -781,7 +678,7 @@
       ],
       "signatures": [
         {
-          "id": 176,
+          "id": 166,
           "name": "initialize",
           "kind": 4096,
           "kindString": "Call signature",
@@ -802,7 +699,7 @@
       ]
     },
     {
-      "id": 199,
+      "id": 189,
       "name": "reduce",
       "kind": 2048,
       "kindString": "Method",
@@ -816,7 +713,7 @@
       ],
       "signatures": [
         {
-          "id": 200,
+          "id": 190,
           "name": "reduce",
           "kind": 4096,
           "kindString": "Call signature",
@@ -831,7 +728,7 @@
           },
           "typeParameter": [
             {
-              "id": 201,
+              "id": 191,
               "name": "R",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -840,19 +737,19 @@
           ],
           "parameters": [
             {
-              "id": 202,
+              "id": 192,
               "name": "result",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 201,
+                "id": 191,
                 "name": "R"
               }
             },
             {
-              "id": 203,
+              "id": 193,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -867,11 +764,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -882,7 +779,7 @@
               },
               {
                 "type": "reference",
-                "id": 201,
+                "id": 191,
                 "name": "R"
               }
             ],
@@ -892,7 +789,7 @@
       ]
     },
     {
-      "id": 196,
+      "id": 186,
       "name": "select",
       "kind": 2048,
       "kindString": "Method",
@@ -906,7 +803,7 @@
       ],
       "signatures": [
         {
-          "id": 197,
+          "id": 187,
           "name": "select",
           "kind": 4096,
           "kindString": "Call signature",
@@ -921,7 +818,7 @@
           },
           "parameters": [
             {
-              "id": 198,
+              "id": 188,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -936,11 +833,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 209,
+            "id": 199,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "intrinsic",
@@ -960,7 +857,7 @@
       ]
     },
     {
-      "id": 192,
+      "id": 182,
       "name": "waitForItem",
       "kind": 2048,
       "kindString": "Method",
@@ -974,7 +871,7 @@
       ],
       "signatures": [
         {
-          "id": 193,
+          "id": 183,
           "name": "waitForItem",
           "kind": 4096,
           "kindString": "Call signature",
@@ -989,7 +886,7 @@
           },
           "typeParameter": [
             {
-              "id": 194,
+              "id": 184,
               "name": "T",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -1007,7 +904,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 194,
+                    "id": 184,
                     "name": "T"
                   }
                 ],
@@ -1017,7 +914,7 @@
           ],
           "parameters": [
             {
-              "id": 195,
+              "id": 185,
               "name": "filter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -1033,11 +930,11 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 48,
+                "id": 38,
                 "typeArguments": [
                   {
                     "type": "reference",
-                    "id": 194,
+                    "id": 184,
                     "name": "T"
                   }
                 ],
@@ -1056,41 +953,31 @@
     {
       "title": "Constructors",
       "children": [
-        158
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        208,
-        164,
-        165,
-        163,
-        166
+        148
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        173,
-        169,
-        167,
-        171
+        163,
+        159,
+        157,
+        161
       ]
     },
     {
       "title": "Methods",
       "children": [
-        206,
-        179,
-        183,
-        204,
-        177,
-        189,
-        175,
-        199,
         196,
-        192
+        169,
+        173,
+        194,
+        167,
+        179,
+        165,
+        189,
+        186,
+        182
       ]
     }
   ],

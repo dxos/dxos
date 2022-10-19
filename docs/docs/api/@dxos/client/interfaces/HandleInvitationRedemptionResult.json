@@ -1,0 +1,141 @@
+{
+  "id": 1037,
+  "name": "HandleInvitationRedemptionResult",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 1041,
+      "name": "authenticate",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+          "line": 34,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L34"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 1042,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+              "line": 34,
+              "character": 16,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L34"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 1043,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "parameters": [
+                {
+                  "id": 1044,
+                  "name": "secret",
+                  "kind": 32768,
+                  "kindString": "Parameter",
+                  "flags": {},
+                  "type": {
+                    "type": "reference",
+                    "name": "Uint8Array",
+                    "qualifiedName": "Uint8Array",
+                    "package": "typescript"
+                  }
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1038,
+      "name": "waitForFinish",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+          "line": 33,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L33"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 1039,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+              "line": 33,
+              "character": 17,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L33"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 1040,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "name": "RedeemedInvitation"
+                  }
+                ],
+                "name": "Promise",
+                "qualifiedName": "Promise",
+                "package": "typescript"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        1041,
+        1038
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
+      "line": 32,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L32"
+    }
+  ]
+}

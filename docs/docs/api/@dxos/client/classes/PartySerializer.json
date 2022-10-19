@@ -1,5 +1,5 @@
 {
-  "id": 1150,
+  "id": 1140,
   "name": "PartySerializer",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 1151,
+      "id": 1141,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -29,35 +29,35 @@
       ],
       "signatures": [
         {
-          "id": 1152,
+          "id": 1142,
           "name": "new PartySerializer",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1153,
+              "id": 1143,
               "name": "_client",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 860,
+                "id": 850,
                 "name": "Client"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 1150,
+            "id": 1140,
             "name": "PartySerializer"
           }
         }
       ]
     },
     {
-      "id": 1157,
+      "id": 1147,
       "name": "deserializeParty",
       "kind": 2048,
       "kindString": "Method",
@@ -72,14 +72,14 @@
       ],
       "signatures": [
         {
-          "id": 1158,
+          "id": 1148,
           "name": "deserializeParty",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1159,
+              "id": 1149,
               "name": "data",
               "kind": 32768,
               "kindString": "Parameter",
@@ -97,7 +97,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -109,7 +109,7 @@
       ]
     },
     {
-      "id": 1154,
+      "id": 1144,
       "name": "serializeParty",
       "kind": 2048,
       "kindString": "Method",
@@ -124,21 +124,21 @@
       ],
       "signatures": [
         {
-          "id": 1155,
+          "id": 1145,
           "name": "serializeParty",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1156,
+              "id": 1146,
               "name": "party",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             }
@@ -165,14 +165,14 @@
     {
       "title": "Constructors",
       "children": [
-        1151
+        1141
       ]
     },
     {
       "title": "Methods",
       "children": [
-        1157,
-        1154
+        1147,
+        1144
       ]
     }
   ],

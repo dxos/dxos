@@ -1,5 +1,6 @@
 # Class `Schema`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21`]()
+
 
 Wrapper for ECHO Item that represents an  `ObjectModel`  schema.
 
@@ -9,7 +10,8 @@ new Schema (_schema: ObjectModel) => Schema
 ```
 
 ## Properties
-
+### `fields:  get SchemaField[]`
+### `name:  get string`
 
 ## Functions
 ```ts

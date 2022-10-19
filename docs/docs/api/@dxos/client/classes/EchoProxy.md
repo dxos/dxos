@@ -1,5 +1,6 @@
 # Class `EchoProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/echo-proxy.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/echo-proxy.ts:25`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L25)
+
 
 Client proxy to local/remote ECHO service.
 
@@ -9,7 +10,9 @@ new EchoProxy (_serviceProvider: ClientServiceProvider, _modelFactory: ModelFact
 ```
 
 ## Properties
-
+### `info:  get object`
+### `modelFactory:  get ModelFactory`
+### `networkManager:  get any`
 
 ## Functions
 ```ts

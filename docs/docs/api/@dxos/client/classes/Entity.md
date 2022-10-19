@@ -1,5 +1,6 @@
 # Class `Entity`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:10`]()
+
 
 Base class for all ECHO entitities.
 
@@ -13,6 +14,11 @@ new Entity <M> (_itemManager: ItemManager, _id: string, _type: undefined | strin
 ## Properties
 ### `_itemManager: ItemManager`
 ### `_onUpdate: Event<Entity<any>>`
+### `id:  get string`
+### `model:  get M`
+### `modelMeta:  get ModelMeta<any, any, any>`
+### `modelType:  get string`
+### `type:  get undefined | string`
 
 ## Functions
 ```ts

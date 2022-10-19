@@ -1,0 +1,302 @@
+{
+  "id": 1180,
+  "name": "ClientProviderProps",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "children": [
+    {
+      "id": 1181,
+      "name": "children",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 21,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L21"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ReactNode",
+        "qualifiedName": "React.ReactNode",
+        "package": "@types/react"
+      }
+    },
+    {
+      "id": 1183,
+      "name": "client",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Client object or async provider to enable to caller to do custom initialization."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 34,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L34"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1176,
+        "name": "ClientProvider"
+      }
+    },
+    {
+      "id": 1182,
+      "name": "clientRef",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Forward reference to provide client object to outercontainer since it won't have access to the context."
+          }
+        ],
+        "blockTags": [
+          {
+            "tag": "@deprecated",
+            "content": []
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 29,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L29"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "union",
+            "types": [
+              {
+                "type": "intrinsic",
+                "name": "undefined"
+              },
+              {
+                "type": "reference",
+                "name": "Client"
+              }
+            ]
+          }
+        ],
+        "name": "MutableRefObject",
+        "qualifiedName": "React.MutableRefObject",
+        "package": "@types/react"
+      }
+    },
+    {
+      "id": 1185,
+      "name": "config",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Config object or async provider."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 44,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L44"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ConfigProvider"
+      }
+    },
+    {
+      "id": 1184,
+      "name": "fallback",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "ReactNode to display until the client is available."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 39,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L39"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ReactNode",
+        "qualifiedName": "React.ReactNode",
+        "package": "@types/react"
+      }
+    },
+    {
+      "id": 1187,
+      "name": "onInitialize",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 55,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L55"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 1188,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+              "line": 55,
+              "character": 17,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L55"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 1189,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Post initialization hook."
+                  }
+                ]
+              },
+              "parameters": [
+                {
+                  "id": 1190,
+                  "name": "client",
+                  "kind": 32768,
+                  "kindString": "Parameter",
+                  "flags": {},
+                  "type": {
+                    "type": "reference",
+                    "name": "Client"
+                  }
+                }
+              ],
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                ],
+                "name": "Promise",
+                "qualifiedName": "Promise",
+                "package": "typescript"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1186,
+      "name": "options",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Runtime objects."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+          "line": 49,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L49"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ClientOptions"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        1181,
+        1183,
+        1182,
+        1185,
+        1184,
+        1187,
+        1186
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/containers/ClientProvider.tsx",
+      "line": 20,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L20"
+    }
+  ]
+}

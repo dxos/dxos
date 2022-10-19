@@ -1,5 +1,6 @@
 # Class `ClientServiceHost`
-> Declared in [`packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts`]()
+> Declared in [`packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts:15`]()
+
 
 Remote service implementation.
 
@@ -9,7 +10,8 @@ new ClientServiceHost (__namedParameters: ClientServiceHostParams) => ClientServ
 ```
 
 ## Properties
-
+### `echo:  get never`
+### `services:  get ClientServices`
 
 ## Functions
 ```ts

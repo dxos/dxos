@@ -1,5 +1,5 @@
 {
-  "id": 270,
+  "id": 260,
   "name": "SelectionResult",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 271,
+      "id": 261,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,21 +28,21 @@
       ],
       "signatures": [
         {
-          "id": 272,
+          "id": 262,
           "name": "new SelectionResult",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 273,
+              "id": 263,
               "name": "T",
               "kind": 131072,
               "kindString": "Type parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 16,
+                "id": 6,
                 "typeArguments": [
                   {
                     "type": "reference",
@@ -60,7 +60,7 @@
                   },
                   {
                     "type": "reference",
-                    "id": 273,
+                    "id": 263,
                     "name": "T"
                   }
                 ],
@@ -68,7 +68,7 @@
               }
             },
             {
-              "id": 274,
+              "id": 264,
               "name": "R",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -81,7 +81,7 @@
           ],
           "parameters": [
             {
-              "id": 275,
+              "id": 265,
               "name": "_execute",
               "kind": 32768,
               "kindString": "Parameter",
@@ -89,7 +89,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 276,
+                  "id": 266,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -103,7 +103,7 @@
                   ],
                   "signatures": [
                     {
-                      "id": 277,
+                      "id": 267,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
@@ -113,12 +113,12 @@
                         "typeArguments": [
                           {
                             "type": "reference",
-                            "id": 273,
+                            "id": 263,
                             "name": "T"
                           },
                           {
                             "type": "reference",
-                            "id": 274,
+                            "id": 264,
                             "name": "R"
                           }
                         ],
@@ -130,7 +130,7 @@
               }
             },
             {
-              "id": 278,
+              "id": 268,
               "name": "_update",
               "kind": 32768,
               "kindString": "Parameter",
@@ -142,7 +142,7 @@
                     "type": "array",
                     "elementType": {
                       "type": "reference",
-                      "id": 16,
+                      "id": 6,
                       "typeArguments": [
                         {
                           "type": "reference",
@@ -167,7 +167,7 @@
               }
             },
             {
-              "id": 279,
+              "id": 269,
               "name": "_root",
               "kind": 32768,
               "kindString": "Parameter",
@@ -178,7 +178,7 @@
               }
             },
             {
-              "id": 280,
+              "id": 270,
               "name": "_reducer",
               "kind": 32768,
               "kindString": "Parameter",
@@ -191,16 +191,16 @@
           ],
           "type": {
             "type": "reference",
-            "id": 270,
+            "id": 260,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 273,
+                "id": 263,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 274,
+                "id": 264,
                 "name": "R"
               }
             ],
@@ -210,111 +210,7 @@
       ]
     },
     {
-      "id": 281,
-      "name": "_execute",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
-          "line": 17,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 286,
-      "name": "_lastResult",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
-          "line": 26,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 284,
-      "name": "_reducer",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
-          "line": 20,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 283,
-      "name": "_root",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
-          "line": 19,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 282,
-      "name": "_update",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
-          "line": 18,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 285,
+      "id": 275,
       "name": "update",
       "kind": 1024,
       "kindString": "Property",
@@ -341,11 +237,11 @@
         "typeArguments": [
           {
             "type": "reference",
-            "id": 270,
+            "id": 260,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 273,
+                "id": 263,
                 "name": "T"
               },
               {
@@ -360,7 +256,7 @@
       }
     },
     {
-      "id": 293,
+      "id": 283,
       "name": "entities",
       "kind": 262144,
       "kindString": "Accessor",
@@ -373,7 +269,7 @@
         }
       ],
       "getSignature": {
-        "id": 294,
+        "id": 284,
         "name": "entities",
         "kind": 524288,
         "kindString": "Get signature",
@@ -390,14 +286,14 @@
           "type": "array",
           "elementType": {
             "type": "reference",
-            "id": 273,
+            "id": 263,
             "name": "T"
           }
         }
       }
     },
     {
-      "id": 291,
+      "id": 281,
       "name": "root",
       "kind": 262144,
       "kindString": "Accessor",
@@ -410,7 +306,7 @@
         }
       ],
       "getSignature": {
-        "id": 292,
+        "id": 282,
         "name": "root",
         "kind": 524288,
         "kindString": "Get signature",
@@ -430,7 +326,7 @@
       }
     },
     {
-      "id": 295,
+      "id": 285,
       "name": "value",
       "kind": 262144,
       "kindString": "Accessor",
@@ -443,7 +339,7 @@
         }
       ],
       "getSignature": {
-        "id": 296,
+        "id": 286,
         "name": "value",
         "kind": 524288,
         "kindString": "Get signature",
@@ -460,7 +356,7 @@
           "type": "conditional",
           "checkType": {
             "type": "reference",
-            "id": 274,
+            "id": 264,
             "name": "R"
           },
           "extendsType": {
@@ -471,20 +367,20 @@
             "type": "array",
             "elementType": {
               "type": "reference",
-              "id": 273,
+              "id": 263,
               "name": "T"
             }
           },
           "falseType": {
             "type": "reference",
-            "id": 274,
+            "id": 264,
             "name": "R"
           }
         }
       }
     },
     {
-      "id": 297,
+      "id": 287,
       "name": "expectOne",
       "kind": 2048,
       "kindString": "Method",
@@ -498,7 +394,7 @@
       ],
       "signatures": [
         {
-          "id": 298,
+          "id": 288,
           "name": "expectOne",
           "kind": 4096,
           "kindString": "Call signature",
@@ -513,14 +409,14 @@
           },
           "type": {
             "type": "reference",
-            "id": 273,
+            "id": 263,
             "name": "T"
           }
         }
       ]
     },
     {
-      "id": 289,
+      "id": 279,
       "name": "refresh",
       "kind": 2048,
       "kindString": "Method",
@@ -534,7 +430,7 @@
       ],
       "signatures": [
         {
-          "id": 290,
+          "id": 280,
           "name": "refresh",
           "kind": 4096,
           "kindString": "Call signature",
@@ -549,16 +445,16 @@
           },
           "type": {
             "type": "reference",
-            "id": 270,
+            "id": 260,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 273,
+                "id": 263,
                 "name": "T"
               },
               {
                 "type": "reference",
-                "id": 274,
+                "id": 264,
                 "name": "R"
               }
             ],
@@ -568,7 +464,7 @@
       ]
     },
     {
-      "id": 287,
+      "id": 277,
       "name": "toString",
       "kind": 2048,
       "kindString": "Method",
@@ -582,7 +478,7 @@
       ],
       "signatures": [
         {
-          "id": 288,
+          "id": 278,
           "name": "toString",
           "kind": 4096,
           "kindString": "Call signature",
@@ -599,34 +495,29 @@
     {
       "title": "Constructors",
       "children": [
-        271
+        261
       ]
     },
     {
       "title": "Properties",
       "children": [
-        281,
-        286,
-        284,
-        283,
-        282,
-        285
+        275
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        293,
-        291,
-        295
+        283,
+        281,
+        285
       ]
     },
     {
       "title": "Methods",
       "children": [
-        297,
-        289,
-        287
+        287,
+        279,
+        277
       ]
     }
   ],
@@ -639,19 +530,19 @@
   ],
   "typeParameters": [
     {
-      "id": 299,
+      "id": 289,
       "name": "T",
       "kind": 131072,
       "kindString": "Type parameter",
       "flags": {},
       "type": {
         "type": "reference",
-        "id": 16,
+        "id": 6,
         "name": "Entity"
       }
     },
     {
-      "id": 300,
+      "id": 290,
       "name": "R",
       "kind": 131072,
       "kindString": "Type parameter",

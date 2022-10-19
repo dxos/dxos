@@ -1,5 +1,5 @@
 {
-  "id": 605,
+  "id": 595,
   "name": "NetworkManager",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 606,
+      "id": 596,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,14 +28,14 @@
       ],
       "signatures": [
         {
-          "id": 607,
+          "id": 597,
           "name": "new NetworkManager",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 608,
+              "id": 598,
               "name": "__namedParameters",
               "kind": 32768,
               "kindString": "Parameter",
@@ -48,162 +48,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 605,
+            "id": 595,
             "name": "NetworkManager"
           }
         }
       ]
     },
     {
-      "id": 615,
-      "name": "_connectionLog",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isOptional": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 32,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 611,
-      "name": "_maps",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 28,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 613,
-      "name": "_messenger",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 30,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 614,
-      "name": "_signalConnection",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 31,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 612,
-      "name": "_signalManager",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 29,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 610,
-      "name": "_swarms",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 27,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 609,
-      "name": "_transportFactory",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/mesh/network-manager/dist/src/network-manager.d.ts",
-          "line": 26,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 616,
+      "id": 606,
       "name": "topicsUpdated",
       "kind": 1024,
       "kindString": "Property",
@@ -229,7 +81,7 @@
       }
     },
     {
-      "id": 621,
+      "id": 611,
       "name": "connectionLog",
       "kind": 262144,
       "kindString": "Accessor",
@@ -242,7 +94,7 @@
         }
       ],
       "getSignature": {
-        "id": 622,
+        "id": 612,
         "name": "connectionLog",
         "kind": 524288,
         "kindString": "Get signature",
@@ -263,7 +115,7 @@
       }
     },
     {
-      "id": 617,
+      "id": 607,
       "name": "signal",
       "kind": 262144,
       "kindString": "Accessor",
@@ -276,7 +128,7 @@
         }
       ],
       "getSignature": {
-        "id": 618,
+        "id": 608,
         "name": "signal",
         "kind": 524288,
         "kindString": "Get signature",
@@ -288,7 +140,7 @@
       }
     },
     {
-      "id": 619,
+      "id": 609,
       "name": "topics",
       "kind": 262144,
       "kindString": "Accessor",
@@ -301,7 +153,7 @@
         }
       ],
       "getSignature": {
-        "id": 620,
+        "id": 610,
         "name": "topics",
         "kind": 524288,
         "kindString": "Get signature",
@@ -310,14 +162,14 @@
           "type": "array",
           "elementType": {
             "type": "reference",
-            "id": 427,
+            "id": 417,
             "name": "PublicKey"
           }
         }
       }
     },
     {
-      "id": 639,
+      "id": 629,
       "name": "destroy",
       "kind": 2048,
       "kindString": "Method",
@@ -331,7 +183,7 @@
       ],
       "signatures": [
         {
-          "id": 640,
+          "id": 630,
           "name": "destroy",
           "kind": 4096,
           "kindString": "Call signature",
@@ -352,7 +204,7 @@
       ]
     },
     {
-      "id": 626,
+      "id": 616,
       "name": "getSwarm",
       "kind": 2048,
       "kindString": "Method",
@@ -366,21 +218,21 @@
       ],
       "signatures": [
         {
-          "id": 627,
+          "id": 617,
           "name": "getSwarm",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 628,
+              "id": 618,
               "name": "topic",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
@@ -402,7 +254,7 @@
       ]
     },
     {
-      "id": 623,
+      "id": 613,
       "name": "getSwarmMap",
       "kind": 2048,
       "kindString": "Method",
@@ -416,21 +268,21 @@
       ],
       "signatures": [
         {
-          "id": 624,
+          "id": 614,
           "name": "getSwarmMap",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 625,
+              "id": 615,
               "name": "topic",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
@@ -452,7 +304,7 @@
       ]
     },
     {
-      "id": 629,
+      "id": 619,
       "name": "joinProtocolSwarm",
       "kind": 2048,
       "kindString": "Method",
@@ -466,14 +318,14 @@
       ],
       "signatures": [
         {
-          "id": 630,
+          "id": 620,
           "name": "joinProtocolSwarm",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 631,
+              "id": 621,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -490,7 +342,7 @@
               {
                 "type": "reflection",
                 "declaration": {
-                  "id": 632,
+                  "id": 622,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -504,7 +356,7 @@
                   ],
                   "signatures": [
                     {
-                      "id": 633,
+                      "id": 623,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
@@ -534,7 +386,7 @@
       ]
     },
     {
-      "id": 634,
+      "id": 624,
       "name": "leaveProtocolSwarm",
       "kind": 2048,
       "kindString": "Method",
@@ -548,21 +400,21 @@
       ],
       "signatures": [
         {
-          "id": 635,
+          "id": 625,
           "name": "leaveProtocolSwarm",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 636,
+              "id": 626,
               "name": "topic",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
@@ -583,7 +435,7 @@
       ]
     },
     {
-      "id": 637,
+      "id": 627,
       "name": "start",
       "kind": 2048,
       "kindString": "Method",
@@ -597,7 +449,7 @@
       ],
       "signatures": [
         {
-          "id": 638,
+          "id": 628,
           "name": "start",
           "kind": 4096,
           "kindString": "Call signature",
@@ -631,39 +483,32 @@
     {
       "title": "Constructors",
       "children": [
-        606
+        596
       ]
     },
     {
       "title": "Properties",
       "children": [
-        615,
-        611,
-        613,
-        614,
-        612,
-        610,
-        609,
-        616
+        606
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        621,
-        617,
-        619
+        611,
+        607,
+        609
       ]
     },
     {
       "title": "Methods",
       "children": [
-        639,
-        626,
-        623,
         629,
-        634,
-        637
+        616,
+        613,
+        619,
+        624,
+        627
       ]
     }
   ],

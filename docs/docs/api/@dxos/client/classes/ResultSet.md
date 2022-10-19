@@ -1,5 +1,6 @@
 # Class `ResultSet`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6`]()
+
 
 Reactive query results.
 
@@ -11,6 +12,8 @@ new ResultSet <T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => ResultS
 ## Properties
 ### `update: ReadOnlyEvent<T[]>`
 Triggered when  `value`  updates.
+### `first:  get T`
+### `value:  get T[]`
 
 ## Functions
 ```ts

@@ -1,0 +1,284 @@
+{
+  "id": 470,
+  "name": "KeyRecord",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Defined in:\n  "
+      },
+      {
+        "kind": "inline-tag",
+        "tag": "@link",
+        "text": "file://./../../../dxos/halo/keys.proto"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 477,
+      "name": "added",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "An RFC-3339 date/time string for when the key was added to the Keyring.\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 63,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "string"
+      }
+    },
+    {
+      "id": 478,
+      "name": "created",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "An RFC-3339 date/time string for when the key was created.\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 70,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "string"
+      }
+    },
+    {
+      "id": 474,
+      "name": "hint",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Is this key from a Greeting \"hint\"?\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 41,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    },
+    {
+      "id": 475,
+      "name": "own",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Determines if this is our key?\nUsually true if "
+          },
+          {
+            "kind": "code",
+            "text": "`secret_key`"
+          },
+          {
+            "kind": "text",
+            "text": " is present; may be false for \"inception keys\" such as the Party key.\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 49,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    },
+    {
+      "id": 472,
+      "name": "publicKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "The public key as a Buffer (required)."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 27,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 417,
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 473,
+      "name": "secretKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "The secret key as a Buffer (this will never be visible outside the Keyring).\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 34,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Buffer",
+        "qualifiedName": "global.Buffer",
+        "package": "@types/node"
+      }
+    },
+    {
+      "id": 476,
+      "name": "trusted",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Is this key to be trusted?\n\nOptions:\n  - proto3_optional = true"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 56,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    },
+    {
+      "id": 471,
+      "name": "type",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "The "
+          },
+          {
+            "kind": "code",
+            "text": "`KeyType`"
+          },
+          {
+            "kind": "text",
+            "text": " type of the key. This is often unknown for keys from other sources."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 23,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 479,
+        "name": "KeyType"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        477,
+        478,
+        474,
+        475,
+        472,
+        473,
+        476,
+        471
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+      "line": 19,
+      "character": 17
+    }
+  ]
+}

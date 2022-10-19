@@ -1,5 +1,6 @@
 # Class `HaloProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts:26`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L26)
+
 
 Client proxy to local/remote HALO service.
 
@@ -10,6 +11,10 @@ new HaloProxy (_serviceProvider: ClientServiceProvider) => HaloProxy
 
 ## Properties
 ### `profileChanged: Event<void>`
+### `info:  get HaloInfo`
+### `invitationProxy:  get InvitationProxy`
+### `profile:  get undefined | Profile`
+User profile info.
 
 ## Functions
 ```ts

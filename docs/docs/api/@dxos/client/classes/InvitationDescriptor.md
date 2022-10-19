@@ -1,5 +1,6 @@
 # Class `InvitationDescriptor`
-> Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts`]()
+> Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:21`]()
+
 
 Describes an issued invitation.
 
@@ -19,6 +20,7 @@ new InvitationDescriptor (type: Type, swarmKey: PublicKey, invitation: Uint8Arra
 ### `secret: Uint8Array`
 ### `swarmKey: PublicKey`
 ### `type: Type`
+### `hash:  get string`
 
 ## Functions
 ```ts

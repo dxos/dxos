@@ -1,5 +1,5 @@
 {
-  "id": 932,
+  "id": 922,
   "name": "EchoProxy",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 933,
+      "id": 923,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -29,14 +29,14 @@
       ],
       "signatures": [
         {
-          "id": 934,
+          "id": 924,
           "name": "new EchoProxy",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 935,
+              "id": 925,
               "name": "_serviceProvider",
               "kind": 32768,
               "kindString": "Parameter",
@@ -47,7 +47,7 @@
               }
             },
             {
-              "id": 936,
+              "id": 926,
               "name": "_modelFactory",
               "kind": 32768,
               "kindString": "Parameter",
@@ -58,115 +58,28 @@
               }
             },
             {
-              "id": 937,
+              "id": 927,
               "name": "_haloProxy",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 973,
+                "id": 963,
                 "name": "HaloProxy"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 932,
+            "id": 922,
             "name": "EchoProxy"
           }
         }
       ]
     },
     {
-      "id": 938,
-      "name": "_parties",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
-          "line": 26,
-          "character": 19,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L26"
-        }
-      ],
-      "type": {
-        "type": "reference",
-        "typeArguments": [
-          {
-            "type": "reference",
-            "id": 427,
-            "name": "PublicKey"
-          },
-          {
-            "type": "reference",
-            "id": 1073,
-            "name": "PartyProxy"
-          }
-        ],
-        "name": "ComplexMap"
-      },
-      "defaultValue": "..."
-    },
-    {
-      "id": 939,
-      "name": "_partiesChanged",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
-          "line": 27,
-          "character": 19,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L27"
-        }
-      ],
-      "type": {
-        "type": "reference",
-        "typeArguments": [
-          {
-            "type": "intrinsic",
-            "name": "void"
-          }
-        ],
-        "name": "Event"
-      },
-      "defaultValue": "..."
-    },
-    {
-      "id": 940,
-      "name": "_subscriptions",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
-          "line": 28,
-          "character": 19,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L28"
-        }
-      ],
-      "type": {
-        "type": "reference",
-        "name": "SubscriptionGroup"
-      },
-      "defaultValue": "..."
-    },
-    {
-      "id": 947,
+      "id": 937,
       "name": "info",
       "kind": 262144,
       "kindString": "Accessor",
@@ -180,7 +93,7 @@
         }
       ],
       "getSignature": {
-        "id": 948,
+        "id": 938,
         "name": "info",
         "kind": 524288,
         "kindString": "Get signature",
@@ -188,14 +101,14 @@
         "type": {
           "type": "reflection",
           "declaration": {
-            "id": 949,
+            "id": 939,
             "name": "__type",
             "kind": 65536,
             "kindString": "Type literal",
             "flags": {},
             "children": [
               {
-                "id": 950,
+                "id": 940,
                 "name": "parties",
                 "kind": 1024,
                 "kindString": "Property",
@@ -219,7 +132,7 @@
               {
                 "title": "Properties",
                 "children": [
-                  950
+                  940
                 ]
               }
             ],
@@ -235,18 +148,18 @@
         },
         "implementationOf": {
           "type": "reference",
-          "id": 730,
+          "id": 720,
           "name": "Echo.info"
         }
       },
       "implementationOf": {
         "type": "reference",
-        "id": 730,
+        "id": 720,
         "name": "Echo.info"
       }
     },
     {
-      "id": 943,
+      "id": 933,
       "name": "modelFactory",
       "kind": 262144,
       "kindString": "Accessor",
@@ -260,7 +173,7 @@
         }
       ],
       "getSignature": {
-        "id": 944,
+        "id": 934,
         "name": "modelFactory",
         "kind": 524288,
         "kindString": "Get signature",
@@ -272,7 +185,7 @@
       }
     },
     {
-      "id": 945,
+      "id": 935,
       "name": "networkManager",
       "kind": 262144,
       "kindString": "Accessor",
@@ -286,7 +199,7 @@
         }
       ],
       "getSignature": {
-        "id": 946,
+        "id": 936,
         "name": "networkManager",
         "kind": 524288,
         "kindString": "Get signature",
@@ -298,7 +211,7 @@
       }
     },
     {
-      "id": 968,
+      "id": 958,
       "name": "acceptInvitation",
       "kind": 2048,
       "kindString": "Method",
@@ -313,7 +226,7 @@
       ],
       "signatures": [
         {
-          "id": 969,
+          "id": 959,
           "name": "acceptInvitation",
           "kind": 4096,
           "kindString": "Call signature",
@@ -336,38 +249,38 @@
           },
           "parameters": [
             {
-              "id": 970,
+              "id": 960,
               "name": "invitationDescriptor",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 397,
+                "id": 387,
                 "name": "InvitationDescriptor"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 703,
+            "id": 693,
             "name": "PartyInvitation"
           },
           "implementationOf": {
             "type": "reference",
-            "id": 747,
+            "id": 737,
             "name": "Echo.acceptInvitation"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 746,
+        "id": 736,
         "name": "Echo.acceptInvitation"
       }
     },
     {
-      "id": 960,
+      "id": 950,
       "name": "cloneParty",
       "kind": 2048,
       "kindString": "Method",
@@ -382,7 +295,7 @@
       ],
       "signatures": [
         {
-          "id": 961,
+          "id": 951,
           "name": "cloneParty",
           "kind": 4096,
           "kindString": "Call signature",
@@ -397,7 +310,7 @@
           },
           "parameters": [
             {
-              "id": 962,
+              "id": 952,
               "name": "snapshot",
               "kind": 32768,
               "kindString": "Parameter",
@@ -413,7 +326,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -423,19 +336,19 @@
           },
           "implementationOf": {
             "type": "reference",
-            "id": 739,
+            "id": 729,
             "name": "Echo.cloneParty"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 738,
+        "id": 728,
         "name": "Echo.cloneParty"
       }
     },
     {
-      "id": 958,
+      "id": 948,
       "name": "createParty",
       "kind": 2048,
       "kindString": "Method",
@@ -450,7 +363,7 @@
       ],
       "signatures": [
         {
-          "id": 959,
+          "id": 949,
           "name": "createParty",
           "kind": 4096,
           "kindString": "Call signature",
@@ -468,7 +381,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -478,19 +391,19 @@
           },
           "implementationOf": {
             "type": "reference",
-            "id": 737,
+            "id": 727,
             "name": "Echo.createParty"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 736,
+        "id": 726,
         "name": "Echo.createParty"
       }
     },
     {
-      "id": 963,
+      "id": 953,
       "name": "getParty",
       "kind": 2048,
       "kindString": "Method",
@@ -505,7 +418,7 @@
       ],
       "signatures": [
         {
-          "id": 964,
+          "id": 954,
           "name": "getParty",
           "kind": 4096,
           "kindString": "Call signature",
@@ -520,14 +433,14 @@
           },
           "parameters": [
             {
-              "id": 965,
+              "id": 955,
               "name": "partyKey",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
@@ -541,26 +454,26 @@
               },
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ]
           },
           "implementationOf": {
             "type": "reference",
-            "id": 742,
+            "id": 732,
             "name": "Echo.getParty"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 741,
+        "id": 731,
         "name": "Echo.getParty"
       }
     },
     {
-      "id": 966,
+      "id": 956,
       "name": "queryParties",
       "kind": 2048,
       "kindString": "Method",
@@ -575,18 +488,18 @@
       ],
       "signatures": [
         {
-          "id": 967,
+          "id": 957,
           "name": "queryParties",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "type": {
             "type": "reference",
-            "id": 305,
+            "id": 295,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 646,
+                "id": 636,
                 "name": "Party"
               }
             ],
@@ -594,19 +507,19 @@
           },
           "implementationOf": {
             "type": "reference",
-            "id": 745,
+            "id": 735,
             "name": "Echo.queryParties"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 744,
+        "id": 734,
         "name": "Echo.queryParties"
       }
     },
     {
-      "id": 951,
+      "id": 941,
       "name": "registerModel",
       "kind": 2048,
       "kindString": "Method",
@@ -621,14 +534,14 @@
       ],
       "signatures": [
         {
-          "id": 952,
+          "id": 942,
           "name": "registerModel",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 953,
+              "id": 943,
               "name": "constructor",
               "kind": 32768,
               "kindString": "Parameter",
@@ -647,24 +560,24 @@
           ],
           "type": {
             "type": "reference",
-            "id": 932,
+            "id": 922,
             "name": "EchoProxy"
           },
           "implementationOf": {
             "type": "reference",
-            "id": 734,
+            "id": 724,
             "name": "Echo.registerModel"
           }
         }
       ],
       "implementationOf": {
         "type": "reference",
-        "id": 733,
+        "id": 723,
         "name": "Echo.registerModel"
       }
     },
     {
-      "id": 941,
+      "id": 931,
       "name": "toString",
       "kind": 2048,
       "kindString": "Method",
@@ -679,7 +592,7 @@
       ],
       "signatures": [
         {
-          "id": 942,
+          "id": 932,
           "name": "toString",
           "kind": 4096,
           "kindString": "Call signature",
@@ -696,35 +609,27 @@
     {
       "title": "Constructors",
       "children": [
-        933
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        938,
-        939,
-        940
+        923
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        947,
-        943,
-        945
+        937,
+        933,
+        935
       ]
     },
     {
       "title": "Methods",
       "children": [
-        968,
-        960,
         958,
-        963,
-        966,
-        951,
-        941
+        950,
+        948,
+        953,
+        956,
+        941,
+        931
       ]
     }
   ],
@@ -739,7 +644,7 @@
   "implementedTypes": [
     {
       "type": "reference",
-      "id": 729,
+      "id": 719,
       "name": "Echo"
     }
   ]

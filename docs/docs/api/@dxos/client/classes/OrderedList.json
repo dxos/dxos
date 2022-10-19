@@ -1,5 +1,5 @@
 {
-  "id": 577,
+  "id": 567,
   "name": "OrderedList",
   "kind": 128,
   "kindString": "Class",
@@ -22,7 +22,7 @@
   },
   "children": [
     {
-      "id": 578,
+      "id": 568,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -36,26 +36,26 @@
       ],
       "signatures": [
         {
-          "id": 579,
+          "id": 569,
           "name": "new OrderedList",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 580,
+              "id": 570,
               "name": "_model",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 504,
+                "id": 494,
                 "name": "ObjectModel"
               }
             },
             {
-              "id": 581,
+              "id": 571,
               "name": "_property",
               "kind": 32768,
               "kindString": "Parameter",
@@ -70,96 +70,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 577,
+            "id": 567,
             "name": "OrderedList"
           }
         }
       ]
     },
     {
-      "id": 582,
-      "name": "_model",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
-          "line": 8,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 583,
-      "name": "_property",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
-          "line": 9,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 586,
-      "name": "_unsubscribe",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
-          "line": 12,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 584,
-      "name": "_values",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
-          "line": 10,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 585,
+      "id": 575,
       "name": "update",
       "kind": 1024,
       "kindString": "Property",
@@ -186,7 +104,7 @@
       }
     },
     {
-      "id": 587,
+      "id": 577,
       "name": "id",
       "kind": 262144,
       "kindString": "Accessor",
@@ -199,7 +117,7 @@
         }
       ],
       "getSignature": {
-        "id": 588,
+        "id": 578,
         "name": "id",
         "kind": 524288,
         "kindString": "Get signature",
@@ -211,7 +129,7 @@
       }
     },
     {
-      "id": 589,
+      "id": 579,
       "name": "values",
       "kind": 262144,
       "kindString": "Accessor",
@@ -224,7 +142,7 @@
         }
       ],
       "getSignature": {
-        "id": 590,
+        "id": 580,
         "name": "values",
         "kind": 524288,
         "kindString": "Get signature",
@@ -247,7 +165,7 @@
       }
     },
     {
-      "id": 591,
+      "id": 581,
       "name": "destroy",
       "kind": 2048,
       "kindString": "Method",
@@ -261,7 +179,7 @@
       ],
       "signatures": [
         {
-          "id": 592,
+          "id": 582,
           "name": "destroy",
           "kind": 4096,
           "kindString": "Call signature",
@@ -274,7 +192,7 @@
       ]
     },
     {
-      "id": 595,
+      "id": 585,
       "name": "init",
       "kind": 2048,
       "kindString": "Method",
@@ -288,7 +206,7 @@
       ],
       "signatures": [
         {
-          "id": 596,
+          "id": 586,
           "name": "init",
           "kind": 4096,
           "kindString": "Call signature",
@@ -303,7 +221,7 @@
           },
           "parameters": [
             {
-              "id": 597,
+              "id": 587,
               "name": "values",
               "kind": 32768,
               "kindString": "Parameter",
@@ -338,7 +256,7 @@
       ]
     },
     {
-      "id": 598,
+      "id": 588,
       "name": "insert",
       "kind": 2048,
       "kindString": "Method",
@@ -352,7 +270,7 @@
       ],
       "signatures": [
         {
-          "id": 599,
+          "id": 589,
           "name": "insert",
           "kind": 4096,
           "kindString": "Call signature",
@@ -367,7 +285,7 @@
           },
           "parameters": [
             {
-              "id": 600,
+              "id": 590,
               "name": "left",
               "kind": 32768,
               "kindString": "Parameter",
@@ -378,7 +296,7 @@
               }
             },
             {
-              "id": 601,
+              "id": 591,
               "name": "right",
               "kind": 32768,
               "kindString": "Parameter",
@@ -408,7 +326,7 @@
       ]
     },
     {
-      "id": 593,
+      "id": 583,
       "name": "refresh",
       "kind": 2048,
       "kindString": "Method",
@@ -422,7 +340,7 @@
       ],
       "signatures": [
         {
-          "id": 594,
+          "id": 584,
           "name": "refresh",
           "kind": 4096,
           "kindString": "Call signature",
@@ -437,14 +355,14 @@
           },
           "type": {
             "type": "reference",
-            "id": 577,
+            "id": 567,
             "name": "OrderedList"
           }
         }
       ]
     },
     {
-      "id": 602,
+      "id": 592,
       "name": "remove",
       "kind": 2048,
       "kindString": "Method",
@@ -458,7 +376,7 @@
       ],
       "signatures": [
         {
-          "id": 603,
+          "id": 593,
           "name": "remove",
           "kind": 4096,
           "kindString": "Call signature",
@@ -473,7 +391,7 @@
           },
           "parameters": [
             {
-              "id": 604,
+              "id": 594,
               "name": "values",
               "kind": 32768,
               "kindString": "Parameter",
@@ -510,34 +428,30 @@
     {
       "title": "Constructors",
       "children": [
-        578
+        568
       ]
     },
     {
       "title": "Properties",
       "children": [
-        582,
-        583,
-        586,
-        584,
-        585
+        575
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        587,
-        589
+        577,
+        579
       ]
     },
     {
       "title": "Methods",
       "children": [
-        591,
-        595,
-        598,
-        593,
-        602
+        581,
+        585,
+        588,
+        583,
+        592
       ]
     }
   ],

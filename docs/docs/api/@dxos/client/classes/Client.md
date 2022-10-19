@@ -1,5 +1,6 @@
 # Class `Client`
-> Declared in [`packages/sdk/client/src/packlets/proxies/client.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:78`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L78)
+
 
 
 
@@ -12,6 +13,17 @@ Requires initialization after creating by calling  `.initialize()` .
 
 ## Properties
 ### `version: "2.33.8"`
+### `config:  get Config`
+### `echo:  get EchoProxy`
+ECHO database.
+### `halo:  get HaloProxy`
+HALO credentials.
+### `info:  get ClientInfo`
+### `initialized:  get boolean`
+Has the Client been initialized?
+Initialize by calling  `.initialize()`
+### `services:  get ClientServices`
+Client services that can be proxied.
 
 ## Functions
 ```ts

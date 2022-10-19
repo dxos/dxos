@@ -1,0 +1,82 @@
+{
+  "id": 351,
+  "name": "SchemaDef",
+  "kind": 4194304,
+  "kindString": "Type alias",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+      "line": 14,
+      "character": 20
+    }
+  ],
+  "type": {
+    "type": "reflection",
+    "declaration": {
+      "id": 352,
+      "name": "__type",
+      "kind": 65536,
+      "kindString": "Type literal",
+      "flags": {},
+      "children": [
+        {
+          "id": 354,
+          "name": "fields",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 16,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "array",
+            "elementType": {
+              "type": "reference",
+              "id": 355,
+              "name": "SchemaField"
+            }
+          }
+        },
+        {
+          "id": 353,
+          "name": "schema",
+          "kind": 1024,
+          "kindString": "Property",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+              "line": 15,
+              "character": 4
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ],
+      "groups": [
+        {
+          "title": "Properties",
+          "children": [
+            354,
+            353
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
+          "line": 14,
+          "character": 32
+        }
+      ]
+    }
+  }
+}

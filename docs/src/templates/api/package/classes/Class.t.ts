@@ -1,12 +1,13 @@
 import { ReflectionKind, JSONOutput as S } from "typedoc";
-import { Input, TemplateFunction, text, File, JSONFile } from "../..";
-
 import {
-  children,
-  href,
-  generic,
   method,
   comment,
+  sources,
+  Input,
+  TemplateFunction,
+  text,
+  File,
+  JSONFile,
   packagesInProject,
   reflectionsOfKind,
   property,
@@ -28,7 +29,8 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
           );
           const properties = reflectionsOfKind(
             aclass,
-            ReflectionKind.Property
+            ReflectionKind.Property,
+            ReflectionKind.Accessor
           ).filter((r) => !r.flags.isPrivate);
           const functions = reflectionsOfKind(
             aclass,
@@ -42,9 +44,9 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
               path: [...classesDir, `${aclass.name}.md`],
               content: text`
                 # Class \`${aclass.name}\`
-                > Declared in [\`${sourceFileName}\`]()
+                ${sources(aclass)}
 
-                ${comment(aclass)}
+                ${comment(aclass.comment)}
 
                 ## Constructors
                 ${constructors.map(method)}

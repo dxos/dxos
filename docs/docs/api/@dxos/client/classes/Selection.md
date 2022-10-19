@@ -1,5 +1,6 @@
 # Class `Selection`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:32`]()
+
 
 Selections are used to construct database subscriptions.
 They are [monads](https://www.quora.com/What-are-monads-in-computer-science) that support
@@ -15,7 +16,8 @@ new Selection <T, R> (_visitor: function, _update: Event<Entity<Model<any, any>>
 ```
 
 ## Properties
-
+### `root:  get SelectionRoot`
+The root of the selection. Either a database or an item. Must be a stable reference.
 
 ## Functions
 ```ts

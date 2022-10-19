@@ -29,8 +29,22 @@ export const generic = (
   `;
 };
 
-export const comment = (ref: S.Reflection) => {
-  return text`${ref.comment?.summary?.map((s) => s.text).join(" ")}`;
+export const sources = (ref: S.ContainerReflection) => {
+  const { sources } = ref;
+  return sources?.length
+    ? `> Declared in ` +
+        sources
+          ?.map(
+            (source) =>
+              `[\`${source.fileName}:${source.line}\`](${source.url ?? ""})`
+          )
+          .join(" and ") +
+        os.EOL
+    : "";
+};
+
+export const comment = (comment?: S.Comment) => {
+  return text`${comment?.summary?.map((s) => s.text).join(" ")}`;
 };
 
 export const param = (ref: S.ParameterReflection) => {
@@ -45,7 +59,7 @@ export const signature = (ref: S.SignatureReflection): string => {
   \`\`\`ts
   ${ref.name} ${stringifyCallSignature(ref)}
   \`\`\`
-  ${comment(ref)}
+  ${comment(ref.comment)}
   `;
 };
 
@@ -56,10 +70,24 @@ export const method = (ref: S.DeclarationReflection): string => {
 };
 
 export const property = (ref: S.DeclarationReflection): string => {
-  return text`
-  ### \`${ref.name}: ${ref.type ? stringifyType(ref.type) : 'unknown'}\`
-  ${comment(ref)}
-  `;
+  const accessor = (ref: S.DeclarationReflection): string => {
+    return text`
+    ### \`${ref.name}: ${
+      ref.getSignature ? ` get ` + stringifyType(ref.getSignature.type!) : ""
+    }${
+      ref.setSignature ? `, set ${stringifyType(ref.setSignature.type!)}` : ""
+    }\`
+    ${comment(ref.getSignature?.comment)}
+    ${comment(ref.setSignature?.comment)}
+    `;
+  };
+  const field = (ref: S.DeclarationReflection): string => {
+    return text`
+    ### \`${ref.name}: ${stringifyType(ref.type!)}\`
+    ${comment(ref.comment)}
+    `;
+  };
+  return ref.kind == ReflectionKind.Accessor ? accessor(ref) : field(ref);
 };
 
 export const href = (ref: Reflection): string => {

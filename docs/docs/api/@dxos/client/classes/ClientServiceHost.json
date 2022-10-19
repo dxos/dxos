@@ -1,5 +1,5 @@
 {
-  "id": 376,
+  "id": 366,
   "name": "ClientServiceHost",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 377,
+      "id": 367,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,14 +28,14 @@
       ],
       "signatures": [
         {
-          "id": 378,
+          "id": 368,
           "name": "new ClientServiceHost",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 379,
+              "id": 369,
               "name": "__namedParameters",
               "kind": 32768,
               "kindString": "Parameter",
@@ -48,127 +48,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 376,
+            "id": 366,
             "name": "ClientServiceHost"
           }
         }
       ]
     },
     {
-      "id": 380,
-      "name": "_config",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
-          "line": 16,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 382,
-      "name": "_context",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
-          "line": 18,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 396,
-      "name": "_createDevtoolsService",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "comment": {
-        "summary": [
-          {
-            "kind": "text",
-            "text": "Returns devtools context.\nUsed by the DXOS DevTool Extension."
-          }
-        ]
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
-          "line": 29,
-          "character": 12
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 383,
-      "name": "_services",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
-          "line": 19,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 381,
-      "name": "_signer",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isOptional": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
-          "line": 17,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 394,
+      "id": 384,
       "name": "echo",
       "kind": 262144,
       "kindString": "Accessor",
@@ -181,7 +68,7 @@
         }
       ],
       "getSignature": {
-        "id": 395,
+        "id": 385,
         "name": "echo",
         "kind": 524288,
         "kindString": "Get signature",
@@ -193,7 +80,7 @@
       }
     },
     {
-      "id": 384,
+      "id": 374,
       "name": "services",
       "kind": 262144,
       "kindString": "Accessor",
@@ -206,7 +93,7 @@
         }
       ],
       "getSignature": {
-        "id": 385,
+        "id": 375,
         "name": "services",
         "kind": 524288,
         "kindString": "Get signature",
@@ -226,7 +113,7 @@
       }
     },
     {
-      "id": 392,
+      "id": 382,
       "name": "close",
       "kind": 2048,
       "kindString": "Method",
@@ -240,7 +127,7 @@
       ],
       "signatures": [
         {
-          "id": 393,
+          "id": 383,
           "name": "close",
           "kind": 4096,
           "kindString": "Call signature",
@@ -269,7 +156,7 @@
       }
     },
     {
-      "id": 386,
+      "id": 376,
       "name": "open",
       "kind": 2048,
       "kindString": "Method",
@@ -283,14 +170,14 @@
       ],
       "signatures": [
         {
-          "id": 387,
+          "id": 377,
           "name": "open",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 388,
+              "id": 378,
               "name": "onProgressCallback",
               "kind": 32768,
               "kindString": "Parameter",
@@ -300,7 +187,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 389,
+                  "id": 379,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -314,14 +201,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 390,
+                      "id": 380,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 391,
+                          "id": 381,
                           "name": "progress",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -370,31 +257,21 @@
     {
       "title": "Constructors",
       "children": [
-        377
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        380,
-        382,
-        396,
-        383,
-        381
+        367
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        394,
-        384
+        384,
+        374
       ]
     },
     {
       "title": "Methods",
       "children": [
-        392,
-        386
+        382,
+        376
       ]
     }
   ],

@@ -1,5 +1,6 @@
 # Class `PartyProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/party-proxy.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/party-proxy.ts:25`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L25)
+
 
 Main public Party API.
 Proxies requests to local/remove services.
@@ -8,7 +9,17 @@ Proxies requests to local/remove services.
 
 
 ## Properties
-
+### `database:  get Database`
+### `invitationProxy:  get InvitationProxy`
+### `isActive:  get boolean`
+### `isOpen:  get boolean`
+### `key:  get PublicKey`
+### `properties:  get ObjectProperties`
+TODO: Currently broken.
+### `reduce:  get function`
+Returns a selection context, which can be used to traverse the object graph.
+### `select:  get function`
+Returns a selection context, which can be used to traverse the object graph.
 
 ## Functions
 ```ts

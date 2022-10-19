@@ -1,5 +1,5 @@
 {
-  "id": 427,
+  "id": 417,
   "name": "PublicKey",
   "kind": 128,
   "kindString": "Class",
@@ -14,7 +14,7 @@
   },
   "children": [
     {
-      "id": 455,
+      "id": 445,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -28,14 +28,14 @@
       ],
       "signatures": [
         {
-          "id": 456,
+          "id": 446,
           "name": "new PublicKey",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 457,
+              "id": 447,
               "name": "_value",
               "kind": 32768,
               "kindString": "Parameter",
@@ -50,35 +50,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 427,
+            "id": 417,
             "name": "PublicKey"
           }
         }
       ]
     },
     {
-      "id": 458,
-      "name": "_value",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
-          "line": 16,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 475,
+      "id": 465,
       "name": "[custom]",
       "kind": 2048,
       "kindString": "Method",
@@ -92,7 +71,7 @@
       ],
       "signatures": [
         {
-          "id": 476,
+          "id": 466,
           "name": "[custom]",
           "kind": 4096,
           "kindString": "Call signature",
@@ -115,7 +94,7 @@
           },
           "parameters": [
             {
-              "id": 477,
+              "id": 467,
               "name": "depth",
               "kind": 32768,
               "kindString": "Parameter",
@@ -126,7 +105,7 @@
               }
             },
             {
-              "id": 478,
+              "id": 468,
               "name": "options",
               "kind": 32768,
               "kindString": "Parameter",
@@ -147,7 +126,7 @@
       ]
     },
     {
-      "id": 461,
+      "id": 451,
       "name": "asBuffer",
       "kind": 2048,
       "kindString": "Method",
@@ -161,7 +140,7 @@
       ],
       "signatures": [
         {
-          "id": 462,
+          "id": 452,
           "name": "asBuffer",
           "kind": 4096,
           "kindString": "Call signature",
@@ -184,7 +163,7 @@
       ]
     },
     {
-      "id": 459,
+      "id": 449,
       "name": "asUint8Array",
       "kind": 2048,
       "kindString": "Method",
@@ -198,7 +177,7 @@
       ],
       "signatures": [
         {
-          "id": 460,
+          "id": 450,
           "name": "asUint8Array",
           "kind": 4096,
           "kindString": "Call signature",
@@ -221,7 +200,7 @@
       ]
     },
     {
-      "id": 472,
+      "id": 462,
       "name": "equals",
       "kind": 2048,
       "kindString": "Method",
@@ -235,7 +214,7 @@
       ],
       "signatures": [
         {
-          "id": 473,
+          "id": 463,
           "name": "equals",
           "kind": 4096,
           "kindString": "Call signature",
@@ -250,7 +229,7 @@
           },
           "parameters": [
             {
-              "id": 474,
+              "id": 464,
               "name": "other",
               "kind": 32768,
               "kindString": "Parameter",
@@ -269,7 +248,7 @@
       ]
     },
     {
-      "id": 463,
+      "id": 453,
       "name": "toHex",
       "kind": 2048,
       "kindString": "Method",
@@ -283,7 +262,7 @@
       ],
       "signatures": [
         {
-          "id": 464,
+          "id": 454,
           "name": "toHex",
           "kind": 4096,
           "kindString": "Call signature",
@@ -304,7 +283,7 @@
       ]
     },
     {
-      "id": 467,
+      "id": 457,
       "name": "toJSON",
       "kind": 2048,
       "kindString": "Method",
@@ -318,7 +297,7 @@
       ],
       "signatures": [
         {
-          "id": 468,
+          "id": 458,
           "name": "toJSON",
           "kind": 4096,
           "kindString": "Call signature",
@@ -347,7 +326,7 @@
       ]
     },
     {
-      "id": 465,
+      "id": 455,
       "name": "toString",
       "kind": 2048,
       "kindString": "Method",
@@ -361,7 +340,7 @@
       ],
       "signatures": [
         {
-          "id": 466,
+          "id": 456,
           "name": "toString",
           "kind": 4096,
           "kindString": "Call signature",
@@ -390,7 +369,7 @@
       ]
     },
     {
-      "id": 469,
+      "id": 459,
       "name": "truncate",
       "kind": 2048,
       "kindString": "Method",
@@ -404,14 +383,14 @@
       ],
       "signatures": [
         {
-          "id": 470,
+          "id": 460,
           "name": "truncate",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 471,
+              "id": 461,
               "name": "n",
               "kind": 32768,
               "kindString": "Parameter",
@@ -432,7 +411,7 @@
       ]
     },
     {
-      "id": 439,
+      "id": 429,
       "name": "assertValidPublicKey",
       "kind": 2048,
       "kindString": "Method",
@@ -448,7 +427,7 @@
       ],
       "signatures": [
         {
-          "id": 440,
+          "id": 430,
           "name": "assertValidPublicKey",
           "kind": 4096,
           "kindString": "Call signature",
@@ -463,7 +442,7 @@
           },
           "parameters": [
             {
-              "id": 441,
+              "id": 431,
               "name": "value",
               "kind": 32768,
               "kindString": "Parameter",
@@ -480,7 +459,7 @@
             "asserts": true,
             "targetType": {
               "type": "reference",
-              "id": 427,
+              "id": 417,
               "name": "PublicKey"
             }
           }
@@ -488,7 +467,7 @@
       ]
     },
     {
-      "id": 446,
+      "id": 436,
       "name": "bufferize",
       "kind": 2048,
       "kindString": "Method",
@@ -504,7 +483,7 @@
       ],
       "signatures": [
         {
-          "id": 447,
+          "id": 437,
           "name": "bufferize",
           "kind": 4096,
           "kindString": "Call signature",
@@ -534,7 +513,7 @@
           },
           "parameters": [
             {
-              "id": 448,
+              "id": 438,
               "name": "str",
               "kind": 32768,
               "kindString": "Parameter",
@@ -555,7 +534,7 @@
       ]
     },
     {
-      "id": 442,
+      "id": 432,
       "name": "equals",
       "kind": 2048,
       "kindString": "Method",
@@ -571,7 +550,7 @@
       ],
       "signatures": [
         {
-          "id": 443,
+          "id": 433,
           "name": "equals",
           "kind": 4096,
           "kindString": "Call signature",
@@ -586,7 +565,7 @@
           },
           "parameters": [
             {
-              "id": 444,
+              "id": 434,
               "name": "left",
               "kind": 32768,
               "kindString": "Parameter",
@@ -597,7 +576,7 @@
               }
             },
             {
-              "id": 445,
+              "id": 435,
               "name": "right",
               "kind": 32768,
               "kindString": "Parameter",
@@ -616,7 +595,7 @@
       ]
     },
     {
-      "id": 428,
+      "id": 418,
       "name": "from",
       "kind": 2048,
       "kindString": "Method",
@@ -632,7 +611,7 @@
       ],
       "signatures": [
         {
-          "id": 429,
+          "id": 419,
           "name": "from",
           "kind": 4096,
           "kindString": "Call signature",
@@ -647,7 +626,7 @@
           },
           "parameters": [
             {
-              "id": 430,
+              "id": 420,
               "name": "source",
               "kind": 32768,
               "kindString": "Parameter",
@@ -660,14 +639,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 427,
+            "id": 417,
             "name": "PublicKey"
           }
         }
       ]
     },
     {
-      "id": 431,
+      "id": 421,
       "name": "fromHex",
       "kind": 2048,
       "kindString": "Method",
@@ -683,7 +662,7 @@
       ],
       "signatures": [
         {
-          "id": 432,
+          "id": 422,
           "name": "fromHex",
           "kind": 4096,
           "kindString": "Call signature",
@@ -698,7 +677,7 @@
           },
           "parameters": [
             {
-              "id": 433,
+              "id": 423,
               "name": "hex",
               "kind": 32768,
               "kindString": "Parameter",
@@ -711,14 +690,14 @@
           ],
           "type": {
             "type": "reference",
-            "id": 427,
+            "id": 417,
             "name": "PublicKey"
           }
         }
       ]
     },
     {
-      "id": 452,
+      "id": 442,
       "name": "hash",
       "kind": 2048,
       "kindString": "Method",
@@ -734,7 +713,7 @@
       ],
       "signatures": [
         {
-          "id": 453,
+          "id": 443,
           "name": "hash",
           "kind": 4096,
           "kindString": "Call signature",
@@ -749,14 +728,14 @@
           },
           "parameters": [
             {
-              "id": 454,
+              "id": 444,
               "name": "key",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 427,
+                "id": 417,
                 "name": "PublicKey"
               }
             }
@@ -769,7 +748,7 @@
       ]
     },
     {
-      "id": 436,
+      "id": 426,
       "name": "isPublicKey",
       "kind": 2048,
       "kindString": "Method",
@@ -785,7 +764,7 @@
       ],
       "signatures": [
         {
-          "id": 437,
+          "id": 427,
           "name": "isPublicKey",
           "kind": 4096,
           "kindString": "Call signature",
@@ -800,7 +779,7 @@
           },
           "parameters": [
             {
-              "id": 438,
+              "id": 428,
               "name": "value",
               "kind": 32768,
               "kindString": "Parameter",
@@ -817,7 +796,7 @@
             "asserts": false,
             "targetType": {
               "type": "reference",
-              "id": 427,
+              "id": 417,
               "name": "PublicKey"
             }
           }
@@ -825,7 +804,7 @@
       ]
     },
     {
-      "id": 434,
+      "id": 424,
       "name": "random",
       "kind": 2048,
       "kindString": "Method",
@@ -841,7 +820,7 @@
       ],
       "signatures": [
         {
-          "id": 435,
+          "id": 425,
           "name": "random",
           "kind": 4096,
           "kindString": "Call signature",
@@ -856,14 +835,14 @@
           },
           "type": {
             "type": "reference",
-            "id": 427,
+            "id": 417,
             "name": "PublicKey"
           }
         }
       ]
     },
     {
-      "id": 449,
+      "id": 439,
       "name": "stringify",
       "kind": 2048,
       "kindString": "Method",
@@ -879,7 +858,7 @@
       ],
       "signatures": [
         {
-          "id": 450,
+          "id": 440,
           "name": "stringify",
           "kind": 4096,
           "kindString": "Call signature",
@@ -909,7 +888,7 @@
           },
           "parameters": [
             {
-              "id": 451,
+              "id": 441,
               "name": "key",
               "kind": 32768,
               "kindString": "Parameter",
@@ -945,35 +924,29 @@
     {
       "title": "Constructors",
       "children": [
-        455
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        458
+        445
       ]
     },
     {
       "title": "Methods",
       "children": [
-        475,
-        461,
-        459,
-        472,
-        463,
-        467,
         465,
-        469,
-        439,
-        446,
-        442,
-        428,
-        431,
-        452,
+        451,
+        449,
+        462,
+        453,
+        457,
+        455,
+        459,
+        429,
         436,
-        434,
-        449
+        432,
+        418,
+        421,
+        442,
+        426,
+        424,
+        439
       ]
     }
   ],

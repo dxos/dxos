@@ -1,0 +1,19 @@
+{
+  "id": 1168,
+  "name": "Contact",
+  "kind": 4194304,
+  "kindString": "Type alias",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/stubs.ts",
+      "line": 7,
+      "character": 12,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/stubs.ts#L7"
+    }
+  ],
+  "type": {
+    "type": "intrinsic",
+    "name": "any"
+  }
+}

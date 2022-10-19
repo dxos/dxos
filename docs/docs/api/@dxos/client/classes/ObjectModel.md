@@ -1,5 +1,6 @@
 # Class `ObjectModel`
-> Declared in [`packages/core/echo/object-model/dist/src/object-model.d.ts`]()
+> Declared in [`packages/core/echo/object-model/dist/src/object-model.d.ts:24`]()
+
 
 Object mutation model.
 
@@ -12,6 +13,9 @@ new ObjectModel (_meta: ModelMeta<any, any, any>, _itemId: string, _getState: fu
 ### `_getState: function`
 ### `update: Event<Model<ObjectModelState, ObjectMutationSet>>`
 ### `meta: ModelMeta<any, any, any>`
+### `itemId:  get string`
+### `modelMeta:  get ModelMeta<any, any, any>`
+### `readOnly:  get boolean`
 
 ## Functions
 ```ts

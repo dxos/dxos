@@ -1,5 +1,6 @@
 # Class `InvitationRequest`
-> Declared in [`packages/sdk/client/src/packlets/api/invitation-request.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/api/invitation-request.ts:13`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L13)
+
 
 Invitation created by sender.
 
@@ -16,6 +17,10 @@ Fired when the remote peer connects.
 Fired when there's an error in the invitation process.
 ### `finished: Event<void>`
 Fired when the invitation process completes successfully.
+### `descriptor:  get InvitationDescriptor`
+### `hasConnected:  get boolean`
+True if the connected event has been fired.
+### `secret:  get Uint8Array`
 
 ## Functions
 ```ts

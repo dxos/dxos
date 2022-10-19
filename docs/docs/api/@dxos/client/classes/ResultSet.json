@@ -1,5 +1,5 @@
 {
-  "id": 305,
+  "id": 295,
   "name": "ResultSet",
   "kind": 128,
   "kindString": "Class",
@@ -20,7 +20,7 @@
   },
   "children": [
     {
-      "id": 306,
+      "id": 296,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -34,14 +34,14 @@
       ],
       "signatures": [
         {
-          "id": 307,
+          "id": 297,
           "name": "new ResultSet",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "typeParameter": [
             {
-              "id": 308,
+              "id": 298,
               "name": "T",
               "kind": 131072,
               "kindString": "Type parameter",
@@ -50,7 +50,7 @@
           ],
           "parameters": [
             {
-              "id": 309,
+              "id": 299,
               "name": "itemUpdate",
               "kind": 32768,
               "kindString": "Parameter",
@@ -67,7 +67,7 @@
               }
             },
             {
-              "id": 310,
+              "id": 300,
               "name": "getter",
               "kind": 32768,
               "kindString": "Parameter",
@@ -75,7 +75,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 311,
+                  "id": 301,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -89,7 +89,7 @@
                   ],
                   "signatures": [
                     {
-                      "id": 312,
+                      "id": 302,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
@@ -98,7 +98,7 @@
                         "type": "array",
                         "elementType": {
                           "type": "reference",
-                          "id": 308,
+                          "id": 298,
                           "name": "T"
                         }
                       }
@@ -110,11 +110,11 @@
           ],
           "type": {
             "type": "reference",
-            "id": 305,
+            "id": 295,
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 308,
+                "id": 298,
                 "name": "T"
               }
             ],
@@ -124,70 +124,7 @@
       ]
     },
     {
-      "id": 315,
-      "name": "_getter",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts",
-          "line": 9,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 314,
-      "name": "_itemUpdate",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts",
-          "line": 8,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 313,
-      "name": "_resultsUpdate",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts",
-          "line": 7,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 316,
+      "id": 306,
       "name": "update",
       "kind": 1024,
       "kindString": "Property",
@@ -224,7 +161,7 @@
             "type": "array",
             "elementType": {
               "type": "reference",
-              "id": 308,
+              "id": 298,
               "name": "T"
             }
           }
@@ -233,7 +170,7 @@
       }
     },
     {
-      "id": 319,
+      "id": 309,
       "name": "first",
       "kind": 262144,
       "kindString": "Accessor",
@@ -246,20 +183,20 @@
         }
       ],
       "getSignature": {
-        "id": 320,
+        "id": 310,
         "name": "first",
         "kind": 524288,
         "kindString": "Get signature",
         "flags": {},
         "type": {
           "type": "reference",
-          "id": 308,
+          "id": 298,
           "name": "T"
         }
       }
     },
     {
-      "id": 317,
+      "id": 307,
       "name": "value",
       "kind": 262144,
       "kindString": "Accessor",
@@ -272,7 +209,7 @@
         }
       ],
       "getSignature": {
-        "id": 318,
+        "id": 308,
         "name": "value",
         "kind": 524288,
         "kindString": "Get signature",
@@ -281,14 +218,14 @@
           "type": "array",
           "elementType": {
             "type": "reference",
-            "id": 308,
+            "id": 298,
             "name": "T"
           }
         }
       }
     },
     {
-      "id": 321,
+      "id": 311,
       "name": "subscribe",
       "kind": 2048,
       "kindString": "Method",
@@ -302,7 +239,7 @@
       ],
       "signatures": [
         {
-          "id": 322,
+          "id": 312,
           "name": "subscribe",
           "kind": 4096,
           "kindString": "Call signature",
@@ -317,7 +254,7 @@
           },
           "parameters": [
             {
-              "id": 323,
+              "id": 313,
               "name": "listener",
               "kind": 32768,
               "kindString": "Parameter",
@@ -325,7 +262,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 324,
+                  "id": 314,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -339,14 +276,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 325,
+                      "id": 315,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 326,
+                          "id": 316,
                           "name": "result",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -355,7 +292,7 @@
                             "type": "array",
                             "elementType": {
                               "type": "reference",
-                              "id": 308,
+                              "id": 298,
                               "name": "T"
                             }
                           }
@@ -374,7 +311,7 @@
           "type": {
             "type": "reflection",
             "declaration": {
-              "id": 327,
+              "id": 317,
               "name": "__type",
               "kind": 65536,
               "kindString": "Type literal",
@@ -388,7 +325,7 @@
               ],
               "signatures": [
                 {
-                  "id": 328,
+                  "id": 318,
                   "name": "__type",
                   "kind": 4096,
                   "kindString": "Call signature",
@@ -413,7 +350,7 @@
       ]
     },
     {
-      "id": 329,
+      "id": 319,
       "name": "waitFor",
       "kind": 2048,
       "kindString": "Method",
@@ -427,7 +364,7 @@
       ],
       "signatures": [
         {
-          "id": 330,
+          "id": 320,
           "name": "waitFor",
           "kind": 4096,
           "kindString": "Call signature",
@@ -442,7 +379,7 @@
           },
           "parameters": [
             {
-              "id": 331,
+              "id": 321,
               "name": "condition",
               "kind": 32768,
               "kindString": "Parameter",
@@ -450,7 +387,7 @@
               "type": {
                 "type": "reflection",
                 "declaration": {
-                  "id": 332,
+                  "id": 322,
                   "name": "__type",
                   "kind": 65536,
                   "kindString": "Type literal",
@@ -464,14 +401,14 @@
                   ],
                   "signatures": [
                     {
-                      "id": 333,
+                      "id": 323,
                       "name": "__type",
                       "kind": 4096,
                       "kindString": "Call signature",
                       "flags": {},
                       "parameters": [
                         {
-                          "id": 334,
+                          "id": 324,
                           "name": "data",
                           "kind": 32768,
                           "kindString": "Parameter",
@@ -480,7 +417,7 @@
                             "type": "array",
                             "elementType": {
                               "type": "reference",
-                              "id": 308,
+                              "id": 298,
                               "name": "T"
                             }
                           }
@@ -503,7 +440,7 @@
                 "type": "array",
                 "elementType": {
                   "type": "reference",
-                  "id": 308,
+                  "id": 298,
                   "name": "T"
                 }
               }
@@ -520,30 +457,27 @@
     {
       "title": "Constructors",
       "children": [
-        306
+        296
       ]
     },
     {
       "title": "Properties",
       "children": [
-        315,
-        314,
-        313,
-        316
+        306
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        319,
-        317
+        309,
+        307
       ]
     },
     {
       "title": "Methods",
       "children": [
-        321,
-        329
+        311,
+        319
       ]
     }
   ],
@@ -556,7 +490,7 @@
   ],
   "typeParameters": [
     {
-      "id": 335,
+      "id": 325,
       "name": "T",
       "kind": 131072,
       "kindString": "Type parameter",

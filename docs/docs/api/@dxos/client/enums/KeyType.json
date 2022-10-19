@@ -1,0 +1,150 @@
+{
+  "id": 479,
+  "name": "KeyType",
+  "kind": 8,
+  "kindString": "Enumeration",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Defined in:\n  "
+      },
+      {
+        "kind": "inline-tag",
+        "tag": "@link",
+        "text": "file://./../../../dxos/halo/keys.proto"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 482,
+      "name": "DEVICE",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 10,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 2
+      }
+    },
+    {
+      "id": 485,
+      "name": "DXNS_ADDRESS",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 13,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 5
+      }
+    },
+    {
+      "id": 484,
+      "name": "FEED",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 12,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 4
+      }
+    },
+    {
+      "id": 481,
+      "name": "IDENTITY",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 9,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 1
+      }
+    },
+    {
+      "id": 483,
+      "name": "PARTY",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 11,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 3
+      }
+    },
+    {
+      "id": 480,
+      "name": "UNKNOWN",
+      "kind": 16,
+      "kindString": "Enumeration Member",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+          "line": 8,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": 0
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Enumeration Members",
+      "children": [
+        482,
+        485,
+        484,
+        481,
+        483,
+        480
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts",
+      "line": 7,
+      "character": 20
+    }
+  ]
+}

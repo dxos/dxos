@@ -1,55 +1,33 @@
 {
-  "id": 1055,
+  "id": 1045,
   "name": "InvitationProxy",
   "kind": 128,
   "kindString": "Class",
   "flags": {},
   "children": [
     {
-      "id": 1059,
+      "id": 1049,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
       "flags": {},
       "signatures": [
         {
-          "id": 1060,
+          "id": 1050,
           "name": "new InvitationProxy",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "type": {
             "type": "reference",
-            "id": 1055,
+            "id": 1045,
             "name": "InvitationProxy"
           }
         }
       ]
     },
     {
-      "id": 1063,
-      "name": "_isClosed",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/sdk/client/src/packlets/proxies/invitation-proxy.ts",
-          "line": 41,
-          "character": 10,
-          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L41"
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "boolean"
-      },
-      "defaultValue": "false"
-    },
-    {
-      "id": 1061,
+      "id": 1051,
       "name": "activeInvitations",
       "kind": 1024,
       "kindString": "Property",
@@ -68,14 +46,14 @@
         "type": "array",
         "elementType": {
           "type": "reference",
-          "id": 822,
+          "id": 812,
           "name": "InvitationRequest"
         }
       },
       "defaultValue": "[]"
     },
     {
-      "id": 1062,
+      "id": 1052,
       "name": "invitationsUpdate",
       "kind": 1024,
       "kindString": "Property",
@@ -103,7 +81,7 @@
       "defaultValue": "..."
     },
     {
-      "id": 1069,
+      "id": 1059,
       "name": "_removeInvitation",
       "kind": 2048,
       "kindString": "Method",
@@ -120,21 +98,21 @@
       ],
       "signatures": [
         {
-          "id": 1070,
+          "id": 1060,
           "name": "_removeInvitation",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1071,
+              "id": 1061,
               "name": "invitation",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 822,
+                "id": 812,
                 "name": "InvitationRequest"
               }
             }
@@ -147,7 +125,7 @@
       ]
     },
     {
-      "id": 1064,
+      "id": 1054,
       "name": "close",
       "kind": 2048,
       "kindString": "Method",
@@ -162,7 +140,7 @@
       ],
       "signatures": [
         {
-          "id": 1065,
+          "id": 1055,
           "name": "close",
           "kind": 4096,
           "kindString": "Call signature",
@@ -175,7 +153,7 @@
       ]
     },
     {
-      "id": 1066,
+      "id": 1056,
       "name": "createInvitationRequest",
       "kind": 2048,
       "kindString": "Method",
@@ -190,21 +168,21 @@
       ],
       "signatures": [
         {
-          "id": 1067,
+          "id": 1057,
           "name": "createInvitationRequest",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1068,
+              "id": 1058,
               "name": "__namedParameters",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 1038,
+                "id": 1028,
                 "name": "CreateInvitationRequestOpts"
               }
             }
@@ -214,7 +192,7 @@
             "typeArguments": [
               {
                 "type": "reference",
-                "id": 822,
+                "id": 812,
                 "name": "InvitationRequest"
               }
             ],
@@ -226,7 +204,7 @@
       ]
     },
     {
-      "id": 1056,
+      "id": 1046,
       "name": "handleInvitationRedemption",
       "kind": 2048,
       "kindString": "Method",
@@ -243,28 +221,28 @@
       ],
       "signatures": [
         {
-          "id": 1057,
+          "id": 1047,
           "name": "handleInvitationRedemption",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 1058,
+              "id": 1048,
               "name": "__namedParameters",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 1040,
+                "id": 1030,
                 "name": "HandleInvitationRedemptionOpts"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 1047,
+            "id": 1037,
             "name": "HandleInvitationRedemptionResult"
           }
         }
@@ -275,24 +253,23 @@
     {
       "title": "Constructors",
       "children": [
-        1059
+        1049
       ]
     },
     {
       "title": "Properties",
       "children": [
-        1063,
-        1061,
-        1062
+        1051,
+        1052
       ]
     },
     {
       "title": "Methods",
       "children": [
-        1069,
-        1064,
-        1066,
-        1056
+        1059,
+        1054,
+        1056,
+        1046
       ]
     }
   ],

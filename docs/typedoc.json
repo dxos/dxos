@@ -4,6 +4,8 @@
   "json": "docs/api.json",
   "gitRevision": "main",
   "githubPages": false,
+  "excludePrivate": true,
+  "basePath": "..",
   "entryPointStrategy": "packages",
-  "entryPoints": ["../packages/sdk/*"]
+  "entryPoints": ["../packages/sdk/client", "../packages/sdk/react-client"]
 }

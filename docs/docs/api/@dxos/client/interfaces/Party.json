@@ -1,0 +1,979 @@
+{
+  "id": 636,
+  "name": "Party",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Party API."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 643,
+      "name": "database",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 31,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L31"
+        }
+      ],
+      "getSignature": {
+        "id": 644,
+        "name": "database",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 147,
+          "name": "Database"
+        }
+      }
+    },
+    {
+      "id": 641,
+      "name": "isActive",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 28,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L28"
+        }
+      ],
+      "getSignature": {
+        "id": 642,
+        "name": "isActive",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        }
+      }
+    },
+    {
+      "id": 639,
+      "name": "isOpen",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 27,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L27"
+        }
+      ],
+      "getSignature": {
+        "id": 640,
+        "name": "isOpen",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        }
+      }
+    },
+    {
+      "id": 637,
+      "name": "key",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 26,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L26"
+        }
+      ],
+      "getSignature": {
+        "id": 638,
+        "name": "key",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 417,
+          "name": "PublicKey"
+        }
+      }
+    },
+    {
+      "id": 676,
+      "name": "properties",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 48,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L48"
+        }
+      ],
+      "getSignature": {
+        "id": 677,
+        "name": "properties",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "ObjectProperties"
+        }
+      }
+    },
+    {
+      "id": 650,
+      "name": "reduce",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 33,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L33"
+        }
+      ],
+      "getSignature": {
+        "id": 651,
+        "name": "reduce",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 652,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "sources": [
+              {
+                "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+                "line": 80,
+                "character": 4
+              }
+            ],
+            "signatures": [
+              {
+                "id": 653,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                  "summary": [
+                    {
+                      "kind": "text",
+                      "text": "Returns a reducer selection context."
+                    }
+                  ]
+                },
+                "typeParameter": [
+                  {
+                    "id": 654,
+                    "name": "R",
+                    "kind": 131072,
+                    "kindString": "Type parameter",
+                    "flags": {}
+                  }
+                ],
+                "parameters": [
+                  {
+                    "id": 655,
+                    "name": "result",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {},
+                    "type": {
+                      "type": "reference",
+                      "id": 191,
+                      "name": "R"
+                    }
+                  },
+                  {
+                    "id": 656,
+                    "name": "filter",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {
+                      "isOptional": true
+                    },
+                    "type": {
+                      "type": "reference",
+                      "name": "RootFilter"
+                    }
+                  }
+                ],
+                "type": {
+                  "type": "reference",
+                  "id": 199,
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "id": 38,
+                      "typeArguments": [
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        }
+                      ],
+                      "name": "Item"
+                    },
+                    {
+                      "type": "reference",
+                      "id": 191,
+                      "name": "R"
+                    }
+                  ],
+                  "name": "Selection"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 645,
+      "name": "select",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 32,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L32"
+        }
+      ],
+      "getSignature": {
+        "id": 646,
+        "name": "select",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 647,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "sources": [
+              {
+                "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+                "line": 74,
+                "character": 4
+              }
+            ],
+            "signatures": [
+              {
+                "id": 648,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                  "summary": [
+                    {
+                      "kind": "text",
+                      "text": "Returns a selection context, which can be used to traverse the object graph."
+                    }
+                  ]
+                },
+                "parameters": [
+                  {
+                    "id": 649,
+                    "name": "filter",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {
+                      "isOptional": true
+                    },
+                    "type": {
+                      "type": "reference",
+                      "name": "RootFilter"
+                    }
+                  }
+                ],
+                "type": {
+                  "type": "reference",
+                  "id": 199,
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "id": 38,
+                      "typeArguments": [
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        }
+                      ],
+                      "name": "Item"
+                    },
+                    {
+                      "type": "intrinsic",
+                      "name": "void"
+                    }
+                  ],
+                  "name": "Selection"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 663,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 39,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L39"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 664,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 688,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 59,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L59"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 689,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 690,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "id": 634,
+                "name": "CreationInvitationOptions"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 812,
+                "name": "InvitationRequest"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 691,
+      "name": "createSnapshot",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 61,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L61"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 692,
+          "name": "createSnapshot",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "PartySnapshot"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 659,
+      "name": "destroy",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 36,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L36"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 660,
+          "name": "destroy",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 674,
+      "name": "getDetails",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 46,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L46"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 675,
+          "name": "getDetails",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "PartyDetails"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 682,
+      "name": "getProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 56,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L56"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 683,
+          "name": "getProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 684,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 685,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        }
+      ]
+    },
+    {
+      "id": 672,
+      "name": "getTitle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 43,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L43"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 673,
+          "name": "getTitle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 657,
+      "name": "initialize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 35,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L35"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 658,
+          "name": "initialize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 661,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 38,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L38"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 662,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 686,
+      "name": "queryMembers",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 58,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L58"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 687,
+          "name": "queryMembers",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 295,
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            ],
+            "name": "ResultSet"
+          }
+        }
+      ]
+    },
+    {
+      "id": 665,
+      "name": "setActive",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 40,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L40"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 666,
+          "name": "setActive",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 667,
+              "name": "active",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            },
+            {
+              "id": 668,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 678,
+      "name": "setProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 52,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L52"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 679,
+          "name": "setProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 680,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 681,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 669,
+      "name": "setTitle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 42,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L42"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 670,
+          "name": "setTitle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 671,
+              "name": "title",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Accessors",
+      "children": [
+        643,
+        641,
+        639,
+        637,
+        676,
+        650,
+        645
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        663,
+        688,
+        691,
+        659,
+        674,
+        682,
+        672,
+        657,
+        661,
+        686,
+        665,
+        678,
+        669
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+      "line": 25,
+      "character": 17,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L25"
+    }
+  ],
+  "implementedBy": [
+    {
+      "type": "reference",
+      "id": 1063,
+      "name": "PartyProxy"
+    }
+  ]
+}

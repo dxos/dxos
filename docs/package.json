@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
-    "cleanup:api": "rm docs/api/README.md",
+    "clean:plate": "rm -rf docs/api",
     "docs:build": "vuepress build docs",
     "typedoc": "typedoc",
-    "generate:api": "plate src/templates/api --input docs/api.json --output docs/api",
+    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "prerelease": "pnpm run generate:api && pnpm run cleanup:api && pnpm run docs:build",
     "serve": "vuepress dev docs"
   },
@@ -27,6 +27,7 @@
     "eslint": "^8.24.0",
     "front-matter": "^4.0.2",
     "markdown-it-container": "^3.0.0",
+    "markdown-it-highlightjs": "^4.0.1",
     "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

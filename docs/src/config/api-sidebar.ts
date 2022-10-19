@@ -78,14 +78,14 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
   );
   const flatPackages = packagesByScope.flat();
   const otherPackages = flatPackages.filter(
-    (p) => !PINNED_PACKAGES.includes(p)
+    (p) => !!p && !PINNED_PACKAGES.includes(p)
   );
   return [
     ...(await Promise.all(PINNED_PACKAGES.map(sidebarItem.package))),
-    {
+    ...(otherPackages?.length ? [{
       text: "Other packages",
       collapsible: true,
       children: await Promise.all(otherPackages.map(sidebarItem.package)),
-    },
+    }] : []),
   ];
 };

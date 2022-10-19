@@ -217,6 +217,7 @@ importers:
       eslint: ^8.24.0
       front-matter: ^4.0.2
       markdown-it-container: ^3.0.0
+      markdown-it-highlightjs: ^4.0.1
       prettier: ^2.7.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -241,6 +242,7 @@ importers:
       eslint: 8.25.0
       front-matter: 4.0.2
       markdown-it-container: 3.0.0
+      markdown-it-highlightjs: 4.0.1
       prettier: 2.7.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -3556,7 +3558,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/prettier': ^2.7.1
       '@types/recursive-readdir': ^2.2.0
-      '@types/yargs': ~16
+      '@types/yargs': ~16.0.1
       esbuild: ~0.14.1
       lodash.flatten: ^4.4.0
       lodash.zip: ^4.2.0
@@ -3663,7 +3665,7 @@ importers:
       '@types/node': ^16.11.58
       '@vuepress/client': ^2.0.0-beta.51
       change-case: ^4.1.2
-      typedoc: ^0.23.15
+      typedoc: 0.23.15
       typescript: ^4.7.2
       vue: ^3.2.40
       vuepress: ^2.0.0-beta.51
@@ -3672,7 +3674,7 @@ importers:
       '@types/node': 16.11.66
       '@vuepress/client': 2.0.0-beta.51
       change-case: 4.1.2
-      typedoc: 0.23.16_typescript@4.8.4
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
       typescript: 4.8.4
       vue: 3.2.41
       vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
@@ -23806,6 +23808,12 @@ packages:
     resolution: {integrity: sha512-zLftSaNrKuYl0kR5zm4gxXjHaOI3FAOEaloKmRA5hijmJZvSjmxcokOLlzycb/HXlUFWzXqpIEoyEMCE4i9MvQ==}
     dev: true
 
+  /markdown-it-highlightjs/4.0.1:
+    resolution: {integrity: sha512-EPXwFEN6P5nqR3G4KjT20r20xbGYKMMA/360hhSYFmeoGXTE6hsLtJAiB/8ID8slVH4CWHHEL7GX0YenyIstVQ==}
+    dependencies:
+      highlight.js: 11.6.0
+    dev: true
+
   /markdown-it/13.0.1:
     resolution: {integrity: sha512-lTlxriVoy2criHP0JKRhO2VDG9c2ypWCsT237eDiLqi09rmbKoUetyGHq2uOIRoRS//kfoJckS0eUzzkDR+k2Q==}
     hasBin: true
@@ -30732,20 +30740,6 @@ packages:
       typescript: 4.8.4
     dev: true
     patched: true
-
-  /typedoc/0.23.16_typescript@4.8.4:
-    resolution: {integrity: sha512-rumYsCeNRXlyuZVzefD7050n7ptL2uudsCJg50dY0v/stKniqIlRpvx/F/6expC0/Q6Dbab+g/JpZuB7Sw90FA==}
-    engines: {node: '>= 14.14'}
-    hasBin: true
-    peerDependencies:
-      typescript: 4.6.x || 4.7.x || 4.8.x
-    dependencies:
-      lunr: 2.3.9
-      marked: 4.1.1
-      minimatch: 5.1.0
-      shiki: 0.11.1
-      typescript: 4.8.4
-    dev: true
 
   /typescript/4.8.4:
     resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}

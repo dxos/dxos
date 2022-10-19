@@ -44,6 +44,7 @@ const main = async () => {
         const tstart = Date.now();
         const [template] = _;
         if (!template) throw new Error("no template specified");
+        console.log('working directory', process.cwd());
         console.log(`executing template '${template}'...`);
         const files = await executeDirectoryTemplate({
           outputDirectory: output,

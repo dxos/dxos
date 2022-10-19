@@ -1,5 +1,5 @@
 {
-  "id": 336,
+  "id": 326,
   "name": "Schema",
   "kind": 128,
   "kindString": "Class",
@@ -22,7 +22,7 @@
   },
   "children": [
     {
-      "id": 337,
+      "id": 327,
       "name": "constructor",
       "kind": 512,
       "kindString": "Constructor",
@@ -36,56 +36,35 @@
       ],
       "signatures": [
         {
-          "id": 338,
+          "id": 328,
           "name": "new Schema",
           "kind": 16384,
           "kindString": "Constructor signature",
           "flags": {},
           "parameters": [
             {
-              "id": 339,
+              "id": 329,
               "name": "_schema",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 504,
+                "id": 494,
                 "name": "ObjectModel"
               }
             }
           ],
           "type": {
             "type": "reference",
-            "id": 336,
+            "id": 326,
             "name": "Schema"
           }
         }
       ]
     },
     {
-      "id": 340,
-      "name": "_schema",
-      "kind": 1024,
-      "kindString": "Property",
-      "flags": {
-        "isPrivate": true,
-        "isReadonly": true
-      },
-      "sources": [
-        {
-          "fileName": "packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts",
-          "line": 22,
-          "character": 21
-        }
-      ],
-      "type": {
-        "type": "intrinsic",
-        "name": "any"
-      }
-    },
-    {
-      "id": 343,
+      "id": 333,
       "name": "fields",
       "kind": 262144,
       "kindString": "Accessor",
@@ -98,7 +77,7 @@
         }
       ],
       "getSignature": {
-        "id": 344,
+        "id": 334,
         "name": "fields",
         "kind": 524288,
         "kindString": "Get signature",
@@ -107,14 +86,14 @@
           "type": "array",
           "elementType": {
             "type": "reference",
-            "id": 365,
+            "id": 355,
             "name": "SchemaField"
           }
         }
       }
     },
     {
-      "id": 341,
+      "id": 331,
       "name": "name",
       "kind": 262144,
       "kindString": "Accessor",
@@ -127,7 +106,7 @@
         }
       ],
       "getSignature": {
-        "id": 342,
+        "id": 332,
         "name": "name",
         "kind": 524288,
         "kindString": "Get signature",
@@ -139,7 +118,7 @@
       }
     },
     {
-      "id": 351,
+      "id": 341,
       "name": "addField",
       "kind": 2048,
       "kindString": "Method",
@@ -153,21 +132,21 @@
       ],
       "signatures": [
         {
-          "id": 352,
+          "id": 342,
           "name": "addField",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 353,
+              "id": 343,
               "name": "newField",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 365,
+                "id": 355,
                 "name": "SchemaField"
               }
             }
@@ -188,7 +167,7 @@
       ]
     },
     {
-      "id": 358,
+      "id": 348,
       "name": "deleteField",
       "kind": 2048,
       "kindString": "Method",
@@ -202,14 +181,14 @@
       ],
       "signatures": [
         {
-          "id": 359,
+          "id": 349,
           "name": "deleteField",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 360,
+              "id": 350,
               "name": "key",
               "kind": 32768,
               "kindString": "Parameter",
@@ -236,7 +215,7 @@
       ]
     },
     {
-      "id": 354,
+      "id": 344,
       "name": "editField",
       "kind": 2048,
       "kindString": "Method",
@@ -250,14 +229,14 @@
       ],
       "signatures": [
         {
-          "id": 355,
+          "id": 345,
           "name": "editField",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 356,
+              "id": 346,
               "name": "currentKey",
               "kind": 32768,
               "kindString": "Parameter",
@@ -268,14 +247,14 @@
               }
             },
             {
-              "id": 357,
+              "id": 347,
               "name": "editedField",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 365,
+                "id": 355,
                 "name": "SchemaField"
               }
             }
@@ -296,7 +275,7 @@
       ]
     },
     {
-      "id": 345,
+      "id": 335,
       "name": "getField",
       "kind": 2048,
       "kindString": "Method",
@@ -310,14 +289,14 @@
       ],
       "signatures": [
         {
-          "id": 346,
+          "id": 336,
           "name": "getField",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 347,
+              "id": 337,
               "name": "key",
               "kind": 32768,
               "kindString": "Parameter",
@@ -337,7 +316,7 @@
               },
               {
                 "type": "reference",
-                "id": 365,
+                "id": 355,
                 "name": "SchemaField"
               }
             ]
@@ -346,7 +325,7 @@
       ]
     },
     {
-      "id": 348,
+      "id": 338,
       "name": "validate",
       "kind": 2048,
       "kindString": "Method",
@@ -360,21 +339,21 @@
       ],
       "signatures": [
         {
-          "id": 349,
+          "id": 339,
           "name": "validate",
           "kind": 4096,
           "kindString": "Call signature",
           "flags": {},
           "parameters": [
             {
-              "id": 350,
+              "id": 340,
               "name": "model",
               "kind": 32768,
               "kindString": "Parameter",
               "flags": {},
               "type": {
                 "type": "reference",
-                "id": 504,
+                "id": 494,
                 "name": "ObjectModel"
               }
             }
@@ -391,30 +370,24 @@
     {
       "title": "Constructors",
       "children": [
-        337
-      ]
-    },
-    {
-      "title": "Properties",
-      "children": [
-        340
+        327
       ]
     },
     {
       "title": "Accessors",
       "children": [
-        343,
-        341
+        333,
+        331
       ]
     },
     {
       "title": "Methods",
       "children": [
-        351,
-        358,
-        354,
-        345,
-        348
+        341,
+        348,
+        344,
+        335,
+        338
       ]
     }
   ],
