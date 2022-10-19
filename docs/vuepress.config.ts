@@ -19,7 +19,7 @@ import {
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
-  description: 'DXOS is an Operating System for Decentralized Software',
+  description: 'An Operating System for Decentralized Software',
   pagePatterns: [
     // Defaults
     '**/*.md',

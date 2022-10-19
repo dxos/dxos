@@ -15,9 +15,7 @@ Centralized applications create walls and silos around information which slow th
 What if our software was built without the silos and moats around individual applications? Imagine being able to turn phrases from a conversation into a requirements document without copy pasting, switching windows, or "fixing formatting". Imagine no distance between those requirements and the code of the software that gets built to support them. It should all appear as connected knowledge in a singular user experience. How much easier would it be if there was one place to go to locate everything you were working on in relation to a given person, project, or company? What if all software universally supported the undo/redo functionality, "for free", at no cost to app developers? What if all software universally worked offline and allowed real-time collaboration by default as well? What if your data never had to leave your device?
 
 What would have to be true for such a world to exist?
----
 - we need software to work offline first
----
 - We need solutions to decentralize peer discovery, consensus, state synchronization, service availability, and user identity problems. (why do we need this? is this just decent rammed down our throat?)
 - We also need to solve continuous integration, code management, and software trust for decentralized software.
 - We need a platform built around privacy by default without precluding public discord and reputation
