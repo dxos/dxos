@@ -6,15 +6,17 @@ import { promises as fs } from 'fs';
 import mkdirp from 'mkdirp';
 import * as path from 'path';
 
-import { relative, fileExists, ellipsis, kib } from './utils';
+import { fileExists, ellipsis, kib } from './utils';
 
 export type Path = string | string[];
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export const promise = <T>(o: MaybePromise<T>): Promise<T> => isPromise(o) ? o : Promise.resolve(o);
+export const promise = <T>(o: MaybePromise<T>): Promise<T> =>
+  isPromise(o) ? o : Promise.resolve(o);
 
-export const isPromise = <T>(p: any): p is Promise<T> => typeof p?.then === 'function';
+export const isPromise = <T>(p: any): p is Promise<T> =>
+  typeof p?.then === 'function';
 
 export type AsyncFunctor<T> = (o: T) => MaybePromise<T>;
 
@@ -65,12 +67,18 @@ export class File<D = string> {
     this.allowOverwrite = overwrite;
   }
 
-  shortDescription () {
-    return `${ellipsis(relative(this.dir))}/${this.name}${this.ext}${
+  shortDescription (cwd?: string) {
+    const formattedDir = cwd ? path.relative(cwd, this.dir) : this.dir;
+    const formattedFrom = this.isCopy()
+      ? cwd
+        ? path.relative(cwd, this.copyFrom!)
+        : this.copyFrom
+      : '';
+    return `${path.join(ellipsis(formattedDir), `${this.name}${this.ext}`)}${
       typeof this.content === 'string'
-        ? ': ' + kib(this.content?.length ?? 0)
+        ? ' [' + kib(this.content?.length ?? 0) + ']'
         : ''
-    }`;
+    }${this.isCopy() ? ` copy from ${formattedFrom}` : ''}`;
   }
 
   clone () {
@@ -99,13 +107,12 @@ export class File<D = string> {
     } catch (err) {
       // faild to read / maybe no file at all
     }
-    const parsed = content ? (await this.parse(content!, loadOptions)) : null;
+    const parsed = content ? await this.parse(content!, loadOptions) : null;
     const transformed = this.transform
       ? await promise(this.transform(parsed))
       : parsed;
     this.content = transformed ?? undefined;
     return this;
-
   }
 
   async ensureLoaded () {
