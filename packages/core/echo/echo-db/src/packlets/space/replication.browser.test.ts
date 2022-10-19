@@ -16,8 +16,6 @@ import { codec } from '../common';
 
 describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {
-    const keyring = new Keyring();
-
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
     const keyring = new Keyring();
