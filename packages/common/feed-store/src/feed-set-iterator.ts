@@ -71,7 +71,9 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   }
 
   async addFeed (feed: FeedWrapper<T>) {
+    assert(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     assert(feed.properties.opened);
+
     const queue = new FeedQueue<T>(feed);
     await queue.open();
     this._feedQueues.set(feed.key, queue);
