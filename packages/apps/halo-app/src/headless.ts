@@ -4,6 +4,7 @@
 
 import { RpcPort } from '@dxos/rpc';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
+
 import { IframeRuntime } from './worker/iframe-runtime';
 
 const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
@@ -13,10 +14,10 @@ const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
   });
   window.addEventListener('beforeunload', () => {
     iframeRuntime.close().catch(err => console.error(err));
-  })
+  });
 
   await iframeRuntime.open();
-}
+};
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
@@ -32,7 +33,7 @@ if (typeof SharedWorker !== 'undefined') {
       onOrigin: origin => {
         setTimeout(async () => {
           createRuntime(origin, wrtcPort);
-        })
+        });
       }
     });
 

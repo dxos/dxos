@@ -1,9 +1,14 @@
-import { Trigger } from "@dxos/async";
-import { Config } from "@dxos/config";
-import { WebRTCTransportProxyFactory } from "@dxos/network-manager";
-import { RpcPort } from "@dxos/rpc";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Trigger } from '@dxos/async';
 import { ClientServiceHost } from '@dxos/client';
-import { WorkerSession } from "./worker-session";
+import { Config } from '@dxos/config';
+import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { RpcPort } from '@dxos/rpc';
+
+import { WorkerSession } from './worker-session';
 
 export type NewSessionParams = {
   appPort: RpcPort
@@ -20,33 +25,33 @@ export class WorkerRuntime {
   private readonly sessions = new Set<WorkerSession>();
   private _sessionForNetworking?: WorkerSession;
 
-  constructor(
-    private readonly _config: Config,
+  constructor (
+    private readonly _config: Config
   ) {
     this._clientServices = new ClientServiceHost({
       config: this._config,
-      transportFactory: this._transportFactory,
+      transportFactory: this._transportFactory
     });
   }
 
-  async start() {
+  async start () {
     await this._clientServices.open();
     this._ready.wake();
   }
 
-  async newSession({ appPort, systemPort }: NewSessionParams) {
+  async newSession ({ appPort, systemPort }: NewSessionParams) {
     await this._ready.wait();
 
     const session = new WorkerSession({
       appPort,
       systemPort,
-      services: this._clientServices.services,
+      services: this._clientServices.services
     });
     session.onClose.set(async () => {
       this.sessions.delete(session);
       this._reconnectWebrtc();
-    })
-    await session.open()
+    });
+    await session.open();
     this.sessions.add(session);
     this._reconnectWebrtc();
   }
@@ -54,7 +59,7 @@ export class WorkerRuntime {
   /**
    * Pick and assign session for networking.
    */
-  private _reconnectWebrtc() {
+  private _reconnectWebrtc () {
     // Check if current session is already closed.
     if (this._sessionForNetworking) {
       if (!this.sessions.has(this._sessionForNetworking)) {
