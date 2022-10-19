@@ -1,0 +1,2 @@
+# Function `useSearchSelection`
+> Declared in [`packages/sdk/react-client/src/hooks/echo-selections/search.ts:16`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-selections/search.ts#L16)
