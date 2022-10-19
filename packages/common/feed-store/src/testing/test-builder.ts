@@ -34,7 +34,7 @@ export type TestBuilderOptions<T> = {
  * - Avoids explosion of overly specific test functions that require and return large bags of properties.
  */
 // TODO(burdon): Apply this pattern elsewhere.
-export class TestBuilder<T = any> {
+export class TestBuilder<T> {
   static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
 
   constructor (

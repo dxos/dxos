@@ -42,7 +42,7 @@ export default defineConfig((env) => ({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     themePlugin({
       content: [

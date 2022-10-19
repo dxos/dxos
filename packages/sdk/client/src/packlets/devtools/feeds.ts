@@ -26,7 +26,7 @@ export const subscribeToFeeds = (
 
   const feedMap = new Map<PublicKey, { feedKey: PublicKey, stream: Readable, length: number }>();
 
-  setImmediate(async () => {
+  setTimeout(async () => {
     const { value: parties } = echo.queryParties();
     const party = parties.find(party => party.key.equals(partyKey));
     if (!party) {
@@ -43,7 +43,7 @@ export const subscribeToFeeds = (
           // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
           // Tail feed so as to not overload the browser.
           const feedStream = new Readable({ objectMode: true })
-            .wrap(createBatchStream(feed.feed, {
+            .wrap(createBatchStream(feed, {
               live: true,
               start: 0
             }) as any);
@@ -84,7 +84,7 @@ export const subscribeToFeedBlocks = (
   }
 
   let feedStream: Readable;
-  setImmediate(async () => {
+  setTimeout(async () => {
     const { value: parties } = echo.queryParties();
     const party = parties.find(party => party.key.equals(partyKey));
     if (!party) {
@@ -100,7 +100,7 @@ export const subscribeToFeedBlocks = (
     // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
     // Tail feed so as to not overload the browser.
     feedStream = new Readable({ objectMode: true })
-      .wrap(createBatchStream(descriptor.feed, {
+      .wrap(createBatchStream(descriptor, {
         live: true,
         start: Math.max(0, descriptor.feed.length - maxBlocks)
       }) as any);

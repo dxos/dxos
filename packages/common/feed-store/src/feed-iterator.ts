@@ -12,7 +12,7 @@ import { FeedWrapper } from './feed-wrapper';
 /**
  * Base class for an async iterable feed.
  */
-export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
+export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
   private readonly _stopTrigger = new Trigger();
   protected _running = false;
 
@@ -73,7 +73,7 @@ export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<Feed
 /**
  * Iterator that reads blocks from a single feed.
  */
-export class FeedIterator<T = {}> extends AbstractFeedIterator<T> {
+export class FeedIterator<T> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
   constructor (

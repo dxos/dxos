@@ -16,29 +16,29 @@ import { codec } from '../common';
 
 describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {
-    const keyring = new Keyring();
-
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
+    const keyring1 = new Keyring();
     const feedStore1 = new FeedStore({
       factory: new FeedFactory({
         root: storage.createDirectory('feeds1'),
-        signer: keyring,
+        signer: keyring1,
         hypercore: { valueEncoding: codec }
       })
     });
 
+    const keyring2 = new Keyring();
     const feedStore2 = new FeedStore({
       factory: new FeedFactory({
         root: storage.createDirectory('feeds2'),
-        signer: keyring,
+        signer: keyring2,
         hypercore: { valueEncoding: codec }
       })
     });
 
-    const feed1 = await feedStore1.openFeed(await keyring.createKey(), { writable: true });
+    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), { writable: true });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
     const stream1 = feed1.replicate(true);

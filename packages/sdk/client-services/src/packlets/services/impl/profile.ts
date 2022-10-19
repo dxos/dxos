@@ -67,7 +67,7 @@ export class ProfileService implements ProfileServiceRpc {
 
   createInvitation (): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
-      setImmediate(async () => {
+      setTimeout(async () => {
         const secret = Buffer.from(generatePasscode());
         // TODO(burdon): Not used.
         // const secretProvider = async () => {

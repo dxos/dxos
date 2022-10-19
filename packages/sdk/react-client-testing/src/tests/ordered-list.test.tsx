@@ -8,11 +8,10 @@ import expect from 'expect';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
+import { defaultTestingConfig, Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 
 const createTestComponents = async () => {
-  const config = {};
-  const client = new Client(config);
+  const client = new Client(defaultTestingConfig);
   await client.initialize();
   await client.halo.createProfile();
 

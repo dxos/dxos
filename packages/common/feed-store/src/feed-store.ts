@@ -10,23 +10,23 @@ import { ComplexMap } from '@dxos/util';
 import { FeedFactory, FeedOptions } from './feed-factory';
 import { FeedWrapper } from './feed-wrapper';
 
-export interface FeedStoreOptions {
-  factory: FeedFactory
+export interface FeedStoreOptions<T> {
+  factory: FeedFactory<T>
 }
 
 /**
  * Persistent hypercore store.
  */
-export class FeedStore<T = {}> {
+export class FeedStore<T> {
   private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
 
-  private readonly _factory: FeedFactory;
+  private readonly _factory: FeedFactory<T>;
 
-  readonly feedOpened = new Event<FeedWrapper>();
+  readonly feedOpened = new Event<FeedWrapper<T>>();
 
   constructor ({
     factory
-  }: FeedStoreOptions) {
+  }: FeedStoreOptions<T>) {
     this._factory = factory ?? failUndefined();
   }
 

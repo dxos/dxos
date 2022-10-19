@@ -28,7 +28,6 @@ const createPeer = async (
     signalManager: new MemorySignalManager(signalContext),
     transportFactory: MemoryTransportFactory
   });
-
   afterTest(() => networkManager.destroy());
   const plugin = new RpcPlugin(onConnect);
   await networkManager.joinProtocolSwarm({

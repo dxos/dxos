@@ -10,6 +10,7 @@ import { ReplicatorPlugin as AbstractReplicatorPlugin } from '@dxos/protocol-plu
 /**
  * Protocol plugin for feed replication.
  */
+// TODO(burdon): Should this extend or create the plugin?
 export class ReplicatorPlugin extends AbstractReplicatorPlugin {
   private readonly _feedAdded = new Event<FeedWrapper>();
   private readonly _feeds = new Set<FeedWrapper>();
@@ -37,7 +38,7 @@ export class ReplicatorPlugin extends AbstractReplicatorPlugin {
       replicate: async (remoteFeeds, info) => {
         const feeds = Array.from(this._feeds);
         log('Replicating', { peerId: info.session, feeds: feeds.map(feed => feed.key) });
-        return Array.from(feeds.values());
+        return feeds;
       }
     });
   }

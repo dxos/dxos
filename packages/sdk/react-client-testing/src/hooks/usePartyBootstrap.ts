@@ -15,7 +15,7 @@ export const usePartyBootstrap = (peerCount = 2) => {
   const [peers, setPeers] = useState<{ client: Client, party: Party }[]>([]);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const peers = [];
       const inviter = new Client();
       await inviter.initialize();

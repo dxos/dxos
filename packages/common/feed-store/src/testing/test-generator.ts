@@ -24,7 +24,7 @@ export const defaultCodec: Codec<any> = {
 
 export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncoding(defaultCodec);
 
-export type TestBlockGenerator<T extends {}> = (i: number) => T
+export type TestBlockGenerator<T> = (i: number) => T
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
   id: faker.datatype.uuid(),
@@ -35,7 +35,7 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 /**
  * Writes data to feeds.
  */
-export class TestGenerator<T = {}> {
+export class TestGenerator<T> {
   _count = 0;
 
   constructor (
