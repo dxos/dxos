@@ -6,8 +6,8 @@ import debug from 'debug';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
 import { resolve } from 'node:path';
-import { mapFromKeyValues } from '../config';
 
+import { mapFromKeyValues } from '../config';
 import { ConfigPluginOpts } from './types';
 
 const log = debug('dxos:config:plugin');
