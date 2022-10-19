@@ -241,6 +241,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -272,6 +273,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log

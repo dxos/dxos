@@ -2,11 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { WebRTCTransportService } from '@dxos/network-manager';
-import { schema } from '@dxos/protocols';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
+import { IframeRuntime } from './worker/iframe-runtime';
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
@@ -23,19 +20,11 @@ if (typeof SharedWorker !== 'undefined') {
     windowAppPort.subscribe(msg => workerAppPort.send(msg));
 
     const wrtcPort = muxer.createWorkerPort({ channel: 'dxos:wrtc' });
-    const transportService = new WebRTCTransportService();
-    const peer = createProtoRpcPeer({
-      exposed: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
-      },
-      requested: {},
-      handlers: {
-        BridgeService: transportService as BridgeService
-      },
-      port: wrtcPort
+    
+    const iframeRuntime = new IframeRuntime({
+      systemPort: wrtcPort
     });
-
-    await peer.open();
+    await iframeRuntime.open();
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');
