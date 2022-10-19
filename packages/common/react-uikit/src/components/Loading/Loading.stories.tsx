@@ -9,7 +9,7 @@ import { templateForComponent } from '../../testing';
 import { Loading, LoadingColor, LoadingProps, LoadingSize } from './Loading';
 
 export default {
-  title: 'react-ui/Loading',
+  title: 'react-uikit/Loading',
   component: Loading,
   argTypes: {
     size: {
@@ -23,27 +23,20 @@ export default {
   }
 };
 
-const Template = (props: LoadingProps) => (
-  <>
-    <Loading {...props} />
-    <span className='sr-only' id='loading__label-id'>
-      Loading…
-    </span>
-  </>
-);
+const Template = (props: LoadingProps) => <Loading {...props} />;
 
-export const Default = templateForComponent(Template)({ labelId: '' });
+export const Default = templateForComponent(Template)({ });
 Default.args = { size: LoadingSize.md, color: LoadingColor.primary };
 
 export const Small = () => (
-  <Template labelId='loading__label-id' size={LoadingSize.sm} />
+  <Template size={LoadingSize.sm} />
 );
 export const Neutral = () => (
-  <Template labelId='loading__label-id' color={LoadingColor.neutral} />
+  <Template color={LoadingColor.neutral} />
 );
 export const Large = () => (
-  <Template labelId='loading__label-id' size={LoadingSize.lg} />
+  <Template size={LoadingSize.lg} />
 );
 export const ExtraLarge = () => (
-  <Template labelId='loading__label-id' size={LoadingSize.xl} />
+  <Template size={LoadingSize.xl} />
 );
