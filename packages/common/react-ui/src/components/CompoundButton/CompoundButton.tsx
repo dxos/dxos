@@ -30,7 +30,7 @@ export const CompoundButton = ({
       {...buttonProps}
       className={cx(
         buttonClassName(buttonProps),
-        'flex items-center gap-4',
+        'flex items-center gap-4 py-2.5',
         buttonProps.className
       )}
       aria-labelledby={labelId}
@@ -47,7 +47,7 @@ export const CompoundButton = ({
           <p
             id={descriptionId}
             className={cx(
-              'text-xs font-normal',
+              'text-xs font-normal mb-1',
               variant === 'primary' ? primaryDescription : defaultDescription
             )}
           >

@@ -35,7 +35,7 @@ export const CreateProfile = ({
       elevation={5}
       label={groupProps.label || CreateProfileDefaultLabel(t)}
       {...groupProps}
-      className={cx('p-6', groupProps.className)}
+      className={cx('p-6 rounded-3xl', groupProps.className)}
     >
       <Input autoComplete='username' size='lg' label={t('username label')} placeholder={t('username placeholder')} onChange={onChangeUsername} />
       <div role='none' className='flex gap-4 justify-end'>
