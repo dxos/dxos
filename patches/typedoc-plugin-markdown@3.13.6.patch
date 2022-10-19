@@ -1,0 +1,10 @@
+diff --git a/dist/resources/partials/main.hbs b/dist/resources/partials/main.hbs
+index f2351149b7b00de883e572300a17a3689fa35d91..5a45d70cca057e08c8502ae80fffa7d5f9fae413 100644
+--- a/dist/resources/partials/main.hbs
++++ b/dist/resources/partials/main.hbs
+@@ -1,3 +1,5 @@
++# Zhenya wuz here
++
+ {{ toc }}
+ 
+ {{> members}}
