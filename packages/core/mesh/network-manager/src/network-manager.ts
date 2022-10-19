@@ -37,8 +37,8 @@ export interface NetworkManagerOptions {
 export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;

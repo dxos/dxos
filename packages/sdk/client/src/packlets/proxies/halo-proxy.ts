@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, EventSubscriptions } from '@dxos/async';
 import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { Profile, SignRequest } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { Halo, Invitation, InvitationRequest } from '../api';
 import { InvitationProxy } from './invitation-proxy';
@@ -25,7 +24,7 @@ export interface HaloInfo {
  */
 export class HaloProxy implements Halo {
   private readonly _invitationProxy = new InvitationProxy();
-  private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new EventSubscriptions();
 
   private readonly _contactsChanged = new Event();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
@@ -215,7 +214,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   _close () {
-    this._subscriptions.unsubscribe();
+    this._subscriptions.clear();
     this._invitationProxy.close();
   }
 }

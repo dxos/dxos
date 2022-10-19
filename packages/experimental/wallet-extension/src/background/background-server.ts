@@ -10,7 +10,6 @@ import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { config } from './config';
 
@@ -71,7 +70,7 @@ export class BackgroundServer {
 }
 
 export class TraceCollector {
-  private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new EventSubscriptions();
 
   private _messages: RpcMessage[] = [];
   private readonly _ids = new Set<number>();
@@ -105,7 +104,7 @@ export class TraceCollector {
         this._message.emit(inner);
       }));
     } else {
-      this._subscriptions.unsubscribe();
+      this._subscriptions.clear();
       this._messages = [];
       this._ids.clear();
     }

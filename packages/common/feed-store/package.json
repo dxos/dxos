@@ -33,7 +33,6 @@
     "debug": "^4.3.3",
     "hypercore": "^9.12.0",
     "readable-stream": "^3.6.0",
-    "through2": "^4.0.2",
     "util": "^0.12.4"
   },
   "devDependencies": {
@@ -44,7 +43,6 @@
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
     "@types/readable-stream": "^2.3.9",
-    "@types/through2": "^2.0.36",
     "faker": "^5.5.3"
   },
   "publishConfig": {

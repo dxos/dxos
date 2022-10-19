@@ -4,10 +4,10 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event, EventSubscriptions } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue, Trigger } from './feed-queue';
@@ -41,7 +41,7 @@ export const defaultFeedSetIteratorOptions = {
 export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
   private readonly _trigger = new Trigger(this.options.timeout);
-  private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new EventSubscriptions();
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 
@@ -92,7 +92,7 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   }
 
   override async _onClose (): Promise<void> {
-    this._subscriptions.unsubscribe();
+    this._subscriptions.clear();
     for (const queue of this._feedQueues.values()) {
       await queue.close();
     }

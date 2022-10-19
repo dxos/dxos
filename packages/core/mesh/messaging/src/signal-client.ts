@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, EventSubscriptions, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { Message, SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
@@ -80,9 +80,9 @@ export class SignalClient implements SignalMethods {
 
   private _client!: SignalRPCClient;
 
-  private _subscriptions = new SubscriptionGroup();
-  readonly statusChanged = new Event<SignalStatus>();
+  private _subscriptions = new EventSubscriptions();
 
+  readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
     topic: PublicKey
@@ -198,7 +198,7 @@ export class SignalClient implements SignalMethods {
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._subscriptions.unsubscribe();
+      this._subscriptions.clear();
 
       // Close client if it wasn't already closed.
       this._client.close().catch(() => {});
@@ -209,7 +209,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async close () {
-    this._subscriptions.unsubscribe();
+    this._subscriptions.clear();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);

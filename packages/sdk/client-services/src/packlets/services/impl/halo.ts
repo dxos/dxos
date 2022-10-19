@@ -16,7 +16,6 @@ import {
   GetPreferenceRequest,
   GetPreferenceResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { HaloSigner } from '../signer';
 
@@ -62,7 +61,7 @@ export class HaloService implements HaloServiceRpc {
         next({ contacts: [] });
       }
 
-      const subscriptions = new SubscriptionGroup();
+      const subscriptions = new EventSubscriptions();
       setImmediate(async () => {
         await this.echo.halo.identityReady.waitForCondition(() => !!this.echo.halo.identity);
 

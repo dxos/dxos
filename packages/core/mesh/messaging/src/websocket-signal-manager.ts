@@ -61,7 +61,7 @@ export class WebsocketSignalManager implements SignalManager {
 
       this._servers.set(host, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
-      this._topicsJoinedPerSignal.set(host, new ComplexMap(key => key.toHex()));
+      this._topicsJoinedPerSignal.set(host, new ComplexMap(PublicKey.hash));
     }
   }
 

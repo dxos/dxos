@@ -80,7 +80,7 @@ describe('feed store iterator', function () {
     // Create feeds.
     //
 
-    const feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
+    const feeds = new ComplexMap<PublicKey, FeedDescriptor>(PublicKey.hash);
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const keyring = new Keyring();
       const descriptor = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);

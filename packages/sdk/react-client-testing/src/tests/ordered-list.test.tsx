@@ -9,7 +9,6 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
-import { SubscriptionGroup } from '@dxos/util';
 
 const createTestComponents = async () => {
   const config = {};
@@ -30,7 +29,7 @@ const createTestComponents = async () => {
 };
 
 const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: OrderedList}) => {
-  const subscriptions = useMemo(() => new SubscriptionGroup(), []);
+  const subscriptions = useMemo(() => new EventSubscriptions(), []);
   const [order, setOrder] = useState(orderedList.values);
 
   useEffect(() => {

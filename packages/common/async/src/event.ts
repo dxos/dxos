@@ -4,19 +4,37 @@
 
 import { throwUnhandledRejection } from '@dxos/debug';
 
-export type Effect = () => (() => void) | undefined;
+type UnsubscribeCallback = () => void
+
+export type Effect = () => UnsubscribeCallback | undefined;
 
 /**
  * Effect that's been added to a specific Event.
  */
 interface MaterializedEffect {
   effect: Effect
-  cleanup: (() => void) | undefined
+  cleanup: UnsubscribeCallback | undefined
 }
 
 interface EventEmitterLike {
   on(event: string, cb: (data: any) => void): void
   off(event: string, cb: (data: any) => void): void
+}
+
+/**
+ * Set of event unsubscribe callbacks, which can be garbage collected.
+ */
+export class EventSubscriptions {
+  private readonly _listeners: UnsubscribeCallback[] = [];
+
+  add (cb: UnsubscribeCallback) {
+    this._listeners.push(cb);
+  }
+
+  clear () {
+    this._listeners.forEach(cb => cb());
+    this._listeners.length = 0;
+  }
 }
 
 /**
@@ -49,7 +67,6 @@ interface EventEmitterLike {
  * 6. Removes the cases where event names intersect when used in cases with inheritance.
  * 7. Remove the need to namespace events when developing a class with events that will be used as a base-class.
  */
-// TODO(burdon): Rename EventListener.
 export class Event<T = void> implements ReadOnlyEvent<T> {
   static wrap<T> (emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();
@@ -96,7 +113,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on (callback: (data: T) => void): () => void {
+  on (callback: (data: T) => void): UnsubscribeCallback {
     if (this._onceListeners.has(callback)) {
       this._onceListeners.delete(callback);
     }
@@ -135,7 +152,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  once (callback: (data: T) => void): () => void {
+  once (callback: (data: T) => void): UnsubscribeCallback {
     if (this._listeners.has(callback)) {
       return () => { /* No-op. */ };
     }
@@ -224,7 +241,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @returns Callback that will remove this effect once called.
    */
-  addEffect (effect: Effect): () => void {
+  addEffect (effect: Effect): UnsubscribeCallback {
     const handle: MaterializedEffect = { effect, cleanup: undefined };
 
     if (this.listenerCount() > 0) {
@@ -312,7 +329,7 @@ export interface ReadOnlyEvent<T = void> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): () => void
+  on(callback: (data: T) => void): UnsubscribeCallback
 
   /**
    * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
@@ -332,7 +349,7 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): () => void
+  once(callback: (data: T) => void): UnsubscribeCallback
 
   /**
    * An async iterator that iterates over events.

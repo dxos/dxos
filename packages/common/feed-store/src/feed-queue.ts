@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
-import through2 from 'through2';
+import { Writable } from 'readable-stream';
 
 import { Event, latch } from '@dxos/async';
 import { FeedBlock, createReadable } from '@dxos/hypercore';
@@ -113,37 +113,30 @@ export class FeedQueue<T = {}> {
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
 
-    const callback = (data: any, encoding: string, next: () => void) => {
-      this._next = () => {
-        this._currentBlock = undefined;
-        this._index++;
-        next();
-      };
+    // Create look-ahead transform.
+    // TODO(burdon): Consider buffering.
+    const lookAheadStream = this._feedStream.pipe(new Writable({
+      objectMode: true,
+      write: (data: any, encoding: string, next: () => void) => {
+        this._next = () => {
+          this._currentBlock = undefined;
+          this._index++;
+          next();
+        };
 
-      this._currentBlock = {
-        key: this._feed.key,
-        seq: this._index,
-        data
-      };
+        this._currentBlock = {
+          key: this._feed.key,
+          seq: this._index,
+          data
+        };
 
-      this._trigger.wake(this._currentBlock);
-      this.updated.emit(this);
-    };
-
-    // Consume feed for look-ahead.
-    // https://www.npmjs.com/package/through2
-    // TODO(burdon): Is back-pressure relevant? Buffering?
-    //  https://nodejs.org/en/docs/guides/backpressuring-in-streams
-    //  https://nodejs.org/api/stream.html#stream_simplified_construction
-    const transform = this._feedStream.pipe(through2.obj(callback));
-    // TODO(burdon): Node only?
-    // const writable = this._feedStream.pipe(new Writable({
-    //   objectMode: true,
-    //   write: callback
-    // }));
+        this._trigger.wake(this._currentBlock);
+        this.updated.emit(this);
+      }
+    }));
 
     this._feedStream.on('close', () => {
-      this._feedStream.unpipe(transform);
+      this._feedStream.unpipe(lookAheadStream);
       this._feedStream = undefined;
       this._currentBlock = undefined;
       this._index = -1;

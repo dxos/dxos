@@ -12,7 +12,6 @@ export * from './map';
 export * from './platform';
 export * from './random';
 export * from './range';
-export * from './subscription';
 export * from './typeguards';
 export * from './types';
 export * from './uint8array';

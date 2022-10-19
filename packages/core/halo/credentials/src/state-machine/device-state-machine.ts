@@ -14,7 +14,7 @@ import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../cr
  * Processes device invitation credentials.
  */
 export class DeviceStateMachine {
-  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(key => key.toHex());
+  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 

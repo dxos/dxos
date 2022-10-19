@@ -17,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
  * Manages keys.
  */
 export class Keyring implements Signer {
-  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
+  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
 
   constructor (
     private readonly _storage: Directory = createStorage({ type: StorageType.RAM }).createDirectory('keyring')

@@ -367,11 +367,11 @@ describe('Network manager', function () {
           const s: ModelRunSetup<Model, Real> = () => ({
             model: {
               topic: PublicKey.random(),
-              peers: new ComplexSet(key => key.toHex()),
-              joinedPeers: new ComplexSet(key => key.toHex())
+              peers: new ComplexSet(PublicKey.hash),
+              joinedPeers: new ComplexSet(PublicKey.hash)
             },
             real: {
-              peers: new ComplexMap(key => key.toHex())
+              peers: new ComplexMap(PublicKey.hash)
             }
 
           });
