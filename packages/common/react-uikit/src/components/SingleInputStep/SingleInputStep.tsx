@@ -26,9 +26,9 @@ export interface SingleInputStepProps
   inputLabelTKey: TKey
   onChange: (value: string) => void
   pending?: boolean
-  onClickBack?: () => void
+  onBack?: () => void
   backTKey?: TKey
-  onClickNext: () => void
+  onNext: () => void
   nextTKey?: TKey
   loadingTKey?: TKey
   inputPlaceholderTKey?: string
@@ -40,9 +40,9 @@ export const SingleInputStep = ({
   inputLabelTKey,
   onChange,
   pending,
-  onClickBack,
+  onBack,
   backTKey = 'back label',
-  onClickNext,
+  onNext,
   nextTKey = 'next label',
   loadingTKey = 'generic loading label',
   inputPlaceholderTKey,
@@ -82,14 +82,14 @@ export const SingleInputStep = ({
             {t(loadingTKey)}
           </span>
         </div>
-        {onClickBack && (
-          <Button onClick={onClickBack} {...(pending && { disabled: true })}>
+        {onBack && (
+          <Button onClick={onBack} {...(pending && { disabled: true })}>
             {t(backTKey)}
           </Button>
         )}
         <Button
           variant='primary'
-          onClick={onClickNext}
+          onClick={onNext}
           {...(pending && { disabled: true })}
         >
           {t(nextTKey)}

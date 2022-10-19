@@ -12,9 +12,9 @@ export default {
   title: 'react-uikit/AuthChoices',
   component: AuthChoices,
   argTypes: {
-    onClickCreate: { action: 'create' },
-    onClickRecover: { action: 'recover' },
-    onClickInviteDevice: { action: 'inviteDevice' }
+    onCreate: { action: 'create' },
+    onRecover: { action: 'recover' },
+    onInviteDevice: { action: 'inviteDevice' }
   }
 };
 

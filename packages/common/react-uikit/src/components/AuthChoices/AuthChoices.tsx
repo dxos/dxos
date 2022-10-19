@@ -16,20 +16,20 @@ import {
   Textbox
 } from '@dxos/react-ui';
 
-import { TKey } from '../../types/TFunction';
+import { TKey } from '../../types';
 
 export interface AuthChoicesProps extends Omit<GroupProps, 'label'> {
   rootLabelTKey?: TKey
-  onClickCreate?: () => void
-  onClickInviteDevice?: () => void
-  onClickRecover?: () => void
+  onCreate?: () => void
+  onInviteDevice?: () => void
+  onRecover?: () => void
 }
 
 export const AuthChoices = ({
   rootLabelTKey,
-  onClickCreate,
-  onClickInviteDevice,
-  onClickRecover,
+  onCreate,
+  onInviteDevice,
+  onRecover,
   ...groupProps
 }: AuthChoicesProps) => {
   const { t } = useTranslation();
@@ -45,31 +45,31 @@ export const AuthChoices = ({
       {...groupProps}
       className={cx('p-6 rounded-3xl', groupProps.className)}>
       <div role='none' className='flex flex-col gap-2 mt-4'>
-        {onClickCreate && (
+        {onCreate && (
           <CompoundButton
             description={t('create profile description')}
             before={<Plus className='w-6 h-6' />}
             after={<CaretRight className='w-4 h-4' weight='bold' />}
             className='text-lg w-full'
-            onClick={onClickCreate}
+            onClick={onCreate}
           >{t('create profile label')}</CompoundButton>
         )}
-        {onClickInviteDevice && (
+        {onInviteDevice && (
           <CompoundButton
             description={t('invite device description')}
             before={<QrCode className='w-6 h-6' />}
             after={<CaretRight className='w-4 h-4' weight='bold' />}
             className='text-lg w-full'
-            onClick={onClickInviteDevice}
+            onClick={onInviteDevice}
           >{t('invite device label')}</CompoundButton>
         )}
-        {onClickRecover && (
+        {onRecover && (
           <CompoundButton
             description={t('recover profile description')}
             before={<Textbox className='w-6 h-6' />}
             after={<CaretRight className='w-4 h-4' weight='bold' />}
             className='text-lg w-full'
-            onClick={onClickRecover}
+            onClick={onRecover}
           >{t('recover profile label')}</CompoundButton>
         )}
       </div>

@@ -28,7 +28,7 @@ export const CreateProfile = templateForComponent(Template)({
   rootLabelTKey: '',
   inputLabelTKey: '',
   inputPlaceholderTKey: '',
-  onClickNext: () => {},
+  onNext: () => {},
   onChange: () => {}
 });
 CreateProfile.args = {
@@ -47,8 +47,8 @@ export const JoinSpace = () => (
     backTKey='cancel label'
     nextTKey='redeem invitation label'
     onChange={() => {}}
-    onClickNext={() => {}}
-    onClickBack={() => {}}
+    onNext={() => {}}
+    onBack={() => {}}
   />
 );
 
@@ -59,8 +59,8 @@ export const RestoreProfile = () => (
     inputPlaceholderTKey='seed phrase placeholder'
     nextTKey='validate seed phrase label'
     onChange={() => {}}
-    onClickNext={() => {}}
-    onClickBack={() => {}}
+    onNext={() => {}}
+    onBack={() => {}}
   />
 );
 
@@ -71,8 +71,8 @@ export const RestoreProfileWithError = () => (
     inputPlaceholderTKey='seed phrase placeholder'
     nextTKey='validate seed phrase label'
     onChange={() => {}}
-    onClickNext={() => {}}
-    onClickBack={() => {}}
+    onNext={() => {}}
+    onBack={() => {}}
     inputProps={{
       validationMessage: 'This only has 3 of the required 24 words',
       validationValence: ValidationValence.error,
