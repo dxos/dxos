@@ -15,7 +15,7 @@ import { FeedWrapper } from './feed-wrapper';
 type Callback<T> = (value?: T) => void
 
 /**
- * Enables blocked listeners to be awakened.
+ * Enables blocked listeners to be awakened with optional timeouts.
  */
 // TODO(burdon): Factor out to @dxos/async.
 export class Trigger<T = void> {
@@ -26,7 +26,7 @@ export class Trigger<T = void> {
   ) {}
 
   /**
-   * Wait until wake is called.
+   * Wait until wake is called, with optional timeout.
    */
   async wait (timeout: number = this._timeout): Promise<T> {
     return new Promise((resolve, reject) => {
@@ -36,6 +36,7 @@ export class Trigger<T = void> {
 
       if (timeout) {
         setTimeout(() => {
+          // TODO(burdon): Remove callback.
           reject(new Error(`Timed out after ${timeout}ms`));
         }, timeout);
       }
@@ -43,7 +44,7 @@ export class Trigger<T = void> {
   }
 
   /**
-   * Wake blocked caller if any.
+   * Wake blocked callers (if any).
    */
   wake (value?: T) {
     // Copy to avoid race conditions.

@@ -32,7 +32,6 @@ export class TimeframeClock {
   updateTimeframe (key: PublicKey, seq: number) {
     this._timeframe = Timeframe.merge(this._timeframe, new Timeframe([[key, seq]]));
     this.update.emit(this._timeframe);
-    console.log('### TF.updateTimeframe', seq);
   }
 
   hasGaps (timeframe: Timeframe) {
@@ -42,7 +41,6 @@ export class TimeframeClock {
 
   @timed(5_000)
   async waitUntilReached (target: Timeframe) {
-    console.log('### TF.waitUntilReached', target);
     log.debug('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
   }

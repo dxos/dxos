@@ -19,8 +19,8 @@ import { codec } from '../common';
 import { mapFeedIndexesToTimeframe } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 
-describe('space/control-pipeline', function () {
-  it.only('admits feeds', async function () {
+describe.only('space/control-pipeline', function () {
+  it('admits feeds', async function () {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
@@ -80,6 +80,10 @@ describe('space/control-pipeline', function () {
 
       // TODO(burdon): FeedIterator timeframe is not updated until consumed!
       const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 2 }]);
+      console.log(controlPipeline.pipeline.state.endTimeframe, end);
+      const x = controlPipeline.pipeline.state.endTimeframe;
+      await controlPipeline.pipeline.state.waitUntilTimeframe(x);
+
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
       // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
