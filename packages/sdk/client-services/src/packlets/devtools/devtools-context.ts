@@ -3,7 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
-import { Keyring } from '@dxos/credentials';
+import { Keyring } from '@dxos/keyring';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
