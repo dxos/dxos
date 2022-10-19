@@ -1,0 +1,61 @@
+{
+  "id": 918,
+  "name": "createDevtoolsRpcServer",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/devtools.ts",
+      "line": 53,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L53"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 919,
+      "name": "createDevtoolsRpcServer",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "parameters": [
+        {
+          "id": 920,
+          "name": "client",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 850,
+            "name": "Client"
+          }
+        },
+        {
+          "id": 921,
+          "name": "serviceHost",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "ClientServiceProvider"
+          }
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Promise",
+        "qualifiedName": "Promise",
+        "package": "typescript"
+      }
+    }
+  ]
+}

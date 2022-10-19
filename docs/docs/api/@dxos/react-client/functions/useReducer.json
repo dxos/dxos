@@ -1,0 +1,156 @@
+{
+  "id": 1226,
+  "name": "useReducer",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts",
+      "line": 54,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L54"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1227,
+      "name": "useReducer",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Hook to process selection reducer."
+          }
+        ]
+      },
+      "typeParameter": [
+        {
+          "id": 1228,
+          "name": "T",
+          "kind": 131072,
+          "kindString": "Type parameter",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "any"
+              },
+              {
+                "type": "reference",
+                "id": 1228,
+                "name": "T"
+              }
+            ],
+            "name": "Entity"
+          }
+        },
+        {
+          "id": 1229,
+          "name": "R",
+          "kind": 131072,
+          "kindString": "Type parameter",
+          "flags": {}
+        }
+      ],
+      "parameters": [
+        {
+          "id": 1230,
+          "name": "selection",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "type": {
+            "type": "union",
+            "types": [
+              {
+                "type": "reference",
+                "name": "Falsy"
+              },
+              {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 1228,
+                    "name": "T"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                ],
+                "name": "Selection"
+              },
+              {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 1228,
+                    "name": "T"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "SelectionResult"
+              }
+            ]
+          }
+        },
+        {
+          "id": 1231,
+          "name": "value",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 1229,
+            "name": "R"
+          }
+        },
+        {
+          "id": 1232,
+          "name": "deps",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "type": {
+            "type": "typeOperator",
+            "operator": "readonly",
+            "target": {
+              "type": "array",
+              "elementType": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          },
+          "defaultValue": "[]"
+        }
+      ],
+      "type": {
+        "type": "union",
+        "types": [
+          {
+            "type": "intrinsic",
+            "name": "undefined"
+          },
+          {
+            "type": "reference",
+            "id": 1229,
+            "name": "R"
+          }
+        ]
+      }
+    }
+  ]
+}

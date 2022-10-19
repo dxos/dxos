@@ -1,0 +1,45 @@
+{
+  "id": 1205,
+  "name": "useProfile",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/client/useProfile.ts",
+      "line": 13,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useProfile.ts#L13"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1206,
+      "name": "useProfile",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Hook returning DXOS user profile object, renders HALO auth screen if no profile exists yet.\nRequires ClientContext to be set via ClientProvider."
+          }
+        ]
+      },
+      "type": {
+        "type": "union",
+        "types": [
+          {
+            "type": "intrinsic",
+            "name": "undefined"
+          },
+          {
+            "type": "reference",
+            "name": "Profile"
+          }
+        ]
+      }
+    }
+  ]
+}

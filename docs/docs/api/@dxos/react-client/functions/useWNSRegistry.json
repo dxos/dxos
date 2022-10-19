@@ -1,0 +1,63 @@
+{
+  "id": 1254,
+  "name": "useWNSRegistry",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/wns/registry.ts",
+      "line": 10,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registry.ts#L10"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1255,
+      "name": "useWNSRegistry",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Low-level hook returning WNS registry object.\nSee "
+          },
+          {
+            "kind": "code",
+            "text": "`useRegistryBots`"
+          },
+          {
+            "kind": "text",
+            "text": " and "
+          },
+          {
+            "kind": "code",
+            "text": "`useBotFactories`"
+          },
+          {
+            "kind": "text",
+            "text": " for higher-level hooks."
+          }
+        ],
+        "blockTags": [
+          {
+            "tag": "@deprecated",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Use DXNS registry."
+              }
+            ]
+          }
+        ]
+      },
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    }
+  ]
+}

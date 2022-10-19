@@ -1,0 +1,36 @@
+{
+  "id": 1199,
+  "name": "useClient",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/client/useClient.ts",
+      "line": 15,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useClient.ts#L15"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1200,
+      "name": "useClient",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Hook returning instance of DXOS client.\nRequires ClientContext to be set via ClientProvider."
+          }
+        ]
+      },
+      "type": {
+        "type": "reference",
+        "name": "Client"
+      }
+    }
+  ]
+}

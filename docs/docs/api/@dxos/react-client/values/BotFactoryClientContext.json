@@ -1,0 +1,39 @@
+{
+  "id": 1191,
+  "name": "BotFactoryClientContext",
+  "kind": 32,
+  "kindString": "Variable",
+  "flags": {
+    "isConst": true
+  },
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts",
+      "line": 12,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L12"
+    }
+  ],
+  "type": {
+    "type": "reference",
+    "typeArguments": [
+      {
+        "type": "union",
+        "types": [
+          {
+            "type": "reference",
+            "name": "BotFactoryClient"
+          },
+          {
+            "type": "intrinsic",
+            "name": "undefined"
+          }
+        ]
+      }
+    ],
+    "name": "Context",
+    "qualifiedName": "React.Context",
+    "package": "@types/react"
+  },
+  "defaultValue": "..."
+}

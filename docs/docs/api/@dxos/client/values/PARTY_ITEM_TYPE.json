@@ -1,0 +1,22 @@
+{
+  "id": 1170,
+  "name": "PARTY_ITEM_TYPE",
+  "kind": 32,
+  "kindString": "Variable",
+  "flags": {
+    "isConst": true
+  },
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/stubs.ts",
+      "line": 9,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/stubs.ts#L9"
+    }
+  ],
+  "type": {
+    "type": "literal",
+    "value": "dxos:item/party"
+  },
+  "defaultValue": "'dxos:item/party'"
+}

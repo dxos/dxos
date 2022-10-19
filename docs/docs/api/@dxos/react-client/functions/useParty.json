@@ -1,0 +1,60 @@
+{
+  "id": 1212,
+  "name": "useParty",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/echo-queries/useParties.ts",
+      "line": 16,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L16"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1213,
+      "name": "useParty",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Get a specific Party.\nRequires ClientContext to be set via ClientProvider."
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "id": 1214,
+          "name": "partyKey",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {
+            "isOptional": true
+          },
+          "type": {
+            "type": "reference",
+            "name": "PublicKeyLike"
+          }
+        }
+      ],
+      "type": {
+        "type": "union",
+        "types": [
+          {
+            "type": "intrinsic",
+            "name": "undefined"
+          },
+          {
+            "type": "reference",
+            "name": "Party"
+          }
+        ]
+      }
+    }
+  ]
+}

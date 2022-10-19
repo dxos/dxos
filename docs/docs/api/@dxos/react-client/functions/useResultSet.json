@@ -1,0 +1,92 @@
+{
+  "id": 1242,
+  "name": "useResultSet",
+  "kind": 64,
+  "kindString": "Function",
+  "flags": {},
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-client/src/hooks/util/useResultSet.ts",
+      "line": 17,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/util/useResultSet.ts#L17"
+    }
+  ],
+  "signatures": [
+    {
+      "id": 1243,
+      "name": "useResultSet",
+      "kind": 4096,
+      "kindString": "Call signature",
+      "flags": {},
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "A convenience hook used for subscribing to changing values of a result set.\nResult sets are reactive query results from ECHO."
+          }
+        ],
+        "blockTags": [
+          {
+            "tag": "@deprecated",
+            "content": []
+          },
+          {
+            "tag": "@returns",
+            "content": [
+              {
+                "kind": "text",
+                "text": "Always up-to-date value of the result set"
+              }
+            ]
+          }
+        ]
+      },
+      "typeParameter": [
+        {
+          "id": 1244,
+          "name": "T",
+          "kind": 131072,
+          "kindString": "Type parameter",
+          "flags": {}
+        }
+      ],
+      "parameters": [
+        {
+          "id": 1245,
+          "name": "resultSet",
+          "kind": 32768,
+          "kindString": "Parameter",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "The result set to subscribe to"
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1244,
+                "name": "T"
+              }
+            ],
+            "name": "ResultSet"
+          }
+        }
+      ],
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "reference",
+          "id": 1244,
+          "name": "T"
+        }
+      }
+    }
+  ]
+}

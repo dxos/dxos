@@ -1,0 +1,20 @@
+{
+  "id": 365,
+  "name": "clientServiceBundle",
+  "kind": 32,
+  "kindString": "Variable",
+  "flags": {
+    "isConst": true
+  },
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/dist/src/packlets/services/services.d.ts",
+      "line": 13,
+      "character": 21
+    }
+  ],
+  "type": {
+    "type": "reference",
+    "name": "ServiceBundle"
+  }
+}
