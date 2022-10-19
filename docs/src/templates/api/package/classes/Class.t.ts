@@ -58,10 +58,10 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ${functions.map(method)}
                 `,
             }),
-            new JSONFile({
-              path: [...classesDir, `${aclass.name}.json`],
-              content: aclass,
-            }),
+            // new JSONFile({
+            //   path: [...classesDir, `${aclass.name}.json`],
+            //   content: aclass,
+            // }),
           ];
         })
         .flat();

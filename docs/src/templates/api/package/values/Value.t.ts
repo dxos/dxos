@@ -34,10 +34,10 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ${comment(avalue.comment)}
                 `,
             }),
-            new JSONFile({
-              path: [...dir, `${avalue.name}.json`],
-              content: avalue,
-            }),
+            // new JSONFile({
+            //   path: [...dir, `${avalue.name}.json`],
+            //   content: avalue,
+            // }),
           ];
         })
         .flat();

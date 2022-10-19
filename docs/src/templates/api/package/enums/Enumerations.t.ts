@@ -35,16 +35,16 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 # Enumeration \`${aenum.name}\`
                 > Declared in [\`${sourceFileName}\`]()
 
-                ${comment(aenum)}
+                ${comment(aenum.comment)}
 
                 ## Members
                 ${members.map((member) => `## \`${member.name}\``)}
                 `,
             }),
-            new JSONFile({
-              path: [...dir, `${aenum.name}.json`],
-              content: aenum,
-            }),
+            // new JSONFile({
+            //   path: [...dir, `${aenum.name}.json`],
+            //   content: aenum,
+            // }),
           ];
         })
         .flat();

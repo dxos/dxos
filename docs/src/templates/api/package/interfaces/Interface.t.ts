@@ -26,20 +26,20 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
           const sourceFileName = iface.sources?.[0]?.fileName;
           const properties = reflectionsOfKind(iface, ReflectionKind.Property);
           return [
-            new JSONFile({
-              path: [...interfacesDir, `${iface.name}.json`],
-              content: iface,
-            }),
+            // new JSONFile({
+            //   path: [...interfacesDir, `${iface.name}.json`],
+            //   content: iface,
+            // }),
             new File({
               path: [...interfacesDir, `${iface.name}.md`],
               content: text`
-          # Interface \`${iface.name}\`
-          > Declared in [\`${sourceFileName}\`]()
+                # Interface \`${iface.name}\`
+                > Declared in [\`${sourceFileName}\`]()
 
-          ${comment(iface.comment)}
-          ## Properties
-          ${properties.map(property)}
-        `,
+                ${comment(iface.comment)}
+                ## Properties
+                ${properties.map(property)}
+              `,
             }),
           ];
         })

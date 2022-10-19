@@ -39,10 +39,10 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 \`\`\`
                 `,
             }),
-            new JSONFile({
-              path: [...dir, `${atype.name}.json`],
-              content: atype,
-            }),
+            // new JSONFile({
+            //   path: [...dir, `${atype.name}.json`],
+            //   content: atype,
+            // }),
           ];
         })
         .flat();
