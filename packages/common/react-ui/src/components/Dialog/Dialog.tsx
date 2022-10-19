@@ -66,7 +66,7 @@ export const Dialog = ({
               'fixed z-50',
               'w-[95vw] max-w-md rounded-3xl p-4 md:w-full',
               'top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-              'shadow-2xl bg-white dark:bg-neutral-800',
+              'shadow-2xl bg-white dark:bg-neutral-800 elevated-buttons',
               defaultFocus
             )}
           >
