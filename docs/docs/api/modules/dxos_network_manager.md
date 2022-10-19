@@ -9,7 +9,7 @@
 - [Connection](../classes/dxos_network_manager.Connection.md)
 - [ConnectionLog](../classes/dxos_network_manager.ConnectionLog.md)
 - [FullyConnectedTopology](../classes/dxos_network_manager.FullyConnectedTopology.md)
-- [InMemoryTransport](../classes/dxos_network_manager.InMemoryTransport.md)
+- [MemoryTransport](../classes/dxos_network_manager.MemoryTransport.md)
 - [MMSTTopology](../classes/dxos_network_manager.MMSTTopology.md)
 - [MessageRouter](../classes/dxos_network_manager.MessageRouter.md)
 - [NetworkManager](../classes/dxos_network_manager.NetworkManager.md)
@@ -52,6 +52,6 @@
 
 - [createProtocolFactory](../functions/dxos_network_manager.createProtocolFactory.md)
 - [createWebRTCTransportFactory](../functions/dxos_network_manager.createWebRTCTransportFactory.md)
-- [inMemoryTransportFactory](../functions/dxos_network_manager.inMemoryTransportFactory.md)
+- [MemoryTransportFactory](../functions/dxos_network_manager.MemoryTransportFactory.md)
 - [protocolFactory](../functions/dxos_network_manager.protocolFactory.md)
 - [transportProtocolProvider](../functions/dxos_network_manager.transportProtocolProvider.md)

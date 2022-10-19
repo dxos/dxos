@@ -30,7 +30,7 @@ export class FeedFactory<T = {}> {
   private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
 
   private readonly _root: Directory;
-  private readonly _signer: Signer;
+  private readonly _signer?: Signer;
   private readonly _hypercoreOptions?: HypercoreOptions;
 
   // TODO(burdon): Must patch codec here createCodecEncoding.
@@ -41,7 +41,7 @@ export class FeedFactory<T = {}> {
     hypercore
   }: FeedFactoryOptions) {
     this._root = root ?? failUndefined();
-    this._signer = signer ?? failUndefined();
+    this._signer = signer;
     this._hypercoreOptions = hypercore;
 
     this._storage = (publicKey: PublicKey) => (filename) => {
@@ -64,7 +64,7 @@ export class FeedFactory<T = {}> {
     const opts = Object.assign({}, this._hypercoreOptions, {
       // TODO(burdon): Test if can omit (given crypto signer) in v10.
       secretKey: (this._signer && options?.writable) ? Buffer.from('dummy') : undefined,
-      crypto: createCrypto(this._signer, publicKey)
+      crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
     }, options);
 
     return hypercore(this._storage(publicKey), key, opts);

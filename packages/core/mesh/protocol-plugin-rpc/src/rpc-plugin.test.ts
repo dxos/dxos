@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, inMemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
@@ -26,7 +26,7 @@ const createPeer = async (
 ) => {
   const networkManager = new NetworkManager({
     signalManager: new MemorySignalManager(signalContext),
-    transportFactory: inMemoryTransportFactory
+    transportFactory: MemoryTransportFactory
   });
 
   afterTest(() => networkManager.destroy());

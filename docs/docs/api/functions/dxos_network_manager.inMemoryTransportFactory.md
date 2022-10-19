@@ -1,8 +1,8 @@
-# Function: inMemoryTransportFactory
+# Function: MemoryTransportFactory
 
-[@dxos/network-manager](../modules/dxos_network_manager.md).inMemoryTransportFactory
+[@dxos/network-manager](../modules/dxos_network_manager.md).MemoryTransportFactory
 
-**inMemoryTransportFactory**(`options`): [`Transport`](../interfaces/dxos_network_manager.Transport.md)
+**MemoryTransportFactory**(`options`): [`Transport`](../interfaces/dxos_network_manager.Transport.md)
 
 #### Parameters
 

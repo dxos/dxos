@@ -10,7 +10,7 @@ import { Party, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
@@ -20,7 +20,7 @@ export class Orchestrator {
   private _client: Client | undefined;
   private _botFactoryClient = new BotFactoryClient(new NetworkManager({
     signalManager: new MemorySignalManager(signalContext),
-    transportFactory: inMemoryTransportFactory
+    transportFactory: MemoryTransportFactory
   }));
 
   private _party: Party | undefined;
@@ -64,7 +64,7 @@ export class Orchestrator {
     const botFactory = new BotFactory({ config: this._config, botContainer: this._botContainer });
     const botController = new BotController(botFactory, new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     }));
     await botController.start(topic);
     await this._botFactoryClient.start(topic);

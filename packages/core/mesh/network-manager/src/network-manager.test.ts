@@ -21,9 +21,9 @@ import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
-import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
+import { TestProtocolPlugin, testProtocolProvider } from './testing';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory, WebRTCTransportService } from './transport';
+import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, MemoryTransportFactory, TransportFactory, WebRTCTransportService } from './transport';
 
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
@@ -176,7 +176,7 @@ describe('Network manager', function () {
   });
 
   describe('In-memory transport', function () {
-    sharedTests({ inMemory: true, getTransportFactory: async () => inMemoryTransportFactory });
+    sharedTests({ inMemory: true, getTransportFactory: async () => MemoryTransportFactory });
 
     it('large amount of peers and connections', async function () {
       const numTopics = 5;
@@ -187,7 +187,7 @@ describe('Network manager', function () {
 
         await Promise.all(range(peersPerTopic).map(async (_, index) => {
           const peerId = PublicKey.random();
-          const { plugin } = await createPeer({ topic, peerId, transportFactory: inMemoryTransportFactory });
+          const { plugin } = await createPeer({ topic, peerId, transportFactory: MemoryTransportFactory });
 
           const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
 
@@ -270,7 +270,7 @@ describe('Network manager', function () {
         async run (model: Model, real: Real) {
           model.peers.add(this.peerId);
 
-          const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+          const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: MemoryTransportFactory });
           afterTest(() => networkManager.destroy());
 
           real.peers.set(this.peerId, {

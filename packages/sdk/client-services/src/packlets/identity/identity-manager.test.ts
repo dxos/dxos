@@ -9,7 +9,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
@@ -31,7 +31,7 @@ describe('identity-manager', function () {
 
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
 
     const identityManager = new IdentityManager(

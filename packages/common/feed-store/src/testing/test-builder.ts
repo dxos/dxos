@@ -5,6 +5,7 @@
 import type { ValueEncoding } from 'hypercore';
 
 import { Codec } from '@dxos/codec-protobuf';
+import { createCodecEncoding } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
@@ -68,11 +69,15 @@ export class TestBuilder<T = any> {
   }
 
   createFeedFactory () {
+    const codec = this._properties.codec;
+    const valueEncoding = this._properties.valueEncoding ??
+      (codec !== undefined) ? createCodecEncoding(codec!) : undefined;
+
     return new FeedFactory<T>({
       root: this.directory,
       signer: this.keyring,
       hypercore: {
-        valueEncoding: this._properties.valueEncoding
+        valueEncoding
       }
     });
   }

@@ -1,6 +1,6 @@
-# Class: InMemoryTransport
+# Class: MemoryTransport
 
-[@dxos/network-manager](../modules/dxos_network_manager.md).InMemoryTransport
+[@dxos/network-manager](../modules/dxos_network_manager.md).MemoryTransport
 
 Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
 
@@ -12,7 +12,7 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 ### constructor
 
-**new InMemoryTransport**(`_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_stream`)
+**new MemoryTransport**(`_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_stream`)
 
 #### Parameters
 
@@ -62,7 +62,7 @@ ___
 
 ### \_remoteConnection
 
- `Private` `Optional` **\_remoteConnection**: [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)
+ `Private` `Optional` **\_remoteConnection**: [`MemoryTransport`](dxos_network_manager.MemoryTransport.md)
 
 #### Defined in
 
@@ -124,7 +124,7 @@ ___
 
 ### \_connections
 
- `Static` `Private` `Readonly` **\_connections**: `ComplexMap`<`ConnectionKey`, [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)\>
+ `Static` `Private` `Readonly` **\_connections**: `ComplexMap`<`ConnectionKey`, [`MemoryTransport`](dxos_network_manager.MemoryTransport.md)\>
 
 #### Defined in
 

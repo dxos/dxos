@@ -11,7 +11,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
@@ -28,7 +28,7 @@ describe('space/space-protocol', function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: MemoryTransportFactory });
     const protocol1 = new SpaceProtocol(
       networkManager1,
       topic,
@@ -36,12 +36,11 @@ describe('space/space-protocol', function () {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      []
+      }
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: MemoryTransportFactory });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,
@@ -49,8 +48,7 @@ describe('space/space-protocol', function () {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      []
+      }
     );
 
     await protocol1.start();
@@ -72,7 +70,7 @@ describe('space/space-protocol', function () {
     const peerId1 = PublicKey.random();
     const networkManager1 = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
     const replicator1 = new ReplicatorPlugin();
     const protocol1 = new SpaceProtocol(
@@ -89,7 +87,7 @@ describe('space/space-protocol', function () {
     const peerId2 = PublicKey.random();
     const networkManager2 = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
     const replicator2 = new ReplicatorPlugin();
     const protocol2 = new SpaceProtocol(

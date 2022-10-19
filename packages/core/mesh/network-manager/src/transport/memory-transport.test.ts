@@ -11,12 +11,12 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { InMemoryTransport } from './in-memory-transport';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing';
+import { MemoryTransport } from './memory-transport';
 
 // TODO(burdon): Flaky test.
-//     Cannot log after tests are done. Did you forget to wait for something async in your test?
-//     Attempted to log "Ignoring unsupported ICE candidate.".
+//  Cannot log after tests are done. Did you forget to wait for something async in your test?
+//  Attempted to log "Ignoring unsupported ICE candidate.".
 
 const createPair = () => {
   const topic = PublicKey.random();
@@ -26,7 +26,7 @@ const createPair = () => {
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
   const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-  const connection1 = new InMemoryTransport(
+  const connection1 = new MemoryTransport(
     peer1Id,
     peer2Id,
     sessionId,
@@ -39,7 +39,7 @@ const createPair = () => {
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
   const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-  const connection2 = new InMemoryTransport(
+  const connection2 = new MemoryTransport(
     peer2Id,
     peer1Id,
     sessionId,
@@ -53,7 +53,7 @@ const createPair = () => {
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
 };
 
-describe('InMemoryTransport', function () {
+describe('MemoryTransport', function () {
   it('establish connection and send data through with protocol', async function () {
     const { plugin1, plugin2, peer1Id } = createPair();
 

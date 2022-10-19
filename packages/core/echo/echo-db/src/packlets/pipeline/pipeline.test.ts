@@ -8,6 +8,7 @@ import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
+import { codec } from '../common';
 import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', function () {
@@ -15,7 +16,7 @@ describe('pipeline/Pipeline', function () {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 
-    const builder = new TestBuilder<FeedMessage>();
+    const builder = new TestBuilder<FeedMessage>({ codec });
     const feedStore = builder.createFeedStore();
 
     // Remote feeds from other peers.
@@ -23,19 +24,17 @@ describe('pipeline/Pipeline', function () {
     for (const feedIdx in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
-      pipeline.addFeed(feed);
+      void pipeline.addFeed(feed);
 
       setTimeout(async () => {
         for (const msgIdx in range(messagesPerFeed)) {
-          const msg: FeedMessage = {
+          await feed.append({
             timeframe: new Timeframe(),
             payload: {
               '@type': 'dxos.echo.feed.EchoEnvelope',
               itemId: `${feedIdx}-${msgIdx}`
             }
-          };
-
-          await feed.append(msg);
+          });
         }
       });
     }
@@ -43,7 +42,7 @@ describe('pipeline/Pipeline', function () {
     // Local feed.
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    pipeline.addFeed(feed);
+    void pipeline.addFeed(feed);
     pipeline.setWriteFeed(feed);
 
     for (const msgIdx in range(messagesPerFeed)) {

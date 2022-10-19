@@ -6,7 +6,7 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
@@ -59,7 +59,7 @@ export class ClientServiceHost implements ClientServiceProvider {
       transportFactory: transportFactory ?? (
         networkingEnabled
           ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
-          : inMemoryTransportFactory),
+          : MemoryTransportFactory),
       log: true
     });
 

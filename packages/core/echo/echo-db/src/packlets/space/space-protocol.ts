@@ -11,8 +11,6 @@ import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 
-// TODO(burdon): Move/remove?
-
 export interface SwarmIdentity {
   peerKey: PublicKey
   credentialProvider: AuthProvider
@@ -31,7 +29,7 @@ export class SpaceProtocol {
     private readonly _networkManager: NetworkManager,
     topic: PublicKey,
     private readonly _swarmIdentity: SwarmIdentity,
-    private readonly _plugins: Plugin[]
+    private readonly _plugins: Plugin[] = []
   ) {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.

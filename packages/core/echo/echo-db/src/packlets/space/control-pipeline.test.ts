@@ -43,7 +43,6 @@ describe('space/control-pipeline', function () {
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
-
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,

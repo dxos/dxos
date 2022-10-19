@@ -17,13 +17,15 @@ import { Transport, TransportFactory } from './transport';
 type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey]
 
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
-const IN_MEMORY_TRANSPORT_DELAY = 1;
+const MEMORY_TRANSPORT_DELAY = 1;
 
-// TODO(burdon): Rename.
-export class InMemoryTransport implements Transport {
-
+/**
+ * Fake transport.
+ */
+// TODO(burdon): Remove static variables.
+export class MemoryTransport implements Transport {
   // TODO(burdon): Remove global properties.
-  private static readonly _connections = new ComplexMap<ConnectionKey, InMemoryTransport>(
+  private static readonly _connections = new ComplexMap<ConnectionKey, MemoryTransport>(
     ([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex());
 
   public readonly closed = new Event<void>();
@@ -33,10 +35,10 @@ export class InMemoryTransport implements Transport {
   private readonly _ownKey: ConnectionKey;
   private readonly _remoteKey: ConnectionKey;
 
-  private readonly _outgoingDelay = createStreamDelay(IN_MEMORY_TRANSPORT_DELAY);
-  private readonly _incomingDelay = createStreamDelay(IN_MEMORY_TRANSPORT_DELAY);
+  private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
+  private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
 
-  private _remoteConnection?: InMemoryTransport;
+  private _remoteConnection?: MemoryTransport;
 
   constructor (
     private readonly _ownId: PublicKey,
@@ -50,10 +52,10 @@ export class InMemoryTransport implements Transport {
     this._ownKey = [this._topic, this._ownId, this._remoteId];
     this._remoteKey = [this._topic, this._remoteId, this._ownId];
 
-    assert(!InMemoryTransport._connections.has(this._ownKey), 'Duplicate in-memory connection');
-    InMemoryTransport._connections.set(this._ownKey, this);
+    assert(!MemoryTransport._connections.has(this._ownKey), 'Duplicate in-memory connection');
+    MemoryTransport._connections.set(this._ownKey, this);
 
-    this._remoteConnection = InMemoryTransport._connections.get(this._remoteKey);
+    this._remoteConnection = MemoryTransport._connections.get(this._remoteKey);
     if (this._remoteConnection) {
       this._remoteConnection._remoteConnection = this;
 
@@ -84,12 +86,13 @@ export class InMemoryTransport implements Transport {
   async close (): Promise<void> {
     log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
 
-    InMemoryTransport._connections.delete(this._ownKey);
+    MemoryTransport._connections.delete(this._ownKey);
 
     if (this._remoteConnection) {
-      InMemoryTransport._connections.delete(this._remoteKey);
+      MemoryTransport._connections.delete(this._remoteKey);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
+      //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
       // code this._stream
       // code   .unpipe(this._outgoingDelay)
       // code   .unpipe(this._remoteConnection._stream)
@@ -109,9 +112,9 @@ export class InMemoryTransport implements Transport {
   }
 }
 
-// TODO(burdon): Remove.
-export const inMemoryTransportFactory: TransportFactory = {
-  create: opts => new InMemoryTransport(
+// TODO(burdon): Remove non-testing usage (i.e., Client config defaults).
+export const MemoryTransportFactory: TransportFactory = {
+  create: opts => new MemoryTransport(
     opts.ownId,
     opts.remoteId,
     opts.sessionId,

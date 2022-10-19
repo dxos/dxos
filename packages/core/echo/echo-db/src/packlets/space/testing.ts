@@ -7,7 +7,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -30,6 +30,7 @@ export type TestSpaceContext = {
 /**
  * Independent agent able to swarm and create spaces.
  */
+// TODO(burdon): Use test builder.
 export class TestAgent {
   public readonly feedStore: FeedStore<FeedMessage>;
 
@@ -73,7 +74,7 @@ export class TestAgent {
       initialTimeframe: new Timeframe(),
       networkManager: new NetworkManager({
         signalManager: this._signalManager,
-        transportFactory: inMemoryTransportFactory
+        transportFactory: MemoryTransportFactory
       }),
       networkPlugins: [],
       swarmIdentity: {
