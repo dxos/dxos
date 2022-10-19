@@ -46,7 +46,7 @@ export const AuthChoices = ({
       elevation={5}
       label={label || AuthChoicesDefaultLabel(t)}
       {...groupProps}
-      className={cx('p-6 rounded-3xl', groupProps.className)}>
+      className={cx('p-4 pt-5 rounded-2xl', groupProps.className)}>
       <div role='none' className='flex flex-col gap-2 mt-4'>
         {onClickCreate && (
           <CompoundButton
