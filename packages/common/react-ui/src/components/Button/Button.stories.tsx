@@ -5,8 +5,10 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
-import { templateForComponent } from '../../dev-util';
-import { Button, ButtonProps } from './Button';
+import { templateForComponent } from '../../testing';
+import { Group } from '../Group';
+import { Button } from './Button';
+import { ButtonProps } from './ButtonProps';
 
 export default {
   title: 'react-ui/Button',
@@ -14,7 +16,10 @@ export default {
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
-  <div className='flex gap-4'>{children}</div>
+<>
+  <Group label={{ children: null }} elevation={0} className='flex gap-4 px-1 mb-4'>{children}</Group>
+  <Group label={{ children: null }} elevation={5} className='flex gap-4 px-1'>{children}</Group>
+</>
 );
 
 const Template = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (

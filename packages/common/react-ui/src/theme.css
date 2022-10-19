@@ -35,16 +35,25 @@
   .font-black {
     font-variation-settings: 'wght' 900;
   }
+  /* Elevations */
+  .button-elevation {
+    box-shadow: var(--button-elevation)
+  }
+  .elevated-buttons {
+    --button-elevation: theme(boxShadow.sm);
+  }
 }
 
 :root {
   --surface-bg: theme(colors.neutral.50);
   --surface-text: theme(colors.neutral.900);
+  --button-elevation: theme(boxShadow.md);
 }
 
 .dark {
   --surface-bg: theme(colors.neutral.900);
   --surface-text: theme(colors.neutral.50);
+  --button-elevation: theme(boxShadow.lg);
 }
 
 html {
