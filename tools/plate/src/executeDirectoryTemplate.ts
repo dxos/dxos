@@ -1,23 +1,23 @@
 //
 // Copyright 2022 DXOS.org
 //
+import flatten from 'lodash.flatten';
+import * as path from 'path';
+import readDir from 'recursive-readdir';
 
-import flatten from "lodash.flatten";
-import * as path from "path";
-import readDir from "recursive-readdir";
+import { File } from './file';
 
 import {
   executeFileTemplate,
   TemplatingResult,
   isTemplateFile,
   TEMPLATE_FILE_IGNORE,
-} from "./executeFileTemplate";
+} from './executeFileTemplate';
 
 export const TEMPLATE_DIRECTORY_IGNORE = [
   ...TEMPLATE_FILE_IGNORE,
   /^index(\.d)?\.[tj]s/,
 ];
-import { File } from './file';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string;

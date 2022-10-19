@@ -49,25 +49,30 @@ export class Theme extends ThemeBase {
   onBeginRenderer(event: RendererEvent) {
     this.outputDirectory = event.outputDirectory;
   }
+  /**
+   * This should return the output file mappings but doesnt work well with our plate package because typedoc does not allow this to be async. a pnpm patch can work but is annoying.
+   * @param project the project reflection
+   * @returns a list of UrlMappings (or a promise of this)
+   */
+  getUrls(project: ProjectReflection) {
+    return [];
+    // const files = await executeDirectoryTemplate<Input>({
+    //   templateDirectory: path.resolve(__dirname, "template/api"),
+    //   outputDirectory: this.outputDirectory,
+    //   input: {
+    //     project,
+    //   },
+    // });
 
-  async getUrls(project: ProjectReflection) {
-    const files = await executeDirectoryTemplate<Input>({
-      templateDirectory: path.resolve(__dirname, "template/api"),
-      outputDirectory: this.outputDirectory,
-      input: {
-        project,
-      },
-    });
+    // // because some files are copies of others, load all files into .content
+    // await Promise.all(
+    //   files.filter((file) => !file.isLoaded()).map((file) => file.load())
+    // );
 
-    // because some files are copies of others, load all files into .content
-    await Promise.all(
-      files.filter((file) => !file.isLoaded()).map((file) => file.load())
-    );
+    // console.log(files.map((file) => file.shortDescription()).join("\n"));
 
-    console.log(files.map((file) => file.shortDescription()).join("\n"));
-
-    return files.map(
-      (file) => new UrlMapping(file.path, project, () => file.content as string)
-    );
+    // return files.map(
+    //   (file) => new UrlMapping(file.path, project, () => file.content as string)
+    // );
   }
 }

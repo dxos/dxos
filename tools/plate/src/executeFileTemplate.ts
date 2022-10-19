@@ -6,7 +6,7 @@ import path from "path";
 // import { promises as fs } from "fs";
 import * as tsnode from "ts-node";
 
-import { File, MaybePromise, promise } from './file';
+import { File, MaybePromise, promise } from "./file";
 
 /**Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -88,21 +88,18 @@ export type TemplateFunction<TInput = void> = Functor<
 export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateFile, templateRelativeTo, outputDirectory } = options;
-  const templateFullPath = templateRelativeTo
-    ? path.resolve(templateRelativeTo, templateFile)
-    : templateFile;
+  const { templateFile, outputDirectory, templateRelativeTo } = options;
+  const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? "");
+  const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath);
   if (!templateFunction) {
     return [];
   }
   const nominalOutputPath = path.join(
     outputDirectory,
-    templateRelativeTo
-      ? getOutputNameFromTemplateName(templateFullPath).slice(
-          templateRelativeTo.length
-        )
-      : getOutputNameFromTemplateName(templateFile)
+    getOutputNameFromTemplateName(templateFullPath).slice(
+      absoluteTemplateRelativeTo.length
+    )
   );
   try {
     const result = await promise(
@@ -111,7 +108,7 @@ export const executeFileTemplate = async <TInput>(
         ...options,
         defaultOutputFile: nominalOutputPath,
         ...(templateRelativeTo
-          ? { templateRelativeTo }
+          ? { templateRelativeTo: absoluteTemplateRelativeTo }
           : { templateRelativeTo: path.dirname(templateFullPath) }),
       })
     );

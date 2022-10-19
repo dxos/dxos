@@ -1,4 +1,4 @@
-import { Application, ParameterType } from "typedoc";
+import { Application, ParameterType, Renderer } from "typedoc";
 import { Options, OptionsReader } from 'typedoc';
 import { Theme } from "./theme";
 
@@ -12,7 +12,7 @@ export class ForceThemeOptionsReader implements OptionsReader {
   }
 }
 export const load = (app: Application) => {
-  app.renderer.defineTheme('plate', Theme);
+  app.renderer.defineTheme('plate', Theme as any);
   app.options.addReader(new ForceThemeOptionsReader());
 
   // app.options.addDeclaration({

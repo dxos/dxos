@@ -67,12 +67,18 @@ export class File<D = string> {
     this.allowOverwrite = overwrite;
   }
 
-  shortDescription() {
-    return `${path.join(ellipsis(this.dir), `${this.name}${this.ext}`)}${
+  shortDescription(cwd?: string) {
+    const formattedDir = cwd ? path.relative(cwd, this.dir) : this.dir;
+    const formattedFrom = this.isCopy()
+      ? cwd
+        ? path.relative(cwd, this.copyFrom!)
+        : this.copyFrom
+      : "";
+    return `${path.join(ellipsis(formattedDir), `${this.name}${this.ext}`)}${
       typeof this.content === "string"
         ? " [" + kib(this.content?.length ?? 0) + "]"
-        : "" 
-    }${this.isCopy() ? ` copy from ${this.copyFrom}` : ''}`;
+        : ""
+    }${this.isCopy() ? ` copy from ${formattedFrom}` : ""}`;
   }
 
   clone() {
