@@ -24,17 +24,19 @@ import { SpaceProtocol } from './space-protocol';
 
 const signalContext = new MemorySignalManagerContext();
 
+// Signal server will be started by the setup script.
+const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+
 describe('space/space-protocol', function () {
   it('two peers discover each other', async function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
-    });
     const protocol1 = new SpaceProtocol(
-      networkManager1,
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory
+      }),
       topic,
       {
         peerKey: peerId1,
@@ -44,12 +46,11 @@ describe('space/space-protocol', function () {
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
-    });
     const protocol2 = new SpaceProtocol(
-      networkManager2,
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory
+      }),
       topic,
       {
         peerKey: peerId2,
@@ -59,9 +60,9 @@ describe('space/space-protocol', function () {
     );
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
-
     await protocol2.start();
+
+    afterTest(() => protocol1.stop());
     afterTest(() => protocol2.stop());
 
     await waitForExpect(() => {
@@ -75,13 +76,12 @@ describe('space/space-protocol', function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
-    });
     const replicator1 = new ReplicatorPlugin();
     const protocol1 = new SpaceProtocol(
-      networkManager1,
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory
+      }),
       topic,
       {
         peerKey: peerId1,
@@ -92,13 +92,12 @@ describe('space/space-protocol', function () {
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
-    });
     const replicator2 = new ReplicatorPlugin();
     const protocol2 = new SpaceProtocol(
-      networkManager2,
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory
+      }),
       topic,
       {
         peerKey: peerId2,
@@ -109,9 +108,9 @@ describe('space/space-protocol', function () {
     );
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
-
     await protocol2.start();
+
+    afterTest(() => protocol1.stop());
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();
@@ -165,17 +164,15 @@ describe('space/space-protocol', function () {
     const storage = createStorage();
 
     const keyring = new Keyring();
-
     const topic = await keyring.createKey();
 
     const peerId1 = await keyring.createKey();
-    const networkManager1 = new NetworkManager({
-      signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal']),
-      transportFactory: createWebRTCTransportFactory()
-    });
     const replicator1 = new ReplicatorPlugin();
     const protocol1 = new SpaceProtocol(
-      networkManager1,
+      new NetworkManager({
+        signalManager: new WebsocketSignalManager([SIGNAL_URL]),
+        transportFactory: createWebRTCTransportFactory()
+      }),
       topic,
       {
         peerKey: peerId1,
@@ -186,13 +183,12 @@ describe('space/space-protocol', function () {
     );
 
     const peerId2 = await keyring.createKey();
-    const networkManager2 = new NetworkManager({
-      signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal']),
-      transportFactory: createWebRTCTransportFactory()
-    });
     const replicator2 = new ReplicatorPlugin();
     const protocol2 = new SpaceProtocol(
-      networkManager2,
+      new NetworkManager({
+        signalManager: new WebsocketSignalManager([SIGNAL_URL]),
+        transportFactory: createWebRTCTransportFactory()
+      }),
       topic,
       {
         peerKey: peerId2,

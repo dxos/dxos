@@ -21,7 +21,6 @@ import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
 
 describe('space/replicator-plugin', function () {
-  // TODO(burdon): Exact same code as space-protocol.browser.test
   it.only('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
@@ -59,9 +58,9 @@ describe('space/replicator-plugin', function () {
     );
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
-
     await protocol2.start();
+
+    afterTest(() => protocol1.stop());
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();

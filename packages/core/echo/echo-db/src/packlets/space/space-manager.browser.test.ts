@@ -20,6 +20,9 @@ import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { SpaceManager } from './space-manager';
 
+// Signal server will be started by the setup script.
+const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
+
 describe('space-manager', function () {
   const createPeer = async () => {
     const storage = createStorage();
@@ -39,7 +42,7 @@ describe('space-manager', function () {
       }),
       new NetworkManager({
         // TODO(burdon): Config.
-        signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal']),
+        signalManager: new WebsocketSignalManager([SIGNAL_URL]),
         transportFactory: createWebRTCTransportFactory()
       }),
       keyring,
