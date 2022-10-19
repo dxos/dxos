@@ -35,7 +35,7 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 /**
  * Writes data to feeds.
  */
-export class TestGenerator<T = any> {
+export class TestGenerator<T extends {}> {
   _count = 0;
 
   constructor (

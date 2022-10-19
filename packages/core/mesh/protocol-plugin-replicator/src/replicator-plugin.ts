@@ -9,6 +9,7 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKeyLike } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { schemaJson } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 import { Peer } from './peer';
@@ -31,7 +32,7 @@ type LoadFunction = (info: ReplicatorContextInfo) => Promise<FeedData[]>;
 
 type SubscribeFunction = (share: (feeds: FeedData[]) => Promise<void> | undefined, info: ReplicatorContextInfo) => () => void;
 
-type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedWrapper[]>;
+type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedWrapper<FeedMessage>[]>;
 
 const defaultSubscribe: SubscribeFunction = () => () => {};
 const defaultReplicate: ReplicateFunction = async () => [];
@@ -65,7 +66,11 @@ export class ReplicatorPlugin {
   private readonly _subscribe: SubscribeFunction;
   private readonly _replicate: ReplicateFunction;
 
-  constructor ({ load, subscribe, replicate }: ReplicatorMiddleware, options?: { timeout: number }) {
+  constructor ({
+    load,
+    subscribe,
+    replicate
+  }: ReplicatorMiddleware, options?: { timeout: number }) {
     this._options = options ?? { timeout: 10000 };
     this._load = load;
     this._subscribe = subscribe ?? defaultSubscribe;

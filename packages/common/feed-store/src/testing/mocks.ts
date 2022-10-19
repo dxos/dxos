@@ -10,7 +10,7 @@ import type { FeedWriter, WriteReceipt } from '../feed-writer';
 /**
  * Mock writer collects and emits messages.
  */
-export class MockFeedWriter<T = any> implements FeedWriter<T> {
+export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
   public readonly written = new Event<[T, WriteReceipt]>();
   public readonly messages: T[] = [];
 

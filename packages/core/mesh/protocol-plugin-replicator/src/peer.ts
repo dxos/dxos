@@ -9,6 +9,7 @@ import { Event } from '@dxos/async';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { ComplexMap } from '@dxos/util';
 
@@ -16,7 +17,7 @@ const log = debug('dxos.replicator.peer');
 
 export class Peer {
   // Active reeds being replicated.
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
   readonly closed = new Event();
 
@@ -60,7 +61,7 @@ export class Peer {
   /**
    * Replicate multiple feeds.
    */
-  replicate (feeds: FeedWrapper[] = []) {
+  replicate (feeds: FeedWrapper<FeedMessage>[] = []) {
     feeds.forEach(feed => this._replicate(feed));
   }
 
@@ -79,7 +80,7 @@ export class Peer {
   /**
    * Replicate a feed.
    */
-  _replicate (feed: FeedWrapper): boolean {
+  _replicate (feed: FeedWrapper<FeedMessage>): boolean {
     assert(feed && feed.core.replicate); // TODO(burdon): Remove.
     // if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
     //   return false;

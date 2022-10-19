@@ -19,7 +19,7 @@ import {
   TestItem
 } from './test-generator';
 
-export type TestBuilderOptions<T> = {
+export type TestBuilderOptions<T extends {}> = {
   codec?: Codec<T>
   storage?: Storage
   directory?: Directory
@@ -34,7 +34,7 @@ export type TestBuilderOptions<T> = {
  * - Avoids explosion of overly specific test functions that require and return large bags of properties.
  */
 // TODO(burdon): Apply this pattern elsewhere.
-export class TestBuilder<T = any> {
+export class TestBuilder<T extends {}> {
   static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
 
   constructor (

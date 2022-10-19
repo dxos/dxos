@@ -12,6 +12,6 @@ export type WriteReceipt = {
 /**
  * Async feed writer.
  */
-export interface FeedWriter<T = any> {
+export interface FeedWriter<T extends {}> {
   write (data: T): Promise<WriteReceipt>
 }

@@ -12,6 +12,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
@@ -28,7 +29,10 @@ describe('space/space-protocol', function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: MemoryTransportFactory });
+    const networkManager1 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    });
     const protocol1 = new SpaceProtocol(
       networkManager1,
       topic,
@@ -40,7 +44,10 @@ describe('space/space-protocol', function () {
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: MemoryTransportFactory });
+    const networkManager2 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,
@@ -108,8 +115,8 @@ describe('space/space-protocol', function () {
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore1 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring1,
         hypercore: {
@@ -123,8 +130,8 @@ describe('space/space-protocol', function () {
       timeframe: new Timeframe()
     });
 
-    const feedStore2 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore2 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         hypercore: {
           valueEncoding: codec
@@ -202,7 +209,7 @@ describe('space/space-protocol', function () {
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore({
+    const feedStore1 = new FeedStore<FeedMessage>({
       factory: new FeedFactory({
         root: storage.createDirectory('feeds1'),
         signer: keyring1,
@@ -217,9 +224,11 @@ describe('space/space-protocol', function () {
       timeframe: new Timeframe()
     });
 
-    const feedStore2 = new FeedStore({
-      factory: new FeedFactory({
+    const keyring2 = new Keyring();
+    const feedStore2 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: storage.createDirectory('feeds2'),
+        signer: keyring2,
         hypercore: {
           valueEncoding: codec
         }

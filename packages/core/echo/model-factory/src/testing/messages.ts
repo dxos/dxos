@@ -3,7 +3,7 @@
 //
 
 import { schema, ItemID } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 export const createSetPropertyMutation = (

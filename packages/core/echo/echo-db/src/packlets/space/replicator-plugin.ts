@@ -6,16 +6,17 @@ import { Event } from '@dxos/async';
 import { FeedWrapper } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { ReplicatorPlugin as AbstractReplicatorPlugin } from '@dxos/protocol-plugin-replicator';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 /**
  * Protocol plugin for feed replication.
  */
 // TODO(burdon): Should this extend or create the plugin?
 export class ReplicatorPlugin extends AbstractReplicatorPlugin {
-  private readonly _feedAdded = new Event<FeedWrapper>();
-  private readonly _feeds = new Set<FeedWrapper>();
+  private readonly _feedAdded = new Event<FeedWrapper<FeedMessage>>();
+  private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
 
-  addFeed (feed: FeedWrapper) {
+  addFeed (feed: FeedWrapper<FeedMessage>) {
     log('Adding feed', { feed: feed.key });
 
     this._feeds.add(feed);

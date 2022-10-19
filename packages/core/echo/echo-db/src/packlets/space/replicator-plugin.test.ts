@@ -10,6 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
@@ -64,8 +65,8 @@ describe('space/replicator-plugin', function () {
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore1 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring1,
         hypercore: {
@@ -75,8 +76,8 @@ describe('space/replicator-plugin', function () {
     });
 
     const keyring2 = new Keyring();
-    const feedStore2 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore2 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring2,
         hypercore: {

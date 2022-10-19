@@ -10,7 +10,7 @@ import { MaybePromise } from '@dxos/util';
 /**
  * Maps the written arguments onto a different message type.
  */
-export const createMappedFeedWriter = <Source, Target> (
+export const createMappedFeedWriter = <Source extends {}, Target extends {}> (
   mapper: (arg: Source) => MaybePromise<Target>,
   writer: FeedWriter<Target>
 ): FeedWriter<Source> => {

@@ -16,6 +16,7 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
@@ -25,13 +26,13 @@ import { ReplicatorPlugin, ReplicatorMiddleware } from './replicator-plugin';
 const noop = () => {};
 
 interface MiddlewareOptions {
-  feedStore: FeedStore
-  onUnsubscribe?: (feedStore: FeedStore) => void
-  onLoad?: (feedStore: FeedStore) => FeedWrapper[]
+  feedStore: FeedStore<FeedMessage>
+  onUnsubscribe?: (feedStore: FeedStore<FeedMessage>) => void
+  onLoad?: (feedStore: FeedStore<FeedMessage>) => FeedWrapper<FeedMessage>[]
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
-  const encodeFeed = (feed: FeedWrapper): FeedData => ({
+  const encodeFeed = (feed: FeedWrapper<FeedMessage>): FeedData => ({
     key: feed.key.asBuffer(), // TODO(dmaretskyi): Has to be buffer because of broken encoding.
     discoveryKey: feed.properties.discoveryKey
   });
@@ -68,14 +69,14 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const keyring = new Keyring();
-  const feedFactory = new FeedFactory({
+  const feedFactory = new FeedFactory<FeedMessage>({
     root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
     signer: keyring,
     hypercore: {
       valueEncoding: 'utf-8'
     }
   });
-  const feedStore = new FeedStore({ factory: feedFactory });
+  const feedStore = new FeedStore<FeedMessage>({ factory: feedFactory });
   const feed = await feedStore.openFeed(await keyring.createKey());
 
   let closed = false;
@@ -114,7 +115,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       const messages: any[] = [];
 
       // Create combined stream.
-      const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper) => feed.createReadableStream()));
+      const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) => feed.createReadableStream()));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });

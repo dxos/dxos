@@ -65,7 +65,7 @@ export type FeedQueueOptions = {}
 /**
  * Async queue using an AsyncIterator created from a hypercore.
  */
-export class FeedQueue<T = any> {
+export class FeedQueue<T extends {}> {
   public updated = new Event<FeedQueue<T>>();
 
   private readonly _trigger = new Trigger<FeedBlock<T>>();

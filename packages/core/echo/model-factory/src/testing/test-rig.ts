@@ -17,7 +17,8 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
-class MockFeedWriter<T> implements FeedWriter<T> {
+// TODO(burdon): Remove?
+class MockFeedWriter<T extends {}> implements FeedWriter<T> {
   constructor (
     private readonly _writer: (data: T) => Promise<WriteReceipt>
   ) {}

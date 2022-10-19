@@ -38,7 +38,7 @@ export const defaultFeedSetIteratorOptions = {
 /**
  * Iterator that reads blocks from multiple feeds, ordering them based on a traversal callback.
  */
-export class FeedSetIterator<T = any> extends AbstractFeedIterator<T> {
+export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
   private readonly _trigger = new Trigger(this.options.timeout);
   private readonly _subscriptions = new EventSubscriptions();
