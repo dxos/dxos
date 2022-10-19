@@ -1,0 +1,822 @@
+{
+  "id": 5285,
+  "name": "MemoryRegistryClientBackend",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "In-memory implementation of the registry client with statically specified records.\nUseful for testing code which relies on the DXNS registry without connecting to a real node."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 5286,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "signatures": [
+        {
+          "id": 5287,
+          "name": "new MemoryRegistryClientBackend",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 5285,
+            "name": "MemoryRegistryClientBackend"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5288,
+      "name": "authorities",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 29,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L29"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "string"
+          },
+          {
+            "type": "reference",
+            "id": 4962,
+            "name": "Authority"
+          }
+        ],
+        "name": "Map",
+        "qualifiedName": "Map",
+        "package": "typescript"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 5290,
+      "name": "records",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 31,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L31"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 4861,
+            "name": "CID"
+          },
+          {
+            "type": "reference",
+            "name": "Record"
+          }
+        ],
+        "name": "ComplexMap"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 5289,
+      "name": "resources",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 30,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L30"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 4898,
+            "name": "DXN"
+          },
+          {
+            "type": "reference",
+            "id": 4861,
+            "name": "CID"
+          }
+        ],
+        "name": "ComplexMap"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 5291,
+      "name": "getDomainKey",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 37,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L37"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5292,
+          "name": "getDomainKey",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5293,
+              "name": "domainName",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4883,
+                "name": "DomainKey"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4972,
+            "name": "RegistryClientBackend.getDomainKey"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4971,
+        "name": "RegistryClientBackend.getDomainKey"
+      }
+    },
+    {
+      "id": 5313,
+      "name": "getRecord",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 107,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L107"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5314,
+          "name": "getRecord",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5315,
+              "name": "cid",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4861,
+                "name": "CID"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 4967,
+                    "name": "RecordWithCid"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4990,
+            "name": "RegistryClientBackend.getRecord"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4989,
+        "name": "RegistryClientBackend.getRecord"
+      }
+    },
+    {
+      "id": 5303,
+      "name": "getResource",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 76,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L76"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5304,
+          "name": "getResource",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5305,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4898,
+                "name": "DXN"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 4861,
+                    "name": "CID"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4980,
+            "name": "RegistryClientBackend.getResource"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4979,
+        "name": "RegistryClientBackend.getResource"
+      }
+    },
+    {
+      "id": 5294,
+      "name": "listAuthorities",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 46,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L46"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5295,
+          "name": "listAuthorities",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 4962,
+                  "name": "Authority"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4975,
+            "name": "RegistryClientBackend.listAuthorities"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4974,
+        "name": "RegistryClientBackend.listAuthorities"
+      }
+    },
+    {
+      "id": 5316,
+      "name": "listRecords",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 111,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L111"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5317,
+          "name": "listRecords",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 4967,
+                  "name": "RecordWithCid"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4993,
+            "name": "RegistryClientBackend.listRecords"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4992,
+        "name": "RegistryClientBackend.listRecords"
+      }
+    },
+    {
+      "id": 5306,
+      "name": "listResources",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 80,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L80"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5307,
+          "name": "listResources",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "tuple",
+                  "elements": [
+                    {
+                      "type": "reference",
+                      "id": 4898,
+                      "name": "DXN"
+                    },
+                    {
+                      "type": "reference",
+                      "id": 4861,
+                      "name": "CID"
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4983,
+            "name": "RegistryClientBackend.listResources"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4982,
+        "name": "RegistryClientBackend.listResources"
+      }
+    },
+    {
+      "id": 5296,
+      "name": "registerAuthority",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 50,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L50"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5297,
+          "name": "registerAuthority",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5298,
+              "name": "owner",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4883,
+                "name": "DomainKey"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4977,
+            "name": "RegistryClientBackend.registerAuthority"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4976,
+        "name": "RegistryClientBackend.registerAuthority"
+      }
+    },
+    {
+      "id": 5299,
+      "name": "registerDomainName",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 60,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L60"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5300,
+          "name": "registerDomainName",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5301,
+              "name": "domainName",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 5302,
+              "name": "owner",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4962,
+                "name": "Authority"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5318,
+      "name": "registerRecord",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 115,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L115"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5319,
+          "name": "registerRecord",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5320,
+              "name": "record",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Record"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4861,
+                "name": "CID"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4995,
+            "name": "RegistryClientBackend.registerRecord"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4994,
+        "name": "RegistryClientBackend.registerRecord"
+      }
+    },
+    {
+      "id": 5308,
+      "name": "registerResource",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+          "line": 84,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L84"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5309,
+          "name": "registerResource",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5310,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4898,
+                "name": "DXN"
+              }
+            },
+            {
+              "id": 5311,
+              "name": "cid",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 4861,
+                    "name": "CID"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 5312,
+              "name": "owner",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 4985,
+            "name": "RegistryClientBackend.registerResource"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 4984,
+        "name": "RegistryClientBackend.registerResource"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        5286
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        5288,
+        5290,
+        5289
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        5291,
+        5313,
+        5303,
+        5294,
+        5316,
+        5306,
+        5296,
+        5299,
+        5318,
+        5308
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/testing/memory-registry-client.ts",
+      "line": 28,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L28"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "id": 4970,
+      "name": "RegistryClientBackend"
+    }
+  ]
+}

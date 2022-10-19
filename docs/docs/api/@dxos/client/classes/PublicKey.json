@@ -1,0 +1,987 @@
+{
+  "id": 427,
+  "name": "PublicKey",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "The purpose of this class is to assure consistent use of keys throughout the project.\nKeys should be maintained as buffers in objects and proto definitions, and converted to hex\nstrings as late as possible (eg, to log/display)."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 455,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 58,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 456,
+          "name": "new PublicKey",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 457,
+              "name": "_value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 427,
+            "name": "PublicKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 458,
+      "name": "_value",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 16,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 475,
+      "name": "[custom]",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 83,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 476,
+          "name": "[custom]",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Used by NodeJS to get textual representation of this object when it's printed with a "
+              },
+              {
+                "kind": "code",
+                "text": "`console.log`"
+              },
+              {
+                "kind": "text",
+                "text": " statement."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 477,
+              "name": "depth",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            },
+            {
+              "id": 478,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "InspectOptionsStylized",
+                "qualifiedName": "InspectOptionsStylized",
+                "package": "@types/node"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 461,
+      "name": "asBuffer",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 66,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 462,
+          "name": "asBuffer",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Covert this key to buffer."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "Buffer",
+            "qualifiedName": "global.Buffer",
+            "package": "@types/node"
+          }
+        }
+      ]
+    },
+    {
+      "id": 459,
+      "name": "asUint8Array",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 62,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 460,
+          "name": "asUint8Array",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Return underlying Uint8Array representation."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "Uint8Array",
+            "qualifiedName": "Uint8Array",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 472,
+      "name": "equals",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 87,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 473,
+          "name": "equals",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Test this key for equality with some other key."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 474,
+              "name": "other",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PublicKeyLike"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "id": 463,
+      "name": "toHex",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 70,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 464,
+          "name": "toHex",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Convert this key to hex-encoded string."
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 467,
+      "name": "toJSON",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 78,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 468,
+          "name": "toJSON",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Same as "
+              },
+              {
+                "kind": "code",
+                "text": "`PublicKey.humanize()`"
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 465,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 74,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 466,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Same as "
+              },
+              {
+                "kind": "code",
+                "text": "`PublicKey.humanize()`"
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 469,
+      "name": "truncate",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 79,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 470,
+          "name": "truncate",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 471,
+              "name": "n",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 439,
+      "name": "assertValidPublicKey",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 36,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 440,
+          "name": "assertValidPublicKey",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Asserts that provided values is an instance of PublicKey."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 441,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "predicate",
+            "name": "value",
+            "asserts": true,
+            "targetType": {
+              "type": "reference",
+              "id": 427,
+              "name": "PublicKey"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 446,
+      "name": "bufferize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 46,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 447,
+          "name": "bufferize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@returns",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Key buffer."
+                  }
+                ]
+              },
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "All keys should be represented as instances of PublicKey."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 448,
+              "name": "str",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "name": "Buffer",
+            "qualifiedName": "global.Buffer",
+            "package": "@types/node"
+          }
+        }
+      ]
+    },
+    {
+      "id": 442,
+      "name": "equals",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 40,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 443,
+          "name": "equals",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Tests two keys for equality."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 444,
+              "name": "left",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PublicKeyLike"
+              }
+            },
+            {
+              "id": 445,
+              "name": "right",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PublicKeyLike"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "id": 428,
+      "name": "from",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 20,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 429,
+          "name": "from",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates new instance of PublicKey automatically determining the input format."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 430,
+              "name": "source",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PublicKeyLike"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 427,
+            "name": "PublicKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 431,
+      "name": "fromHex",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 24,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 432,
+          "name": "fromHex",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates new instance of PublicKey from hex string."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 433,
+              "name": "hex",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 427,
+            "name": "PublicKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 452,
+      "name": "hash",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 57,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 453,
+          "name": "hash",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "To be used with ComplexMap and ComplexSet.\nReturns a scalar representation for this key."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 454,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 427,
+                "name": "PublicKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 436,
+      "name": "isPublicKey",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 32,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 437,
+          "name": "isPublicKey",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Tests if provided values is an instance of PublicKey."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 438,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "predicate",
+            "name": "value",
+            "asserts": false,
+            "targetType": {
+              "type": "reference",
+              "id": 427,
+              "name": "PublicKey"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 434,
+      "name": "random",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 28,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 435,
+          "name": "random",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a new key."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 427,
+            "name": "PublicKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 449,
+      "name": "stringify",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+          "line": 52,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 450,
+          "name": "stringify",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@returns",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Hex string representation of key."
+                  }
+                ]
+              },
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "All keys should be represented as instances of PublicKey."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 451,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "name": "Buffer",
+                    "qualifiedName": "global.Buffer",
+                    "package": "@types/node"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "Uint8Array",
+                    "qualifiedName": "Uint8Array",
+                    "package": "typescript"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        455
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        458
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        475,
+        461,
+        459,
+        472,
+        463,
+        467,
+        465,
+        469,
+        439,
+        446,
+        442,
+        428,
+        431,
+        452,
+        436,
+        434,
+        449
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/common/keys/dist/src/public-key.d.ts",
+      "line": 15,
+      "character": 21
+    }
+  ]
+}

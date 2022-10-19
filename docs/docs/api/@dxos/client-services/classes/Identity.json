@@ -1,0 +1,540 @@
+{
+  "id": 1195,
+  "name": "Identity",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Agent identity manager, which includes the agent's Halo space."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1196,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 33,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L33"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1197,
+          "name": "new Identity",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1198,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1189,
+                "name": "IdentityParams"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1195,
+            "name": "Identity"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1203,
+      "name": "_deviceStateMachine",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 31,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L31"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "DeviceStateMachine"
+      }
+    },
+    {
+      "id": 1201,
+      "name": "_signer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 29,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L29"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Signer"
+      }
+    },
+    {
+      "id": 1202,
+      "name": "_space",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 30,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L30"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Space"
+      }
+    },
+    {
+      "id": 1200,
+      "name": "deviceKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 27,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 1199,
+      "name": "identityKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 26,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L26"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 1204,
+      "name": "authorizedDeviceKeys",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 54,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L54"
+        }
+      ],
+      "getSignature": {
+        "id": 1205,
+        "name": "authorizedDeviceKeys",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "reference",
+              "name": "PublicKey"
+            }
+          ],
+          "name": "ComplexSet"
+        }
+      }
+    },
+    {
+      "id": 1212,
+      "name": "controlPipeline",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 75,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L75"
+        }
+      ],
+      "getSignature": {
+        "id": 1213,
+        "name": "controlPipeline",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "@test-only"
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "name": "PipelineAccessor"
+        }
+      }
+    },
+    {
+      "id": 1218,
+      "name": "haloDatabase",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 87,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L87"
+        }
+      ],
+      "getSignature": {
+        "id": 1219,
+        "name": "haloDatabase",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "Database"
+        }
+      }
+    },
+    {
+      "id": 1216,
+      "name": "haloGenesisFeedKey",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 83,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L83"
+        }
+      ],
+      "getSignature": {
+        "id": 1217,
+        "name": "haloGenesisFeedKey",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "PublicKey"
+        }
+      }
+    },
+    {
+      "id": 1214,
+      "name": "haloSpaceKey",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 79,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L79"
+        }
+      ],
+      "getSignature": {
+        "id": 1215,
+        "name": "haloSpaceKey",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "PublicKey"
+        }
+      }
+    },
+    {
+      "id": 1208,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 62,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L62"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1209,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1222,
+      "name": "getDeviceCredentialSigner",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 103,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L103"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1223,
+          "name": "getDeviceCredentialSigner",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Issues credentials as device."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "CredentialSigner"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1220,
+      "name": "getIdentityCredentialSigner",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 95,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L95"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1221,
+          "name": "getIdentityCredentialSigner",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Issues credentials as identity.\nRequires identity to be ready."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "CredentialSigner"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1206,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 58,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L58"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1207,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1210,
+      "name": "ready",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+          "line": 66,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L66"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1211,
+          "name": "ready",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1196
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        1203,
+        1201,
+        1202,
+        1200,
+        1199
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1204,
+        1212,
+        1218,
+        1216,
+        1214
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1208,
+        1222,
+        1220,
+        1206,
+        1210
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/src/packlets/identity/identity.ts",
+      "line": 25,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity.ts#L25"
+    }
+  ]
+}

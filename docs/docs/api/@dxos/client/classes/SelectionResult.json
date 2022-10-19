@@ -1,0 +1,665 @@
+{
+  "id": 270,
+  "name": "SelectionResult",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Query subscription.\nRepresents a live-query (subscription) that can notify about future updates to the relevant subset of items."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 271,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 27,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 272,
+          "name": "new SelectionResult",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 273,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 16,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Model"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 273,
+                    "name": "T"
+                  }
+                ],
+                "name": "Entity"
+              }
+            },
+            {
+              "id": 274,
+              "name": "R",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "default": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 275,
+              "name": "_execute",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 276,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+                      "line": 27,
+                      "character": 26
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 277,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "type": {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "reference",
+                            "id": 273,
+                            "name": "T"
+                          },
+                          {
+                            "type": "reference",
+                            "id": 274,
+                            "name": "R"
+                          }
+                        ],
+                        "name": "SelectionContext"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 278,
+              "name": "_update",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "array",
+                    "elementType": {
+                      "type": "reference",
+                      "id": 16,
+                      "typeArguments": [
+                        {
+                          "type": "reference",
+                          "typeArguments": [
+                            {
+                              "type": "intrinsic",
+                              "name": "any"
+                            },
+                            {
+                              "type": "intrinsic",
+                              "name": "any"
+                            }
+                          ],
+                          "name": "Model"
+                        }
+                      ],
+                      "name": "Entity"
+                    }
+                  }
+                ],
+                "name": "Event"
+              }
+            },
+            {
+              "id": 279,
+              "name": "_root",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "SelectionRoot"
+              }
+            },
+            {
+              "id": 280,
+              "name": "_reducer",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 270,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 273,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 274,
+                "name": "R"
+              }
+            ],
+            "name": "SelectionResult"
+          }
+        }
+      ]
+    },
+    {
+      "id": 281,
+      "name": "_execute",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 17,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 286,
+      "name": "_lastResult",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 26,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 284,
+      "name": "_reducer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 20,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 283,
+      "name": "_root",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 19,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 282,
+      "name": "_update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 18,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 285,
+      "name": "update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Fired when there are updates in the selection.\nOnly update that are relevant to the selection cause the update."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 25,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 270,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 273,
+                "name": "T"
+              },
+              {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            ],
+            "name": "SelectionResult"
+          }
+        ],
+        "name": "Event"
+      }
+    },
+    {
+      "id": 293,
+      "name": "entities",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 40,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 294,
+        "name": "entities",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Get the result of this selection."
+            }
+          ]
+        },
+        "type": {
+          "type": "array",
+          "elementType": {
+            "type": "reference",
+            "id": 273,
+            "name": "T"
+          }
+        }
+      }
+    },
+    {
+      "id": 291,
+      "name": "root",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 36,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 292,
+        "name": "root",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "The root of the selection. Either a database or an item. Must be a stable reference."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "name": "SelectionRoot"
+        }
+      }
+    },
+    {
+      "id": 295,
+      "name": "value",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 44,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 296,
+        "name": "value",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Returns the selection or reducer result."
+            }
+          ]
+        },
+        "type": {
+          "type": "conditional",
+          "checkType": {
+            "type": "reference",
+            "id": 274,
+            "name": "R"
+          },
+          "extendsType": {
+            "type": "intrinsic",
+            "name": "void"
+          },
+          "trueType": {
+            "type": "array",
+            "elementType": {
+              "type": "reference",
+              "id": 273,
+              "name": "T"
+            }
+          },
+          "falseType": {
+            "type": "reference",
+            "id": 274,
+            "name": "R"
+          }
+        }
+      }
+    },
+    {
+      "id": 297,
+      "name": "expectOne",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 48,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 298,
+          "name": "expectOne",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Return the first element if the set has exactly one element."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 273,
+            "name": "T"
+          }
+        }
+      ]
+    },
+    {
+      "id": 289,
+      "name": "refresh",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 32,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 290,
+          "name": "refresh",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Re-run query."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 270,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 273,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 274,
+                "name": "R"
+              }
+            ],
+            "name": "SelectionResult"
+          }
+        }
+      ]
+    },
+    {
+      "id": 287,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+          "line": 28,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 288,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        271
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        281,
+        286,
+        284,
+        283,
+        282,
+        285
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        293,
+        291,
+        295
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        297,
+        289,
+        287
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts",
+      "line": 16,
+      "character": 21
+    }
+  ],
+  "typeParameters": [
+    {
+      "id": 299,
+      "name": "T",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "type": {
+        "type": "reference",
+        "id": 16,
+        "name": "Entity"
+      }
+    },
+    {
+      "id": 300,
+      "name": "R",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "default": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    }
+  ]
+}

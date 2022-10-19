@@ -1,0 +1,425 @@
+{
+  "id": 1583,
+  "name": "SchemaBuilder",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "children": [
+    {
+      "id": 1584,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+          "line": 82,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L82"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1585,
+          "name": "new SchemaBuilder",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1586,
+              "name": "_database",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Database"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1583,
+            "name": "SchemaBuilder"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1587,
+      "name": "defaultSchemas",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+          "line": 86,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L86"
+        }
+      ],
+      "getSignature": {
+        "id": 1588,
+        "name": "defaultSchemas",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 1589,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "sources": [
+              {
+                "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+                "line": 22,
+                "character": 32,
+                "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L22"
+              }
+            ],
+            "indexSignature": {
+              "id": 1590,
+              "name": "__index",
+              "kind": 8192,
+              "kindString": "Index signature",
+              "flags": {},
+              "parameters": [
+                {
+                  "id": 1591,
+                  "name": "schema",
+                  "kind": 32768,
+                  "flags": {},
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                }
+              ],
+              "type": {
+                "type": "reference",
+                "id": 1576,
+                "name": "SchemaDefWithGenerator"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 1599,
+      "name": "createData",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+          "line": 150,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L150"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1600,
+          "name": "createData",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Create data for all schemas."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1601,
+              "name": "customSchemas",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 1576,
+                  "name": "SchemaDefWithGenerator"
+                }
+              }
+            },
+            {
+              "id": 1602,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1603,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+                      "line": 150,
+                      "character": 71,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L150"
+                    }
+                  ],
+                  "indexSignature": {
+                    "id": 1604,
+                    "name": "__index",
+                    "kind": 8192,
+                    "kindString": "Index signature",
+                    "flags": {},
+                    "parameters": [
+                      {
+                        "id": 1605,
+                        "name": "key",
+                        "kind": 32768,
+                        "flags": {},
+                        "type": {
+                          "type": "intrinsic",
+                          "name": "string"
+                        }
+                      }
+                    ],
+                    "type": {
+                      "type": "intrinsic",
+                      "name": "number"
+                    }
+                  }
+                }
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "array",
+                  "elementType": {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          },
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        ],
+                        "name": "Model"
+                      }
+                    ],
+                    "name": "Item"
+                  }
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1595,
+      "name": "createItems",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+          "line": 118,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L118"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1596,
+          "name": "createItems",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Create items for a given schema.\nNOTE: Assumes that referenced items have already been constructed."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1597,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1576,
+                "name": "SchemaDefWithGenerator"
+              }
+            },
+            {
+              "id": 1598,
+              "name": "numItems",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "typeArguments": [
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        },
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        }
+                      ],
+                      "name": "Model"
+                    }
+                  ],
+                  "name": "Item"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1592,
+      "name": "createSchemas",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+          "line": 90,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L90"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1593,
+          "name": "createSchemas",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1594,
+              "name": "customSchemas",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 1576,
+                  "name": "SchemaDefWithGenerator"
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "name": "Schema"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1584
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1587
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1599,
+        1595,
+        1592
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-testing/src/builders/schemaBuilder.ts",
+      "line": 81,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L81"
+    }
+  ]
+}

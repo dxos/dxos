@@ -1,0 +1,375 @@
+{
+  "id": 5144,
+  "name": "ApiTransactionHandler",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "TODO(burdon): Comment."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 5145,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 27,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L27"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5146,
+          "name": "new ApiTransactionHandler",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5147,
+              "name": "api",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ApiPromise",
+                "qualifiedName": "ApiPromise",
+                "package": "@polkadot/api"
+              }
+            },
+            {
+              "id": 5148,
+              "name": "_signFn",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "id": 5140,
+                    "name": "SignTxFunction"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "AddressOrPair",
+                    "qualifiedName": "AddressOrPair",
+                    "package": "@polkadot/api"
+                  }
+                ]
+              },
+              "defaultValue": "..."
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 5144,
+            "name": "ApiTransactionHandler"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5149,
+      "name": "signFn",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 25,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L25"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 5140,
+        "name": "SignTxFunction"
+      }
+    },
+    {
+      "id": 5161,
+      "name": "ensureExtrinsicNotFailed",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 100,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L100"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5162,
+          "name": "ensureExtrinsicNotFailed",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5163,
+              "name": "events",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "name": "EventRecord",
+                  "qualifiedName": "EventRecord",
+                  "package": "@polkadot/types"
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5158,
+      "name": "getErrorName",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 78,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L78"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5159,
+          "name": "getErrorName",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5160,
+              "name": "rejectionEvent",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Event",
+                "qualifiedName": "Event",
+                "package": "@polkadot/types"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5154,
+      "name": "sendSudoTransaction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 71,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L71"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5155,
+          "name": "sendSudoTransaction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5156,
+              "name": "transaction",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Tx"
+              }
+            },
+            {
+              "id": 5157,
+              "name": "sudoSignFn",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "id": 5140,
+                    "name": "SignTxFunction"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "AddressOrPair",
+                    "qualifiedName": "AddressOrPair",
+                    "package": "@polkadot/api"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "SendTransactionResult"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5150,
+      "name": "sendTransaction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+          "line": 38,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L38"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5151,
+          "name": "sendTransaction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5152,
+              "name": "transaction",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "literal",
+                    "value": "promise"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "ISubmittableResult",
+                    "qualifiedName": "ISubmittableResult",
+                    "package": "@polkadot/types"
+                  }
+                ],
+                "name": "SubmittableExtrinsic",
+                "qualifiedName": "SubmittableExtrinsic",
+                "package": "@polkadot/api"
+              }
+            },
+            {
+              "id": 5153,
+              "name": "signFn",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 5140,
+                "name": "SignTxFunction"
+              },
+              "defaultValue": "..."
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "SendTransactionResult"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        5145
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        5149
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        5161,
+        5158,
+        5154,
+        5150
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts",
+      "line": 24,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L24"
+    }
+  ]
+}

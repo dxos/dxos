@@ -1,0 +1,235 @@
+{
+  "id": 5328,
+  "name": "ClientSigner",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Can be used as an external signer for signing DXNS transactions.\nUses a DXNS key stored in HALO."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 5329,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/util/client-signer.ts",
+          "line": 44,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/util/client-signer.ts#L44"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5330,
+          "name": "new ClientSigner",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5331,
+              "name": "client",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Client"
+              }
+            },
+            {
+              "id": 5332,
+              "name": "registry",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Registry",
+                "qualifiedName": "Registry",
+                "package": "@polkadot/types"
+              }
+            },
+            {
+              "id": 5333,
+              "name": "address",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 5328,
+            "name": "ClientSigner"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5334,
+      "name": "id",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/util/client-signer.ts",
+          "line": 40,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/util/client-signer.ts#L40"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "number"
+      },
+      "defaultValue": "0"
+    },
+    {
+      "id": 5335,
+      "name": "publicKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/util/client-signer.ts",
+          "line": 42,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/util/client-signer.ts#L42"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 5336,
+      "name": "signRaw",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPublic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/util/client-signer.ts",
+          "line": 52,
+          "character": 15,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/util/client-signer.ts#L52"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 5337,
+          "name": "signRaw",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 5338,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "SignerPayloadRaw",
+                "qualifiedName": "SignerPayloadRaw",
+                "package": "@polkadot/types"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "SignerResult",
+                "qualifiedName": "SignerResult",
+                "package": "@polkadot/types"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "Partial.signRaw"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "Partial.signRaw"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        5329
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        5334,
+        5335
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        5336
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/util/client-signer.ts",
+      "line": 39,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/util/client-signer.ts#L39"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "typeArguments": [
+        {
+          "type": "reference",
+          "name": "Signer",
+          "qualifiedName": "Signer",
+          "package": "@polkadot/types"
+        }
+      ],
+      "name": "Partial",
+      "qualifiedName": "Partial",
+      "package": "typescript"
+    }
+  ]
+}

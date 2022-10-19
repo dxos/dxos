@@ -1,0 +1,304 @@
+{
+  "id": 1280,
+  "name": "DataInvitations",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Create and manage data invitations for Data spaces."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1281,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+          "line": 24,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L24"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1282,
+          "name": "new DataInvitations",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1283,
+              "name": "_networkManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "NetworkManager"
+              }
+            },
+            {
+              "id": 1284,
+              "name": "_signingContext",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "SigningContext"
+              }
+            },
+            {
+              "id": 1285,
+              "name": "_spaceManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "SpaceManager"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1280,
+            "name": "DataInvitations"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1294,
+      "name": "acceptInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+          "line": 118,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L118"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1295,
+          "name": "acceptInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Joins an existing identity HALO by invitation."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1296,
+              "name": "invitationDescriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "Space"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1286,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+          "line": 33,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L33"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1287,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Create an invitation to an exiting identity HALO."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1288,
+              "name": "space",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Space"
+              }
+            },
+            {
+              "id": 1289,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1290,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "children": [
+                    {
+                      "id": 1291,
+                      "name": "onFinish",
+                      "kind": 1024,
+                      "kindString": "Property",
+                      "flags": {
+                        "isOptional": true
+                      },
+                      "sources": [
+                        {
+                          "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+                          "line": 33,
+                          "character": 56,
+                          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L33"
+                        }
+                      ],
+                      "type": {
+                        "type": "reflection",
+                        "declaration": {
+                          "id": 1292,
+                          "name": "__type",
+                          "kind": 65536,
+                          "kindString": "Type literal",
+                          "flags": {},
+                          "sources": [
+                            {
+                              "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+                              "line": 33,
+                              "character": 67,
+                              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L33"
+                            }
+                          ],
+                          "signatures": [
+                            {
+                              "id": 1293,
+                              "name": "__type",
+                              "kind": 4096,
+                              "kindString": "Call signature",
+                              "flags": {},
+                              "type": {
+                                "type": "intrinsic",
+                                "name": "void"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "groups": [
+                    {
+                      "title": "Properties",
+                      "children": [
+                        1291
+                      ]
+                    }
+                  ],
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+                      "line": 33,
+                      "character": 54,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L33"
+                    }
+                  ]
+                }
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1281
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1294,
+        1286
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/src/packlets/invitations/data-invitations.ts",
+      "line": 23,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/data-invitations.ts#L23"
+    }
+  ]
+}

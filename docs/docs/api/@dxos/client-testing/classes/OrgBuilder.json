@@ -1,0 +1,320 @@
+{
+  "id": 1506,
+  "name": "OrgBuilder",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Org"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1507,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+          "line": 69,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L69"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1508,
+          "name": "new OrgBuilder",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1509,
+              "name": "_builder",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1523,
+                "name": "PartyBuilder"
+              }
+            },
+            {
+              "id": 1510,
+              "name": "_org",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "name": "ObjectModel"
+                  }
+                ],
+                "name": "Item"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1506,
+            "name": "OrgBuilder"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1511,
+      "name": "org",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+          "line": 74,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L74"
+        }
+      ],
+      "getSignature": {
+        "id": 1512,
+        "name": "org",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "reference",
+              "name": "ObjectModel"
+            }
+          ],
+          "name": "Item"
+        }
+      }
+    },
+    {
+      "id": 1513,
+      "name": "createPeople",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+          "line": 78,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L78"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1514,
+          "name": "createPeople",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1515,
+              "name": "n",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1619,
+                "name": "NumberRange"
+              },
+              "defaultValue": "1"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "name": "ObjectModel"
+                    }
+                  ],
+                  "name": "Item"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1516,
+      "name": "createProjects",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+          "line": 84,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1517,
+          "name": "createProjects",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1518,
+              "name": "n",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1619,
+                "name": "NumberRange"
+              },
+              "defaultValue": "1"
+            },
+            {
+              "id": 1519,
+              "name": "callback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1520,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+                      "line": 84,
+                      "character": 55,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 1521,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 1522,
+                          "name": "buidler",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "id": 1494,
+                            "name": "ProjectBuilder"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "intrinsic",
+                            "name": "void"
+                          }
+                        ],
+                        "name": "Promise",
+                        "qualifiedName": "Promise",
+                        "package": "typescript"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "name": "ObjectModel"
+                    }
+                  ],
+                  "name": "Item"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1507
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1511
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1513,
+        1516
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-testing/src/builders/partyBuilder.ts",
+      "line": 68,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-testing/src/builders/partyBuilder.ts#L68"
+    }
+  ]
+}

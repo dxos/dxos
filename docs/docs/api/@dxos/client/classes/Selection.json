@@ -1,0 +1,1530 @@
+{
+  "id": 209,
+  "name": "Selection",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Selections are used to construct database subscriptions.\nThey are [monads](https://www.quora.com/What-are-monads-in-computer-science) that support\nthe functional composition of predicates to traverse the graph.\nAdditionally, selections may be used to create reducers that compute an aggregated value over the traversal.\n\nImplementation:\nEach Selection contains a visitor"
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 210,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 43,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 211,
+          "name": "new Selection",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 212,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 16,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 212,
+                    "name": "T"
+                  }
+                ],
+                "name": "Entity"
+              }
+            },
+            {
+              "id": 213,
+              "name": "R",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "default": {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 214,
+              "name": "_visitor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Executes the query."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 215,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+                      "line": 43,
+                      "character": 26
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 216,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 217,
+                          "name": "options",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "name": "QueryOptions"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "reference",
+                            "id": 212,
+                            "name": "T"
+                          },
+                          {
+                            "type": "reference",
+                            "id": 213,
+                            "name": "R"
+                          }
+                        ],
+                        "name": "SelectionContext"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 218,
+              "name": "_update",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "The unfiltered update event."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "array",
+                    "elementType": {
+                      "type": "reference",
+                      "id": 16,
+                      "typeArguments": [
+                        {
+                          "type": "reference",
+                          "typeArguments": [
+                            {
+                              "type": "intrinsic",
+                              "name": "any"
+                            },
+                            {
+                              "type": "intrinsic",
+                              "name": "any"
+                            }
+                          ],
+                          "name": "Model"
+                        }
+                      ],
+                      "name": "Entity"
+                    }
+                  }
+                ],
+                "name": "Event"
+              }
+            },
+            {
+              "id": 219,
+              "name": "_root",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "The root of the selection. Must be a stable reference."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "name": "SelectionRoot"
+              }
+            },
+            {
+              "id": 220,
+              "name": "_reducer",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 212,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 225,
+      "name": "_createSubSelection",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Creates a derrived selection by aplying a mapping function to the result of the current selection."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 47,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 224,
+      "name": "_reducer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 36,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 223,
+      "name": "_root",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 35,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 222,
+      "name": "_update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 34,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 221,
+      "name": "_visitor",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 33,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 232,
+      "name": "root",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 59,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 233,
+        "name": "root",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "The root of the selection. Either a database or an item. Must be a stable reference."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "name": "SelectionRoot"
+        }
+      }
+    },
+    {
+      "id": 234,
+      "name": "call",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 64,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 235,
+          "name": "call",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Visitor."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 236,
+              "name": "visitor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 212,
+                    "name": "T"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Callable"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 212,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 245,
+      "name": "children",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 74,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 246,
+          "name": "children",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select children of the items in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 247,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 48,
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Item"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 248,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "ItemFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 226,
+      "name": "exec",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 51,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 227,
+          "name": "exec",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Finish the selection and return the result."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 228,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "QueryOptions"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 270,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 212,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "SelectionResult"
+          }
+        }
+      ]
+    },
+    {
+      "id": 237,
+      "name": "filter",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 69,
+          "character": 4
+        },
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 70,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 238,
+          "name": "filter",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Filter entities of this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 239,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 48,
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Item"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 240,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "A filter object or a predicate function."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "name": "ItemFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        },
+        {
+          "id": 241,
+          "name": "filter",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 242,
+              "name": "U",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 16,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Model"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 242,
+                    "name": "U"
+                  }
+                ],
+                "name": "Entity"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 243,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 242,
+                    "name": "U"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 244,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 242,
+                    "name": "U"
+                  }
+                ],
+                "name": "Predicate"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 242,
+                "name": "U"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 252,
+      "name": "links",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 82,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 253,
+          "name": "links",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select links sourcing from the items in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 254,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 48,
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Item"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 255,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "LinkFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 113,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Model"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Link"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 249,
+      "name": "parent",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 78,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 250,
+          "name": "parent",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select parent of the items in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 251,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 48,
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Item"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 229,
+      "name": "query",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 55,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 230,
+          "name": "query",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 231,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "QueryOptions"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 270,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 212,
+                "name": "T"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "SelectionResult"
+          }
+        }
+      ]
+    },
+    {
+      "id": 256,
+      "name": "refs",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 86,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 257,
+          "name": "refs",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select links pointing to items in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 258,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 48,
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Item"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 259,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "LinkFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 113,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Model"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Link"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 264,
+      "name": "source",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 94,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 265,
+          "name": "source",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select sources of links in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 266,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 113,
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          },
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        ],
+                        "name": "Model"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Link"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 267,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "ItemFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 260,
+      "name": "target",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+          "line": 90,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 261,
+          "name": "target",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Select targets of links in this selection."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 262,
+              "name": "this",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 209,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 113,
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          },
+                          {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        ],
+                        "name": "Model"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Link"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "R"
+                  }
+                ],
+                "name": "Selection"
+              }
+            },
+            {
+              "id": 263,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "ItemFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 213,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        210
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        225,
+        224,
+        223,
+        222,
+        221
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        232
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        234,
+        245,
+        226,
+        237,
+        252,
+        249,
+        229,
+        256,
+        264,
+        260
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts",
+      "line": 32,
+      "character": 21
+    }
+  ],
+  "typeParameters": [
+    {
+      "id": 268,
+      "name": "T",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "type": {
+        "type": "reference",
+        "id": 16,
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        ],
+        "name": "Entity"
+      }
+    },
+    {
+      "id": 269,
+      "name": "R",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "default": {
+        "type": "intrinsic",
+        "name": "void"
+      }
+    }
+  ]
+}

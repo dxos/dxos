@@ -1,0 +1,330 @@
+{
+  "id": 1297,
+  "name": "HaloInvitations",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Create and process Halo (space) invitations for device management."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1298,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+          "line": 24,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L24"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1299,
+          "name": "new HaloInvitations",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1300,
+              "name": "_networkManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "NetworkManager"
+              }
+            },
+            {
+              "id": 1301,
+              "name": "_identityManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1229,
+                "name": "IdentityManager"
+              }
+            },
+            {
+              "id": 1302,
+              "name": "_onInitialize",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1303,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+                      "line": 27,
+                      "character": 36,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L27"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 1304,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "type": {
+                        "type": "reference",
+                        "typeArguments": [
+                          {
+                            "type": "intrinsic",
+                            "name": "void"
+                          }
+                        ],
+                        "name": "Promise",
+                        "qualifiedName": "Promise",
+                        "package": "typescript"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1297,
+            "name": "HaloInvitations"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1312,
+      "name": "acceptInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+          "line": 94,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L94"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1313,
+          "name": "acceptInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Joins an existing identity HALO by invitation."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1314,
+              "name": "invitationDescriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1195,
+                "name": "Identity"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1305,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+          "line": 33,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L33"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1306,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Create an invitation to an exiting identity HALO."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1307,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1308,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "children": [
+                    {
+                      "id": 1309,
+                      "name": "onFinish",
+                      "kind": 1024,
+                      "kindString": "Property",
+                      "flags": {
+                        "isOptional": true
+                      },
+                      "sources": [
+                        {
+                          "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+                          "line": 33,
+                          "character": 42,
+                          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L33"
+                        }
+                      ],
+                      "type": {
+                        "type": "reflection",
+                        "declaration": {
+                          "id": 1310,
+                          "name": "__type",
+                          "kind": 65536,
+                          "kindString": "Type literal",
+                          "flags": {},
+                          "sources": [
+                            {
+                              "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+                              "line": 33,
+                              "character": 53,
+                              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L33"
+                            }
+                          ],
+                          "signatures": [
+                            {
+                              "id": 1311,
+                              "name": "__type",
+                              "kind": 4096,
+                              "kindString": "Call signature",
+                              "flags": {},
+                              "type": {
+                                "type": "intrinsic",
+                                "name": "void"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "groups": [
+                    {
+                      "title": "Properties",
+                      "children": [
+                        1309
+                      ]
+                    }
+                  ],
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+                      "line": 33,
+                      "character": 40,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L33"
+                    }
+                  ]
+                }
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1298
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1312,
+        1305
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts",
+      "line": 23,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations.ts#L23"
+    }
+  ]
+}

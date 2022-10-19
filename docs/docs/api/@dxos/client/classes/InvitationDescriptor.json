@@ -1,0 +1,504 @@
+{
+  "id": 397,
+  "name": "InvitationDescriptor",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Describes an issued invitation.\n\nCan be serialized to protobuf or JSON.\nInvitations can be interactive or offline.\n\nThis descriptor might also have a bundled secret for authentication in interactive mode."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 407,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 30,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 408,
+          "name": "new InvitationDescriptor",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 409,
+              "name": "type",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Type"
+              }
+            },
+            {
+              "id": 410,
+              "name": "swarmKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 427,
+                "name": "PublicKey"
+              }
+            },
+            {
+              "id": 411,
+              "name": "invitation",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            },
+            {
+              "id": 412,
+              "name": "identityKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "id": 427,
+                "name": "PublicKey"
+              }
+            },
+            {
+              "id": 413,
+              "name": "secret",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 397,
+            "name": "InvitationDescriptor"
+          }
+        }
+      ]
+    },
+    {
+      "id": 417,
+      "name": "identityKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 25,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 427,
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 416,
+      "name": "invitation",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 24,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Uint8Array",
+        "qualifiedName": "Uint8Array",
+        "package": "typescript"
+      }
+    },
+    {
+      "id": 418,
+      "name": "secret",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 26,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Uint8Array",
+        "qualifiedName": "Uint8Array",
+        "package": "typescript"
+      }
+    },
+    {
+      "id": 415,
+      "name": "swarmKey",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 23,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 427,
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 414,
+      "name": "type",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 22,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Type"
+      }
+    },
+    {
+      "id": 419,
+      "name": "hash",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 31,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 420,
+        "name": "hash",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        }
+      }
+    },
+    {
+      "id": 425,
+      "name": "encode",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 37,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 426,
+          "name": "encode",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 423,
+      "name": "toProto",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 36,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 424,
+          "name": "toProto",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "InvitationDescriptor"
+          }
+        }
+      ]
+    },
+    {
+      "id": 421,
+      "name": "toQueryParameters",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 35,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 422,
+          "name": "toQueryParameters",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Exports an InvitationDescriptor to an object suitable for use as query parameters."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "InvitationQueryParameters"
+          }
+        }
+      ]
+    },
+    {
+      "id": 404,
+      "name": "decode",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 29,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 405,
+          "name": "decode",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 406,
+              "name": "code",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 397,
+            "name": "InvitationDescriptor"
+          }
+        }
+      ]
+    },
+    {
+      "id": 401,
+      "name": "fromProto",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 28,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 402,
+          "name": "fromProto",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 403,
+              "name": "invitation",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 397,
+            "name": "InvitationDescriptor"
+          }
+        }
+      ]
+    },
+    {
+      "id": 398,
+      "name": "fromQueryParameters",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+          "line": 27,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 399,
+          "name": "fromQueryParameters",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 400,
+              "name": "queryParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "InvitationQueryParameters"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 397,
+            "name": "InvitationDescriptor"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        407
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        417,
+        416,
+        418,
+        415,
+        414
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        419
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        425,
+        423,
+        421,
+        404,
+        401,
+        398
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts",
+      "line": 21,
+      "character": 21
+    }
+  ]
+}

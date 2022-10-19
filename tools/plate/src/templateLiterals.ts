@@ -14,23 +14,35 @@ const trim = (a: string) => a.trim();
 const terminalNewline = (a: string) =>
   a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL;
 
-const removeLeadingTabs = (literal: string) => {
+const removeLeadingTabs = (literal: string, n?: number) => {
+  const chars = n ?? detectParasiticTabs(literal);
+  const lines = literal.split(os.EOL);
+  return lines
+    .map((l) => l.replace(new RegExp(`^\\s{${chars},${chars}}`), ""))
+    .join(os.EOL);
+};
+
+const detectParasiticTabs = (literal: string): number => {
   const lines = literal.split(os.EOL);
   const firstLine = lines[1];
   const whitespace = /^\s+/.exec(firstLine);
-  const trimStart = !!whitespace ? whitespace[0].length : 0;
-  return lines
-    .map((l) => l.replace(new RegExp(`^\\s{0,${trimStart}}`), ""))
-    .join(os.EOL);
+  const chars = !!whitespace ? whitespace[0].length : 0;
+  return chars;
 };
 
 export const textUntrimmed = (
   literals: TemplateStringsArray,
   ...args: any[]
 ) => {
+  const tabs = detectParasiticTabs(literals[0]);
   const cleanArgs = args.map((a) => squelch(join(squelch(force(a)))));
   return terminalNewline(
-    removeLeadingTabs(trim(flatten(zip(literals, cleanArgs)).join("")))
+    flatten(
+      zip(
+        literals.map((l) => removeLeadingTabs(l, tabs)),
+        cleanArgs
+      )
+    ).join("")
   );
 };
 

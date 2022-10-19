@@ -1,0 +1,933 @@
+{
+  "id": 113,
+  "name": "Link",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Link variant of an item. Link two objects together. Can hold a custom model."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 114,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 16,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 115,
+          "name": "new Link",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 116,
+              "name": "M",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "literal",
+                    "value": null
+                  },
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      },
+                      {
+                        "type": "intrinsic",
+                        "name": "any"
+                      }
+                    ],
+                    "name": "Model"
+                  }
+                ]
+              },
+              "default": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Model"
+              }
+            },
+            {
+              "id": 117,
+              "name": "L",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 117,
+                    "name": "L"
+                  }
+                ],
+                "name": "Model"
+              },
+              "default": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            },
+            {
+              "id": 118,
+              "name": "R",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 118,
+                    "name": "R"
+                  }
+                ],
+                "name": "Model"
+              },
+              "default": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 119,
+              "name": "itemManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ItemManager"
+              }
+            },
+            {
+              "id": 120,
+              "name": "itemId",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 121,
+              "name": "itemType",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 122,
+              "name": "stateManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "id": 116,
+                        "name": "M"
+                      }
+                    ],
+                    "name": "NonNullable",
+                    "qualifiedName": "NonNullable",
+                    "package": "typescript"
+                  }
+                ],
+                "name": "StateManager"
+              }
+            },
+            {
+              "id": 123,
+              "name": "link",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "LinkData"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 113,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 116,
+                "name": "M"
+              },
+              {
+                "type": "reference",
+                "id": 117,
+                "name": "L"
+              },
+              {
+                "type": "reference",
+                "id": 118,
+                "name": "R"
+              }
+            ],
+            "name": "Link"
+          },
+          "overwrites": {
+            "type": "reference",
+            "id": 18,
+            "name": "Entity.constructor"
+          }
+        }
+      ],
+      "overwrites": {
+        "type": "reference",
+        "id": 17,
+        "name": "Entity.constructor"
+      }
+    },
+    {
+      "id": 134,
+      "name": "_itemManager",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 11,
+          "character": 23
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ItemManager"
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 24,
+        "name": "Entity._itemManager"
+      }
+    },
+    {
+      "id": 135,
+      "name": "_onUpdate",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 14,
+          "character": 23
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 16,
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            ],
+            "name": "Entity"
+          }
+        ],
+        "name": "Event"
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 27,
+        "name": "Entity._onUpdate"
+      }
+    },
+    {
+      "id": 136,
+      "name": "id",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 17,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 137,
+        "name": "id",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Entity.id"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 29,
+        "name": "Entity.id"
+      }
+    },
+    {
+      "id": 124,
+      "name": "isLink",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 17,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 125,
+        "name": "isLink",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "literal",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": 144,
+      "name": "model",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 21,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 145,
+        "name": "model",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 19,
+          "name": "M"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Entity.model"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 37,
+        "name": "Entity.model"
+      }
+    },
+    {
+      "id": 142,
+      "name": "modelMeta",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 20,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 143,
+        "name": "modelMeta",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "intrinsic",
+              "name": "any"
+            },
+            {
+              "type": "intrinsic",
+              "name": "any"
+            },
+            {
+              "type": "intrinsic",
+              "name": "any"
+            }
+          ],
+          "name": "ModelMeta"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Entity.modelMeta"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 35,
+        "name": "Entity.modelMeta"
+      }
+    },
+    {
+      "id": 140,
+      "name": "modelType",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 19,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 141,
+        "name": "modelType",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Entity.modelType"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 33,
+        "name": "Entity.modelType"
+      }
+    },
+    {
+      "id": 130,
+      "name": "source",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 20,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 131,
+        "name": "source",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 48,
+          "typeArguments": [
+            {
+              "type": "reference",
+              "id": 117,
+              "name": "L"
+            }
+          ],
+          "name": "Item"
+        }
+      }
+    },
+    {
+      "id": 126,
+      "name": "sourceId",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 18,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 127,
+        "name": "sourceId",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        }
+      }
+    },
+    {
+      "id": 132,
+      "name": "target",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 21,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 133,
+        "name": "target",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 48,
+          "typeArguments": [
+            {
+              "type": "reference",
+              "id": 118,
+              "name": "R"
+            }
+          ],
+          "name": "Item"
+        }
+      }
+    },
+    {
+      "id": 128,
+      "name": "targetId",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+          "line": 19,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 129,
+        "name": "targetId",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        }
+      }
+    },
+    {
+      "id": 138,
+      "name": "type",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 18,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 139,
+        "name": "type",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "union",
+          "types": [
+            {
+              "type": "intrinsic",
+              "name": "undefined"
+            },
+            {
+              "type": "intrinsic",
+              "name": "string"
+            }
+          ]
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Entity.type"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 31,
+        "name": "Entity.type"
+      }
+    },
+    {
+      "id": 146,
+      "name": "subscribe",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+          "line": 26,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 147,
+          "name": "subscribe",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Subscribe for updates."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 148,
+              "name": "listener",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 149,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+                      "line": 26,
+                      "character": 24
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 150,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 151,
+                          "name": "entity",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "id": 113,
+                            "typeArguments": [
+                              {
+                                "type": "reference",
+                                "id": 116,
+                                "name": "M"
+                              },
+                              {
+                                "type": "reference",
+                                "id": 117,
+                                "name": "L"
+                              },
+                              {
+                                "type": "reference",
+                                "id": 118,
+                                "name": "R"
+                              }
+                            ],
+                            "name": "Link"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reflection",
+            "declaration": {
+              "id": 152,
+              "name": "__type",
+              "kind": 65536,
+              "kindString": "Type literal",
+              "flags": {},
+              "sources": [
+                {
+                  "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts",
+                  "line": 26,
+                  "character": 49
+                }
+              ],
+              "signatures": [
+                {
+                  "id": 153,
+                  "name": "__type",
+                  "kind": 4096,
+                  "kindString": "Call signature",
+                  "flags": {},
+                  "comment": {
+                    "summary": [
+                      {
+                        "kind": "text",
+                        "text": "Subscribe for updates."
+                      }
+                    ]
+                  },
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                }
+              ]
+            }
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "id": 40,
+            "name": "Entity.subscribe"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 39,
+        "name": "Entity.subscribe"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        114
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        134,
+        135
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        136,
+        124,
+        144,
+        142,
+        140,
+        130,
+        126,
+        132,
+        128,
+        138
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        146
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts",
+      "line": 15,
+      "character": 21
+    }
+  ],
+  "typeParameters": [
+    {
+      "id": 154,
+      "name": "M",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "type": {
+        "type": "union",
+        "types": [
+          {
+            "type": "reference",
+            "name": "Model"
+          },
+          {
+            "type": "literal",
+            "value": null
+          }
+        ]
+      },
+      "default": {
+        "type": "reference",
+        "name": "Model"
+      }
+    },
+    {
+      "id": 155,
+      "name": "L",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        ],
+        "name": "Model"
+      },
+      "default": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 156,
+      "name": "R",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {},
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        ],
+        "name": "Model"
+      },
+      "default": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    }
+  ],
+  "extendedTypes": [
+    {
+      "type": "reference",
+      "id": 16,
+      "typeArguments": [
+        {
+          "type": "reference",
+          "id": 116,
+          "name": "M"
+        }
+      ],
+      "name": "Entity"
+    }
+  ]
+}

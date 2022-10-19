@@ -1,0 +1,1340 @@
+{
+  "id": 973,
+  "name": "HaloProxy",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Client proxy to local/remote HALO service."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 974,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 36,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L36"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 975,
+          "name": "new HaloProxy",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 976,
+              "name": "_serviceProvider",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ClientServiceProvider"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 973,
+            "name": "HaloProxy"
+          }
+        }
+      ]
+    },
+    {
+      "id": 982,
+      "name": "_contacts",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 34,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L34"
+        }
+      ],
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "intrinsic",
+          "name": "any"
+        }
+      },
+      "defaultValue": "[]"
+    },
+    {
+      "id": 979,
+      "name": "_contactsChanged",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 30,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L30"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 977,
+      "name": "_invitationProxy",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 27,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1055,
+        "name": "InvitationProxy"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 981,
+      "name": "_profile",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 33,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L33"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 496,
+        "name": "Profile"
+      }
+    },
+    {
+      "id": 978,
+      "name": "_subscriptions",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 28,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L28"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "SubscriptionGroup"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 980,
+      "name": "profileChanged",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 31,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L31"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 985,
+      "name": "info",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 44,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L44"
+        }
+      ],
+      "getSignature": {
+        "id": 986,
+        "name": "info",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 971,
+          "name": "HaloInfo"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "id": 750,
+          "name": "Halo.info"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 750,
+        "name": "Halo.info"
+      }
+    },
+    {
+      "id": 987,
+      "name": "invitationProxy",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 50,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L50"
+        }
+      ],
+      "getSignature": {
+        "id": 988,
+        "name": "invitationProxy",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 1055,
+          "name": "InvitationProxy"
+        }
+      }
+    },
+    {
+      "id": 989,
+      "name": "profile",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 57,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L57"
+        }
+      ],
+      "getSignature": {
+        "id": 990,
+        "name": "profile",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "User profile info."
+            }
+          ]
+        },
+        "type": {
+          "type": "union",
+          "types": [
+            {
+              "type": "intrinsic",
+              "name": "undefined"
+            },
+            {
+              "type": "reference",
+              "id": 496,
+              "name": "Profile"
+            }
+          ]
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Halo.profile"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 753,
+        "name": "Halo.profile"
+      }
+    },
+    {
+      "id": 1009,
+      "name": "acceptInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 133,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L133"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1010,
+          "name": "acceptInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Joins an existing identity HALO by invitation.\nUsed to authorize another device of the same user.\nThe Invitation flow requires the inviter device and invitee device to be online at the same time.\nThe invitation flow is protected by a generated pin code.\n\nTo be used with "
+              },
+              {
+                "kind": "code",
+                "text": "`client.halo.createHaloInvitation`"
+              },
+              {
+                "kind": "text",
+                "text": " on the inviter side."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1011,
+              "name": "invitationDescriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 397,
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 796,
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Invitation"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 778,
+            "name": "Halo.acceptInvitation"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 777,
+        "name": "Halo.acceptInvitation"
+      }
+    },
+    {
+      "id": 1015,
+      "name": "addKeyRecord",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 159,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L159"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1016,
+          "name": "addKeyRecord",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1017,
+              "name": "keyRecord",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 480,
+                "name": "KeyRecord"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 765,
+            "name": "Halo.addKeyRecord"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 764,
+        "name": "Halo.addKeyRecord"
+      }
+    },
+    {
+      "id": 1007,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 120,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L120"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1008,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates an invitation to an existing HALO party.\nUsed to authorize another device of the same user.\nThe Invitation flow requires the inviter device and invitee device to be online at the same time.\nThe invitation flow is protected by a generated pin code.\n\nTo be used with "
+              },
+              {
+                "kind": "code",
+                "text": "`client.halo.joinHaloInvitation`"
+              },
+              {
+                "kind": "text",
+                "text": " on the invitee side."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 822,
+                "name": "InvitationRequest"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 776,
+            "name": "Halo.createInvitation"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 775,
+        "name": "Halo.createInvitation"
+      }
+    },
+    {
+      "id": 999,
+      "name": "createProfile",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 77,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L77"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1000,
+          "name": "createProfile",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Create Profile.\nAdd Identity key if public and secret key are provided.\nThen initializes profile with given username.\nIf no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.\nSeedphrase must not be specified with existing keys."
+              }
+            ],
+            "blockTags": [
+              {
+                "tag": "@returns",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "User profile info."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1001,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 496,
+                "name": "Profile"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 756,
+            "name": "Halo.createProfile"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 755,
+        "name": "Halo.createProfile"
+      }
+    },
+    {
+      "id": 1024,
+      "name": "getDevicePreference",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 172,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L172"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1025,
+          "name": "getDevicePreference",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1026,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 787,
+            "name": "Halo.getDevicePreference"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 786,
+        "name": "Halo.getDevicePreference"
+      }
+    },
+    {
+      "id": 1031,
+      "name": "getGlobalPreference",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 180,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L180"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1032,
+          "name": "getGlobalPreference",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1033,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 794,
+            "name": "Halo.getGlobalPreference"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 793,
+        "name": "Halo.getGlobalPreference"
+      }
+    },
+    {
+      "id": 1005,
+      "name": "queryContacts",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 108,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L108"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1006,
+          "name": "queryContacts",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Query for contacts. Contacts represent member keys across all known Parties."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 305,
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            ],
+            "name": "ResultSet"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 774,
+            "name": "Halo.queryContacts"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 773,
+        "name": "Halo.queryContacts"
+      }
+    },
+    {
+      "id": 1018,
+      "name": "queryDevices",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 164,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L164"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1019,
+          "name": "queryDevices",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "name": "DeviceInfo"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 781,
+            "name": "Halo.queryDevices"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 780,
+        "name": "Halo.queryDevices"
+      }
+    },
+    {
+      "id": 1002,
+      "name": "recoverProfile",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 100,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L100"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1003,
+          "name": "recoverProfile",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Joins an existing identity HALO from a recovery seed phrase."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1004,
+              "name": "seedPhrase",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 496,
+                "name": "Profile"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 759,
+            "name": "Halo.recoverProfile"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 758,
+        "name": "Halo.recoverProfile"
+      }
+    },
+    {
+      "id": 1020,
+      "name": "setDevicePreference",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 168,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L168"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1021,
+          "name": "setDevicePreference",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1022,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 1023,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 783,
+            "name": "Halo.setDevicePreference"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 782,
+        "name": "Halo.setDevicePreference"
+      }
+    },
+    {
+      "id": 1027,
+      "name": "setGlobalPreference",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 176,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L176"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1028,
+          "name": "setGlobalPreference",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1029,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 1030,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 790,
+            "name": "Halo.setGlobalPreference"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 789,
+        "name": "Halo.setGlobalPreference"
+      }
+    },
+    {
+      "id": 1012,
+      "name": "sign",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 155,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L155"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1013,
+          "name": "sign",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1014,
+              "name": "request",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 499,
+                "name": "SignRequest"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 502,
+                "name": "SignResponse"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 762,
+            "name": "Halo.sign"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 761,
+        "name": "Halo.sign"
+      }
+    },
+    {
+      "id": 991,
+      "name": "subscribeToProfile",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 65,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L65"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 992,
+          "name": "subscribeToProfile",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 993,
+              "name": "callback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 994,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+                      "line": 65,
+                      "character": 32,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L65"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 995,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 996,
+                          "name": "profile",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "id": 496,
+                            "name": "Profile"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reflection",
+            "declaration": {
+              "id": 997,
+              "name": "__type",
+              "kind": 65536,
+              "kindString": "Type literal",
+              "flags": {},
+              "sources": [
+                {
+                  "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+                  "line": 65,
+                  "character": 61,
+                  "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L65"
+                }
+              ],
+              "signatures": [
+                {
+                  "id": 998,
+                  "name": "__type",
+                  "kind": 4096,
+                  "kindString": "Call signature",
+                  "flags": {},
+                  "comment": {
+                    "summary": [],
+                    "blockTags": [
+                      {
+                        "tag": "@deprecated",
+                        "content": []
+                      }
+                    ]
+                  },
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                }
+              ]
+            }
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 768,
+            "name": "Halo.subscribeToProfile"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 767,
+        "name": "Halo.subscribeToProfile"
+      }
+    },
+    {
+      "id": 983,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+          "line": 40,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L40"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 984,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        974
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        982,
+        979,
+        977,
+        981,
+        978,
+        980
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        985,
+        987,
+        989
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1009,
+        1015,
+        1007,
+        999,
+        1024,
+        1031,
+        1005,
+        1018,
+        1002,
+        1020,
+        1027,
+        1012,
+        991,
+        983
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/halo-proxy.ts",
+      "line": 26,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L26"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "id": 749,
+      "name": "Halo"
+    }
+  ]
+}

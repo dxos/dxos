@@ -1,54 +1,70 @@
-import os from "os";
-import {
-  ReflectionKind,
-  Reflection,
-  TraverseProperty,
-  ParameterReflection,
-  DeclarationReflection,
-  SignatureReflection,
-} from "typedoc";
-import { Input, TemplateFunction, text, File } from "../..";
+import { ReflectionKind, JSONOutput as S } from "typedoc";
+import { Input, TemplateFunction, text, File, JSONFile } from "../..";
 
-import { children, href, generic, method, comment } from "../..";
+import {
+  children,
+  href,
+  generic,
+  method,
+  comment,
+  packagesInProject,
+  reflectionsOfKind,
+  property,
+} from "../..";
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
-  // const classes = input.project.getReflectionsByKind(ReflectionKind.Class);
-  const classes: any[] = [];
-  return classes.map((aclass) => {
-    const members = children(aclass);
-    const constructors = members.filter(
-      (m) => m.kind == ReflectionKind.Constructor
-    ) as DeclarationReflection[];
-    const functions = members.filter(
-      m => m.kind == ReflectionKind.FunctionOrMethod
-    ) as DeclarationReflection[];
-    const properties = members.filter(
-      m => m.kind == ReflectionKind.VariableOrProperty
-    ) as DeclarationReflection[];
-    return new File({
-      path: [
-        outputDirectory,
-        aclass.parent?.getFullName() ?? "",
-        "classes",
-        `${aclass.getAlias()}.md`,
-      ],
-      content: text`
-        # Class \`${aclass.name}\`
-        > Declared in [\`${aclass.sources?.[0]?.fileName}\`](${href(aclass)})
+  const packages = packagesInProject(input);
+  return packages
+    .map((pkage) => {
+      const classes = reflectionsOfKind(
+        pkage,
+        ReflectionKind.Class
+      ) as S.ContainerReflection[];
+      return classes
+        .map((aclass) => {
+          const constructors = reflectionsOfKind(
+            aclass,
+            ReflectionKind.Constructor
+          );
+          const properties = reflectionsOfKind(
+            aclass,
+            ReflectionKind.Property
+          ).filter((r) => !r.flags.isPrivate);
+          const functions = reflectionsOfKind(
+            aclass,
+            ReflectionKind.Method,
+            ReflectionKind.Function
+          ).filter((r) => !r.flags.isPrivate);
+          const sourceFileName = aclass.sources?.[0]?.fileName;
+          const classesDir = [outputDirectory, pkage.name ?? "", "classes"];
+          return [
+            new File({
+              path: [...classesDir, `${aclass.name}.md`],
+              content: text`
+                # Class \`${aclass.name}\`
+                > Declared in [\`${sourceFileName}\`]()
 
-        ${comment(aclass)}
+                ${comment(aclass)}
 
-        ## Constructors
-        ${constructors.map(method)}
+                ## Constructors
+                ${constructors.map(method)}
 
-        ## Properties
-        ${properties.map(generic)}
+                ## Properties
+                ${properties.map(property)}
 
-        ## Functions
-        ${functions.map(method)}
-        `,
-    });
-  });
+                ## Functions
+                ${functions.map(method)}
+                `,
+            }),
+            new JSONFile({
+              path: [...classesDir, `${aclass.name}.json`],
+              content: aclass,
+            }),
+          ];
+        })
+        .flat();
+    })
+    .flat();
 };
 
-// export default template;
+export default template;

@@ -1,0 +1,1176 @@
+{
+  "id": 860,
+  "name": "Client",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "children": [
+    {
+      "id": 861,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 100,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L100"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 862,
+          "name": "new Client",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates the client object based on supplied configuration.\nRequires initialization after creating by calling "
+              },
+              {
+                "kind": "code",
+                "text": "`.initialize()`"
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 863,
+              "name": "config",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "name": "Config"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "Config"
+                  }
+                ]
+              },
+              "defaultValue": "defaultConfig"
+            },
+            {
+              "id": 864,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 850,
+                "name": "ClientOptions"
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 860,
+            "name": "Client"
+          }
+        }
+      ]
+    },
+    {
+      "id": 866,
+      "name": "_config",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 81,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L81"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Config"
+      }
+    },
+    {
+      "id": 873,
+      "name": "_echo",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 91,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L91"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 932,
+        "name": "EchoProxy"
+      }
+    },
+    {
+      "id": 872,
+      "name": "_halo",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 90,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L90"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 973,
+        "name": "HaloProxy"
+      }
+    },
+    {
+      "id": 870,
+      "name": "_initialized",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 88,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L88"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      },
+      "defaultValue": "false"
+    },
+    {
+      "id": 868,
+      "name": "_mode",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 83,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L83"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Mode"
+      }
+    },
+    {
+      "id": 869,
+      "name": "_modelFactory",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 85,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L85"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ModelFactory"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 867,
+      "name": "_options",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 82,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L82"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 850,
+        "name": "ClientOptions"
+      }
+    },
+    {
+      "id": 871,
+      "name": "_serviceProvider",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 89,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L89"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ClientServiceProvider"
+      }
+    },
+    {
+      "id": 865,
+      "name": "version",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 79,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L79"
+        }
+      ],
+      "type": {
+        "type": "literal",
+        "value": "2.33.8"
+      },
+      "defaultValue": "DXOS_VERSION"
+    },
+    {
+      "id": 878,
+      "name": "config",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 132,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L132"
+        }
+      ],
+      "getSignature": {
+        "id": 879,
+        "name": "config",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "Config"
+        }
+      }
+    },
+    {
+      "id": 882,
+      "name": "echo",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 147,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L147"
+        }
+      ],
+      "getSignature": {
+        "id": 883,
+        "name": "echo",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "ECHO database."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "id": 932,
+          "name": "EchoProxy"
+        }
+      }
+    },
+    {
+      "id": 884,
+      "name": "halo",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 155,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L155"
+        }
+      ],
+      "getSignature": {
+        "id": 885,
+        "name": "halo",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "HALO credentials."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "id": 973,
+          "name": "HaloProxy"
+        }
+      }
+    },
+    {
+      "id": 876,
+      "name": "info",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 124,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L124"
+        }
+      ],
+      "getSignature": {
+        "id": 877,
+        "name": "info",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 854,
+          "name": "ClientInfo"
+        }
+      }
+    },
+    {
+      "id": 880,
+      "name": "initialized",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 140,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L140"
+        }
+      ],
+      "getSignature": {
+        "id": 881,
+        "name": "initialized",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Has the Client been initialized?\nInitialize by calling "
+            },
+            {
+              "kind": "code",
+              "text": "`.initialize()`"
+            }
+          ]
+        },
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        }
+      }
+    },
+    {
+      "id": 886,
+      "name": "services",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 166,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L166"
+        }
+      ],
+      "getSignature": {
+        "id": 887,
+        "name": "services",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Client services that can be proxied."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "name": "ClientServices"
+        }
+      }
+    },
+    {
+      "id": 888,
+      "name": "timeout",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 170,
+          "character": 14,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L170"
+        }
+      ],
+      "getSignature": {
+        "id": 889,
+        "name": "timeout",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "number"
+        }
+      }
+    },
+    {
+      "id": 916,
+      "name": "destroy",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 265,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L265"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 917,
+          "name": "destroy",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Cleanup, release resources."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 890,
+      "name": "initialize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 179,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 891,
+          "name": "initialize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Initializes internal resources in an idempotent way.\nRequired before using the Client instance."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 892,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 893,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+                      "line": 179,
+                      "character": 41,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 894,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 895,
+                          "name": "progress",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 910,
+      "name": "initializeAuto",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 242,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L242"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 911,
+          "name": "initializeAuto",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 912,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reflection",
+                    "declaration": {
+                      "id": 913,
+                      "name": "__type",
+                      "kind": 65536,
+                      "kindString": "Type literal",
+                      "flags": {},
+                      "sources": [
+                        {
+                          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+                          "line": 179,
+                          "character": 41,
+                          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179"
+                        }
+                      ],
+                      "signatures": [
+                        {
+                          "id": 914,
+                          "name": "__type",
+                          "kind": 4096,
+                          "kindString": "Call signature",
+                          "flags": {},
+                          "parameters": [
+                            {
+                              "id": 915,
+                              "name": "progress",
+                              "kind": 32768,
+                              "kindString": "Parameter",
+                              "flags": {},
+                              "type": {
+                                "type": "intrinsic",
+                                "name": "any"
+                              }
+                            }
+                          ],
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "void"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 896,
+      "name": "initializeIFramePort",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 211,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L211"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 897,
+          "name": "initializeIFramePort",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "RpcPort"
+          }
+        }
+      ]
+    },
+    {
+      "id": 904,
+      "name": "initializeLocal",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 232,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L232"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 905,
+          "name": "initializeLocal",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 906,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reflection",
+                    "declaration": {
+                      "id": 907,
+                      "name": "__type",
+                      "kind": 65536,
+                      "kindString": "Type literal",
+                      "flags": {},
+                      "sources": [
+                        {
+                          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+                          "line": 179,
+                          "character": 41,
+                          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179"
+                        }
+                      ],
+                      "signatures": [
+                        {
+                          "id": 908,
+                          "name": "__type",
+                          "kind": 4096,
+                          "kindString": "Call signature",
+                          "flags": {},
+                          "parameters": [
+                            {
+                              "id": 909,
+                              "name": "progress",
+                              "kind": 32768,
+                              "kindString": "Parameter",
+                              "flags": {},
+                              "type": {
+                                "type": "intrinsic",
+                                "name": "any"
+                              }
+                            }
+                          ],
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "void"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 898,
+      "name": "initializeRemote",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 218,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L218"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 899,
+          "name": "initializeRemote",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 900,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reflection",
+                    "declaration": {
+                      "id": 901,
+                      "name": "__type",
+                      "kind": 65536,
+                      "kindString": "Type literal",
+                      "flags": {},
+                      "sources": [
+                        {
+                          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+                          "line": 179,
+                          "character": 41,
+                          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179"
+                        }
+                      ],
+                      "signatures": [
+                        {
+                          "id": 902,
+                          "name": "__type",
+                          "kind": 4096,
+                          "kindString": "Call signature",
+                          "flags": {},
+                          "parameters": [
+                            {
+                              "id": 903,
+                              "name": "progress",
+                              "kind": 32768,
+                              "kindString": "Parameter",
+                              "flags": {},
+                              "type": {
+                                "type": "intrinsic",
+                                "name": "any"
+                              }
+                            }
+                          ],
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "void"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 920,
+      "name": "registerModel",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 295,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L295"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 921,
+          "name": "registerModel",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Registers a new ECHO model."
+              }
+            ],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 922,
+              "name": "constructor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "ModelConstructor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 860,
+            "name": "Client"
+          }
+        }
+      ]
+    },
+    {
+      "id": 918,
+      "name": "reset",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 284,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L284"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 919,
+          "name": "reset",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Resets and destroys client storage.\nWarning: Inconsistent state after reset, do not continue to use this client instance."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 874,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+          "line": 120,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L120"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 875,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        861
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        866,
+        873,
+        872,
+        870,
+        868,
+        869,
+        867,
+        871,
+        865
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        878,
+        882,
+        884,
+        876,
+        880,
+        886,
+        888
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        916,
+        890,
+        910,
+        896,
+        904,
+        898,
+        920,
+        918,
+        874
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/client.ts",
+      "line": 78,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L78"
+    }
+  ]
+}

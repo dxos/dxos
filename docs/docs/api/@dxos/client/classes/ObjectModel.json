@@ -1,0 +1,1353 @@
+{
+  "id": 504,
+  "name": "ObjectModel",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Object mutation model."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 506,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 20,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 507,
+          "name": "new ObjectModel",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 508,
+              "name": "_meta",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Metadata definitions."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "ModelMeta"
+              }
+            },
+            {
+              "id": 509,
+              "name": "_itemId",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Parent item."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 510,
+              "name": "_getState",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Retrieves the underlying state object."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 511,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                      "line": 20,
+                      "character": 62
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 512,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "type": {
+                        "type": "reference",
+                        "name": "ObjectModelState"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 513,
+              "name": "_mutationWriter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Output mutation stream (unless read-only)."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "name": "ObjectMutationSet"
+                  }
+                ],
+                "name": "MutationWriter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 504,
+            "name": "ObjectModel"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "name": "Model<ObjectModelState, ObjectMutationSet>.constructor"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model<ObjectModelState, ObjectMutationSet>.constructor"
+      }
+    },
+    {
+      "id": 549,
+      "name": "_getState",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 11,
+          "character": 23
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 550,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+              "line": 11,
+              "character": 34
+            }
+          ],
+          "signatures": [
+            {
+              "id": 551,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ObjectModelState"
+              }
+            }
+          ]
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model._getState"
+      }
+    },
+    {
+      "id": 552,
+      "name": "update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 13,
+          "character": 13
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "ObjectModelState"
+              },
+              {
+                "type": "reference",
+                "name": "ObjectMutationSet"
+              }
+            ],
+            "name": "Model"
+          }
+        ],
+        "name": "Event"
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.update"
+      }
+    },
+    {
+      "id": 505,
+      "name": "meta",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 25,
+          "character": 11
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "any"
+          },
+          {
+            "type": "intrinsic",
+            "name": "any"
+          },
+          {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        ],
+        "name": "ModelMeta"
+      }
+    },
+    {
+      "id": 562,
+      "name": "itemId",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 27,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 563,
+        "name": "itemId",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Model.itemId"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.itemId"
+      }
+    },
+    {
+      "id": 560,
+      "name": "modelMeta",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 26,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 561,
+        "name": "modelMeta",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "intrinsic",
+              "name": "any"
+            },
+            {
+              "type": "intrinsic",
+              "name": "any"
+            },
+            {
+              "type": "intrinsic",
+              "name": "any"
+            }
+          ],
+          "name": "ModelMeta"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Model.modelMeta"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.modelMeta"
+      }
+    },
+    {
+      "id": 564,
+      "name": "readOnly",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 28,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 565,
+        "name": "readOnly",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Model.readOnly"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.readOnly"
+      }
+    },
+    {
+      "id": 537,
+      "name": "addToSet",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 45,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 538,
+          "name": "addToSet",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 539,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 540,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 516,
+      "name": "builder",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 30,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 517,
+          "name": "builder",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "MutationBuilder"
+          }
+        }
+      ]
+    },
+    {
+      "id": 518,
+      "name": "get",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 31,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 519,
+          "name": "get",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 520,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 521,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "unknown"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "any"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ObjectProperties.get"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ObjectProperties.get"
+      }
+    },
+    {
+      "id": 526,
+      "name": "getProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 36,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 527,
+          "name": "getProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 528,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 529,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "any"
+          }
+        }
+      ]
+    },
+    {
+      "id": 545,
+      "name": "pushToArray",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 47,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 546,
+          "name": "pushToArray",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 547,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 548,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 541,
+      "name": "removeFromSet",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 46,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 542,
+          "name": "removeFromSet",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 543,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 544,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 522,
+      "name": "set",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 32,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 523,
+          "name": "set",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 524,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 525,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "unknown"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ObjectProperties.set"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ObjectProperties.set"
+      }
+    },
+    {
+      "id": 534,
+      "name": "setProperties",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 44,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 535,
+          "name": "setProperties",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 536,
+              "name": "properties",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 530,
+      "name": "setProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 40,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 531,
+          "name": "setProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": []
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 532,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 533,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 566,
+      "name": "subscribe",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 29,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 567,
+          "name": "subscribe",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 568,
+              "name": "listener",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 569,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                      "line": 29,
+                      "character": 24
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 570,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 571,
+                          "name": "result",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "id": 504,
+                            "name": "ObjectModel"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reflection",
+            "declaration": {
+              "id": 572,
+              "name": "__type",
+              "kind": 65536,
+              "kindString": "Type literal",
+              "flags": {},
+              "sources": [
+                {
+                  "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                  "line": 29,
+                  "character": 49
+                }
+              ],
+              "signatures": [
+                {
+                  "id": 573,
+                  "name": "__type",
+                  "kind": 4096,
+                  "kindString": "Call signature",
+                  "flags": {},
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                }
+              ]
+            }
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "name": "Model.subscribe"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.subscribe"
+      }
+    },
+    {
+      "id": 555,
+      "name": "toJSON",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 22,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 556,
+          "name": "toJSON",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reflection",
+            "declaration": {
+              "id": 557,
+              "name": "__type",
+              "kind": 65536,
+              "kindString": "Type literal",
+              "flags": {},
+              "children": [
+                {
+                  "id": 558,
+                  "name": "id",
+                  "kind": 1024,
+                  "kindString": "Property",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                      "line": 23,
+                      "character": 8
+                    }
+                  ],
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                },
+                {
+                  "id": 559,
+                  "name": "type",
+                  "kind": 1024,
+                  "kindString": "Property",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                      "line": 24,
+                      "character": 8
+                    }
+                  ],
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                  }
+                }
+              ],
+              "groups": [
+                {
+                  "title": "Properties",
+                  "children": [
+                    558,
+                    559
+                  ]
+                }
+              ],
+              "sources": [
+                {
+                  "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+                  "line": 22,
+                  "character": 14
+                }
+              ]
+            }
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "name": "Model.toJSON"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.toJSON"
+      }
+    },
+    {
+      "id": 514,
+      "name": "toObject",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+          "line": 29,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 515,
+          "name": "toObject",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns an immutable object."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "name": "ObjectModelState"
+          }
+        }
+      ]
+    },
+    {
+      "id": 553,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 21,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 554,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "name": "Model.toString"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.toString"
+      }
+    },
+    {
+      "id": 574,
+      "name": "write",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isProtected": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/model-factory/dist/src/model.d.ts",
+          "line": 33,
+          "character": 14
+        }
+      ],
+      "signatures": [
+        {
+          "id": 575,
+          "name": "write",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Writes the raw mutation to the output stream."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 576,
+              "name": "mutation",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ObjectMutationSet"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "MutationWriteReceipt"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "name": "Model.write"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "name": "Model.write"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        506
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        549,
+        552,
+        505
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        562,
+        560,
+        564
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        537,
+        516,
+        518,
+        526,
+        545,
+        541,
+        522,
+        534,
+        530,
+        566,
+        555,
+        514,
+        553,
+        574
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/object-model/dist/src/object-model.d.ts",
+      "line": 24,
+      "character": 21
+    }
+  ],
+  "extendedTypes": [
+    {
+      "type": "reference",
+      "typeArguments": [
+        {
+          "type": "reference",
+          "name": "ObjectModelState"
+        },
+        {
+          "type": "reference",
+          "name": "ObjectMutationSet"
+        }
+      ],
+      "name": "Model"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "name": "ObjectProperties"
+    }
+  ]
+}

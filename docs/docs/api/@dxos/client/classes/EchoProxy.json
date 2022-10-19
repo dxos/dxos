@@ -1,0 +1,746 @@
+{
+  "id": 932,
+  "name": "EchoProxy",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Client proxy to local/remote ECHO service."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 933,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 30,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L30"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 934,
+          "name": "new EchoProxy",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 935,
+              "name": "_serviceProvider",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ClientServiceProvider"
+              }
+            },
+            {
+              "id": 936,
+              "name": "_modelFactory",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ModelFactory"
+              }
+            },
+            {
+              "id": 937,
+              "name": "_haloProxy",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 973,
+                "name": "HaloProxy"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 932,
+            "name": "EchoProxy"
+          }
+        }
+      ]
+    },
+    {
+      "id": 938,
+      "name": "_parties",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 26,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L26"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 427,
+            "name": "PublicKey"
+          },
+          {
+            "type": "reference",
+            "id": 1073,
+            "name": "PartyProxy"
+          }
+        ],
+        "name": "ComplexMap"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 939,
+      "name": "_partiesChanged",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 27,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 940,
+      "name": "_subscriptions",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 28,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L28"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "SubscriptionGroup"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 947,
+      "name": "info",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 54,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L54"
+        }
+      ],
+      "getSignature": {
+        "id": 948,
+        "name": "info",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 949,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "children": [
+              {
+                "id": 950,
+                "name": "parties",
+                "kind": 1024,
+                "kindString": "Property",
+                "flags": {},
+                "sources": [
+                  {
+                    "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+                    "line": 56,
+                    "character": 6,
+                    "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L56"
+                  }
+                ],
+                "type": {
+                  "type": "intrinsic",
+                  "name": "number"
+                },
+                "defaultValue": "..."
+              }
+            ],
+            "groups": [
+              {
+                "title": "Properties",
+                "children": [
+                  950
+                ]
+              }
+            ],
+            "sources": [
+              {
+                "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+                "line": 55,
+                "character": 11,
+                "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L55"
+              }
+            ]
+          }
+        },
+        "implementationOf": {
+          "type": "reference",
+          "id": 730,
+          "name": "Echo.info"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 730,
+        "name": "Echo.info"
+      }
+    },
+    {
+      "id": 943,
+      "name": "modelFactory",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 40,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L40"
+        }
+      ],
+      "getSignature": {
+        "id": 944,
+        "name": "modelFactory",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "ModelFactory"
+        }
+      }
+    },
+    {
+      "id": 945,
+      "name": "networkManager",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 44,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L44"
+        }
+      ],
+      "getSignature": {
+        "id": 946,
+        "name": "networkManager",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "any"
+        }
+      }
+    },
+    {
+      "id": 968,
+      "name": "acceptInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 186,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L186"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 969,
+          "name": "acceptInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Joins an existing Party by invitation.\n\nTo be used with "
+              },
+              {
+                "kind": "code",
+                "text": "`party.createInvitation`"
+              },
+              {
+                "kind": "text",
+                "text": " on the inviter side."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 970,
+              "name": "invitationDescriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 397,
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 703,
+            "name": "PartyInvitation"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 747,
+            "name": "Echo.acceptInvitation"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 746,
+        "name": "Echo.acceptInvitation"
+      }
+    },
+    {
+      "id": 960,
+      "name": "cloneParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 149,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L149"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 961,
+          "name": "cloneParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Clones the party from a snapshot."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 962,
+              "name": "snapshot",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PartySnapshot"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 739,
+            "name": "Echo.cloneParty"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 738,
+        "name": "Echo.cloneParty"
+      }
+    },
+    {
+      "id": 958,
+      "name": "createParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 128,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L128"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 959,
+          "name": "createParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a new party."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 737,
+            "name": "Echo.createParty"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 736,
+        "name": "Echo.createParty"
+      }
+    },
+    {
+      "id": 963,
+      "name": "getParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 170,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L170"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 964,
+          "name": "getParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns an individual party by its key."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 965,
+              "name": "partyKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 427,
+                "name": "PublicKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "union",
+            "types": [
+              {
+                "type": "intrinsic",
+                "name": "undefined"
+              },
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ]
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 742,
+            "name": "Echo.getParty"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 741,
+        "name": "Echo.getParty"
+      }
+    },
+    {
+      "id": 966,
+      "name": "queryParties",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 177,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L177"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 967,
+          "name": "queryParties",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 305,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "ResultSet"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 745,
+            "name": "Echo.queryParties"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 744,
+        "name": "Echo.queryParties"
+      }
+    },
+    {
+      "id": 951,
+      "name": "registerModel",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 60,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L60"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 952,
+          "name": "registerModel",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 953,
+              "name": "constructor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "ModelConstructor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 932,
+            "name": "EchoProxy"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 734,
+            "name": "Echo.registerModel"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 733,
+        "name": "Echo.registerModel"
+      }
+    },
+    {
+      "id": 941,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+          "line": 36,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L36"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 942,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        933
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        938,
+        939,
+        940
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        947,
+        943,
+        945
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        968,
+        960,
+        958,
+        963,
+        966,
+        951,
+        941
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/echo-proxy.ts",
+      "line": 25,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L25"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "id": 729,
+      "name": "Echo"
+    }
+  ]
+}

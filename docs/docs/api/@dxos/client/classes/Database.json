@@ -1,0 +1,1104 @@
+{
+  "id": 157,
+  "name": "Database",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 158,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 41,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 159,
+          "name": "new Database",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a new database instance. "
+              },
+              {
+                "kind": "code",
+                "text": "`database.initialize()`"
+              },
+              {
+                "kind": "text",
+                "text": " must be called afterwards to complete the initialization."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 160,
+              "name": "_modelFactory",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ModelFactory"
+              }
+            },
+            {
+              "id": 161,
+              "name": "_backend",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "DatabaseBackend"
+              }
+            },
+            {
+              "id": 162,
+              "name": "memberKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 427,
+                "name": "PublicKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 157,
+            "name": "Database"
+          }
+        }
+      ]
+    },
+    {
+      "id": 208,
+      "name": "_assertInitialized",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 83,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 164,
+      "name": "_backend",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 35,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 165,
+      "name": "_itemManager",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 36,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 163,
+      "name": "_modelFactory",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 34,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 166,
+      "name": "_state",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 37,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 173,
+      "name": "entityUpdate",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 53,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 174,
+        "name": "entityUpdate",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Fired immediately after any update in the entities.\nIf the information about which entity got updated is not required prefer using "
+            },
+            {
+              "kind": "code",
+              "text": "`update`"
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "reference",
+              "id": 16,
+              "typeArguments": [
+                {
+                  "type": "intrinsic",
+                  "name": "any"
+                }
+              ],
+              "name": "Entity"
+            }
+          ],
+          "name": "Event"
+        }
+      }
+    },
+    {
+      "id": 169,
+      "name": "isReadOnly",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 43,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 170,
+        "name": "isReadOnly",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        }
+      }
+    },
+    {
+      "id": 167,
+      "name": "state",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 42,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 168,
+        "name": "state",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "State"
+        }
+      }
+    },
+    {
+      "id": 171,
+      "name": "update",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 48,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 172,
+        "name": "update",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Fired when any item is updated.\nContains a list of all entities changed from the last update."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "typeArguments": [
+            {
+              "type": "array",
+              "elementType": {
+                "type": "reference",
+                "id": 16,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Entity"
+              }
+            }
+          ],
+          "name": "Event"
+        }
+      }
+    },
+    {
+      "id": 206,
+      "name": "createDataServiceHost",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 82,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 207,
+          "name": "createDataServiceHost",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "DataServiceHost"
+          }
+        }
+      ]
+    },
+    {
+      "id": 179,
+      "name": "createItem",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 59,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 180,
+          "name": "createItem",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a new item with the given queryable type and model."
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 181,
+              "name": "M",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 181,
+                    "name": "M"
+                  }
+                ],
+                "name": "Model"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 182,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 181,
+                    "name": "M"
+                  }
+                ],
+                "name": "CreateItemOption"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 181,
+                    "name": "M"
+                  }
+                ],
+                "name": "Item"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 183,
+      "name": "createLink",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 60,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 184,
+          "name": "createLink",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 185,
+              "name": "M",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 185,
+                    "name": "M"
+                  }
+                ],
+                "name": "Model"
+              }
+            },
+            {
+              "id": 186,
+              "name": "S",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 186,
+                    "name": "S"
+                  }
+                ],
+                "name": "Model"
+              }
+            },
+            {
+              "id": 187,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 187,
+                    "name": "T"
+                  }
+                ],
+                "name": "Model"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 188,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 185,
+                    "name": "M"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 186,
+                    "name": "S"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 187,
+                    "name": "T"
+                  }
+                ],
+                "name": "CreateLinkOptions"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 113,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 185,
+                    "name": "M"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 186,
+                    "name": "S"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 187,
+                    "name": "T"
+                  }
+                ],
+                "name": "Link"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 204,
+      "name": "createSnapshot",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 81,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 205,
+          "name": "createSnapshot",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "DatabaseSnapshot"
+          }
+        }
+      ]
+    },
+    {
+      "id": 177,
+      "name": "destroy",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 55,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 178,
+          "name": "destroy",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 189,
+      "name": "getItem",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 65,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 190,
+          "name": "getItem",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Retrieves a item from the index."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 191,
+              "name": "itemId",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "union",
+            "types": [
+              {
+                "type": "intrinsic",
+                "name": "undefined"
+              },
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 175,
+      "name": "initialize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 54,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 176,
+          "name": "initialize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 199,
+      "name": "reduce",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 80,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 200,
+          "name": "reduce",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns a reducer selection context."
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 201,
+              "name": "R",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {}
+            }
+          ],
+          "parameters": [
+            {
+              "id": 202,
+              "name": "result",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 201,
+                "name": "R"
+              }
+            },
+            {
+              "id": 203,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "RootFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "reference",
+                "id": 201,
+                "name": "R"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 196,
+      "name": "select",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 74,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 197,
+          "name": "select",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns a selection context, which can be used to traverse the object graph."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 198,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "name": "RootFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 209,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  }
+                ],
+                "name": "Item"
+              },
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Selection"
+          }
+        }
+      ]
+    },
+    {
+      "id": 192,
+      "name": "waitForItem",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+          "line": 69,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 193,
+          "name": "waitForItem",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Waits for item matching the filter to be present and returns it."
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 194,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "any"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 194,
+                    "name": "T"
+                  }
+                ],
+                "name": "Model"
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 195,
+              "name": "filter",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "RootFilter"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 48,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 194,
+                    "name": "T"
+                  }
+                ],
+                "name": "Item"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        158
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        208,
+        164,
+        165,
+        163,
+        166
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        173,
+        169,
+        167,
+        171
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        206,
+        179,
+        183,
+        204,
+        177,
+        189,
+        175,
+        199,
+        196,
+        192
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+      "line": 33,
+      "character": 21
+    }
+  ]
+}

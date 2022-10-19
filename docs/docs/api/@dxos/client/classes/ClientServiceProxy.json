@@ -1,0 +1,303 @@
+{
+  "id": 1160,
+  "name": "ClientServiceProxy",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Implements services that are not local to the app.\nFor example, the services can be located in Wallet Extension."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1161,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+          "line": 16,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L16"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1162,
+          "name": "new ClientServiceProxy",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1163,
+              "name": "port",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "RpcPort"
+              }
+            },
+            {
+              "id": 1164,
+              "name": "_timeout",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              },
+              "defaultValue": "300"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1160,
+            "name": "ClientServiceProxy"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1165,
+      "name": "_client",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+          "line": 14,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L14"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "name": "ClientServices"
+          }
+        ],
+        "name": "ProtoRpcPeer"
+      }
+    },
+    {
+      "id": 1166,
+      "name": "services",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+          "line": 27,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ClientServices"
+      },
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.services"
+      }
+    },
+    {
+      "id": 1173,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+          "line": 33,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L33"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1174,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ClientServiceProvider.close"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.close"
+      }
+    },
+    {
+      "id": 1167,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+          "line": 29,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L29"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1168,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1169,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1170,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+                      "line": 29,
+                      "character": 36,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L29"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 1171,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 1172,
+                          "name": "progress",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ClientServiceProvider.open"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.open"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1161
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        1165,
+        1166
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1173,
+        1167
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/service-proxy.ts",
+      "line": 13,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L13"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "name": "ClientServiceProvider"
+    }
+  ]
+}

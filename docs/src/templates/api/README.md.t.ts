@@ -1,7 +1,7 @@
-import { Input, TemplateFunction, text, getModulesInProject } from ".";
+import { Input, TemplateFunction, text, packagesInProject } from ".";
 
 const template: TemplateFunction<Input> = ({ input }) => {
-  const modules = getModulesInProject(input);
+  const modules = packagesInProject(input);
   return text`
   # DXOS
   ## Packages:

@@ -1,0 +1,187 @@
+{
+  "id": 1150,
+  "name": "PartySerializer",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Import/export party."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1151,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/serializer.ts",
+          "line": 16,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L16"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1152,
+          "name": "new PartySerializer",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1153,
+              "name": "_client",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 860,
+                "name": "Client"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1150,
+            "name": "PartySerializer"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1157,
+      "name": "deserializeParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/serializer.ts",
+          "line": 25,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L25"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1158,
+          "name": "deserializeParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1159,
+              "name": "data",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1154,
+      "name": "serializeParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/serializer.ts",
+          "line": 20,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L20"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1155,
+          "name": "serializeParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1156,
+              "name": "party",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "Blob",
+                "qualifiedName": "Blob",
+                "package": "typescript"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1151
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1157,
+        1154
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/serializer.ts",
+      "line": 15,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L15"
+    }
+  ]
+}

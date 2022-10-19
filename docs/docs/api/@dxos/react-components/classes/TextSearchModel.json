@@ -1,0 +1,492 @@
+{
+  "id": 3497,
+  "name": "TextSearchModel",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Simple text search model."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 3498,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 37,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L37"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 3499,
+          "name": "new TextSearchModel",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "typeParameter": [
+            {
+              "id": 3500,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {}
+            }
+          ],
+          "parameters": [
+            {
+              "id": 3501,
+              "name": "_values",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 3471,
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "id": 3500,
+                      "name": "T"
+                    }
+                  ],
+                  "name": "SearchResult"
+                }
+              }
+            },
+            {
+              "id": 3502,
+              "name": "_delay",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              },
+              "defaultValue": "500"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 3497,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 3500,
+                "name": "T"
+              }
+            ],
+            "name": "TextSearchModel"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3504,
+      "name": "_results",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 34,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L34"
+        }
+      ],
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "reference",
+          "id": 3471,
+          "typeArguments": [
+            {
+              "type": "reference",
+              "id": 3500,
+              "name": "T"
+            }
+          ],
+          "name": "SearchResult"
+        }
+      },
+      "defaultValue": "[]"
+    },
+    {
+      "id": 3505,
+      "name": "_timeout",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 35,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L35"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Timeout",
+        "qualifiedName": "global.NodeJS.Timeout",
+        "package": "@types/node"
+      }
+    },
+    {
+      "id": 3503,
+      "name": "_update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 33,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L33"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "array",
+            "elementType": {
+              "type": "reference",
+              "id": 3471,
+              "typeArguments": [
+                {
+                  "type": "reference",
+                  "id": 3500,
+                  "name": "T"
+                }
+              ],
+              "name": "SearchResult"
+            }
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 3506,
+      "name": "results",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 42,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L42"
+        }
+      ],
+      "getSignature": {
+        "id": 3507,
+        "name": "results",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "array",
+          "elementType": {
+            "type": "reference",
+            "id": 3471,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 3500,
+                "name": "T"
+              }
+            ],
+            "name": "SearchResult"
+          }
+        },
+        "implementationOf": {
+          "type": "reference",
+          "id": 3484,
+          "name": "SearchModel.results"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 3484,
+        "name": "SearchModel.results"
+      }
+    },
+    {
+      "id": 3516,
+      "name": "setText",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 50,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L50"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 3517,
+          "name": "setText",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 3518,
+              "name": "text",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "void"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "SearchModel.setText"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 3492,
+        "name": "SearchModel.setText"
+      }
+    },
+    {
+      "id": 3508,
+      "name": "subscribe",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+          "line": 46,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 3509,
+          "name": "subscribe",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 3510,
+              "name": "callback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 3511,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+                      "line": 46,
+                      "character": 23,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 3512,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 3513,
+                          "name": "results",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "array",
+                            "elementType": {
+                              "type": "reference",
+                              "id": 3471,
+                              "typeArguments": [
+                                {
+                                  "type": "reference",
+                                  "id": 3500,
+                                  "name": "T"
+                                }
+                              ],
+                              "name": "SearchResult"
+                            }
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reflection",
+            "declaration": {
+              "id": 3514,
+              "name": "__type",
+              "kind": 65536,
+              "kindString": "Type literal",
+              "flags": {},
+              "sources": [
+                {
+                  "fileName": "packages/common/async/dist/src/event.d.ts",
+                  "line": 60,
+                  "character": 37
+                }
+              ],
+              "signatures": [
+                {
+                  "id": 3515,
+                  "name": "__type",
+                  "kind": 4096,
+                  "kindString": "Call signature",
+                  "flags": {},
+                  "comment": {
+                    "summary": [
+                      {
+                        "kind": "text",
+                        "text": "Register an event listener.\n\nIf provided callback was already registered as once-listener, it is made permanent."
+                      }
+                    ],
+                    "blockTags": [
+                      {
+                        "tag": "@returns",
+                        "content": [
+                          {
+                            "kind": "text",
+                            "text": "function that unsubscribes this event listener"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                }
+              ]
+            }
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "SearchModel.subscribe"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 3485,
+        "name": "SearchModel.subscribe"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        3498
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        3504,
+        3505,
+        3503
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        3506
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        3516,
+        3508
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts",
+      "line": 32,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L32"
+    }
+  ],
+  "typeParameters": [
+    {
+      "id": 3519,
+      "name": "T",
+      "kind": 131072,
+      "kindString": "Type parameter",
+      "flags": {}
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "id": 3483,
+      "typeArguments": [
+        {
+          "type": "reference",
+          "id": 3500,
+          "name": "T"
+        }
+      ],
+      "name": "SearchModel"
+    }
+  ]
+}

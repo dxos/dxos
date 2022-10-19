@@ -1,0 +1,493 @@
+{
+  "id": 1229,
+  "name": "IdentityManager",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "children": [
+    {
+      "id": 1230,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 40,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L40"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1231,
+          "name": "new IdentityManager",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1232,
+              "name": "_metadataStore",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "MetadataStore"
+              }
+            },
+            {
+              "id": 1233,
+              "name": "_feedStore",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "FeedStore"
+              }
+            },
+            {
+              "id": 1234,
+              "name": "_keyring",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Keyring"
+              }
+            },
+            {
+              "id": 1235,
+              "name": "_networkManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "NetworkManager"
+              }
+            },
+            {
+              "id": 1236,
+              "name": "_modelFactory",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ModelFactory"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1229,
+            "name": "IdentityManager"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1238,
+      "name": "_identity",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 37,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L37"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1195,
+        "name": "Identity"
+      }
+    },
+    {
+      "id": 1237,
+      "name": "stateUpdate",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 35,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L35"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 1239,
+      "name": "identity",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 48,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L48"
+        }
+      ],
+      "getSignature": {
+        "id": 1240,
+        "name": "identity",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "union",
+          "types": [
+            {
+              "type": "intrinsic",
+              "name": "undefined"
+            },
+            {
+              "type": "reference",
+              "id": 1195,
+              "name": "Identity"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1245,
+      "name": "_constructIdentity",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 68,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L68"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1246,
+          "name": "_constructIdentity",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1247,
+              "name": "identityRecord",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "IdentityRecord"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1195,
+                "name": "Identity"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1248,
+      "name": "_constructSpace",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 90,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L90"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1249,
+          "name": "_constructSpace",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1250,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ConstructSpaceParams"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "Space"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1253,
+      "name": "acceptIdentity",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 168,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L168"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1254,
+          "name": "acceptIdentity",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Accept an existing identity. Expects it's device key to be authorized."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1255,
+              "name": "params",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1224,
+                "name": "JoinIdentityParams"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1195,
+                "name": "Identity"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1243,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 64,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L64"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1244,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1251,
+      "name": "createIdentity",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 113,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L113"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1252,
+          "name": "createIdentity",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1195,
+                "name": "Identity"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1241,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+          "line": 52,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L52"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1242,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1230
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        1238,
+        1237
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1239
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1245,
+        1248,
+        1253,
+        1243,
+        1251,
+        1241
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/src/packlets/identity/identity-manager.ts",
+      "line": 34,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/identity-manager.ts#L34"
+    }
+  ]
+}

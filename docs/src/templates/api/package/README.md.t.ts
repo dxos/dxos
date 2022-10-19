@@ -5,11 +5,11 @@ import {
   text,
   File,
   generic,
-  getModulesInProject,
+  packagesInProject,
 } from "..";
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
-  const modules = getModulesInProject(input);
+  const modules = packagesInProject(input);
   return modules
     .map((module) => {
       const source = module.sources?.[0].fileName;

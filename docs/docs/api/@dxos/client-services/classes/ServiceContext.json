@@ -1,0 +1,673 @@
+{
+  "id": 1351,
+  "name": "ServiceContext",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "children": [
+    {
+      "id": 1352,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 44,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L44"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1353,
+          "name": "new ServiceContext",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1354,
+              "name": "storage",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Storage"
+              }
+            },
+            {
+              "id": 1355,
+              "name": "networkManager",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "NetworkManager"
+              }
+            },
+            {
+              "id": 1356,
+              "name": "modelFactory",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ModelFactory"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1351,
+            "name": "ServiceContext"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1365,
+      "name": "dataInvitations",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 42,
+          "character": 9,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L42"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1280,
+        "name": "DataInvitations"
+      }
+    },
+    {
+      "id": 1358,
+      "name": "dataService",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 32,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L32"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "DataService"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 1360,
+      "name": "feedStore",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 35,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L35"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "FeedStore"
+      }
+    },
+    {
+      "id": 1363,
+      "name": "haloInvitations",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 38,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L38"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1297,
+        "name": "HaloInvitations"
+      }
+    },
+    {
+      "id": 1362,
+      "name": "identityManager",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 37,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L37"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1229,
+        "name": "IdentityManager"
+      }
+    },
+    {
+      "id": 1357,
+      "name": "initialized",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 29,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L29"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Trigger"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 1361,
+      "name": "keyring",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 36,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L36"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Keyring"
+      }
+    },
+    {
+      "id": 1359,
+      "name": "metadataStore",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 34,
+          "character": 18,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L34"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "MetadataStore"
+      }
+    },
+    {
+      "id": 1368,
+      "name": "modelFactory",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 47,
+          "character": 20,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L47"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "ModelFactory"
+      }
+    },
+    {
+      "id": 1367,
+      "name": "networkManager",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 46,
+          "character": 20,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L46"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "NetworkManager"
+      }
+    },
+    {
+      "id": 1364,
+      "name": "spaceManager",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 41,
+          "character": 9,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L41"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "SpaceManager"
+      }
+    },
+    {
+      "id": 1366,
+      "name": "storage",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 45,
+          "character": 20,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L45"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Storage"
+      }
+    },
+    {
+      "id": 1375,
+      "name": "_initialize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 88,
+          "character": 16,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L88"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1376,
+          "name": "_initialize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1371,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 73,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L73"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1372,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1373,
+      "name": "createIdentity",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 81,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L81"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1374,
+          "name": "createIdentity",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1195,
+                "name": "Identity"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1377,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 116,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L116"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1378,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1379,
+              "name": "spaceKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "PublicKey"
+              }
+            },
+            {
+              "id": 1380,
+              "name": "onFinish",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 1381,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+                      "line": 116,
+                      "character": 58,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L116"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 1382,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1383,
+      "name": "joinSpace",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 124,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L124"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1384,
+          "name": "joinSpace",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1385,
+              "name": "invitationDescriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 1321,
+                "name": "InvitationDescriptor"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "Space"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1369,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+          "line": 66,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L66"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1370,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1352
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        1365,
+        1358,
+        1360,
+        1363,
+        1362,
+        1357,
+        1361,
+        1359,
+        1368,
+        1367,
+        1364,
+        1366
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1375,
+        1371,
+        1373,
+        1377,
+        1383,
+        1369
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/src/packlets/services/service-context.ts",
+      "line": 28,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L28"
+    }
+  ]
+}

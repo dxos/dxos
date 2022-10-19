@@ -1,0 +1,385 @@
+{
+  "id": 4781,
+  "name": "AccountsClient",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Main API for DXNS account and devices management."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 4782,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 12,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L12"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4783,
+          "name": "new AccountsClient",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 4784,
+              "name": "_backend",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4765,
+                "name": "AccountsClientBackend"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 4781,
+            "name": "AccountsClient"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4792,
+      "name": "addDevice",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 40,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L40"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4793,
+          "name": "addDevice",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Add a new device to an existing DXNS account."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4794,
+              "name": "account",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            },
+            {
+              "id": 4795,
+              "name": "device",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4796,
+      "name": "belongsToAccount",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 47,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L47"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4797,
+          "name": "belongsToAccount",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Is the given device a listed device of this DXNS account?"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4798,
+              "name": "account",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            },
+            {
+              "id": 4799,
+              "name": "device",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4790,
+      "name": "createAccount",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 33,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L33"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4791,
+          "name": "createAccount",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a DXNS account on the blockchain."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4785,
+      "name": "getAccount",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 19,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L19"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4786,
+          "name": "getAccount",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Get the account details."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4787,
+              "name": "account",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 4762,
+                    "name": "Account"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4788,
+      "name": "listAccounts",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+          "line": 26,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L26"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4789,
+          "name": "listAccounts",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "List accounts in the system."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 4762,
+                  "name": "Account"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        4782
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        4792,
+        4796,
+        4790,
+        4785,
+        4788
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/api/accounts-client.ts",
+      "line": 11,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/accounts-client.ts#L11"
+    }
+  ]
+}

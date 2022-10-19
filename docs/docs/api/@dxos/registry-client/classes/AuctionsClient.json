@@ -1,0 +1,610 @@
+{
+  "id": 4833,
+  "name": "AuctionsClient",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Main API for DXNS auctions management."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 4834,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 16,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L16"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4835,
+          "name": "new AuctionsClient",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 4836,
+              "name": "_backend",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 4808,
+                "name": "AuctionsClientBackend"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 4833,
+            "name": "AuctionsClient"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4846,
+      "name": "bidAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 48,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L48"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4847,
+          "name": "bidAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Offers a new amount in the auction."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4848,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "An object of the auction."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 4849,
+              "name": "amount",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "The offered amount."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4857,
+      "name": "claimAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 76,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L76"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4858,
+          "name": "claimAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Allows for transferring the ownership of the name to the highest bidder."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4859,
+              "name": "domainName",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 4860,
+              "name": "account",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "The DXNS Account that will claim the ownership of the domain."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "id": 4741,
+                "name": "AccountKey"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 4883,
+                "name": "DomainKey"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4850,
+      "name": "closeAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 57,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L57"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4851,
+          "name": "closeAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Closes an auction. Note! This DOES NOT transfer the ownership to the highest bidder. They need to claim\nby invoking separate operation."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4852,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "An object of the auction."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4842,
+      "name": "createAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 39,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L39"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4843,
+          "name": "createAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates a new auction."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4844,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "An object of the auction."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 4845,
+              "name": "startAmount",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "The initial amount offered."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4853,
+      "name": "forceCloseAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 67,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L67"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4854,
+          "name": "forceCloseAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Forces close an auction. This arbitrarily closes the ongoing auction even its time is not reached yet.\nNote! This is reserved to sudo/admin accounts."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4855,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "An object of the auction."
+                  }
+                ]
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 4856,
+              "name": "sudoSignFn",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "A transaction signing function using a sudo/admin account with rights to to execute this high-privilege operation."
+                  }
+                ]
+              },
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "id": 5140,
+                    "name": "SignTxFunction"
+                  },
+                  {
+                    "type": "reference",
+                    "name": "AddressOrPair",
+                    "qualifiedName": "AddressOrPair",
+                    "package": "@polkadot/api"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4837,
+      "name": "getAuction",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 23,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L23"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4838,
+          "name": "getAuction",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Get an auction by name."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 4839,
+              "name": "name",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 4800,
+                    "name": "Auction"
+                  }
+                ]
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4840,
+      "name": "listAuctions",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+          "line": 30,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L30"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4841,
+          "name": "listAuctions",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns a collection of all auctions (ongoing and closed) in DXOS."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "reference",
+                  "id": 4800,
+                  "name": "Auction"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        4834
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        4846,
+        4857,
+        4850,
+        4842,
+        4853,
+        4837,
+        4840
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/api/auctions-client.ts",
+      "line": 15,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/auctions-client.ts#L15"
+    }
+  ]
+}

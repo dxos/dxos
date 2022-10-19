@@ -1,0 +1,556 @@
+{
+  "id": 703,
+  "name": "PartyInvitation",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Invitation that is being redeemed.\nIt works in non-interactive mode and requires no authentication."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 704,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 13,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L13"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 705,
+          "name": "new PartyInvitation",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 706,
+              "name": "_descriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 397,
+                "name": "InvitationDescriptor"
+              }
+            },
+            {
+              "id": 707,
+              "name": "_invitationPromise",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 646,
+                    "name": "Party"
+                  }
+                ],
+                "name": "Promise",
+                "qualifiedName": "Promise",
+                "package": "typescript"
+              }
+            },
+            {
+              "id": 708,
+              "name": "_onAuthenticate",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 709,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+                      "line": 16,
+                      "character": 40,
+                      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L16"
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 710,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 711,
+                          "name": "secret",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "reference",
+                            "name": "Uint8Array",
+                            "qualifiedName": "Uint8Array",
+                            "package": "typescript"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 703,
+            "name": "PartyInvitation"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "id": 798,
+            "name": "Invitation.constructor"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 797,
+        "name": "Invitation.constructor"
+      }
+    },
+    {
+      "id": 714,
+      "name": "_descriptor",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 14,
+          "character": 23,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L14"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 397,
+        "name": "InvitationDescriptor"
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 806,
+        "name": "Invitation._descriptor"
+      }
+    },
+    {
+      "id": 715,
+      "name": "_invitationPromise",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 15,
+          "character": 23,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L15"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 646,
+            "name": "Party"
+          }
+        ],
+        "name": "Promise",
+        "qualifiedName": "Promise",
+        "package": "typescript"
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 807,
+        "name": "Invitation._invitationPromise"
+      }
+    },
+    {
+      "id": 716,
+      "name": "_onAuthenticate",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isProtected": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 16,
+          "character": 23,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L16"
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 717,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "sources": [
+            {
+              "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+              "line": 16,
+              "character": 40,
+              "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L16"
+            }
+          ],
+          "signatures": [
+            {
+              "id": 718,
+              "name": "__type",
+              "kind": 4096,
+              "kindString": "Call signature",
+              "flags": {},
+              "parameters": [
+                {
+                  "id": 719,
+                  "name": "secret",
+                  "kind": 32768,
+                  "kindString": "Parameter",
+                  "flags": {},
+                  "type": {
+                    "type": "reference",
+                    "name": "Uint8Array",
+                    "qualifiedName": "Uint8Array",
+                    "package": "typescript"
+                  }
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            }
+          ]
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 808,
+        "name": "Invitation._onAuthenticate"
+      }
+    },
+    {
+      "id": 720,
+      "name": "descriptor",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 19,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L19"
+        }
+      ],
+      "getSignature": {
+        "id": 721,
+        "name": "descriptor",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 397,
+          "name": "InvitationDescriptor"
+        },
+        "inheritedFrom": {
+          "type": "reference",
+          "name": "Invitation.descriptor"
+        }
+      },
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 812,
+        "name": "Invitation.descriptor"
+      }
+    },
+    {
+      "id": 722,
+      "name": "authenticate",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 24,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L24"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 723,
+          "name": "authenticate",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 724,
+              "name": "secret",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "void"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "id": 815,
+            "name": "Invitation.authenticate"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 814,
+        "name": "Invitation.authenticate"
+      }
+    },
+    {
+      "id": 712,
+      "name": "getParty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+          "line": 68,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L68"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 713,
+          "name": "getParty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Wait for the invitation flow to complete and return the target party."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 727,
+      "name": "toJSON",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 35,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L35"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 728,
+          "name": "toJSON",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "name": "InvitationDescriptor"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "id": 820,
+            "name": "Invitation.toJSON"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 819,
+        "name": "Invitation.toJSON"
+      }
+    },
+    {
+      "id": 725,
+      "name": "wait",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation.ts",
+          "line": 31,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation.ts#L31"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 726,
+          "name": "wait",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Wait for the invitation flow to complete."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 646,
+                "name": "Party"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "inheritedFrom": {
+            "type": "reference",
+            "id": 818,
+            "name": "Invitation.wait"
+          }
+        }
+      ],
+      "inheritedFrom": {
+        "type": "reference",
+        "id": 817,
+        "name": "Invitation.wait"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        704
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        714,
+        715,
+        716
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        720
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        722,
+        712,
+        727,
+        725
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/api/echo.ts",
+      "line": 64,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L64"
+    }
+  ],
+  "extendedTypes": [
+    {
+      "type": "reference",
+      "id": 796,
+      "typeArguments": [
+        {
+          "type": "reference",
+          "id": 646,
+          "name": "Party"
+        }
+      ],
+      "name": "Invitation"
+    }
+  ]
+}

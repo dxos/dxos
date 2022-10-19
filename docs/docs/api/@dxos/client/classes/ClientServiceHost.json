@@ -1,0 +1,414 @@
+{
+  "id": 376,
+  "name": "ClientServiceHost",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Remote service implementation."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 377,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 20,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 378,
+          "name": "new ClientServiceHost",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 379,
+              "name": "__namedParameters",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "ClientServiceHostParams"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 376,
+            "name": "ClientServiceHost"
+          }
+        }
+      ]
+    },
+    {
+      "id": 380,
+      "name": "_config",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 16,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 382,
+      "name": "_context",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 18,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 396,
+      "name": "_createDevtoolsService",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Returns devtools context.\nUsed by the DXOS DevTool Extension."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 29,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 383,
+      "name": "_services",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 19,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 381,
+      "name": "_signer",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isOptional": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 17,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 394,
+      "name": "echo",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 24,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 395,
+        "name": "echo",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "never"
+        }
+      }
+    },
+    {
+      "id": 384,
+      "name": "services",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 21,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 385,
+        "name": "services",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "ClientServices"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "ClientServiceProvider.services"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.services"
+      }
+    },
+    {
+      "id": 392,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 23,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 393,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ClientServiceProvider.close"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.close"
+      }
+    },
+    {
+      "id": 386,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+          "line": 22,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 387,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 388,
+              "name": "onProgressCallback",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reflection",
+                "declaration": {
+                  "id": 389,
+                  "name": "__type",
+                  "kind": 65536,
+                  "kindString": "Type literal",
+                  "flags": {},
+                  "sources": [
+                    {
+                      "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+                      "line": 22,
+                      "character": 31
+                    }
+                  ],
+                  "signatures": [
+                    {
+                      "id": 390,
+                      "name": "__type",
+                      "kind": 4096,
+                      "kindString": "Call signature",
+                      "flags": {},
+                      "parameters": [
+                        {
+                          "id": 391,
+                          "name": "progress",
+                          "kind": 32768,
+                          "kindString": "Parameter",
+                          "flags": {},
+                          "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                          }
+                        }
+                      ],
+                      "type": {
+                        "type": "intrinsic",
+                        "name": "void"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "name": "ClientServiceProvider.open"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "name": "ClientServiceProvider.open"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        377
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        380,
+        382,
+        396,
+        383,
+        381
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        394,
+        384
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        392,
+        386
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts",
+      "line": 15,
+      "character": 21
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "name": "ClientServiceProvider"
+    }
+  ]
+}

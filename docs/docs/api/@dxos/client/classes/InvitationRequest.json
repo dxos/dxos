@@ -1,0 +1,547 @@
+{
+  "id": 822,
+  "name": "InvitationRequest",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Invitation created by sender."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 823,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 38,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L38"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 824,
+          "name": "new InvitationRequest",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 825,
+              "name": "_descriptor",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 397,
+                "name": "InvitationDescriptor"
+              }
+            },
+            {
+              "id": 826,
+              "name": "connected",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                ],
+                "name": "Event"
+              }
+            },
+            {
+              "id": 827,
+              "name": "finished",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "intrinsic",
+                    "name": "void"
+                  }
+                ],
+                "name": "Event"
+              }
+            },
+            {
+              "id": 828,
+              "name": "error",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "name": "Error",
+                    "qualifiedName": "Error",
+                    "package": "typescript"
+                  }
+                ],
+                "name": "Event"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 822,
+            "name": "InvitationRequest"
+          }
+        }
+      ]
+    },
+    {
+      "id": 829,
+      "name": "_hasConnected",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 14,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L14"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      },
+      "defaultValue": "false"
+    },
+    {
+      "id": 830,
+      "name": "_isCanceled",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 16,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L16"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      },
+      "defaultValue": "false"
+    },
+    {
+      "id": 834,
+      "name": "canceled",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 36,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L36"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 831,
+      "name": "connected",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Fired when the remote peer connects."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 23,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L23"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      }
+    },
+    {
+      "id": 833,
+      "name": "error",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Fired when there's an error in the invitation process."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 34,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L34"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "reference",
+            "name": "Error",
+            "qualifiedName": "Error",
+            "package": "typescript"
+          }
+        ],
+        "name": "Event"
+      }
+    },
+    {
+      "id": 832,
+      "name": "finished",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isReadonly": true
+      },
+      "comment": {
+        "summary": [
+          {
+            "kind": "text",
+            "text": "Fired when the invitation process completes successfully."
+          }
+        ]
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 28,
+          "character": 11,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L28"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        ],
+        "name": "Event"
+      }
+    },
+    {
+      "id": 835,
+      "name": "descriptor",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 53,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L53"
+        }
+      ],
+      "getSignature": {
+        "id": 836,
+        "name": "descriptor",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 397,
+          "name": "InvitationDescriptor"
+        }
+      }
+    },
+    {
+      "id": 839,
+      "name": "hasConnected",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 64,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L64"
+        }
+      ],
+      "getSignature": {
+        "id": 840,
+        "name": "hasConnected",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "True if the connected event has been fired."
+            }
+          ]
+        },
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        }
+      }
+    },
+    {
+      "id": 837,
+      "name": "secret",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 57,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L57"
+        }
+      ],
+      "getSignature": {
+        "id": 838,
+        "name": "secret",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "name": "Uint8Array",
+          "qualifiedName": "Uint8Array",
+          "package": "typescript"
+        }
+      }
+    },
+    {
+      "id": 844,
+      "name": "cancel",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 82,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L82"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 845,
+          "name": "cancel",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Cancel the invitation."
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        }
+      ]
+    },
+    {
+      "id": 846,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 88,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L88"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 847,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 841,
+      "name": "wait",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+          "line": 71,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L71"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 842,
+          "name": "wait",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Wait until connected."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 843,
+              "name": "timeout",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        823
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        829,
+        830,
+        834,
+        831,
+        833,
+        832
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        835,
+        839,
+        837
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        844,
+        846,
+        841
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/api/invitation-request.ts",
+      "line": 13,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L13"
+    }
+  ]
+}

@@ -1,41 +1,42 @@
 import os from "os";
+import { ReflectionKind, JSONOutput as S } from "typedoc";
 import {
-  ReflectionKind,
-  Reflection,
-  TraverseProperty,
-  ParameterReflection,
-  DeclarationReflection,
-  SignatureReflection,
-} from "typedoc";
-import { Input, TemplateFunction, text, File } from "../..";
-
-import { children, href, generic, method, comment } from "../..";
+  Input,
+  TemplateFunction,
+  text,
+  File,
+  reflectionsOfKind,
+  packagesInProject,
+  property,
+  comment
+} from "../..";
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
-  // const ifaces = input.project.getReflectionsByKind(ReflectionKind.Interface);
-  const ifaces: any[] = [];
-  return ifaces.map((iface) => {
-    const members = children(iface);
-    const functions = members.filter(
-      (m) =>
-        m.kind == ReflectionKind.Function || m.kind == ReflectionKind.SomeMember
-    ) as DeclarationReflection[];
-    return new File({
-      path: [
-        outputDirectory,
-        iface.parent?.getFullName() ?? "",
-        "interfaces",
-        `${iface.getAlias()}.md`,
-      ],
-      content: text`
-        # Interface \`${iface.name}\`
-        > Declared in [\`${iface.sources?.[0]?.fileName}\`](${href(iface)})
+  const packages = packagesInProject(input);
+  return packages
+    .map((pkage) => {
+      const ifaces = reflectionsOfKind(
+        pkage,
+        ReflectionKind.Interface
+      ) as S.ContainerReflection[];
+      const interfacesDir = [outputDirectory, pkage.name ?? "", "interfaces"];
+      return ifaces.map((iface) => {
+        const sourceFileName = iface.sources?.[0]?.fileName;
+        const properties = reflectionsOfKind(iface, ReflectionKind.Property);
+        return new File({
+          path: [...interfacesDir, `${iface.name}.md`],
+          content: text`
+          # Interface \`${iface.name}\`
+          > Declared in [\`${sourceFileName}\`]()
 
-        ${comment(iface)}
-        
+          ${comment(iface)}
+          ## Properties
+          ${properties.map(property)}
         `,
-    });
-  });
+        });
+      });
+    })
+    .flat();
 };
 
-// export default template;
+export default template;

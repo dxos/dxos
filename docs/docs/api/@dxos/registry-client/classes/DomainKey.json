@@ -1,0 +1,247 @@
+{
+  "id": 4883,
+  "name": "DomainKey",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Represents a domain key.\n\nDomains must conform to regex: /^[a-z0-9_]+$/."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 4889,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 24,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L24"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4890,
+          "name": "new DomainKey",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 4891,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "name": "Uint8Array",
+                "qualifiedName": "Uint8Array",
+                "package": "typescript"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 4883,
+            "name": "DomainKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4892,
+      "name": "value",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPublic": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 25,
+          "character": 20,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L25"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "name": "Uint8Array",
+        "qualifiedName": "Uint8Array",
+        "package": "typescript"
+      }
+    },
+    {
+      "id": 4893,
+      "name": "toHex",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 30,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L30"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4894,
+          "name": "toHex",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4895,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 34,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L34"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4896,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4884,
+      "name": "fromHex",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 16,
+          "character": 9,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L16"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4885,
+          "name": "fromHex",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 4886,
+              "name": "hexString",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 4883,
+            "name": "DomainKey"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4887,
+      "name": "random",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+          "line": 20,
+          "character": 9,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L20"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 4888,
+          "name": "random",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "id": 4883,
+            "name": "DomainKey"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        4889
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        4892
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        4893,
+        4895,
+        4884,
+        4887
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/registry-client/src/api/domain-key.ts",
+      "line": 15,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/registry-client/src/api/domain-key.ts#L15"
+    }
+  ]
+}

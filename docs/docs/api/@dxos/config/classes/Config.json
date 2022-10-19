@@ -1,0 +1,2389 @@
+{
+  "id": 1826,
+  "name": "Config",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Global configuration object.\nNOTE: Config objects are immutable."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1827,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 100,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L100"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1828,
+          "name": "new Config",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates an immutable instance."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1829,
+              "name": "objects",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isRest": true
+              },
+              "type": {
+                "type": "tuple",
+                "elements": [
+                  {
+                    "type": "reference",
+                    "id": 1646,
+                    "name": "Config"
+                  },
+                  {
+                    "type": "rest",
+                    "elementType": {
+                      "type": "array",
+                      "elementType": {
+                        "type": "reference",
+                        "id": 1646,
+                        "name": "Config"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1826,
+            "name": "Config"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1830,
+      "name": "_config",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 93,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L93"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 1831,
+      "name": "values",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 107,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L107"
+        }
+      ],
+      "getSignature": {
+        "id": 1832,
+        "name": "values",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Returns an immutable config JSON object."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "id": 1646,
+          "name": "Config"
+        }
+      }
+    },
+    {
+      "id": 1833,
+      "name": "get",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 118,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L118"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1834,
+          "name": "get",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns the given config property."
+              }
+            ],
+            "blockTags": [
+              {
+                "tag": "@returns",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "The config value or undefined if the option is not present."
+                  }
+                ]
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 1835,
+              "name": "K",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "literal",
+                    "value": "version"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.repos"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.repos.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".url"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.license"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.modules"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.modules.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".url"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".type"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".displayName"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".description"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".record"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.byteLength"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.BYTES_PER_ELEMENT"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.byteOffset"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.buffer.byteLength"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.command"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.outdir"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.tag"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.props"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.system"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.debug"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.enableSnapshots"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.snapshotInterval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.invitationExpiration"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.mode"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.remoteSource"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.persistent"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.keyStorage"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.storageType"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.path"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.org"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.theme"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.website"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.publicUrl"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.nodePath"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.npmClient"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.loginApp"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.keyPhrase"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.props.title"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ice"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.publisher"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app.prefix"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.publicUrl"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.services"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.logs"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.cert"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.api"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.status"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.accountUri"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.address"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.account"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.faucet"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs.gateway"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ice.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".urls"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".username"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".credential"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.doAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.githubAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.githubUsername"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.dnsDomain"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.npmAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.persistent"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.topic"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.retryAttempts"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.retryInterval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.publisher.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.system.debug"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.host"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.confhost"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.env"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.alias"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate.enabled"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate.interval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.enabled"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.email"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.certfile"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.keyfile"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.dnsprovider"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.privateKey"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.bootstrap"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.bootstrap.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.p2p.bootstrap.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.env.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.env.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.alias.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.alias.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 1836,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "id": 1835,
+                "name": "K"
+              }
+            },
+            {
+              "id": 1837,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Default value to return if option is not present in the config."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "id": 1867,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 1646,
+                    "name": "Config"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 1865,
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "id": 1835,
+                        "name": "K"
+                      }
+                    ],
+                    "name": "ParseKey"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  }
+                ],
+                "name": "DeepIndex"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1867,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1646,
+                "name": "Config"
+              },
+              {
+                "type": "reference",
+                "id": 1865,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 1835,
+                    "name": "K"
+                  }
+                ],
+                "name": "ParseKey"
+              },
+              {
+                "type": "intrinsic",
+                "name": "undefined"
+              }
+            ],
+            "name": "DeepIndex"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1843,
+      "name": "getOrThrow",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 136,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L136"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1844,
+          "name": "getOrThrow",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns the given config property or throw if it doesn't exist."
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 1845,
+              "name": "K",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {},
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "literal",
+                    "value": "version"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.repos"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.repos.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.repos.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".url"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.license"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.modules"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "package.modules.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".name"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".repos."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".url"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".type"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".displayName"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".description"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".record"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".tags."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.length"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle."
+                      ],
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.byteLength"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.BYTES_PER_ELEMENT"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.byteOffset"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".bundle.buffer.byteLength"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.version"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.command"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.outdir"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "package.modules.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".build.tag"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.props"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.system"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.debug"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.enableSnapshots"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.snapshotInterval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.invitationExpiration"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.mode"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.remoteSource"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.persistent"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.keyStorage"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.storageType"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.client.storage.path"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.org"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.theme"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.website"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.app.publicUrl"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.nodePath"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.npmClient"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.loginApp"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.app.serve.keyPhrase"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.console.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.mdns.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.config"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.package"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.channel"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.cli.signal.bin"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.props.title"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ice"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.publisher"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app.prefix"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.app.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.publicUrl"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.services"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.logs"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.kube.endpoints.cert"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.api"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.signal.status"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.accountUri"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.address"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.account"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.dxns.faucet"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ipfs.gateway"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.ice.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".urls"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".username"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.services.ice.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ".credential"
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.doAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.githubAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.githubUsername"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.dnsDomain"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.machine.npmAccessToken"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.persistent"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.topic"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.retryAttempts"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.bot.retryInterval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.services.publisher.server"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.system.debug"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.host"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.confhost"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.env"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.alias"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate.enabled"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.autoupdate.interval"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.enabled"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.email"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.certfile"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.keyfile"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.https.dnsprovider"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.port"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.privateKey"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.bootstrap"
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.p2p.bootstrap.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.p2p.bootstrap.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.env.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.env.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  },
+                  {
+                    "type": "literal",
+                    "value": "runtime.kube.alias.length"
+                  },
+                  {
+                    "type": "template-literal",
+                    "head": "runtime.kube.alias.",
+                    "tail": [
+                      [
+                        {
+                          "type": "intrinsic",
+                          "name": "number"
+                        },
+                        ""
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "parameters": [
+            {
+              "id": 1846,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'."
+                  }
+                ]
+              },
+              "type": {
+                "type": "reference",
+                "id": 1845,
+                "name": "K"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 1867,
+                "typeArguments": [
+                  {
+                    "type": "reference",
+                    "id": 1646,
+                    "name": "Config"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 1865,
+                    "typeArguments": [
+                      {
+                        "type": "reference",
+                        "id": 1845,
+                        "name": "K"
+                      }
+                    ],
+                    "name": "ParseKey"
+                  },
+                  {
+                    "type": "intrinsic",
+                    "name": "undefined"
+                  }
+                ],
+                "name": "DeepIndex"
+              },
+              {
+                "type": "intrinsic",
+                "name": "undefined"
+              }
+            ],
+            "name": "Exclude",
+            "qualifiedName": "Exclude",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1838,
+      "name": "getUnchecked",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/config/src/config.ts",
+          "line": 127,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L127"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1839,
+          "name": "getUnchecked",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Returns config key without type checking."
+              }
+            ],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Use the type-checked version."
+                  }
+                ]
+              }
+            ]
+          },
+          "typeParameter": [
+            {
+              "id": 1840,
+              "name": "T",
+              "kind": 131072,
+              "kindString": "Type parameter",
+              "flags": {}
+            }
+          ],
+          "parameters": [
+            {
+              "id": 1841,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 1842,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "reference",
+                "id": 1840,
+                "name": "T"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 1840,
+            "name": "T"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        1827
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        1830
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1831
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1833,
+        1843,
+        1838
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/config/src/config.ts",
+      "line": 92,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L92"
+    }
+  ]
+}

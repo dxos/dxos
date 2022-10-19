@@ -1,0 +1,551 @@
+{
+  "id": 577,
+  "name": "OrderedList",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Utility class that wraps an "
+      },
+      {
+        "kind": "code",
+        "text": "`ObjectModel`"
+      },
+      {
+        "kind": "text",
+        "text": " and implements a linked list via key-values on a given property."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 578,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 13,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 579,
+          "name": "new OrderedList",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 580,
+              "name": "_model",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "reference",
+                "id": 504,
+                "name": "ObjectModel"
+              }
+            },
+            {
+              "id": 581,
+              "name": "_property",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 577,
+            "name": "OrderedList"
+          }
+        }
+      ]
+    },
+    {
+      "id": 582,
+      "name": "_model",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 8,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 583,
+      "name": "_property",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 9,
+          "character": 21
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 586,
+      "name": "_unsubscribe",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 12,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 584,
+      "name": "_values",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 10,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "any"
+      }
+    },
+    {
+      "id": 585,
+      "name": "update",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 11,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "typeArguments": [
+          {
+            "type": "array",
+            "elementType": {
+              "type": "intrinsic",
+              "name": "string"
+            }
+          }
+        ],
+        "name": "Event"
+      }
+    },
+    {
+      "id": 587,
+      "name": "id",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 14,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 588,
+        "name": "id",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "string"
+        }
+      }
+    },
+    {
+      "id": 589,
+      "name": "values",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 18,
+          "character": 8
+        }
+      ],
+      "getSignature": {
+        "id": 590,
+        "name": "values",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Get ordered values."
+            }
+          ]
+        },
+        "type": {
+          "type": "array",
+          "elementType": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      }
+    },
+    {
+      "id": 591,
+      "name": "destroy",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 19,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 592,
+          "name": "destroy",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "intrinsic",
+            "name": "void"
+          }
+        }
+      ]
+    },
+    {
+      "id": 595,
+      "name": "init",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 27,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 596,
+          "name": "init",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Clears the ordered set with the optional values."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 597,
+              "name": "values",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "intrinsic",
+                  "name": "string"
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "intrinsic",
+                  "name": "string"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 598,
+      "name": "insert",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 31,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 599,
+          "name": "insert",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Links the ordered items, possibly linking them to existing items."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 600,
+              "name": "left",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 601,
+              "name": "right",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "intrinsic",
+                  "name": "string"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 593,
+      "name": "refresh",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 23,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 594,
+          "name": "refresh",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Refresh list from properties."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 577,
+            "name": "OrderedList"
+          }
+        }
+      ]
+    },
+    {
+      "id": 602,
+      "name": "remove",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+          "line": 35,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 603,
+          "name": "remove",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Removes the given element, possibly linked currently connected items."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 604,
+              "name": "values",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "array",
+                "elementType": {
+                  "type": "intrinsic",
+                  "name": "string"
+                }
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "array",
+                "elementType": {
+                  "type": "intrinsic",
+                  "name": "string"
+                }
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "children": [
+        578
+      ]
+    },
+    {
+      "title": "Properties",
+      "children": [
+        582,
+        583,
+        586,
+        584,
+        585
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        587,
+        589
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        591,
+        595,
+        598,
+        593,
+        602
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/core/echo/object-model/dist/src/ordered-list.d.ts",
+      "line": 7,
+      "character": 21
+    }
+  ]
+}

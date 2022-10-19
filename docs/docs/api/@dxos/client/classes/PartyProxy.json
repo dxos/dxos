@@ -1,0 +1,1529 @@
+{
+  "id": 1073,
+  "name": "PartyProxy",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "summary": [
+      {
+        "kind": "text",
+        "text": "Main public Party API.\nProxies requests to local/remove services."
+      }
+    ]
+  },
+  "children": [
+    {
+      "id": 1080,
+      "name": "_database",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isOptional": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 26,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L26"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 157,
+        "name": "Database"
+      }
+    },
+    {
+      "id": 1081,
+      "name": "_invitationProxy",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isReadonly": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 27,
+          "character": 19,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L27"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 1055,
+        "name": "InvitationProxy"
+      },
+      "defaultValue": "..."
+    },
+    {
+      "id": 1084,
+      "name": "_isActive",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 31,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L31"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    },
+    {
+      "id": 1083,
+      "name": "_isOpen",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 30,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L30"
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "boolean"
+      }
+    },
+    {
+      "id": 1085,
+      "name": "_item",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true,
+        "isOptional": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 32,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L32"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 48,
+        "typeArguments": [
+          {
+            "type": "reference",
+            "id": 504,
+            "name": "ObjectModel"
+          }
+        ],
+        "name": "Item"
+      }
+    },
+    {
+      "id": 1082,
+      "name": "_key",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 29,
+          "character": 10,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L29"
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 427,
+        "name": "PublicKey"
+      }
+    },
+    {
+      "id": 1094,
+      "name": "database",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 83,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L83"
+        }
+      ],
+      "getSignature": {
+        "id": 1095,
+        "name": "database",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 157,
+          "name": "Database"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.database"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 653,
+        "name": "Party.database"
+      }
+    },
+    {
+      "id": 1086,
+      "name": "invitationProxy",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 66,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L66"
+        }
+      ],
+      "getSignature": {
+        "id": 1087,
+        "name": "invitationProxy",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 1055,
+          "name": "InvitationProxy"
+        }
+      }
+    },
+    {
+      "id": 1092,
+      "name": "isActive",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 78,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L78"
+        }
+      ],
+      "getSignature": {
+        "id": 1093,
+        "name": "isActive",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.isActive"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 651,
+        "name": "Party.isActive"
+      }
+    },
+    {
+      "id": 1090,
+      "name": "isOpen",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 74,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L74"
+        }
+      ],
+      "getSignature": {
+        "id": 1091,
+        "name": "isOpen",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "intrinsic",
+          "name": "boolean"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.isOpen"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 649,
+        "name": "Party.isOpen"
+      }
+    },
+    {
+      "id": 1088,
+      "name": "key",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 70,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L70"
+        }
+      ],
+      "getSignature": {
+        "id": 1089,
+        "name": "key",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "type": {
+          "type": "reference",
+          "id": 427,
+          "name": "PublicKey"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.key"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 647,
+        "name": "Party.key"
+      }
+    },
+    {
+      "id": 1125,
+      "name": "properties",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 159,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L159"
+        }
+      ],
+      "getSignature": {
+        "id": 1126,
+        "name": "properties",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "TODO: Currently broken."
+            }
+          ]
+        },
+        "type": {
+          "type": "reference",
+          "name": "ObjectProperties"
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.properties"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 686,
+        "name": "Party.properties"
+      }
+    },
+    {
+      "id": 1101,
+      "name": "reduce",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 101,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L101"
+        }
+      ],
+      "getSignature": {
+        "id": 1102,
+        "name": "reduce",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Returns a selection context, which can be used to traverse the object graph."
+            }
+          ]
+        },
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 1103,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "sources": [
+              {
+                "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+                "line": 80,
+                "character": 4
+              }
+            ],
+            "signatures": [
+              {
+                "id": 1104,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                  "summary": [
+                    {
+                      "kind": "text",
+                      "text": "Returns a reducer selection context."
+                    }
+                  ]
+                },
+                "typeParameter": [
+                  {
+                    "id": 1105,
+                    "name": "R",
+                    "kind": 131072,
+                    "kindString": "Type parameter",
+                    "flags": {}
+                  }
+                ],
+                "parameters": [
+                  {
+                    "id": 1106,
+                    "name": "result",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {},
+                    "type": {
+                      "type": "reference",
+                      "id": 201,
+                      "name": "R"
+                    }
+                  },
+                  {
+                    "id": 1107,
+                    "name": "filter",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {
+                      "isOptional": true
+                    },
+                    "type": {
+                      "type": "reference",
+                      "name": "RootFilter"
+                    }
+                  }
+                ],
+                "type": {
+                  "type": "reference",
+                  "id": 209,
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "id": 48,
+                      "typeArguments": [
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        }
+                      ],
+                      "name": "Item"
+                    },
+                    {
+                      "type": "reference",
+                      "id": 201,
+                      "name": "R"
+                    }
+                  ],
+                  "name": "Selection"
+                }
+              }
+            ]
+          }
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.reduce"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 660,
+        "name": "Party.reduce"
+      }
+    },
+    {
+      "id": 1096,
+      "name": "select",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 94,
+          "character": 6,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L94"
+        }
+      ],
+      "getSignature": {
+        "id": 1097,
+        "name": "select",
+        "kind": 524288,
+        "kindString": "Get signature",
+        "flags": {},
+        "comment": {
+          "summary": [
+            {
+              "kind": "text",
+              "text": "Returns a selection context, which can be used to traverse the object graph."
+            }
+          ]
+        },
+        "type": {
+          "type": "reflection",
+          "declaration": {
+            "id": 1098,
+            "name": "__type",
+            "kind": 65536,
+            "kindString": "Type literal",
+            "flags": {},
+            "sources": [
+              {
+                "fileName": "packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts",
+                "line": 74,
+                "character": 4
+              }
+            ],
+            "signatures": [
+              {
+                "id": 1099,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                  "summary": [
+                    {
+                      "kind": "text",
+                      "text": "Returns a selection context, which can be used to traverse the object graph."
+                    }
+                  ]
+                },
+                "parameters": [
+                  {
+                    "id": 1100,
+                    "name": "filter",
+                    "kind": 32768,
+                    "kindString": "Parameter",
+                    "flags": {
+                      "isOptional": true
+                    },
+                    "type": {
+                      "type": "reference",
+                      "name": "RootFilter"
+                    }
+                  }
+                ],
+                "type": {
+                  "type": "reference",
+                  "id": 209,
+                  "typeArguments": [
+                    {
+                      "type": "reference",
+                      "id": 48,
+                      "typeArguments": [
+                        {
+                          "type": "intrinsic",
+                          "name": "any"
+                        }
+                      ],
+                      "name": "Item"
+                    },
+                    {
+                      "type": "intrinsic",
+                      "name": "void"
+                    }
+                  ],
+                  "name": "Selection"
+                }
+              }
+            ]
+          }
+        },
+        "implementationOf": {
+          "type": "reference",
+          "name": "Party.select"
+        }
+      },
+      "implementationOf": {
+        "type": "reference",
+        "id": 655,
+        "name": "Party.select"
+      }
+    },
+    {
+      "id": 1118,
+      "name": "_setOpen",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 138,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L138"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1119,
+          "name": "_setOpen",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1120,
+              "name": "open",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          }
+        }
+      ]
+    },
+    {
+      "id": 1114,
+      "name": "close",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 130,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L130"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1115,
+          "name": "close",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 674,
+            "name": "Party.close"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 673,
+        "name": "Party.close"
+      }
+    },
+    {
+      "id": 1142,
+      "name": "createInvitation",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 214,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L214"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1143,
+          "name": "createInvitation",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Creates an invitation to a given party.\nThe Invitation flow requires the inviter and invitee to be online at the same time.\nIf the invitee is known ahead of time, "
+              },
+              {
+                "kind": "code",
+                "text": "`invitee_key`"
+              },
+              {
+                "kind": "text",
+                "text": " can be provide to not require the secret exchange.\nThe invitation flow is protected by a generated pin code.\n\nTo be used with "
+              },
+              {
+                "kind": "code",
+                "text": "`client.echo.acceptInvitation`"
+              },
+              {
+                "kind": "text",
+                "text": " on the invitee side."
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1144,
+              "name": "inviteeKey",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "summary": [
+                  {
+                    "kind": "text",
+                    "text": "Public key of the invitee. In this case no secret exchange is required,\n  but only the specified recipient can accept the invitation."
+                  }
+                ]
+              },
+              "originalName": "__namedParameters",
+              "type": {
+                "type": "reference",
+                "id": 644,
+                "name": "CreationInvitationOptions"
+              },
+              "defaultValue": "{}"
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "id": 822,
+                "name": "InvitationRequest"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 699,
+            "name": "Party.createInvitation"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 698,
+        "name": "Party.createInvitation"
+      }
+    },
+    {
+      "id": 1145,
+      "name": "createSnapshot",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 222,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L222"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1146,
+          "name": "createSnapshot",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Implementation method."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "PartySnapshot"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 702,
+            "name": "Party.createSnapshot"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 701,
+        "name": "Party.createSnapshot"
+      }
+    },
+    {
+      "id": 1110,
+      "name": "destroy",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 120,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L120"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1111,
+          "name": "destroy",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Called by EchoProxy close."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 670,
+            "name": "Party.destroy"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 669,
+        "name": "Party.destroy"
+      }
+    },
+    {
+      "id": 1116,
+      "name": "getDetails",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 134,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L134"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1117,
+          "name": "getDetails",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "PartyDetails"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 685,
+            "name": "Party.getDetails"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 684,
+        "name": "Party.getDetails"
+      }
+    },
+    {
+      "id": 1136,
+      "name": "getProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 188,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L188"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1137,
+          "name": "getProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Use party.properties."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1138,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 1139,
+              "name": "defaultValue",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "any"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 693,
+            "name": "Party.getProperty"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 692,
+        "name": "Party.getProperty"
+      }
+    },
+    {
+      "id": 1130,
+      "name": "getTitle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 173,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L173"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1131,
+          "name": "getTitle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Use party.properties."
+                  }
+                ]
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "never"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 683,
+            "name": "Party.getTitle"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 682,
+        "name": "Party.getTitle"
+      }
+    },
+    {
+      "id": 1108,
+      "name": "initialize",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 108,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L108"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1109,
+          "name": "initialize",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Called by EchoProxy open."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 668,
+            "name": "Party.initialize"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 667,
+        "name": "Party.initialize"
+      }
+    },
+    {
+      "id": 1112,
+      "name": "open",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 126,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L126"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1113,
+          "name": "open",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 672,
+            "name": "Party.open"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 671,
+        "name": "Party.open"
+      }
+    },
+    {
+      "id": 1140,
+      "name": "queryMembers",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 196,
+          "character": 2,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L196"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1141,
+          "name": "queryMembers",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [
+              {
+                "kind": "text",
+                "text": "Return set of party members."
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 305,
+            "typeArguments": [
+              {
+                "type": "reference",
+                "name": "PartyMember"
+              }
+            ],
+            "name": "ResultSet"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 697,
+            "name": "Party.queryMembers"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 696,
+        "name": "Party.queryMembers"
+      }
+    },
+    {
+      "id": 1121,
+      "name": "setActive",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 146,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L146"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1122,
+          "name": "setActive",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "parameters": [
+            {
+              "id": 1123,
+              "name": "active",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            },
+            {
+              "id": 1124,
+              "name": "options",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 676,
+            "name": "Party.setActive"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 675,
+        "name": "Party.setActive"
+      }
+    },
+    {
+      "id": 1132,
+      "name": "setProperty",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 181,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L181"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1133,
+          "name": "setProperty",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Use party.properties."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1134,
+              "name": "key",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 1135,
+              "name": "value",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "any"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 689,
+            "name": "Party.setProperty"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 688,
+        "name": "Party.setProperty"
+      }
+    },
+    {
+      "id": 1127,
+      "name": "setTitle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+          "line": 166,
+          "character": 8,
+          "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L166"
+        }
+      ],
+      "signatures": [
+        {
+          "id": 1128,
+          "name": "setTitle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "summary": [],
+            "blockTags": [
+              {
+                "tag": "@deprecated",
+                "content": [
+                  {
+                    "kind": "text",
+                    "text": "Use party.properties."
+                  }
+                ]
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 1129,
+              "name": "title",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "typeArguments": [
+              {
+                "type": "intrinsic",
+                "name": "void"
+              }
+            ],
+            "name": "Promise",
+            "qualifiedName": "Promise",
+            "package": "typescript"
+          },
+          "implementationOf": {
+            "type": "reference",
+            "id": 680,
+            "name": "Party.setTitle"
+          }
+        }
+      ],
+      "implementationOf": {
+        "type": "reference",
+        "id": 679,
+        "name": "Party.setTitle"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "children": [
+        1080,
+        1081,
+        1084,
+        1083,
+        1085,
+        1082
+      ]
+    },
+    {
+      "title": "Accessors",
+      "children": [
+        1094,
+        1086,
+        1092,
+        1090,
+        1088,
+        1125,
+        1101,
+        1096
+      ]
+    },
+    {
+      "title": "Methods",
+      "children": [
+        1118,
+        1114,
+        1142,
+        1145,
+        1110,
+        1116,
+        1136,
+        1130,
+        1108,
+        1112,
+        1140,
+        1121,
+        1132,
+        1127
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "packages/sdk/client/src/packlets/proxies/party-proxy.ts",
+      "line": 25,
+      "character": 13,
+      "url": "https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L25"
+    }
+  ],
+  "implementedTypes": [
+    {
+      "type": "reference",
+      "id": 646,
+      "name": "Party"
+    }
+  ]
+}

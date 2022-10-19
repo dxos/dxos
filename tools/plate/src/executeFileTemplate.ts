@@ -71,9 +71,9 @@ export type TemplateContext<TInput = {}> =
     defaultOutputFile: string;
   };
 
-export type TemplatingResult = File[];
+export type TemplatingResult<R = any> = File<R>[];
 
-export type TemplateFunctionResult = string | File[];
+export type TemplateFunctionResult<R = any> = string | File<R>[];
 
 export type Functor<TInput = void, TOutput = void> = (
   input: TInput
