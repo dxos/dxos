@@ -15,43 +15,35 @@ import {
   CardActions,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  TextField
 } from '@mui/material';
 
-import { clientServiceBundle } from '@dxos/client-services';
+import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
-import { RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
 import { PartyCard } from './PartyCard';
+
+export interface ControlsProps {
+  onRemoteSource: (remoteSource: string) => void
+}
 
 /**
  * Devtools playground control.
  * @param port
  * @constructor
  */
-export const PlaygroundControls = ({ port }: { port?: RpcPort }) => {
+export const Controls = ({ onRemoteSource }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
-
-  useAsyncEffect(async () => {
-    if (port) {
-      const rpcServer = createBundledRpcServer({ // TODO(burdon): Rename "Bundled"?
-        services: clientServiceBundle,
-        handlers: client.services,
-        port
-      });
-
-      await rpcServer.open();
-    }
-  }, [port]);
+  const [remoteSource, setRemoteSource] = useState(client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN);
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
@@ -137,6 +129,32 @@ export const PlaygroundControls = ({ port }: { port?: RpcPort }) => {
           closeOnSuccess
         />
       </>
+
+      <Box sx={{
+        paddingRight: 1
+      }}>
+        <Card sx={{ margin: 1 }}>
+          <Box sx={{
+            padding: 1,
+            display: 'flex'
+          }}>
+            <TextField
+              label='Remote Source'
+              variant='standard'
+              fullWidth
+              value={remoteSource}
+              onChange={event => setRemoteSource(event.target.value)}
+            />
+            <Button
+              variant='contained'
+              onClick={() => onRemoteSource(remoteSource)}
+              sx={{ marginLeft: 1 }}
+            >
+              Set
+            </Button>
+          </Box>
+        </Card>
+      </Box>
 
       <Box sx={{
         paddingRight: 1
