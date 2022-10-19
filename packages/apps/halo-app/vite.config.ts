@@ -80,6 +80,6 @@ export default defineConfig({
     })
   ],
   worker: {
-    plugins: [dxosPlugin()]
+    plugins: [dxosPlugin(__dirname)]
   }
 });
