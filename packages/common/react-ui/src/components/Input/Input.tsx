@@ -12,6 +12,7 @@ import React, {
   useTransition
 } from 'react';
 
+import { useId } from '../../hooks';
 import {
   defaultDescription,
   defaultDisabled,
@@ -19,7 +20,6 @@ import {
   defaultHover,
   defaultPlaceholder
 } from '../../styles';
-import { useId } from '../../util/useId';
 
 export enum InputSize {
   md = 'md',

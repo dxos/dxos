@@ -5,9 +5,9 @@
 import cx from 'classnames';
 import React, { PropsWithChildren, ReactNode } from 'react';
 
+import { useId } from '../../hooks';
 import { ButtonProps } from '../../props';
 import { buttonClassName, defaultDescription, primaryDescription } from '../../styles';
-import { useId } from '../../util/useId';
 
 export interface CompoundButtonProps extends ButtonProps {
   description?: ReactNode

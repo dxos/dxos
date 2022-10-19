@@ -10,23 +10,28 @@ import {
   Button,
   Group,
   GroupProps,
-  HeadingProps,
   Input,
   InputProps,
-  InputSize
+  InputSize,
+  Loading,
+  LoadingColor,
+  useId
 } from '@dxos/react-ui';
 
-type TKey = Parameters<TFunction>[0]
+type TKey = Parameters<TFunction>[0];
 
-export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'>, Pick<InputProps, 'autoComplete' | 'type'> {
+export interface SingleInputStepProps
+  extends Omit<GroupProps, 'label' | 'onChange'>,
+    Pick<InputProps, 'autoComplete' | 'type'> {
   rootLabelTKey: TKey
   inputLabelTKey: TKey
   onChange: (value: string) => void
-  label?: HeadingProps
+  pending?: boolean
   onClickBack?: () => void
   backTKey?: TKey
   onClickNext: () => void
   nextTKey?: TKey
+  loadingTKey?: TKey
   inputPlaceholderTKey?: string
 }
 
@@ -34,16 +39,19 @@ export const SingleInputStep = ({
   rootLabelTKey,
   inputLabelTKey,
   onChange,
-  inputPlaceholderTKey,
+  pending,
   onClickBack,
   backTKey = 'back label',
   onClickNext,
   nextTKey = 'next label',
+  loadingTKey = 'generic loading label',
+  inputPlaceholderTKey,
   autoComplete,
   type,
   ...groupProps
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
+  const loadingId = useId('singleInputStep-loading');
   return (
     <Group
       elevation={5}
@@ -53,12 +61,43 @@ export const SingleInputStep = ({
         children: t(rootLabelTKey)
       }}
       {...groupProps}
-      className={cx('p-4 pt-5 rounded-2xl', groupProps.className)}
+      className={cx('p-6 rounded-3xl', groupProps.className)}
+      aria-live='polite'
     >
-      <Input size={InputSize.lg} label={t(inputLabelTKey)} {...{ autoComplete, type }} {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })} onChange={onChange} />
-      <div role='none' className='flex gap-4 justify-end'>
-        {onClickBack && <Button onClick={onClickBack}>{t(backTKey)}</Button>}
-        <Button variant='primary' onClick={onClickNext}>{t(nextTKey)}</Button>
+      <Input
+        size={InputSize.lg}
+        label={t(inputLabelTKey)}
+        {...{
+          autoComplete,
+          type
+        }}
+        {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })}
+        {...(pending && { disabled: true })}
+        onChange={onChange}
+      />
+      <div role='none' className='flex gap-4 justify-end items-center'>
+        <div role='none' className={cx(!pending && 'hidden')}>
+          <Loading
+            labelId={loadingId}
+            color={LoadingColor.neutral}
+            className='p-0 ml-0'
+          />
+          <span id={loadingId} className='sr-only'>
+            {t(loadingTKey)}
+          </span>
+        </div>
+        {onClickBack && (
+          <Button onClick={onClickBack} {...(pending && { disabled: true })}>
+            {t(backTKey)}
+          </Button>
+        )}
+        <Button
+          variant='primary'
+          onClick={onClickNext}
+          {...(pending && { disabled: true })}
+        >
+          {t(nextTKey)}
+        </Button>
       </div>
     </Group>
   );

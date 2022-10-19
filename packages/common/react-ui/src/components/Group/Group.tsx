@@ -5,7 +5,7 @@
 import cx from 'classnames';
 import React, { PropsWithChildren } from 'react';
 
-import { useId } from '../../util/useId';
+import { useId } from '../../hooks';
 import { Heading, HeadingProps } from '../Heading/Heading';
 
 export interface GroupProps extends React.ComponentProps<'div'> {

@@ -4,6 +4,7 @@
 
 export const translation = {
   'loading translations': 'Loading translations…',
+  'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
   'create profile label': 'Create a profile',
   'create profile description': 'Create a new profile.',

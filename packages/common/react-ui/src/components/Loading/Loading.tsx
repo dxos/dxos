@@ -5,8 +5,6 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { useId } from '../../util/useId';
-
 export enum LoadingSize {
   sm = 'sm',
   md = 'md',
@@ -20,6 +18,7 @@ export enum LoadingColor {
 }
 
 export interface LoadingProps {
+  labelId: string
   size?: LoadingSize
   color?: LoadingColor
   className?: string
@@ -32,21 +31,20 @@ const sizeMap = new Map<LoadingSize, string>([
   [LoadingSize.xl, 'w-16 h-16']
 ]);
 
-export const Loading = ({ size, color, className }: LoadingProps) => {
-  const labelId = useId('loading');
+export const Loading = ({ size, color, className, labelId }: LoadingProps) => {
   const sizeClassName = sizeMap.get(size || LoadingSize.md);
   return (
     <div
-      role='status' className='flex justify-center p-4'
-      aria-labelledby={labelId}>
+      role='status' className={cx('flex justify-center p-4', className)}
+      aria-labelledby={labelId}
+    >
       <svg
         role='none'
         aria-hidden='true'
         className={cx(
           sizeClassName,
           'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
-          color === LoadingColor.neutral ? 'fill-neutral-400' : 'fill-primary-400',
-          className
+          color === LoadingColor.neutral ? 'fill-neutral-400' : 'fill-primary-400'
         )}
         viewBox='0 0 100 101' fill='none' xmlns='http://www.w3.org/2000/svg'
       >
@@ -59,7 +57,6 @@ export const Loading = ({ size, color, className }: LoadingProps) => {
           fill='currentFill'
         />
       </svg>
-      <span id={labelId} className='sr-only'>Loading…</span>
     </div>
   );
 };

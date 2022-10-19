@@ -30,6 +30,7 @@ export const CreateProfile = templateForComponent(Template)({
   onChange: () => {}
 });
 CreateProfile.args = {
+  pending: false,
   rootLabelTKey: 'create profile label',
   inputLabelTKey: 'username label',
   inputPlaceholderTKey: 'username placeholder',
