@@ -35,7 +35,7 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/devtools/devtools/out/halo",
+        "outputPath": "packages/devtools/devtools/out/devtools",
         "configFile": "packages/devtools/devtools/vite.config.ts"
       }
     },
@@ -53,7 +53,7 @@
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/devtools/devtools/out/halo",
+        "outputPath": "packages/devtools/devtools/out/devtools",
         "configFile": "packages/devtools/devtools/vite.config.ts"
       }
     },
