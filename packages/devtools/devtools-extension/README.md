@@ -1,6 +1,6 @@
 # DXOS DevTools browser extension
 
-TODO(wittjosiah): Upgrade to manifest v3.
+WARNING: This package is currently outdated and unmaintained.
 
 The DevTools extension provides debugging information about all aspects of the currently loaded DXOS app.
 
@@ -19,30 +19,20 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 
 ### General
 
-1. Clone this repo then install dependencies and build:
+1. Clone this repo then install dependencies
+2. Then to build the extension:
 
 ```
-rushx build --to rush build --to @dxos/devtools
+pnpm -w nx build devtools-extension
 ```
 
-2. Then to build the extension.
-
-```
-rushx build
-```
-
-3. (Optional) Run the `rushx build:watch` for both `devtools-extension` and `devtools` and open the devtools in your browser.
-
-TODO(burdon): `build:watch` not configured.
-
-### Chrome
+### Chromium
 
 4. Open the __extensions__ manager in your browser: 
 
 - [brave://extensions](brave://extensions)
 - [chrome://extensions](chrome://extensions)
 - Edge (Not Supported Yet)
-- Safari (Not Supported Yet)
 
 5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
 6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
@@ -54,6 +44,10 @@ TODO(burdon): `build:watch` not configured.
 6. Click `Load Temporary Add-on...` and select the zip file in `web-ext-artifacts`.
 
 An alternative method is to run `rushx start:firefox` which will run a temporary firefox instance with the extension installed. Running this way allows for integration with watch tools and reloading the extension by pressing `r` in the terminal.
+
+### Safari
+
+- Not yet supported.
 
 ## Troubleshooting
 
@@ -85,4 +79,3 @@ The injected script sends messages through the content script via window events 
 
 - Anatomy of an extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#Background_pages
 - This package is loosely based on the [Apollo DevTools](https://github.com/apollographql/apollo-client-devtools).
-
