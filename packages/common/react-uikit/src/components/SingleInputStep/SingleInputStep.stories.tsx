@@ -36,7 +36,7 @@ CreateProfile.args = {
   rootLabelTKey: 'create profile label',
   inputLabelTKey: 'username label',
   inputPlaceholderTKey: 'username placeholder',
-  autoComplete: 'username'
+  inputProps: { autoComplete: 'username' }
 };
 
 export const JoinSpace = () => (
@@ -73,8 +73,10 @@ export const RestoreProfileWithError = () => (
     onChange={() => {}}
     onClickNext={() => {}}
     onClickBack={() => {}}
-    validationMessage='This only has 3 of the required 24 words'
-    validationValence={ValidationValence.error}
-    initialValue='squirrels potatoes dolphins'
+    inputProps={{
+      validationMessage: 'This only has 3 of the required 24 words',
+      validationValence: ValidationValence.error,
+      initialValue: 'squirrels potatoes dolphins'
+    }}
   />
 );

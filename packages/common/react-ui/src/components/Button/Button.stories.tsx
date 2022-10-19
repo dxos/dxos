@@ -5,10 +5,10 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
-import { ButtonProps } from '../../props';
 import { templateForComponent } from '../../testing';
-import { Group } from '../Group/Group';
+import { Group } from '../Group';
 import { Button } from './Button';
+import { ButtonProps } from './ButtonProps';
 
 export default {
   title: 'react-ui/Button',
