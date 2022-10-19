@@ -84,7 +84,7 @@ export class TraceCollector {
 
   setEnabled (enabled: boolean) {
     if (enabled) {
-      this._subscriptions.push(this._tracer.message.on(msg => {
+      this._subscriptions.add(this._tracer.message.on(msg => {
         assert(msg.data);
         const inner = schema.getCodecForType('dxos.rpc.RpcMessage').decode(msg.data);
         if (inner.request) {

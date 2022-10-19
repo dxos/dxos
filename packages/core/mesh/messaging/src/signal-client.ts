@@ -80,7 +80,7 @@ export class SignalClient implements SignalMethods {
 
   private _client!: SignalRPCClient;
 
-  private _cleanupSubscriptions = new SubscriptionGroup();
+  private _subscriptions = new SubscriptionGroup();
   readonly statusChanged = new Event<SignalStatus>();
 
   readonly commandTrace = new Event<CommandTrace>();
@@ -138,7 +138,7 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     }
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.connected.on(() => {
         this._lastError = undefined;
         this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
@@ -146,7 +146,7 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.error.on((error) => {
         log(`Socket error: ${error.message}`);
         if (this._state === SignalState.CLOSED) {
@@ -164,7 +164,7 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.disconnected.on(() => {
         log('Socket disconnected');
         // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
@@ -198,7 +198,7 @@ export class SignalClient implements SignalMethods {
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._cleanupSubscriptions.unsubscribe();
+      this._subscriptions.unsubscribe();
 
       // Close client if it wasn't already closed.
       this._client.close().catch(() => {});
@@ -209,7 +209,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async close () {
-    this._cleanupSubscriptions.unsubscribe();
+    this._subscriptions.unsubscribe();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);
@@ -282,7 +282,7 @@ export class SignalClient implements SignalMethods {
     // Saving swarm stream.
     this._swarmStreams.set(topic, swarmStream);
 
-    this._cleanupSubscriptions.push(() => {
+    this._subscriptions.add(() => {
       swarmStream.close();
       this._swarmStreams.delete(topic);
     });
@@ -309,7 +309,7 @@ export class SignalClient implements SignalMethods {
       this._messageStreams.set(peerId, messageStream);
     }
 
-    this._cleanupSubscriptions.push(() => {
+    this._subscriptions.add(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
     });

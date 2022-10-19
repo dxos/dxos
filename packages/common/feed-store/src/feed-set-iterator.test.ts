@@ -18,13 +18,16 @@ import { TestItemBuilder } from './testing';
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
   faker.datatype.number({ min: 0, max: blocks.length - 1 });
 
-describe('FeedSetIterator', function () {
+describe.only('FeedSetIterator', function () {
   const builder = new TestItemBuilder();
+
+  // TODO(burdon): Create randomized setTimeout to test race conditions.
 
   // TODO(burdon): Test when feed is added.
   it('responds immediately when a feed is appended', async function () {
     const feedStore = builder.createFeedStore();
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
+    await iterator.start();
 
     const numFeeds = 3;
     const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
@@ -37,19 +40,22 @@ describe('FeedSetIterator', function () {
     const [done, received] = latch();
 
     {
+      // Read block.
       setTimeout(async () => {
         for await (const block of iterator) {
-          console.log('>>>>>', block);
+          log('received', block);
           received();
         }
       });
 
+      // Write block.
       setTimeout(async () => {
         await builder.generator.writeBlocks(createFeedWriter(faker.random.arrayElement(feeds)));
       }, 10);
     }
 
     await done();
+    await iterator.stop();
     await iterator.close();
   });
 
@@ -57,7 +63,7 @@ describe('FeedSetIterator', function () {
     // TODO(burdon): Test with starting index.
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
 
-    const numFeeds = 3;
+    const numFeeds = 1;
     const numBlocks = 25;
 
     // Write blocks.

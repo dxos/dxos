@@ -44,13 +44,13 @@ export class SwarmMapper {
     private readonly _swarm: Swarm,
     private readonly _presence: PresencePlugin | undefined
   ) {
-    this._subscriptions.push(_swarm.connectionAdded.on(connection => {
+    this._subscriptions.add(_swarm.connectionAdded.on(connection => {
       this._update();
       this._connectionSubscriptions.set(connection.remoteId, connection.stateChanged.on(() => {
         this._update();
       }));
     }));
-    this._subscriptions.push(_swarm.connectionRemoved.on(connection => {
+    this._subscriptions.add(_swarm.connectionRemoved.on(connection => {
       this._connectionSubscriptions.get(connection.remoteId)?.();
       this._connectionSubscriptions.delete(connection.remoteId);
       this._update();
@@ -59,7 +59,7 @@ export class SwarmMapper {
       const cb = () => {
         this._update();
       };
-      this._subscriptions.push(_presence.graphUpdated.on(cb));
+      this._subscriptions.add(_presence.graphUpdated.on(cb));
     }
     this._update();
   }

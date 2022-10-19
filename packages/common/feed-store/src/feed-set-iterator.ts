@@ -7,10 +7,10 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
-import { FeedQueue } from './feed-queue';
+import { FeedQueue, Trigger } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 export type FeedBlock<T> = HypercoreFeedBlock<T>
@@ -37,11 +37,12 @@ export const defaultFeedSetIteratorOptions = {
 };
 
 /**
- * Iterator that reads blocks from multiple feeds in timeframe order.
+ * Iterator that reads blocks from multiple feeds, ordering them based on a traversal callback.
  */
 export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
   private readonly _trigger = new Trigger(this.options.timeout);
+  private readonly _subscriptions = new SubscriptionGroup();
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 
@@ -51,6 +52,8 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   ) {
     super();
     assert(_selector);
+
+    (this._trigger as any).label = 'iterator';
   }
 
   get size () {
@@ -68,17 +71,17 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     }));
   }
 
-  /**
-   * Adds the feed to the iterator, then asynchronously opens it and adds it to the candidates.
-   */
-  addFeed (feed: FeedWrapper<T>) {
+  async addFeed (feed: FeedWrapper<T>) {
     assert(feed.properties.opened);
-    setTimeout(async () => {
-      const queue = new FeedQueue<T>(feed);
-      await queue.open();
-      this._feedQueues.set(feed.key, queue);
+    const queue = new FeedQueue<T>(feed);
+    await queue.open();
+    this._feedQueues.set(feed.key, queue);
+
+    // Wake when feed added or queue updated.
+    this._trigger.wake();
+    this._subscriptions.add(queue.updated.on(() => {
       this._trigger.wake();
-    });
+    }));
   }
 
   override async _onOpen (): Promise<void> {
@@ -88,44 +91,37 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   }
 
   override async _onClose (): Promise<void> {
+    this._subscriptions.unsubscribe();
     for (const queue of this._feedQueues.values()) {
       await queue.close();
     }
   }
 
-  // TODO(burdon): Iterator may not work since can't get update event.
-
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
-    console.log('############## next', this.indexes);
     while (this._running) {
-      // Get candidates.
-      const queues = Array.from(this._feedQueues.values()).filter(queue => {
-        return (queue.index < queue.length);
-      });
-
-      // Select feed.
-      if (queues.length > 0) {
-        // TODO(burdon): This is wrong -- peeks shouldn't block.
-        const blocks = await Promise.all(queues.map(queue => queue.peek()!));
-        if (blocks.length) {
-          const idx = this._selector(blocks);
-          if (idx !== undefined) {
-            if (idx >= blocks.length) {
-              throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
-            }
-
-            const queue = queues[idx];
-            return queue.pop();
+      const queues = Array.from(this._feedQueues.values());
+      const blocks = queues.map(queue => queue.peek()).filter(Boolean) as FeedBlock<T>[];
+      if (blocks.length) {
+        // Get selected block from candidates.
+        const idx = this._selector(blocks);
+        if (idx !== undefined) {
+          if (idx >= blocks.length) {
+            throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
           }
+
+          // Pop from queue.
+          const queue = this._feedQueues.get(blocks[idx].key)!;
+          const next = await queue.pop();
+          assert(next);
+          return next;
         }
       }
 
       try {
-        console.log('Waiting...', this.indexes);
+        // Wait until new feed added or new block.
         await this._trigger.wait();
-        console.log('############ ok', this.indexes);
       } catch (err) {
-        console.log(err);
+        // TODO(burdon): Stalled should only be triggered if we know there's unconsumed data.
         this.stalled.emit(this);
       }
     }

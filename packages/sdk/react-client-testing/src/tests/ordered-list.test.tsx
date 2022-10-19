@@ -36,7 +36,7 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   useEffect(() => {
     setOrder(() => orderedList.values);
     const unsuscribeOrderedListListener = orderedList.update.on(() => setOrder(orderedList.values));
-    subscriptions.push(unsuscribeOrderedListListener);
+    subscriptions.add(unsuscribeOrderedListListener);
     return () => subscriptions.unsubscribe();
   }, [orderedList]);
 

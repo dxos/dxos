@@ -95,14 +95,14 @@ export class EchoProxy implements Echo {
           //   this._partiesChanged.emit();
           // });
 
-          // this._subscriptions.push(() => partyStream.close());
+          // this._subscriptions.add(() => partyStream.close());
         }
       }
 
       this._partiesChanged.emit();
     });
 
-    this._subscriptions.push(() => partiesStream.close());
+    this._subscriptions.add(() => partiesStream.close());
 
     await gotParties;
   }

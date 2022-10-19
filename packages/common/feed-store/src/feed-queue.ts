@@ -4,9 +4,9 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
-import throught2 from 'through2';
+import through2 from 'through2';
 
-import { latch } from '@dxos/async';
+import { Event, latch } from '@dxos/async';
 import { FeedBlock, createReadable } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
@@ -17,7 +17,7 @@ import { FeedWrapper } from './feed-wrapper';
  */
 // TODO(burdon): Factor out to @dxos/async.
 export class Trigger<T = void> {
-  _wake!: (value?: T) => void;
+  _wake?: (value?: T) => void;
 
   constructor (
     private readonly _timeout: number = 0
@@ -25,7 +25,11 @@ export class Trigger<T = void> {
 
   async wait (timeout: number = this._timeout): Promise<T> {
     return new Promise((resolve, reject) => {
-      this._wake = (value?: T) => resolve(value as T);
+      this._wake = (value?: T) => {
+        resolve(value as T);
+        this._wake = undefined;
+      };
+
       if (timeout) {
         setTimeout(() => {
           reject(new Error(`Timed out after ${timeout}ms`));
@@ -49,6 +53,8 @@ export type FeedQueueOptions = {}
  * Async queue using an AsyncIterator created from a hypercore.
  */
 export class FeedQueue<T = {}> {
+  public updated = new Event<FeedQueue<T>>();
+
   private readonly _trigger = new Trigger<FeedBlock<T>>();
   private _feedStream?: any;
   private _currentBlock?: FeedBlock<T> = undefined;
@@ -96,9 +102,7 @@ export class FeedQueue<T = {}> {
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
 
-    // TODO(burdon): Is back-pressure relevant? Buffering?
-    //  https://nodejs.org/en/docs/guides/backpressuring-in-streams
-    const transform = this._feedStream.pipe(throught2.obj((data: any, encoding: string, next: () => void) => {
+    const callback = (data: any, encoding: string, next: () => void) => {
       this._next = () => {
         this._currentBlock = undefined;
         this._index++;
@@ -112,17 +116,27 @@ export class FeedQueue<T = {}> {
       };
 
       this._trigger.wake(this._currentBlock);
-    }));
+      this.updated.emit(this);
+    };
 
-    const onClose = () => {
+    // Consume feed for look-ahead.
+    // https://www.npmjs.com/package/through2
+    // TODO(burdon): Is back-pressure relevant? Buffering?
+    //  https://nodejs.org/en/docs/guides/backpressuring-in-streams
+    //  https://nodejs.org/api/stream.html#stream_simplified_construction
+    const transform = this._feedStream.pipe(through2.obj(callback));
+    // TODO(burdon): Node only?
+    // const writable = this._feedStream.pipe(new Writable({
+    //   objectMode: true,
+    //   write: callback
+    // }));
+
+    this._feedStream.on('close', () => {
       this._feedStream.unpipe(transform);
-      this._feedStream.off('close', onClose);
       this._feedStream = undefined;
       this._currentBlock = undefined;
       this._index = -1;
-    };
-
-    this._feedStream.on('close', onClose);
+    });
 
     log('opened');
   }
@@ -137,7 +151,7 @@ export class FeedQueue<T = {}> {
       log('closing...');
       this._feedStream.destroy();
       const [closed, setClosed] = latch();
-      this._feedStream.on('close', setClosed);
+      this._feedStream.once('close', setClosed);
       await closed();
       log('closed');
     }

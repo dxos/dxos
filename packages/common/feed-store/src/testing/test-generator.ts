@@ -13,6 +13,7 @@ import { FeedWriter } from '../feed-writer';
 
 export type TestItem = {
   id: string
+  index: number
   value: string
 }
 
@@ -25,8 +26,9 @@ export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncod
 
 export type TestBlockGenerator<T extends {}> = (i: number) => T
 
-export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = () => ({
+export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
   id: faker.datatype.uuid(),
+  index: i,
   value: faker.lorem.sentence()
 });
 

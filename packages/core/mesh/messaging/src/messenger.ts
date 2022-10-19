@@ -9,12 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
-import {
-  ComplexMap,
-  ComplexSet,
-  exponentialBackoffInterval,
-  SubscriptionGroup
-} from '@dxos/util';
+import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup } from '@dxos/util';
 
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
@@ -33,14 +28,14 @@ export interface MessengerOptions {
 
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  //* * { peerId, payloadType } => listeners set */
+  // { peerId, payloadType } => listeners set
   private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(({ peerId, payloadType }) => peerId.toHex() + payloadType);
-  //* * peerId => listeners set */
+  // peerId => listeners set
   private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
-  private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new SubscriptionGroup(); // TODO(burdon): Not released.
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
@@ -98,7 +93,7 @@ export class Messenger {
       clearTimeout(timeout);
     });
 
-    this._subscriptions.push(() => {
+    this._subscriptions.add(() => {
       cancelRetry();
       clearTimeout(timeout);
     });

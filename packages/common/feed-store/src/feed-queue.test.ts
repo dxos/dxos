@@ -11,7 +11,7 @@ import { FeedWrapper } from './feed-wrapper';
 import { createFeedWriter } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
-describe.only('FeedQueue', function () {
+describe('FeedQueue', function () {
   const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 

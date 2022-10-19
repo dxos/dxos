@@ -34,7 +34,7 @@ export class Entity<M extends Model | null = Model> {
     this._stateManager = stateManager;
 
     if (this._stateManager.initialized) {
-      this._subscriptions.push(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
+      this._subscriptions.add(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
     }
   }
 

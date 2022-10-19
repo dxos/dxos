@@ -196,7 +196,7 @@ export class HaloProxy implements Halo {
       this.profileChanged.emit();
     });
 
-    this._subscriptions.push(() => profileStream.close());
+    this._subscriptions.add(() => profileStream.close());
 
     // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     // contactsStream.subscribe(data => {
@@ -204,7 +204,7 @@ export class HaloProxy implements Halo {
     //   this._contactsChanged.emit();
     // });
 
-    // this._subscriptions.push(() => contactsStream.close());
+    // this._subscriptions.add(() => contactsStream.close());
 
     await Promise.all([gotProfile/*, gotContacts */]);
   }

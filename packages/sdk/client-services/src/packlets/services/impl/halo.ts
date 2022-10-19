@@ -62,17 +62,16 @@ export class HaloService implements HaloServiceRpc {
         next({ contacts: [] });
       }
 
-      const subGroup = new SubscriptionGroup();
-
+      const subscriptions = new SubscriptionGroup();
       setImmediate(async () => {
         await this.echo.halo.identityReady.waitForCondition(() => !!this.echo.halo.identity);
 
         const resultSet = this.echo.halo.queryContacts();
         next({ contacts: resultSet.value });
-        subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
+        subscriptions.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
       });
 
-      return () => subGroup.unsubscribe();
+      return () => subscriptions.unsubscribe();
     });
   }
 
