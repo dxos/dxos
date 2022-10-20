@@ -28,12 +28,17 @@ Using the app, `users` can:
 - revoke a device access to their identity and spaces (for all applications on that device)
 - revoke an application access to their identity and spaces (for all devices)
 
-### Networking: 
-- discover and inspect the network
+### Contacts:
+- see a list of known contacts
+- remove a known contact
+- add a known contact by pasting an identifier or opening from a QR code
+- send invitations to known contacts
+- accept invitations from known contacts
+- send a simple message to a known contact
+
+### Collaboration:
 - create / leave spaces
 - invite others to spaces
 - see the spaces the identity is a member of
-- 
-### Collaboration:
-- collaborate on a single per-space document together (like a readme or scratchpad)
-- send simple messages to each other after joining a space
+- leave a space
+- collaborate on a single per-space rich text document together (like a readme or scratchpad)
