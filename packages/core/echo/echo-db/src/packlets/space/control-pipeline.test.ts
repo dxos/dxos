@@ -16,7 +16,6 @@ import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
-import { mapFeedIndexesToTimeframe } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', function () {
@@ -77,10 +76,7 @@ describe('space/control-pipeline', function () {
         });
       }
 
-      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
-      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 2 }]);
-      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
-      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
@@ -103,10 +99,7 @@ describe('space/control-pipeline', function () {
         })
       });
 
-      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
-      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 3 }]);
-      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
-      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
     }
 
@@ -129,10 +122,9 @@ describe('space/control-pipeline', function () {
         })
       });
 
-      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
-      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 4 }]);
+      const end = controlPipeline.pipeline.state.endTimeframe;
+      console.log({ end });
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
-      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
 
@@ -158,14 +150,8 @@ describe('space/control-pipeline', function () {
         timeframe: new Timeframe()
       });
 
-      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
-      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 4 }]);
-      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
-      // TODO(dmaretskyi): Count ignored messages.
-      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
-
-    // TODO(burdon): Fails with not open.
   });
 });

@@ -4,13 +4,14 @@
 
 import assert from 'assert';
 
-import { Event, EventSubscriptions } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
-import { FeedQueue, Trigger } from './feed-queue';
+import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 export type FeedBlock<T> = HypercoreFeedBlock<T>
@@ -28,11 +29,11 @@ export type FeedIndex = {
 export type FeedSetIteratorOptions = {
   // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
   start?: FeedIndex[]
-  timeout?: number
+  stallTimeout?: number
 }
 
 export const defaultFeedSetIteratorOptions = {
-  timeout: 1000
+  stallTimeout: 1000
 };
 
 /**
@@ -40,7 +41,7 @@ export const defaultFeedSetIteratorOptions = {
  */
 export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
-  private readonly _trigger = new Trigger(this.options.timeout);
+  private readonly _trigger = new Trigger({ autoReset: true });
   private readonly _subscriptions = new EventSubscriptions();
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
@@ -68,19 +69,31 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }));
   }
 
+  // TODO(burdon): Testing only?
+  get end (): FeedIndex[] {
+    return Array.from(this._feedQueues.values())
+      .filter(queue => queue.length > 0)
+      .map(feedQueue => ({
+        feedKey: feedQueue.feed.key,
+        index: feedQueue.length - 1
+      }));
+  }
+
   async addFeed (feed: FeedWrapper<T>) {
     assert(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     assert(feed.properties.opened);
+    log('Feed added.', { feed: feed.key });
 
     const queue = new FeedQueue<T>(feed);
+    this._subscriptions.add(queue.updated.on(() => {
+      this._trigger.wake();
+    }));
+
     await queue.open();
     this._feedQueues.set(feed.key, queue);
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
-    this._subscriptions.add(queue.updated.on(() => {
-      this._trigger.wake();
-    }));
   }
 
   override async _onOpen (): Promise<void> {
@@ -96,9 +109,8 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }
   }
 
-  // TODO(burdon): Review.
-  //  https://github.com/dxos/dxos/pull/1670#discussion_r999289501
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
+    let t: NodeJS.Timeout | undefined;
     while (this._running) {
       const queues = Array.from(this._feedQueues.values());
       const blocks = queues.map(queue => queue.peek()).filter(isNotNullOrUndefined);
@@ -106,22 +118,32 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
         // Get selected block from candidates.
         const idx = this._selector(blocks);
         if (idx === undefined) {
-          this.stalled.emit(this);
+          log.warn('Stalled', { blocks });
+          // Timeout if all candidates are rejected.
+          if (t === undefined) {
+            t = setTimeout(() => {
+              this.stalled.emit(this);
+            }, this.options.stallTimeout);
+          }
         } else {
           if (idx >= blocks.length) {
             throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
           }
+          if (t !== undefined) {
+            clearTimeout(t);
+            t = undefined;
+          }
 
           // Pop from queue.
           const queue = this._feedQueues.get(blocks[idx].key)!;
-          const next = await queue.pop();
-          assert(next);
-          return next;
+          const message = await queue.pop();
+          assert(message);
+          return message;
         }
       }
 
       // Wait until new feed added or new block.
-      await this._trigger.wait();
+      await this._trigger.wait({ timeout: this.options.stallTimeout });
     }
   }
 }

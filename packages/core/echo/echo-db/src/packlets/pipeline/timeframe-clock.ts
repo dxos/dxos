@@ -42,6 +42,9 @@ export class TimeframeClock {
   @timed(5_000)
   async waitUntilReached (target: Timeframe) {
     log.debug('waitUntilReached', { target, current: this._timeframe });
-    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
+    await this.update.waitForCondition(() => {
+      console.log('check if reached', { target, current: this._timeframe, deps: Timeframe.dependencies(target, this._timeframe) });
+      return Timeframe.dependencies(target, this._timeframe).isEmpty();
+    });
   }
 }

@@ -60,10 +60,9 @@ export class TestAgent {
       spaceKey = await this.keyring.createKey();
     }
 
-    const controlFeed = await this.createFeed();
-    const dataFeed = await this.createFeed();
-
+    const controlFeed = await this.openWritableFeed();
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
+    const dataFeed = await this.openWritableFeed();
 
     const space = new Space({
       spaceKey,
@@ -94,7 +93,7 @@ export class TestAgent {
     };
   }
 
-  async createFeed () {
+  async openWritableFeed () {
     const key = await this.keyring.createKey();
     return this.feedStore.openFeed(key, { writable: true });
   }

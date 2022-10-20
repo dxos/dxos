@@ -6,55 +6,11 @@ import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
 import { Writable } from 'readable-stream';
 
-import { Event, latch } from '@dxos/async';
+import { Event, latch, Trigger } from '@dxos/async';
 import { FeedBlock, createReadable } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
-
-type Callback<T> = (value?: T) => void
-
-/**
- * Enables blocked listeners to be awakened with optional timeouts.
- */
-// TODO(burdon): Factor out to @dxos/async.
-export class Trigger<T = void> {
-  private readonly _waiters: Callback<T>[] = [];
-
-  constructor (
-    private readonly _timeout: number = 0
-  ) {}
-
-  /**
-   * Wait until wake is called, with optional timeout.
-   */
-  // TODO(burdon): Don't return promise each time.
-  //  https://github.com/dxos/dxos/pull/1670#discussion_r999270202
-  async wait (timeout: number = this._timeout): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this._waiters.push((value?: T) => {
-        resolve(value as T);
-      });
-
-      if (timeout) {
-        setTimeout(() => {
-          // TODO(burdon): Remove callback.
-          reject(new Error(`Timed out after ${timeout}ms`));
-        }, timeout);
-      }
-    });
-  }
-
-  /**
-   * Wake blocked callers (if any).
-   */
-  wake (value?: T) {
-    // Copy to avoid race conditions.
-    const waiters = [...this._waiters];
-    this._waiters.length = 0;
-    waiters.forEach(item => item(value));
-  }
-}
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
@@ -68,7 +24,7 @@ export type FeedQueueOptions = {}
 export class FeedQueue<T extends {}> {
   public updated = new Event<FeedQueue<T>>();
 
-  private readonly _trigger = new Trigger<FeedBlock<T>>();
+  private readonly _trigger = new Trigger<FeedBlock<T>>({ autoReset: true });
   private _feedStream?: any;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
@@ -111,7 +67,7 @@ export class FeedQueue<T extends {}> {
       console.warn('Start index not yet supported.');
     }
 
-    log('opening...');
+    log('opening', { key: this._feed.key });
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
 

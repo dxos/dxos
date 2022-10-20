@@ -12,6 +12,7 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { createMappedFeedWriter } from '../common';
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
@@ -76,7 +77,9 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
-    return this._outboundStream;
+    return createMappedFeedWriter((msg) => { // TODO(burdon): Create spy/tap util.
+      return msg;
+    }, this._outboundStream!);
   }
 
   createSnapshot () {
@@ -113,7 +116,6 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     this._itemManager = itemManager;
 
     const dataMirror = new DataMirror(this._itemManager, this._service, this._partyKey);
-
     dataMirror.open();
   }
 
@@ -125,6 +127,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     return {
       write: async (mutation) => {
         log('write', mutation);
+        console.log('###################################################');
         const { feedKey, seq } = await this._service.write({ mutation, partyKey: this._partyKey });
         assert(feedKey);
         assert(seq !== undefined);

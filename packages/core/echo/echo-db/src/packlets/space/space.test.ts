@@ -13,7 +13,7 @@ import { afterTest } from '@dxos/testutils';
 import { TestAgentFactory } from './testing';
 
 describe('space/space', function () {
-  it('database', async function () {
+  it('crates a database with object model', async function () {
     const agentFactory = new TestAgentFactory();
     const agent = await agentFactory.createAgent();
     const spaceContext = await agent.createSpace(agent.identityKey);
@@ -42,7 +42,7 @@ describe('space/space', function () {
         });
       }
 
-      // TODO(burdon): Don't expose.
+      // TODO(burdon): Debugging only.
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
@@ -51,18 +51,17 @@ describe('space/space', function () {
       const item1 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
       const item2 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
 
-      // TODO(burdon): No foo/bar.
-      await item1.model.set('foo', 'one');
-      await item2.model.set('foo', 'two');
+      await item1.model.set('key_1', 'value_1');
+      await item2.model.set('key_2', 'value_2');
 
-      expect(item1.model.get('foo')).toEqual('one');
-      expect(item2.model.get('foo')).toEqual('two');
+      expect(item1.model.get('key_1')).toEqual('value_1');
+      expect(item2.model.get('key_2')).toEqual('value_2');
 
       expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
     }
   });
 
-  it('2 spaces replicating', async function () {
+  it('two spaces replicating', async function () {
     const agentFactory = new TestAgentFactory();
 
     // TODO(burdon): Factor out?

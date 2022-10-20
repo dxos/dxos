@@ -194,7 +194,7 @@ export class Space {
       this._dataPipeline = new Pipeline(new Timeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {
-        this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+        await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
     }
 
@@ -219,6 +219,8 @@ export class Space {
       this._database = await this._databaseFactory({ databaseBackend: this._databaseBackend });
       await this._database.initialize();
     }
+
+    await this._dataPipeline.start();
 
     // Start message processing loop.
     setTimeout(async () => {

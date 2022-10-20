@@ -70,7 +70,6 @@ export class ItemManager {
   private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
-   * @param _modelFactory
    * @param _writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
   constructor (
@@ -129,7 +128,8 @@ export class ItemManager {
 
     // Write Item Genesis block.
     log('Item Genesis:', itemId);
-    await this._writeStream.write({
+
+    const receipt = await this._writeStream.write({
       itemId,
       genesis: {
         itemType,
@@ -138,6 +138,7 @@ export class ItemManager {
       itemMutation: parentId ? { parentId } : undefined,
       mutation
     });
+    console.log('Mutation written', { receipt });
 
     // Unlocked by construct.
     log('Pending Item:', itemId);

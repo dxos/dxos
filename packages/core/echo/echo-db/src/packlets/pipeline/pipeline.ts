@@ -32,7 +32,7 @@ export class PipelineState {
 
   // TODO(burdon): Rename `currentTimeframe`?
   get endTimeframe () {
-    return mapFeedIndexesToTimeframe(this._iterator.indexes);
+    return mapFeedIndexesToTimeframe(this._iterator.end);
   }
 
   async waitUntilTimeframe (target: Timeframe) {
@@ -83,7 +83,7 @@ export class Pipeline implements PipelineAccessor {
   // Inbound feed stream.
   private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
     start: mapTimeframeToFeedIndexes(this._initialTimeframe),
-    timeout: 5000
+    stallTimeout: 1000
   });
 
   // External state accessor.
@@ -98,7 +98,7 @@ export class Pipeline implements PipelineAccessor {
     private readonly _initialTimeframe: Timeframe
   ) {
     this.feedSetIterator.stalled.on((iterator) => {
-      log.warn(`Stalled after ${iterator.options.timeout}ms with ${iterator.size} feeds.`);
+      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
     });
   }
 

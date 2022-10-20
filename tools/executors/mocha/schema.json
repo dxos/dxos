@@ -30,6 +30,10 @@
       "description": "Run tests with a code coverage tool",
       "default": false
     },
+    "reporter": {
+      "type": "string",
+      "description": ""
+    },
     "coveragePath": {
       "type": "string",
       "description": "Where to save coverage outputs"
