@@ -15,9 +15,10 @@
       "type": "string",
       "description": ""
     },
-    "bundlePackages": {
+    "external": {
       "type": "array",
-      "description": ""
+      "description": "List of packages that shouldn't be bundled.",
+      "default": []
     }
   },
   "required": ["entryPoints"]

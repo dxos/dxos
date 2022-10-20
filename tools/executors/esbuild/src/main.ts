@@ -4,16 +4,17 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build } from 'esbuild';
-import { nodeExternalsPlugin } from 'esbuild-node-externals';
+// import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { join } from 'path';
 
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
+import { externalsPlugin } from './externals-plugin';
 
 export interface EsbuildExecutorOptions {
   entryPoints: string[]
   outdir?: string
   outfile?: string
-  bundlePackages?: string[]
+  external?: string[]
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -29,6 +30,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     format: 'cjs',
     write: true,
     bundle: true,
+    metafile: true,
     // https://esbuild.github.io/api/#log-override
     logOverride: {
       // @polkadot/api/augment/rpc was generating this warning.
@@ -36,9 +38,12 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       'ignored-bare-import': 'info'
     },
     plugins: [
-      nodeExternalsPlugin({
-        packagePath,
-        allowList: options.bundlePackages
+      // nodeExternalsPlugin({
+      //   packagePath,
+      //   allowList: options.bundlePackages
+      // }),
+      externalsPlugin({
+        exclude: options.external ?? [],
       }),
       FixMemdownPlugin(),
       NodeModulesPlugin()
