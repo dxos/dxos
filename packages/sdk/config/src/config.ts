@@ -16,6 +16,14 @@ type MappingSpec = Record<string, { path: string, type?: string }>;
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
+ *
+ * Expects parsed yaml content of the form:
+ *
+ * ```
+ * ENV_VAR:
+ *   path: config.selector.path
+ * ```
+ *
  * @param {object} spec
  * @param {object} values
  * @return {object}

@@ -31,7 +31,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

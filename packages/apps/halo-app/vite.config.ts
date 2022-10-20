@@ -13,6 +13,7 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
+    host: true,
     port: 3967
   },
   optimizeDeps: {
@@ -49,7 +50,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

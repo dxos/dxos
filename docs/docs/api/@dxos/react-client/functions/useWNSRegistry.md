@@ -1,0 +1,2 @@
+# Function `useWNSRegistry`
+> Declared in [`packages/sdk/react-client/src/hooks/wns/registry.ts:10`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registry.ts#L10)
