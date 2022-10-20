@@ -16,6 +16,9 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
+  typedoc@0.23.15:
+    hash: k4qfemgm4ttpeeuk35ye3qqa2i
+    path: patches/typedoc@0.23.15.patch
 
 importers:
 
@@ -34,6 +37,7 @@ importers:
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/shims': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/typedoc-plugin-plate': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
       '@nrwl/eslint-plugin-nx': 14.5.7
@@ -60,6 +64,7 @@ importers:
       '@types/chai': ^4.2.15
       '@types/chai-as-promised': ^7.1.5
       '@types/glob': ~7.1.3
+      '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/mocha': ^8.2.2
@@ -82,6 +87,7 @@ importers:
       husky: ^8.0.0
       jsdom: ^20.0.1
       jsdom-global: ^3.0.2
+      json-stringify-safe: ^5.0.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       mocha: ^8.4.0
@@ -120,6 +126,7 @@ importers:
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/shims': link:packages/common/shims
       '@dxos/signal': link:packages/core/mesh/signal
+      '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.8.6+typescript@4.8.4
       '@nrwl/eslint-plugin-nx': 14.5.7_eyzui33xbcmxmcbtzg5oblshvi
@@ -146,6 +153,7 @@ importers:
       '@types/chai': 4.3.3
       '@types/chai-as-promised': 7.1.5
       '@types/glob': 7.1.4
+      '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/mocha': 8.2.3
@@ -168,6 +176,7 @@ importers:
       husky: 8.0.1
       jsdom: 20.0.1
       jsdom-global: 3.0.2_jsdom@20.0.1
+      json-stringify-safe: 5.0.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       mocha: 8.4.0
@@ -192,7 +201,9 @@ importers:
 
   docs:
     specifiers:
+      '@dxos/plate': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/typedoc-plugin-plate': workspace:*
       '@types/eslint': ^8.4.6
       '@types/markdown-it': ^12.2.3
       '@types/markdown-it-container': ^2.0.5
@@ -202,19 +213,22 @@ importers:
       '@vuepress/client': ^2.0.0-beta.51
       '@vuepress/plugin-register-components': ^2.0.0-beta.51
       '@vuepress/plugin-search': ^2.0.0-beta.51
+      change-case: ^4.1.2
       eslint: ^8.24.0
       front-matter: ^4.0.2
       markdown-it-container: ^3.0.0
+      markdown-it-highlightjs: ^4.0.1
       prettier: ^2.7.1
       react: ^18.2.0
       react-dom: ^18.2.0
-      typedoc: ^0.23.15
-      typedoc-plugin-markdown: ^3.13.6
+      typedoc: 0.23.15
       typescript: ^4.7.2
-      vue: ^3.2.39
+      vue: ^3.2.40
       vuepress: ^2.0.0-beta.51
     devDependencies:
+      '@dxos/plate': link:../tools/plate
       '@dxos/react-components': link:../packages/sdk/react-components
+      '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3
       '@types/markdown-it-container': 2.0.5
@@ -224,14 +238,15 @@ importers:
       '@vuepress/client': 2.0.0-beta.51
       '@vuepress/plugin-register-components': 2.0.0-beta.51
       '@vuepress/plugin-search': 2.0.0-beta.51
+      change-case: 4.1.2
       eslint: 8.25.0
       front-matter: 4.0.2
       markdown-it-container: 3.0.0
+      markdown-it-highlightjs: 4.0.1
       prettier: 2.7.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      typedoc: 0.23.16_typescript@4.8.4
-      typedoc-plugin-markdown: 3.13.6_typedoc@0.23.16
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
       typescript: 4.8.4
       vue: 3.2.41
       vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
@@ -3603,6 +3618,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/prettier': ^2.7.1
       '@types/recursive-readdir': ^2.2.0
+      '@types/yargs': ~16.0.1
       esbuild: ~0.14.1
       lodash.flatten: ^4.4.0
       lodash.zip: ^4.2.0
@@ -3611,6 +3627,7 @@ importers:
       recursive-readdir: ^2.2.2
       ts-node: 10.9.1
       typescript: ^4.7.2
+      yargs: ~16.2.0
     dependencies:
       esbuild: 0.14.54
       lodash.flatten: 4.4.0
@@ -3618,6 +3635,7 @@ importers:
       mkdirp: 1.0.4
       prettier: 2.7.1
       recursive-readdir: 2.2.2
+      yargs: 16.2.0
     devDependencies:
       '@types/lodash.flatten': 4.4.7
       '@types/lodash.zip': 4.2.7
@@ -3625,6 +3643,7 @@ importers:
       '@types/node': 16.11.66
       '@types/prettier': 2.7.1
       '@types/recursive-readdir': 2.2.1
+      '@types/yargs': 16.0.4
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
 
@@ -3699,6 +3718,26 @@ importers:
       mocha: 8.4.0
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
+
+  tools/typedoc-plugin-plate:
+    specifiers:
+      '@dxos/plate': workspace:*
+      '@types/node': ^16.11.58
+      '@vuepress/client': ^2.0.0-beta.51
+      change-case: ^4.1.2
+      typedoc: 0.23.15
+      typescript: ^4.7.2
+      vue: ^3.2.40
+      vuepress: ^2.0.0-beta.51
+    devDependencies:
+      '@dxos/plate': link:../plate
+      '@types/node': 16.11.66
+      '@vuepress/client': 2.0.0-beta.51
+      change-case: 4.1.2
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
+      typescript: 4.8.4
+      vue: 3.2.41
+      vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
 
   tools/vite-plugin:
     specifiers:
@@ -12202,6 +12241,10 @@ packages:
     resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
     dev: true
 
+  /@types/json-stringify-safe/5.0.0:
+    resolution: {integrity: sha512-UUA1sH0RSRROdInuDOA1yoRzbi5xVFD1RHCoOvNRPTNwR8zBkJ/84PZ6NhKVDtKp0FTeIccJCdQz1X2aJPr4uw==}
+    dev: true
+
   /@types/json5/0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
@@ -15289,6 +15332,14 @@ packages:
   /caniuse-lite/1.0.30001420:
     resolution: {integrity: sha512-OnyeJ9ascFA9roEj72ok2Ikp7PHJTKubtEJIQ/VK3fdsS50q4KWy+Z5X0A1/GswEItKX0ctAp8n4SYDE7wTu6A==}
 
+  /capital-case/1.0.4:
+    resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.4.0
+      upper-case-first: 2.0.2
+    dev: true
+
   /capture-exit/2.0.0:
     resolution: {integrity: sha512-PiT/hQmTonHhl/HFGN+Lx3JJUznrVYJ3+AQsnthneZbvW7x+f08Tk7yLJTLEOUvBTbduLeeBkxEaYXUOUrRq6g==}
     engines: {node: 6.* || 8.* || >= 10.*}
@@ -15392,6 +15443,23 @@ packages:
   /chalk/5.1.2:
     resolution: {integrity: sha512-E5CkT4jWURs1Vy5qGJye+XwCkNj7Od3Af7CP6SujMetSMkLs8Do2RWJK5yx1wamHV/op8Rz+9rltjaTQWDnEFQ==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  /change-case/4.1.2:
+    resolution: {integrity: sha512-bSxY2ws9OtviILG1EiY5K7NNxkqg/JnRnFxLtKQ96JaviiIxi7djMrSd0ECT9AC+lttClmYwKw53BWpOMblo7A==}
+    dependencies:
+      camel-case: 4.1.2
+      capital-case: 1.0.4
+      constant-case: 3.0.4
+      dot-case: 3.0.4
+      header-case: 2.0.4
+      no-case: 3.0.4
+      param-case: 3.0.4
+      pascal-case: 3.1.2
+      path-case: 3.0.4
+      sentence-case: 3.0.4
+      snake-case: 3.0.4
+      tslib: 2.4.0
+    dev: true
 
   /char-regex/1.0.2:
     resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
@@ -16045,6 +16113,14 @@ packages:
 
   /console-control-strings/1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
+
+  /constant-case/3.0.4:
+    resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.4.0
+      upper-case: 2.0.2
+    dev: true
 
   /constants-browserify/1.0.0:
     resolution: {integrity: sha512-xFxOwqIzR/e1k1gLiWEophSCMqXcwVHIH7akf7b/vxcUeGunlj3hvZaaqxwHsTgn+IndtkQJgSztIDWeumWJDQ==}
@@ -20679,6 +20755,13 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
+  /header-case/2.0.4:
+    resolution: {integrity: sha512-H/vuk5TEEVZwrR0lp2zed9OCo1uAILMlx0JEMgC26rzyJJ3N1v6XkwHHXJQdR2doSjcGPM6OKPYoJgf0plJ11Q==}
+    dependencies:
+      capital-case: 1.0.4
+      tslib: 2.4.0
+    dev: true
+
   /highlight.js/10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
 
@@ -23855,6 +23938,12 @@ packages:
     resolution: {integrity: sha512-zLftSaNrKuYl0kR5zm4gxXjHaOI3FAOEaloKmRA5hijmJZvSjmxcokOLlzycb/HXlUFWzXqpIEoyEMCE4i9MvQ==}
     dev: true
 
+  /markdown-it-highlightjs/4.0.1:
+    resolution: {integrity: sha512-EPXwFEN6P5nqR3G4KjT20r20xbGYKMMA/360hhSYFmeoGXTE6hsLtJAiB/8ID8slVH4CWHHEL7GX0YenyIstVQ==}
+    dependencies:
+      highlight.js: 11.6.0
+    dev: true
+
   /markdown-it/13.0.1:
     resolution: {integrity: sha512-lTlxriVoy2criHP0JKRhO2VDG9c2ypWCsT237eDiLqi09rmbKoUetyGHq2uOIRoRS//kfoJckS0eUzzkDR+k2Q==}
     hasBin: true
@@ -26385,6 +26474,13 @@ packages:
   /path-browserify/1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
 
+  /path-case/3.0.4:
+    resolution: {integrity: sha512-qO4qCFjXqVTrcbPt/hQfhTQ+VhFsqNKOPtytgNKkKxSoEp3XPUQ8ObFuePylOIok5gjn69ry8XiULxCwot3Wfg==}
+    dependencies:
+      dot-case: 3.0.4
+      tslib: 2.4.0
+    dev: true
+
   /path-dirname/1.0.2:
     resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
     dev: true
@@ -28748,6 +28844,14 @@ packages:
       - supports-color
     dev: true
 
+  /sentence-case/3.0.4:
+    resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.4.0
+      upper-case-first: 2.0.2
+    dev: true
+
   /serialize-error/7.0.1:
     resolution: {integrity: sha512-8I8TjW5KMOKsZQTvoxjuSIa7foAwPWGOts+6o7sgjz41/qMD9VQHEDxi6PBvK2l0MXUmqZyNpUK+T2tQaaElvw==}
     engines: {node: '>=10'}
@@ -29080,6 +29184,13 @@ packages:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
     dev: false
+
+  /snake-case/3.0.4:
+    resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
+    dependencies:
+      dot-case: 3.0.4
+      tslib: 2.4.0
+    dev: true
 
   /snapdragon-node/2.1.1:
     resolution: {integrity: sha512-O27l4xaMYt/RSQ5TR3vpWCAB5Kb/czIcqUFOM/C4fYcLnbZUc1PkjTAMjof2pBWaSTwOUd6qUHcFGVGj7aIwnw==}
@@ -30796,17 +30907,8 @@ packages:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
     dev: true
 
-  /typedoc-plugin-markdown/3.13.6_typedoc@0.23.16:
-    resolution: {integrity: sha512-ISSc9v3BK7HkokxSBuJPttXox4tJ6hP0N9wfSIk0fmLN67+eqtAxbk97gs2nDiuha+RTO5eW9gdeAb+RPP0mgg==}
-    peerDependencies:
-      typedoc: '>=0.23.0'
-    dependencies:
-      handlebars: 4.7.7
-      typedoc: 0.23.16_typescript@4.8.4
-    dev: true
-
-  /typedoc/0.23.16_typescript@4.8.4:
-    resolution: {integrity: sha512-rumYsCeNRXlyuZVzefD7050n7ptL2uudsCJg50dY0v/stKniqIlRpvx/F/6expC0/Q6Dbab+g/JpZuB7Sw90FA==}
+  /typedoc/0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4:
+    resolution: {integrity: sha512-x9Zu+tTnwxb9YdVr+zvX7LYzyBl1nieOr6lrSHbHsA22/RJK2m4Y525WIg5Mj4jWCmfL47v6f4hUzY7EIuwS5w==}
     engines: {node: '>= 14.14'}
     hasBin: true
     peerDependencies:
@@ -30818,6 +30920,7 @@ packages:
       shiki: 0.11.1
       typescript: 4.8.4
     dev: true
+    patched: true
 
   /typescript/4.8.4:
     resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
@@ -31197,6 +31300,18 @@ packages:
       semver: 7.3.8
       semver-diff: 3.1.1
       xdg-basedir: 4.0.0
+    dev: true
+
+  /upper-case-first/2.0.2:
+    resolution: {integrity: sha512-514ppYHBaKwfJRK/pNC6c/OxfGa0obSnAl106u97Ed0I625Nin96KAjttZF6ZL3e1XLtphxnqrOi9iWgm+u+bg==}
+    dependencies:
+      tslib: 2.4.0
+    dev: true
+
+  /upper-case/2.0.2:
+    resolution: {integrity: sha512-KgdgDGJt2TpuwBUIjgG6lzw2GWFRCW9Qkfkiv0DxqHHLYJHmtmdUIKcZd8rHgFSjopVTlw6ggzCm1b8MFQwikg==}
+    dependencies:
+      tslib: 2.4.0
     dev: true
 
   /uri-js/4.4.1:
