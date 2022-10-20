@@ -13,12 +13,13 @@ import { Tooltip } from '../Tooltip';
 
 export interface DialogProps {
   title: ReactNode
-  openTrigger: ReactNode
+  openTrigger?: ReactNode
+  closeTriggers?: [ReactNode, ...ReactNode[]]
   titleVisuallyHidden?: boolean
   description?: ReactNode
   children?: ReactNode
   translatedCloseLabel?: string
-  closeTriggers: [ReactNode, ...ReactNode[]]
+  initiallyOpen?: boolean
 }
 
 export const Dialog = ({
@@ -28,14 +29,17 @@ export const Dialog = ({
   openTrigger,
   children,
   closeTriggers,
-  translatedCloseLabel
+  translatedCloseLabel,
+  initiallyOpen
 }: DialogProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(!!initiallyOpen);
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <DialogPrimitive.Trigger asChild>
-        {openTrigger}
-      </DialogPrimitive.Trigger>
+      {openTrigger && (
+        <DialogPrimitive.Trigger asChild>
+          {openTrigger}
+        </DialogPrimitive.Trigger>
+      )}
       <Transition.Root show={isOpen}>
         <Transition.Child
           as={Fragment}
@@ -71,14 +75,19 @@ export const Dialog = ({
             )}
           >
             <DialogPrimitive.Title
-              className={cx('text-sm font-medium text-neutral-900 dark:text-neutral-100', titleVisuallyHidden && 'sr-only', defaultFocus)}
+              className={cx(
+                'text-sm font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+                titleVisuallyHidden && 'sr-only',
+                defaultFocus
+              )}
               tabIndex={0}
             >
               {title}
             </DialogPrimitive.Title>
             {description && (
               <DialogPrimitive.Description
-                className={cx('mt-2', defaultDescription)}>
+                className={cx('mt-2', defaultDescription)}
+              >
                 {description}
               </DialogPrimitive.Description>
             )}
@@ -86,7 +95,7 @@ export const Dialog = ({
             {children}
 
             {translatedCloseLabel && (
-              <Tooltip trigger={(
+              <Tooltip content={translatedCloseLabel}>
                 <DialogPrimitive.Close
                   className={cx(
                     'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-md p-1',
@@ -95,15 +104,17 @@ export const Dialog = ({
                 >
                   <X className='h-4 w-4' />
                 </DialogPrimitive.Close>
-              )}>{translatedCloseLabel}</Tooltip>
+              </Tooltip>
             )}
-            <div className='flex flex-wrap justify-end gap-4'>
-              {closeTriggers.map((closeTrigger, key) => (
-                <DialogPrimitive.Close key={key}>
-                  {closeTrigger}
-                </DialogPrimitive.Close>
-              ))}
-            </div>
+            {closeTriggers && (
+              <div className='flex flex-wrap justify-end gap-4'>
+                {closeTriggers.map((closeTrigger, key) => (
+                  <DialogPrimitive.Close key={key}>
+                    {closeTrigger}
+                  </DialogPrimitive.Close>
+                ))}
+              </div>
+            )}
           </DialogPrimitive.Content>
         </Transition.Child>
       </Transition.Root>

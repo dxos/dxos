@@ -15,13 +15,17 @@ export interface QrCodeProps extends Omit<ButtonProps, 'onClick' | 'ref'> {
   translatedCopyLabel?: string
 }
 
-export const QrCode = ({ value, translatedCopyLabel, ...buttonProps }: QrCodeProps) => {
+export const QrCode = ({
+  value,
+  translatedCopyLabel,
+  ...buttonProps
+}: QrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
   return translatedCopyLabel ? (
-    <Tooltip trigger={(
+    <Tooltip content={translatedCopyLabel}>
       <Button
         {...buttonProps}
         className={cx('py-0 px-0 overflow-hidden', buttonProps.className)}
@@ -30,8 +34,6 @@ export const QrCode = ({ value, translatedCopyLabel, ...buttonProps }: QrCodePro
         <QRCodeSVG value={value} includeMargin role='none' />
         <span id={labelId} className='sr-only'>{translatedCopyLabel}</span>
       </Button>
-    )}>
-      {translatedCopyLabel}
     </Tooltip>
   ) : <QRCodeSVG value={value} includeMargin />;
 };

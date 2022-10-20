@@ -9,16 +9,16 @@ import React, { ReactNode, useState } from 'react';
 import { defaultTooltip } from '../../styles';
 
 export interface TooltipProps {
-  trigger: ReactNode
+  content: ReactNode
   children: ReactNode
 }
 
-export const Tooltip = ({ trigger, children }: TooltipProps) => {
+export const Tooltip = ({ content, children }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
       <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
         <TooltipPrimitive.Trigger asChild>
-          {trigger}
+          {children}
         </TooltipPrimitive.Trigger>
         <TooltipPrimitive.Content
           className={cx(
@@ -34,7 +34,7 @@ export const Tooltip = ({ trigger, children }: TooltipProps) => {
         >
           <TooltipPrimitive.Arrow
             className='fill-current text-white dark:text-neutral-800' />
-          {children}
+          {content}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Root>
   );

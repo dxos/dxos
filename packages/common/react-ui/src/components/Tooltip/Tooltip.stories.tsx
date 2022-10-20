@@ -14,12 +14,12 @@ export default {
   component: Tooltip
 };
 
-const Template = ({ children, trigger }: TooltipProps) => {
-  return <Tooltip trigger={trigger}>{children}</Tooltip>;
+const Template = ({ children, content }: TooltipProps) => {
+  return <Tooltip content={content}>{children}</Tooltip>;
 };
 
-export const Default = templateForComponent(Template)({ children: '', trigger: '' });
+export const Default = templateForComponent(Template)({ children: '', content: '' });
 Default.args = {
-  trigger: <ChatTeardropText className='w-8 h-8' />,
-  children: 'Here’s a tooltip for you!'
+  children: <ChatTeardropText className='w-8 h-8' />,
+  content: 'Here’s a tooltip for you!'
 };
