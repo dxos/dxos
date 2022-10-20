@@ -5,14 +5,6 @@
 import { Readable } from 'readable-stream';
 import { Readable as StreamXReadable } from 'streamx';
 
-import { PublicKey } from '@dxos/keys';
-
-export type FeedBlock<T> = {
-  key: PublicKey
-  seq: number
-  data: T
-}
-
 /**
  * Wraps streamx.Readable (hypercore.createReadStream) to a standard Readable stream.
  *

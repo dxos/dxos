@@ -7,10 +7,10 @@ import { ReadStreamOptions } from 'hypercore';
 import { Writable } from 'readable-stream';
 
 import { Event, latch, Trigger } from '@dxos/async';
-import { FeedBlock, createReadable } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
+import { FeedBlock } from './types';
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
@@ -71,7 +71,7 @@ export class FeedQueue<T extends {}> {
 
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
-    this._feedStream = createReadable(this._feed.core.createReadStream(opts));
+    this._feedStream = this._feed.core.createReadStream(opts);
 
     // Create look-ahead transform.
     // TODO(burdon): Consider buffering?

@@ -6,12 +6,12 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch } from '@dxos/async';
-import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { TestItemBuilder } from './testing';
+import { FeedBlock } from './types';
 
 // Random selector.
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>

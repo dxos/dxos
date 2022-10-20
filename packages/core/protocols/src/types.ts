@@ -3,7 +3,6 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
-import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -17,6 +16,12 @@ export type TypedMessage = TypedProtoMessage<TYPES>
 export type FeedMeta = {
   feedKey: PublicKey
   seq: number
+}
+
+export type FeedBlock<T> = {
+  key: PublicKey
+  seq: number
+  data: T
 }
 
 export type FeedMessageBlock = FeedBlock<FeedMessage>

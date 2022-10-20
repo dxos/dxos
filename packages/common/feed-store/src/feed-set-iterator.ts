@@ -5,7 +5,6 @@
 import assert from 'assert';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
-import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -13,8 +12,7 @@ import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
-
-export type FeedBlock<T> = HypercoreFeedBlock<T>
+import { FeedBlock } from './types';
 
 /**
  * Select next block.

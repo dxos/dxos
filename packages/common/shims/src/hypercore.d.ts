@@ -23,15 +23,6 @@ declare module 'hypercore' {
   export type Callback<T> = (err: Error | null, result: T) => void
 
   /**
-   * Feed data block.
-   */
-  // TODO(burdon): Remove -- not defined by hypercore.
-  export type FeedBlock = {
-    seq: number
-    data: Buffer
-  }
-
-  /**
    * Download range.
    */
   export type Range = {

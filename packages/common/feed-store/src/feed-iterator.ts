@@ -5,11 +5,11 @@
 import assert from 'assert';
 
 import { Trigger } from '@dxos/async';
-import { FeedBlock } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
+import { FeedBlock } from './types';
 
 /**
  * Base class for an async iterable feed.

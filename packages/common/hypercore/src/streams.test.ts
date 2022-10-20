@@ -3,14 +3,13 @@
 //
 
 import util from 'node:util';
-import { Writable } from 'readable-stream';
+import { Writable } from 'streamx';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createReadable } from './streams';
 
 describe('Hypercore', function () {
   it('reads from stream', async function () {
@@ -22,20 +21,19 @@ describe('Hypercore', function () {
     const [closed, setClosed] = latch();
     const [processed, incProcessed] = latch({ count: numBlocks });
 
-    const readStream = createReadable(core.createReadStream({ live: true }));
-    readStream.on('close', () => {
-      log('closed');
-      setClosed();
-    });
-
-    const writeStream = readStream.pipe(new Writable({
-      objectMode: true,
-      write: (data: any, encoding: string, next: () => void) => {
-        log('received', { data: data.toString(encoding) });
+    const readStream = core.createReadStream({ live: true });
+    const consumer = readStream.pipe(new Writable({
+      write (data: any, next: () => void) {
+        log('received', { data: String(data) });
         incProcessed();
         next();
       }
     }));
+
+    consumer.on('close', () => {
+      log('closed');
+      setClosed();
+    });
 
     {
       const append = util.promisify(core.append.bind(core));
@@ -46,9 +44,7 @@ describe('Hypercore', function () {
 
     await processed();
 
-    readStream.unpipe(writeStream);
-    readStream.destroy();
-
+    consumer.destroy();
     await closed();
   });
 
@@ -57,9 +53,9 @@ describe('Hypercore', function () {
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
 
-    const [closed, setClosed] = latch();
+    const [closed, setClosed] = latch({ count: 1 });
     {
-      const readStream = createReadable(core.createReadStream({ live: false }));
+      const readStream = core.createReadStream({ live: true });
       readStream.on('close', () => {
         log('closed');
         setClosed();
@@ -69,7 +65,6 @@ describe('Hypercore', function () {
     }
     await closed();
 
-    // TODO(burdon): Error: Feed is closed (if live)
     const close = util.promisify(core.close.bind(core));
     await close();
   });
