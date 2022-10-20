@@ -19,7 +19,7 @@ describe('Hypercore', function () {
     const core = factory.createFeed(publicKey, { secretKey });
 
     const numBlocks = 10;
-    const [closed, setClosed] = latch({ count: 1 });
+    const [closed, setClosed] = latch();
     const [processed, incProcessed] = latch({ count: numBlocks });
 
     const readStream = createReadable(core.createReadStream({ live: true }));
@@ -52,12 +52,12 @@ describe('Hypercore', function () {
     await closed();
   });
 
-  it.only('feed closed while stream is open', async function () {
+  it('feed closed while stream is open', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
 
-    const [closed, setClosed] = latch({ count: 1 });
+    const [closed, setClosed] = latch();
     {
       const readStream = createReadable(core.createReadStream({ live: false }));
       readStream.on('close', () => {
