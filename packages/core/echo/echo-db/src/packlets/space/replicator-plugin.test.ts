@@ -21,7 +21,7 @@ import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
 
 describe('space/replicator-plugin', function () {
-  it.only('replicates a feed', async function () {
+  it('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 
