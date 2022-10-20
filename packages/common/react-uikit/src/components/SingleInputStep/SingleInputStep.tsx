@@ -59,7 +59,7 @@ export const SingleInputStep = ({
         children: t(rootLabelTKey)
       }}
       {...groupProps}
-      className={cx('p-6 rounded-3xl', groupProps.className)}
+      className={cx('p-6 rounded-xl', groupProps.className)}
       aria-live='polite'
     >
       <Input
