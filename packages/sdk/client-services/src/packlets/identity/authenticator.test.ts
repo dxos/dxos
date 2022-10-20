@@ -7,6 +7,7 @@ import expect from 'expect';
 
 import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
 
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';

@@ -54,7 +54,7 @@ Once you have updated the `dx.yml` file, you can deploy your frame to the regist
 dx ns deploy --tag latest
 ```
 
-> Note: The `latest` tag is a special tag which is the default loaded when no other tags or versions are specified.
+> NOTE: The `latest` tag is a special tag which is the default loaded when no other tags or versions are specified.
 
 ## Ready For Action
 

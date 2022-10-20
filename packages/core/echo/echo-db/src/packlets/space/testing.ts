@@ -13,7 +13,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 import { Database } from '../database';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
@@ -45,7 +45,7 @@ export class TestAgent {
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });

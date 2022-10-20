@@ -74,7 +74,7 @@ export class FeedStore<T extends {}> {
   /**
    * Close all feeds.
    */
-  async clear () {
+  async close () {
     await Promise.all(Array.from(this._feeds.values()).map(feed => feed.close()));
     this._feeds.clear();
   }

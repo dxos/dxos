@@ -11,10 +11,11 @@ import { WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
@@ -31,12 +32,12 @@ describe('space-manager', function () {
 
     return new SpaceManager(
       new MetadataStore(storage.createDirectory('metadata')),
-      new FeedStore({
-        factory: new FeedFactory({
+      new FeedStore<FeedMessage>({
+        factory: new FeedFactory<FeedMessage>({
           root: storage.createDirectory('feeds'),
           signer: keyring,
           hypercore: {
-            valueEncoding: codec
+            valueEncoding
           }
         })
       }),

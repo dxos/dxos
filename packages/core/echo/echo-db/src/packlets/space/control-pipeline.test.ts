@@ -15,7 +15,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', function () {
@@ -30,7 +30,7 @@ describe('space/control-pipeline', function () {
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });

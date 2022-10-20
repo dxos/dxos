@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// Note: Do not export ./interfaces, they conflict with the types in the SDK.
+// NOTE: Do not export ./interfaces, they conflict with the types in the SDK.
 
 export * from './accounts';
 export * from './api-creation';

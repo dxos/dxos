@@ -39,7 +39,7 @@ describe('FeedStore', function () {
     }
 
     {
-      await feedStore.clear();
+      await feedStore.close();
       expect(feedStore.size).to.eq(0);
     }
   });
@@ -92,7 +92,7 @@ describe('FeedStore', function () {
     const numBlocks = 10;
 
     // Write.
-    // Note: Node is required to make this persistent across invocations.
+    // NOTE: Node is required to make this persistent across invocations.
     {
       const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });

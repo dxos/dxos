@@ -9,10 +9,11 @@ import waitForExpect from 'wait-for-expect';
 
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 
 describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {
@@ -21,20 +22,24 @@ describe('replication', function () {
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
     const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore1 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: storage.createDirectory('feeds1'),
         signer: keyring1,
-        hypercore: { valueEncoding: codec }
+        hypercore: {
+          valueEncoding
+        }
       })
     });
 
     const keyring2 = new Keyring();
-    const feedStore2 = new FeedStore({
-      factory: new FeedFactory({
+    const feedStore2 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: storage.createDirectory('feeds2'),
         signer: keyring2,
-        hypercore: { valueEncoding: codec }
+        hypercore: {
+          valueEncoding
+        }
       })
     });
 

@@ -5,14 +5,15 @@
 import expect from 'expect';
 
 import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
-import { codec, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
+import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
@@ -30,10 +31,19 @@ describe('halo/identity', function () {
     const deviceKey = await keyring.createKey();
     const spaceKey = await keyring.createKey();
 
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const feedStore = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    });
+
     const createFeed = async () => {
       const feedKey = await keyring.createKey();
-      return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
+      return feedStore.openFeed(feedKey, { writable: true });
     };
 
     const controlFeed = await createFeed();
@@ -45,7 +55,7 @@ describe('halo/identity', function () {
       controlFeed,
       dataFeed,
       initialTimeframe: new Timeframe(),
-      feedProvider: key => feedStore.openReadOnlyFeed(key),
+      feedProvider: key => feedStore.openFeed(key),
       networkManager: new NetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
@@ -122,10 +132,19 @@ describe('halo/identity', function () {
       const deviceKey = await keyring.createKey();
       spaceKey = await keyring.createKey();
 
-      const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+      const feedStore = new FeedStore<FeedMessage>({
+        factory: new FeedFactory<FeedMessage>({
+          root: createStorage({ type: StorageType.RAM }).createDirectory(),
+          signer: keyring,
+          hypercore: {
+            valueEncoding
+          }
+        })
+      });
+
       const createFeed = async () => {
         const feedKey = await keyring.createKey();
-        return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
+        return feedStore.openFeed(feedKey, { writable: true });
       };
 
       const controlFeed = await createFeed();
@@ -139,7 +158,7 @@ describe('halo/identity', function () {
         controlFeed,
         dataFeed,
         initialTimeframe: new Timeframe(),
-        feedProvider: key => feedStore.openReadOnlyFeed(key),
+        feedProvider: key => feedStore.openFeed(key),
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory
@@ -193,10 +212,19 @@ describe('halo/identity', function () {
       const keyring = new Keyring();
       const deviceKey = await keyring.createKey();
 
-      const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+      const feedStore = new FeedStore<FeedMessage>({
+        factory: new FeedFactory<FeedMessage>({
+          root: createStorage({ type: StorageType.RAM }).createDirectory(),
+          signer: keyring,
+          hypercore: {
+            valueEncoding
+          }
+        })
+      });
+
       const createFeed = async () => {
         const feedKey = await keyring.createKey();
-        return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
+        return feedStore.openFeed(feedKey, { writable: true });
       };
 
       const controlFeed = await createFeed();
@@ -204,11 +232,11 @@ describe('halo/identity', function () {
 
       const space: Space = new Space({
         spaceKey,
-        genesisFeed: await feedStore.openReadOnlyFeed(genesisFeedKey),
+        genesisFeed: await feedStore.openFeed(genesisFeedKey),
         controlFeed,
         dataFeed,
         initialTimeframe: new Timeframe(),
-        feedProvider: key => feedStore.openReadOnlyFeed(key),
+        feedProvider: key => feedStore.openFeed(key),
         networkManager: new NetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory

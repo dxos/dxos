@@ -17,7 +17,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
@@ -119,7 +119,7 @@ describe('space/space-protocol', function () {
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring1,
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });
@@ -133,7 +133,7 @@ describe('space/space-protocol', function () {
       factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });
@@ -210,7 +210,7 @@ describe('space/space-protocol', function () {
         root: storage.createDirectory('feeds1'),
         signer: keyring1,
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });
@@ -226,7 +226,7 @@ describe('space/space-protocol', function () {
         root: storage.createDirectory('feeds2'),
         signer: keyring2,
         hypercore: {
-          valueEncoding: codec
+          valueEncoding
         }
       })
     });

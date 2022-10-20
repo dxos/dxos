@@ -9,16 +9,17 @@ import { failUndefined, raise } from '@dxos/debug';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
-  codec,
+  valueEncoding,
   DataService,
   MetadataStore,
   SpaceManager, SigningContext
 } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
@@ -32,10 +33,10 @@ export class ServiceContext {
   public readonly dataService = new DataService();
 
   public readonly metadataStore: MetadataStore;
-  public readonly feedStore: FeedStore;
+  public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
   public readonly identityManager: IdentityManager;
-  public readonly haloInvitations: HaloInvitations; // TOOD(burdon): Move.
+  public readonly haloInvitations: HaloInvitations; // TODO(burdon): Move.
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
@@ -47,8 +48,17 @@ export class ServiceContext {
     public readonly modelFactory: ModelFactory
   ) {
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    this.feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
     this.keyring = new Keyring(storage.createDirectory('keyring'));
+    this.feedStore = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
+        root: storage.createDirectory('feeds'),
+        signer: this.keyring,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    });
+
     this.identityManager = new IdentityManager(
       this.metadataStore,
       this.feedStore,
@@ -123,7 +133,6 @@ export class ServiceContext {
 
   async joinSpace (invitationDescriptor: InvitationDescriptor) {
     assert(this.dataInvitations);
-
     return this.dataInvitations.acceptInvitation(invitationDescriptor);
   }
 }

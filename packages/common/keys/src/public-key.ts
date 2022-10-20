@@ -129,8 +129,8 @@ export class PublicKey {
   }
 
   // TODO(burdon): Rename toDebugHex? Make default for toString?
-  truncate () {
-    return truncateKey(this);
+  truncate (length = 4) {
+    return truncateKey(this, length);
   }
 
   toString (): string {

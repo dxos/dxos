@@ -53,6 +53,9 @@ export class FeedFactory<T extends {}> {
   }
 
   createFeed (publicKey: PublicKey, options?: FeedOptions): Hypercore<T> {
+    if (options?.writable && !this._signer) {
+      throw new Error('Signer required to create writable feeds.');
+    }
     if (options?.secretKey) {
       console.warn('Secret key ignored due to signer.');
     }
