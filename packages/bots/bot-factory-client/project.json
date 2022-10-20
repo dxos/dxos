@@ -23,7 +23,13 @@
           "packages/bots/bot-factory-client/src/index.ts"
         ],
         "outfile": "packages/bots/bot-factory-client/dist/browser.js",
-        "bundlePackages": [
+        "external": [
+          "@dxos/async",
+          "@dxos/codec-protobuf",
+          "@dxos/keys",
+          "@dxos/protocol-plugin-rpc",
+          "@dxos/protocols",
+          "@dxos/rpc",
           "@dxos/network-manager"
         ]
       }
