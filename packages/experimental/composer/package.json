@@ -19,6 +19,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@tiptap/core": "2.0.0-beta.199",
