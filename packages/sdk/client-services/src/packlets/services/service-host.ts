@@ -8,8 +8,8 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
-import { createDevtoolsHost, DevtoolsServiceDependencies } from '../devtools';
+import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
+import { subscribeToSwarmInfo } from '../devtools/network';
 
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -33,7 +33,7 @@ type ClientServiceHostParams = {
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _config: Config;
   private readonly _signer?: HaloSigner;
-  // private readonly _devtoolsEvents = new DevtoolsHostEvents();
+  private readonly _devtoolsEvents = new DevtoolsHostEvents();
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
@@ -98,18 +98,14 @@ export class ClientServiceHost implements ClientServiceProvider {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _createDevtoolsService (networkManager: NetworkManager): DevtoolsHost {
+  private _createDevtoolsService (networkManager: NetworkManager) {
     const dependencies: DevtoolsServiceDependencies = {
-      config: this._config,
-      echo: this._echo,
-      feedStore: this._echo.feedStore,
-      networkManager,
-      modelFactory: this._echo.modelFactory,
-      keyring: this._echo.halo.keyring,
-      debug // Export debug lib.
-    };
+      networkManager
+    } as any;
 
-    return createDevtoolsHost(dependencies, this._devtoolsEvents);
-    // TODO(dmaretskyi): Implement.
+    // return createDevtoolsHost(dependencies, this._devtoolsEvents);
+    return {
+      subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies)
+    } as any;
   }
 }
