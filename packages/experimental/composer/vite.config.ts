@@ -17,9 +17,9 @@ export default defineConfig((env) => ({
     include: [
       '@dxos/client',
       '@dxos/config',
-      '@dxos/credentials',
       '@dxos/react-client',
       '@dxos/react-ui',
+      '@dxos/react-uikit',
       '@dxos/text-model'
     ],
     esbuildOptions: {
@@ -47,7 +47,8 @@ export default defineConfig((env) => ({
     themePlugin({
       content: [
         resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, 'node_modules/@dxos/react-uikit/dist/**/*.js'),
       ]
     }),
     VitePWA({
