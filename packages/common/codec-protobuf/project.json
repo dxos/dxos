@@ -23,8 +23,10 @@
           "packages/common/codec-protobuf/src/index.ts"
         ],
         "outfile": "packages/common/codec-protobuf/dist/browser.js",
-        "bundlePackages": [
-          "protobufjs"
+        "external": [
+          "assert",
+          "debug",
+          "lodash.merge"
         ]
       }
     },
