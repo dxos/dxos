@@ -9,7 +9,6 @@ The HALO Application allows users to choose from a list of secure "identities" t
 
 End `users` use the application to manage secure "passwordless" sign-ins to the applications they use, revoke application access, or revoke device access to their identity and user data.
 
-
 ## Glossary
 - user: a customer of an application built by a dxos developer
 - developer: customer of the dxos platform, builds apps with dxos components
@@ -20,15 +19,15 @@ End `users` use the application to manage secure "passwordless" sign-ins to the 
 ## User stories
 
 ### Essentials:
-Using the app, `users` can:
+`users` can:
 - self-identify when logging into an application (choose an identity)
 - create/destroy "identities"
 - recover an identity from a paper key
 - join a device to their HALO (incl from a CLI device)
 - revoke a device access to their identity and spaces (for all applications on that device)
 - revoke an application access to their identity and spaces (for all devices)
-
 ### Contacts:
+`users` can:
 - see a list of known contacts
 - remove a known contact
 - add a known contact by pasting an identifier or opening from a QR code
@@ -37,6 +36,7 @@ Using the app, `users` can:
 - send a simple message to a known contact
 
 ### Collaboration:
+`users` can:
 - create / leave spaces
 - invite others to spaces
 - see the spaces the identity is a member of
