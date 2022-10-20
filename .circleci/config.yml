@@ -52,15 +52,9 @@ jobs:
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
             - run: pnpm nx run-many --target=lint
-            - run:
-                command: pnpm nx run-many --target=prerelease
-                no_output_timeout: 30m
-                environment:
-                  NODE_OPTIONS: --max_old_space_size=8198
       - run:
           name: "Upload to codecov.com"
           command: ./.circleci/scripts/upload-codecov.sh
-          when: always
       - store_test_results:
           path: test-results
 
@@ -115,6 +109,13 @@ jobs:
           command: ../../../.circleci/scripts/publish.sh
           environment:
             NODE_OPTIONS: --max_old_space_size=3072
+      - run:
+          name: Deploy Docs
+          working_directory: ./docs
+          command: ../.circleci/scripts/publish.sh
+          no_output_timeout: 30m
+          environment:
+            NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
   main:
