@@ -3,17 +3,19 @@
 //
 
 import cx from 'classnames';
+import {
+  CaretRight,
+  Plus,
+  QrCode,
+  Textbox
+} from 'phosphor-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  CaretRight,
   CompoundButton,
   Group,
-  GroupProps,
-  Plus,
-  QrCode,
-  Textbox
+  GroupProps
 } from '@dxos/react-ui';
 
 import { TKey } from '../../types';
@@ -43,7 +45,7 @@ export const AuthChoices = ({
         children: t(rootLabelTKey ?? 'auth choices label')
       }}
       {...groupProps}
-      className={cx('p-6 rounded-xl', groupProps.className)}>
+      className={cx('p-5 rounded-xl', groupProps.className)}>
       <div role='none' className='flex flex-col gap-2 mt-4'>
         {onCreate && (
           <CompoundButton

@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { ValidationValence } from '@dxos/react-ui';
+import { MessageValence } from '@dxos/react-ui';
 
 import { templateForComponent } from '../../testing';
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
@@ -75,7 +75,7 @@ export const RestoreProfileWithError = () => (
     onBack={() => {}}
     inputProps={{
       validationMessage: 'This only has 3 of the required 24 words',
-      validationValence: ValidationValence.error,
+      validationValence: MessageValence.error,
       initialValue: 'squirrels potatoes dolphins'
     }}
   />
