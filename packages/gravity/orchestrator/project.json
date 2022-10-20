@@ -21,6 +21,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/gravity/orchestrator/**/*.{ts,js}"
         ]

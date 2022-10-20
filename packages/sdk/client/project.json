@@ -40,6 +40,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
         ]

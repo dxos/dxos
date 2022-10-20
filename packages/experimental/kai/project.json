@@ -6,6 +6,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
         ]

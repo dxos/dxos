@@ -27,6 +27,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/executors/protobuf-compiler/**/*.{ts,js}"
         ]

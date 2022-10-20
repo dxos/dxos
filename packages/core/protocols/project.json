@@ -37,6 +37,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/protocols/**/*.{ts,js}"
         ]

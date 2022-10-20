@@ -19,6 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/react-toolkit/**/*.{ts,tsx,js,jsx}"
         ]

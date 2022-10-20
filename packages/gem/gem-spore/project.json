@@ -16,6 +16,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": ["packages/gem/gem-spore/**/*.{ts,tsx,js,jsx}"]
       }
     },

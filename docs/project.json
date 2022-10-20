@@ -20,6 +20,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
         ]

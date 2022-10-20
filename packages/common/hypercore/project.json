@@ -17,8 +17,9 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": [
         "{options.outputFile}"
-    ],
+      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/hypercore/**/*.{ts,js}"
         ]

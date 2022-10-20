@@ -19,6 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
         ]

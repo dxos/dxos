@@ -19,6 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/object-model/**/*.{ts,js}"
         ]

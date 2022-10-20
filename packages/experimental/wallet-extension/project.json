@@ -23,6 +23,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/wallet-extension/**/*.{ts,js}"
         ]

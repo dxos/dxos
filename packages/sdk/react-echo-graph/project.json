@@ -19,6 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/react-echo-graph/**/*.{ts,tsx,js,jsx}"
         ]

@@ -19,6 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/react-registry-client/**/*.{ts,tsx,js,jsx}"
         ]

@@ -14,6 +14,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/plate/**/*.{ts,js}"
         ]

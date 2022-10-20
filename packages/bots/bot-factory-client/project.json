@@ -34,6 +34,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/bots/bot-factory-client/**/*.{ts,js}"
         ]

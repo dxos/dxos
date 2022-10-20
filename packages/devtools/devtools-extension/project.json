@@ -8,6 +8,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/devtools/devtools-extension/**/*.{ts,tsx,js,jsx}"
         ]

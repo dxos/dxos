@@ -45,6 +45,7 @@
         "{options.outputFile}"
       ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/apps/halo-app/**/*.{ts,js}"
         ]

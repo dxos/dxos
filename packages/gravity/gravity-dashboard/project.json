@@ -17,6 +17,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/gravity/gravity-dashboard/**/*.{ts,tsx,js,jsx}"
         ]
