@@ -105,7 +105,7 @@ export class Peer {
     //   stream.expectedFeeds = stream.feeds.length + 1;
     // }
 
-    feed.replicate(this._protocol.initiator, { stream });
+    feed.replicate(this._protocol.initiator, { stream, live: true });
     this._feeds.set(feed.key, feed);
     log('Stream replicated', feed.key.toHex());
     return true;
