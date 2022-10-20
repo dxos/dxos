@@ -26,7 +26,7 @@ export class HypercoreFactory {
    * NOTE: We have to use our `random-access-storage` implementation since the native ones
    * do not behave uniformly across platforms.
    */
-  createFeed (publicKey: Buffer, options?: HypercoreOptions): Hypercore {
+  createFeed (publicKey: Buffer, options?: HypercoreOptions): Hypercore<any> {
     const directory = this._root.createDirectory(publicKey.toString());
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
     return hypercore(storage, publicKey, Object.assign({}, this._options, options));
