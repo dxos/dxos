@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { useId } from '../../hooks';
-import { ValidationValence } from '../../props';
+import { MessageValence } from '../../props';
 import {
   defaultDescription,
   defaultDisabled,
@@ -40,7 +40,7 @@ export interface InputProps
   disabled?: boolean
   size?: InputSize
   validationMessage?: ReactNode
-  validationValence?: ValidationValence
+  validationValence?: MessageValence
 }
 
 const sizeMap = new Map<InputSize, string>([
@@ -87,7 +87,7 @@ export const Input = ({
   );
 
   const isInvalid =
-    !!validationMessage && validationValence === ValidationValence.error;
+    !!validationMessage && validationValence === MessageValence.error;
 
   return (
     <div className={cx('my-4', className)} role='none'>

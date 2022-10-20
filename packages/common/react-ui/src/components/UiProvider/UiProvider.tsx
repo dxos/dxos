@@ -18,7 +18,7 @@ export const UiProvider = ({
 }: UiProviderProps) => {
   return (
     <TooltipProvider
-      delayDuration={200}
+      delayDuration={0}
       {...tooltipProviderProps}
     >
       {children}
