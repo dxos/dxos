@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/experimental/kai/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "packages/experimental/kai/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kai/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/experimental/kai",
+        "resultsPath": "test-results/packages/experimental/kai",
+        "coveragePath": "coverage/packages/experimental/kai"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

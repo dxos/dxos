@@ -1,18 +1,28 @@
-[![build](https://github.com/dxos/protocols/actions/workflows/check.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/check.yaml)
-[![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
+![DXOS](./docs/docs/assets/images/github-repo-banner.png)
 
-![js-dxos](./docs/assets/images/github-repo-banner.png)
+<!-- https://shields.io -->
+[![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE)
+[![CI](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
+![Netlify Status](https://img.shields.io/netlify/847d26d2-ec3b-4f2e-ac3b-caee7fe6e7bc)
+[![codecov](https://img.shields.io/codecov/c/github/dxos/dxos?token=CLO9PHX2PQ)](https://codecov.io/gh/dxos/dxos)
+![Node](https://img.shields.io/node/v/@dxos/client)
+[![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
+[![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
 
-## DXOS Protocols
+<!--
+When public:
+![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)
+![Contributors](https://img.shields.io/github/contributors/dxos/dxos)
+-->
 
-**dxos-js** is a monorepo containing the TypeScript implementation of the DXOS protocols, SDK, and toolchain.
-If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more information.
+## DXOS Monorepo
+
+This monorepo contains the implementation of the DXOS protocols, SDK, and toolchain.
 
 
 ## Quick start
 
-[Getting started](./docs/getting-started.md).
+[Getting started](./docs/docs/contributing/getting-started.md).
 
 
 ## Demo
@@ -29,22 +39,23 @@ To run the demo:
 
 ```bash
 cd packages/demos/kichchen-sink
-rushx demo:grid
+pnpm run demo:grid
 ```
 
 
 ## Installation and usage
 
 
-## Deployment
-
-Packages are deployed via [Release Please](https://github.com/dxos/protocols/blob/main/docs/internal/getting-started.md#release-process).
-
 
 ## Troubleshooting
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
 Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
+
+
+## Coverage
+
+![Coverage](https://codecov.io/gh/dxos/dxos/branch/main/graphs/tree.svg?token=CLO9PHX2PQ)
 
 
 ## Contributing

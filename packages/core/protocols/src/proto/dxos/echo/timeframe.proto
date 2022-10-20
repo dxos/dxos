@@ -1,0 +1,21 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.timeframe;
+
+/**
+ * Vector timestamp used to order messages.
+ */
+message TimeframeVector {
+  message Frame {
+    // TODO(marik-d): Compress using numeric feed indexes.
+    // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
+    bytes feed_key = 1;
+    int32 seq = 3;
+  }
+
+  repeated Frame frames = 1;
+}

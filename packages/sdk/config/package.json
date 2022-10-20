@@ -8,19 +8,16 @@
   "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
-    "node:fs": "./dist/src/loaders/empty-module-stub.js",
-    "node:path": "path-browserify"
+    "./dist/src/loaders/index.js": "./dist/src/loaders/browser.js"
   },
   "files": [
     "dist",
     "esbuild-plugin.js",
+    "rollup-plugin.js",
     "webpack-plugin.js"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "build:test": "toolchain build:test",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -34,28 +31,16 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
-    "node-fetch": "^2.6.0",
-    "path-browserify": "^1.0.1"
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.6",
-    "@types/lodash.set": "^4.3.6",
-    "@types/mocha": "~8.2.2",
-    "@types/node": "^16.11.27",
-    "esbuild": "^0.14.49",
-    "eslint": "^7.12.1",
-    "expect": "~27.0.2",
-    "typescript": "^4.7.2"
+    "@types/lodash.get": "^4.4.7",
+    "@types/lodash.set": "^4.3.7"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

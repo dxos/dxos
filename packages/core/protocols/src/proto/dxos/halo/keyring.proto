@@ -1,0 +1,13 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo.keyring;
+
+// TODO(burdon): Conflicts with keyring.proto
+message KeyRecord {
+  bytes public_key = 1;
+  bytes private_key = 2;
+}

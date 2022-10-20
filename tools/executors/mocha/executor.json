@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "mocha": {
+      "implementation": "./dist/src/main",
+      "schema": "./schema.json",
+      "description": "Runs mocha tests in multiple environments."
+    }
+  }
+}

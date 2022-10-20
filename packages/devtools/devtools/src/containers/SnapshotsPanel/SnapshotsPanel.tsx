@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@mui/material';
 
-import { PartySnapshot } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { useDevtools, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
@@ -22,7 +22,7 @@ export const SnapshotsPanel = () => {
   const handlePartyChange = (key: PublicKey | undefined) => {
     setSelectedPartyKey(key);
     if (key) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         const { snapshot } = await devtoolsHost.getPartySnapshot({ partyKey: key });
         setSnapshot(snapshot);
       });

@@ -1,0 +1,76 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+import "dxos/mesh/swarm.proto";
+import "google/protobuf/empty.proto";
+
+package dxos.mesh.bridge;
+
+//
+// Broker connections between processes and peers.
+//
+service BridgeService {
+
+  ///
+  rpc Open(ConnectionRequest) returns (stream BridgeEvent);
+
+  ///
+  rpc SendSignal(SignalRequest) returns (google.protobuf.Empty);
+
+  ///
+  rpc SendData(DataRequest) returns (google.protobuf.Empty);
+
+  ///
+  rpc Close(CloseRequest) returns (google.protobuf.Empty);
+}
+
+enum ConnectionState {
+  INVALID = 0;
+  CONNECTING = 1;
+  CONNECTED = 2;
+  CLOSED = 3;
+}
+
+message BridgeEvent {
+  message ConnectionEvent {
+    ConnectionState state = 1;
+    optional string error = 2; // TODO(burdon): Error type.
+  }
+
+  message SignalEvent {
+    dxos.mesh.swarm.Signal payload = 1;
+  }
+
+  message DataEvent {
+    bytes payload = 1;
+  }
+
+  oneof type {
+    ConnectionEvent connection = 1;
+    SignalEvent signal = 2;
+    DataEvent data = 3;
+  }
+}
+
+message ConnectionRequest {
+  dxos.keys.PublicKey  proxy_id = 1;
+  bool initiator = 2;
+}
+
+message SignalRequest {
+  dxos.keys.PublicKey  proxy_id = 1;
+  dxos.mesh.swarm.Signal signal = 2;
+}
+
+message DataRequest {
+  dxos.keys.PublicKey  proxy_id = 1;
+  bytes payload = 2;
+}
+
+message CloseRequest{
+  dxos.keys.PublicKey  proxy_id = 1;
+}

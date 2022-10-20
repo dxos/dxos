@@ -37,12 +37,12 @@ export const RegistryProvider = ({
 
   useEffect(() => {
     if (!registry) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
           const context = await createRegistryContext(config);
           setContext(context);
-        } catch (error: any) {
-          setError(error);
+        } catch (err: any) {
+          setError(err);
         }
       });
     }

@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/common/keys/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/keys/dist",
+        "tsConfig": "packages/common/keys/tsconfig.json",
+        "main": "packages/common/keys/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+    ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/keys/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/common/keys/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/keys/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/keys",
+        "resultsPath": "test-results/packages/common/keys",
+        "coveragePath": "coverage/packages/common/keys"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

@@ -13,9 +13,9 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
 
-import { Client, KeyType } from '@dxos/client';
-import { ConfigObject } from '@dxos/config';
-import { PublicKey } from '@dxos/protocols';
+import { KeyType, Client } from '@dxos/client';
+import { ConfigProto } from '@dxos/config';
+import { PublicKey } from '@dxos/keys';
 
 import {
   ClientSigner,
@@ -46,7 +46,7 @@ class TxSigner implements Partial<Signer> {
   }
 }
 
-describe('Signatures', () => {
+describe('Signatures', function () {
   let client: Client;
   let keypair: ReturnType<Keyring['addFromUri']>;
   let apiPromise: ApiPromise;
@@ -56,18 +56,18 @@ describe('Signatures', () => {
 
   const auctionName = () => Math.random().toString(36).substring(2);
 
-  before(async () => {
+  before(async function () {
     await cryptoWaitReady();
   });
 
-  beforeEach(async () => {
+  beforeEach(async function () {
     apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
     const keyring = await createKeyring();
     const uri = '//Alice';
     keypair = keyring.addFromUri(uri);
 
-    const config: ConfigObject = {
+    const config: ConfigProto = {
       version: 1,
       runtime: {
         services: {
@@ -90,12 +90,12 @@ describe('Signatures', () => {
     });
   });
 
-  afterEach(async () => {
+  afterEach(async function () {
     await apiPromise.disconnect();
     await client.destroy();
   });
 
-  it('Can send transactions with normal signer', async () => {
+  it('Can send transactions with normal signer', async function () {
     {
       const auctionsApi = new PolkadotAuctions(apiPromise, keypair);
       await auctionsApi.createAuction(auctionName(), 100000);
@@ -107,14 +107,14 @@ describe('Signatures', () => {
     }
   });
 
-  it('Can send transactions with lower-level external signer', async () => {
+  it('Can send transactions with lower-level external signer', async function () {
     const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
 
     const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 
-  it('Can send transactions with external signer using Client', async () => {
+  it('Can send transactions with external signer using Client', async function () {
     const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, {
       signer: new ClientSigner(client, apiPromise.registry, keypair.address)
     });

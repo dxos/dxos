@@ -7,7 +7,7 @@ import { DependencyList, useEffect, useState } from 'react';
 import { MaybePromise } from '@dxos/util';
 
 interface Result<T> {
-  data: T,
+  data: T
   error?: unknown
 }
 
@@ -23,7 +23,7 @@ export const useAsync = <T>(getData: () => MaybePromise<T> | undefined, initalVa
   const [data, setData] = useState<T>(initalValue);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         const data = await getData();
         data && setData(data);

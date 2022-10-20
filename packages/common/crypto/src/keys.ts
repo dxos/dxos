@@ -5,26 +5,31 @@
 import crypto from 'hypercore-crypto';
 import assert from 'node:assert';
 
-import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
+import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
+export const createId = (): string => PublicKey.stringify(randomBytes(32));
 
 export const SIGNATURE_LENGTH = 64;
 
-export const zeroKey = () => new Uint8Array(32);
-
-export interface KeyPair {
-  publicKey: Buffer
-  secretKey: Buffer
-}
+export const zeroKey = () => new Uint8Array(32); // TOOD(burdon): Remove?
 
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {
     assert(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.');
     return crypto.keyPair(seed.slice(0, 32));
   }
+
   return crypto.keyPair();
 };
 
-export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
+export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) => crypto.validateKeyPair({ publicKey, secretKey });
+
+// TODO(dmaretskyi): Slicing because webcrypto keys are too long.
+export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
 
 /**
  * Return random bytes of length.
@@ -34,13 +39,7 @@ export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(
 export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
 
 /**
- * @return {string}
- */
-// TODO(wittjosiah): This probably shouldn't rely on PublicKey?
-export const createId = (): string => PublicKey.stringify(randomBytes(32));
-
-/**
- * Sign the contents of message with secretKey
+ * Sign the contents of message with secret_key
  * @param {Buffer} message
  * @param {Buffer} secretKey
  * @returns {Buffer} signature
@@ -53,7 +52,7 @@ export const sign = (message: Buffer, secretKey: Buffer): Buffer => {
 };
 
 /**
- * Verifies the signature against the message and publicKey.
+ * Verifies the signature against the message and public_key.
  * @param {Buffer} message
  * @param {Buffer} publicKey
  * @param {Buffer} signature

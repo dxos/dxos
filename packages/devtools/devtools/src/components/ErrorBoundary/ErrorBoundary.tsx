@@ -20,8 +20,8 @@ export class ErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundar
     return { hasError: true, error };
   }
 
-  override componentDidCatch (error: any, errorInfo: any) {
-    console.error(error, errorInfo);
+  override componentDidCatch (err: any, info: any) {
+    console.error(err, info);
   }
 
   override render () {
@@ -36,6 +36,10 @@ export class ErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundar
       );
     }
 
-    return this.props.children;
+    return (
+      <>
+        {this.props.children}
+      </>
+    );
   }
 }

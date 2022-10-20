@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useClient } from './useClient';
 
 /**
- * Hook returning DXOS user profile object.
+ * Hook returning DXOS user profile object, renders HALO auth screen if no profile exists yet.
  * Requires ClientContext to be set via ClientProvider.
  */
 export const useProfile = () => {

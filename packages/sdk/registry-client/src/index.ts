@@ -10,6 +10,5 @@ export * as definitions from './polkadot/interfaces/definitions';
 export * from './api';
 export * from './encoding';
 export * from './polkadot';
-export * from './proto';
 export * from './testing';
 export * from './util';

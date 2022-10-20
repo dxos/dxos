@@ -1,0 +1,26 @@
+{
+  "name": "@dxos/rpc-tunnel",
+  "version": "2.33.8",
+  "description": "RPC ports over various transports.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/rpc": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

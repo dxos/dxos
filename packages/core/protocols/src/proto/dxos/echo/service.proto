@@ -1,0 +1,63 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/echo/feed.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/keys.proto";
+
+package dxos.echo.service;
+
+message SubscribeEntitySetRequest {
+  dxos.keys.PublicKey party_key = 1;
+}
+
+message SubscribeEntitySetResponse {
+  // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
+  repeated feed.EchoEnvelope added = 1;
+  repeated feed.EchoEnvelope deleted = 2;
+}
+
+message SubscribeEntityStreamRequest {
+  dxos.keys.PublicKey party_key = 1;
+  string item_id = 2;
+}
+
+message SubscribeEntityStreamResponse {
+  message Mutation {
+    message Metadata {
+     dxos.keys.PublicKey feed_key = 1;
+     dxos.keys.PublicKey member_key = 2;
+      int32 seq = 3;
+      timeframe.TimeframeVector timeframe = 4;
+    }
+
+    feed.EchoEnvelope data = 1;
+    Metadata meta = 2;
+  }
+
+  oneof kind {
+    // TODO(dmaretskyi): Move snapshot into EchoEnvelope?
+    snapshot.ItemSnapshot snapshot = 1;
+    Mutation mutation = 2;
+  }
+}
+
+message WriteRequest {
+  dxos.keys.PublicKey party_key = 1;
+  feed.EchoEnvelope mutation = 2;
+}
+
+message MutationReceipt {
+  dxos.keys.PublicKey feed_key = 1;
+  int32 seq = 2;
+}
+
+service DataService {
+  rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
+  rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
+  rpc Write(WriteRequest) returns (MutationReceipt); // TODO(burdon): Rename SubmitMutation.
+}

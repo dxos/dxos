@@ -9,7 +9,6 @@
   },
   "include": [
     "src",
-    "stories"
   ],
   "references": [
     {
@@ -22,40 +21,40 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/rpc"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/messenger-model"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/messenger-model"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../echo/text-model"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -71,6 +70,9 @@
     },
     {
       "path": "../devtools-mesh"
+    },
+    {
+      "path": "./tsconfig.node.json"
     }
   ]
 }

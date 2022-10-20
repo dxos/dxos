@@ -1,0 +1,47 @@
+{
+  "sourceRoot": "packages/e2e/rpc-tunnel-e2e/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
+        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json",
+        "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/e2e/rpc-tunnel-e2e/**/*.{ts,js}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/e2e/rpc-tunnel-e2e/out",
+        "configFile": "packages/e2e/rpc-tunnel-e2e/vite.config.ts"
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/e2e/rpc-tunnel-e2e/playwright/tests/*.spec.ts"
+        ],
+        "config": "packages/e2e/rpc-tunnel-e2e/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "playwright"
+  ]
+}

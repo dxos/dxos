@@ -1,0 +1,21 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.mesh.broadcast;
+
+message Packet {
+  // Id message.
+  bytes seq = 1;
+
+  // Represents the author's ID of the message. To identify a message in the network you should check for the: `seqno + origin`.
+  bytes origin = 2;
+
+  // Represents the current sender's ID of the message.
+  optional bytes from = 3;
+
+  // Represents an opaque blob of data, it can contain any data that the publisher wants to send.
+  bytes data = 4;
+}

@@ -1,0 +1,166 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/registry.proto";
+
+// TODO(burdon): Rename `dxos.registry.type`.
+package dxos.type;
+
+// TODO(wittjosiah): Shared with config. Factor out?
+message Repo {
+  string name = 1;
+  string url = 2;
+  string version = 3;
+}
+
+//
+// Records
+//
+
+//
+// Registered as `type.app`.
+//
+message App {
+  /**
+   * Optional **semver 2.0** compliant record version.
+   * Should conform to the semver regex (see https://semver.org/).
+   */
+  optional string version = 1;
+
+  optional string license = 2;
+
+  repeated Repo repos = 3;
+
+  /// App bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
+  optional bytes bundle = 4;
+
+  message Web {
+    /// Relative path in resource to entrypoint, defaults to index.html.
+    optional string index_file = 1;
+
+    /// Relative path in resource to entrypoint, defaults to main.js.
+    optional string entry_point = 2;
+  }
+
+  oneof kind {
+    Web web = 100;
+  }
+
+  optional dxos.registry.Record.Extension extension = 200;
+}
+
+//
+// Registered as `type.bot`.
+//
+message Bot {
+  /**
+   * Optional **semver 2.0** compliant record version.
+   * Should conform to the semver regex (see https://semver.org/).
+   */
+  string version = 1;
+
+  string license = 2;
+
+  repeated Repo repos = 3;
+
+  /// Bot bundle content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
+  bytes bundle = 4;
+
+  /// Only for spawning bots that are expected to be vendored with bot-factory.
+  /// This would be the path to the bot executable in bot-factory's file-system.
+  string local_path = 5;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.state-machine`.
+//
+message StateMachine {
+  /// Set of protobuf messages encoded in JSON.
+  string mutation_protobuf_defs = 1;
+
+  /// Set of protobuf messages encoded in JSON.
+  string snapshot_protobuf_defs = 2;
+
+  bytes code_ipfs_cid = 3;
+}
+
+//
+// Registered as `type.file`.
+//
+message File {
+  // MIME type of the file content: https://developer.mozilla.org/en-US/docs/Glossary/MIME_type.
+  string content_type = 1;
+  string file_name = 2;
+
+  /// File content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
+  bytes bundle = 3;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.kube`.
+//
+message KUBE {
+  string url = 1;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.service`.
+//
+message Service {
+  // TODO(dmaretskyi): How are service type's defined?
+  string type = 1;
+
+  // KUBE record's CID that hosts this service.
+  bytes kube = 2;
+
+  // Extension field's payload depends on service type and has extra data specific to that service.
+  // Within this schema extension might be `type.service.ipfs` or `type.service.bot-factory`.
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.service.ipfs`.
+//
+message IPFS {
+  string protocol = 1;
+  repeated string addresses = 2;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.service.bot-factory`.
+//
+message BotFactory {
+  string topic = 1;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.service.signal`.
+//
+message Signal {
+  string bootstrap = 1;
+  string url = 2;
+
+  dxos.registry.Record.Extension extension = 100;
+}
+
+//
+// Registered as `type.service.app-server`.
+//
+message AppServer {
+  string url = 1;
+
+  dxos.registry.Record.Extension extension = 100;
+}

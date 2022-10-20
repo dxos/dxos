@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../../packages/common/codec-protobuf"
+    },
+    {
+      "path": "../../protobuf-test"
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import yaml from 'js-yaml';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 
 import { mapFromKeyValues } from '../config';
@@ -42,7 +42,7 @@ export class ConfigPlugin {
         if (value === 'envs-map.yml') {
           content = mapFromKeyValues(content, process.env);
         }
-      } catch (error) {
+      } catch (err) {
         // code compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
         // code   const error = new WebpackError(`
         // code   `)

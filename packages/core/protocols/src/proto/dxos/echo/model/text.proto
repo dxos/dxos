@@ -1,0 +1,16 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.model.text;
+
+message Mutation {
+  bytes update = 1;
+  int32 client_id = 2;
+}
+
+message Snapshot {
+  bytes data = 1;
+}

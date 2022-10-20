@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ConfigObject } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 import { MemoryRegistryClientBackend, RegistryClient, RegistryType } from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';
@@ -18,7 +18,7 @@ const TestApp = () => {
   const [types, setTypes] = useState<RegistryType[]>([]);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const types = await registry.listTypeRecords();
       setTypes(types);
     });
@@ -50,7 +50,7 @@ export const Memory = () => {
 };
 
 export const Testnet = () => {
-  const config: ConfigObject = {
+  const config: ConfigProto = {
     runtime: {
       services: {
         dxns: {

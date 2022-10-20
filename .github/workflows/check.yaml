@@ -1,125 +1,55 @@
+name: Check
 on:
+  pull_request:
   push:
 
-name: Build, test, lint
 jobs:
-  check:
-    runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 25
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-      NGROK_TOKEN: 26mWhh6GLy8MKLfzKimJtZQa9zH_BzqkD8GYcFu3CvFrTStK
+  main:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          clean: false
-      - name: Check, install and build
-        run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use
 
-          # Install dependencies
-          echo "::group::Install"
-          node common/scripts/install-run-rush.js install
-          echo "::endgroup::"
-
-          # Build with tests
-          # TODO(burdon): Move to separate action (run once per evening).
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
-      - name: Prepare summary comment
-        if: failure()
-        run: |
-          SUMMARY_COMMENT=$(cat ./failure-summary.log)
-          SUMMARY_COMMENT="${SUMMARY_COMMENT//'%'/'%25'}"
-          SUMMARY_COMMENT="${SUMMARY_COMMENT//$'\n'/'%0A'}"
-          SUMMARY_COMMENT="${SUMMARY_COMMENT//$'\r'/'%0D'}"
-          echo "::set-output name=summary_comment::$(echo "$SUMMARY_COMMENT")"
-        id: summary_comment
-      - name: Add summary comment
-        if: failure()
-        uses: mshick/add-pr-comment@v1
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
-          message: |
-            <details>
-            <summary>Here's the summary of the build failures for ${{ github.sha }}:</summary>
-            <p>
+          node-version: 16
 
-            ```
-            ${{ steps.summary_comment.outputs.summary_comment }}
-            ```
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install libxtst-dev libpng++-dev
+          npx playwright install --with-deps
 
-            </p>
-            </details>
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
-          allow-repeats: false # This is the default
+      - uses: nrwl/nx-set-shas@v2
 
-  check-storybooks:
-    runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 25
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2.2.2
+        name: Install pnpm
+        id: pnpm-install
         with:
-          fetch-depth: 0
-          clean: false
-      - name: Check, install and build
+          version: 7.9
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
         run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use
+          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
 
-          # Install dependencies
-          echo "::group::Install"
-          node common/scripts/install-run-rush.js install
-          echo "::endgroup::"
-
-          # Quick build
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose
-
-          # Test the demos storybooks
-          cd packages/demos/kitchen-sink
-          pnpm book &
-          pnpm test:playwright
-          echo "::endgroup::"
-      - name: Cleanup
-        if: always()
-        run: |
-          kill $(lsof -t -i:9001) || true
-          kill $(lsof -t -i:8080) || true
-
-  # TODO(burdon): Run nightly.
-  check-sdk-health:
-    runs-on: [self-hosted, dind-actions-runner]
-    timeout-minutes: 25
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
         with:
-          fetch-depth: 0
-          clean: false
-      - name: Check, Install and Test
-        run: |
-          \. "$NVM_DIR/nvm.sh" && nvm use
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
-          echo "::group::Install"
-          node common/scripts/install-run-rush.js install
-          echo "::endgroup::"
+      - name: Install dependencies
+        run: pnpm install
 
-          # Quick build
-          node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build --verbose --to @dxos/tutorials-tasks-app
-
-          # Test the Tasks App
-          echo "::group::tutorials-tasks-app"
-          cd packages/demos/tutorials-tasks-app
-          ./scripts/start-and-wait.sh
-          pnpm test:playwright
-          echo "::endgroup::"
-      - name: Cleanup
-        if: always()
-        run: |
-          sudo apt-get install -y lsof
-          kill $(lsof -t -i:3000) || true
-          kill $(lsof -t -i:8080) || true
+      - run: pnpm nx affected --target=lint
+      - run: pnpm nx affected --target=test
+      - run: pnpm nx affected --target=build
+      - run: pnpm nx affected --target=bundle
+        env:
+          # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+          NODE_OPTIONS: --max_old_space_size=8198

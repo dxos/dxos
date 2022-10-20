@@ -13,7 +13,7 @@ export interface Filter {
   /**
    * Filter by record type. Will only return data records.
    */
-  type?: CID,
+  type?: CID
 
   /**
    * Filter by specific string appearing in record's text fields.

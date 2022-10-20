@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "types": [
+      "@dxos/shims",
+      "mocha",
+      "node"
+    ]
+  },
+  "exclude": [
+    "/dist/",
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ]
+}

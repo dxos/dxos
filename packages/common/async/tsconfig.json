@@ -1,14 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "@dxos/mocha",
+      "mocha",
+      "node"
+    ]
   },
-  "exclude": [
-    "node_modules"
-  ],
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     {

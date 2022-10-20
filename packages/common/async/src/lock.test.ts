@@ -2,11 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import { expect } from 'chai';
+
+import { expectToThrow } from '@dxos/debug';
+
 import { sleep } from './async';
 import { Lock, synchronized } from './lock';
 
-describe('Lock', () => {
-  test('single execution', async () => {
+describe('Lock', function () {
+  it('single execution', async function () {
     const events = [];
     const lock = new Lock();
 
@@ -15,25 +19,24 @@ describe('Lock', () => {
     });
     events.push('after');
 
-    expect(events).toEqual([
+    expect(events).to.deep.equal([
       'lock',
       'after'
     ]);
   });
 
-  test('return value', async () => {
+  it('return value', async function () {
     const lock = new Lock();
 
     const value = await lock.executeSynchronized(async () => 'foo');
 
-    expect(value).toEqual('foo');
+    expect(value).to.equal('foo');
   });
 
-  test('two concurrent synchronizations', async () => {
+  it('two concurrent synchronizations', async function () {
     const events = [];
     const lock = new Lock();
 
-    // eslint-disable-next-line jest/valid-expect-in-promise
     const p1 = lock.executeSynchronized(async () => {
       events.push('lock1');
       await sleep(10);
@@ -42,7 +45,6 @@ describe('Lock', () => {
       events.push('p1 resolve');
     });
 
-    // eslint-disable-next-line jest/valid-expect-in-promise
     const p2 = lock.executeSynchronized(async () => {
       events.push('lock3');
     }).then(() => {
@@ -53,7 +55,7 @@ describe('Lock', () => {
     await p2;
     events.push('after');
 
-    expect(events).toEqual([
+    expect(events).to.deep.equal([
       'lock1',
       'lock2',
       'lock3',
@@ -63,7 +65,7 @@ describe('Lock', () => {
     ]);
   });
 
-  test('deadlock', async () => {
+  it('deadlock', async function () {
     const lock = new Lock();
 
     const promise = lock.executeSynchronized(async () => {
@@ -77,10 +79,10 @@ describe('Lock', () => {
 
     await sleep(10);
 
-    expect(resolved).toEqual(false);
+    expect(resolved).to.be.false;
   });
 
-  test('errors do not break the lock', async () => {
+  it('errors do not break the lock', async function () {
     const lock = new Lock();
 
     let p1Status, p2Status;
@@ -109,11 +111,15 @@ describe('Lock', () => {
     await p1;
     await p2;
 
-    expect(p1Status).toEqual('rejected');
-    expect(p2Status).toEqual('resolved');
+    expect(p1Status).to.equal('rejected');
+    expect(p2Status).to.equal('resolved');
   });
 
-  test('errors are propagated with stack traces', async () => {
+  it('errors are propagated with stack traces', async function () {
+    if (mochaExecutor.environment === 'webkit') {
+      this.skip();
+    }
+
     const lock = new Lock();
 
     const throwsError = async () => {
@@ -132,10 +138,10 @@ describe('Lock', () => {
       }
     };
 
-    await expect(() => callLock()).rejects.toThrowError();
+    await expectToThrow(() => callLock());
 
-    expect(error!.stack!.includes('throwsError')).toBe(true);
-    expect(error!.stack!.includes('callLock')).toBe(true);
+    expect(error!.stack!.includes('throwsError')).to.be.true;
+    expect(error!.stack!.includes('callLock')).to.be.true;
   });
 });
 
@@ -157,8 +163,8 @@ class TestClass {
   }
 }
 
-describe('synchronized decorator', () => {
-  test('different methods on same instance', async () => {
+describe('synchronized decorator', function () {
+  it('different methods on same instance', async function () {
     const events: string[] = [];
     const testClass = new TestClass(events);
 
@@ -168,7 +174,7 @@ describe('synchronized decorator', () => {
     await p1;
     await p2;
 
-    expect(events).toEqual([
+    expect(events).to.deep.equal([
       'foo start',
       'foo end',
       'bar start',
@@ -176,7 +182,7 @@ describe('synchronized decorator', () => {
     ]);
   });
 
-  test('methods on different instances', async () => {
+  it('methods on different instances', async function () {
     const events: string[] = [];
     const testClass1 = new TestClass(events);
     const testClass2 = new TestClass(events);
@@ -187,7 +193,7 @@ describe('synchronized decorator', () => {
     await p1;
     await p2;
 
-    expect(events).toEqual([
+    expect(events).to.deep.equal([
       'foo start',
       'bar start',
       'foo end',

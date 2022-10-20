@@ -14,7 +14,7 @@ type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
 export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
 
 interface SendTransactionResult {
-  events: EventRecord[],
+  events: EventRecord[]
   signer: Address
 }
 
@@ -22,7 +22,7 @@ interface SendTransactionResult {
  * TODO(burdon): Comment.
  */
 export class ApiTransactionHandler {
-  private signFn: SignTxFunction
+  private signFn: SignTxFunction;
 
   constructor (
     private api: ApiPromise,
@@ -43,7 +43,7 @@ export class ApiTransactionHandler {
       if (!signFn) {
         throw new Error('Create or select an account first.');
       }
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
           const signedTransaction = await signFn(transaction);
           signedTransaction.send(({ events = [], status }) => {
@@ -61,8 +61,8 @@ export class ApiTransactionHandler {
               });
             }
           }).catch(reject);
-        } catch (error) {
-          reject(error);
+        } catch (err) {
+          reject(err);
         }
       });
     });

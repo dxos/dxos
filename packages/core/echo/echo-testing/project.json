@@ -1,0 +1,48 @@
+{
+  "sourceRoot": "packages/core/echo/echo-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/echo/echo-testing/dist",
+        "tsConfig": "packages/core/echo/echo-testing/tsconfig.json",
+        "main": "packages/core/echo/echo-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/echo/echo-testing/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/core/echo/echo-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-testing/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/echo/echo-testing",
+        "resultsPath": "test-results/packages/core/echo/echo-testing",
+        "coveragePath": "coverage/packages/core/echo/echo-testing"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

@@ -4,25 +4,54 @@
 
 import assert from 'node:assert';
 
+type LatchProps = {
+  count?: number
+  timeout?: number
+}
+
+type LatchResult = [
+  () => Promise<number>,
+  () => void,
+  (err: Error) => void
+]
+
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
- * @param n The number of times the callback is required to be called to resolve the promise.
+ * @deprecated Use `until`.
  */
-export const latch = (n = 1) => {
-  assert(n > 0);
+// TODO(burdon): Reconcile with until/trigger.
+export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
+  assert(count > 0);
 
-  let callback: (value: number) => void;
-  const promise = new Promise<number>((resolve) => {
-    callback = value => resolve(value);
+  let t: ReturnType<typeof setTimeout>;
+  let doResolve: (value: number) => void;
+  let doReject: (err: Error) => void;
+  const promise = new Promise<number>((resolve, reject) => {
+    doResolve = value => {
+      clearTimeout(t);
+      resolve(value);
+    };
+
+    doReject = err => {
+      clearTimeout(t);
+      reject(err);
+    };
   });
 
-  let count = 0;
+  if (timeout) {
+    t = setTimeout(() => {
+      doReject(new Error(`Timed out after ${timeout}ms`));
+    }, timeout);
+  }
+
+  let i = 0;
   return [
-    promise,
+    async () => await promise,
     () => {
-      if (++count === n) {
-        callback(count);
+      if (++i === count) {
+        doResolve(i);
       }
-    }
-  ] as const;
+    },
+    (err: Error) => doReject(err)
+  ];
 };

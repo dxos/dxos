@@ -8,8 +8,8 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { PartyInvitation, InvitationDescriptor } from '@dxos/client';
-import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
+import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import {
@@ -49,7 +49,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateParty = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const party = await client.echo.createParty();
       setPartyKey(party.key);
       resetInvitations();
@@ -57,7 +57,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateInvitation = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       resetInvitations();
 
       const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
@@ -128,8 +128,8 @@ const PartyInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any,
-  party?: string,
+  error?: any
+  party?: string
   invitation?: PartyInvitation
 }
 
@@ -149,8 +149,8 @@ const PartyJoinContainer = () => {
 
       const party = await invitation.getParty();
       setStatus({ party: party.key.toHex() });
-    } catch (error: any) {
-      setStatus({ error });
+    } catch (err: any) {
+      setStatus({ error: err });
     }
   };
 

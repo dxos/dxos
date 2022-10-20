@@ -16,7 +16,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { IFeedGenericBlock } from '@dxos/echo-protocol';
+import { FeedBlock } from '@dxos/feed-store';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { Table, TableCell } from '../Table';
@@ -35,7 +35,7 @@ const defaultGetType = (message: any) => {
     if (message.echo.genesis) {
       return 'echo.genesis';
     } else if (message.echo.itemMutation) {
-      return 'echo.itemMutation';
+      return 'echo.item_mutation';
     } else if (message.echo.mutation) {
       return 'echo.mutation';
     }
@@ -43,8 +43,8 @@ const defaultGetType = (message: any) => {
 
   if (message.halo) {
     // TODO(burdon): Change namespace to dxos.halo.credentials?
-    if (message.halo.payload?.['@type'] === 'dxos.credentials.SignedMessage') {
-      return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.credentials.SignedMessage';
+    if (message.halo.payload?.['@type'] === 'dxos.halo.signed.SignedMessage') {
+      return message.halo.payload.signed?.payload?.__type_url ?? 'dxos.halo.signed.SignedMessage';
     } else {
       return message.halo.payload?.__type_url ?? 'halo.payload';
     }
@@ -52,7 +52,7 @@ const defaultGetType = (message: any) => {
 };
 
 export interface MessageTableProps {
-  messages: IFeedGenericBlock<any>[]
+  messages: FeedBlock<any>[]
   getType?: (message: any) => string
   onSelect?: (data: any) => {}
 }

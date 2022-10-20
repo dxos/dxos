@@ -1,0 +1,72 @@
+{
+  "sourceRoot": "packages/sdk/registry-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/registry-client/dist",
+        "tsConfig": "packages/sdk/registry-client/tsconfig.json",
+        "main": "packages/sdk/registry-client/src/index.ts"
+      }
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/registry-client/src/index.ts"
+        ],
+        "outfile": "packages/sdk/registry-client/dist/browser.js",
+        "bundlePackages": [
+          "@polkadot/api",
+          "@polkadot/keyring",
+          "@polkadot/metadata",
+          "@polkadot/rpc-core",
+          "@polkadot/types",
+          "@polkadot/util",
+          "@polkadot/util-crypto"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/registry-client/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/sdk/registry-client/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/registry-client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/registry-client",
+        "resultsPath": "test-results/packages/sdk/registry-client",
+        "coveragePath": "coverage/packages/sdk/registry-client"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

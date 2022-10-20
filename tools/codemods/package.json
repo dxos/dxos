@@ -1,0 +1,21 @@
+{
+  "name": "@dxos/codemods",
+  "version": "2.33.8",
+  "description": "Code analyzer.",
+  "license": "MIT",
+  "bin": {
+    "beast": "./bin/beast.js"
+  },
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "scripts": {},
+  "dependencies": {
+    "jscodeshift": "^0.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.19.3",
+    "@types/jscodeshift": "^0.11.5",
+    "typescript": "^4.7.2"
+  }
+}

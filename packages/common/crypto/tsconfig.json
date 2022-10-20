@@ -1,14 +1,18 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
   },
   "include": [
     "src"
   ],
   "references": [
     {
-      "path": "../protocols"
+      "path": "../keys"
     }
   ]
 }

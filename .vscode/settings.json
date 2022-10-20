@@ -6,9 +6,19 @@
     }
   ],
   "cSpell.words": [
-    "burdon"
+    "burdon",
+    "dxos",
+    "DXOS",
+    "protobuf",
+    "testutils"
   ],
   "files.associations": {
+    "nx.json": "jsonc",
+    "workspace.json": "jsonc",
+    "project.json": "jsonc",
+    "schema.json": "jsonc",
+    "eslintConfig.json": "jsonc",
+    ".eslintrc.json": "jsonc",
     "rush.json": "jsonc",
     "command-line.json": "jsonc",
     "version-policies.json": "jsonc",

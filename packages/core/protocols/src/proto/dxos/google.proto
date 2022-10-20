@@ -1,0 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+// Adds `BytesType` definition.
+
+import public "google/protobuf/wrappers.proto";

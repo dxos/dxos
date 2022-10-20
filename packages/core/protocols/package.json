@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/protocols",
+  "version": "2.33.8",
+  "description": "Protobuf definitions for DXOS protocols.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert",
+    "node:util": "util"
+  },
+  "files": [
+    "dist",
+    "proto",
+    "src"
+  ],
+  "scripts": {
+    "check": "true",
+    "gen-proto-defs": "ts-node ./scripts/gen-proto-defs.ts"
+  },
+  "dependencies": {
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "assert": "^2.0.0",
+    "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "debug": "^4.3.3",
+    "glob": "~7.1.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

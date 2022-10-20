@@ -15,8 +15,8 @@ const TestApp = () => {
   const client = useClient();
 
   useEffect(() => {
-    setImmediate(async () => {
-      await client.halo.createProfile({ username: 'Test' });
+    setTimeout(async () => {
+      await client.halo.createProfile({ username: 'test-user' });
     });
   }, []);
 

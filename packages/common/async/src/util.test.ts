@@ -2,46 +2,42 @@
 // Copyright 2020 DXOS.org
 //
 
-// DXOS testing browser.
-/* eslint-disable jest/expect-expect, import/order */
-
-import EventEmitter from 'events';
-
-import { expectToThrow } from '@dxos/debug';
+import { expect } from 'chai';
+import EventEmitter from 'node:events';
 
 import { promiseTimeout } from './async';
-import { onEvent, waitForEvent } from './util';
 import { latch } from './latch';
+import { onEvent, waitForEvent } from './util';
 
-test('onEvent', async () => {
+it('onEvent', async function () {
   const emitter = new EventEmitter();
 
-  const [promise, resolve] = latch();
+  const [done, resolve] = latch();
 
   const off = onEvent(emitter, 'test', () => {
     off();
 
-    expect(emitter.listenerCount('test')).toBe(0);
+    expect(emitter.listenerCount('test')).to.equal(0);
     resolve();
   });
 
   emitter.emit('test');
 
-  await promise;
+  await done();
 });
 
-test('waitForEvent', async () => {
+it('waitForEvent', async function () {
   const emitter = new EventEmitter();
   const waiting = waitForEvent(emitter, 'test');
 
   setTimeout(() => emitter.emit('test', { value: 500 }), 10);
 
   const { value } = await waiting;
-  expect(value).toBe(500);
-  expect(emitter.listenerCount('test')).toBe(0);
+  expect(value).to.equal(500);
+  expect(emitter.listenerCount('test')).to.equal(0);
 });
 
-test('waitForEvent (with test)', async () => {
+it('waitForEvent (with test)', async function () {
   const emitter = new EventEmitter();
   const waiting = waitForEvent(emitter, 'test', value => (value === 300) && value);
 
@@ -50,13 +46,13 @@ test('waitForEvent (with test)', async () => {
   setTimeout(() => emitter.emit('test', 300), 30);
 
   const value = await promiseTimeout(waiting, 100);
-  expect(value).toBe(300);
-  expect(emitter.listenerCount('test')).toBe(0);
+  expect(value).to.equal(300);
+  expect(emitter.listenerCount('test')).to.equal(0);
 });
 
-test('waitForEvent (exipred)', async () => {
+it('waitForEvent (exipred)', async function () {
   const emitter = new EventEmitter();
 
-  await expectToThrow(() => waitForEvent(emitter, 'test', undefined, 100));
-  expect(emitter.listenerCount('test')).toBe(0);
+  await expect(() => waitForEvent(emitter, 'test', undefined, 100)).to.throw;
+  expect(emitter.listenerCount('test')).to.equal(0);
 });

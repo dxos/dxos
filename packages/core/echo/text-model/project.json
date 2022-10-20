@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/core/echo/text-model/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/echo/text-model/dist",
+        "tsConfig": "packages/core/echo/text-model/tsconfig.json",
+        "main": "packages/core/echo/text-model/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/echo/text-model/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/core/echo/text-model/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/echo/text-model/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/echo/text-model",
+        "resultsPath": "test-results/packages/core/echo/text-model",
+        "coveragePath": "coverage/packages/core/echo/text-model"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

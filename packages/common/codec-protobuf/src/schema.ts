@@ -10,7 +10,7 @@ import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
 
-export class Schema<T, S = {}> {
+export class Schema<T, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}> (schema: any, substitutions: Substitutions = {}): Schema<T, S> {
     const root = protobufjs.Root.fromJSON(schema);
     return new Schema(root, substitutions);
@@ -18,7 +18,7 @@ export class Schema<T, S = {}> {
 
   private readonly _mapping: BidirectionalMapingDescriptors;
 
-  private readonly _codecCache: Record<string, ProtoCodec> = {}
+  private readonly _codecCache: Record<string, ProtoCodec> = {};
 
   constructor (
     private _typesRoot: protobufjs.Root,
@@ -37,7 +37,23 @@ export class Schema<T, S = {}> {
 
   }
 
+  hasType (typeName: string): boolean {
+    if (typeName === '') {
+      return false;
+    }
+    try {
+      this._typesRoot.lookupType(typeName);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   tryGetCodecForType (typeName: string): ProtoCodec {
+    if (typeName === '') {
+      throw new Error(`Type not found: "${typeName}"`);
+    }
+
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }

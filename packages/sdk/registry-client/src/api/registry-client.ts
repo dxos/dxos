@@ -7,6 +7,7 @@ import protobuf from 'protobufjs';
 
 import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
+import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import {
@@ -15,7 +16,6 @@ import {
   encodeExtensionPayload,
   sanitizeExtensionData
 } from '../encoding';
-import { Record as RawRecord } from '../proto';
 import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
@@ -24,17 +24,17 @@ import { Filtering, Filter } from './filtering';
 import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
-  name: DXN,
+  name: DXN
   tags: Record<string, CID>
 }
 
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   payload: RecordExtension<T>
 }
 
 export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   type: {
     /**
      * FQN of the root message in the protobuf definitions.
@@ -66,8 +66,8 @@ export interface TypeRecordMetadata extends RecordMetadata {
  * Main API for DXNS registry.
  */
 export class RegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
-  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String());
+  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String());
 
   constructor (
     private readonly _backend: RegistryClientBackend
@@ -279,7 +279,7 @@ export class RegistryClient {
 
   private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
     const rawRecord = await this._backend.getRecord(cid);
-    const record = rawRecord && await this._decodeRecord(cid, rawRecord);
+    const record = rawRecord && (await this._decodeRecord(cid, rawRecord));
     return record;
   }
 
@@ -289,7 +289,7 @@ export class RegistryClient {
     }
 
     const payload = await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
-      await this.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
+      (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`))
     );
 
     return {

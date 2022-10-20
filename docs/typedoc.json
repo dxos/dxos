@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "../tsconfig.json",
+  "json": "docs/api.json",
+  "gitRevision": "main",
+  "githubPages": false,
+  "excludePrivate": true,
+  "basePath": "..",
+  "entryPointStrategy": "packages",
+  "entryPoints": ["../packages/sdk/client", "../packages/sdk/react-client", "../packages/sdk/config"]
+}

@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="Sources" pattern="file[protocols]:packages//*&amp;&amp;!file[protocols]:packages//**/gen//**" />
+  <scope name="Sources" pattern="!file[dxos]:*//node_modules//*" />
 </component>

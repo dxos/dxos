@@ -1,0 +1,35 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/config.proto";
+
+package dxos.service.publisher;
+
+option go_package = "github.com/dxos/kube/publisher/pb";
+
+message PublishRequest {
+  dxos.config.Package package = 1;
+}
+
+message PublishResponse {
+  dxos.config.Package package = 1;
+}
+
+message ListResponse {
+  repeated dxos.config.Module modules = 1;
+}
+
+message ResetResponse {
+  int32 count = 1;
+}
+
+service Publisher {
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  rpc List(google.protobuf.Empty) returns (ListResponse);
+  rpc Reset(google.protobuf.Empty) returns (ResetResponse);
+}

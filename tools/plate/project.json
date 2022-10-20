@@ -1,0 +1,32 @@
+{
+  "sourceRoot": "tools/plate/src",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/plate/dist",
+        "tsConfig": "tools/plate/tsconfig.json",
+        "main": "tools/plate/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/plate/**/*.{ts,js}"
+        ]
+      }
+    },
+    "dev": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "dev"
+      },
+      "dependsOn": [
+        "^build"
+      ]
+    }
+  }
+}

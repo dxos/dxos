@@ -26,7 +26,7 @@ import { Dialog } from '@dxos/react-components';
 
 import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
 
-enum Stage {
+export enum RegistrationStage {
   START,
   RESTORE,
   ENTER_USERNAME,
@@ -48,11 +48,13 @@ const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
 export interface RegistrationDialogProps {
   open: boolean
+  initialStage?: RegistrationStage
+  skipSeedCheck?: boolean
   modal?: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void,
-  onJoinHalo?: () => void,
+  onComplete: (seedPhrase: string, username: string) => void
+  onJoinHalo?: () => void
 }
 
 /**
@@ -60,13 +62,15 @@ export interface RegistrationDialogProps {
  */
 export const RegistrationDialog = ({
   open = true,
+  initialStage = RegistrationStage.START,
+  skipSeedCheck = false,
   modal = true,
   debug = false,
   onRestore,
   onComplete,
   onJoinHalo
 }: RegistrationDialogProps) => {
-  const [stage, setCurrentStage] = useState(Stage.START);
+  const [stage, setCurrentStage] = useState(initialStage);
   const [error, setError] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [seedPhrase] = useState(generateSeedPhrase());
@@ -76,7 +80,7 @@ export const RegistrationDialog = ({
   const seedRefs = [...new Array(numSeedWordTests)].map(() => useRef<HTMLInputElement>());
   const [seedWords, seedWordTestIndexes] = useMemo(() => useSeedWords(seedPhrase, numSeedWordTests), [seedPhrase]);
 
-  const setStage = (stage: Stage) => {
+  const setStage = (stage: RegistrationStage) => {
     setError(undefined);
     setProcessing(false);
     setCurrentStage(stage);
@@ -84,7 +88,7 @@ export const RegistrationDialog = ({
 
   useEffect(() => {
     if (open) {
-      setStage(Stage.START);
+      setStage(initialStage);
     }
   }, [open]);
 
@@ -99,21 +103,27 @@ export const RegistrationDialog = ({
     setProcessing(false);
 
     switch (stage) {
-      case Stage.ENTER_USERNAME: {
+      case RegistrationStage.ENTER_USERNAME: {
         const value = usernameRef.current!.value.trim();
         if (value.length > 0) {
           setUsername(value);
-          setStage(Stage.SHOW_SEED_PHRASE);
+          setStage(RegistrationStage.SHOW_SEED_PHRASE);
         }
         break;
       }
 
-      case Stage.SHOW_SEED_PHRASE: {
-        setStage(Stage.CHECK_SEED_PHRASE);
+      case RegistrationStage.SHOW_SEED_PHRASE: {
+        if (!skipSeedCheck) {
+          setStage(RegistrationStage.CHECK_SEED_PHRASE);
+        } else {
+          setProcessing(true);
+          await onComplete(seedPhrase, username);
+          setProcessing(false);
+        }
         break;
       }
 
-      case Stage.CHECK_SEED_PHRASE: {
+      case RegistrationStage.CHECK_SEED_PHRASE: {
         const testWords = seedRefs.map(seedRef => seedRef.current!.value);
         // Find first word that doesn't match.
         const match = undefined === testWords.find((word, i) => word !== seedWords[seedWordTestIndexes[i]] ? true : undefined);
@@ -124,12 +134,12 @@ export const RegistrationDialog = ({
           await onComplete(seedPhrase, username);
           setProcessing(false);
         } else {
-          setStage(Stage.SHOW_SEED_PHRASE);
+          setStage(RegistrationStage.SHOW_SEED_PHRASE);
         }
         break;
       }
 
-      case Stage.RESTORE: {
+      case RegistrationStage.RESTORE: {
         const restoreSeedPhrase = seedphraseRef.current!.value.trim().toLowerCase();
         if (!isSeedPhraseValid(restoreSeedPhrase)) {
           setError('Invalid seed phrase.');
@@ -147,7 +157,7 @@ export const RegistrationDialog = ({
       }
 
       default: {
-        setStage(Stage.ENTER_USERNAME);
+        setStage(RegistrationStage.ENTER_USERNAME);
       }
     }
   };
@@ -203,7 +213,7 @@ export const RegistrationDialog = ({
     );
   };
 
-  const getStage = (stage: Stage) => {
+  const getStage = (stage: RegistrationStage) => {
     const Option = styled(Paper)({
       'display': 'flex',
       'flexDirection': 'column',
@@ -219,7 +229,7 @@ export const RegistrationDialog = ({
     });
 
     switch (stage) {
-      case Stage.START: {
+      case RegistrationStage.START: {
         return {
           title: 'User profile',
           content: (
@@ -233,7 +243,7 @@ export const RegistrationDialog = ({
                   <Typography sx={{ padding: 3 }}>
                     Create a new profile.<br />&nbsp;
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>
+                  <Button variant='contained' color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>
                     Create Profile
                   </Button>
                 </Option>
@@ -244,7 +254,7 @@ export const RegistrationDialog = ({
                   <Typography sx={{ padding: 3 }}>
                     Enter your seed phrase<br />to recover your profile.
                   </Typography>
-                  <Button variant='contained' color='primary' onClick={() => setStage(Stage.RESTORE)}>
+                  <Button variant='contained' color='primary' onClick={() => setStage(RegistrationStage.RESTORE)}>
                     Recover Profile
                   </Button>
                 </Option>
@@ -262,7 +272,7 @@ export const RegistrationDialog = ({
         };
       }
 
-      case Stage.RESTORE: {
+      case RegistrationStage.RESTORE: {
         return {
           title: 'Restoring your profile',
           content: (
@@ -283,7 +293,7 @@ export const RegistrationDialog = ({
                 Import Keyring
               </Button>
               <Box sx={{ flex: 1 }} />
-              <Button color='primary' onClick={() => setStage(Stage.START)}>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.START)}>
                 Back
               </Button>
               <Button
@@ -298,7 +308,7 @@ export const RegistrationDialog = ({
         };
       }
 
-      case Stage.ENTER_USERNAME: {
+      case RegistrationStage.ENTER_USERNAME: {
         return {
           title: 'Create your profile',
           content: (
@@ -315,14 +325,14 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <>
-              <Button color='primary' onClick={() => setStage(Stage.START)}>Back</Button>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.START)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
             </>
           )
         };
       }
 
-      case Stage.SHOW_SEED_PHRASE: {
+      case RegistrationStage.SHOW_SEED_PHRASE: {
         return {
           title: 'Seed phrase',
           content: (
@@ -343,14 +353,14 @@ export const RegistrationDialog = ({
             <Box sx={{ display: 'flex', flex: 1 }}>
               <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
               <Box sx={{ flex: 1 }} />
-              <Button color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>Back</Button>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Next</Button>
             </Box>
           )
         };
       }
 
-      case Stage.CHECK_SEED_PHRASE: {
+      case RegistrationStage.CHECK_SEED_PHRASE: {
         return {
           title: 'Verify the seed phrase',
           content: (
@@ -377,7 +387,7 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <>
-              <Button color='primary' onClick={() => setStage(Stage.ENTER_USERNAME)}>Back</Button>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>Back</Button>
               <Button variant='contained' color='primary' onClick={handleNext}>Finish</Button>
             </>
           )

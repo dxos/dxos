@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "module": "ESNext",
+    "types": [
+      "node",
+      "sharedworker"
+    ]
+  },
+  "include": [
+    "src",
+    "testing"
+  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-client-testing"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

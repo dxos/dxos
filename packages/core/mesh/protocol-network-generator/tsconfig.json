@@ -1,0 +1,21 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "src/proto/*.json"
+  ],
+  "references": [
+    {
+      "path": "../mesh-protocol"
+    },
+    {
+      "path": "../network-generator"
+    }
+  ]
+}

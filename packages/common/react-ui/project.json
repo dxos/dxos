@@ -1,0 +1,45 @@
+{
+  "sourceRoot": "packages/common/react-ui/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/react-ui/dist",
+        "tsConfig": "packages/common/react-ui/tsconfig.json",
+        "main": "packages/common/react-ui/src/index.ts",
+        "assets": [
+          "packages/common/react-ui/src/theme.css"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/common/react-ui/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    }
+  }
+}

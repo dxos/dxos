@@ -1,0 +1,69 @@
+{
+  "sourceRoot": "packages/core/protocols/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/core/protocols/src/proto"
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/core/protocols/proto"
+      ],
+      "options": {
+        "script": "gen-proto-defs"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/protocols/dist",
+        "tsConfig": "packages/core/protocols/tsconfig.json",
+        "main": "packages/core/protocols/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/protocols/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/core/protocols/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/protocols/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/protocols",
+        "resultsPath": "test-results/packages/core/protocols",
+        "coveragePath": "coverage/packages/core/protocols"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha",
+    "protobuf-compiler"
+  ]
+}

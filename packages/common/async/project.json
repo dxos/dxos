@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/common/async/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/async/dist",
+        "tsConfig": "packages/common/async/tsconfig.json",
+        "main": "packages/common/async/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/async/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/common/async/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/async/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/async",
+        "resultsPath": "test-results/packages/common/async",
+        "coveragePath": "coverage/packages/common/async"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

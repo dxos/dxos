@@ -10,13 +10,13 @@
     "outDir": "dist",
     "paths": {
       "@polkadot/api/augment": [
-        "./src/polkadot/interfaces/augment-api.ts"
+        "./packages/sdk/registry-client/src/polkadot/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
-        "./src/polkadot/interfaces/augment-types.ts"
+        "./packages/sdk/registry-client/src/polkadot/interfaces/augment-types.ts"
       ],
       "sample-polkadotjs-typegen/*": [
-        "./src/*"
+        "./packages/sdk/registry-client/src/*"
       ]
     }
   },
@@ -35,13 +35,13 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
       "path": "../client"

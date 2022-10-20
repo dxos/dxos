@@ -1,0 +1,287 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package dxos.config;
+
+message Config {
+  optional int32 version = 1;
+
+  //
+  // Package definition.
+  //
+
+  optional Package package = 2;
+
+  //
+  // Runtime configuration.
+  //
+
+  optional Runtime runtime = 3;
+}
+
+message Package {
+  optional string license = 1;
+  repeated Repo repos = 2;
+  repeated Module modules = 3;
+}
+
+// TODO(wittjosiah): Shared with registry types. Factor out?
+message Repo {
+  optional string name = 1;
+  optional string url = 2;
+  optional string version = 3;
+}
+
+message Module {
+  message Build {
+    optional string command = 1;
+    optional string outdir = 2;
+    optional string version = 3;
+    optional string tag = 4;
+  }
+
+  optional string name = 1;
+  optional string type = 2;
+  optional string display_name = 3;
+  optional string description = 4;
+  repeated string tags = 5;
+  optional bytes bundle = 6;
+
+  optional Build build = 100;
+  repeated Repo repos = 101;
+
+  /// Data which will be included as apart of DXNS record.
+  /// The data will be validated based on the type when being published.
+  optional google.protobuf.Any record = 200;
+}
+
+message Runtime {
+  message Client {
+    /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy. Defaults to AUTOMATIC.
+    enum Mode {
+      /// Connects to the browser wallet if avialable, otherwise runs services in the local mode.
+      AUTOMATIC = 0;
+
+      /// Run services in the local mode.
+      LOCAL = 1;
+
+      /// Connect to the browser wallet or to the remote services through the RPC port.
+      REMOTE = 2;
+    }
+
+    message Storage {
+      enum StorageDriver {
+        RAM = 0;
+        IDB = 1;
+        CHROME = 2;
+        FIREFOX = 3;
+        NODE = 4;
+
+        // Only for key storage:
+
+        LEVELJS = 11;
+        JSONDOWN = 12;
+      }
+
+      optional bool persistent = 1;             // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3;   // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2;  // TODO(burdon): Rename data_store.
+      optional string path = 4;                 // TODO(burdon): Rename data_path.
+    }
+
+    optional string debug = 1 [(env) = "DEBUG"];
+    optional Storage storage = 2;
+    optional bool enable_snapshots = 3;
+
+    /// Milliseconds
+    optional int32 snapshot_interval = 4;
+
+    /// Milliseconds
+    optional int32 invitation_expiration = 5;
+
+    optional Mode mode = 6;
+
+    optional string remote_source = 7;
+  }
+
+  message App {
+    optional string org = 1;
+    optional string theme = 2;
+    optional string website = 3;
+    optional string public_url = 4 [(env) = "PUBLIC_URL"];
+  }
+
+  // CLI configuration
+  message CLI {
+    message AppServe {
+      message Serve {
+        optional string config = 1;
+        optional string login_app = 2;
+        optional string key_phrase = 3;
+      }
+
+      optional Serve serve = 1;
+    }
+
+    message Package {
+      optional string package = 1;
+      optional string channel = 2;
+      optional string bin = 3;
+      optional string config = 4;
+    }
+
+    optional string node_path = 1;
+    optional AppServe app = 2;
+    optional Package console = 3;
+    optional Package mdns = 4;
+    optional Package signal = 5;
+    optional string npm_client = 6;
+    optional string channel = 7;
+  }
+
+  message Props {
+    optional string title = 1;
+  }
+
+  message System {
+    optional string debug = 1;
+  }
+
+  message Kube {
+    message Autoupdate {
+      optional bool enabled = 1;
+      /// Seconds
+      optional int64 interval = 2;
+    }
+
+    message Https {
+      optional bool enabled = 1;
+      optional string port = 2;
+      optional string email = 3;
+      optional string certfile = 4;
+      optional string keyfile = 5;
+      optional string dnsprovider = 6;
+    }
+
+    message P2P {
+      optional string private_key = 1;
+      optional string port = 2;
+      repeated string bootstrap = 3;
+    }
+
+    optional string host = 1;
+    optional string port = 2;
+    optional Autoupdate autoupdate = 3;
+    optional Https https = 4;
+    optional P2P p2p = 5;
+    optional string confhost = 6;
+    repeated string env = 7;
+    repeated string alias = 8;
+  }
+
+  //
+  // DXOS Services.
+  //
+  message Services {
+    message Kube {
+
+      message Endpoints {
+        optional string logs = 1;
+        optional string services = 2;
+        optional string cert = 3;
+      }
+
+      optional Endpoints endpoints = 1;
+      optional string public_url = 2;
+    }
+
+    message AppServer {
+      optional string prefix = 1;
+      optional string server = 2;
+    }
+
+    message Dxns {
+      /// DXNS endpoint.
+      optional string server = 1;
+
+      /**
+       * Substrate account URI. This is a secret.
+       * KUBEs do not serve this with the config but we store it in profile.yml.
+       *
+       * TODO(dmaretskyi): Deprecate this and move it to keyring.
+       */
+      optional string account_uri = 2;
+
+      /**
+       * Public Polkadot Address.
+       */
+      optional string address = 3;
+
+      /**
+       * Public address of a DXNS Account.
+       */
+      optional string account = 4;
+
+      optional string faucet = 5;
+    }
+
+    message Ipfs {
+      optional string server = 1;
+      optional string gateway = 2;
+    }
+
+    message Signal {
+      optional string server = 1;
+      optional string api = 2;
+      optional string status = 3;
+    }
+
+    message Ice {
+      optional string urls = 1;
+      optional string username = 2;
+      optional string credential = 3;
+    }
+
+    message Machine {
+      optional string do_access_token = 1;
+      optional string github_access_token = 2;
+      optional string github_username = 3;
+      optional string dns_domain = 4;
+      optional string npm_access_token = 5;
+    }
+
+    message BotFactory {
+      optional string topic = 1;
+      optional bool persistent = 2;
+      optional int32 retry_attempts = 3;
+      optional int32 retry_interval = 4;
+    }
+
+    message Publisher {
+      optional string server = 1;
+    }
+
+    optional Kube kube = 1;
+    optional AppServer app = 2;
+    optional Dxns dxns = 3;
+    optional Ipfs ipfs = 4;
+    optional Signal signal = 5;
+    repeated Ice ice = 6;
+    optional Machine machine = 7;
+    optional BotFactory bot = 8;
+    optional Publisher publisher = 9;
+  }
+
+  optional Client client = 1;
+  optional App app = 2;
+  optional CLI cli = 3;
+  optional Props props = 4;
+  optional Services services = 5;
+  optional System system = 6;
+  optional Kube kube = 7;
+}

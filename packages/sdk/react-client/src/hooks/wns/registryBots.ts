@@ -11,14 +11,14 @@ import { QueryRecord, WRN_TYPE_BOT } from './types';
 const log = debug('dxos:react-client');
 
 interface RegistryBotRecord {
-  version: string,
-  name: string,
-  names: string[],
+  version: string
+  name: string
+  names: string[]
   keywords: string[]
 }
 
 export interface UseRegistryBotsProps {
-  sortByKeywords?: string[],
+  sortByKeywords?: string[]
 }
 
 /**

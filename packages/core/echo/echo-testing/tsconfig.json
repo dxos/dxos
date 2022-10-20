@@ -1,0 +1,24 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "scripts"
+  ],
+  "exclude": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../echo-db"
+    },
+    {
+      "path": "../object-model"
+    }
+  ]
+}

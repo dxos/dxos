@@ -7,7 +7,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { ConfigObject } from './proto';
+import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+
 import { sanitizeConfig } from './sanitizer';
 import { ConfigKey, DeepIndex, ParseKey } from './types';
 
@@ -15,6 +16,14 @@ type MappingSpec = Record<string, { path: string, type?: string }>;
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
+ *
+ * Expects parsed yaml content of the form:
+ *
+ * ```
+ * ENV_VAR:
+ *   path: config.selector.path
+ * ```
+ *
  * @param {object} spec
  * @param {object} values
  * @return {object}
@@ -96,14 +105,14 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
+  constructor (...objects: [ConfigProto, ...ConfigProto[]]) {
     this._config = sanitizeConfig(defaultsDeep(...objects, { version: 1 }));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigObject {
+  get values (): ConfigProto {
     return this._config;
   }
 
@@ -114,7 +123,7 @@ export class Config {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>): DeepIndex<ConfigProto, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -132,7 +141,7 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
     const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);

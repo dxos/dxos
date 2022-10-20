@@ -6,8 +6,8 @@ import { decodeAddress } from '@polkadot/util-crypto';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { Client, defaultConfig, KeyType } from '@dxos/client';
-import { PublicKey } from '@dxos/protocols';
+import { defaultConfig, KeyType, Client } from '@dxos/client';
+import { PublicKey } from '@dxos/keys';
 
 import {
   AuctionsClient,
@@ -26,7 +26,7 @@ import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
-export const setup = async () => {
+export const setupRegistryClient = async () => {
   const apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
   // TODO(burdon): Change to array of accounts (are these special for testing?)

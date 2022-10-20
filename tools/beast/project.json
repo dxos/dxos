@@ -1,0 +1,44 @@
+{
+  "sourceRoot": "tools/beast/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/beast/dist",
+        "tsConfig": "tools/beast/tsconfig.json",
+        "main": "tools/beast/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/beast/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "tools/beast/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "tools/beast/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/tools/beast",
+        "resultsPath": "test-results/tools/beast",
+        "coveragePath": "coverage/tools/beast"
+      }
+    }
+  }
+}

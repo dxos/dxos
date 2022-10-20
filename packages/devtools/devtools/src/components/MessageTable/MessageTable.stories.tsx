@@ -5,8 +5,8 @@
 import faker from 'faker';
 import React from 'react';
 
-import { IFeedGenericBlock } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { FeedBlock } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { FullScreen } from '@dxos/react-components';
 
 import { MessageTable } from './MessageTable';
@@ -29,7 +29,7 @@ const generateTree = (node = {}, level = 1) => {
 
 export const Primary = () => {
   // TODO(burdon): Factor out.
-  const messages: IFeedGenericBlock<any>[] = [...new Array(20)].map((_, i) => ({
+  const messages: FeedBlock<any>[] = [...new Array(20)].map((_, i) => ({
     key: PublicKey.random(),
     seq: i,
     sync: true,

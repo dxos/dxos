@@ -1,0 +1,40 @@
+{
+  "name": "@dxos/docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "TODO(wittjosiah)": "Resolve the asset path issue here.",
+    "clean:plate": "rm -rf docs/api",
+    "docs:build": "vuepress build docs",
+    "typedoc": "typedoc",
+    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
+    "prerelease": "pnpm run generate:api && pnpm run cleanup:api && pnpm run docs:build",
+    "serve": "vuepress dev docs"
+  },
+  "devDependencies": {
+    "@dxos/react-components": "workspace:*",
+    "@dxos/plate": "workspace:*",
+    "@dxos/typedoc-plugin-plate": "workspace:*",
+    "@types/eslint": "^8.4.6",
+    "@types/markdown-it": "^12.2.3",
+    "@types/markdown-it-container": "^2.0.5",
+    "@types/prettier": "^2.7.1",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vuepress/client": "^2.0.0-beta.51",
+    "@vuepress/plugin-register-components": "^2.0.0-beta.51",
+    "@vuepress/plugin-search": "^2.0.0-beta.51",
+    "eslint": "^8.24.0",
+    "front-matter": "^4.0.2",
+    "markdown-it-container": "^3.0.0",
+    "markdown-it-highlightjs": "^4.0.1",
+    "prettier": "^2.7.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typedoc": "0.23.15",
+    "typescript": "^4.7.2",
+    "vue": "^3.2.40",
+    "vuepress": "^2.0.0-beta.51",
+    "change-case": "^4.1.2"
+  }
+}

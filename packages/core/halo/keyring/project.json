@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/core/halo/keyring/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/halo/keyring/dist",
+        "tsConfig": "packages/core/halo/keyring/tsconfig.json",
+        "main": "packages/core/halo/keyring/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/halo/keyring/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/core/halo/keyring/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/halo/keyring/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/halo/keyring",
+        "resultsPath": "test-results/packages/core/halo/keyring",
+        "coveragePath": "coverage/packages/core/halo/keyring"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

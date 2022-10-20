@@ -5,7 +5,7 @@
 import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useState } from 'react';
 
-import { Client, ClientOptions } from '@dxos/client';
+import { ClientOptions, Client } from '@dxos/client';
 import { ConfigProvider } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
@@ -34,6 +34,11 @@ export interface ClientProviderProps {
   client?: ClientProvider
 
   /**
+   * ReactNode to display until the client is available.
+   */
+  fallback?: ReactNode
+
+  /**
    * Config object or async provider.
    */
   config?: ConfigProvider
@@ -60,7 +65,8 @@ export const ClientProvider = ({
   client: clientProvider,
   config: configProvider,
   options,
-  onInitialize
+  onInitialize,
+  fallback = null
 }: ClientProviderProps) => {
   const [client, setClient] = useState<Client | undefined>(clientProvider instanceof Client ? clientProvider : undefined);
 
@@ -88,10 +94,10 @@ export const ClientProvider = ({
         await done(client);
       }
     }
-  }, []);
+  }, [clientProvider, configProvider, options]);
 
   if (!client) {
-    return null;
+    return fallback as JSX.Element;
   }
 
   return (

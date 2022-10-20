@@ -2,7 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+export type AsyncCallback<T> = (param: T) => Promise<void>;
+
+export type Provider<T> = () => T
+
 export type MaybePromise<T> = T | Promise<T>
+
+export const isNotNullOrUndefined = <T> (x: T): x is Exclude<T, null | undefined> => x != null;
 
 /**
  * All types that evaluate to false when cast to a boolean.
@@ -24,3 +30,6 @@ export const getAsyncValue = async <T> (value: MaybeFunction<MaybePromise<T>>) =
     return value;
   }
 };
+
+export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> &
+  Partial<Pick<Type, Key>>;

@@ -24,10 +24,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/testutils"
@@ -36,10 +36,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
       "path": "../client"

@@ -9,15 +9,8 @@ import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 import { Invitation, InvitationDescriptor } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import {
-  ClientProvider,
-  useClient,
-  useParties,
-  useProfile
-} from '../src';
-import {
-  ClientPanel, Container, PartyJoinPanel
-} from './helpers';
+import { ClientProvider, useClient, useParties, useProfile } from '../src';
+import { ClientPanel, Container, PartyJoinPanel } from './helpers';
 
 export default {
   title: 'react-client/HALO Invitations'
@@ -90,8 +83,8 @@ const HaloInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any,
-  identity?: string,
+  error?: any
+  identity?: string
   invitation?: Invitation
 }
 

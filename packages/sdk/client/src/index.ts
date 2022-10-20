@@ -5,7 +5,6 @@
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
-  PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   TYPE_SCHEMA,
   Entity,
   Item,
@@ -14,10 +13,6 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
-  InvitationDescriptor,
-  InvitationDescriptorType,
-  OpenProgress,
-  PartyMember,
   ResultSet,
   Schema,
   SchemaDef,
@@ -26,9 +21,30 @@ export {
 } from '@dxos/echo-db';
 
 export {
-  ItemID,
-  PartyKey
-} from '@dxos/echo-protocol';
+  clientServiceBundle,
+  ClientServiceHost,
+  InvitationDescriptor
+} from '@dxos/client-services';
+
+export {
+  PublicKey
+} from '@dxos/keys';
+
+export {
+  ItemID
+} from '@dxos/protocols';
+
+// TODO(burdon): Remove exported protos?
+export {
+  KeyRecord,
+  KeyType
+} from '@dxos/protocols/proto/dxos/halo/keys';
+
+export {
+  Profile,
+  SignRequest,
+  SignResponse
+} from '@dxos/protocols/proto/dxos/client';
 
 export {
   ObjectModel,
@@ -37,12 +53,10 @@ export {
 
 // TODO(wittjosiah): Remove.
 export {
-  NetworkManager
+  NetworkManager,
+  createWebRTCTransportFactory
 } from '@dxos/network-manager';
 
-export * from './api';
-export * from './devtools';
-export * from './proto';
-export * from './services';
-export * from './util';
-export * from './version';
+export * from './packlets/api';
+export * from './packlets/proxies';
+// export * from './packlets/devtools';

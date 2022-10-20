@@ -1,0 +1,83 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+
+// TODO(burdon): Standardize position of "package" (i.e., before/after imports).
+// TODO(burdon): Move Item specific to echo.item?
+package dxos.echo.feed;
+
+/**
+ * Outer message type decoded by Codec.
+ * This is what is written to the feeds.
+ */
+message FeedMessage {
+  dxos.echo.timeframe.TimeframeVector timeframe = 1;
+  google.protobuf.Any payload = 2;
+}
+
+/**
+ * A container for dxos.credentials.Message
+ */
+message CredentialsMessage {
+  dxos.halo.credentials.Credential credential = 1;
+}
+
+/**
+ * Wrapper for all ECHO messages.
+ */
+// TODO(burdon): Reconcile with HaloMessage (and other "Message" types).
+message EchoEnvelope {
+  string item_id = 1;
+
+  // Create item.
+  optional ItemGenesis genesis = 10;
+
+  // Item system mutations.
+  optional ItemMutation item_mutation = 11;
+
+  // Model-specific mutations.
+  optional bytes mutation = 12;
+
+  /// Set the model to the provided snapshot.
+  optional snapshot.ModelSnapshot snapshot = 13;
+}
+
+// TODO(burdon): Document (different from parent/child).?
+// TODO(dmaretskyi): Refactor so that entity mutation message is oneof between item mutation and link mutation: items have parents, and links have from/to.
+message LinkData {
+  string source = 1;
+  string target = 2;
+}
+
+/**
+ * Item creation.
+ */
+// TODO(burdon): EntityGenesis?
+message ItemGenesis {
+  optional string item_type = 1;
+  string model_type = 2;
+  optional string model_version = 3;
+  optional LinkData link = 4;
+}
+
+/**
+ * Item mutation.
+ */
+message ItemMutation {
+  enum Action {
+    NOOP = 0;
+    DELETE = 1;
+    RESTORE = 2;
+  }
+
+  optional string parent_id = 1;  // TODO(burdon): Define Action type?
+  optional Action action = 2;
+}

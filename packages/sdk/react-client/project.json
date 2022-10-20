@@ -1,0 +1,63 @@
+{
+  "sourceRoot": "packages/sdk/react-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-client/dist",
+        "tsConfig": "packages/sdk/react-client/tsconfig.json",
+        "main": "packages/sdk/react-client/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/react-client/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/react-client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/react-client",
+        "resultsPath": "test-results/packages/sdk/react-client",
+        "coveragePath": "coverage/packages/sdk/react-client",
+        "domRequired": true,
+        "forceExit": true
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/react-client/playwright/tests/*.test.ts"
+        ],
+        "config": "packages/sdk/react-client/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha",
+    "playwright"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "sourceRoot": "packages/devtools/dx-cli/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/devtools/dx-cli/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "packages/devtools/dx-cli/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/devtools/dx-cli/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/devtools/dx-cli",
+        "resultsPath": "test-results/packages/devtools/dx-cli",
+        "coveragePath": "coverage/packages/devtools/dx-cli",
+        "checkLeaks": false
+      },
+      "dependsOn": [
+        "build"
+      ]
+    }
+  }
+}

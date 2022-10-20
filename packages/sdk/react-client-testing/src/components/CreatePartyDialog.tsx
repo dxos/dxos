@@ -15,7 +15,7 @@ export interface CreatePartyDialogProps {
   open: boolean
   title?: string
   modal?: boolean
-  onCreate?: () => void,
+  onCreate?: () => void
   onJoin?: (invitationCode: string) => void
   onImport?: (file: File | string) => void
 }
@@ -41,8 +41,8 @@ export const CreatePartyDialog = ({
     setError(undefined);
     try {
       await onImport!(file);
-    } catch (error: any) {
-      setError(error);
+    } catch (err: any) {
+      setError(err);
     } finally {
       if (isMounted()) {
         setInProgress(false);
@@ -94,8 +94,8 @@ export const CreatePartyDialog = ({
             setError(undefined);
             try {
               await onJoin!(invitationCodeOrIpfsCid);
-            } catch (error: any) {
-              setError(error);
+            } catch (err: any) {
+              setError(err);
             } finally {
               setInProgress(false);
             }

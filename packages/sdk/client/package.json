@@ -1,87 +1,61 @@
 {
   "name": "@dxos/client",
   "version": "2.33.8",
+  "description": "Core DXOS Client API.",
   "license": "MIT",
   "author": "DXOS.org",
+  "repository": "github:dxos/dxos",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/browser.js",
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/src/index.js": "./dist/browser/index.js"
   },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-    "build": "npm run prebuild && toolchain bundle:library",
-    "build:test": "toolchain build:test --bundle",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true",
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "del": "^5.1.0",
-    "jsondown": "dxos/jsondown#main",
-    "level-js": "^5.0.2",
-    "lodash.defaultsdeep": "^4.6.1",
-    "memdown": "^5.1.0",
-    "readable-stream": "^3.6.0",
-    "uuid": "^8.3.2"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/feed-store": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^28.1.6",
-    "@types/level-js": "~4.0.1",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/memdown": "^3.0.0",
-    "@types/mocha": "~8.2.2",
-    "@types/node": "^16.11.27",
     "@types/readable-stream": "^2.3.9",
-    "@types/uuid": "~8.3.3",
-    "eslint": "^7.12.1",
-    "expect": "~27.0.2",
-    "jsonify": "^0.0.0",
-    "mocha": "~8.4.0",
-    "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "source-map-support": "^0.5.12"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "bundlePackages": [
-      "@dxos/credentials",
-      "@dxos/crypto",
-      "@dxos/echo-db",
-      "@dxos/echo-protocol",
-      "@dxos/feed-store",
-      "@dxos/network-manager",
-      "@dxos/object-model"
-    ],
-    "testingFramework": "mocha"
   }
 }

@@ -1,0 +1,139 @@
+{
+  "extends": "nx/presets/npm.json",
+  "npmScope": "dxos",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "bundle",
+          "check",
+          "e2e",
+          "lint",
+          "prebuild",
+          "prerelease",
+          "proto",
+          "test"
+        ],
+        "parallel": 6,
+        "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
+      }
+    }
+  },
+  // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    // Nx assumes the use of tsconfig.base.json.
+    //   https://nx.dev/more-concepts/customizing-inputs#global-settings.
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/.eslintrc*.js"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/*.md",
+      "!{projectRoot}/eslintConfig.json",
+      "!{workspaceRoot}/.eslintrc*.js"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto",
+        "prebuild"
+      ]
+    },
+    "bundle": {
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "env": "CONFIG_DYNAMIC"
+        }
+      ],
+      "dependsOn": [
+        "^bundle",
+        "build",
+        "proto",
+        "prebuild"
+      ]
+    },
+    "check": {
+      "inputs": ["default", "^production"],
+      "dependsOn": [
+        "lint",
+        "test",
+        "proto",
+        "build"
+      ]
+    },
+    "e2e": {
+      "inputs": ["default", "^production"],
+      "dependsOn": [
+        "proto",
+        "build",
+        "bundle"
+      ]
+    },
+    "lint": {
+      "inputs": ["default"]
+    },
+    "prebuild": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "prerelease": {
+      "inputs": ["default", "^production"]
+    },
+    "proto": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "serve": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "CI"
+        },
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
+      "dependsOn": [
+        "^build",
+        "proto"
+      ]
+    }
+  },
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    }
+  }
+}

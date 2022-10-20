@@ -1,0 +1,142 @@
+#
+# CircleCI configuration
+# https://circleci.com/docs/configuration-reference
+#
+
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.0
+
+aliases:
+  - &docker_image
+    image: ghcr.io/dxos/circleci-node:latest
+    auth:
+      username: dxos-bot
+      password: $GH_TOKEN
+  - &cache_restore
+    restore_cache:
+      keys:
+        - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-v1-{{ arch }}-
+  - &cache_save
+    save_cache:
+      paths:
+        - ~/.local/share/pnpm/store/v3
+      key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+
+jobs:
+  #
+  # NOTE: This job is required to complete before ALL PRs can be merged to main.
+  #
+  check:
+    docker:
+      - *docker_image
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+    resource_class: xlarge
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpm install-playwright
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm check-dependencies
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - when:
+          condition:
+            equal: [ main, <<pipeline.git.branch>> ]
+          steps:
+            - run: pnpm nx run-many --target=build
+            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
+            - run: pnpm nx run-many --target=lint
+            - run:
+                command: pnpm nx run-many --target=prerelease
+                no_output_timeout: 30m
+                environment:
+                  NODE_OPTIONS: --max_old_space_size=8198
+      - run:
+          name: "Upload to codecov.com"
+          command: ./.circleci/scripts/upload-codecov.sh
+          when: always
+      - store_test_results:
+          path: test-results
+
+  #
+  # End-to-end integration tests.
+  #
+  e2e:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpm install-playwright
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+
+  #
+  # Create application bundles.
+  #
+  bundle:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - nx/set-shas
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          environment:
+            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+            NODE_OPTIONS: --max_old_space_size=8198
+
+  #
+  # Deploy applications.
+  #
+  deploy:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - run: pnpm nx build dx-cli
+      - run:
+          name: Deploy HALO
+          working_directory: ./packages/apps/halo-app
+          command: ../../../.circleci/scripts/publish.sh
+          environment:
+            NODE_OPTIONS: --max_old_space_size=3072
+
+workflows:
+  main:
+    jobs:
+      - check:
+          context:
+            - Github
+      # TODO(wittjosiah): Move these jobs back into check.
+      # - e2e:
+      #     context:
+      #       - Github
+      # - bundle:
+      #     context:
+      #       - Github
+
+  deploy:
+    jobs:
+      - deploy:
+          filters:
+            branches:
+              only:
+                - main
+                - release
+          context:
+            - Github

@@ -1,0 +1,22 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "src/**/*.d.ts",
+    "src/**/*.js",
+    "src/**/*.json",
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    }
+  ]
+}

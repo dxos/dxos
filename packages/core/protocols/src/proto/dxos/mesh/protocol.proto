@@ -1,0 +1,28 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package dxos.mesh.protocol;
+
+// TODO(burdon): Rename ProtoMessage.
+message Message {
+  string nmId = 1; // TODO(burdon): nm???
+  bool nmResponse = 2;
+  bool nmEphemeral = 3;
+  google.protobuf.Any nmData = 4;
+}
+
+// TODO(burdon): Rename ProtoError.
+message Error {
+  string code = 1;
+  string message = 2;
+}
+
+// TODO(burdon): Rename ProtoBuffer.
+message Buffer {
+  bytes data = 1;
+}

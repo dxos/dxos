@@ -1,0 +1,75 @@
+{
+  "sourceRoot": "packages/sdk/client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/client/dist",
+        "tsConfig": "packages/sdk/client/tsconfig.json",
+        "main": "packages/sdk/client/src/index.ts"
+      }
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outdir}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/client/src/index.ts"
+        ],
+        "outdir": "packages/sdk/client/dist/browser",
+        "bundlePackages": [
+          "@dxos/client-services",
+          "@dxos/credentials",
+          "@dxos/crypto",
+          "@dxos/echo-db",
+          "@dxos/feed-store",
+          "@dxos/network-manager",
+          "@dxos/object-model"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/client",
+        "resultsPath": "test-results/packages/sdk/client",
+        "coveragePath": "coverage/packages/sdk/client",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "checkLeaks": false,
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

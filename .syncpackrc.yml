@@ -1,0 +1,51 @@
+peer: false
+workspace: false
+semverGroups:
+  - range: ^
+    packages:
+      - '**'
+    dependencies:
+      - '**'
+  - range: ~
+    packages:
+      - '**'
+    dependencies:
+      - esbuild
+      - '@swc-node/register'
+  - range: ''
+    packages:
+      - '**'
+    dependencies:
+      - nx
+      - '@nwrl/*'
+versionGroups:
+  - packages:
+      - '@dxos/docs'
+    dependencies:
+      - '@mdx-js/react'
+  - packages:
+      - '@dxos/log-hook'
+    dependencies:
+      - '@swc/core'
+sortFirst:
+  - name
+  - version
+  - private
+  - description
+  - license
+  - author
+  - keywords
+  - homepage
+  - bugs
+  - repository
+  - type
+  - bin
+  - main
+  - types
+  - browser
+  - files
+  - exports
+  - scripts
+  - dependencies
+  - devDependencies
+  - peerDependencies

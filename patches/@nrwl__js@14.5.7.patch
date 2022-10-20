@@ -1,0 +1,12 @@
+diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
+index 72a4ea9648bcb424655c3a60edc070b48e3cb44b..94e8bc475d85ddfb7f8f269d44e3c349a1ccf9ce 100644
+--- a/src/executors/tsc/tsc.impl.js
++++ b/src/executors/tsc/tsc.impl.js
+@@ -52,7 +52,6 @@ function tscExecutor(_options, context) {
+         }
+         return yield tslib_1.__await(yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues((0, compile_typescript_files_1.compileTypeScriptFiles)(options, context, () => tslib_1.__awaiter(this, void 0, void 0, function* () {
+             yield assetHandler.processAllAssetsOnce();
+-            (0, update_package_json_1.updatePackageJson)(options, context, target, dependencies);
+         }))))));
+     });
+ }

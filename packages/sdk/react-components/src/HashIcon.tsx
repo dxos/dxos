@@ -91,8 +91,8 @@ export const HashIcon = ({
   size = 'medium',
   ...props
 }: {
-  value: string,
-  sx?: any,
+  value: string
+  sx?: any
   size?: Size
 }) => {
   const icon = hashIcons[hash(value) % hashIcons.length];

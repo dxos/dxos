@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/eslint-plugin",
+  "main": "index.js",
+  "dependencies": {
+    "@dxos/eslint-plugin-rules": "workspace:*",
+    "@rushstack/eslint-plugin-packlets": "^0.4.1",
+    "@stayradiated/eslint-plugin-prefer-arrow-functions": "^4.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "eslint-config-semistandard": "^16.0.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-n": "^15.2.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.30.0",
+    "eslint-plugin-unused-imports": "^2.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.24.0",
+    "typescript": "^4.7.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "target": "ESNext",
+    "types": [
+      "mocha"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out"
+  ],
+  "include": [
+    "src/**/*",
+    "testing/**/*"
+  ]
+}

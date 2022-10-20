@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+[ -n "$CI" ] && exit 0
+
+# Exit if husky is disabled
+[ -n "$HUSKY" ] && exit 0
+
+SCRIPT="$(dirname -- "$0")/_/husky.sh"
+
+if [ -f "$SCRIPT" ]; then
+  . "$SCRIPT"
+fi
+
+pnpm run check-dependencies

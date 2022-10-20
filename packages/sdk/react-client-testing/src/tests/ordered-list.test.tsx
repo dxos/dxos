@@ -2,20 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { screen, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import expect from 'expect';
-import 'raf/polyfill';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
 
-import { sleep } from '@dxos/async';
-import { Client, Item, ObjectModel, OrderedList } from '@dxos/client';
+import { defaultTestingConfig, Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 import { SubscriptionGroup } from '@dxos/util';
 
 const createTestComponents = async () => {
-  const config = {};
-  const client = new Client(config);
+  const client = new Client(defaultTestingConfig);
   await client.initialize();
   await client.halo.createProfile();
 
@@ -27,6 +24,7 @@ const createTestComponents = async () => {
       name: faker.name.firstName()
     }
   })));
+
   return { client, party, items };
 };
 
@@ -51,9 +49,9 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   };
 
   return (
-    <ul onClick={handleChangeOrder}>
+    <ul data-testid='click' onClick={handleChangeOrder}>
       {order.map(id => (
-        <li key={id}>
+        <li data-testid='item' key={id}>
           {items.find(item => item.id === id)!.id}
         </li>
       ))}
@@ -61,20 +59,8 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   );
 };
 
-let rootContainer: HTMLDivElement | null;
-
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
-
-afterEach(() => {
-  document.body.removeChild(rootContainer as HTMLDivElement);
-  rootContainer = null;
-});
-
-describe('OrderedList', () => {
-  it('reorders', async () => {
+describe('OrderedList', function () {
+  it('reorders', async function () {
     const { party, items } = await createTestComponents();
     const list = await party.database.createItem({
       model: ObjectModel,
@@ -83,20 +69,18 @@ describe('OrderedList', () => {
     const orderedList = new OrderedList(list.model);
     await orderedList.init(items.map(item => item.id));
 
-    act(() => {
-      ReactDOM.render(<Test items={items} orderedList={orderedList} />, rootContainer);
-    });
+    render(<Test items={items} orderedList={orderedList} />);
 
-    const ul = document.querySelector('ul');
-    expect(ul?.childElementCount).toEqual(3);
-    ul?.childNodes.forEach((node, i) => {
+    expect((await screen.findAllByTestId('item')).length).toEqual(3);
+    screen.getAllByTestId('item').forEach((node, i) => {
       expect(node.textContent).toBe(orderedList.values[i]);
     });
 
-    ul?.click();
-    await sleep(100); // It does not render quick enough.
-    ul?.childNodes.forEach((node, i) => {
-      expect(node.textContent).toBe(orderedList.values[i]);
+    await userEvent.click(screen.getByTestId('click'));
+    await waitFor(() => {
+      screen.getAllByTestId('item').forEach((node, i) => {
+        expect(node.textContent).toBe(orderedList.values[i]);
+      });
     });
   });
 });

@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/common/feed-store/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/feed-store/dist",
+        "tsConfig": "packages/common/feed-store/tsconfig.json",
+        "main": "packages/common/feed-store/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/feed-store/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/common/feed-store/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/feed-store/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/feed-store",
+        "resultsPath": "test-results/packages/common/feed-store",
+        "coveragePath": "coverage/packages/common/feed-store"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

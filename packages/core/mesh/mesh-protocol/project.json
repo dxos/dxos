@@ -1,0 +1,51 @@
+{
+  "sourceRoot": "packages/core/mesh/mesh-protocol/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/mesh-protocol/dist",
+        "tsConfig": "packages/core/mesh/mesh-protocol/tsconfig.json",
+        "main": "packages/core/mesh/mesh-protocol/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/mesh-protocol/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "packages/core/mesh/mesh-protocol/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/mesh-protocol/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/mesh/mesh-protocol",
+        "resultsPath": "test-results/packages/core/mesh/mesh-protocol",
+        "coveragePath": "coverage/packages/core/mesh/mesh-protocol"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}
