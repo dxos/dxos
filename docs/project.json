@@ -25,6 +25,18 @@
           "docs/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "generate:api": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "docs/docs/api"
+      ],
+      "options": {
+        "script": "generate:api"
+      },
+      "dependsOn": [
+        "^build"
+      ]
     }
   }
 }

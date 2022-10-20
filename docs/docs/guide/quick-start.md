@@ -2,6 +2,7 @@
 position: 1.5
 label: Quick start
 ---
+# Quick start
 ## Using an ECHO database for state consensus
 Install ECHO with your package manager of choice
 ```bash

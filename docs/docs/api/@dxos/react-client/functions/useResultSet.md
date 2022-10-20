@@ -1,0 +1,2 @@
+# Function `useResultSet`
+> Declared in [`packages/sdk/react-client/src/hooks/util/useResultSet.ts:17`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/util/useResultSet.ts#L17)

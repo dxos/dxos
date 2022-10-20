@@ -7,12 +7,19 @@ import { searchPlugin } from '@vuepress/plugin-search';
 import { join, resolve } from 'node:path';
 import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
-import { apiSidebar, DOCS_PATH, packageToModule, PINNED_PACKAGES, showcasePlugin, sidebarSection } from './src';
+import {
+  apiSidebar,
+  DOCS_PATH,
+  link,
+  PINNED_PACKAGES,
+  showcasePlugin,
+  sidebarSection
+} from './src';
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
-  description: 'DXOS is an Operating System for Decentralized Software',
+  description: 'An Operating System for Decentralized Software',
   pagePatterns: [
     // Defaults
     '**/*.md',
@@ -39,9 +46,10 @@ const config: UserConfig = defineUserConfig({
       },
       {
         text: 'Reference',
-        children: PINNED_PACKAGES.map(text => ({
+        link: '/api',
+        children: PINNED_PACKAGES.map((text) => ({
           text,
-          link: `/api/modules/${packageToModule(text)}`
+          link: link.package(text)
         }))
       },
       {
@@ -51,7 +59,7 @@ const config: UserConfig = defineUserConfig({
     ],
     sidebar: {
       '/guide': sidebarSection(join(DOCS_PATH, 'guide')),
-      '/api': apiSidebar()
+      '/api': await apiSidebar()
     }
   }),
   plugins: [

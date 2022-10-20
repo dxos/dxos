@@ -26,6 +26,6 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname)
+    dxosPlugin()
   ]
 });
