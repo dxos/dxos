@@ -23,7 +23,13 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, MemoryTransportFactory, TransportFactory, WebRTCTransportService } from './transport';
+import {
+  createWebRTCTransportFactory,
+  MemoryTransportFactory,
+  TransportFactory,
+  WebRTCTransportProxyFactory,
+  WebRTCTransportService
+} from './transport';
 
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
