@@ -23,14 +23,21 @@
           "packages/sdk/client/src/index.ts"
         ],
         "outdir": "packages/sdk/client/dist/browser",
-        "bundlePackages": [
-          "@dxos/client-services",
-          "@dxos/credentials",
-          "@dxos/crypto",
-          "@dxos/echo-db",
-          "@dxos/feed-store",
-          "@dxos/network-manager",
-          "@dxos/object-model"
+        "external": [
+          "@dxos/async",
+          "@dxos/codec-protobuf",
+          "@dxos/config",
+          "@dxos/debug",
+          "@dxos/keys",
+          "@dxos/messaging",
+          "@dxos/model-factory",
+          "@dxos/protocols",
+          "@dxos/rpc",
+          "@dxos/rpc-tunnel",
+          "@dxos/util",
+          "assert",
+          "debug",
+          "readable-stream"
         ]
       }
     },
