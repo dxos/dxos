@@ -1976,6 +1976,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@tiptap/core': 2.0.0-beta.199
@@ -2000,6 +2001,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
