@@ -238,7 +238,8 @@ export class SignalClient implements SignalMethods {
     topic: PublicKey
     peerId: PublicKey
   }): Promise<void> {
-    log(`Join: topic=${topic} peerId=${peerId}`);
+    log('joining', { topic, peerId });
+
     await this.subscribeMessages(peerId);
     await this._subscribeSwarmEvents(topic, peerId);
   }
@@ -250,7 +251,7 @@ export class SignalClient implements SignalMethods {
     topic: PublicKey
     peerId: PublicKey
   }): Promise<void> {
-    log(`Leave: topic=${topic} peerId=${peerId}`);
+    log('leaving', { topic, peerId });
 
     this._swarmStreams.get(topic)?.close();
     this._swarmStreams.delete(topic);

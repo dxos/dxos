@@ -32,7 +32,7 @@ describe('FeedSetIterator', function () {
     const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
-      iterator.addFeed(feed);
+      void iterator.addFeed(feed);
       return feed;
     }));
 
@@ -73,11 +73,10 @@ describe('FeedSetIterator', function () {
 
       // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
-      log('writing', { numFeeds, numBlocks });
       const writers = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
         const key = await builder.keyring.createKey();
         const feed = await feedStore.openFeed(key, { writable: true });
-        iterator.addFeed(feed);
+        void iterator.addFeed(feed);
         feedKeys.push(feed.key);
         return feed.createFeedWriter();
       }));
@@ -94,7 +93,8 @@ describe('FeedSetIterator', function () {
     }
 
     await iterator.start();
-    expect(iterator.running).to.be.true;
+    expect(iterator.isOpen).to.be.true;
+    expect(iterator.isRunning).to.be.true;
 
     // Read blocks.
     {
@@ -116,6 +116,6 @@ describe('FeedSetIterator', function () {
       expect(count).to.eq(numBlocks);
     }
 
-    expect(iterator.running).to.be.false;
+    expect(iterator.isRunning).to.be.false;
   }).timeout(5_000);
 });

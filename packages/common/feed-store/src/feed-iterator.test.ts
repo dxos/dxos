@@ -23,7 +23,7 @@ describe('FeedIterator', function () {
 
     const iterator = new FeedIterator(feed);
     await iterator.start();
-    expect(iterator.running).to.be.true;
+    expect(iterator.isRunning).to.be.true;
 
     // Write blocks.
     {
@@ -52,6 +52,6 @@ describe('FeedIterator', function () {
       expect(count).to.eq(numBlocks);
     }
 
-    expect(iterator.running).to.be.false;
+    expect(iterator.isRunning).to.be.false;
   }).timeout(5_000);
 });

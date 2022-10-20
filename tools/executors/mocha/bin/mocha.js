@@ -2,6 +2,10 @@
 
 const { spawnSync } = require('child_process');
 
+//
+// Script called by IDEs.
+//
+
 const getArg = (flag) => {
   const idx = process.argv.findIndex(arg => arg.startsWith(flag));
   if (idx === -1) {

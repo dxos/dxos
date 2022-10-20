@@ -52,6 +52,15 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   ) {
     super();
     assert(_selector);
+    assert(options);
+  }
+
+  override toJSON () {
+    return {
+      open: this.isOpen,
+      running: this.isRunning,
+      feeds: this._feedQueues.size
+    };
   }
 
   get size () {
@@ -82,15 +91,16 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   async addFeed (feed: FeedWrapper<T>) {
     assert(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     assert(feed.properties.opened);
-    log('Feed added.', { feed: feed.key });
+    log('feed added', { feed: feed.key });
 
     const queue = new FeedQueue<T>(feed);
     this._subscriptions.add(queue.updated.on(() => {
+      console.log('!!!!!!!!!!!!!!');
       this._trigger.wake();
     }));
 
-    await queue.open();
     this._feedQueues.set(feed.key, queue);
+    await queue.open();
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
@@ -103,10 +113,16 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   }
 
   override async _onClose (): Promise<void> {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     this._subscriptions.clear();
     for (const queue of this._feedQueues.values()) {
       await queue.close();
     }
+
+    console.log('???', this.toJSON());
+
+    // Wake when feed added or queue updated.
+    this._trigger.wake();
   }
 
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
@@ -126,12 +142,12 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
             }, this.options.stallTimeout);
           }
         } else {
-          if (idx >= blocks.length) {
-            throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
-          }
           if (t !== undefined) {
             clearTimeout(t);
             t = undefined;
+          }
+          if (idx >= blocks.length) {
+            throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
           }
 
           // Pop from queue.
@@ -142,8 +158,9 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
         }
       }
 
-      // Wait until new feed added or new block.
-      await this._trigger.wait({ timeout: this.options.stallTimeout });
+      // Wait until feed added, new block, or closing.
+      await this._trigger.wait();
+      log('WOKEN', { this: this.toJSON() });
     }
   }
 }

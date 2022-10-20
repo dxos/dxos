@@ -25,12 +25,20 @@ const codec: Codec<TestItem> = {
 const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
 describe('Hypercore', function () {
-  it('sanity', async function () {
+  it('create, append, and close a feed', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
 
     {
+      // Check open is idempotent.
+      const open = util.promisify(core.open.bind(core));
+      await open();
+      await open();
+    }
+
+    {
+      // Append block.
       expect(core.length).to.eq(0);
       const append = util.promisify(core.append.bind(core));
       const seq = await append('test');
@@ -39,9 +47,17 @@ describe('Hypercore', function () {
     }
 
     {
+      // Get block.
       const get = util.promisify(core.get.bind(core));
       const block: any = await get(0);
       expect(block.toString()).to.eq('test');
+    }
+
+    {
+      // Check open is idempotent.
+      const close = util.promisify(core.close.bind(core));
+      await close();
+      await close();
     }
   });
 

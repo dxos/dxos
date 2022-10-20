@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Trigger } from '@dxos/async';
 import { FeedBlock } from '@dxos/hypercore';
 import { log } from '@dxos/log';
@@ -14,30 +16,58 @@ import { FeedWrapper } from './feed-wrapper';
  */
 export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
   private readonly _stopTrigger = new Trigger();
+
+  protected _open = false;
   protected _running = false;
 
-  get running () {
+  toJSON () {
+    return {
+      open: this.isOpen,
+      running: this.isRunning
+    };
+  }
+
+  get isOpen () {
+    return this._open;
+  }
+
+  get isRunning () {
     return this._running;
   }
 
-  async start () {
-    log('starting...');
-    await this._onOpen();
-    this._running = true;
-  }
-
-  async stop () {
-    log('stopping...');
-    this._running = false;
-    this._stopTrigger.wake();
-  }
-
   async open () {
-    await this._onOpen();
+    if (!this._open) {
+      log('opening...');
+      await this._onOpen();
+      this._open = true;
+      await this.start();
+    }
   }
 
   async close () {
-    await this._onClose();
+    if (this._open) {
+      log('closing...');
+      await this.stop();
+      await this._onClose();
+      this._open = false;
+    }
+  }
+
+  async start () {
+    assert(this._open);
+    if (!this._running) {
+      log('starting...');
+      this._running = true;
+    }
+  }
+
+  async stop () {
+    assert(this._open);
+    if (this._running) {
+      log('stopping...');
+      this._running = false;
+      this._stopTrigger.wake();
+    }
   }
 
   //
@@ -50,8 +80,6 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 
   async * _generator () {
     while (this._running) {
-      // TODO(burdon): Promise.race with stop trigger.
-      //  https://github.com/dxos/dxos/pull/1670#discussion_r999298039
       const block = await Promise.race([
         this._stopTrigger.wait(),
         this._nextBlock()

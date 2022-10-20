@@ -97,7 +97,7 @@ export class SwarmMapper {
         }
       });
     }
-    log(`Graph changed directConnections=${this._swarm.connections.length} totalPeersInSwarm=${this._peers.size}`);
+    log('graph changed', { directConnections: this._swarm.connections.length, totalPeersInSwarm: this._peers.size });
     this.mapUpdated.emit(Array.from(this._peers.values()));
   }
 

@@ -176,6 +176,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
+  // TODO(burdon): Rename open.
   async initialize (onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._initialized) {
       return;
@@ -183,7 +184,7 @@ export class Client {
 
     const timeout = setTimeout(() => {
       // TODO(burdon): Tie to global error handling (or event).
-      throw new TimeoutError(`Initialize timed out after ${this.timeout / 1000}s.`);
+      throw new TimeoutError(`Initialize timed out after ${this.timeout}ms.`);
     }, this.timeout);
 
     if (this._mode === Runtime.Client.Mode.REMOTE) {
@@ -206,6 +207,23 @@ export class Client {
 
     this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
+  }
+
+  /**
+   * Cleanup, release resources.
+   */
+  @synchronized
+  // TODO(burdon): Rename close.
+  async destroy () {
+    await this._echo._close();
+    await this._halo._close();
+
+    if (!this._initialized) {
+      return;
+    }
+
+    await this._serviceProvider.close();
+    this._initialized = false;
   }
 
   private initializeIFramePort () {
@@ -259,22 +277,6 @@ export class Client {
         }
       }
     }
-  }
-
-  /**
-   * Cleanup, release resources.
-   */
-  @synchronized
-  async destroy () {
-    await this._echo._close();
-    this._halo._close();
-
-    if (!this._initialized) {
-      return;
-    }
-
-    await this._serviceProvider.close();
-    this._initialized = false;
   }
 
   /**

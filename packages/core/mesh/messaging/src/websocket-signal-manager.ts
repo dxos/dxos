@@ -80,7 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
-    log(`Leave ${topic} ${peerId}`);
+    log('leaving', { topic, peerId });
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
   }

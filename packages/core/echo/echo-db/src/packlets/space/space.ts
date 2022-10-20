@@ -227,7 +227,7 @@ export class Space {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
         const { key: feedKey, seq, data } = msg;
-        log('Processing message.', { msg });
+        log('processing message', { msg });
 
         try {
           const payload = data.payload as TypedMessage;

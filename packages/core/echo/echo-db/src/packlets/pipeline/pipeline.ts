@@ -126,7 +126,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   async start () {
-    await this.feedSetIterator.start();
+    await this.feedSetIterator.open();
   }
 
   async stop () {

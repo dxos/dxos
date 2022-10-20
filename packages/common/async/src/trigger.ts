@@ -56,7 +56,7 @@ export class Trigger<T = void> {
    */
   async wait ({ timeout }: { timeout?: number } = {}): Promise<T> {
     if (timeout) {
-      return promiseTimeout(this._promise, timeout, new Error('timeotu'));
+      return promiseTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
     } else {
       return this._promise;
     }

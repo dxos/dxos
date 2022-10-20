@@ -138,7 +138,6 @@ export class ItemManager {
       itemMutation: parentId ? { parentId } : undefined,
       mutation
     });
-    console.log('Mutation written', { receipt });
 
     // Unlocked by construct.
     log('Pending Item:', itemId);

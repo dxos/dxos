@@ -7,7 +7,11 @@ import assert from 'node:assert';
 
 import { Party, Client } from '@dxos/client';
 
-export class Builder {
+/**
+ * Test builder.
+ */
+// TODO(burdon): Reconcile with @dxos/feed-store.
+export class TestBuilder {
   _client?: Client;
 
   get client () {
@@ -51,8 +55,8 @@ export class Builder {
 
 type Callback = (client: Client, Party: Party) => Promise<void>
 
-export const handler = async (callback: Callback) => {
-  const builder = new Builder();
+export const testCallback = async (callback: Callback) => {
+  const builder = new TestBuilder();
   await builder.initialize();
   const party = await builder.createParty();
   try {

@@ -105,7 +105,7 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
 
-    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
+    log('joining', { topic: options.topic, peerId: options.peerId, topology: options.topology.toString() });
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm ${topic}`);
     }

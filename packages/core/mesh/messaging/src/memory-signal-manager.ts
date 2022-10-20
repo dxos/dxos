@@ -106,7 +106,7 @@ export class MemorySignalManager implements SignalManager {
   async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
     assert(recipient);
     if (!this._context.connections.has(recipient)) {
-      log.warn('Recipient is not subscribed for messages.', { author, recipient });
+      log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
     }
     this._context.connections
@@ -115,7 +115,7 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {
-    log(`Subscribing ${peerId} for messages`);
+    log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
   }
 

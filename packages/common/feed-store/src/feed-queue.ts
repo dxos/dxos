@@ -68,11 +68,13 @@ export class FeedQueue<T extends {}> {
     }
 
     log('opening', { key: this._feed.key });
+
+    // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
 
     // Create look-ahead transform.
-    // TODO(burdon): Consider buffering.
+    // TODO(burdon): Consider buffering?
     const lookAheadStream = this._feedStream.pipe(new Writable({
       objectMode: true,
       write: (data: any, encoding: string, next: () => void) => {
@@ -110,7 +112,7 @@ export class FeedQueue<T extends {}> {
     if (this.opened) {
       assert(this._feedStream);
 
-      log('closing...');
+      log('closing', { feed: this._feed.key });
       this._feedStream.destroy();
       const [closed, setClosed] = latch();
       this._feedStream.once('close', setClosed);

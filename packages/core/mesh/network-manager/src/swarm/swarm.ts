@@ -71,7 +71,7 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
-    log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
+    log('creating swarm', { topic: _topic, peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new MessageRouter({
@@ -104,30 +104,31 @@ export class Swarm {
   }
 
   onSwarmEvent (swarmEvent: SwarmEvent) {
-    log(`Swarm event ${JSON.stringify(swarmEvent)}`);
+    log('swarm event', { swarmEvent });
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log(`New peer for ${this._topic} ${peerId}`);
+      log('new peer', { topic: this._topic, peerId });
       if (!peerId.equals(this._ownPeerId)) {
         this._discoveredPeers.add(peerId);
       }
     } else if (swarmEvent.peerLeft) {
       this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
     }
+
     this._topology.update();
   }
 
   async onOffer (message: OfferMessage): Promise<Answer> {
-    log(`Offer from ${JSON.stringify(message)}`);
+    log(`offer from ${message}`);
     // Id of the peer offering us the connection.
     assert(message.author);
     const remoteId = message.author;
     if (!message.recipient?.equals(this._ownPeerId)) {
-      log(`Rejecting offer with incorrect peerId: ${message.author}`);
+      log(`rejecting offer with incorrect peerId: ${message.author}`);
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
-      log(`Rejecting offer with incorrect topic: ${message.topic}`);
+      log(`rejecting offer with incorrect topic: ${message.topic}`);
       return { accept: false };
     }
 
@@ -159,12 +160,13 @@ export class Swarm {
         accept = true;
       }
     }
+
     this._topology.update();
     return { accept };
   }
 
   async onSignal (message: SignalMessage): Promise<void> {
-    log(`Signal ${this._topic} ${JSON.stringify(message)}`);
+    log(`Signal ${this._topic} ${message}`);
     assert(message.recipient?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`);
     assert(message.topic?.equals(this._topic));
     assert(message.author);
@@ -189,7 +191,7 @@ export class Swarm {
   }
 
   async destroy () {
-    log(`Destroy swarm ${this._topic}`);
+    log('destroying', { topic: this._topic });
     await this._topology.destroy();
     await Promise.all(Array.from(this._connections.keys()).map(key => this._closeConnection(key)));
   }

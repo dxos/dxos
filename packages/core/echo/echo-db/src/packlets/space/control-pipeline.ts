@@ -42,7 +42,7 @@ export class ControlPipeline {
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
     this._partyStateMachine.onFeedAdmitted.set(async info => {
-      log('Feed admitted', { info });
+      log('feed admitted', { info });
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
           const feed = await feedProvider(info.key);
@@ -72,15 +72,15 @@ export class ControlPipeline {
   }
 
   async start () {
-    log('Starting control pipeline');
+    log('starting');
     setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {
         try {
-          log('Processing message', { msg });
+          log('processing', { msg });
           if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
             const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
             if (!result) {
-              log.warn('Credential processing failed', { msg });
+              log.warn('processing failed', { msg });
             }
           }
         } catch (err: any) {
@@ -93,7 +93,7 @@ export class ControlPipeline {
   }
 
   async stop () {
-    log('Stopping control pipeline');
+    log('stopping');
     await this._pipeline.stop();
   }
 }

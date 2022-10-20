@@ -63,7 +63,6 @@ export class FeedWrapper<T extends {}> {
   close = this._binder.async(this._hypercore.close);
 
   get = this._binder.async(this._hypercore.get);
-  getBatch = this._binder.async(this._hypercore.getBatch);
   append = this._binder.async(this._hypercore.append);
   download = this._binder.async(this._hypercore.download);
 
