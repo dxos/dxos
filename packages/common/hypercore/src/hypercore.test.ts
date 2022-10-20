@@ -26,7 +26,7 @@ const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec
 
 describe('Hypercore', function () {
   it('sanity', async function () {
-    const factory = new HypercoreFactory();
+    const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
 
@@ -46,7 +46,7 @@ describe('Hypercore', function () {
   });
 
   it('encoding with typed hypercore', async function () {
-    const factory = new HypercoreFactory();
+    const factory = new HypercoreFactory<TestItem>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
 
