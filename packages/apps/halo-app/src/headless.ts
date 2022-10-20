@@ -32,7 +32,7 @@ if (typeof SharedWorker !== 'undefined') {
       channel: 'dxos:app',
       onOrigin: origin => {
         setTimeout(async () => {
-          createRuntime(origin, wrtcPort);
+          await createRuntime(origin, wrtcPort);
         });
       }
     });
