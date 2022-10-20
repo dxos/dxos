@@ -12,6 +12,7 @@ import {
   DOCS_PATH,
   link,
   PINNED_PACKAGES,
+  plausiblePlugin,
   showcasePlugin,
   sidebarSection
 } from './src';
@@ -69,6 +70,7 @@ const config: UserConfig = defineUserConfig({
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
+    plausiblePlugin({ domain: process.env.DOCS_DOMAIN }),
     await showcasePlugin()
   ]
 });

@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import prettier from 'prettier';
 import ts from 'typescript';
-import { Plugin } from 'vuepress';
+import type { Plugin } from 'vuepress';
 
 const require = createRequire(import.meta.url);
 // TODO(wittjosiah): Consider adding the following rules to the global config:
