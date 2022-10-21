@@ -14,7 +14,7 @@ import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 
-import { getMachineId, PublisherRpcPeer } from './util';
+import { getTelemetryContext, PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -57,7 +57,7 @@ export abstract class BaseCommand extends Command {
     await super.init();
 
     // TODO(wittjosiah): Create second identifier per HALO.
-    const machineId = await getMachineId(this.config.configDir);
+    const { machineId } = await getTelemetryContext(this.config.configDir);
 
     Sentry.init({
       machineId,
