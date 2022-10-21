@@ -1876,6 +1876,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
       '@oclif/core': ^1.14.1
       '@oclif/plugin-help': ^5.1.12
       '@oclif/plugin-plugins': ^2.1.0
@@ -1917,6 +1918,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
       '@oclif/core': 1.18.0
       '@oclif/plugin-help': 5.1.15
       '@oclif/plugin-plugins': 2.1.4

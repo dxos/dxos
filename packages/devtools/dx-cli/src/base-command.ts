@@ -13,8 +13,9 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
+import * as Telemetry from '@dxos/telemetry';
 
-import { getTelemetryContext, PublisherRpcPeer } from './util';
+import { getTelemetryApiKey, getTelemetryContext, PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -56,15 +57,33 @@ export abstract class BaseCommand extends Command {
   override async init (): Promise<void> {
     await super.init();
 
-    // TODO(wittjosiah): Create second identifier per HALO.
-    const { machineId } = await getTelemetryContext(this.config.configDir);
-
-    Sentry.init({
+    const {
       machineId,
-      destination: process.env.SENTRY_DSN ?? SENTRY_DESTINATION,
-      // TODO(wittjosiah): Configure this.
-      sampleRate: 1.0,
-      scrubFilenames: true
+      identityId,
+      fullCrashReports,
+      disableTelemetry
+    } = await getTelemetryContext(this.config.configDir);
+
+    if (!disableTelemetry) {
+      Sentry.init({
+        machineId,
+        destination: process.env.SENTRY_DSN ?? SENTRY_DESTINATION,
+        // TODO(wittjosiah): Configure this.
+        sampleRate: 1.0,
+        scrubFilenames: !fullCrashReports
+      });
+    }
+
+    Telemetry.init({
+      apiKey: getTelemetryApiKey(),
+      batchSize: 20,
+      enable: !disableTelemetry
+    });
+
+    Telemetry.event({
+      machineId,
+      identityId,
+      name: this.id ?? 'unknown'
     });
 
     // Load user config file.
