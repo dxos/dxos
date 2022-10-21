@@ -62,10 +62,9 @@ describe('RpcPeer', function () {
 
       await bob.open();
 
-      await aliceOpen;
+      await promise;
 
       expect(aliceOpen).toEqual(true);
-      await promise;
     });
 
     it('one peer can open before the other is created', async function () {

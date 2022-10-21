@@ -625,13 +625,11 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
       hypercore: ^9.12.0
       random-access-storage: ^3.0.0
-      readable-stream: ^3.6.0
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
@@ -647,7 +645,6 @@ importers:
       debug: 4.3.4
       hypercore: 9.12.0
       random-access-storage: 3.0.0
-      readable-stream: 3.6.0
       util: 0.12.5
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
@@ -655,7 +652,6 @@ importers:
       '@dxos/keyring': link:../../core/halo/keyring
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/readable-stream': 2.3.14
       faker: 5.5.3
 
   packages/common/hypercore:
