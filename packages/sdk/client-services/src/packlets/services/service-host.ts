@@ -57,20 +57,22 @@ export class ClientServiceHost implements ClientServiceProvider {
         ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
       transportFactory: transportFactory ?? (
+        // TODO(burdon): Should require memory transport.
         networkingEnabled
           ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
           : MemoryTransportFactory),
       log: true
     });
 
-    this._context = new ServiceContext(
-      storage,
-      networkManager,
-      modelFactory
-    );
+    this._context = new ServiceContext(storage, networkManager, modelFactory);
 
     this._services = {
-      ...createServices({ config: this._config, echo: null, context: this._context, signer: this._signer }),
+      ...createServices({
+        config: this._config,
+        echo: null,
+        context: this._context,
+        signer: this._signer
+      }),
       DevtoolsHost: this._createDevtoolsService() // TODO(burdon): Move into createServices.
     };
   }

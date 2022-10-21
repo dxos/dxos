@@ -109,6 +109,7 @@ export class MemorySignalManager implements SignalManager {
       log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
     }
+
     this._context.connections
       .get(recipient)!
       .onMessage.emit({ author, recipient, payload });
@@ -119,5 +120,5 @@ export class MemorySignalManager implements SignalManager {
     this._context.connections.set(peerId, this);
   }
 
-  async destroy () { }
+  async destroy () {}
 }

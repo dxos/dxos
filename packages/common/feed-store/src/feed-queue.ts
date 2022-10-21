@@ -80,6 +80,10 @@ export class FeedQueue<T extends {}> {
 
     log('opening', { key: this._feed.key });
 
+    this._feed.core.on('close', () => {
+      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    });
+
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = this._feed.core.createReadStream(opts);
@@ -118,18 +122,19 @@ export class FeedQueue<T extends {}> {
 
       log('closing', { feed: this._feed.key });
       const [closed, setClosed] = latch();
-      this._feedConsumer.once('close', () => {
+      this._feedConsumer.on('close', () => { // TODO(burdon): ???
+        console.log('!!!');
         this._feedStream = undefined;
         this._feedConsumer = undefined;
         this._currentBlock = undefined;
         this._index = -1;
+        log('closed');
         setClosed();
       });
 
       this._feedStream.destroy();
       this._feedConsumer.destroy();
       await closed();
-      log('closed');
     }
   }
 

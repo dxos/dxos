@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { latch, promiseTimeout } from '@dxos/async';
+import { latch, promiseTimeout, sleep } from '@dxos/async';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
@@ -26,8 +26,25 @@ describe('FeedQueue', function () {
     await queue.close();
     await queue.close();
 
-    // TODO(burdon): Close queue if feed closed by store.
     await feedStore.close();
+  });
+
+  it.only('feed closed before iterator', async function () {
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+
+    const queue = new FeedQueue<any>(feed);
+    await queue.open();
+
+    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
+
+    // TODO(burdon): Close queue if feed closed by store. Add listener.
+    await queue.close();
+
+    await sleep(2000);
+
+    // await feedStore.close();
   });
 
   it('responds immediately when feed is appended', async function () {
