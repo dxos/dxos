@@ -12,6 +12,7 @@ export const init = (options: InitOptions) => {
   sentryInit({
     dsn: options.destination,
     release: options.release,
+    environment: options.environment,
     tracesSampleRate: options.sampleRate,
     transport: options.transport,
     beforeSend: event => {
