@@ -8,8 +8,9 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import { subscribeToSwarmInfo } from '../devtools/network';
+import { subscribeToNetworkStatus as subscribeToSignalStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../devtools/network';
 
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -98,14 +99,16 @@ export class ClientServiceHost implements ClientServiceProvider {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _createDevtoolsService (networkManager: NetworkManager) {
+  private _createDevtoolsService (networkManager: NetworkManager): DevtoolsHost {
     const dependencies: DevtoolsServiceDependencies = {
       networkManager
     } as any;
 
     // return createDevtoolsHost(dependencies, this._devtoolsEvents);
     return {
-      subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies)
+      subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
+      subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
+      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies),
     } as any;
   }
 }
