@@ -13,6 +13,33 @@
         "main": "packages/sdk/client-services/src/index.ts"
       }
     },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outdir}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/client-services/src/index.ts"
+        ],
+        "outdir": "packages/sdk/client-services/dist/browser",
+        "external": [
+          "@dxos/async",
+          "@dxos/codec-protobuf",
+          "@dxos/config",
+          "@dxos/debug",
+          "@dxos/keys",
+          "@dxos/messaging",
+          "@dxos/model-factory",
+          "@dxos/protocols",
+          "@dxos/rpc",
+          "@dxos/rpc-tunnel",
+          "@dxos/util",
+          "assert",
+          "debug"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

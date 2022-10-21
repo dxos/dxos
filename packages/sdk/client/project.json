@@ -24,6 +24,7 @@
         ],
         "outdir": "packages/sdk/client/dist/browser",
         "external": [
+          "@dxos/client-services",
           "@dxos/async",
           "@dxos/codec-protobuf",
           "@dxos/config",

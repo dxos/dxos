@@ -6,7 +6,9 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:debug": "debug",
+    "./dist/src/index.js": "./dist/browser/index.js"
   },
   "files": [
     "dist",
@@ -39,6 +41,7 @@
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
+    "debug": "^2.0.0",
     "base-x": "~3.0.9",
     "json-stable-stringify": "^1.0.1",
     "jsondown": "dxos/jsondown#main",
