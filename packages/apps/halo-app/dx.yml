@@ -16,9 +16,8 @@ package:
 
 runtime:
   client:
-    # For local development uncomment:
-    # remoteSource: http://localhost:3967/headless.html
     mode: remote
+    remoteSource: /headless.html
     storage:
       persistent: true
 

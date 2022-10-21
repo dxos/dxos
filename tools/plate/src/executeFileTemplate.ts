@@ -8,20 +8,27 @@ import * as tsnode from 'ts-node';
 
 import { File, MaybePromise, promise } from './file';
 
-export const TEMPLATE_REGEX = /(.*)\.t\.ts$/;
+/** Include all template files that end with .t.ts or .t.js */
+export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
+/** Do not process files that are compilation noise like .map and .t.d.ts */
+export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.map$/];
 
-export const isTemplateFile = (file: string): boolean => TEMPLATE_REGEX.test(file);
+export const isTemplateFile = (file: string): boolean =>
+  TEMPLATE_FILE_INCLUDE.test(file) &&
+  !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
 
 export const getOutputNameFromTemplateName = (s: string): string => {
-  const e = TEMPLATE_REGEX.exec(s);
+  const e = TEMPLATE_FILE_INCLUDE.exec(s);
   const out = e?.[1];
   return out ?? s;
 };
 
-const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> => {
+const loadTemplate = async <I = any>(
+  p: string
+): Promise<TemplateFunction<I>> => {
   if (!isTemplateFile(p)) {
     throw new Error(
-      `only *.t.ts template files are supported. attempted file: ${p}`
+      `only *.t.ts or *.t.js template files are supported. attempted file: ${p}`
     );
   }
   // const outpath = p.replace(/\.t\.ts$/, ".t.js");
@@ -39,7 +46,11 @@ const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> =>
   try {
     mod = await import(p);
     const fn = mod?.default ?? mod;
-    return typeof fn === 'function' ? fn : null;
+    return typeof fn === 'function'
+      ? fn
+      : typeof fn === 'string'
+        ? () => fn
+        : null;
   } catch (err) {
     console.error(`problem while loading template ${p}`);
     console.error(err);
@@ -60,9 +71,9 @@ export type TemplateContext<TInput = {}> =
     defaultOutputFile: string
   };
 
-export type TemplatingResult = File[];
+export type TemplatingResult<R = any> = File<R>[];
 
-export type TemplateFunctionResult = string | File[];
+export type TemplateFunctionResult<R = any> = string | File<R>[];
 
 export type Functor<TInput = void, TOutput = void> = (
   input: TInput
@@ -74,32 +85,33 @@ export type TemplateFunction<TInput = void> = Functor<
   TemplateFunctionResult
 >;
 
-export const executeFileTemplate = async <TInput>(options: ExecuteFileTemplateOptions<TInput>): Promise<TemplatingResult> => {
-  const { templateFile, templateRelativeTo, outputDirectory } = options;
-  const templateFullPath = templateRelativeTo
-    ? path.resolve(templateRelativeTo, templateFile)
-    : templateFile;
+export const executeFileTemplate = async <TInput>(
+  options: ExecuteFileTemplateOptions<TInput>
+): Promise<TemplatingResult> => {
+  const { templateFile, outputDirectory, templateRelativeTo } = options;
+  const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
+  const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath);
   if (!templateFunction) {
     return [];
   }
   const nominalOutputPath = path.join(
     outputDirectory,
-    templateRelativeTo
-      ? getOutputNameFromTemplateName(templateFullPath).slice(
-        templateRelativeTo.length
-      )
-      : getOutputNameFromTemplateName(templateFile)
+    getOutputNameFromTemplateName(templateFullPath).slice(
+      absoluteTemplateRelativeTo.length
+    )
   );
   try {
-    const result = await promise(templateFunction({
-      input: {},
-      ...options,
-      defaultOutputFile: nominalOutputPath,
-      ...(templateRelativeTo
-        ? { templateRelativeTo }
-        : { templateRelativeTo: path.dirname(templateFullPath) })
-    }));
+    const result = await promise(
+      templateFunction({
+        input: {},
+        ...options,
+        defaultOutputFile: nominalOutputPath,
+        ...(templateRelativeTo
+          ? { templateRelativeTo: absoluteTemplateRelativeTo }
+          : { templateRelativeTo: path.dirname(templateFullPath) })
+      })
+    );
     return typeof result === 'string'
       ? [
           new File({

@@ -4,7 +4,7 @@
 
 import { promiseTimeout } from '@dxos/async';
 import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '@dxos/client-services';
-import { createBundledRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 /**
  * Implements services that are not local to the app.
@@ -17,7 +17,10 @@ export class ClientServiceProxy implements ClientServiceProvider {
     port: RpcPort,
     private readonly _timeout = 300
   ) {
-    this._client = createBundledRpcClient(clientServiceBundle, {
+    this._client = createProtoRpcPeer({
+      exposed: {},
+      requested: clientServiceBundle,
+      handlers: {},
       port
     });
 

@@ -1,0 +1,2 @@
+# Function `useMembers`
+> Declared in [`packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx:9`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx#L9)

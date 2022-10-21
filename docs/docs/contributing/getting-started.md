@@ -79,7 +79,7 @@ Custom shell aliases can be included in your shell config:
 source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
 ```
 
-## Building
+## Using NX in the repo
 
 To Install dependencies from the root directory:
 
@@ -96,13 +96,26 @@ pnpm nx run-many --target=build
 To check all tests pass (this is run by CI):
 
 ```bash
-pnpm nx run-many --target=check
+pnpm nx run-many --target=test
 ```
 
 To build an individual package (optionally with the `watch` flag):
 
 ```bash
 pnpm nx build <target> --watch
+```
+
+To fix all lint errors (whole repo, slow)
+```bash
+pnpm nx run-many --target=lint --fix
+```
+To fix lint errors only within (you can configure HEAD and BASE, by default it's your branch against main)
+```bash
+pnpm nx affected --target=lint --fix 
+```
+For specific packages:
+```bash
+pnpm nx run-many --projects=docs,config --target=lint --fix
 ```
 
 ## Adding new dependencies
