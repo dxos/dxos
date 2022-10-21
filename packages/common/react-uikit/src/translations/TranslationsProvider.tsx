@@ -49,7 +49,7 @@ export const TranslationsProvider = ({
     if (resourceExtensions) {
       Object.keys(resourceExtensions).forEach((language) => {
         Object.keys(resourceExtensions[language]).forEach((ns) => {
-          i18Next.addResources(language, ns, resourceExtensions[language][ns]);
+          i18Next.addResourceBundle(language, ns, resourceExtensions[language][ns]);
         });
       });
     }

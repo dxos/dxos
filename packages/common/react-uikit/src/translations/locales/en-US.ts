@@ -29,5 +29,6 @@ export const uikit = {
   'fatal error message': 'Something went wrong that requires the app to be reloaded.',
   'caught error message': 'Something went wrong; check the console for details.',
   'copy error label': 'Copy this error',
-  'reload page label': 'Reload'
+  'reload page label': 'Reload',
+  'generic copy label': 'Copy'
 };

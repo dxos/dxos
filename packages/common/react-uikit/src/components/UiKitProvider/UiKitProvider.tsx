@@ -10,6 +10,7 @@ import {
   TranslationsProvider,
   TranslationsProviderProps
 } from '../../translations';
+import { ErrorsBoundaryProvider } from '../ErrorBoundary';
 
 interface UiKitProviderProps
   extends Omit<UiProviderProps, 'children'>,
@@ -31,7 +32,9 @@ export const UiKitProvider = ({
           resourceExtensions
         }}
       >
-        {children}
+        <ErrorsBoundaryProvider>
+          {children}
+        </ErrorsBoundaryProvider>
       </TranslationsProvider>
     </UiProvider>
   );
