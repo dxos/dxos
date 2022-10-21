@@ -10,7 +10,7 @@ import { SubscribeToSwarmInfoResponse } from "@dxos/protocols/proto/dxos/devtool
 
 import { ConnectionState, Swarm } from "./swarm";
 
-export enum ConnectionType {
+export enum EventType {
   CONNECTION_STATE_CHANGED = "CONNECTION_STATE_CHANGED",
   PROTOCOL_ERROR = "PROTOCOL_ERROR",
   PROTOCOL_EXTENSIONS_INITIALIZED = "PROTOCOL_EXTENSIONS_INITIALIZED",
@@ -70,34 +70,34 @@ export class ConnectionLog {
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
         connectionInfo.events!.push({
-            type: "CONNECTION_STATE_CHANGED",
-            newState: state,
+          type: EventType.CONNECTION_STATE_CHANGED,
+          newState: state,
         });
         this.update.emit();
       });
 
       connection.protocol.error.on((error) => {
         connectionInfo.events!.push({
-            type: "PROTOCOL_ERROR",
-            error: error.stack ?? error.message,
+          type: EventType.PROTOCOL_ERROR,
+          error: error.stack ?? error.message,
         });
         this.update.emit();
       });
       connection.protocol.extensionsInitialized.on(() => {
         connectionInfo.events!.push({
-            type: "PROTOCOL_EXTENSIONS_INITIALIZED",
+          type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED,
         });
         this.update.emit();
       });
       connection.protocol.extensionsHandshake.on(() => {
         connectionInfo.events!.push({
-            type: "PROTOCOL_EXTENSIONS_HANDSHAKE",
+          type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE,
         });
         this.update.emit();
       });
       connection.protocol.handshake.on(() => {
         connectionInfo.events!.push({
-            type: "PROTOCOL_HANDSHAKE",
+          type: EventType.PROTOCOL_HANDSHAKE,
         });
         this.update.emit();
       });
