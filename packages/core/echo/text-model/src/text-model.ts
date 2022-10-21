@@ -53,7 +53,7 @@ export class TextModel extends Model<Doc, Mutation> {
     this.update.on(() => {
       unsubscribe();
       unsubscribe = this._subscribeToDocUpdates();
-    })
+    });
   }
 
   get doc (): Doc {

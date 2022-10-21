@@ -139,7 +139,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
             </div>
           </Group>
           {parties.length > 0 && (
-            <Group 
+            <Group
               className='my-8 mx-auto w-72 flex flex-col gap-4'
               label={{
                 level: 1,

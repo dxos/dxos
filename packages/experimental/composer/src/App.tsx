@@ -20,7 +20,7 @@ export const App = () => {
       config={configProvider}
       fallback={<ProviderFallback message='Starting DXOS client…' />}
       onInitialize={async client => {
-        client.echo.registerModel(TextModel)
+        client.echo.registerModel(TextModel);
       }}
     >
       <ProfileProvider>

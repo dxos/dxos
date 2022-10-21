@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import type { Item } from '@dxos/client';
-import { useClient, useSelection } from '@dxos/react-client';
+import { useSelection } from '@dxos/react-client';
 import { Button, Group } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 

@@ -11,12 +11,12 @@ import { ModelFactory } from '@dxos/model-factory';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SubscriptionGroup } from '@dxos/util';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
-import { SubscriptionGroup } from '@dxos/util';
 
 const log = debug('dxos:echo-db:database-backend');
 
