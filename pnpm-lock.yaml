@@ -1861,8 +1861,8 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/sentry': workspace:*
       '@oclif/core': ^1.14.1
       '@oclif/plugin-help': ^5.1.12
       '@oclif/plugin-plugins': ^2.1.0
@@ -1892,6 +1892,7 @@ importers:
       oclif: ^3.1.2
       react: ^18.2.0
       shx: ^0.3.3
+      uuid: ^8.3.2
       ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
@@ -1902,6 +1903,7 @@ importers:
       '@dxos/plate': link:../../../tools/plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/sentry': link:../../common/sentry
       '@oclif/core': 1.18.0
       '@oclif/plugin-help': 5.1.15
       '@oclif/plugin-plugins': 2.1.4
@@ -1920,9 +1922,9 @@ importers:
       node-fetch: 2.6.7
       oclif: 3.2.19
       react: 18.2.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       ws: 7.5.9
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@oclif/test': 2.2.4
       '@types/chai': 4.3.3
       '@types/cli-progress': 3.11.0
