@@ -14,6 +14,22 @@ describe('FeedQueue', function () {
   const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 
+  it('opens and closes a queue multiple times', async function () {
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+
+    const queue = new FeedQueue(feed);
+    await queue.open();
+    await queue.open();
+
+    await queue.close();
+    await queue.close();
+
+    // TODO(burdon): Close queue if feed closed by store.
+    await feedStore.close();
+  });
+
   it('responds immediately when feed is appended', async function () {
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
@@ -21,6 +37,7 @@ describe('FeedQueue', function () {
 
     const queue = new FeedQueue<any>(feed);
     await queue.open();
+    expect(queue.isOpen).to.be.true;
 
     const numBlocks = 10;
     const [done, received] = latch({ count: numBlocks });
@@ -41,7 +58,8 @@ describe('FeedQueue', function () {
         expect(feed.properties.length).to.eq(1);
 
         for await (const _ of Array.from(Array(numBlocks - 1))) {
-          await queue.pop();
+          const next = await queue.pop();
+          expect(next).not.to.be.undefined;
           const i = received();
           expect(i).to.eq(queue.index);
         }
@@ -56,8 +74,10 @@ describe('FeedQueue', function () {
     }
 
     await done();
+    expect(queue.isOpen).to.be.true;
     await queue.close();
-  });
+    expect(queue.isOpen).to.be.false;
+  }).timeout(1000);
 
   it('peeks ahead', async function () {
     const key = await builder.keyring.createKey();

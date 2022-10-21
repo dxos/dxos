@@ -33,7 +33,6 @@
     "debug": "^4.3.3",
     "hypercore": "^9.12.0",
     "random-access-storage": "^3.0.0",
-    "readable-stream": "^3.6.0",
     "util": "^0.12.4"
   },
   "devDependencies": {
@@ -43,7 +42,6 @@
     "@dxos/keys": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
-    "@types/readable-stream": "^2.3.9",
     "faker": "^5.5.3"
   },
   "publishConfig": {

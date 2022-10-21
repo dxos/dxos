@@ -22,7 +22,7 @@ describe('FeedIterator', function () {
     const writer = feed.createFeedWriter();
 
     const iterator = new FeedIterator(feed);
-    await iterator.start();
+    await iterator.open();
     expect(iterator.isRunning).to.be.true;
 
     // Write blocks.
@@ -43,7 +43,7 @@ describe('FeedIterator', function () {
         for await (const _ of iterator) {
           const count = inc();
           if (count === numBlocks) {
-            await iterator.stop();
+            await iterator.close();
           }
         }
       });

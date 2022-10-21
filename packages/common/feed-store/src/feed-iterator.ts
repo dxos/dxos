@@ -40,7 +40,9 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
       log('opening...');
       await this._onOpen();
       this._open = true;
+
       await this.start();
+      log('opened');
     }
   }
 
@@ -48,15 +50,16 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     if (this._open) {
       log('closing...');
       await this.stop();
+
       await this._onClose();
       this._open = false;
+      log('closed');
     }
   }
 
   async start () {
     assert(this._open);
     if (!this._running) {
-      log('starting...');
       this._running = true;
     }
   }
@@ -64,7 +67,6 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   async stop () {
     assert(this._open);
     if (this._running) {
-      log('stopping...');
       this._running = false;
       this._stopTrigger.wake();
     }
@@ -85,8 +87,8 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
         this._nextBlock()
       ]);
 
-      if (!block) {
-        break;
+      if (block === undefined) {
+        return;
       }
 
       yield block;

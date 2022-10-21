@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
-import { Writable } from 'readable-stream';
+import { Readable, Writable } from 'streamx';
 
 import { Event, latch, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -24,8 +24,10 @@ export type FeedQueueOptions = {}
 export class FeedQueue<T extends {}> {
   public updated = new Event<FeedQueue<T>>();
 
-  private readonly _trigger = new Trigger<FeedBlock<T>>({ autoReset: true });
-  private _feedStream?: any;
+  private readonly _messageTrigger = new Trigger<FeedBlock<T>>({ autoReset: true });
+
+  private _feedStream?: Readable;
+  private _feedConsumer?: Writable;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
   private _next?: () => void;
@@ -35,11 +37,20 @@ export class FeedQueue<T extends {}> {
     private readonly _options: FeedQueueOptions = {}
   ) {}
 
+  toJSON () {
+    return {
+      feedKey: this._feed.key,
+      index: this.index,
+      length: this.length,
+      open: this.isOpen
+    };
+  }
+
   get feed () {
     return this._feed;
   }
 
-  get opened (): boolean {
+  get isOpen (): boolean {
     return Boolean(this._feedStream);
   }
 
@@ -58,7 +69,7 @@ export class FeedQueue<T extends {}> {
    * Opens (or reopens) the queue.
    */
   async open (options: ReadStreamOptions = {}) {
-    if (this.opened) {
+    if (this.isOpen) {
       await this.close();
     }
 
@@ -73,34 +84,26 @@ export class FeedQueue<T extends {}> {
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = this._feed.core.createReadStream(opts);
 
-    // Create look-ahead transform.
     // TODO(burdon): Consider buffering?
-    const lookAheadStream = this._feedStream.pipe(new Writable({
-      objectMode: true,
-      write: (data: any, encoding: string, next: () => void) => {
+    this._feedConsumer = this._feedStream.pipe(new Writable({
+      write: (data: any, next: () => void) => {
         this._next = () => {
+          this._next = undefined;
           this._currentBlock = undefined;
           this._index++;
           next();
         };
 
         this._currentBlock = {
-          key: this._feed.key,
+          feedKey: this._feed.key,
           seq: this._index,
           data
         };
 
-        this._trigger.wake(this._currentBlock);
+        this._messageTrigger.wake(this._currentBlock);
         this.updated.emit(this);
       }
     }));
-
-    this._feedStream.on('close', () => {
-      this._feedStream.unpipe(lookAheadStream);
-      this._feedStream = undefined;
-      this._currentBlock = undefined;
-      this._index = -1;
-    });
 
     log('opened');
   }
@@ -109,13 +112,22 @@ export class FeedQueue<T extends {}> {
    * Closes the queue.
    */
   async close () {
-    if (this.opened) {
+    if (this.isOpen) {
       assert(this._feedStream);
+      assert(this._feedConsumer);
 
       log('closing', { feed: this._feed.key });
-      this._feedStream.destroy();
       const [closed, setClosed] = latch();
-      this._feedStream.once('close', setClosed);
+      this._feedConsumer.once('close', () => {
+        this._feedStream = undefined;
+        this._feedConsumer = undefined;
+        this._currentBlock = undefined;
+        this._index = -1;
+        setClosed();
+      });
+
+      this._feedStream.destroy();
+      this._feedConsumer.destroy();
       await closed();
       log('closed');
     }
@@ -132,13 +144,13 @@ export class FeedQueue<T extends {}> {
    * Pop block at the head of the queue.
    */
   async pop (): Promise<FeedBlock<T>> {
-    if (!this.opened) {
+    if (!this.isOpen) {
       throw new Error(`Queue not open: ${this.feed.key.truncate()}`);
     }
 
     let block = this.peek();
     if (!block) {
-      block = await this._trigger.wait();
+      block = await this._messageTrigger.wait();
     }
 
     if (block) {

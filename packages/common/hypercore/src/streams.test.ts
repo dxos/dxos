@@ -21,19 +21,14 @@ describe('Hypercore', function () {
     const [closed, setClosed] = latch();
     const [processed, incProcessed] = latch({ count: numBlocks });
 
-    const readStream = core.createReadStream({ live: true });
-    const consumer = readStream.pipe(new Writable({
-      write (data: any, next: () => void) {
+    const stream = core.createReadStream({ live: true });
+    const consumer: Writable = stream.pipe(new Writable({
+      write: (data: any, next: () => void) => {
         log('received', { data: String(data) });
         incProcessed();
         next();
       }
     }));
-
-    consumer.on('close', () => {
-      log('closed');
-      setClosed();
-    });
 
     {
       const append = util.promisify(core.append.bind(core));
@@ -44,8 +39,15 @@ describe('Hypercore', function () {
 
     await processed();
 
-    consumer.destroy();
-    await closed();
+    {
+      consumer.once('close', () => {
+        log('closed');
+        setClosed();
+      });
+
+      consumer.destroy();
+      await closed();
+    }
   });
 
   it('feed closed while stream is open', async function () {
@@ -55,13 +57,13 @@ describe('Hypercore', function () {
 
     const [closed, setClosed] = latch({ count: 1 });
     {
-      const readStream = core.createReadStream({ live: true });
-      readStream.on('close', () => {
+      const stream = core.createReadStream({ live: true });
+      stream.once('close', () => {
         log('closed');
         setClosed();
       });
 
-      readStream.destroy();
+      stream.destroy();
     }
     await closed();
 

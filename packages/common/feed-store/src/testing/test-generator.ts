@@ -52,15 +52,15 @@ export class TestGenerator<T extends {}> {
       max: number
     }
   } = {}) {
-    for (const _ of Array.from(Array(count))) {
+    return await Promise.all(Array.from(Array(count)).map(async () => {
       const data = this._generate(this._count++);
-      await writer.write(data);
+      const receipt = await writer.write(data);
       if (delay) {
         await sleep(faker.datatype.number(delay));
       }
-    }
 
-    return count;
+      return receipt;
+    }));
   }
 }
 

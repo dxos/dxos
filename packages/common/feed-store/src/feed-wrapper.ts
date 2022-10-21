@@ -4,9 +4,8 @@
 
 import assert from 'assert';
 import { Hypercore, HypercoreProperties } from 'hypercore';
-import { Readable } from 'readable-stream';
+import { Readable } from 'streamx';
 
-import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { createBinder } from '@dxos/util';
 
@@ -40,8 +39,7 @@ export class FeedWrapper<T extends {}> {
   }
 
   createReadableStream (): Readable {
-    const feedStream = this._hypercore.createReadStream({ live: true });
-    return createReadable(feedStream);
+    return this._hypercore.createReadStream({ live: true });
   }
 
   createFeedWriter (): FeedWriter<T> {

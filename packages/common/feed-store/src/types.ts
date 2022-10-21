@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 
 export type FeedBlock<T> = {
-  key: PublicKey
+  feedKey: PublicKey
   seq: number
   data: T
 }

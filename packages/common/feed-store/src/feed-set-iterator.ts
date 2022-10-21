@@ -93,12 +93,11 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
     const queue = new FeedQueue<T>(feed);
     this._subscriptions.add(queue.updated.on(() => {
-      console.log('!!!!!!!!!!!!!!');
       this._trigger.wake();
     }));
 
-    this._feedQueues.set(feed.key, queue);
     await queue.open();
+    this._feedQueues.set(feed.key, queue);
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
@@ -111,25 +110,27 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   }
 
   override async _onClose (): Promise<void> {
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     this._subscriptions.clear();
     for (const queue of this._feedQueues.values()) {
       await queue.close();
     }
 
-    console.log('???', this.toJSON());
-
     // Wake when feed added or queue updated.
     this._trigger.wake();
   }
 
+  /**
+   * Gets the next block from the selected queue.
+   */
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
     let t: NodeJS.Timeout | undefined;
+
     while (this._running) {
+      // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
       const blocks = queues.map(queue => queue.peek()).filter(isNotNullOrUndefined);
       if (blocks.length) {
-        // Get selected block from candidates.
+        // Get the selected block from candidates.
         const idx = this._selector(blocks);
         if (idx === undefined) {
           log.warn('Stalled', { blocks });
@@ -149,16 +150,16 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           }
 
           // Pop from queue.
-          const queue = this._feedQueues.get(blocks[idx].key)!;
+          const queue = this._feedQueues.get(blocks[idx].feedKey)!;
+          log('popping', queue.toJSON());
           const message = await queue.pop();
-          assert(message);
+          assert(message === blocks[idx]);
           return message;
         }
       }
 
       // Wait until feed added, new block, or closing.
       await this._trigger.wait();
-      log('WOKEN', { this: this.toJSON() });
     }
   }
 }

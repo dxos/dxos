@@ -9,7 +9,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createAsyncIterator, createReadable } from './streams';
+import { createAsyncIterator, createReadable } from './iterator';
 
 describe('AsyncIterator', function () {
   it('iterates a feed until stopped', async function () {
