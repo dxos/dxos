@@ -19,7 +19,7 @@ export type FeedMeta = {
 }
 
 export type FeedBlock<T> = {
-  key: PublicKey
+  feedKey: PublicKey
   seq: number
   data: T
 }

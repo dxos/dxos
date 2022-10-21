@@ -26,6 +26,7 @@ export class PublicKey {
    * Creates new instance of PublicKey automatically determining the input format.
    */
   static from (source: PublicKeyLike): PublicKey {
+    assert(source);
     if (source instanceof PublicKey) {
       return source;
     } else if (source instanceof Buffer) {

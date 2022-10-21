@@ -144,7 +144,7 @@ export class Pipeline implements PipelineAccessor {
     for await (const block of this.feedSetIterator) {
       yield block;
 
-      this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
+      this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
     }
 
     // TODO(burdon): Test re-entrant?

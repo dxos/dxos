@@ -100,7 +100,7 @@ export class Space {
           return;
         }
 
-        this._dataPipeline.addFeed(await feedProvider(info.key));
+        await this._dataPipeline.addFeed(await feedProvider(info.key));
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -226,7 +226,7 @@ export class Space {
     setTimeout(async () => {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
-        const { key: feedKey, seq, data } = msg;
+        const { feedKey, seq, data } = msg;
         log('processing message', { msg });
 
         try {

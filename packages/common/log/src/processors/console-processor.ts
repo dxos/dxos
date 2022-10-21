@@ -33,7 +33,7 @@ export type FormatParts = {
 export type Format = (parts: FormatParts, options: ConfigOptions) => (string | undefined)[];
 
 // TODO(burdon): File path must come fist for console hyperlinks?
-export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column }) => {
+export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column } = {}) => {
   const filepath = `${path}:${line}`;
   return [
     chalk.grey(filepath), // Don't truncate for terminal output.

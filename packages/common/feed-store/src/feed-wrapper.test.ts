@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
+import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -105,7 +106,7 @@ describe('FeedWrapper', function () {
 
     const [done, inc] = latch({ count: numBlocks });
     setTimeout(async () => {
-      for await (const block of feed.createReadableStream()) {
+      for await (const block of createReadable(feed.createReadableStream())) {
         const { id } = block;
         const i = inc();
         expect(id).to.eq(String(i));
@@ -166,7 +167,7 @@ describe('FeedWrapper', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        for await (const block of feed2.createReadableStream()) {
+        for await (const block of createReadable(feed2.createReadableStream())) {
           log('R', block);
           inc();
         }

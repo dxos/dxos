@@ -5,6 +5,10 @@
     <mocha-package>$PROJECT_DIR$/tools/executors/mocha</mocha-package>
     <working-directory>$PROJECT_DIR$</working-directory>
     <pass-parent-env>true</pass-parent-env>
+    <envs>
+      <env name="LOG_FILTER" value="debug" />
+      <env name="LOG_CONFIG" value="./log-config.json" />
+    </envs>
     <ui>bdd</ui>
     <extra-mocha-options>--project=echo-db</extra-mocha-options>
     <test-kind>PATTERN</test-kind>
