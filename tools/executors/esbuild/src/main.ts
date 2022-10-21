@@ -4,11 +4,11 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build } from 'esbuild';
-// import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import { join } from 'path';
 
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 import { externalsPlugin } from './externals-plugin';
+import { writeFileSync } from 'fs';
 
 export interface EsbuildExecutorOptions {
   entryPoints: string[]
@@ -20,8 +20,6 @@ export interface EsbuildExecutorOptions {
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing "esbuild"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
-
-  const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
 
   const result = await build({
     entryPoints: options.entryPoints,
@@ -39,10 +37,6 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       'ignored-bare-import': 'info'
     },
     plugins: [
-      // nodeExternalsPlugin({
-      //   packagePath,
-      //   allowList: options.bundlePackages
-      // }),
       externalsPlugin({
         exclude: options.external ?? [],
       }),
@@ -50,6 +44,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       NodeModulesPlugin()
     ]
   });
+
+  if(result.metafile && options.outdir) {
+    writeFileSync(join(options.outdir, 'metafile.json'), JSON.stringify(result.metafile, null, 2));
+  }
 
   return { success: result.errors.length === 0 };
 };
