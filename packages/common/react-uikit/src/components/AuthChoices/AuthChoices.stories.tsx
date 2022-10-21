@@ -25,16 +25,17 @@ export default {
 const Template = (args: AuthChoicesProps) => {
   const { t } = useTranslation();
   return (
-<Group
-    elevation={5}
-    label={{
-      level: 1,
-      className: 'mb-4 text-3xl',
-      children: t('auth choices label')
-    }}
-    className={cx('p-5 rounded-xl max-w-md mx-auto my-4')}>
-    <AuthChoices {...args} />
-  </Group>
+    <Group
+      elevation={5}
+      label={{
+        level: 1,
+        className: 'mb-4 text-3xl',
+        children: t('auth choices label')
+      }}
+      className={cx('p-5 rounded-xl max-w-md mx-auto my-4')}
+    >
+      <AuthChoices {...args} />
+    </Group>
   );
 };
 

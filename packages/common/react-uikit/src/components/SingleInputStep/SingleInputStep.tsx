@@ -6,13 +6,7 @@ import cx from 'classnames';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Button,
-  GroupProps,
-  Input,
-  InputProps,
-  Loading
-} from '@dxos/react-ui';
+import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {
@@ -51,7 +45,11 @@ export const SingleInputStep = ({
         {...(pending && { disabled: true })}
         onChange={onChange}
       />
-      <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
+      <div
+        role='none'
+        aria-live='polite'
+        className='flex gap-4 justify-end items-center'
+      >
         <div role='none' className={cx(!pending && 'hidden')}>
           <Loading
             label={loadingLabel || t('generic loading label')}
