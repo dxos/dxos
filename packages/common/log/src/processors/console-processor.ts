@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { inspect } from 'node:util';
 
-import { LogLevel, LogProcessor, shouldLog } from '../config';
+import { ConfigOptions, LogLevel, LogProcessor, shortLevelName, shouldLog } from '../config';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
@@ -30,20 +30,26 @@ export type FormatParts = {
   context?: string
 }
 
-export const DEFAULT_FORMATTER = ({ path, line, level, message, context }: FormatParts): (string | undefined)[] => ([
-  chalk.grey(`${path}:${line}`), // Don't truncate for terminal output.
-  chalk[LEVEL_COLORS[level]](LogLevel[level]),
-  message,
-  context
-]);
+export type Format = (parts: FormatParts, options: ConfigOptions) => (string | undefined)[];
 
-export const SHORT_FORMATTER = ({ path, line, level, message, context }: FormatParts): (string | undefined)[] => ([
+// TODO(burdon): File path must come fist for console hyperlinks?
+export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column }) => {
+  const filepath = `${path}:${line}`;
+  return [
+    chalk.grey(filepath), // Don't truncate for terminal output.
+    column ? ''.padStart(column - filepath.length) : undefined,
+    chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
+    message,
+    context
+  ];
+};
+
+export const SHORT_FORMATTER: Format = ({ path, level, message }) => ([
   chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
-  chalk[LEVEL_COLORS[level]](LogLevel[level][0]),
+  chalk[LEVEL_COLORS[level]](shortLevelName[level]),
   message
 ]);
 
-// TODO(burdon): Config.
 const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
@@ -65,7 +71,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     parts.context = inspect(entry.ctx, false, undefined, true);
   }
 
-  console.log(formatter(parts).filter(Boolean).join(' '));
+  console.log(formatter(parts, config.config).filter(Boolean).join(' '));
 };
 
 const getRelativeFilename = (filename: string) => {

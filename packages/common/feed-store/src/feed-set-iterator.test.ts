@@ -89,7 +89,7 @@ describe('FeedSetIterator', function () {
     await iterator.close();
   });
 
-  it.only('reads blocks in order', async function () {
+  it('reads blocks in order', async function () {
     const feedStore = builder.createFeedStore();
 
     const numFeeds = 3;
