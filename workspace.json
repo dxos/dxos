@@ -49,6 +49,7 @@
     "messenger-model": "packages/core/echo/messenger-model",
     "mocha": "tools/executors/mocha",
     "model-factory": "packages/core/echo/model-factory",
+    "network-generator": "packages/core/mesh/network-generator",
     "network-manager": "packages/core/mesh/network-manager",
     "object-model": "packages/core/echo/object-model",
     "orchestrator": "packages/gravity/orchestrator",
