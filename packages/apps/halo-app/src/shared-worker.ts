@@ -17,7 +17,7 @@ const workerRuntime = new WorkerRuntime(new Config(await Dynamics(), Defaults(),
   }
 }));
 
-workerRuntime.start().catch(err => {
+void workerRuntime.start().catch(err => {
   console.error(err);
 });
 
