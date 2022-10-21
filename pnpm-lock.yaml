@@ -851,7 +851,6 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/debug': ^4.1.7
-      '@types/lodash': ^4.14.182
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
@@ -865,7 +864,6 @@ importers:
       vite: 3.0.9
     dependencies:
       '@dxos/react-ui': link:../react-ui
-      '@types/lodash': 4.14.186
       classnames: 2.3.2
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
@@ -11994,6 +11992,7 @@ packages:
 
   /@types/lodash/4.14.186:
     resolution: {integrity: sha512-eHcVlLXP0c2FlMPm56ITode2AgLMSa6aJ05JTTbYbI+7EMkCEE5qk2E41d5g2lCVTqRe0GnnRFurmlCsDODrPw==}
+    dev: true
 
   /@types/long/4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
