@@ -83,6 +83,7 @@
     "shims": "packages/common/shims",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
+    "telemetry": "packages/common/telemetry",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
