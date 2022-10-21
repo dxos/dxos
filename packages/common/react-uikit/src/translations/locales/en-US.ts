@@ -30,5 +30,6 @@ export const uikit = {
   'caught error message': 'Something went wrong; check the console for details.',
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',
-  'generic copy label': 'Copy'
+  'generic copy label': 'Copy',
+  'generic help label': 'Help'
 };

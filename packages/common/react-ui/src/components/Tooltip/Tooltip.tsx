@@ -31,9 +31,11 @@ export const Tooltip = ({ content, children }: TooltipProps) => {
             !isOpen && 'sr-only',
             defaultTooltip
           )}
+          forceMount
         >
           <TooltipPrimitive.Arrow
-            className='fill-current text-white dark:text-neutral-800' />
+            className='fill-current text-white dark:text-neutral-800'
+          />
           {content}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Root>
