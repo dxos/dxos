@@ -2711,6 +2711,7 @@ importers:
       '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
@@ -2724,7 +2725,6 @@ importers:
       debug: 4.3.4
       readable-stream: 3.6.0
     devDependencies:
-      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/network-manager': link:../../core/mesh/network-manager
@@ -2767,6 +2767,7 @@ importers:
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       base-x: ~3.0.9
+      bip39: ^3.0.4
       debug: ^2.0.0
       json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
@@ -2797,6 +2798,7 @@ importers:
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       base-x: 3.0.9
+      bip39: 3.0.4
       debug: 2.6.9
       json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
