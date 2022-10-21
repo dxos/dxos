@@ -9,6 +9,7 @@ import { join } from 'path';
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 import { externalsPlugin } from './externals-plugin';
 import { writeFileSync } from 'fs';
+import { fixRequirePlugin } from './fix-require-plugin';
 
 export interface EsbuildExecutorOptions {
   entryPoints: string[]
@@ -25,7 +26,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     entryPoints: options.entryPoints,
     outdir: options.outdir,
     outfile: options.outfile,
-    format: 'cjs',
+    format: 'esm',
     write: true,
     bundle: true,
     metafile: true,
@@ -41,7 +42,8 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         exclude: options.external ?? [],
       }),
       FixMemdownPlugin(),
-      NodeModulesPlugin()
+      NodeModulesPlugin(),
+      fixRequirePlugin(),
     ]
   });
 
