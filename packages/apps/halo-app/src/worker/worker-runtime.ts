@@ -43,7 +43,7 @@ export class WorkerRuntime {
 
   async stop () {
     // TODO(dmaretskyi): Terminate active sessions.
-    await this._clientServices.close(); 
+    await this._clientServices.close();
   }
 
   /**

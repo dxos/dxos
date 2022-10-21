@@ -5,10 +5,10 @@
 import { Trigger } from '@dxos/async';
 import { clientServiceBundle } from '@dxos/client';
 import { ClientServices } from '@dxos/client-services';
+import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
-import { log } from '@dxos/log'
 
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
