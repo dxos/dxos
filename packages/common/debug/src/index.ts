@@ -8,6 +8,7 @@ export * from './error-handler';
 export * from './error-stream';
 export * from './errors';
 export * from './fail';
+export * from './inspect';
 export * from './log-method';
 export * from './logging';
 export * from './raise';

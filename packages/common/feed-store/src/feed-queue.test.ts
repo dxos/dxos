@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { latch, promiseTimeout, sleep } from '@dxos/async';
+import { untilPromise } from '@dxos/async/src';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
@@ -29,7 +30,7 @@ describe('FeedQueue', function () {
     await feedStore.close();
   });
 
-  it.only('feed closed before iterator', async function () {
+  it.only('feed closed during iterator', async function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -37,14 +38,44 @@ describe('FeedQueue', function () {
     const queue = new FeedQueue<any>(feed);
     await queue.open();
 
-    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
+    expect(queue.isOpen).to.be.true;
+    expect(queue.feed.properties.closed).to.be.false;
 
-    // TODO(burdon): Close queue if feed closed by store. Add listener.
-    await queue.close();
+    const [error, setError] = latch();
 
-    await sleep(2000);
+    {
+      const numBlocks = 10;
 
-    // await feedStore.close();
+      // Write blocks.
+      await builder.generator.writeBlocks(feed.createFeedWriter(), { count: numBlocks });
+
+      // Read until queue closed (pop throws exception).
+      setTimeout(async () => {
+        while (true) {
+          try {
+            await queue.pop();
+            await sleep(100);
+          } catch (err: any) {
+            // console.log(err);
+            setError(); // TODO(burdon): Check error type.
+            break;
+          }
+        }
+      });
+    }
+
+    await untilPromise(async () => {
+      await sleep(200);
+      await queue.close();
+      // await feedStore.close();
+    });
+
+    // Expect pop to throw error when queue is closed.
+    await error();
+
+    expect(queue.isOpen).to.be.false;
+    expect(queue.feed.properties.opened).to.be.true;
+    expect(queue.feed.properties.closed).to.be.false;
   });
 
   it('responds immediately when feed is appended', async function () {

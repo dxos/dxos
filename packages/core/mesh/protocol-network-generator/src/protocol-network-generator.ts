@@ -45,14 +45,14 @@ export class ProtocolNetworkGenerator extends EventEmitter {
   }
 
   /**
-   * Generate a network based on a ngraph.generator topology
+   * Generate a network based on a ngraph.generator topology.
    *
    * @param topology Valid ngraph.generator topology
    * @param options.topic Buffer to use on the stream protocol initialization
    * @param [options.waitForFullConnection=true] Wait until all the connections are ready
-   * @param options.peer peer options
+   * @param options.peer Peer options
    * @param options.protocol Protocol options
-   * @param options.parameters Arguments for the ngraph generator.
+   * @param options.parameters Arguments for the n-graph generator
    */
   async _generate (
     topology: Topology,

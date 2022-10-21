@@ -5,8 +5,10 @@
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
 import { Readable, Writable } from 'streamx';
+import { inspect } from 'util';
 
 import { Event, latch, Trigger } from '@dxos/async';
+import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
@@ -28,6 +30,7 @@ export class FeedQueue<T extends {}> {
 
   private _feedStream?: Readable;
   private _feedConsumer?: Writable;
+
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
   private _next?: () => void;
@@ -36,6 +39,10 @@ export class FeedQueue<T extends {}> {
     private readonly _feed: FeedWrapper<T>,
     private readonly _options: FeedQueueOptions = {}
   ) {}
+
+  [inspect.custom] () {
+    return inspectObject(this);
+  }
 
   toJSON () {
     return {
@@ -80,16 +87,15 @@ export class FeedQueue<T extends {}> {
 
     log('opening', { key: this._feed.key });
 
-    this._feed.core.on('close', () => {
-      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    });
-
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = this._feed.core.createReadStream(opts);
 
-    // TODO(burdon): Consider buffering?
-    this._feedConsumer = this._feedStream.pipe(new Writable({
+    // https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
+    const abort = new AbortController();
+
+    this._feedConsumer = new Writable({
+      signal: abort.signal,
       write: (data: any, next: () => void) => {
         this._next = () => {
           this._next = undefined;
@@ -107,7 +113,21 @@ export class FeedQueue<T extends {}> {
         this._messageTrigger.wake(this._currentBlock);
         this.updated.emit(this);
       }
-    }));
+    });
+
+    // TODO(burdon): Consider buffering and back-pressure?
+    this._feedStream.pipe(this._feedConsumer);
+
+    this._feed.core.once('close', () => {
+      console.log('_feed.close');
+    });
+
+    this._feedConsumer.once('close', () => {
+      console.log('this._feedConsumer.close');
+      this._feedStream = undefined;
+      this._currentBlock = undefined;
+      this._index = -1;
+    });
 
     log('opened');
   }
@@ -117,24 +137,17 @@ export class FeedQueue<T extends {}> {
    */
   async close () {
     if (this.isOpen) {
-      assert(this._feedStream);
       assert(this._feedConsumer);
 
       log('closing', { feed: this._feed.key });
       const [closed, setClosed] = latch();
-      this._feedConsumer.on('close', () => { // TODO(burdon): ???
-        console.log('!!!');
-        this._feedStream = undefined;
-        this._feedConsumer = undefined;
-        this._currentBlock = undefined;
-        this._index = -1;
-        log('closed');
-        setClosed();
-      });
-
-      this._feedStream.destroy();
+      this._feedConsumer.once('close', setClosed);
       this._feedConsumer.destroy();
+      // this._feedStream = undefined;
+      // this._feed.close();
+
       await closed();
+      log('closed');
     }
   }
 
@@ -150,7 +163,7 @@ export class FeedQueue<T extends {}> {
    */
   async pop (): Promise<FeedBlock<T>> {
     if (!this.isOpen) {
-      throw new Error(`Queue not open: ${this.feed.key.truncate()}`);
+      throw new Error(`Queue closed: ${this.feed.key.truncate()}`);
     }
 
     let block = this.peek();

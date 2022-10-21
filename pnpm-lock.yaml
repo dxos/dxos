@@ -630,6 +630,7 @@ importers:
       faker: ^5.5.3
       hypercore: ^9.12.0
       random-access-storage: ^3.0.0
+      streamx: ^2.12.5
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
@@ -645,6 +646,7 @@ importers:
       debug: 4.3.4
       hypercore: 9.12.0
       random-access-storage: 3.0.0
+      streamx: 2.12.5
       util: 0.12.5
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3

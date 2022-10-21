@@ -57,7 +57,6 @@ export class NetworkManager {
     // Listen for signal manager events.
     {
       this._signalManager = signalManager;
-
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
       );

@@ -158,7 +158,6 @@ export class PublicKey {
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  // TODO(burdon): Factor out for testing.
   [inspect.custom] (depth: number, options: InspectOptionsStylized) {
     if (!options.colors || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
@@ -167,9 +166,6 @@ export class PublicKey {
     const printControlCode = (code: number) => {
       return `\x1b[${code}m`;
     };
-
-    // Compute simple hash of the key.
-    const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
 
     const colors = [
       'red',
@@ -186,6 +182,9 @@ export class PublicKey {
       'cyanBright',
       'whiteBright'
     ];
+
+    // Compute simple hash of the key.
+    const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
     const color = colors[hash % colors.length];
 
     return `<PublicKey ${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])}>`;
