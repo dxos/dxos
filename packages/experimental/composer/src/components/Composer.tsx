@@ -6,8 +6,7 @@ import Collaboration from '@tiptap/extension-collaboration';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import cx from 'classnames';
-import React, { useEffect } from 'react';
-import { WebrtcProvider } from 'y-webrtc';
+import React from 'react';
 
 import { defaultFocus } from '@dxos/react-ui';
 
@@ -15,10 +14,6 @@ import { useTextItem } from '../context';
 
 export const Composer = () => {
   const { item } = useTextItem();
-
-  // useEffect(() => {
-  //   item && new WebrtcProvider(item.id, item.model.doc);
-  // }, [item]);
 
   const editor = useEditor({
     extensions: [
