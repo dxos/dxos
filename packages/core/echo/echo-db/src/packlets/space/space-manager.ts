@@ -112,15 +112,17 @@ export class SpaceManager {
 
   // TODO(burdon): Rename join space.
   async acceptSpace (opts: AcceptSpaceOptions): Promise<Space> {
-    const space = await this._constructSpace({
+    const metadata: PartyMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlFeedKey: await this._keyring.createKey(),
       dataFeedKey: await this._keyring.createKey()
-    });
+    };
+    const space = await this._constructSpace(metadata);
 
     await space.open();
 
+    await this._metadataStore.addSpace(metadata);
     this._insertSpace(space);
     return space;
   }
