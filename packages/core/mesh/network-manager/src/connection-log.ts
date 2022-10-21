@@ -6,19 +6,26 @@ import { Event } from "@dxos/async";
 import { raise } from "@dxos/debug";
 import { PublicKey } from "@dxos/keys";
 import { ComplexMap } from "@dxos/util";
-import { SubscribeToSwarmInfoResponse } from "@dxos/protocols/proto/dxos/devtools"
+import { SubscribeToSwarmInfoResponse } from "@dxos/protocols/proto/dxos/devtools";
 
 import { ConnectionState, Swarm } from "./swarm";
 
-export type ConnectionEvent = { data: string };
+export enum ConnectionType {
+  CONNECTION_STATE_CHANGED = "CONNECTION_STATE_CHANGED",
+  PROTOCOL_ERROR = "PROTOCOL_ERROR",
+  PROTOCOL_EXTENSIONS_INITIALIZED = "PROTOCOL_EXTENSIONS_INITIALIZED",
+  PROTOCOL_EXTENSIONS_HANDSHAKE = "PROTOCOL_EXTENSIONS_HANDSHAKE",
+  PROTOCOL_HANDSHAKE = "PROTOCOL_HANDSHAKE",
+}
 
 export class ConnectionLog {
   /**
    * SwarmId => info
    */
-  private readonly _swarms = new ComplexMap<PublicKey, SubscribeToSwarmInfoResponse.SwarmInfo>((key) =>
-    key.toHex()
-  );
+  private readonly _swarms = new ComplexMap<
+    PublicKey,
+    SubscribeToSwarmInfoResponse.SwarmInfo
+  >((key) => key.toHex());
 
   readonly update = new Event();
 
@@ -46,60 +53,51 @@ export class ConnectionLog {
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
-      const connectionInfo: SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo = {
-        state: ConnectionState.INITIAL,
-        remotePeerId: connection.remoteId,
-        sessionId: connection.sessionId,
-        transport:
-          connection.transport &&
-          Object.getPrototypeOf(connection.transport).constructor.name,
-        protocolExtensions: connection.protocol.extensionNames,
-        events: [],
-      };
+      const connectionInfo: SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo =
+        {
+          state: ConnectionState.INITIAL,
+          remotePeerId: connection.remoteId,
+          sessionId: connection.sessionId,
+          transport:
+            connection.transport &&
+            Object.getPrototypeOf(connection.transport).constructor.name,
+          protocolExtensions: connection.protocol.extensionNames,
+          events: [],
+        };
       info.connections!.push(connectionInfo);
       this.update.emit();
 
       connection.stateChanged.on((state) => {
         connectionInfo.state = state;
         connectionInfo.events!.push({
-          data: JSON.stringify({
             type: "CONNECTION_STATE_CHANGED",
             newState: state,
-          }),
         });
         this.update.emit();
       });
 
       connection.protocol.error.on((error) => {
         connectionInfo.events!.push({
-          data: JSON.stringify({
             type: "PROTOCOL_ERROR",
             error: error.stack ?? error.message,
-          }),
         });
         this.update.emit();
       });
       connection.protocol.extensionsInitialized.on(() => {
         connectionInfo.events!.push({
-          data: JSON.stringify({
             type: "PROTOCOL_EXTENSIONS_INITIALIZED",
-          }),
         });
         this.update.emit();
       });
       connection.protocol.extensionsHandshake.on(() => {
         connectionInfo.events!.push({
-          data: JSON.stringify({
             type: "PROTOCOL_EXTENSIONS_HANDSHAKE",
-          }),
         });
         this.update.emit();
       });
       connection.protocol.handshake.on(() => {
         connectionInfo.events!.push({
-          data: JSON.stringify({
             type: "PROTOCOL_HANDSHAKE",
-          }),
         });
         this.update.emit();
       });

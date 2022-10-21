@@ -283,15 +283,17 @@ message SubscribeToSwarmInfoResponse {
     optional string label = 3;
     bool is_active = 4;
     message ConnectionInfo {
-      message Json {
-        optional string data = 1;
+      message ConnectionEvent {
+        string type = 1;
+        optional string newState = 2;
+        optional string error = 3;
       }
       string state = 1;
       dxos.keys.PublicKey session_id = 2;
       dxos.keys.PublicKey remote_peer_id = 3;
       optional string transport = 4;
       repeated string protocol_extensions = 5;
-      repeated Json events = 6;
+      repeated ConnectionEvent events = 6;
     }
     repeated ConnectionInfo connections = 5;
   }
