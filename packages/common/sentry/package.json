@@ -1,0 +1,29 @@
+{
+  "name": "@dxos/sentry",
+  "version": "2.33.8",
+  "description": "Provides a common interface for Sentry node & browser",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/node.js": "./dist/src/browser.js",
+    "./src/node.ts": "./src/browser.ts",
+    "./testing/testkit/index.ts": "./testing/testkit/browser.ts"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@sentry/node": "^7.16.0",
+    "@sentry/browser": "^7.16.0"
+  },
+  "devDependencies": {
+    "@sentry/types": "^7.16.0",
+    "sentry-testkit": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
