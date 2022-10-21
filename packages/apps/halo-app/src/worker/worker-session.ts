@@ -8,20 +8,28 @@ import { ClientServices } from '@dxos/client-services';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
+import { log } from '@dxos/log'
 
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  appPort: RpcPort
-  systemPort: RpcPort
   services: ClientServices
+  systemPort: RpcPort
+  appPort: RpcPort
+  options?: {
+    heartbeatInterval: number
+  }
 }
 
+/**
+ * Represents a tab connection within the worker.
+ */
 export class WorkerSession {
   private readonly _clientServices: ClientServices;
   private readonly _appRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
+  private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
   public origin?: string;
 
@@ -29,14 +37,22 @@ export class WorkerSession {
 
   public onClose = new Callback<() => Promise<void>>();
 
-  constructor (params: WorkerSessionParams) {
-    this._clientServices = params.services;
+  constructor ({
+    services,
+    systemPort,
+    appPort,
+    options = {
+      heartbeatInterval: 1000
+    }
+  }: WorkerSessionParams) {
+    this._clientServices = services;
+    this._options = options;
 
     this._appRpc = createProtoRpcPeer({
       requested: {},
       exposed: clientServiceBundle,
       handlers: this._clientServices,
-      port: params.appPort
+      port: appPort
     });
 
     this._systemRpc = createProtoRpcPeer({
@@ -48,18 +64,19 @@ export class WorkerSession {
             this.origin = request.origin;
             this._startTrigger.wake();
           },
+
           stop: async () => {
             setTimeout(async () => {
               try {
                 await this.close();
-              } catch (err) {
-                console.error(err);
+              } catch (err: any) {
+                log.catch(err);
               }
             });
           }
         }
       },
-      port: params.systemPort,
+      port: systemPort,
       timeout: 200
     });
 
@@ -80,18 +97,18 @@ export class WorkerSession {
       } catch (err) {
         try {
           await this.close();
-        } catch (err) {
-          console.error(err);
+        } catch (err: any) {
+          log.catch(err);
         }
       }
-    });
+    }, this._options.heartbeatInterval);
   }
 
   async close () {
     try {
       await this.onClose.callIfSet();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      log.catch(err);
     }
 
     if (this._heartbeatTimer !== undefined) {

@@ -13,13 +13,19 @@ export type IframeRuntimeParams = {
   appOrigin: string
 }
 
+/**
+ * Manages the client connection to the shared worker.
+ */
 export class IframeRuntime {
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
   private readonly _transportService = new WebRTCTransportService();
   private readonly _appOrigin: string;
 
-  constructor (params: IframeRuntimeParams) {
-    this._appOrigin = params.appOrigin;
+  constructor ({
+    systemPort,
+    appOrigin
+  }: IframeRuntimeParams) {
+    this._appOrigin = appOrigin;
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,
       exposed: iframeServiceBundle,
@@ -31,14 +37,13 @@ export class IframeRuntime {
           }
         }
       },
-      port: params.systemPort,
+      port: systemPort,
       timeout: 200
     });
   }
 
   async open () {
     await this._systemRpc.open();
-
     await this._systemRpc.rpc.WorkerService.start({
       origin: this._appOrigin
     });
@@ -46,7 +51,6 @@ export class IframeRuntime {
 
   async close () {
     await this._systemRpc.rpc.WorkerService.stop();
-
     await this._systemRpc.close();
   }
 }

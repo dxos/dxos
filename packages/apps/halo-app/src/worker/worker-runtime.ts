@@ -17,6 +17,8 @@ export type NewSessionParams = {
 
 /**
  * Runtime for the shared worker.
+ * Manages connections from proxies (in tabs).
+ * Tabs make requests to the `ClientServiceHost`, and provide a WebRTC gateway.
  */
 export class WorkerRuntime {
   private readonly _transportFactory = new WebRTCTransportProxyFactory();
@@ -39,7 +41,15 @@ export class WorkerRuntime {
     this._ready.wake();
   }
 
-  async newSession ({ appPort, systemPort }: NewSessionParams) {
+  async stop () {
+    // TODO(dmaretskyi): Terminate active sessions.
+    await this._clientServices.close(); 
+  }
+
+  /**
+   * Create a new session.
+   */
+  async createSession ({ appPort, systemPort }: NewSessionParams) {
     await this._ready.wait();
 
     const session = new WorkerSession({
@@ -47,17 +57,21 @@ export class WorkerRuntime {
       systemPort,
       services: this._clientServices.services
     });
+
+    // When tab is closed.
     session.onClose.set(async () => {
       this.sessions.delete(session);
       this._reconnectWebrtc();
     });
+
     await session.open();
     this.sessions.add(session);
+
     this._reconnectWebrtc();
   }
 
   /**
-   * Pick and assign session for networking.
+   * Selects one of the existing session fro WebRTC networking.
    */
   private _reconnectWebrtc () {
     // Check if current session is already closed.
@@ -67,12 +81,12 @@ export class WorkerRuntime {
       }
     }
 
-    // Pick new session if necessary.
+    // Select existing session.
     if (!this._sessionForNetworking) {
-      const pickedSession = Array.from(this.sessions).find(session => session.bridgeService);
-      if (pickedSession) {
-        this._sessionForNetworking = pickedSession;
-        this._transportFactory.setBridgeService(pickedSession.bridgeService);
+      const selected = Array.from(this.sessions).find(session => session.bridgeService);
+      if (selected) {
+        this._sessionForNetworking = selected;
+        this._transportFactory.setBridgeService(selected.bridgeService);
       } else {
         this._transportFactory.setBridgeService(undefined);
       }
