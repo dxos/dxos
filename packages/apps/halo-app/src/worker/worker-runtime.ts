@@ -10,7 +10,7 @@ import { RpcPort } from '@dxos/rpc';
 
 import { WorkerSession } from './worker-session';
 
-export type NewSessionParams = {
+export type CreateSessionParams = {
   appPort: RpcPort
   systemPort: RpcPort
 }
@@ -49,7 +49,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession ({ appPort, systemPort }: NewSessionParams) {
+  async createSession ({ appPort, systemPort }: CreateSessionParams) {
     await this._ready.wait();
 
     const session = new WorkerSession({

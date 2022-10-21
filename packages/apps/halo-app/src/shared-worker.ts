@@ -24,7 +24,7 @@ workerRuntime.start().catch(err => {
 onconnect = async event => {
   const muxer = new PortMuxer(event.ports[0]);
 
-  await workerRuntime.newSession({
+  await workerRuntime.createSession({
     appPort: muxer.createWorkerPort({ channel: 'dxos:app' }),
     systemPort: muxer.createWorkerPort({ channel: 'dxos:wrtc' })
   });
