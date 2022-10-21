@@ -4,6 +4,7 @@
 
 export * from './AppLayout';
 export * from './AuthPage';
+export * from './CreateProfilePage';
 export * from './DevicesPage';
 export * from './IdentityPage';
 export * from './InvitationPage';

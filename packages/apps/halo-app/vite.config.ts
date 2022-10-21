@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -29,6 +30,7 @@ export default defineConfig({
       '@dxos/react-client',
       '@dxos/react-components',
       '@dxos/react-toolkit',
+      '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
@@ -37,10 +39,7 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
@@ -51,6 +50,13 @@ export default defineConfig({
   },
   plugins: [
     dxosPlugin(),
+    themePlugin({
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
+      ]
+    }),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

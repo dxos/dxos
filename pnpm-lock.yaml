@@ -266,6 +266,8 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -278,6 +280,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       debug: ^4.3.3
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
@@ -296,12 +299,15 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       debug: 4.3.4
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -848,6 +854,7 @@ importers:
 
   packages/common/react-uikit:
     specifiers:
+      '@dxos/debug': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/debug': ^4.1.7
@@ -855,6 +862,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
+      debug: ^4.3.3
       i18next: ^21.10.0
       phosphor-react: ^1.4.1
       react: ^18.2.0
@@ -863,12 +871,15 @@ importers:
       storybook-dark-mode: ^1.1.2
       vite: 3.0.9
     dependencies:
+      '@dxos/debug': link:../debug
       '@dxos/react-ui': link:../react-ui
       classnames: 2.3.2
+      debug: 4.3.4
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
     devDependencies:
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
@@ -26180,7 +26191,6 @@ packages:
       react: '>=16'
     dependencies:
       react: 18.2.0
-    dev: true
 
   /picocolors/0.2.1:
     resolution: {integrity: sha512-cMlDqaLEqfSaW8Z7N5Jw+lyIW869EzT73/F5lhtY9cLGoVxSXznfgfXMO0Z5K0o0Q2TkTXq+0KFsdnSe3jDViA==}

@@ -3,25 +3,39 @@
 //
 
 import React, { useRef } from 'react';
-import { useRoutes, HashRouter } from 'react-router-dom';
+import { HashRouter, useRoutes } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { ErrorBoundary } from '@dxos/react-toolkit';
+import { UiKitProvider } from '@dxos/react-uikit';
 
 import {
-  AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
-  RequireProfile, SpacePage, SpacesPage
+  AppLayout,
+  AuthPage,
+  CreateProfilePage,
+  DevicesPage,
+  IdentityPage,
+  InvitationPage,
+  LockPage,
+  RequireProfile,
+  SpacePage,
+  SpacesPage
 } from './pages';
+import translationResources from './translations';
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+const configProvider = async () =>
+  new Config(await Dynamics(), await Envs(), Defaults());
 
 const Routes = () => useRoutes([
   // TODO(wittjosiah): Move behind RequireProfile.
   {
     path: '/auth/:origin',
     element: <AuthPage />
+  },
+  {
+    path: '/profile/create',
+    element: <CreateProfilePage />
   },
   {
     path: '/',
@@ -51,21 +65,18 @@ const Routes = () => useRoutes([
 export const App = () => {
   const clientRef = useRef<Client>();
 
+  console.log('[resources]', translationResources);
+
   return (
-    <ErrorBoundary
-      onError={() => !clientRef.current}
-      onReset={async () => {
-        await clientRef.current!.reset();
-      }}
-    >
-      <ClientProvider
-        clientRef={clientRef}
-        config={configProvider}
-      >
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </ClientProvider>
-    </ErrorBoundary>
+    <UiKitProvider resourceExtensions={translationResources}>
+        <ClientProvider
+          clientRef={clientRef}
+          config={configProvider}
+        >
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </ClientProvider>
+    </UiKitProvider>
   );
 };

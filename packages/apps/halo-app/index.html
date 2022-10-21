@@ -11,6 +11,13 @@
     <!-- <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
     <link rel="mask-icon" href="/mask-icon.svg" color="#FFFFFF"> -->
     <meta name="theme-color" content="#ffffff">
+    <script>
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
