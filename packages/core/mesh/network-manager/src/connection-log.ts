@@ -2,20 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from "@dxos/async";
-import { raise } from "@dxos/debug";
-import { PublicKey } from "@dxos/keys";
-import { ComplexMap } from "@dxos/util";
-import { SubscribeToSwarmInfoResponse } from "@dxos/protocols/proto/dxos/devtools";
+import { Event } from '@dxos/async';
+import { raise } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, Swarm } from "./swarm";
+import { ConnectionState, Swarm } from './swarm';
 
 export enum EventType {
-  CONNECTION_STATE_CHANGED = "CONNECTION_STATE_CHANGED",
-  PROTOCOL_ERROR = "PROTOCOL_ERROR",
-  PROTOCOL_EXTENSIONS_INITIALIZED = "PROTOCOL_EXTENSIONS_INITIALIZED",
-  PROTOCOL_EXTENSIONS_HANDSHAKE = "PROTOCOL_EXTENSIONS_HANDSHAKE",
-  PROTOCOL_HANDSHAKE = "PROTOCOL_HANDSHAKE",
+  CONNECTION_STATE_CHANGED = 'CONNECTION_STATE_CHANGED',
+  PROTOCOL_ERROR = 'PROTOCOL_ERROR',
+  PROTOCOL_EXTENSIONS_INITIALIZED = 'PROTOCOL_EXTENSIONS_INITIALIZED',
+  PROTOCOL_EXTENSIONS_HANDSHAKE = 'PROTOCOL_EXTENSIONS_HANDSHAKE',
+  PROTOCOL_HANDSHAKE = 'PROTOCOL_HANDSHAKE',
 }
 
 export class ConnectionLog {
@@ -29,24 +29,24 @@ export class ConnectionLog {
 
   readonly update = new Event();
 
-  getSwarmInfo(swarmId: PublicKey) {
+  getSwarmInfo (swarmId: PublicKey) {
     return (
       this._swarms.get(swarmId) ??
       raise(new Error(`Swarm not found: ${swarmId}`))
     );
   }
 
-  get swarms(): SubscribeToSwarmInfoResponse.SwarmInfo[] {
+  get swarms (): SubscribeToSwarmInfoResponse.SwarmInfo[] {
     return Array.from(this._swarms.values());
   }
 
-  swarmJoined(swarm: Swarm) {
+  swarmJoined (swarm: Swarm) {
     const info: SubscribeToSwarmInfoResponse.SwarmInfo = {
       id: swarm.id,
       topic: swarm.topic,
       isActive: true,
       label: swarm.label,
-      connections: [],
+      connections: []
     };
 
     this._swarms.set(swarm.id, info);
@@ -62,7 +62,7 @@ export class ConnectionLog {
             connection.transport &&
             Object.getPrototypeOf(connection.transport).constructor.name,
           protocolExtensions: connection.protocol.extensionNames,
-          events: [],
+          events: []
         };
       info.connections!.push(connectionInfo);
       this.update.emit();
@@ -71,7 +71,7 @@ export class ConnectionLog {
         connectionInfo.state = state;
         connectionInfo.events!.push({
           type: EventType.CONNECTION_STATE_CHANGED,
-          newState: state,
+          newState: state
         });
         this.update.emit();
       });
@@ -79,32 +79,32 @@ export class ConnectionLog {
       connection.protocol.error.on((error) => {
         connectionInfo.events!.push({
           type: EventType.PROTOCOL_ERROR,
-          error: error.stack ?? error.message,
+          error: error.stack ?? error.message
         });
         this.update.emit();
       });
       connection.protocol.extensionsInitialized.on(() => {
         connectionInfo.events!.push({
-          type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED,
+          type: EventType.PROTOCOL_EXTENSIONS_INITIALIZED
         });
         this.update.emit();
       });
       connection.protocol.extensionsHandshake.on(() => {
         connectionInfo.events!.push({
-          type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE,
+          type: EventType.PROTOCOL_EXTENSIONS_HANDSHAKE
         });
         this.update.emit();
       });
       connection.protocol.handshake.on(() => {
         connectionInfo.events!.push({
-          type: EventType.PROTOCOL_HANDSHAKE,
+          type: EventType.PROTOCOL_HANDSHAKE
         });
         this.update.emit();
       });
     });
   }
 
-  swarmLeft(swarm: Swarm) {
+  swarmLeft (swarm: Swarm) {
     this.getSwarmInfo(swarm.id).isActive = false;
     this.update.emit();
   }

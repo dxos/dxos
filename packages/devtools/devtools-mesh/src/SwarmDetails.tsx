@@ -5,11 +5,11 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
 import { SwarmInfoView } from './SwarmInfo';
 import { SwarmTable } from './SwarmTable';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 interface SwarmDetailsProps {
   swarms: SubscribeToSwarmInfoResponse.SwarmInfo[]

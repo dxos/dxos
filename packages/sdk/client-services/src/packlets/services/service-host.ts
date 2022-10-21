@@ -9,9 +9,9 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
+
 import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import { subscribeToNetworkStatus as subscribeToSignalStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../devtools/network';
-
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';
@@ -108,7 +108,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     return {
       subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
       subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
-      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies),
+      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies)
     } as any;
   }
 }

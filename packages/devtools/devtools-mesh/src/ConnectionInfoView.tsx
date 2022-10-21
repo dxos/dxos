@@ -7,8 +7,8 @@ import React from 'react';
 import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import { IconButton, List, ListItem } from '@mui/material';
 
-import { CopyText } from '@dxos/react-components';
 import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { CopyText } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
   connectionInfo: SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo

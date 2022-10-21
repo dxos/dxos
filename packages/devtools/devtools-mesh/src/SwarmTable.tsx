@@ -8,10 +8,10 @@ import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 import { CopyText } from '@dxos/react-components';
 
 import { BooleanIcon } from './BooleanIcon';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 export interface SwarmListProps {
   swarms: SubscribeToSwarmInfoResponse.SwarmInfo[]

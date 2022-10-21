@@ -10,8 +10,8 @@ import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/mat
 
 import { PublicKey } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
-import { CopyText } from '@dxos/react-components';
 import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { CopyText } from '@dxos/react-components';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SubscribeToSwarmInfoResponse.SwarmInfo

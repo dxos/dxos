@@ -29,10 +29,10 @@ import {
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 export default {
   title: 'Devtools/Topology'
