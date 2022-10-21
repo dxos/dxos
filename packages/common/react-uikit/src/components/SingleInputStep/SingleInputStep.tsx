@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 
 import {
   Button,
-  Group,
   GroupProps,
   Input,
   InputProps,
@@ -17,7 +16,6 @@ import {
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {
-  rootLabel: string
   inputLabel: string
   onChange: (value: string) => void
   pending?: boolean
@@ -31,7 +29,6 @@ export interface SingleInputStepProps
 }
 
 export const SingleInputStep = ({
-  rootLabel,
   inputLabel,
   onChange,
   pending,
@@ -41,22 +38,11 @@ export const SingleInputStep = ({
   nextLabel,
   loadingLabel,
   inputPlaceholder,
-  inputProps,
-  ...groupProps
+  inputProps
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
   return (
-    <Group
-      elevation={5}
-      label={{
-        level: 1,
-        className: 'mb-2 text-3xl',
-        children: t(rootLabel)
-      }}
-      {...groupProps}
-      className={cx('p-5 rounded-xl', groupProps.className)}
-      aria-live='polite'
-    >
+    <>
       <Input
         size='lg'
         label={t(inputLabel)}
@@ -65,7 +51,7 @@ export const SingleInputStep = ({
         {...(pending && { disabled: true })}
         onChange={onChange}
       />
-      <div role='none' className='flex gap-4 justify-end items-center'>
+      <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
         <div role='none' className={cx(!pending && 'hidden')}>
           <Loading
             label={loadingLabel || t('generic loading label')}
@@ -85,6 +71,6 @@ export const SingleInputStep = ({
           {nextLabel ?? t('next label')}
         </Button>
       </div>
-    </Group>
+    </>
   );
 };
