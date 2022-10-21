@@ -35,10 +35,10 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "readable-stream": "^3.6.0"
+    "readable-stream": "^3.6.0",
+    "@dxos/credentials": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/feed-store": "workspace:*",

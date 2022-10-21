@@ -36,6 +36,7 @@
           "@dxos/rpc",
           "@dxos/rpc-tunnel",
           "@dxos/util",
+          "@dxos/credentials",
           "assert",
           "debug",
           "readable-stream"
