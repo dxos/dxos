@@ -24,5 +24,9 @@ export const translation = {
   'next label': 'Next',
   'redeem invitation label': 'Redeem invitation',
   'cancel label': 'Cancel',
-  'validate seed phrase label': 'Validate seed phrase'
+  'validate seed phrase label': 'Validate seed phrase',
+  'fatal error label': 'Runtime error',
+  'fatal error message': 'Something went wrong that requires the app to be reloaded.',
+  'copy error label': 'Copy this error',
+  'reload page label': 'Reload'
 };
