@@ -12,13 +12,14 @@ import * as path from 'path';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
+import * as Sentry from '@dxos/sentry';
 
-import { PublisherRpcPeer } from './util';
+import { getTelemetryContext, PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
-const error = log.extend('error');
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
+const SENTRY_DESTINATION = 'https://2647916221e643869965e78469479aa4@o4504012000067584.ingest.sentry.io/4504012027265029';
 
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
@@ -55,6 +56,17 @@ export abstract class BaseCommand extends Command {
   override async init (): Promise<void> {
     await super.init();
 
+    // TODO(wittjosiah): Create second identifier per HALO.
+    const { machineId } = await getTelemetryContext(this.config.configDir);
+
+    Sentry.init({
+      machineId,
+      destination: process.env.SENTRY_DSN ?? SENTRY_DESTINATION,
+      // TODO(wittjosiah): Configure this.
+      sampleRate: 1.0,
+      scrubFilenames: true
+    });
+
     // Load user config file.
     const { flags } = await this.parse(this.constructor as any);
     const { config: configFile } = flags as any;
@@ -62,6 +74,7 @@ export abstract class BaseCommand extends Command {
       try {
         this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
       } catch (err) {
+        Sentry.captureException(err);
         console.error(`Invalid config file: ${configFile}`);
       }
     } else {
@@ -76,8 +89,8 @@ export abstract class BaseCommand extends Command {
   }
 
   override async catch (err: Error) {
-    error(err);
-    // process.exit(1);
+    Sentry.captureException(err);
+    this.error(err);
   }
 
   // Called after each run.
@@ -114,6 +127,7 @@ export abstract class BaseCommand extends Command {
       log('Done');
       return value;
     } catch (err: any) {
+      Sentry.captureException(err);
       this.error(err);
     }
   }
@@ -140,6 +154,7 @@ export abstract class BaseCommand extends Command {
 
       return value;
     } catch (err: any) {
+      Sentry.captureException(err);
       this.error(err);
     } finally {
       if (rpc) {
