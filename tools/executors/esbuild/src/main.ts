@@ -31,6 +31,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     write: true,
     bundle: true,
     metafile: true,
+    platform: 'browser',
     // https://esbuild.github.io/api/#log-override
     logOverride: {
       // @polkadot/api/augment/rpc was generating this warning.
