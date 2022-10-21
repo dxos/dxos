@@ -36,8 +36,7 @@
           "@dxos/rpc-tunnel",
           "@dxos/util",
           "assert",
-          "debug",
-          "bip39"
+          "debug"
         ]
       }
     },

@@ -2767,7 +2767,6 @@ importers:
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       base-x: ~3.0.9
-      bip39: ^3.0.4
       debug: ^2.0.0
       json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
@@ -2798,7 +2797,6 @@ importers:
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       base-x: 3.0.9
-      bip39: 3.0.4
       debug: 2.6.9
       json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
