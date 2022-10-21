@@ -49,7 +49,9 @@ export const FatalError = ({ error }: FatalErrorProps) => {
           </Button>
         </Tooltip>
         <div role='none' className='flex-grow' />
-        <Button variant='primary'>{t('reload page label')}</Button>
+        <Button variant='primary' onClick={() => location.reload()}>
+          {t('reload page label')}
+        </Button>
       </div>
     </Dialog>
   );

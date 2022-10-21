@@ -53,7 +53,7 @@ export const SingleInputStep = ({
       elevation={5}
       label={{
         level: 1,
-        className: 'mb-4',
+        className: 'mb-2 text-3xl',
         children: t(rootLabelTKey)
       }}
       {...groupProps}

@@ -15,17 +15,36 @@ export default {
   component: ErrorsBoundaryProvider
 };
 
-const ErrorThrower = () => {
+const FatalErrorThrower = () => {
   const [throwError, setThrowError] = useState(false);
   if (throwError) {
-    throw new Error('A wild Error appeared!');
+    throw new Error('A wild MISSING№ appeared!');
   }
-  return <Button onClick={() => setThrowError(true)}>Throw an error</Button>;
+  return (
+    <Button onClick={() => setThrowError(true)}>Throw a fatal error</Button>
+  );
+};
+
+const UnhandledRejectionThrower = () => {
+  return (
+    <Button
+      onClick={() => {
+        void new Promise((resolve, reject) => {
+          throw new Error('Broken promise.');
+        });
+      }}
+    >
+      Throw an unhandled rejection
+    </Button>
+  );
 };
 
 const Template = (_args: {}) => (
   <ErrorsBoundaryProvider>
-    <ErrorThrower />
+    <div className='flex flex-col gap-4'>
+      <FatalErrorThrower />
+      <UnhandledRejectionThrower />
+    </div>
   </ErrorsBoundaryProvider>
 );
 

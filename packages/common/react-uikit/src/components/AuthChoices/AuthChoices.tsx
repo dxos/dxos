@@ -41,7 +41,7 @@ export const AuthChoices = ({
       elevation={5}
       label={{
         level: 1,
-        className: 'mb-4',
+        className: 'mb-4 text-3xl',
         children: t(rootLabelTKey ?? 'auth choices label')
       }}
       {...groupProps}
