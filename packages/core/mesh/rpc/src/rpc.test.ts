@@ -61,6 +61,7 @@ describe('RpcPeer', function () {
       expect(aliceOpen).toEqual(false);
 
       await bob.open();
+
       await aliceOpen;
 
       expect(aliceOpen).toEqual(true);
