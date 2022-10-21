@@ -11,10 +11,10 @@ export const errorText = 'text-xs font-medium text-error-700 dark:text-error-300
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {
-    case MessageValence.error: return errorText;
-    case MessageValence.warning: return warningText;
-    case MessageValence.info: return infoText;
-    case MessageValence.success: return successText;
+    case 'success': return successText;
+    case 'info': return infoText;
+    case 'warning': return warningText;
+    case 'error': return errorText;
     default: return undefined;
   }
 };
@@ -27,10 +27,10 @@ export const errorInputBorder = 'border-error-500 dark:border-error-600';
 
 export const valenceInputBorder = (valence?: MessageValence) => {
   switch (valence) {
-    case MessageValence.error: return errorInputBorder;
-    case MessageValence.warning: return warningInputBorder;
-    case MessageValence.info: return infoInputBorder;
-    case MessageValence.success: return successInputBorder;
+    case 'success': return successInputBorder;
+    case 'info': return infoInputBorder;
+    case 'warning': return warningInputBorder;
+    case 'error': return errorInputBorder;
     default: return neutralInputBorder;
   }
 };
@@ -43,10 +43,10 @@ export const errorAlertColors = 'border-error-500 dark:border-error-600 text-err
 
 export const valenceAlertColors = (valence?: MessageValence) => {
   switch (valence) {
-    case MessageValence.error: return errorAlertColors;
-    case MessageValence.warning: return warningAlertColors;
-    case MessageValence.info: return infoAlertColors;
-    case MessageValence.success: return successAlertColors;
+    case 'success': return successAlertColors;
+    case 'info': return infoAlertColors;
+    case 'warning': return warningAlertColors;
+    case 'error': return errorAlertColors;
     default: return neutralAlertColors;
   }
 };

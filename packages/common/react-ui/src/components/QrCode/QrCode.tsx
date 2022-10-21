@@ -12,28 +12,28 @@ import { Tooltip } from '../Tooltip';
 
 export interface QrCodeProps extends Omit<ButtonProps, 'onClick' | 'ref'> {
   value: string
-  translatedCopyLabel?: string
+  label: string
 }
 
 export const QrCode = ({
   value,
-  translatedCopyLabel,
+  label,
   ...buttonProps
 }: QrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
-  return translatedCopyLabel ? (
-    <Tooltip content={translatedCopyLabel}>
+  return (
+    <Tooltip content={label}>
       <Button
         {...buttonProps}
         className={cx('py-0 px-0 overflow-hidden', buttonProps.className)}
         onClick={copyValue}
       >
         <QRCodeSVG value={value} includeMargin role='none' />
-        <span id={labelId} className='sr-only'>{translatedCopyLabel}</span>
+        <span id={labelId} className='sr-only'>{label}</span>
       </Button>
     </Tooltip>
-  ) : <QRCodeSVG value={value} includeMargin />;
+  );
 };

@@ -27,5 +27,5 @@ Default.args = {
   ],
   title: 'Dialog title',
   children: 'Dialog content',
-  translatedCloseLabel: 'Close'
+  closeLabel: 'Close'
 };

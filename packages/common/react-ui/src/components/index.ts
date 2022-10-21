@@ -8,6 +8,7 @@ export * from './CompoundButton';
 export * from './Dialog';
 export * from './Group';
 export * from './Heading';
+export * from './Loading';
 export * from './Input';
 export * from './Main';
 export * from './QrCode';

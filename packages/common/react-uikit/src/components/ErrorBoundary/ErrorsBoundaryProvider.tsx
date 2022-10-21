@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { MessageValence, Tooltip, valenceColorText, defaultFocus } from '@dxos/react-ui';
+import { Tooltip, valenceColorText, defaultFocus } from '@dxos/react-ui';
 
 import { FatalErrorBoundary } from './FatalErrorBoundary';
 
@@ -78,7 +78,7 @@ export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
         role='none'
         className={cx(
           'fixed bottom-4 right-4',
-          valenceColorText(MessageValence.warning)
+          valenceColorText('warning')
         )}
       >
         {!!errors.length && (

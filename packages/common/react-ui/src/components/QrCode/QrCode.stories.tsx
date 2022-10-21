@@ -19,9 +19,9 @@ const Template = (props: QrCodeProps) => {
 
 export const Default = templateForComponent(Template)({
   value: '',
-  translatedCopyLabel: ''
+  label: ''
 });
 Default.args = {
-  translatedCopyLabel: 'Click to copy this code’s value',
+  label: 'Click to copy this code’s value',
   value: 'https://dxos.org'
 };

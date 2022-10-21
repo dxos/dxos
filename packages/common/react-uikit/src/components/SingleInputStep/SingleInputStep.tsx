@@ -12,38 +12,35 @@ import {
   GroupProps,
   Input,
   InputProps,
-  InputSize
+  Loading
 } from '@dxos/react-ui';
-
-import { TKey } from '../../types';
-import { Loading } from '../Loading';
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {
-  rootLabelTKey: TKey
-  inputLabelTKey: TKey
+  rootLabel: string
+  inputLabel: string
   onChange: (value: string) => void
   pending?: boolean
   onBack?: () => void
-  backTKey?: TKey
+  backLabel?: string
   onNext: () => void
-  nextTKey?: TKey
-  loadingTKey?: TKey
-  inputPlaceholderTKey?: string
+  nextLabel?: string
+  loadingLabel?: string
+  inputPlaceholder?: string
   inputProps?: Omit<InputProps, 'label' | 'placeholder'>
 }
 
 export const SingleInputStep = ({
-  rootLabelTKey,
-  inputLabelTKey,
+  rootLabel,
+  inputLabel,
   onChange,
   pending,
   onBack,
-  backTKey = 'back label',
+  backLabel,
   onNext,
-  nextTKey = 'next label',
-  loadingTKey = 'generic loading label',
-  inputPlaceholderTKey,
+  nextLabel,
+  loadingLabel,
+  inputPlaceholder,
   inputProps,
   ...groupProps
 }: SingleInputStepProps) => {
@@ -54,30 +51,30 @@ export const SingleInputStep = ({
       label={{
         level: 1,
         className: 'mb-2 text-3xl',
-        children: t(rootLabelTKey)
+        children: t(rootLabel)
       }}
       {...groupProps}
       className={cx('p-5 rounded-xl', groupProps.className)}
       aria-live='polite'
     >
       <Input
-        size={InputSize.lg}
-        label={t(inputLabelTKey)}
+        size='lg'
+        label={t(inputLabel)}
         {...inputProps}
-        {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })}
+        {...(inputPlaceholder && { placeholder: t(inputPlaceholder) })}
         {...(pending && { disabled: true })}
         onChange={onChange}
       />
       <div role='none' className='flex gap-4 justify-end items-center'>
         <div role='none' className={cx(!pending && 'hidden')}>
           <Loading
-            labelTKey={loadingTKey}
+            label={loadingLabel || t('generic loading label')}
             className='p-0 ml-0'
           />
         </div>
         {onBack && (
           <Button onClick={onBack} {...(pending && { disabled: true })}>
-            {t(backTKey)}
+            {backLabel ?? t('back label')}
           </Button>
         )}
         <Button
@@ -85,7 +82,7 @@ export const SingleInputStep = ({
           onClick={onNext}
           {...(pending && { disabled: true })}
         >
-          {t(nextTKey)}
+          {nextLabel ?? t('next label')}
         </Button>
       </div>
     </Group>

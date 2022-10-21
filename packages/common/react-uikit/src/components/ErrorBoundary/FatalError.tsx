@@ -6,7 +6,7 @@ import { Clipboard } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Alert, Button, Dialog, MessageValence, Tooltip } from '@dxos/react-ui';
+import { Alert, Button, Dialog, Tooltip } from '@dxos/react-ui';
 
 export interface FatalErrorProps {
   error: Error
@@ -36,7 +36,7 @@ export const FatalError = ({ error }: FatalErrorProps) => {
   return (
     <Dialog title={t('fatal error label')} initiallyOpen>
       {isDev ? (
-        <Alert title={message} valence={MessageValence.error} className='my-4'>
+        <Alert title={message} valence={'error'} className='my-4'>
           <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
         </Alert>
       ) : (

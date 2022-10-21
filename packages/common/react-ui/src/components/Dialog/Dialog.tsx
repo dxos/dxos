@@ -18,7 +18,7 @@ export interface DialogProps {
   titleVisuallyHidden?: boolean
   description?: ReactNode
   children?: ReactNode
-  translatedCloseLabel?: string
+  closeLabel?: string
   initiallyOpen?: boolean
 }
 
@@ -29,7 +29,7 @@ export const Dialog = ({
   openTrigger,
   children,
   closeTriggers,
-  translatedCloseLabel,
+  closeLabel,
   initiallyOpen
 }: DialogProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
@@ -94,8 +94,8 @@ export const Dialog = ({
 
             {children}
 
-            {translatedCloseLabel && (
-              <Tooltip content={translatedCloseLabel}>
+            {closeLabel && (
+              <Tooltip content={closeLabel}>
                 <DialogPrimitive.Close
                   className={cx(
                     'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-md p-1',

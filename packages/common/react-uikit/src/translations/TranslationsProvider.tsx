@@ -11,7 +11,8 @@ import React, {
 } from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
-import { UntranslatedLoading } from '../components';
+import { Loading } from '@dxos/react-ui';
+
 import * as enUS from './locales/en-US';
 
 const basicNS = 'uikit';
@@ -58,7 +59,7 @@ export const TranslationsProvider = ({
     <Suspense
       fallback={
         fallback ?? (
-          <UntranslatedLoading label={enUS[basicNS]['loading translations']} />
+          <Loading label={enUS[basicNS]['loading translations']} />
         )
       }
     >

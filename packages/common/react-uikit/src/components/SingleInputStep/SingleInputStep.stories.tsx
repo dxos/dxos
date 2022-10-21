@@ -5,8 +5,6 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { MessageValence } from '@dxos/react-ui';
-
 import { templateForComponent } from '../../testing';
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
@@ -25,27 +23,27 @@ const Template = (args: SingleInputStepProps) => (
 );
 
 export const CreateProfile = templateForComponent(Template)({
-  rootLabelTKey: '',
-  inputLabelTKey: '',
-  inputPlaceholderTKey: '',
+  rootLabel: '',
+  inputLabel: '',
+  inputPlaceholder: '',
   onNext: () => {},
   onChange: () => {}
 });
 CreateProfile.args = {
   pending: false,
-  rootLabelTKey: 'create profile label',
-  inputLabelTKey: 'username label',
-  inputPlaceholderTKey: 'username placeholder',
+  rootLabel: 'create profile label',
+  inputLabel: 'username label',
+  inputPlaceholder: 'username placeholder',
   inputProps: { autoComplete: 'username' }
 };
 
 export const JoinSpace = () => (
   <Template
-    rootLabelTKey='join space label'
-    inputLabelTKey='space invitation label'
-    inputPlaceholderTKey='space invitation placeholder'
-    backTKey='cancel label'
-    nextTKey='redeem invitation label'
+    rootLabel='join space label'
+    inputLabel='space invitation label'
+    inputPlaceholder='space invitation placeholder'
+    backLabel='cancel label'
+    nextLabel='redeem invitation label'
     onChange={() => {}}
     onNext={() => {}}
     onBack={() => {}}
@@ -54,10 +52,10 @@ export const JoinSpace = () => (
 
 export const RestoreProfile = () => (
   <Template
-    rootLabelTKey='recover profile label'
-    inputLabelTKey='seed phrase label'
-    inputPlaceholderTKey='seed phrase placeholder'
-    nextTKey='validate seed phrase label'
+    rootLabel='recover profile label'
+    inputLabel='seed phrase label'
+    inputPlaceholder='seed phrase placeholder'
+    nextLabel='validate seed phrase label'
     onChange={() => {}}
     onNext={() => {}}
     onBack={() => {}}
@@ -66,16 +64,16 @@ export const RestoreProfile = () => (
 
 export const RestoreProfileWithError = () => (
   <Template
-    rootLabelTKey='recover profile label'
-    inputLabelTKey='seed phrase label'
-    inputPlaceholderTKey='seed phrase placeholder'
-    nextTKey='validate seed phrase label'
+    rootLabel='recover profile label'
+    inputLabel='seed phrase label'
+    inputPlaceholder='seed phrase placeholder'
+    nextLabel='validate seed phrase label'
     onChange={() => {}}
     onNext={() => {}}
     onBack={() => {}}
     inputProps={{
       validationMessage: 'This only has 3 of the required 24 words',
-      validationValence: MessageValence.error,
+      validationValence: 'error',
       initialValue: 'squirrels potatoes dolphins'
     }}
   />
