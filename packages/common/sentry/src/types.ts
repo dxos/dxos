@@ -8,6 +8,7 @@ export type InitOptions = {
   destination?: string
   machineId?: string
   release?: string
+  environment?: string
   sampleRate?: number
   scrubFilenames?: boolean
   transport?: () => Transport

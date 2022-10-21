@@ -14,6 +14,7 @@ export const init = (options: InitOptions) => {
     dsn: options.destination,
     serverName: options.machineId,
     release: options.release,
+    environment: options.environment ?? process.env.DX_ENVIRONMENT,
     tracesSampleRate: options.sampleRate,
     transport: options.transport,
     beforeSend: event => {
