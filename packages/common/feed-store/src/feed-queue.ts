@@ -91,11 +91,7 @@ export class FeedQueue<T extends {}> {
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = this._feed.core.createReadStream(opts);
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-    const abort = new AbortController();
-
     this._feedConsumer = new Writable({
-      signal: abort.signal,
       write: (data: any, next: () => void) => {
         this._next = () => {
           this._next = undefined;
@@ -125,6 +121,7 @@ export class FeedQueue<T extends {}> {
     this._feedConsumer.once('close', () => {
       console.log('this._feedConsumer.close');
       this._feedStream = undefined;
+      this._feedConsumer = undefined;
       this._currentBlock = undefined;
       this._index = -1;
     });
