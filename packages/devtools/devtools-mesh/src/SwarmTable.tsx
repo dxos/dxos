@@ -8,13 +8,13 @@ import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
-import { SwarmInfo } from '@dxos/network-manager';
 import { CopyText } from '@dxos/react-components';
 
 import { BooleanIcon } from './BooleanIcon';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 export interface SwarmListProps {
-  swarms: SwarmInfo[]
+  swarms: SubscribeToSwarmInfoResponse.SwarmInfo[]
   onClick?: (id: PublicKey) => void
 }
 

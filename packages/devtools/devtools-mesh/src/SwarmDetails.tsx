@@ -5,14 +5,14 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { SwarmInfo } from '@dxos/network-manager';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
 import { SwarmInfoView } from './SwarmInfo';
 import { SwarmTable } from './SwarmTable';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 interface SwarmDetailsProps {
-  swarms: SwarmInfo[]
+  swarms: SubscribeToSwarmInfoResponse.SwarmInfo[]
 }
 
 export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
@@ -21,7 +21,7 @@ export const SwarmDetails = ({ swarms } : SwarmDetailsProps) => {
 
   if (swarmId && sessionId) {
     const connectionInfo = swarms.find(
-      swarm => swarm.id.equals(swarmId))?.connections.find(conn => conn.sessionId.equals(sessionId));
+      swarm => swarm.id.equals(swarmId))?.connections?.find(conn => conn.sessionId.equals(sessionId));
     if (connectionInfo) {
       return (
         <ConnectionInfoView

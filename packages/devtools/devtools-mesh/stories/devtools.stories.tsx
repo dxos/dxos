@@ -25,7 +25,6 @@ import {
   transportProtocolProvider,
   PeerInfo,
   Topology,
-  SwarmInfo,
   ConnectionLog,
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
@@ -33,6 +32,7 @@ import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
+import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 export default {
   title: 'Devtools/Topology'
@@ -130,7 +130,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     setSignalTrace(msgs => [...msgs, msg]);
   }), [controlPeer]);
 
-  const [swarmInfo, setSwarmInfo] = useState<SwarmInfo[]>([]);
+  const [swarmInfo, setSwarmInfo] = useState<SubscribeToSwarmInfoResponse.SwarmInfo[]>([]);
   useEffect(() => {
     if (controlPeer) {
       setSwarmInfo(controlPeer.log.swarms);
