@@ -3,7 +3,7 @@
 //
 
 import yaml from 'js-yaml';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
@@ -14,6 +14,11 @@ export type TelemetryContext = {
 }
 
 export const getTelemetryContext = async (configDir: string): Promise<TelemetryContext> => {
+  const configDirExists = await exists(configDir);
+  if (!configDirExists) {
+    await mkdir(configDir, { recursive: true });
+  }
+
   const idPath = join(configDir, 'telemetry.yml');
   if (await exists(idPath)) {
     const context = await readFile(idPath, 'utf-8');
