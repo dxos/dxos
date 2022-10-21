@@ -5,3 +5,4 @@
 export * from './AuthChoices';
 export * from './Loading';
 export * from './SingleInputStep';
+export * from './UiKitProvider';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export const translation = {
+export const uikit = {
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',

@@ -14,10 +14,10 @@
     "access": "public"
   },
   "dependencies": {
-    "debug": "^4.3.3",
     "@dxos/debug": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "classnames": "^2.3.2",
+    "debug": "^4.3.3",
     "i18next": "^21.10.0",
     "react-i18next": "^11.18.6"
   },
