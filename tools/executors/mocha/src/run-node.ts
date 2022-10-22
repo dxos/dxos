@@ -21,6 +21,7 @@ export type NodeOptions = {
   checkLeaks: boolean
   forceExit: boolean
   domRequired: boolean
+  reporter?: string
 }
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
@@ -61,9 +62,16 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 };
 
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
+  // NOTE: A custom reporter may be provided by the IDE.
+  if (options.reporter) {
+    return ['--reporter', options.reporter];
+  }
+
   if (options.watch) {
     return ['--reporter', 'min'];
-  } else if (!options.xmlReport) {
+  }
+
+  if (!options.xmlReport) {
     return ['--reporter', 'spec'];
   }
 
@@ -76,11 +84,12 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
       testsuitesTitle: `${name} nodejs Tests`
     }
   };
+
   await mkdir(options.outputPath, { recursive: true });
   await writeFile(reporterConfigFile, JSON.stringify(reporterConfig), 'utf-8');
 
   return [
-    '--reporter', 'mocha-multi-reporters',
+    '--reporter', options.reporter ?? 'mocha-multi-reporters',
     '--reporter-options', `configFile=${reporterConfigFile}`
   ];
 };
