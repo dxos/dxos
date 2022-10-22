@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-// Note: Imported by protobuf-compiler tests.
+// NOTE: Imported by protobuf-compiler tests.
 
 package example.testing.util;
 
