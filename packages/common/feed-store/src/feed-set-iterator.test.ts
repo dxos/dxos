@@ -20,8 +20,9 @@ const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
 // TODO(burdon): Race condition if run with other tests.
-describe.skip('FeedSetIterator', function () {
-  // TODO(burdon): Test when feed is added.
+describe('FeedSetIterator', function () {
+
+  // TODO(burdon): Test when feed is added on-the-fly.
 
   it('opens and closes multiple times', async function () {
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
@@ -51,7 +52,7 @@ describe.skip('FeedSetIterator', function () {
     expect(iterator.isRunning).to.be.false;
   });
 
-  it('responds immediately when a feed is appended', async function () {
+  it.skip('responds immediately when a feed is appended', async function () {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
