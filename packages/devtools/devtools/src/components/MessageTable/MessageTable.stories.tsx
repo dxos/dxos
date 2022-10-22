@@ -30,7 +30,7 @@ const generateTree = (node = {}, level = 1) => {
 export const Primary = () => {
   // TODO(burdon): Factor out.
   const messages: FeedBlock<any>[] = [...new Array(20)].map((_, i) => ({
-    key: PublicKey.random(),
+    feedKey: PublicKey.random(),
     seq: i,
     fn: true,
     path: '',

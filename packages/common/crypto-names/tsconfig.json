@@ -4,6 +4,7 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     "types": [
+      "@dxos/mocha",
       "@dxos/shims"
     ]
   },
