@@ -137,7 +137,7 @@ export class NetworkManager {
   }
 
   async leaveProtocolSwarm (topic: PublicKey) {
-    log(`Leave ${topic}`);
+    log('leaving', { topic });
 
     if (!this._swarms.has(topic)) {
       return;
@@ -167,6 +167,7 @@ export class NetworkManager {
     console.warn('NetworkManger.start is deprecated.');
   }
 
+  // TODO(burdon): Open/close?
   async destroy () {
     for (const topic of this._swarms.keys()) {
       await this.leaveProtocolSwarm(topic).catch((err) => {

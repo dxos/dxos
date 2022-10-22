@@ -5,6 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
@@ -12,7 +13,6 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { createMappedFeedWriter } from '../common';
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
@@ -22,9 +22,8 @@ const log = debug('dxos:echo-db:database-backend');
 
 /**
  * Generic interface to represent a backend for the database.
- *
  * Interfaces with ItemManager to maintain the collection of entities up-to-date.
- * Porvides a way to query for the write stream to make mutations.
+ * Provides a way to query for the write stream to make mutations.
  * Creates data snapshots.
  */
 export interface DatabaseBackend {
@@ -40,7 +39,6 @@ export interface DatabaseBackend {
 
 /**
  * Database backend that operates on two streams: read and write.
- *
  * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
  * Write operations result in mutations being written to the outgoing stream.
  */
@@ -77,9 +75,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
-    return createMappedFeedWriter((msg) => { // TODO(burdon): Create spy/tap util.
-      return msg;
-    }, this._outboundStream!);
+    return this._outboundStream;
   }
 
   createSnapshot () {
@@ -97,10 +93,10 @@ export class FeedDatabaseBackend implements DatabaseBackend {
 
 /**
  * Database backend that is backed by the DataService instance.
- *
  * Uses DataMirror to populate entities in ItemManager.
  */
 export class RemoteDatabaseBackend implements DatabaseBackend {
+  private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 
   constructor (
@@ -116,11 +112,20 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     this._itemManager = itemManager;
 
     const dataMirror = new DataMirror(this._itemManager, this._service, this._partyKey);
+
+    this._subscriptions.add(modelFactory.registered.on(async model => {
+      for (const item of this._itemManager.getUninitializedEntities()) {
+        if (item._stateManager.modelType === model.meta.type) {
+          await this._itemManager.initializeModel(item.id);
+        }
+      }
+    }));
+
     dataMirror.open();
   }
 
   async close (): Promise<void> {
-    // Do nothing for now.
+    this._subscriptions.clear();
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {

@@ -88,7 +88,7 @@ export class Peer {
 
     const { stream } = this._protocol;
     if (stream.destroyed) {
-      log('Stream destroyed; cannot replicate.');
+      log('stream destroyed; cannot replicate.');
       return false;
     }
 
@@ -107,7 +107,7 @@ export class Peer {
 
     feed.replicate(this._protocol.initiator, { stream, live: true });
     this._feeds.set(feed.key, feed);
-    log('Stream replicated', feed.key.toHex());
+    log('stream replicated', { feedKey: feed.key });
     return true;
   }
 }

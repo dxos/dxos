@@ -1,3 +1,7 @@
 // copies template to your project
 
-`typedoc --plugin @dxos/typeod-cppladifasf- --template ./foobar/`
+//
+// Copyright 2022 DXOS.org
+//
+
+'typedoc --plugin @dxos/typeod-cppladifasf- --template ./foobar/';

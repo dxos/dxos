@@ -27,7 +27,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/feed-store"
     },
     {
       "path": "../../common/random-access-storage"
@@ -37,9 +37,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../common/feed-store"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -58,6 +55,9 @@
     },
     {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../config"

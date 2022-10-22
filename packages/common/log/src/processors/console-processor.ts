@@ -36,7 +36,7 @@ export type Format = (parts: FormatParts, options: ConfigOptions) => (string | u
 export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column } = {}) => {
   const filepath = `${path}:${line}`;
   return [
-    chalk.grey(filepath), // Don't truncate for terminal output.
+    path !== undefined && line !== undefined ? chalk.grey(filepath) : undefined, // Don't truncate for terminal output.
     column ? ''.padStart(column - filepath.length) : undefined,
     chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
     message,

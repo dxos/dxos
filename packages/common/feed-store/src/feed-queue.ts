@@ -75,7 +75,7 @@ export class FeedQueue<T extends {}> {
    * Opens (or reopens) the queue.
    */
   async open (options: ReadStreamOptions = {}) {
-    if (this.isOpen) {
+    if (this.isOpen) { // TODO(burdon): Warn if re-opening.
       return;
     }
 
@@ -84,7 +84,7 @@ export class FeedQueue<T extends {}> {
       console.warn('Start index not yet supported.');
     }
 
-    log('opening', { key: this._feed.key });
+    log('opening', { feedKey: this._feed.key });
 
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
@@ -111,15 +111,17 @@ export class FeedQueue<T extends {}> {
     });
 
     const onClose = () => {
-      log('queue closed', { key: this._feed.key });
-      this._feedConsumer = undefined;
-      this._currentBlock = undefined;
-      this._index = -1;
+      if (this._feedConsumer) {
+        log('queue closed', { feedKey: this._feed.key });
+        this._feedConsumer = undefined;
+        this._currentBlock = undefined;
+        this._index = -1;
+      }
     };
 
     // Called if feed is closed externally.
     this._feed.core.once('close', () => {
-      log('feed closed', { key: this._feed.key });
+      log('feed closed', { feedKey: this._feed.key });
       onClose();
     });
 
@@ -129,7 +131,6 @@ export class FeedQueue<T extends {}> {
     });
 
     // Pipe readable stream into writable consumer.
-    // TODO(burdon): Consider buffering and back-pressure?
     feedStream.pipe(this._feedConsumer, () => {
       onClose();
     });
@@ -143,11 +144,13 @@ export class FeedQueue<T extends {}> {
   async close () {
     if (this.isOpen) {
       assert(this._feedConsumer);
+      assert(!this._feed.properties.closed);
 
-      log('closing', { feed: this._feed.key });
+      log('closing', { feedKey: this._feed.key });
       const [closed, setClosed] = latch();
       this._feedConsumer.once('close', setClosed);
       this._feedConsumer.destroy();
+      this._next?.(); // Release any message currently in the queue.
       await closed();
       log('closed');
     }

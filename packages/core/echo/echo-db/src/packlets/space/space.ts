@@ -158,6 +158,7 @@ export class Space {
 
   @synchronized
   async open () {
+    log('opening...');
     if (this._isOpen) {
       return;
     }
@@ -168,21 +169,23 @@ export class Space {
     await this._protocol.start();
 
     this._isOpen = true;
+    log('opened');
   }
 
   @synchronized
   async close () {
+    log('closing...', { key: this._key });
     if (!this._isOpen) {
       return;
     }
 
+    // Closes in reverse order to open.
     await this._protocol.stop();
-
-    // TODO(burdon): Does order matter?
-    await this._controlPipeline.stop();
     await this._closeDataPipeline();
+    await this._controlPipeline.stop();
 
     this._isOpen = false;
+    log('closed');
   }
 
   // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?

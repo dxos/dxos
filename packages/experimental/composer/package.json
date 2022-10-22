@@ -17,8 +17,10 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@tiptap/core": "2.0.0-beta.199",
@@ -31,7 +33,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "y-protocols": "^1.0.5",
-    "y-webrtc": "^10.2.3",
     "yjs": "^13.5.41"
   },
   "devDependencies": {

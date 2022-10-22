@@ -5,11 +5,11 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { templateForComponent } from '../../dev-util';
+import { templateForComponent } from '../../testing';
 import { Loading, LoadingColor, LoadingProps, LoadingSize } from './Loading';
 
 export default {
-  title: 'react-ui/Loading',
+  title: 'react-uikit/Loading',
   component: Loading,
   argTypes: {
     size: {
@@ -25,10 +25,18 @@ export default {
 
 const Template = (props: LoadingProps) => <Loading {...props} />;
 
-export const Default = templateForComponent(Template)({});
+export const Default = templateForComponent(Template)({ });
 Default.args = { size: LoadingSize.md, color: LoadingColor.primary };
 
-export const Small = () => <Template size={LoadingSize.sm} />;
-export const Neutral = () => <Template color={LoadingColor.neutral} />;
-export const Large = () => <Template size={LoadingSize.lg} />;
-export const ExtraLarge = () => <Template size={LoadingSize.xl} />;
+export const Small = () => (
+  <Template size={LoadingSize.sm} />
+);
+export const Neutral = () => (
+  <Template color={LoadingColor.neutral} />
+);
+export const Large = () => (
+  <Template size={LoadingSize.lg} />
+);
+export const ExtraLarge = () => (
+  <Template size={LoadingSize.xl} />
+);

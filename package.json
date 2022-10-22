@@ -13,10 +13,13 @@
     "format-package": "syncpack format",
     "nx": "nx",
     "prepare": "husky install",
-    "build": "nx run-many --target=build",
-    "install-playwright": "playwright install"
+    "install-playwright": "playwright install",
+    "changed-packages": "scripts/changed",
+    "lint-changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "build": "nx run-many --target=build"
   },
   "dependencies": {
+    "execa": "^5.1.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -55,8 +58,8 @@
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "^6.5.10",
     "@storybook/testing-library": "^0.0.13",
-    "@swc/core": "^1.3.9",
     "@swc-node/register": "^1.5.4",
+    "@swc/core": "^1.3.9",
     "@types/chai": "^4.2.15",
     "@types/chai-as-promised": "^7.1.5",
     "@types/glob": "~7.1.3",
@@ -120,4 +123,3 @@
     }
   }
 }
-

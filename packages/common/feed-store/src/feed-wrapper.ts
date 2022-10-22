@@ -5,7 +5,9 @@
 import assert from 'assert';
 import { Hypercore, HypercoreProperties } from 'hypercore';
 import { Readable } from 'streamx';
+import { inspect } from 'util';
 
+import { inspectObject } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { createBinder } from '@dxos/util';
 
@@ -23,6 +25,19 @@ export class FeedWrapper<T extends {}> {
   ) {
     assert(this._hypercore);
     assert(this._key);
+  }
+
+  [inspect.custom] () {
+    return inspectObject(this);
+  }
+
+  toJSON () {
+    return {
+      feedKey: this._key,
+      length: this.properties.length,
+      opened: this.properties.opened,
+      closed: this.properties.closed
+    };
   }
 
   get key (): PublicKey {

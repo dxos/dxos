@@ -28,7 +28,11 @@ export class PipelineState {
 
   // TODO(burdon): For testing only.
   get endTimeframe () {
-    return mapFeedIndexesToTimeframe(this._iterator.end);
+    return mapFeedIndexesToTimeframe(
+      this._iterator.feeds.filter(feed => feed.properties.length > 0).map(feed => ({
+        feedKey: feed.key,
+        index: feed.properties.length - 1
+      })));
   }
 
   get timeframe () {
@@ -126,11 +130,15 @@ export class Pipeline implements PipelineAccessor {
   }
 
   async start () {
+    log('starting...', {});
     await this.feedSetIterator.open();
+    log('started');
   }
 
   async stop () {
+    log('stopping...', {});
     await this.feedSetIterator.close();
+    log('stopped');
   }
 
   /**

@@ -27,9 +27,9 @@ export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _partyStateMachine: PartyStateMachine;
 
-  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   constructor ({
     spaceKey,
@@ -38,15 +38,17 @@ export class ControlPipeline {
     initialTimeframe
   }: ControlPipelineParams) {
     this._pipeline = new Pipeline(initialTimeframe);
-    this._pipeline.addFeed(genesisFeed);
+    void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
     this._partyStateMachine.onFeedAdmitted.set(async info => {
       log('feed admitted', { info });
+
+      // TODO(burdon): Check not stopping.
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
           const feed = await feedProvider(info.key);
-          this._pipeline.addFeed(feed);
+          await this._pipeline.addFeed(feed);
         } catch (err: any) {
           log.catch(err);
         }
@@ -55,8 +57,8 @@ export class ControlPipeline {
       await this.onFeedAdmitted.callIfSet(info);
     });
 
-    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
+    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
   }
 
   get partyState (): PartyState {
@@ -72,7 +74,7 @@ export class ControlPipeline {
   }
 
   async start () {
-    log('starting');
+    log('starting...');
     setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {
         try {
@@ -90,10 +92,12 @@ export class ControlPipeline {
     });
 
     await this._pipeline.start();
+    log('started');
   }
 
   async stop () {
-    log('stopping');
+    log('stopping...');
     await this._pipeline.stop();
+    log('stopped');
   }
 }

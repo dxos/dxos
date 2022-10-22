@@ -3,8 +3,10 @@
 //
 
 import assert from 'assert';
+import { inspect } from 'util';
 
 import { Event, EventSubscriptions, Trigger } from '@dxos/async';
+import { inspectObject } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
@@ -53,11 +55,15 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     assert(options);
   }
 
+  [inspect.custom] () {
+    return inspectObject(this);
+  }
+
   override toJSON () {
     return {
       open: this.isOpen,
       running: this.isRunning,
-      feeds: this._feedQueues.size
+      indexes: this.indexes
     };
   }
 
@@ -76,20 +82,10 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }));
   }
 
-  // TODO(burdon): Testing only?
-  get end (): FeedIndex[] {
-    return Array.from(this._feedQueues.values())
-      .filter(queue => queue.length > 0)
-      .map(feedQueue => ({
-        feedKey: feedQueue.feed.key,
-        index: feedQueue.length - 1
-      }));
-  }
-
   async addFeed (feed: FeedWrapper<T>) {
     assert(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     assert(feed.properties.opened);
-    log('feed added', { feed: feed.key });
+    log('feed added', { feedKey: feed.key });
 
     // Create queue and listen for updates.
     const queue = new FeedQueue<T>(feed);
@@ -113,9 +109,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
   override async _onClose (): Promise<void> {
     this._subscriptions.clear();
-    for (const queue of this._feedQueues.values()) {
-      await queue.close();
-    }
+    await Promise.all(Array.from(this._feedQueues.values()).map(queue => queue.close()));
 
     // Wake when feed added or queue updated.
     this._trigger.wake();

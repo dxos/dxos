@@ -281,6 +281,7 @@ export class Swarm {
           if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
             this._connections.delete(remoteId);
             this.connectionRemoved.emit(connection);
+            this._topology.update();
           }
           break;
       }

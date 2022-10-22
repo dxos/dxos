@@ -17,6 +17,7 @@ import {
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -74,18 +75,21 @@ export class ServiceContext {
   }
 
   async open () {
+    log('opening...');
     await this.identityManager.open();
     if (this.identityManager.identity) {
       await this._initialize();
     }
+    log('opened');
   }
 
   async close () {
+    log('closing...');
     await this.identityManager.close();
     await this.spaceManager?.close();
     await this.feedStore.close();
-    // TODO(burdon): ERROR Signal socket error; normalize close method.
-    await this.networkManager.destroy();
+    await this.networkManager.destroy(); // TODO(burdon): Close.
+    log('closed');
   }
 
   async createIdentity () {

@@ -66,6 +66,105 @@ conversely, Subnets are not reqrued to be associated with a domain name.
 
 ![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
 
+
+```
+Case 1: Single new KUBE (DX instance) (local laptop, doing development)
+
+Alice
+- Develops source code in Linus file system using git and regular toolchain
+  Literally use git to leverage knowledge and toolchain.
+  - Use uses git for their source code => github.com
+  - Creates regular git repo: ~/code/notepad
+  - git remote -v => origin	git@github.com:alice/notepad.git (fetch)
+
+- Installs DX and publishes build artifacts
+  - ~/code/notepad/dx.yml has github actions for build/deploy
+    - when update main, run esbuild
+
+    dx.yml
+    pub:
+      main:
+        target: dx://notepad            ## notepad.kube.local
+
+      dev:
+        target: dx://notepad/dev        ## dev.notepad.hostname
+        target: dx://notepad:dev        ## notepad.hostname/dev
+
+
+  - dx publish kube.local/notepad
+    dx remote -v => kube.local/notepad
+
+  - dx ls
+    dx://notepad
+
+
+https://notepad.kube.local      => /refs/notepad/@dx      <= git@github.com:alice/notepad.git#main
+
+https://dev.kube.local/notepad  => /refs/notepad/dev/@dx  <= git@github.com:alice/notepad.git#dev
+
+
+
+
+
+
+- Map to https://notepad.kube.local (require TLS Cert)
+
+- Map to https://notepad.example.com
+
+[SOURCE REPO] => [FILE REPO] <= URL
+~/code                          http://
+
+
+- 1 single DX repo per KUBE machine
+
+
+
+
+
+
+
+
+
+
+
+Browser                               CLI
+
+
+    dx --help
+    dx repo create main
+    mkdir -p app/notepad
+    touch app/notepad/index.html
+    echo "console.log('hello world')" > app/notepad/main.js
+    dx commit -a
+    dx push
+
+    dx://   main  app/notepad => { index.html, main.js }
+
+
+
+
+notepad.kube.local                    dx://local/kube/nodepad => dmg:/app/notepad
+
+
+                                              /textapp => { index.html, main.js }
+
+notepad.foo.com     => [[Subnet]]  => dmg:/com/foo/notepad
+notepad.bar.com                       dmg:/com/bar/notepad
+
+textapp.foo.com                       dmg:[pierre.com]/app/textapp
+
+```
+
+> - ISSUE: Load balancing (FE/BE)
+
+- Each KUBE machine has a Repo (snowflake)
+- Repo can mount and share hierarchies (within subnet and across subnets)
+  - ISSUE: How to reference other subnets? DNS primary mechanism for global names. In theory could have non-DNS.
+
+
+
+
+
 #### 2.1.1. Realms
 
 The DMG is a global federated graph physically partitioned by Subnets.
@@ -348,15 +447,90 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
 2022-07-24 \[RB, Pierre]
 
 *   What are the relationships between URL => Realm => Refs (and the implied mapping)?
+
 *   Of course URL => Subnet, but the part of the URL that isn't just the host (i.e., subnet) consists of (possibly) a subdomain name (alice.example.com) and a path (/notepad).
 *   That's what i'm calling a "name" or DXN (i.e., alice/notepad).
 *   So a URL identifies both a Subnet and a resource Name (DXN).
 *   Names (DXNs) contain both a Realm and a Resource (path). E.g., "alice.notepad" references the Realm "alice" and the Resource "notepad".
 *   Questions:
 *   1.  Can Realms be hierarchical (e.g., dxos.devnet vs. alice).
+
+Yes.
+
 *   2.  Are Realms fixed to Subnets? Are they fixed to Domain names? (What if I don't have a domain name? What if I want to transfer them?). I don't think they are.
+
+Yes and yes, but I can replicate a realm and mount inside my realm. Transfer -> read in, write out.
+
 *   3.  But if not, then how do we have globally unique Realm names?
+
+Well-defined roots, like /dnsaddr/ams-2.bootstrap.libp2p.io/tcp/4001/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb in multiaddr,
+except we have a few well-defined roots (eg /onion/) and fall back onto DNS.
+
 *   4.  DMG maintains the map between the name and the refs -- what is the model for this? Each subnet is responsible for maintaining it's own map -- since each subnet is the AUTHORITY (with different forms of consensus) for it's SET of realms.
+
+It works like mountpoints. I might mount a realm as a participant or as something I want to expose (but have no control over) or as a mere observer.
+
+## Example of DMG mappings
+
+A browser loads https://alice.pcarrier.com/notepad.
+It connects to one of the servers returned by the pcarrier.com DNS servers for alice.pcarrier.com,
+hence trusted members of the pcarrier.com subnet and a primary source of authority for refs/com/pcarrier (ie, people would pull from there).
+
+They look up locally, in order:
+```
+  refs/!meta
+  refs/com/!meta
+  refs/com/pcarrier/!meta
+  refs/com/pcarrier/alice/!meta
+  refs/com/pcarrier/alice/notepad/!meta
+```
+
+Any of those meta can choose to redirect to another meta, for example 'refs/com/pcarrier/:meta` could say `refs/com/pcarrier/alice`
+is in fact `refs/org/dxos/alice` (or `refs/com/alice`) which would fork the traversal into:
+
+```
+  refs/!meta
+  refs/com/!meta
+  refs/com/pcarrier/!meta
+  refs/org/dxos/alice/!meta
+  refs/org/dxos/alice/notepad/!meta
+```
+
+`refs/org/dxos/alice/notepad/!meta`
+could be a ref to a commit that contains the file `dx.yml` with:
+```
+https:
+  serve:
+    !https:
+  fallback:
+    !https:index.html
+actions:
+  writes:
+    - name: admin-publishes
+      from: /org/dxos/admins:keys
+      only:
+      - !code
+      - !dev/*
+    - name: https propagation:
+      publish-https:
+        after: !code:build
+        from: !code:public
+        to: !https
+```
++
++Which we merge with `refs/org/dxos/alice/!meta : dx.yml`, `refs/org/dxos/!meta : dx.yml`
++
++`/refs/org/dx/alice/notepad/!https` is a ref to a commit that contains:
++```
++index.html
++0636c948994da120435f13158ab4bb8466b7c435.js
++0636c948994da120435f13158ab4bb8466b7c435.css
++```
++
+signed by the user/kube that performed the build (eg through `dx build` automatically creating the local ref ready to be
+pushed. Note that commits can be created and referred to by multiple `tag` objects inside one transaction efficiently, allowing
+for quiescent operation of the blockchain outside of big push events (intermediates could prepare then perform them at once;
+eg could have a bag of `refs/org/dxos/!changeset/$account/v2.0/$ref` updates transacted atomically).
 
 <!--
         alice (alice.com) :: [a1, a2, a3]

@@ -27,6 +27,7 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc",
   },
+  "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
   "hediet.vscode-drawio.theme": "Kennedy",

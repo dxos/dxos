@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { discoveryKey, sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
@@ -42,6 +43,7 @@ export class SpaceProtocol {
   }
 
   async start () {
+    log('starting...');
     // TODO(burdon): Document why empty buffer.
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
@@ -60,10 +62,13 @@ export class SpaceProtocol {
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._discoveryKey}`
     });
+    log('started');
   }
 
   async stop () {
+    log('stopping...');
     await this._networkManager.leaveProtocolSwarm(this._discoveryKey);
+    log('stopped');
   }
 
   private _createProtocol (credentials: Uint8Array | undefined, { initiator, channel }: { initiator: boolean, channel: Buffer }) {

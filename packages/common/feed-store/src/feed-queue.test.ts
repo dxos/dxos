@@ -11,11 +11,11 @@ import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { TestItemBuilder } from './testing';
 
-describe('FeedQueue', function () {
+describe.only('FeedQueue', function () {
   const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 
-  it('opens and closes a queue multiple times', async function () {
+  it.only('opens and closes a queue multiple times', async function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -27,7 +27,7 @@ describe('FeedQueue', function () {
     await queue.close();
     await queue.close();
 
-    await feedStore.close();
+    // await feedStore.close();
   });
 
   it('queue closed while reading', async function () {

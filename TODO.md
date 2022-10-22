@@ -23,6 +23,9 @@
 - [ ] Rationalize `@dxos/util`.
 - [ ] Use TestItemBuilder pattern from `@dxos/feed-store` in `@dxos/network-manager`.
 
+- [ ] Convert Buffers into lengths when logging.
+- [ ] Logging indicator to match open/close (e.g., with timing); indented levels?
+- [ ] Move tests to `chai`.
 - [ ] `@testing` directive.
 - [ ] Unify `@dxos/log`, `@dxos/util` spy, and `@dxos/spyglass`.
 - [ ] Add `@dxos/x` tools (deps, sorting, etc.)
