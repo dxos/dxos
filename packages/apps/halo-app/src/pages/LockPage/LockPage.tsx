@@ -63,7 +63,7 @@ export const LockPage = () => {
       )}
 
       <div role='none' className='text-center px-2 space-y-2'>
-        {profile && <Button className='w-full' onClick={handleUnlock}>{t('unlock label')}</Button>}
+        {profile && <Button className='w-full' variant='primary' onClick={handleUnlock}>{t('unlock label')}</Button>}
         <Button
           variant='outline'
           className='w-full'
