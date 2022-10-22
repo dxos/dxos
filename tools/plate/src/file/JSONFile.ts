@@ -11,7 +11,7 @@ export class JSONFile<T> extends File<T> {
 
   protected override async parse (content: Buffer, loadOptions?: any): Promise<T> {
     try {
-      const result = JSON.parse(content.toString('utf8'));
+      const result = JSON.parse(content.toString('utf-8'));
       return result;
     } catch (err: any) {
       throw new Error(err.toString() + ' while reading ' + this.path);

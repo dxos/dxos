@@ -47,7 +47,7 @@ class Peer extends EventEmitter {
     });
 
     this._broadcast.packet.on(packet => {
-      this._messages.set(packetId(packet), Buffer.from(packet.data!).toString('utf8'));
+      this._messages.set(packetId(packet), Buffer.from(packet.data!).toString('utf-8'));
       this.emit('packet', packet);
     });
 

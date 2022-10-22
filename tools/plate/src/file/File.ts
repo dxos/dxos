@@ -122,7 +122,7 @@ export class File<D = string> {
   }
 
   protected async parse (content: Buffer, loadOptions?: any): Promise<D> {
-    return content.toString('utf8') as any;
+    return content.toString('utf-8') as any;
   }
 
   protected async serialize (): Promise<string> {

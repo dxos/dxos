@@ -15,7 +15,7 @@ const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 
 const maybeLoadFile = (file: string): any => {
   try {
-    return yaml.load(fs.readFileSync(file, { encoding: 'utf8' }));
+    return yaml.load(fs.readFileSync(file, { encoding: 'utf-8' }));
   } catch (err: any) {
     // Ignored.
   }
