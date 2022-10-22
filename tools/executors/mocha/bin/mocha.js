@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
+//
+// Copyright 2022 DXOS.org
+//
+
 const { spawnSync } = require('child_process');
 
 //
-// Script called by IDEs.
+// Script called by IDE to run mocha executor with custom reporter.
 //
 
 const getArg = (flag) => {
@@ -18,7 +22,7 @@ const getArg = (flag) => {
   } else {
     return process.argv[idx + 1];
   }
-}
+};
 
 const project = getArg('--project');
 const reporter = getArg('--reporter');

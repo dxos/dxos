@@ -32,7 +32,7 @@
     },
     "reporter": {
       "type": "string",
-      "description": ""
+      "description": "Custom reporter (e.g., IDE)"
     },
     "coveragePath": {
       "type": "string",
