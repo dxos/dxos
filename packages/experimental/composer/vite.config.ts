@@ -12,11 +12,15 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 // https://vitejs.dev/config/
 export default defineConfig((env) => ({
   base: '', // Ensures relative path to assets.
+  server: {
+    host: true
+  },
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/client',
       '@dxos/config',
+      '@dxos/debug',
       '@dxos/react-client',
       '@dxos/react-ui',
       '@dxos/react-uikit',

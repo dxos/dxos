@@ -41,7 +41,7 @@
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
-    "debug": "^2.0.0",
+    "debug": "^4.3.3",
     "base-x": "~3.0.9",
     "json-stable-stringify": "^1.0.1",
     "jsondown": "dxos/jsondown#main",

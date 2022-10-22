@@ -10,7 +10,6 @@
     "dev": "plate"
   },
   "dependencies": {
-    "esbuild": "~0.14.1",
     "lodash.flatten": "^4.4.0",
     "lodash.zip": "^4.2.0",
     "mkdirp": "^1.0.4",

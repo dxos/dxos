@@ -18,10 +18,7 @@
     "/oclif.manifest.json"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "check": "true",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "readme": "oclif readme",
     "run:cmd": "npm run build && ./bin/run config --config ./config/config.yml --json",
@@ -36,6 +33,8 @@
     "@dxos/plate": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@dxos/telemetry": "workspace:*",
     "@oclif/core": "^1.14.1",
     "@oclif/plugin-help": "^5.1.12",
     "@oclif/plugin-plugins": "^2.1.0",
@@ -54,10 +53,10 @@
     "node-fetch": "^2.6.0",
     "oclif": "^3.1.2",
     "react": "^18.2.0",
+    "uuid": "^8.3.2",
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "@oclif/test": "^2.1.1",
     "@types/chai": "^4.2.15",
     "@types/cli-progress": "^3.11.0",

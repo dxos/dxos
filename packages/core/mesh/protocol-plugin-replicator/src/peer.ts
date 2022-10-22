@@ -106,7 +106,8 @@ export class Peer {
     // }
 
     feedDescriptor.feed.replicate(this._protocol.initiator, {
-      stream
+      stream,
+      live: true
     });
 
     this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);

@@ -36,7 +36,6 @@
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "download": "^8.0.0",
-    "esbuild": "~0.14.1",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
     "tail": "~2.2.4"
