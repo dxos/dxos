@@ -13,26 +13,27 @@ import { TestItemBuilder } from './testing';
 
 chai.use(chaiAsPromised);
 
-describe.only('FeedStore', function () {
+describe('FeedStore', function () {
   it('creates feeds', async function () {
-    const feedStore = new TestItemBuilder().createFeedStore();
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
 
-    const keys = await Promise.all(Array.from(Array(10)).map(async () => {
-      const key = PublicKey.random();
-      await feedStore.openFeed(key);
-      return key;
+    const feedKeys = await Promise.all(Array.from(Array(10)).map(async () => {
+      const feedKey = PublicKey.random();
+      await feedStore.openFeed(feedKey);
+      return feedKey;
     }));
 
     {
-      for (const publicKey of keys) {
-        const feed = feedStore.getFeed(publicKey)!;
-        expect(feed.key).to.eq(publicKey);
+      for (const feedKey of feedKeys) {
+        const feed = feedStore.getFeed(feedKey)!;
+        expect(feed.key).to.eq(feedKey);
         expect(feed.properties.opened).to.be.true;
         expect(feed.properties.readable).to.be.true;
         expect(feed.properties.writable).to.be.false;
       }
 
-      expect(feedStore.size).to.eq(keys.length);
+      expect(feedStore.size).to.eq(feedKeys.length);
     }
 
     {
@@ -42,39 +43,40 @@ describe.only('FeedStore', function () {
   });
 
   it('gets an opened feed', async function () {
-    const feedStore = new TestItemBuilder().createFeedStore();
-
-    const key = PublicKey.random();
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
+    const feedKey = PublicKey.random();
 
     {
-      const feed = await feedStore.openFeed(key);
-      expect(feed.key).to.eq(key);
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
       expect(feedStore.size).to.eq(1);
     }
 
     {
-      const feed = await feedStore.openFeed(key);
-      expect(feed.key).to.eq(key);
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
       expect(feedStore.size).to.eq(1);
     }
   });
 
   it('tries to open an existing readable feed as writable', async function () {
-    const feedStore = new TestItemBuilder().createFeedStore();
-    const key = PublicKey.random();
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
+    const feedKey = PublicKey.random();
 
     {
-      const feed = await feedStore.openFeed(key);
-      expect(feed.key).to.eq(key);
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
       expect(feed.properties.writable).to.be.false;
       expect(feedStore.size).to.eq(1);
     }
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(key, { writable: true })).to.be.rejected;
+      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be.rejected;
     }
   });
 
