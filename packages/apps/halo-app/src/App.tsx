@@ -17,7 +17,9 @@ import {
   DevicesPage,
   IdentityPage,
   InvitationPage,
+  InviteDevicePage,
   LockPage,
+  RecoverProfilePage,
   RequireProfile,
   SpacePage,
   SpacesPage
@@ -36,6 +38,14 @@ const Routes = () => useRoutes([
   {
     path: '/profile/create',
     element: <CreateProfilePage />
+  },
+  {
+    path: '/profile/recover',
+    element: <RecoverProfilePage />
+  },
+  {
+    path: '/profile/invite-device',
+    element: <InviteDevicePage />
   },
   {
     path: '/',

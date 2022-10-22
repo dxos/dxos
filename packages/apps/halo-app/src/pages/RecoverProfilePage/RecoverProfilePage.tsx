@@ -6,32 +6,37 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import { Main, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
+import {
+  Heading,
+  Main,
+  SingleInputStep,
+  useTranslation
+} from '@dxos/react-uikit';
 
-export const CreateProfilePage = () => {
+export const RecoverProfilePage = () => {
   const { t } = useTranslation();
   const client = useClient();
-  const [username, setUsername] = useState('');
+  const [seedphrase, setSeedphrase] = useState('');
   const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') ?? '/spaces';
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createProfile({ username }).then(
+    void client.halo.createProfile({ seedphrase }).then(
       () => navigate(redirect),
       (_rejection) => setPending(false)
     );
-  }, [username]);
+  }, [seedphrase]);
   return (
     <Main className='max-w-lg mx-auto'>
-      <Heading>{t('create profile label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('recover profile label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('username label', { ns: 'uikit' }),
-          inputPlaceholder: t('username placeholder', { ns: 'uikit' }),
-          onChange: setUsername,
+          inputLabel: t('seed phrase label', { ns: 'uikit' }),
+          inputPlaceholder: t('seed phrase placeholder', { ns: 'uikit' }),
+          onChange: setSeedphrase,
           onNext,
           onBack: () => history.back()
         }}
