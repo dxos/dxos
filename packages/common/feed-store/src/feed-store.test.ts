@@ -13,10 +13,7 @@ import { TestItemBuilder } from './testing';
 
 chai.use(chaiAsPromised);
 
-// TODO(burdon): Exception types.
-// TODO(burdon): patchBufferCodec => createEncoding (@dxos/hypercore)
-
-describe('FeedStore', function () {
+describe.only('FeedStore', function () {
   it('creates feeds', async function () {
     const feedStore = new TestItemBuilder().createFeedStore();
 

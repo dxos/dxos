@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedFactory, FeedOptions } from './feed-factory';
@@ -49,25 +50,29 @@ export class FeedStore<T extends {}> {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  async openFeed (publicKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
-    let feed = this.getFeed(publicKey);
+  async openFeed (feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
+    log('opening feed', { feedKey });
+
+    let feed = this.getFeed(feedKey);
     if (feed) {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).
       // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
       if (writable && !feed.properties.writable) {
-        throw new Error(`Read-only feed is already open: ${publicKey.truncate()}`);
+        throw new Error(`Read-only feed is already open: ${feedKey.truncate()}`);
       } else {
         await feed.open();
         return feed;
       }
     }
 
-    const core = this._factory.createFeed(publicKey, { writable });
+    const core = this._factory.createFeed(feedKey, { writable });
 
-    feed = new FeedWrapper<T>(core, publicKey);
+    feed = new FeedWrapper<T>(core, feedKey);
     this._feeds.set(feed.key, feed);
     await feed.open();
     this.feedOpened.emit(feed);
+
+    log('opened');
     return feed;
   }
 
@@ -75,7 +80,9 @@ export class FeedStore<T extends {}> {
    * Close all feeds.
    */
   async close () {
+    log('closing...');
     await Promise.all(Array.from(this._feeds.values()).map(feed => feed.close()));
     this._feeds.clear();
+    log('closed');
   }
 }

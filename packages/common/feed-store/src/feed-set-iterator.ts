@@ -91,13 +91,15 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     assert(feed.properties.opened);
     log('feed added', { feed: feed.key });
 
+    // Create queue and listen for updates.
     const queue = new FeedQueue<T>(feed);
+    this._feedQueues.set(feed.key, queue);
     this._subscriptions.add(queue.updated.on(() => {
       this._trigger.wake();
     }));
 
+    // TODO(burdon): Open at index?
     await queue.open();
-    this._feedQueues.set(feed.key, queue);
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
@@ -152,9 +154,15 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           // Pop from queue.
           const queue = this._feedQueues.get(blocks[idx].feedKey)!;
           log('popping', queue.toJSON());
-          const message = await queue.pop();
-          assert(message === blocks[idx]);
-          return message;
+          try {
+            const message = await queue.pop();
+            assert(message === blocks[idx]);
+            return message;
+          } catch (err) {
+            // TODO(burdon): Same queue closed twice.
+            log.warn('queue closed', { feedKey: queue.feed.key });
+            console.log(Array.from(this._feedQueues.values()));
+          }
         }
       }
 

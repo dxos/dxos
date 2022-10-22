@@ -32,3 +32,13 @@ export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promis
 
 // TODO(burdon): Reconcile promises.
 export const untilPromise = <T = void> (cb: () => Promise<T>) => cb();
+
+export const untilError = <T = void> (cb: () => Promise<T>) => {
+  return new Promise(async (resolve) => {
+    try {
+      await cb();
+    } catch (err) {
+      resolve(err);
+    }
+  });
+};

@@ -20,5 +20,6 @@ import { inspect } from 'util';
  * ```
  */
 export const inspectObject = (obj: any) => {
-  return obj.toJSON ? `${Object.getPrototypeOf(obj).constructor.name}(${inspect(obj.toJSON())}})` : String(obj);
+  const name = Object.getPrototypeOf(obj).constructor.name;
+  return obj.toJSON ? `${name}(${inspect(obj.toJSON())})` : String(obj);
 };

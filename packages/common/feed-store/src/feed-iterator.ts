@@ -81,6 +81,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   }
 
   async * _generator () {
+    log('started');
     while (this._running) {
       const block = await Promise.race([
         this._stopTrigger.wait(),
@@ -88,11 +89,13 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
       ]);
 
       if (block === undefined) {
-        return;
+        break;
       }
 
       yield block;
     }
+
+    log('stopped');
   }
 
   abstract _onOpen (): Promise<void>

@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
-import { Readable, Writable } from 'streamx';
+import { Writable } from 'streamx';
 import { inspect } from 'util';
 
 import { Event, latch, Trigger } from '@dxos/async';
@@ -28,7 +28,6 @@ export class FeedQueue<T extends {}> {
 
   private readonly _messageTrigger = new Trigger<FeedBlock<T>>({ autoReset: true });
 
-  private _feedStream?: Readable;
   private _feedConsumer?: Writable;
 
   private _currentBlock?: FeedBlock<T> = undefined;
@@ -58,7 +57,7 @@ export class FeedQueue<T extends {}> {
   }
 
   get isOpen (): boolean {
-    return Boolean(this._feedStream);
+    return Boolean(this._feedConsumer);
   }
 
   get length (): number {
@@ -77,7 +76,7 @@ export class FeedQueue<T extends {}> {
    */
   async open (options: ReadStreamOptions = {}) {
     if (this.isOpen) {
-      await this.close();
+      return;
     }
 
     this._index = options.start ?? 0;
@@ -89,7 +88,7 @@ export class FeedQueue<T extends {}> {
 
     // TODO(burdon): Open with starting range.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
-    this._feedStream = this._feed.core.createReadStream(opts);
+    const feedStream = this._feed.core.createReadStream(opts);
 
     this._feedConsumer = new Writable({
       write: (data: any, next: () => void) => {
@@ -111,19 +110,28 @@ export class FeedQueue<T extends {}> {
       }
     });
 
-    // TODO(burdon): Consider buffering and back-pressure?
-    this._feedStream.pipe(this._feedConsumer);
-
-    this._feed.core.once('close', () => {
-      console.log('_feed.close');
-    });
-
-    this._feedConsumer.once('close', () => {
-      console.log('this._feedConsumer.close');
-      this._feedStream = undefined;
+    const onClose = () => {
+      log('queue closed', { key: this._feed.key });
       this._feedConsumer = undefined;
       this._currentBlock = undefined;
       this._index = -1;
+    };
+
+    // Called if feed is closed externally.
+    this._feed.core.once('close', () => {
+      log('feed closed', { key: this._feed.key });
+      onClose();
+    });
+
+    // Called when queue is closed. Throws exception if waiting for `pop`.
+    this._feedConsumer.once('close', () => {
+      onClose();
+    });
+
+    // Pipe readable stream into writable consumer.
+    // TODO(burdon): Consider buffering and back-pressure?
+    feedStream.pipe(this._feedConsumer, () => {
+      onClose();
     });
 
     log('opened');
@@ -140,9 +148,6 @@ export class FeedQueue<T extends {}> {
       const [closed, setClosed] = latch();
       this._feedConsumer.once('close', setClosed);
       this._feedConsumer.destroy();
-      // this._feedStream = undefined;
-      // this._feed.close();
-
       await closed();
       log('closed');
     }

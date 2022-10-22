@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { latch, promiseTimeout, sleep } from '@dxos/async';
-import { untilPromise } from '@dxos/async/src';
+import { latch, promiseTimeout, sleep, untilError, untilPromise } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
@@ -30,7 +30,7 @@ describe('FeedQueue', function () {
     await feedStore.close();
   });
 
-  it.only('feed closed during iterator', async function () {
+  it('queue closed while reading', async function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
@@ -41,41 +41,67 @@ describe('FeedQueue', function () {
     expect(queue.isOpen).to.be.true;
     expect(queue.feed.properties.closed).to.be.false;
 
-    const [error, setError] = latch();
+    // Write blocks.
+    // TODO(burdon): Write slowly to test writing close feed.
+    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
 
-    {
-      const numBlocks = 10;
+    // Read until queue closed (pop throws exception).
+    const errorPromise = untilError(async () => {
+      while (true) {
+        const next = await queue.pop();
+        log('next', { next: next.seq });
+        await sleep(50);
+      }
+    });
 
-      // Write blocks.
-      await builder.generator.writeBlocks(feed.createFeedWriter(), { count: numBlocks });
-
-      // Read until queue closed (pop throws exception).
-      setTimeout(async () => {
-        while (true) {
-          try {
-            await queue.pop();
-            await sleep(100);
-          } catch (err: any) {
-            // console.log(err);
-            setError(); // TODO(burdon): Check error type.
-            break;
-          }
-        }
-      });
-    }
-
+    // Close the queue.
     await untilPromise(async () => {
-      await sleep(200);
+      await sleep(400);
       await queue.close();
-      // await feedStore.close();
     });
 
     // Expect pop to throw error when queue is closed.
-    await error();
+    await errorPromise;
 
     expect(queue.isOpen).to.be.false;
-    expect(queue.feed.properties.opened).to.be.true;
     expect(queue.feed.properties.closed).to.be.false;
+  });
+
+  it('feed closed while reading', async function () {
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+
+    const queue = new FeedQueue<any>(feed);
+    await queue.open();
+
+    expect(queue.isOpen).to.be.true;
+    expect(queue.feed.properties.closed).to.be.false;
+
+    // Write blocks.
+    // TODO(burdon): Write slowly to test writing close feed.
+    await builder.generator.writeBlocks(feed.createFeedWriter(), { count: 10 });
+
+    // Read until queue closed (pop throws exception).
+    const errorPromise = untilError(async () => {
+      while (true) {
+        const next = await queue.pop();
+        log('next', { next: next.seq });
+        await sleep(50);
+      }
+    });
+
+    // Close the feed.
+    await untilPromise(async () => {
+      await sleep(400);
+      await feedStore.close();
+    });
+
+    // Expect pop to throw error when queue is closed.
+    await errorPromise;
+
+    expect(queue.isOpen).to.be.false;
+    expect(queue.feed.properties.closed).to.be.true;
   });
 
   it('responds immediately when feed is appended', async function () {

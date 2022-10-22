@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -92,14 +92,16 @@ describe('FeedSetIterator', function () {
   it('reads blocks in order', async function () {
     const feedStore = builder.createFeedStore();
 
+    // TODO(burdon): Randomize?
     const numFeeds = 3;
-    const numBlocks = 25;
+    const numBlocks = 20;
 
     // TODO(burdon): Test with starting index.
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
 
     // Write blocks.
     const feedKeys: PublicKey[] = [];
+
     {
       // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
@@ -119,10 +121,21 @@ describe('FeedSetIterator', function () {
           const writer = faker.random.arrayElement(writers);
           const receipts = await builder.generator.writeBlocks(writer, { count: 1 });
           log('wrote', receipts);
+          await sleep(10);
         }
+
+        const count = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
+        const feeds = feedStore.feeds.map(feed => ({
+          feedKey: feed.key,
+          length: feed.properties.length
+        }));
+
+        log('written', { feeds, count });
+        expect(count).to.eq(numBlocks);
       });
     }
 
+    // Open and start iterator.
     await iterator.open();
     expect(iterator.isOpen).to.be.true;
     expect(iterator.isRunning).to.be.true;
@@ -133,13 +146,13 @@ describe('FeedSetIterator', function () {
       setTimeout(async () => {
         for await (const block of iterator) {
           const { feedKey, seq } = block;
+          log('read', { feedKey, seq });
           const count = inc();
-          log('next', { feedKey, seq, count });
           if (count === numBlocks) {
             await iterator.stop();
           }
         }
-      });
+      }, 100);
 
       const count = await done();
       expect(count).to.eq(numBlocks);
@@ -147,17 +160,6 @@ describe('FeedSetIterator', function () {
 
     expect(iterator.isRunning).to.be.false;
     await iterator.close();
-
-    {
-      const feeds = feedStore.feeds.map(feed => ({
-        feedKey: feed.key,
-        length: feed.properties.length
-      }));
-
-      log('feeds', feeds);
-      expect(feeds.reduce((count, feed) => count + feed.length, 0)).to.eq(numBlocks);
-
-      await feedStore.close();
-    }
+    await feedStore.close();
   }).timeout(5_000);
 });

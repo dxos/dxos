@@ -187,7 +187,7 @@ export class PublicKey {
     const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
     const color = colors[hash % colors.length];
 
-    return `<PublicKey ${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])}>`;
+    return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])})`;
   }
 
   /**
@@ -198,11 +198,12 @@ export class PublicKey {
     if (this._value.length !== otherConverted._value.length) {
       return false;
     }
+
     let equal = true;
-    this._value;
     for (let i = 0; i < this._value.length; i++) {
       equal &&= this._value[i] === otherConverted._value[i];
     }
+
     return equal;
   }
 }
