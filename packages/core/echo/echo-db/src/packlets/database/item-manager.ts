@@ -127,9 +127,8 @@ export class ItemManager {
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.
-    log('Item Genesis:', itemId);
-
-    const receipt = await this._writeStream.write({
+    log('Item Genesis', { itemId });
+    await this._writeStream.write({
       itemId,
       genesis: {
         itemType,

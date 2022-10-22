@@ -30,15 +30,24 @@ export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promis
   });
 };
 
-// TODO(burdon): Reconcile promises.
+/**
+ * Wait until promise resolves.
+ */
+// TODO(burdon): Reconcile promises (with timeouts).
 export const untilPromise = <T = void> (cb: () => Promise<T>) => cb();
 
-export const untilError = <T = void> (cb: () => Promise<T>) => {
-  return new Promise(async (resolve) => {
-    try {
-      await cb();
-    } catch (err) {
-      resolve(err);
-    }
+/**
+ * Wait until error is thrown.
+ */
+export const untilError = (cb: () => Promise<any>) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        await cb();
+        reject(new Error('No error was thrown.'));
+      } catch (err) {
+        resolve(err);
+      }
+    });
   });
 };
