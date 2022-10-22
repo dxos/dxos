@@ -29,10 +29,9 @@ export class FeedQueue<T extends {}> {
   private readonly _messageTrigger = new Trigger<FeedBlock<T>>({ autoReset: true });
 
   private _feedConsumer?: Writable;
-
+  private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
-  private _next?: () => void;
 
   constructor (
     private readonly _feed: FeedWrapper<T>,
@@ -65,7 +64,7 @@ export class FeedQueue<T extends {}> {
   }
 
   /**
-   * Index (seq) of next block to be read.
+   * Index (seq) of the NEXT block to be read, or -1 if not open.
    */
   get index () {
     return this._index;
@@ -75,7 +74,7 @@ export class FeedQueue<T extends {}> {
    * Opens (or reopens) the queue.
    */
   async open (options: ReadStreamOptions = {}) {
-    if (this.isOpen) { // TODO(burdon): Warn if re-opening.
+    if (this.isOpen) { // TODO(burdon): Warn if re-opening (e.g., with different starting point).
       return;
     }
 
@@ -114,6 +113,7 @@ export class FeedQueue<T extends {}> {
       if (this._feedConsumer) {
         log('queue closed', { feedKey: this._feed.key });
         this._feedConsumer = undefined;
+        this._next = undefined;
         this._currentBlock = undefined;
         this._index = -1;
       }
@@ -150,7 +150,7 @@ export class FeedQueue<T extends {}> {
       const [closed, setClosed] = latch();
       this._feedConsumer.once('close', setClosed);
       this._feedConsumer.destroy();
-      this._next?.(); // Release any message currently in the queue.
+      this._next?.(); // Release any message currently in the queue (otherwise destroy will block).
       await closed();
       log('closed');
     }
