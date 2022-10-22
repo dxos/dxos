@@ -26,13 +26,13 @@ export class PipelineState {
     private _timeframeClock: TimeframeClock
   ) {}
 
-  get timeframe () {
-    return this._timeframeClock.timeframe;
-  }
-
-  // TODO(burdon): Rename `currentTimeframe`?
+  // TODO(burdon): For testing only.
   get endTimeframe () {
     return mapFeedIndexesToTimeframe(this._iterator.end);
+  }
+
+  get timeframe () {
+    return this._timeframeClock.timeframe;
   }
 
   async waitUntilTimeframe (target: Timeframe) {
