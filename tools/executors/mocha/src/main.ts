@@ -45,6 +45,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   const includesBrowserEnv = resolvedOptions.environments
     .filter(environment => ([...BrowserTypes.values()] as string[]).includes(environment))
     .length > 0;
+
   const [skipBrowserTests] = await Promise.all([
     includesBrowserEnv && runBrowserBuild(resolvedOptions),
     resolvedOptions.setup && runSetup(resolvedOptions.setup)
@@ -65,6 +66,10 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
       case 'nodejs': {
         success &&= await runNode(context, resolvedOptions);
         break;
+      }
+
+      default: {
+        throw new Error(`Invalid env: ${env}`);
       }
     }
   }

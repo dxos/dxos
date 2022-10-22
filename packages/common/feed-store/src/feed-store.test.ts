@@ -18,7 +18,8 @@ describe('FeedStore', function () {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 
-    const feedKeys = await Promise.all(Array.from(Array(10)).map(async () => {
+    const numFeeds = 5;
+    const feedKeys = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
       const feedKey = PublicKey.random();
       await feedStore.openFeed(feedKey);
       return feedKey;

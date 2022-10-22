@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { latch, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
+import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
@@ -19,7 +18,6 @@ const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[
 
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
-// TODO(burdon): Race condition if run with other tests.
 describe('FeedSetIterator', function () {
 
   // TODO(burdon): Test when feed is added on-the-fly.
@@ -52,7 +50,7 @@ describe('FeedSetIterator', function () {
     expect(iterator.isRunning).to.be.false;
   });
 
-  it.skip('responds immediately when a feed is appended', async function () {
+  it('responds immediately when a feed is appended', async function () {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
@@ -96,46 +94,30 @@ describe('FeedSetIterator', function () {
 
     // TODO(burdon): Randomize?
     const numFeeds = 3;
-    const numBlocks = 20;
+    const numBlocks = 15;
 
     // TODO(burdon): Test with starting index.
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
 
     // Write blocks.
-    const feedKeys: PublicKey[] = [];
-
-    {
+    setTimeout(async () => {
       // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
       const writers = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
         const key = await builder.keyring.createKey();
         const feed = await feedStore.openFeed(key, { writable: true });
         await iterator.addFeed(feed);
-        feedKeys.push(feed.key);
         return feed.createFeedWriter();
       }));
 
       expect(iterator.size).to.eq(numFeeds);
 
-      // Write blocks.
-      setTimeout(async () => {
-        for await (const _ of Array.from(Array(numBlocks))) {
-          const writer = faker.random.arrayElement(writers);
-          const receipts = await builder.generator.writeBlocks(writer, { count: 1 });
-          log('wrote', receipts);
-          await sleep(10);
-        }
-
-        const count = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
-        const feeds = feedStore.feeds.map(feed => ({
-          feedKey: feed.key,
-          length: feed.properties.length
-        }));
-
-        log('written', { feeds, count });
-        expect(count).to.eq(numBlocks);
-      });
-    }
+      for (const _ of Array.from(Array(numBlocks))) {
+        const writer = faker.random.arrayElement(writers);
+        const receipts = await builder.generator.writeBlocks(writer, { count: 1 });
+        log('wrote', receipts);
+      }
+    }, faker.datatype.number({ min: 0, max: 100 }));
 
     // Open and start iterator.
     await iterator.open();
@@ -143,25 +125,34 @@ describe('FeedSetIterator', function () {
     expect(iterator.isRunning).to.be.true;
 
     // Read blocks.
-    {
-      const [done, inc] = latch({ count: numBlocks });
-      setTimeout(async () => {
-        for await (const block of iterator) {
-          const { feedKey, seq } = block;
-          log('read', { feedKey, seq });
-          const count = inc();
-          if (count === numBlocks) {
-            await iterator.stop();
-          }
+    const [readAll, read] = latch({ count: numBlocks });
+    setTimeout(async () => {
+      for await (const block of iterator) {
+        const { feedKey, seq } = block;
+        log('read', { feedKey, seq });
+        const count = read();
+        if (count === numBlocks) {
+          await iterator.stop();
         }
-      }, 100);
+      }
+    }, faker.datatype.number({ min: 0, max: 100 }));
 
-      const count = await done();
-      expect(count).to.eq(numBlocks);
-    }
+    // Wait until all written and read.
+    const count = await readAll();
+    expect(count).to.eq(numBlocks);
+
+    // Written blocks.
+    const written = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
+    const feeds = feedStore.feeds.map(feed => ({
+      feedKey: feed.key,
+      length: feed.properties.length
+    }));
+
+    log('written', { feeds, written });
+    expect(written).to.eq(numBlocks);
 
     expect(iterator.isRunning).to.be.false;
     await iterator.close();
     await feedStore.close();
-  }).timeout(5_000);
+  }).timeout(3_000);
 });
