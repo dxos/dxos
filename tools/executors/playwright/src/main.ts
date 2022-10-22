@@ -13,8 +13,10 @@ export interface MochaExecutorOptions {
 }
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing "playwright"...');
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  console.info('Executing playwright...');
+  if (context.isVerbose) {
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
 
   // TODO(wittjosiah): Run dev server.
 
