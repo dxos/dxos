@@ -52,7 +52,7 @@ export class ProtocolNetworkGenerator extends EventEmitter {
    * @param [options.waitForFullConnection=true] Wait until all the connections are ready
    * @param options.peer Peer options
    * @param options.protocol Protocol options
-   * @param options.parameters Arguments for the n-graph generator
+   * @param options.parameters Arguments for the ngraph generator
    */
   async _generate (
     topology: Topology,

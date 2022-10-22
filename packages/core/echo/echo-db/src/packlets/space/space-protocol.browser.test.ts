@@ -129,9 +129,11 @@ describe('space/space-protocol', function () {
       timeframe: new Timeframe()
     });
 
+    const keyring2 = new Keyring();
     const feedStore2 = new FeedStore<FeedMessage>({
       factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring2,
         hypercore: {
           valueEncoding
         }
