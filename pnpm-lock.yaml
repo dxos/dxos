@@ -411,7 +411,6 @@ importers:
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
-      esbuild: ~0.14.1
       isomorphic-ws: ^4.0.1
       sodium-native: ^3.4.1
       sodium-universal: ^3.1.0
@@ -432,7 +431,6 @@ importers:
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@koush/wrtc': 0.5.3
-      esbuild: 0.14.54
       sodium-native: 3.4.1
       sodium-universal: 3.1.0
       typescript: 4.8.4
@@ -498,7 +496,6 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       download: ^8.0.0
-      esbuild: ~0.14.1
       node-fetch: ^2.6.0
       source-map-support: ^0.5.12
       tail: ~2.2.4
@@ -519,7 +516,6 @@ importers:
       assert: 2.0.0
       debug: 4.3.4
       download: 8.0.0
-      esbuild: 0.14.54
       node-fetch: 2.6.7
       source-map-support: 0.5.21
       tail: 2.2.4
@@ -2244,7 +2240,6 @@ importers:
       clipboardy: ^3.0.0
       compare-semver: ~1.1.0
       date-format: ~4.0.11
-      esbuild: ~0.14.1
       ink: ^3.2.0
       ink-select-input: ~4.2.1
       ink-spinner: ~4.0.3
@@ -2298,7 +2293,6 @@ importers:
       '@types/qrcode-terminal': 0.12.0
       '@types/react': 18.0.21
       '@types/yargs': 16.0.4
-      esbuild: 0.14.54
       mocha: 8.4.0
       supervisor: 0.12.0
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
@@ -2801,7 +2795,7 @@ importers:
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       base-x: ~3.0.9
-      debug: ^2.0.0
+      debug: ^4.3.3
       json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
@@ -2831,7 +2825,7 @@ importers:
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       base-x: 3.0.9
-      debug: 2.6.9
+      debug: 4.3.4
       json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
@@ -3496,7 +3490,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
-      esbuild: ~0.14.1
+      esbuild: ~0.15.12
       esbuild-node-externals: ^1.4.1
       eslint: ^8.24.0
       glob: ~7.1.6
@@ -3518,8 +3512,8 @@ importers:
       '@swc-node/register': 1.5.4_6yqwcne7hyxkofmgunm52xhmgy
       '@swc/core': 1.3.9
       chalk: 4.1.2
-      esbuild: 0.14.54
-      esbuild-node-externals: 1.5.0_esbuild@0.14.54
+      esbuild: 0.15.12
+      esbuild-node-externals: 1.5.0_esbuild@0.15.12
       eslint: 8.25.0
       glob: 7.1.7
       jest: 27.5.1_ts-node@10.9.1
@@ -3528,7 +3522,7 @@ importers:
       mocha: 8.4.0
       pkg-dir: 5.0.0
       terser: 5.15.1
-      ts-jest: 27.1.4_iaxrwifmfr6lj7f7mmtnvey4p4
+      ts-jest: 27.1.4_6frsdtqbjsxkjj7ux3tr5o53r4
       typescript: 4.8.4
       wtfnode: 0.9.1
       yargs: 16.2.0
@@ -3655,7 +3649,6 @@ importers:
       '@types/prettier': ^2.7.1
       '@types/recursive-readdir': ^2.2.0
       '@types/yargs': ~16.0.1
-      esbuild: ~0.14.1
       lodash.flatten: ^4.4.0
       lodash.zip: ^4.2.0
       mkdirp: ^1.0.4
@@ -3665,7 +3658,6 @@ importers:
       typescript: ^4.7.2
       yargs: ~16.2.0
     dependencies:
-      esbuild: 0.14.54
       lodash.flatten: 4.4.0
       lodash.zip: 4.2.0
       mkdirp: 1.0.4
@@ -5758,7 +5750,6 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.14.54:
@@ -5784,7 +5775,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@eslint/eslintrc/1.3.3:
@@ -17494,7 +17484,6 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-android-arm64/0.14.54:
@@ -17520,7 +17509,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-64/0.14.54:
@@ -17546,7 +17534,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-arm64/0.14.54:
@@ -17572,7 +17559,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-64/0.14.54:
@@ -17598,7 +17584,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-arm64/0.14.54:
@@ -17624,7 +17609,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-32/0.14.54:
@@ -17650,7 +17634,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-64/0.14.54:
@@ -17676,7 +17659,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm/0.14.54:
@@ -17702,7 +17684,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm64/0.14.54:
@@ -17728,7 +17709,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-mips64le/0.14.54:
@@ -17754,7 +17734,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-ppc64le/0.14.54:
@@ -17780,7 +17759,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-riscv64/0.14.54:
@@ -17806,7 +17784,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-s390x/0.14.54:
@@ -17832,7 +17809,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-netbsd-64/0.14.54:
@@ -17858,18 +17834,7 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
-
-  /esbuild-node-externals/1.5.0_esbuild@0.14.54:
-    resolution: {integrity: sha512-9394Ne2t2Z243BWeNBRkXEYVMOVbQuzp7XSkASZTOQs0GSXDuno5aH5OmzEXc6GMuln5zJjpkZpgwUPW0uRKgw==}
-    peerDependencies:
-      esbuild: 0.12 - 0.15
-    dependencies:
-      esbuild: 0.14.54
-      find-up: 5.0.0
-      tslib: 2.3.1
-    dev: false
 
   /esbuild-node-externals/1.5.0_esbuild@0.15.12:
     resolution: {integrity: sha512-9394Ne2t2Z243BWeNBRkXEYVMOVbQuzp7XSkASZTOQs0GSXDuno5aH5OmzEXc6GMuln5zJjpkZpgwUPW0uRKgw==}
@@ -17879,7 +17844,6 @@ packages:
       esbuild: 0.15.12
       find-up: 5.0.0
       tslib: 2.3.1
-    dev: true
 
   /esbuild-openbsd-64/0.14.54:
     resolution: {integrity: sha512-Qyk7ikT2o7Wu76UsvvDS5q0amJvmRzDyVlL0qf5VLsLchjCa1+IAvd8kTBgUxD7VBUUVgItLkk609ZHUc1oCaw==}
@@ -17904,7 +17868,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-plugin-yaml/0.0.1:
@@ -17937,7 +17900,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-32/0.14.54:
@@ -17963,7 +17925,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-64/0.14.54:
@@ -17989,7 +17950,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-arm64/0.14.54:
@@ -18015,7 +17975,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild/0.14.54:
@@ -18104,7 +18063,6 @@ packages:
       esbuild-windows-32: 0.15.12
       esbuild-windows-64: 0.15.12
       esbuild-windows-arm64: 0.15.12
-    dev: true
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -30512,7 +30470,7 @@ packages:
       typescript: 4.8.4
     dev: true
 
-  /ts-jest/27.1.4_iaxrwifmfr6lj7f7mmtnvey4p4:
+  /ts-jest/27.1.4_6frsdtqbjsxkjj7ux3tr5o53r4:
     resolution: {integrity: sha512-qjkZlVPWVctAezwsOD1OPzbZ+k7zA5z3oxII4dGdZo5ggX/PL7kvwTM0pXTr10fAtbiVpJaL3bWd502zAhpgSQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     hasBin: true
@@ -30535,7 +30493,7 @@ packages:
     dependencies:
       '@types/jest': 27.5.2
       bs-logger: 0.2.6
-      esbuild: 0.14.54
+      esbuild: 0.15.12
       fast-json-stable-stringify: 2.1.0
       jest: 27.5.1_ts-node@10.9.1
       jest-util: 27.5.1
