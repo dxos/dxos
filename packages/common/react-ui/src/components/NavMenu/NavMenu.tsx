@@ -6,15 +6,21 @@ import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import cx from 'classnames';
 import React, { ComponentProps, ReactNode } from 'react';
 
-import { defaultFocus } from '../../styles';
+import { defaultFocus, defaultHover } from '../../styles';
+import { defaultButtonColors, primaryButtonColors } from '../Button';
 
-export interface NavMenuLinkItemProps {
+interface NavMenuItemSharedProps {
+  children: ReactNode
+  active?: boolean
+}
+
+export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
   triggerLinkProps: Omit<ComponentProps<typeof NavigationMenuPrimitive.Link>,
     'children'>
   children: ReactNode
 }
 
-export interface NavMenuInvokerItemProps {
+export interface NavMenuInvokerItemProps extends NavMenuItemSharedProps {
   content: ReactNode
   children: ReactNode
 }
@@ -27,16 +33,17 @@ export interface NavMenuProps {
 
 const NavMenuInvokerItem = ({
   content,
-  children
+  children,
+  active
 }: NavMenuInvokerItemProps) => {
   return (
     <NavigationMenuPrimitive.Item>
       <NavigationMenuPrimitive.Trigger
         className={cx(
-          'px-3 py-2 text-sm rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-900',
-          'text-sm font-medium',
-          'text-neutral-700 dark:text-neutral-100',
-          defaultFocus
+          'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
+          active ? primaryButtonColors : defaultButtonColors,
+          defaultFocus,
+          defaultHover({})
         )}
       >
         {children}
@@ -58,15 +65,17 @@ const NavMenuInvokerItem = ({
 
 const NavMenuLinkItem = ({
   triggerLinkProps,
-  children
+  children,
+  active
 }: NavMenuLinkItemProps) => (
   <NavigationMenuPrimitive.Item asChild>
     <NavigationMenuPrimitive.Link
       {...triggerLinkProps}
       className={cx(
-        'px-3 py-2 text-sm rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-900',
-        'text-sm font-medium text-neutral-700 dark:text-neutral-100',
+        'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
+        active ? primaryButtonColors : defaultButtonColors,
         defaultFocus,
+        defaultHover({}),
         triggerLinkProps.className
       )}
     >
@@ -83,7 +92,7 @@ export const NavMenu = ({ items }: NavMenuProps) => {
   return (
     <NavigationMenuPrimitive.Root className='relative flex justify-center'>
       <NavigationMenuPrimitive.List
-        className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2'>
+        className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
         {items.map((item: NavMenuItem, i) => (
           isLinkItem(item)
             ? <NavMenuLinkItem {...item} />

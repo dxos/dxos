@@ -22,7 +22,8 @@ Default.args = {
   items: [
     {
       triggerLinkProps: { href: '#Hello' },
-      children: 'Hello'
+      children: 'Hello',
+      active: true
     },
     {
       children: 'How’s it going?',
