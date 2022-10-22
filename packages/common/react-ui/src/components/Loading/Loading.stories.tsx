@@ -9,7 +9,7 @@ import { templateForComponent } from '../../testing';
 import { Loading, LoadingProps } from './Loading';
 
 export default {
-  title: 'react-uikit/Loading',
+  title: 'react-ui/Loading',
   component: Loading,
   argTypes: {
     size: {
