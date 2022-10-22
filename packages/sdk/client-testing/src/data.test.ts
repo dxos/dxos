@@ -114,7 +114,7 @@ describe('Builders', function () {
       await builder.initialize();
       const party = await builder.createParty();
 
-      const raw = fs.readFileSync(filename, 'utf8');
+      const raw = fs.readFileSync(filename, 'utf-8');
       const data: DataType = yaml.load(raw) as DataType;
 
       const orgs = new Map();

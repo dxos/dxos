@@ -1,11 +1,15 @@
-import { Plugin } from "esbuild";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Plugin } from 'esbuild';
 
 export type ExternalsPluginParams = {
-  exclude: string[];
+  exclude: string[]
 }
 
 export const externalsPlugin = (params: ExternalsPluginParams): Plugin => ({
-  name: "externals",
+  name: 'externals',
   setup: (build) => {
     build.onResolve({ filter: /.*/ }, (args) => {
       if (params.exclude.includes(args.path)) {
@@ -13,4 +17,4 @@ export const externalsPlugin = (params: ExternalsPluginParams): Plugin => ({
       }
     });
   }
-})
+});

@@ -91,7 +91,7 @@ export function remarkSnippets () {
 
             const rootDir = inputFile?.dirname ?? config.baseDir;
             const filePath = path.join(rootDir, file);
-            let content = fs.readFileSync(filePath, 'utf8');
+            let content = fs.readFileSync(filePath, 'utf-8');
 
             if (lang) {
               content = removeTrailing(parser?.(content, { hash }) ?? content);
@@ -123,7 +123,7 @@ export function remarkSnippets () {
                     // E.g., ../../packages/halo/halo-protocol/src/proto/defs/credentials.proto
                     const match = filePath.match(/(.+)\/(src\/.+\/.+)/);
                     const [, pkgDir, relPath] = match ?? [];
-                    const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf8'));
+                    const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf-8'));
                     return [
                       name,
                       relPath

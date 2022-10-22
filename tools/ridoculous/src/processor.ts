@@ -58,7 +58,7 @@ export const processFiles = async ({
           fs.mkdirSync(dirname, { recursive: true });
         }
 
-        fs.writeFileSync(outFilename, text.toString() + '\n', 'utf8');
+        fs.writeFileSync(outFilename, text.toString() + '\n', 'utf-8');
       }
     }
   }
