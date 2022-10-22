@@ -4,11 +4,12 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build } from 'esbuild';
+import { writeFileSync } from 'fs';
 import { join } from 'path';
 
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
+
 import { externalsPlugin } from './externals-plugin';
-import { writeFileSync } from 'fs';
 import { fixRequirePlugin } from './fix-require-plugin';
 
 export interface EsbuildExecutorOptions {
@@ -39,15 +40,15 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     },
     plugins: [
       externalsPlugin({
-        exclude: options.external ?? [],
+        exclude: options.external ?? []
       }),
       FixMemdownPlugin(),
       NodeModulesPlugin(),
-      fixRequirePlugin(),
+      fixRequirePlugin()
     ]
   });
 
-  if(result.metafile && options.outdir) {
+  if (result.metafile && options.outdir) {
     writeFileSync(join(options.outdir, 'metafile.json'), JSON.stringify(result.metafile, null, 2));
   }
 

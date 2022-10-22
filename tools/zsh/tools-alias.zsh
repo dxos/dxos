@@ -25,8 +25,16 @@ function p () {
 }
 
 #
+# Run all tests.
+# e.g., `pa test`
+#
+function pa () {
+  pnpm nx run-many --target=$1
+}
+
+#
 # Runs Nx command skipping the cache.
-# e.g., `p test`
+# e.g., `pc test`
 #
 function pc () {
   p "$@" "${RANDOM}"

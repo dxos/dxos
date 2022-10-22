@@ -24,6 +24,7 @@
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -35,8 +36,7 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "readable-stream": "^3.6.0",
-    "@dxos/credentials": "workspace:*"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
