@@ -47,7 +47,7 @@ export class FeedFactory<T extends {}> {
     this._storage = (publicKey: PublicKey) => (filename) => {
       const dir = this._root.createDirectory(publicKey.toHex());
       const { type, native } = dir.getOrCreateFile(filename);
-      log(`File[${type}]: ${dir.path}/${filename}`);
+      log('created', { path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}` });
       return native;
     };
   }

@@ -82,6 +82,7 @@ describe('FeedStore', function () {
   });
 
   it('reopens a feed and reads data from storage', async function () {
+    // NOTE: Must use Node so that data is persistent across invocations.
     if (mochaExecutor.environment !== 'nodejs') {
       this.skip();
     }
@@ -92,7 +93,6 @@ describe('FeedStore', function () {
     const numBlocks = 10;
 
     // Write.
-    // NOTE: Node is required to make this persistent across invocations.
     {
       const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });

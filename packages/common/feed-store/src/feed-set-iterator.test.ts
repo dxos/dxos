@@ -94,7 +94,7 @@ describe('FeedSetIterator', function () {
 
     // TODO(burdon): Randomize?
     const numFeeds = 3;
-    const numBlocks = 15;
+    const numBlocks = 30;
 
     // TODO(burdon): Test with starting index.
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
@@ -129,8 +129,8 @@ describe('FeedSetIterator', function () {
     setTimeout(async () => {
       for await (const block of iterator) {
         const { feedKey, seq } = block;
-        log('read', { feedKey, seq });
         const count = read();
+        log('read', { feedKey, seq, count });
         if (count === numBlocks) {
           await iterator.stop();
         }

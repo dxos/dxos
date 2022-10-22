@@ -141,7 +141,7 @@ describe('FeedWrapper', function () {
       expect(feed2.properties.stats.peers).to.have.lengthOf(1);
 
       feed2.core.on('sync', () => {
-        log('S');
+        log('sync');
       });
     }
 
@@ -157,7 +157,7 @@ describe('FeedWrapper', function () {
           };
 
           const seq = await writer.write(block);
-          log('W', { seq, block });
+          log('write', { seq, block });
         }
       });
     }
@@ -168,7 +168,7 @@ describe('FeedWrapper', function () {
 
       setTimeout(async () => {
         for await (const block of createReadable(feed2.createReadableStream())) {
-          log('R', block);
+          log('read', block);
           inc();
         }
       });
