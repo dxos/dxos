@@ -618,31 +618,27 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/from2': ~2.3.1
-      '@types/pify': ^3.0.2
-      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
-      from2: ^2.3.0
       hypercore: ^9.12.0
-      pify: ~5.0.0
-      readable-stream: ^3.6.0
-      tempy: ~1.0.1
+      random-access-storage: ^3.0.0
+      streamx: ^2.12.5
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
+      '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
       '@dxos/hypercore': link:../hypercore
@@ -652,23 +648,17 @@ importers:
       '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
-      from2: 2.3.0
       hypercore: 9.12.0
-      pify: 5.0.0
-      readable-stream: 3.6.0
+      random-access-storage: 3.0.0
+      streamx: 2.12.5
       util: 0.12.5
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/keyring': link:../../core/halo/keyring
-      '@dxos/protocols': link:../../core/protocols
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/from2': 2.3.1
-      '@types/pify': 3.0.2
-      '@types/readable-stream': 2.3.14
       faker: 5.5.3
-      tempy: 1.0.1
 
   packages/common/hypercore:
     specifiers:
@@ -717,11 +707,13 @@ importers:
 
   packages/common/keys:
     specifiers:
+      '@dxos/debug': workspace:*
       '@types/randombytes': ^2.0.0
       assert: ^2.0.0
       randombytes: ^2.1.0
       util: ^0.12.4
     dependencies:
+      '@dxos/debug': link:../debug
       assert: 2.0.0
       randombytes: 2.1.0
       util: 0.12.5
@@ -914,6 +906,21 @@ importers:
       '@types/node': 16.11.66
       typescript: 4.8.4
 
+  packages/common/timeframe:
+    specifiers:
+      '@dxos/keys': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      debug: ^4.3.3
+      util: ^0.12.4
+    dependencies:
+      '@dxos/keys': link:../keys
+      '@dxos/util': link:../util
+      debug: 4.3.4
+      util: 0.12.5
+    devDependencies:
+      '@types/debug': 4.1.7
+
   packages/common/util:
     specifiers:
       '@dxos/crypto': workspace:*
@@ -937,6 +944,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -950,6 +958,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -964,6 +973,7 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/hypercore': link:../../../common/hypercore
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -976,6 +986,7 @@ importers:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -1029,6 +1040,7 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -1040,6 +1052,7 @@ importers:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/keys': link:../../../common/keys
       '@dxos/protocols': link:../../protocols
+      '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -1598,7 +1611,9 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/hypercore': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/timeframe': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
@@ -1606,7 +1621,9 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/hypercore': link:../../common/hypercore
       '@dxos/keys': link:../../common/keys
+      '@dxos/timeframe': link:../../common/timeframe
       assert: 2.0.0
       util: 0.12.5
     devDependencies:
@@ -1643,6 +1660,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -1691,6 +1709,7 @@ importers:
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/text-model': link:../../core/echo/text-model
+      '@dxos/timeframe': link:../../common/timeframe
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
@@ -1882,7 +1901,6 @@ importers:
       '@oclif/plugin-plugins': ^2.1.0
       '@oclif/test': ^2.1.1
       '@octokit/core': ^4.0.4
-      '@types/chai': ^4.2.15
       '@types/cli-progress': ^3.11.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
@@ -1941,7 +1959,6 @@ importers:
       ws: 7.5.9
     devDependencies:
       '@oclif/test': 2.2.4
-      '@types/chai': 4.3.3
       '@types/cli-progress': 3.11.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -2732,6 +2749,7 @@ importers:
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
@@ -2753,6 +2771,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -2794,6 +2813,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/json-stable-stringify': ^1.0.32
       '@types/level-js': ~4.0.1
@@ -2826,6 +2846,7 @@ importers:
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/testutils': link:../../common/testutils
+      '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -3354,15 +3375,11 @@ importers:
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
-      '@types/chai': ^4.2.15
-      '@types/chai-as-promised': ^7.1.5
       '@types/faker': ^5.5.9
       '@types/fs-extra': ^9.0.4
       '@types/randombytes': ^2.0.0
       assert: ^2.0.0
       bn.js: 4.12.0
-      chai: ^4.3.4
-      chai-as-promised: ^7.1.1
       faker: ^5.5.3
       fs-extra: ^8.1.0
       multihashes: ^4.0.2
@@ -3394,13 +3411,9 @@ importers:
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
-      '@types/chai': 4.3.3
-      '@types/chai-as-promised': 7.1.5
       '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
       '@types/randombytes': 2.0.0
-      chai: 4.3.6
-      chai-as-promised: 7.1.1_chai@4.3.6
       protobufjs: 6.11.3
 
   tools/beast:
@@ -11772,12 +11785,6 @@ packages:
     resolution: {integrity: sha512-BsPXH/irW0ht0Ji6iw/jJaK8Lj3FJemon2gvEqHKpCdDCeemHa+rI3WBGq5z7cDMZgoLjY40oninGxqk+8NzNQ==}
     dev: true
 
-  /@types/from2/2.3.1:
-    resolution: {integrity: sha512-l7kKtohAc5h0CKh6vFMv5WcWvQx40KE6dQneUg22i8c1mwxhVPbN781bYts/mYXxSBrQMhNxkhwg18QY0MfeOg==}
-    dependencies:
-      '@types/node': 18.11.0
-    dev: true
-
   /@types/fs-extra/9.0.13:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
@@ -16733,20 +16740,6 @@ packages:
       slash: 3.0.0
     dev: false
 
-  /del/6.1.1:
-    resolution: {integrity: sha512-ua8BhapfP0JUJKC/zV9yHHDW/rDoDxP4Zhn3AkA6/xT6gY7jYXJiaeyBZznYVujhZZET+UgcbZiQ7sN3WqcImg==}
-    engines: {node: '>=10'}
-    dependencies:
-      globby: 11.1.0
-      graceful-fs: 4.2.10
-      is-glob: 4.0.3
-      is-path-cwd: 2.2.0
-      is-path-inside: 3.0.3
-      p-map: 4.0.0
-      rimraf: 3.0.2
-      slash: 3.0.0
-    dev: true
-
   /delaunator/5.0.0:
     resolution: {integrity: sha512-AyLvtyJdbv/U1GkiS6gUUzclRoAY4Gs75qkMygJJhU75LW4DNuSF2RMzpxs9jw9Oz1BobHjTdkG3zdP55VxAqw==}
     dependencies:
@@ -21608,6 +21601,7 @@ packages:
   /is-path-cwd/2.2.0:
     resolution: {integrity: sha512-w942bTcih8fdJPJmQHFzkS76NEP8Kzzvmw92cXsazb8intwLqPibPPdXf4ANdKV3rYMuuQYGIWtvz9JilB3NFQ==}
     engines: {node: '>=6'}
+    dev: false
 
   /is-path-inside/3.0.3:
     resolution: {integrity: sha512-Fd4gABb+ycGAmKou8eMftCupSir5lRxqf4aD/vd0cD2qc4HL07OjCeuHMr8Ro4CoMaeCKDB0/ECBOVWjTwUvPQ==}
@@ -24998,7 +24992,7 @@ packages:
     dev: true
 
   /node-cmake/2.3.2:
-    resolution: {integrity: sha512-t3m0q/tB8b7eg1yAUZCx/UdC8bTPf9gNzQPWl+62fsLYE2pEeoU71auIYtgGos0G36jopbo+FCLini4NMzpFhg==}
+    resolution: {integrity: sha1-4PvFSxFAWwdwXk1tQYZa6VrSidA=}
     hasBin: true
     dependencies:
       nan: 2.17.0
@@ -29841,17 +29835,6 @@ packages:
     resolution: {integrity: sha512-G13vtMYPT/J8A4X2SjdtBTphZlrp1gKv6hZiOjw14RCWg6GbHuQBGtjlx75xLbYV/wEc0D7G5K4rxKP/cXk8Bw==}
     engines: {node: '>=10'}
     dependencies:
-      is-stream: 2.0.1
-      temp-dir: 2.0.0
-      type-fest: 0.16.0
-      unique-string: 2.0.0
-    dev: true
-
-  /tempy/1.0.1:
-    resolution: {integrity: sha512-biM9brNqxSc04Ee71hzFbryD11nX7VPhQQY32AdDmjFvodsRFz/3ufeoTZ6uYkRFfGo188tENcASNs3vTdsM0w==}
-    engines: {node: '>=10'}
-    dependencies:
-      del: 6.1.1
       is-stream: 2.0.1
       temp-dir: 2.0.0
       type-fest: 0.16.0

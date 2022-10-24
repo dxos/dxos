@@ -4,11 +4,11 @@
   "description": "A consistent store for hypercore feeds.",
   "license": "MIT",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:util": "util"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "src",
     "dist"
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hypercore": "workspace:*",
@@ -30,10 +31,9 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "from2": "^2.3.0",
     "hypercore": "^9.12.0",
-    "pify": "~5.0.0",
-    "readable-stream": "^3.6.0",
+    "random-access-storage": "^3.0.0",
+    "streamx": "^2.12.5",
     "util": "^0.12.4"
   },
   "devDependencies": {
@@ -41,14 +41,9 @@
     "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
-    "@types/from2": "~2.3.1",
-    "@types/pify": "^3.0.2",
-    "@types/readable-stream": "^2.3.9",
-    "faker": "^5.5.3",
-    "tempy": "~1.0.1"
+    "faker": "^5.5.3"
   },
   "publishConfig": {
     "access": "public"

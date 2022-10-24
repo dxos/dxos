@@ -28,7 +28,7 @@
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     // Nx assumes the use of tsconfig.base.json.
-    //   https://nx.dev/more-concepts/customizing-inputs#global-settings.
+    // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/.eslintrc*.js"

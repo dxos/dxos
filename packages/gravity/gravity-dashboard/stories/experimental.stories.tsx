@@ -263,7 +263,7 @@ class MeshLayout {
     return this.doLayout.bind(this);
   }
 
-  // Note: Don't do transitions inside join.
+  // NOTE: Don't do transitions inside join.
   doLayout (group: D3Selection, objects: Kube[]) {
     group
       .call(createOne('circle', 'outer', el => el.attr('r', this._context.scale.model.toValue(this._radius))));

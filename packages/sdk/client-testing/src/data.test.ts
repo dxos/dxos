@@ -12,7 +12,7 @@ import { truncate, truncateKey } from '@dxos/debug';
 
 import { buildTestParty, PartyBuilder, TestType } from './builders';
 import { treeLogger, TreeRoot } from './logging';
-import { Builder, handler } from './testing';
+import { TestBuilder, testCallback } from './testing';
 
 const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');
@@ -35,16 +35,16 @@ type DataType = {
 const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
 
-describe('Builders', function () {
-  it('Sanity.', async function () {
-    const builder = new Builder();
+describe.only('Builders', function () {
+  it.only('sanity', async function () {
+    const builder = new TestBuilder();
     await builder.initialize();
     const party = await builder.createParty();
     await builder.destroyParty(party);
   });
 
-  it('Tree logger.', function () {
-    return handler(async (client, party) => {
+  it('tree logger', function () {
+    return testCallback(async (client, party) => {
       await buildTestParty(new PartyBuilder(party));
 
       const { entities } = await party.database.select()
@@ -65,13 +65,13 @@ describe('Builders', function () {
     });
   });
 
-  it('Import/export.', async function () {
+  it('import/export', async function () {
     const dir = `/tmp/dxos/testing/${Date.now()}`;
     fs.mkdirSync(dir, { recursive: true });
     const filename = `${dir}/data.yml`;
 
     {
-      const builder = new Builder();
+      const builder = new TestBuilder();
       await builder.initialize();
       const party = await builder.createParty();
       await buildTestParty(new PartyBuilder(party), {
@@ -110,7 +110,7 @@ describe('Builders', function () {
     }
 
     {
-      const builder = new Builder();
+      const builder = new TestBuilder();
       await builder.initialize();
       const party = await builder.createParty();
 

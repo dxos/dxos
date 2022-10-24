@@ -4,9 +4,16 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
+import { FeedIndex } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
+
+export const mapTimeframeToFeedIndexes = (timeframe: Timeframe): FeedIndex[] =>
+  timeframe.frames().map(([feedKey, index]) => ({ feedKey, index }));
+
+export const mapFeedIndexesToTimeframe = (indexes: FeedIndex[]): Timeframe =>
+  new Timeframe(indexes.map(({ feedKey, index }) => [feedKey, index]));
 
 /**
  * Keeps state of the last timeframe that was processed by ECHO.
@@ -35,6 +42,9 @@ export class TimeframeClock {
   @timed(5_000)
   async waitUntilReached (target: Timeframe) {
     log.debug('waitUntilReached', { target, current: this._timeframe });
-    await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
+    await this.update.waitForCondition(() => {
+      console.log('check if reached', { target, current: this._timeframe, deps: Timeframe.dependencies(target, this._timeframe) });
+      return Timeframe.dependencies(target, this._timeframe).isEmpty();
+    });
   }
 }
