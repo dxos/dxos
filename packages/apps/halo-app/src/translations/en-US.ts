@@ -10,6 +10,8 @@ export const halo = {
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
-  'devices label': 'Devices',
-  'identity label': 'Identities'
+  'devices label': 'Your devices',
+  'identity label': 'You',
+  'apps label': 'Apps',
+  'contacts label': 'Contacts'
 };

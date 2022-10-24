@@ -12,6 +12,7 @@ import { defaultButtonColors, primaryButtonColors } from '../Button';
 interface NavMenuItemSharedProps {
   children: ReactNode
   active?: boolean
+  separator?: false
 }
 
 export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
@@ -25,9 +26,13 @@ export interface NavMenuInvokerItemProps extends NavMenuItemSharedProps {
   children: ReactNode
 }
 
-export type NavMenuItem = NavMenuLinkItemProps | NavMenuInvokerItemProps;
+export interface NavMenuSeparatorProps {
+  separator: true
+}
 
-export interface NavMenuProps {
+export type NavMenuItem = NavMenuLinkItemProps | NavMenuInvokerItemProps | NavMenuSeparatorProps;
+
+export interface NavMenuProps extends ComponentProps<typeof NavigationMenuPrimitive.Root> {
   items: NavMenuItem[]
 }
 
@@ -86,17 +91,24 @@ const NavMenuLinkItem = ({
 
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
-const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
+export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
+  return <span role='none' className='h-5 border-l border-neutral-300 dark:border-neutral-700' />;
+};
 
-export const NavMenu = ({ items }: NavMenuProps) => {
+const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
+const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
+
+export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
-    <NavigationMenuPrimitive.Root className='relative flex justify-center'>
+    <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
       <NavigationMenuPrimitive.List
-        className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
+        className='relative flex flex-row items-center rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
         {items.map((item: NavMenuItem, i) => (
           isLinkItem(item)
             ? <NavMenuLinkItem {...item} />
-            : <NavMenuInvokerItem {...item} />
+            : isSeparator(item)
+              ? <NavMenuSeparatorItem {...item} />
+              : <NavMenuInvokerItem {...item} />
         ))}
 
         <NavigationMenuPrimitive.Indicator

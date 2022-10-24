@@ -2,56 +2,83 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Planet, DeviceMobileCamera, UserCircle } from 'phosphor-react';
-import React, { useCallback } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { DeviceMobileCamera, Planet, UserCircle, AddressBook, SignOut } from 'phosphor-react';
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { useProfile } from '@dxos/react-client';
-import { FullScreen } from '@dxos/react-components';
-import { Button, NavMenu, useTranslation } from '@dxos/react-uikit';
+import {
+  Main,
+  NavMenu,
+  NavMenuSeparatorProps,
+  useTranslation
+} from '@dxos/react-uikit';
 
-import { AppToolbar } from './AppToolbar';
+const iconAttributes = { className: 'mr-1 h-5 w-5' };
 
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
   const profile = useProfile();
   const location = useLocation();
-  const navigate = useNavigate();
 
-  const handleLock = useCallback(() => {
-    navigate('/');
-  }, []);
-
-  const navMenuItems = [
+  const centerMenuItems = [
     {
-      label: <div className='flex items-center'><Planet className='mr-1 h-5 w-5' /><span>{t('spaces label')}</span></div>,
+      label: t('lock label'),
+      icon: <SignOut mirrored {...iconAttributes} />,
+      pathName: '/'
+    },
+    {
+      separator: true
+    } as NavMenuSeparatorProps,
+    {
+      label: t('spaces label'),
+      icon: <Planet {...iconAttributes} />,
       pathName: '/spaces'
     },
     {
-      label: <div className='flex items-center'><DeviceMobileCamera className='mr-1 h-5 w-5' /><span>{t('devices label')}</span></div>,
+      label: t('contacts label'),
+      icon: <AddressBook {...iconAttributes} />,
+      pathName: '/contacts'
+    },
+    {
+      label: t('apps label'),
+      icon: <UserCircle {...iconAttributes} />,
+      pathName: '/apps'
+    },
+    {
+      separator: true
+    } as NavMenuSeparatorProps,
+    {
+      label: t('devices label'),
+      icon: <DeviceMobileCamera {...iconAttributes} />,
       pathName: '/devices'
     },
     {
-      label: <div className='flex items-center'><UserCircle className='mr-1 h-5 w-5' /><span>{t('identity label')}</span></div>,
+      label: t('identity label'),
+      icon: <UserCircle {...iconAttributes} />,
       pathName: '/identity'
     }
   ];
 
   return (
-    <FullScreen>
-      <AppToolbar dense profile={profile}>
-        <Button onClick={handleLock}>{t('lock label')}</Button>
-      </AppToolbar>
-
-      <NavMenu
-        items={navMenuItems.map((navMenuItem) => ({
-          triggerLinkProps: { href: `#${navMenuItem.pathName}` },
-          children: navMenuItem.label,
-          ...(location.pathname.startsWith(navMenuItem.pathName) && { active: true })
-        }))}
-      />
+    <Main className='mt-24'>
+        <NavMenu
+          items={centerMenuItems.map((navMenuItem) => (('separator' in navMenuItem) ? navMenuItem : {
+            triggerLinkProps: { href: `#${navMenuItem.pathName}` },
+            children: (
+              <div className='flex items-center'>
+                {navMenuItem.icon}
+                <span>{navMenuItem.label}</span>
+              </div>
+            ),
+            ...(navMenuItem.pathName.length > 1 && location.pathname.startsWith(navMenuItem.pathName) && {
+              active: true
+            })
+          }))}
+          className='fixed top-5 left-0 right-0'
+        />
 
       <Outlet />
-    </FullScreen>
+    </Main>
   );
 };

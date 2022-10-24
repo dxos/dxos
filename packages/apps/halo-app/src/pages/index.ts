@@ -3,7 +3,9 @@
 //
 
 export * from './AppLayout';
+export * from './AppsPage';
 export * from './AuthPage';
+export * from './ContactsPage';
 export * from './CreateProfilePage';
 export * from './DevicesPage';
 export * from './IdentityPage';

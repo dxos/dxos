@@ -12,7 +12,9 @@ import { UiKitProvider } from '@dxos/react-uikit';
 
 import {
   AppLayout,
+  AppsPage,
   AuthPage,
+  ContactsPage,
   CreateProfilePage,
   DevicesPage,
   IdentityPage,
@@ -66,6 +68,8 @@ const Routes = () => useRoutes([
           { path: '/devices', element: <DevicesPage /> },
           { path: '/identity', element: <IdentityPage /> },
           { path: '/spaces', element: <SpacesPage /> },
+          { path: '/contacts', element: <ContactsPage /> },
+          { path: '/apps', element: <AppsPage /> },
           { path: '/spaces/:space', element: <SpacePage /> }
         ]
       }]
