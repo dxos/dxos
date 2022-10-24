@@ -2,36 +2,68 @@
 // Copyright 2022 DXOS.org
 //
 
-import i18Next from 'i18next';
-import React, { PropsWithChildren, ReactNode, Suspense } from 'react';
+import i18Next, { Resource } from 'i18next';
+import React, {
+  PropsWithChildren,
+  ReactNode,
+  Suspense,
+  useEffect
+} from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
-import { UntranslatedLoading } from '../components';
+import { Loading } from '@dxos/react-ui';
+
 import * as enUS from './locales/en-US';
+
+const basicNS = 'uikit';
 
 export const resources = {
   'en-US': enUS
 } as const;
 
-export const i18n = i18Next.use(initReactI18next).init({
+void i18Next.use(initReactI18next).init({
   resources,
   lng: 'en-US',
+  defaultNS: basicNS,
   interpolation: {
     escapeValue: false
   }
 });
 
+export interface TranslationsProviderProps {
+  children?: ReactNode
+  fallback?: ReactNode
+  resourceExtensions?: Resource
+}
+
+const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
+  const { t: _t } = useTranslation(basicNS);
+  return <>{children}</>;
+};
+
 export const TranslationsProvider = ({
-  children,
-  fallback
-}: PropsWithChildren<{ fallback?: ReactNode }>) => {
-  const { t: _t } = useTranslation();
+  fallback,
+  resourceExtensions,
+  children
+}: TranslationsProviderProps) => {
+  useEffect(() => {
+    if (resourceExtensions) {
+      Object.keys(resourceExtensions).forEach((language) => {
+        Object.keys(resourceExtensions[language]).forEach((ns) => {
+          i18Next.addResourceBundle(language, ns, resourceExtensions[language][ns]);
+        });
+      });
+    }
+  }, [resourceExtensions]);
   return (
     <Suspense
-      fallback={fallback ??
-        <UntranslatedLoading label={enUS.translation['loading translations']} />}
+      fallback={
+        fallback ?? (
+          <Loading label={enUS[basicNS]['loading translations']} />
+        )
+      }
     >
-      {children}
+      <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
     </Suspense>
   );
 };

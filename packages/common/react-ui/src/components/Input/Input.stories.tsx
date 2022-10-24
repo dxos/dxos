@@ -5,7 +5,6 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { ValidationValence } from '../../props';
 import { templateForComponent } from '../../testing';
 import { Input, InputProps } from './Input';
 
@@ -17,10 +16,10 @@ export default {
     validationValence: {
       control: 'select',
       options: [
-        ValidationValence.error,
-        ValidationValence.warning,
-        ValidationValence.info,
-        ValidationValence.success
+        'success',
+        'info',
+        'warning',
+        'error'
       ]
     }
   }
@@ -79,7 +78,7 @@ export const InputWithErrorAndDescription = () => (
       label: 'Described invalid input',
       placeholder: 'This input has both an accessible description and a validation error',
       description: 'This description is identified separately in the accessibility tree.',
-      validationValence: ValidationValence.error,
+      validationValence: 'error',
       validationMessage: 'The input has an error.'
     }}
   />
@@ -91,7 +90,7 @@ export const InputWithValidationAndDescription = () => (
       label: 'Described input with validation message',
       placeholder: 'This input is styled to express a validation valence',
       description: 'This description is extra.',
-      validationValence: ValidationValence.success,
+      validationValence: 'success',
       validationMessage: 'This validation message is really part of the description.'
     }}
   />
