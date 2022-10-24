@@ -49,7 +49,11 @@ export class TextModel extends Model<Doc, Mutation> {
   constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
     super(meta, itemId, getState, writeStream);
 
-    this._getState().on('update', this._handleDocUpdated.bind(this));
+    let unsubscribe = this._subscribeToDocUpdates();
+    this.update.on(() => {
+      unsubscribe();
+      unsubscribe = this._subscribeToDocUpdates();
+    });
   }
 
   get doc (): Doc {
@@ -63,6 +67,12 @@ export class TextModel extends Model<Doc, Mutation> {
   // TODO(burdon): How is this different?
   get textContent () {
     return this._textContentInner(this.content);
+  }
+
+  private _subscribeToDocUpdates () {
+    const cb = this._handleDocUpdated.bind(this);
+    this._getState().on('update', cb);
+    return () => this._getState().off('update', cb);
   }
 
   private async _handleDocUpdated (update: Uint8Array, origin: any) {
@@ -117,7 +127,7 @@ export class TextModel extends Model<Doc, Mutation> {
       node.insert(0, [paragraph]);
     }
 
-    // TODO(marik-d): What is the type of `node` here?
+    // TODO(dmaretskyi): What is the type of `node` here?
     for (const childNode of (node as any).toArray()) {
       const inserted = this._insertInner(childNode as any, innerIndex, text);
       if (inserted === true) {

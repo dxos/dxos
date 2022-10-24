@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "@dxos/mocha",
+      "mocha",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ]
+}

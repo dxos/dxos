@@ -7,13 +7,12 @@ import React, {
   PropsWithChildren,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState
 } from 'react';
 
 import type { Item } from '@dxos/client';
-import { useClient, useSelection } from '@dxos/react-client';
+import { useSelection } from '@dxos/react-client';
 import { Button, Group } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
@@ -28,7 +27,6 @@ export interface TextItemContextValue {
 export const TextItemContext = createContext<TextItemContextValue>({});
 
 export const TextItemProvider = (props: PropsWithChildren<{}>) => {
-  const client = useClient();
   const { party } = useParty();
 
   const [item, setItem] = useState<Item<TextModel>>();
@@ -37,10 +35,6 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
   );
 
   const textModelDocumentContextValue = useMemo(() => ({ item }), [item]);
-
-  useEffect(() => {
-    client.echo.registerModel(TextModel);
-  }, [client]);
 
   const onCreate = useCallback(() => {
     void party!.database

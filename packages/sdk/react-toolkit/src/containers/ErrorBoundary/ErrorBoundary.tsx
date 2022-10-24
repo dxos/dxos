@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     fatal: false // Whether the head error is fatal or not.
   };
 
-  // Note: Render errors also trigger global onerror before componentDidCatch.
+  // NOTE: Render errors also trigger global onerror before componentDidCatch.
   override componentDidCatch (err: Error) {
     const { errors } = this.state;
 

@@ -124,7 +124,7 @@ Storage for keys (on disk or in-memory).
 ***Party*** -
 Set of Agents that can access a digital resource (such as an ECHO Space).
 
-> **Note:** Party was the old term for a Space.
+> **NOTE:** Party was the old term for a Space.
 
 ***Presentation***
 Message containing a Credential that is signed by the Subject.

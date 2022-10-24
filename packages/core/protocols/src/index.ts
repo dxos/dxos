@@ -3,6 +3,5 @@
 //
 
 export * from './proto';
-export * from './timeframe';
 export * from './testing';
 export * from './types';

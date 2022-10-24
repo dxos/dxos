@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
 describe('WebRTCTransport', function () {

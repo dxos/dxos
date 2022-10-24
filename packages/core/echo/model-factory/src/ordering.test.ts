@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 
 import { getInsertionIndex } from './ordering';
 import { ModelMessage } from './types';

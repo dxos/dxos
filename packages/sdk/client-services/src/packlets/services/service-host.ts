@@ -6,7 +6,7 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
@@ -59,20 +59,22 @@ export class ClientServiceHost implements ClientServiceProvider {
         ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
       transportFactory: transportFactory ?? (
+        // TODO(burdon): Should require memory transport.
         networkingEnabled
           ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
-          : inMemoryTransportFactory),
+          : MemoryTransportFactory),
       log: true
     });
 
-    this._context = new ServiceContext(
-      storage,
-      networkManager,
-      modelFactory
-    );
+    this._context = new ServiceContext(storage, networkManager, modelFactory);
 
     this._services = {
-      ...createServices({ config: this._config, echo: null, context: this._context, signer: this._signer }),
+      ...createServices({
+        config: this._config,
+        echo: null,
+        context: this._context,
+        signer: this._signer
+      }),
       DevtoolsHost: this._createDevtoolsService(networkManager) // TODO(burdon): Move into createServices.
     };
   }

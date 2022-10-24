@@ -4,7 +4,8 @@
     "outDir": "dist",
     "types": [
       "@dxos/shims",
-      "@dxos/mocha"
+      "@dxos/mocha",
+      "@dxos/shims"
     ]
   },
   "include": [

@@ -10,7 +10,7 @@ import { Filtering } from './filtering';
 import { RegistryRecord } from './registry-client';
 
 describe('Filtering', function () {
-  // TODO(marik-d): Fix those tests.
+  // TODO(dmaretskyi): Fix those tests.
   describe('Resources filtering', function () {
     it('Filters by type, when equal, then filtered in', function () {
       // code const data = [{ messageFqn: 'app' } as unknown as Resource, { mesageFqn: 'bot' } as unknown as Resource];

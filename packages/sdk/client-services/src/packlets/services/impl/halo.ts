@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ObjectModel } from '@dxos/object-model';
 import {
@@ -16,7 +17,6 @@ import {
   GetPreferenceRequest,
   GetPreferenceResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { SubscriptionGroup } from '@dxos/util';
 
 import { HaloSigner } from '../signer';
 
@@ -35,7 +35,7 @@ export class HaloService implements HaloServiceRpc {
     assert(this.signer, 'Signer not set.');
     assert(request.publicKey, 'Provide a public_key of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
-    assert(key, 'Key not found.');
+    assert(key, `Key not found: ${request.publicKey.toHex()}`);
     return this.signer.sign(request, key);
   }
 
@@ -62,17 +62,16 @@ export class HaloService implements HaloServiceRpc {
         next({ contacts: [] });
       }
 
-      const subGroup = new SubscriptionGroup();
-
+      const subscriptions = new EventSubscriptions();
       setTimeout(async () => {
         await this.echo.halo.identityReady.waitForCondition(() => !!this.echo.halo.identity);
 
         const resultSet = this.echo.halo.queryContacts();
         next({ contacts: resultSet.value });
-        subGroup.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
+        subscriptions.add(resultSet.update.on(() => next({ contacts: resultSet.value })));
       });
 
-      return () => subGroup.unsubscribe();
+      return () => subscriptions.clear();
     });
   }
 

@@ -114,9 +114,8 @@ export class AuthPlugin {
 
       // Success!
       // log(`Authenticated peer: ${credsPeerId.toHex()}`);
-      /* TODO(dboreham): Should this be a callback rather than an event, or communicated some other way to
-      *   code that needs to know about auth success events?
-      */
+      // TODO(dboreham): Should this be a callback rather than an event,
+      //  or communicate some other way to code that needs to know about auth success events?
       // this.emit('authenticated', credsPeerId.asBuffer());
     } catch (err: any) {
       log(err);

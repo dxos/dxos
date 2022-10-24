@@ -23,7 +23,7 @@ export interface CreateItemOption<M extends Model> {
   model?: ModelConstructor<M>
   type?: ItemType
   parent?: ItemID
-  props?: any // TODO(marik-d): Type this better. Rename properties?
+  props?: any // TODO(dmaretskyi): Type this better. Rename properties?
 }
 
 export interface CreateLinkOptions<M extends Model, L extends Model, R extends Model> {
@@ -31,7 +31,7 @@ export interface CreateLinkOptions<M extends Model, L extends Model, R extends M
   type?: ItemType
   source: Item<L>
   target: Item<R>
-  props?: any // TODO(marik-d): Type this better.
+  props?: any // TODO(dmaretskyi): Type this better.
 }
 
 export enum State {

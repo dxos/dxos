@@ -16,11 +16,11 @@ import { throwUnhandledRejection } from '@dxos/debug';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './packlets/proxies';
 

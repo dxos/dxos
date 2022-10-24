@@ -2,8 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import { promiseTimeout } from './async';
+
 /**
  * Returns a tuple containing a Promise that will be resolved when the resolver function is called.
+ * @deprecated Use `Trigger` instead.
  */
 export function trigger (timeout?: number): [() => Promise<void>, () => void]
 export function trigger <T>(timeout?: number): [() => Promise<T>, (arg: T) => void]
@@ -14,6 +17,7 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
     if (timeout) {
       setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
     }
+
     callback = resolve;
   });
 
@@ -23,8 +27,12 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
   return [provider, resolver];
 }
 
+export type TriggerOptions = {
+  autoReset: boolean
+}
+
 /**
- * Multiple-use version of `trigger`.
+ * Enables blocked listeners to be awakened with optional timeouts.
  *
  * Has two states:
  * - WAITING: promise is in pending state and will be resolved once `wake()` is called.
@@ -33,25 +41,45 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
  * Trigger starts in WAITING state initially.
  * Use `reset()` to switch resolved trigger back to WAITING state.
  */
-export class Trigger {
-  _promise!: Promise<void>;
-  _wake!: () => void;
+export class Trigger<T = void> {
+  private _promise!: Promise<T>;
+  private _wake!: (value: T) => void;
 
-  constructor () {
+  constructor (
+    private _options: TriggerOptions = { autoReset: false }
+  ) {
     this.reset();
   }
 
-  wait () {
-    return this._promise;
+  /**
+   * Wait until wake is called, with optional timeout.
+   */
+  async wait ({ timeout }: { timeout?: number } = {}): Promise<T> {
+    if (timeout) {
+      return promiseTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
+    } else {
+      return this._promise;
+    }
   }
 
-  wake () {
-    this._wake();
+  /**
+   * Wake blocked callers (if any).
+   */
+  wake (value: T) {
+    this._wake(value);
+    if (this._options.autoReset) {
+      this.reset();
+    }
+
+    return this;
   }
 
+  /**
+   * Reset promise (new waiters will wait).
+   */
   reset () {
-    const [getPromise, wake] = trigger();
-    this._promise = getPromise();
-    this._wake = wake;
+    this._promise = new Promise<T>((resolve) => {
+      this._wake = resolve;
+    });
   }
 }

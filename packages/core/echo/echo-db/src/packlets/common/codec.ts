@@ -3,10 +3,16 @@
 //
 
 import { Codec } from '@dxos/codec-protobuf';
+import { createCodecEncoding } from '@dxos/hypercore';
 import { schema } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 /**
- * Codec for messages written on feeds.
+ * Codec for feed messages.
  */
 export const codec: Codec<FeedMessage> = schema.getCodecForType('dxos.echo.feed.FeedMessage');
+
+/**
+ * Value encoding used by feed store.
+ */
+export const valueEncoding = createCodecEncoding(codec);

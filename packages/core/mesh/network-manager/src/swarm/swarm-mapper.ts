@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, EventSubscriptions } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState } from './connection';
 import { Swarm } from './swarm';
@@ -28,11 +28,9 @@ export interface PeerInfo {
 type Unsubscribe = () => void;
 
 export class SwarmMapper {
-  private readonly _subscriptions = new SubscriptionGroup();
-
-  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(key => key.toHex());
-
-  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(key => key.toHex());
+  private readonly _subscriptions = new EventSubscriptions();
+  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(PublicKey.hash);
+  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(PublicKey.hash);
 
   get peers (): PeerInfo[] {
     return Array.from(this._peers.values());
@@ -44,13 +42,13 @@ export class SwarmMapper {
     private readonly _swarm: Swarm,
     private readonly _presence: PresencePlugin | undefined
   ) {
-    this._subscriptions.push(_swarm.connectionAdded.on(connection => {
+    this._subscriptions.add(_swarm.connectionAdded.on(connection => {
       this._update();
       this._connectionSubscriptions.set(connection.remoteId, connection.stateChanged.on(() => {
         this._update();
       }));
     }));
-    this._subscriptions.push(_swarm.connectionRemoved.on(connection => {
+    this._subscriptions.add(_swarm.connectionRemoved.on(connection => {
       this._connectionSubscriptions.get(connection.remoteId)?.();
       this._connectionSubscriptions.delete(connection.remoteId);
       this._update();
@@ -59,7 +57,7 @@ export class SwarmMapper {
       const cb = () => {
         this._update();
       };
-      this._subscriptions.push(_presence.graphUpdated.on(cb));
+      this._subscriptions.add(_presence.graphUpdated.on(cb));
     }
     this._update();
   }
@@ -99,12 +97,12 @@ export class SwarmMapper {
         }
       });
     }
-    log(`Graph changed directConnections=${this._swarm.connections.length} totalPeersInSwarm=${this._peers.size}`);
+    log('graph changed', { directConnections: this._swarm.connections.length, totalPeersInSwarm: this._peers.size });
     this.mapUpdated.emit(Array.from(this._peers.values()));
   }
 
   destroy () {
     Array.from(this._connectionSubscriptions.values()).forEach(cb => cb());
-    this._subscriptions.unsubscribe();
+    this._subscriptions.clear();
   }
 }

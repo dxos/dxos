@@ -34,6 +34,8 @@ jobs:
       - *docker_image
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
     steps:
       - checkout
       - *cache_restore
@@ -43,8 +45,8 @@ jobs:
       - nx/set-shas
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]

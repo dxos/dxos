@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
+
 export type AsyncCallback<T> = (param: T) => Promise<void>;
 
 export type Provider<T> = () => T
@@ -31,5 +33,4 @@ export const getAsyncValue = async <T> (value: MaybeFunction<MaybePromise<T>>) =
   }
 };
 
-export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> &
-  Partial<Pick<Type, Key>>;
+export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Codec } from './interface';
+import type { Codec } from './codec';
 
 /**
  * Protobuf codec returns instances of Uint8Arrays, but some storages expect to receive Buffers.
