@@ -14,7 +14,13 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/hypercore"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/timeframe"
     }
   ]
 }
