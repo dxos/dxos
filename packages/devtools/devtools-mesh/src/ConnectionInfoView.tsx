@@ -7,11 +7,11 @@ import React from 'react';
 import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import { IconButton } from '@mui/material';
 
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { CopyText, JsonTreeView } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo: SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo
+  connectionInfo: ConnectionInfo
   onReturn?: () => void
 }
 

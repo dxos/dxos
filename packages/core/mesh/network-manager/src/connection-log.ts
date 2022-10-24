@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
@@ -24,7 +24,7 @@ export class ConnectionLog {
    */
   private readonly _swarms = new ComplexMap<
     PublicKey,
-    SubscribeToSwarmInfoResponse.SwarmInfo
+    SwarmInfo
   >(PublicKey.hash);
 
   readonly update = new Event();
@@ -36,12 +36,12 @@ export class ConnectionLog {
     );
   }
 
-  get swarms (): SubscribeToSwarmInfoResponse.SwarmInfo[] {
+  get swarms (): SwarmInfo[] {
     return Array.from(this._swarms.values());
   }
 
   swarmJoined (swarm: Swarm) {
-    const info: SubscribeToSwarmInfoResponse.SwarmInfo = {
+    const info: SwarmInfo = {
       id: swarm.id,
       topic: swarm.topic,
       isActive: true,
@@ -53,7 +53,7 @@ export class ConnectionLog {
     this.update.emit();
 
     swarm.connectionAdded.on((connection) => {
-      const connectionInfo: SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo =
+      const connectionInfo: ConnectionInfo =
         {
           state: ConnectionState.INITIAL,
           remotePeerId: connection.remoteId,

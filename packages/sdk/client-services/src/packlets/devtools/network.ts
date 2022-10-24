@@ -12,7 +12,7 @@ import {
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse,
   SubscribeToSwarmInfoResponse
-} from '@dxos/protocols/proto/dxos/devtools';
+} from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { DevtoolsServiceDependencies } from './devtools-context';
 

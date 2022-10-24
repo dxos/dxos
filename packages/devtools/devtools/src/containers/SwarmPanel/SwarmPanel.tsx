@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { SwarmDetails } from '@dxos/devtools-mesh';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { useDevtools, useStream } from '@dxos/react-client';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 
 export const SwarmPanel = () => {
   const devtoolsHost = useDevtools();
@@ -17,6 +17,6 @@ export const SwarmPanel = () => {
 
   // TODO(burdon): Requires cast despite subsitutions.
   return (
-    <SwarmDetails swarms={data as SubscribeToSwarmInfoResponse.SwarmInfo[]} />
+    <SwarmDetails swarms={data as SwarmInfo[]} />
   );
 };

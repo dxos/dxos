@@ -29,7 +29,7 @@ import {
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
@@ -130,7 +130,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     setSignalTrace(msgs => [...msgs, msg]);
   }), [controlPeer]);
 
-  const [swarmInfo, setSwarmInfo] = useState<SubscribeToSwarmInfoResponse.SwarmInfo[]>([]);
+  const [swarmInfo, setSwarmInfo] = useState<SwarmInfo[]>([]);
   useEffect(() => {
     if (controlPeer) {
       setSwarmInfo(controlPeer.log.swarms);

@@ -8,7 +8,7 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
+import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import { subscribeToNetworkStatus as subscribeToSignalStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../devtools/network';
