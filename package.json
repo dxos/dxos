@@ -34,7 +34,7 @@
     "@dxos/plate": "workspace:*",
     "@dxos/playwright": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/shims": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/typedoc-plugin-plate": "workspace:*",
     "@mdx-js/react": "^2.1.3",

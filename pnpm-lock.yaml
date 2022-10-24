@@ -35,9 +35,9 @@ importers:
       '@dxos/plate': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
-      '@dxos/shims': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
+      '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
       '@nrwl/eslint-plugin-nx': 14.5.7
@@ -126,9 +126,9 @@ importers:
       '@dxos/plate': link:tools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
-      '@dxos/shims': link:packages/common/shims
       '@dxos/signal': link:packages/core/mesh/signal
       '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
+      '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.8.4
       '@nrwl/eslint-plugin-nx': 14.5.7_nrc2d4knn7wn75eoukzzbkawsm
@@ -882,9 +882,6 @@ importers:
       '@sentry/types': 7.16.0
       sentry-testkit: 4.1.0
 
-  packages/common/shims:
-    specifiers: {}
-
   packages/common/telemetry:
     specifiers:
       '@dxos/sentry': workspace:*
@@ -920,6 +917,9 @@ importers:
       util: 0.12.5
     devDependencies:
       '@types/debug': 4.1.7
+
+  packages/common/typings:
+    specifiers: {}
 
   packages/common/util:
     specifiers:

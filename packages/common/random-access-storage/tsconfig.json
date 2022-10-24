@@ -8,7 +8,7 @@
     "outDir": "dist",
     "skipLibCheck": true,
     "types": [
-      "@dxos/shims",
+      "@dxos/typings",
       "mocha",
       "node"
     ]
