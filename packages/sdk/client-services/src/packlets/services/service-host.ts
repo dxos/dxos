@@ -2,31 +2,44 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import { Config } from "@dxos/config";
+import { todo } from "@dxos/debug";
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  WebsocketSignalManager,
+} from "@dxos/messaging";
+import { ModelFactory } from "@dxos/model-factory";
+import {
+  createWebRTCTransportFactory,
+  MemoryTransportFactory,
+  NetworkManager,
+  TransportFactory,
+} from "@dxos/network-manager";
+import { ObjectModel } from "@dxos/object-model";
+import { DevtoolsHost } from "@dxos/protocols/proto/dxos/devtools/host";
 
-import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import { subscribeToNetworkStatus as subscribeToSignalStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../devtools/network';
-import { createStorageObjects } from '../storage';
-import { ServiceContext } from './service-context';
-import { createServices } from './service-factory';
-import { ClientServiceProvider, ClientServices } from './services';
-import { HaloSigner } from './signer';
+import { DevtoolsHostEvents, DevtoolsServiceDependencies } from "../devtools";
+import {
+  subscribeToNetworkStatus as subscribeToSignalStatus,
+  subscribeToSignalTrace,
+  subscribeToSwarmInfo,
+} from "../devtools/network";
+import { createStorageObjects } from "../storage";
+import { ServiceContext } from "./service-context";
+import { createServices } from "./service-factory";
+import { ClientServiceProvider, ClientServices } from "./services";
+import { HaloSigner } from "./signer";
 // import { DevtoolsHostEvents } from '../devtools';
 
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
 type ClientServiceHostParams = {
-  config: Config
-  modelFactory?: ModelFactory
-  transportFactory?: TransportFactory
-  signer?: HaloSigner
-}
+  config: Config;
+  modelFactory?: ModelFactory;
+  transportFactory?: TransportFactory;
+  signer?: HaloSigner;
+};
 
 /**
  * Remote service implementation.
@@ -38,32 +51,39 @@ export class ClientServiceHost implements ClientServiceProvider {
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
-  constructor ({
+  constructor({
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
     signer,
-    transportFactory
+    transportFactory,
   }: ClientServiceHostParams) {
     this._config = config;
     this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(
-      this._config.get('runtime.client.storage', {})!
+      this._config.get("runtime.client.storage", {})!
     );
 
-    const networkingEnabled = this._config.get('runtime.services.signal.server');
+    const networkingEnabled = this._config.get(
+      "runtime.services.signal.server"
+    );
 
     const networkManager = new NetworkManager({
       signalManager: networkingEnabled
-        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
+        ? new WebsocketSignalManager([
+            this._config.get("runtime.services.signal.server")!,
+          ])
         : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory: transportFactory ?? (
+      transportFactory:
+        transportFactory ??
         // TODO(burdon): Should require memory transport.
-        networkingEnabled
-          ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
+        (networkingEnabled
+          ? createWebRTCTransportFactory({
+              iceServers: this._config.get("runtime.services.ice"),
+            })
           : MemoryTransportFactory),
-      log: true
+      log: true,
     });
 
     this._context = new ServiceContext(storage, networkManager, modelFactory);
@@ -73,27 +93,27 @@ export class ClientServiceHost implements ClientServiceProvider {
         config: this._config,
         echo: null,
         context: this._context,
-        signer: this._signer
+        signer: this._signer,
       }),
-      DevtoolsHost: this._createDevtoolsService(networkManager) // TODO(burdon): Move into createServices.
+      DevtoolsHost: this._createDevtoolsService(networkManager), // TODO(burdon): Move into createServices.
     };
   }
 
-  get services () {
+  get services() {
     return this._services;
   }
 
   // TODO(dmaretskyi): progress.
-  async open (onProgressCallback?: ((progress: any) => void) | undefined) {
+  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
     await this._context.open();
     // this._devtoolsEvents.ready.emit();
   }
 
-  async close () {
+  async close() {
     await this._context.close();
   }
 
-  get echo () {
+  get echo() {
     return todo();
   }
 
@@ -101,16 +121,22 @@ export class ClientServiceHost implements ClientServiceProvider {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _createDevtoolsService (networkManager: NetworkManager): DevtoolsHost {
+  private _createDevtoolsService(networkManager: NetworkManager): DevtoolsHost {
     const dependencies: DevtoolsServiceDependencies = {
       networkManager
+      //   config: this._config,
+      //   echo: this._echo,
+      //   feedStore: this._echo.feedStore,
+      //   modelFactory: this._echo.modelFactory,
+      //   keyring: this._echo.halo.keyring,
+      //   debug // Export debug lib.
     } as any;
 
     // return createDevtoolsHost(dependencies, this._devtoolsEvents);
     return {
       subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
       subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
-      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies)
+      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies),
     } as any;
   }
 }
