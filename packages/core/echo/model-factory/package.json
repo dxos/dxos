@@ -18,6 +18,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3"

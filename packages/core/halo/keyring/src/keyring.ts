@@ -17,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
  * Manages keys.
  */
 export class Keyring implements Signer {
-  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
+  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
 
   constructor (
     private readonly _storage: Directory = createStorage({ type: StorageType.RAM }).createDirectory('keyring')
@@ -49,7 +49,7 @@ export class Keyring implements Signer {
       const file = this._storage.getOrCreateFile(key.toHex());
       const { size } = await file.stat();
       if (size === 0) {
-        throw new Error('Key not found');
+        throw new Error(`Key not found: ${key.toHex()}`);
       }
 
       const recordBytes = await file.read(0, size);

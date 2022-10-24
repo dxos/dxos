@@ -100,7 +100,7 @@ it('balancedBinTree: broadcast a message.', async function () {
       peerFrom.connect(peerTo);
       peerTo.connect(peerFrom);
 
-      // TODO(marik-d): Fix network generator types.
+      // TODO(dmaretskyi): Fix network generator types.
       return null as any;
     }
   });
@@ -121,7 +121,7 @@ it('complete: broadcast a message.', async function () {
       peerFrom.connect(peerTo);
       peerTo.connect(peerFrom);
 
-      // TODO(marik-d): Fix network generator types.
+      // TODO(dmaretskyi): Fix network generator types.
       return null as any;
     }
   });

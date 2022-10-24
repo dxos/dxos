@@ -27,6 +27,7 @@ describe('RpcPeer', function () {
         messageHandler: async msg => createPayload(),
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -40,10 +41,12 @@ describe('RpcPeer', function () {
 
     it('open waits for the other peer to call open', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
+
       const alice: RpcPeer = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -55,14 +58,13 @@ describe('RpcPeer', function () {
       });
 
       await sleep(5);
-
       expect(aliceOpen).toEqual(false);
 
       await bob.open();
-      await aliceOpen;
+
+      await promise;
 
       expect(aliceOpen).toEqual(true);
-      await promise;
     });
 
     it('one peer can open before the other is created', async function () {
@@ -72,8 +74,8 @@ describe('RpcPeer', function () {
         messageHandler: async msg => createPayload(),
         port: alicePort
       });
-      const aliceOpen = alice.open();
 
+      const aliceOpen = alice.open();
       await sleep(5);
 
       const bob = new RpcPeer({
@@ -236,6 +238,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -270,6 +273,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -297,6 +301,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort,
@@ -325,6 +330,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort,
@@ -359,6 +365,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -394,6 +401,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -460,6 +468,7 @@ describe('RpcPeer', function () {
         },
         port: alicePort
       });
+
       const bob = new RpcPeer({
         messageHandler: async msg => createPayload(),
         port: bobPort
@@ -507,6 +516,7 @@ describe('RpcPeer', function () {
         port: alicePort,
         noHandshake: true
       });
+
       const bob = new RpcPeer({
         messageHandler: async (method, msg) => createPayload(),
         port: bobPort,

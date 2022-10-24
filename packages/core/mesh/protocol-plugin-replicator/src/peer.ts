@@ -6,15 +6,18 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import { FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
+import { ComplexMap } from '@dxos/util';
 
 const log = debug('dxos.replicator.peer');
 
 export class Peer {
   // Active reeds being replicated.
-  private readonly _feeds = new Map<string, FeedDescriptor>();
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
   readonly closed = new Event();
 
@@ -58,7 +61,7 @@ export class Peer {
   /**
    * Replicate multiple feeds.
    */
-  replicate (feeds: FeedDescriptor[] = []) {
+  replicate (feeds: FeedWrapper<FeedMessage>[] = []) {
     feeds.forEach(feed => this._replicate(feed));
   }
 
@@ -76,24 +79,21 @@ export class Peer {
 
   /**
    * Replicate a feed.
-   * @param {FeedDescriptor} feedDescriptor
-   * @returns {boolean} - true if `feed.replicate` was called and succeeds.
-   * @private
    */
-  _replicate (feedDescriptor: FeedDescriptor): boolean {
-    assert(feedDescriptor && feedDescriptor.feed.replicate); // TODO(burdon): Remvoe.
+  _replicate (feed: FeedWrapper<FeedMessage>): boolean {
+    assert(feed && feed.core.replicate); // TODO(burdon): Remove.
     // if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
     //   return false;
     // }
 
     const { stream } = this._protocol;
     if (stream.destroyed) {
-      log('Stream destroyed; cannot replicate.');
+      log('stream destroyed; cannot replicate.');
       return false;
     }
 
     // Already replicating.
-    if (this._feeds.has(feedDescriptor.key.toHex())) {
+    if (this._feeds.has(feed.key)) {
       return true;
     }
 
@@ -105,13 +105,9 @@ export class Peer {
     //   stream.expectedFeeds = stream.feeds.length + 1;
     // }
 
-    feedDescriptor.feed.replicate(this._protocol.initiator, {
-      stream,
-      live: true
-    });
-
-    this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
-    log('Stream replicated', feedDescriptor.key.toHex());
+    feed.replicate(this._protocol.initiator, { stream, live: true });
+    this._feeds.set(feed.key, feed);
+    log('stream replicated', { feedKey: feed.key });
     return true;
   }
 }

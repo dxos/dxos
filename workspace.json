@@ -86,6 +86,7 @@
     "telemetry": "packages/common/telemetry",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
+    "timeframe": "packages/common/timeframe",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "typedoc-plugin-plate": "tools/typedoc-plugin-plate",
     "util": "packages/common/util",

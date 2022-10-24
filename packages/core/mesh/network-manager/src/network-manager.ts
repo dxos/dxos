@@ -37,8 +37,8 @@ export interface NetworkManagerOptions {
 export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
@@ -57,7 +57,6 @@ export class NetworkManager {
     // Listen for signal manager events.
     {
       this._signalManager = signalManager;
-
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
       );
@@ -105,7 +104,7 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
 
-    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
+    log('joining', { topic: options.topic, peerId: options.peerId, topology: options.topology.toString() });
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm ${topic}`);
     }
@@ -138,7 +137,7 @@ export class NetworkManager {
   }
 
   async leaveProtocolSwarm (topic: PublicKey) {
-    log(`Leave ${topic}`);
+    log('leaving', { topic });
 
     if (!this._swarms.has(topic)) {
       return;
@@ -163,11 +162,12 @@ export class NetworkManager {
   /**
    * @deprecated
    */
-  // TODO(marik-d): Remove.
+  // TODO(dmaretskyi): Remove.
   async start () {
     console.warn('NetworkManger.start is deprecated.');
   }
 
+  // TODO(burdon): Open/close?
   async destroy () {
     for (const topic of this._swarms.keys()) {
       await this.leaveProtocolSwarm(topic).catch((err) => {

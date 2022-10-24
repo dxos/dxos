@@ -10,12 +10,13 @@ import { Stream } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
-import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { FeedWrapper, FeedStore, FeedFactory } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
@@ -25,20 +26,20 @@ import { ReplicatorPlugin, ReplicatorMiddleware } from './replicator-plugin';
 const noop = () => {};
 
 interface MiddlewareOptions {
-  feedStore: FeedStore
-  onUnsubscribe?: (feedStore: FeedStore) => void
-  onLoad?: (feedStore: FeedStore) => FeedDescriptor[]
+  feedStore: FeedStore<FeedMessage>
+  onUnsubscribe?: (feedStore: FeedStore<FeedMessage>) => void
+  onLoad?: (feedStore: FeedStore<FeedMessage>) => FeedWrapper<FeedMessage>[]
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
-  const encodeFeed = (feed: FeedDescriptor): FeedData => ({
+  const encodeFeed = (feed: FeedWrapper<FeedMessage>): FeedData => ({
     key: feed.key.asBuffer(), // TODO(dmaretskyi): Has to be buffer because of broken encoding.
-    discoveryKey: feed.feed.discoveryKey
+    discoveryKey: feed.properties.discoveryKey
   });
 
   return {
     subscribe: (next) => {
-      const unsubscribe = feedStore.feedOpenedEvent.on((descriptor) => next([encodeFeed(descriptor)]));
+      const unsubscribe = feedStore.feedOpened.on((feed) => next([encodeFeed(feed)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
@@ -55,7 +56,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     replicate: async (feeds: FeedData[]) => {
       const feedDescriptors = await Promise.all(feeds.map(async (feedData) => {
         if (feedData.key) {
-          return await feedStore.openReadOnlyFeed(PublicKey.from(feedData.key));
+          return await feedStore.openFeed(PublicKey.from(feedData.key));
         }
 
         return null;
@@ -67,12 +68,16 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 };
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
   const keyring = new Keyring();
-  const feed = await feedStore.openReadWriteFeedWithSigner(
-    await keyring.createKey(),
-    keyring
-  );
+  const feedFactory = new FeedFactory<FeedMessage>({
+    root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+    signer: keyring,
+    hypercore: {
+      valueEncoding: 'utf-8'
+    }
+  });
+  const feedStore = new FeedStore<FeedMessage>({ factory: feedFactory });
+  const feed = await feedStore.openFeed(await keyring.createKey());
 
   let closed = false;
   const replicator = new ReplicatorPlugin(middleware({
@@ -93,7 +98,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       },
       userSession: { peerId: 'session1' }
     })
-      .setContext({ name: 'foo' })
+      .setContext({ name: 'test' })
       .setExtensions([replicator.createExtension()])
       .init()
       .stream as Stream // TODO(burdon): See network.ts which uses a different Stream interface.
@@ -104,11 +109,13 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 
     // TODO(burdon): This isn't part of the Peer interface.
     isClosed: () => closed,
-    getFeedsNum: () => Array.from((feedStore as any)._descriptors.values()).length,
+    getFeedsNum: () => feedStore.feeds.length,
     append: (msg: any) => feed.append(msg),
     getMessages: () => {
       const messages: any[] = [];
-      const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor)));
+
+      // Create combined stream.
+      const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) => feed.createReadableStream()));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });
@@ -142,24 +149,22 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
 
   it('feed synchronization', async function () {
     expect(network.peers.length).to.equal(15);
-
     await waitForExpect(() => {
       const result = network.peers.reduce((prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length, true);
-
       expect(result).to.be.true;
     }, 4500, 1000);
   });
 
   it('message synchronization', async function () {
-    const messages: any[] = [];
     const wait: any[] = [];
+    const messages: any[] = [];
     network.peers.forEach((peer: any) => {
-      const msg = `${peer.id.toString('hex')}:foo`;
+      const msg = `${peer.id.toString('hex')}:test`;
       messages.push(msg);
       wait.push(peer.append(msg));
     });
-    messages.sort();
 
+    messages.sort();
     await Promise.all(wait);
 
     await waitForExpect(async () => {

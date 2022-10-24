@@ -4,14 +4,14 @@
 
 import assert from 'node:assert';
 
-import { Event, latch } from '@dxos/async';
+import { Event, EventSubscriptions, latch } from '@dxos/async';
 import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { Echo, Party, PartyInvitation } from '../api';
 import { HaloProxy } from './halo-proxy';
@@ -23,9 +23,9 @@ import { ClientServiceProxy } from './service-proxy';
  * Client proxy to local/remote ECHO service.
  */
 export class EchoProxy implements Echo {
-  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
+  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
   private readonly _partiesChanged = new Event();
-  private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _subscriptions = new EventSubscriptions();
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
@@ -95,14 +95,14 @@ export class EchoProxy implements Echo {
           //   this._partiesChanged.emit();
           // });
 
-          // this._subscriptions.push(() => partyStream.close());
+          // this._subscriptions.add(() => partyStream.close());
         }
       }
 
       this._partiesChanged.emit();
     });
 
-    this._subscriptions.push(() => partiesStream.close());
+    this._subscriptions.add(() => partiesStream.close());
 
     await gotParties;
   }
@@ -115,7 +115,7 @@ export class EchoProxy implements Echo {
       await party.destroy();
     }
 
-    await this._subscriptions.unsubscribe();
+    await this._subscriptions.clear();
   }
 
   //

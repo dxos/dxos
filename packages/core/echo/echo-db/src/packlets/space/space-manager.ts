@@ -10,9 +10,10 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { Database, DataService } from '../database';
@@ -42,9 +43,10 @@ export class SpaceManager {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   public readonly update = new Event();
 
+  // TODO(burdon): Convert to object.
   constructor (
     private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _networkManager: NetworkManager,
     private readonly _keyring: Keyring,
     private readonly _dataService: DataService,
@@ -88,8 +90,8 @@ export class SpaceManager {
 
     // Write genesis credentials.
     {
-      const generator = new CredentialGenerator(
-        this._keyring, this._signingContext.identityKey, this._signingContext.deviceKey);
+      const generator =
+        new CredentialGenerator(this._keyring, this._signingContext.identityKey, this._signingContext.deviceKey);
 
       const credentials = [
         ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey)),
@@ -134,17 +136,17 @@ export class SpaceManager {
   }
 
   private async _constructSpace (metadata: PartyMetadata) {
-    const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.controlFeedKey ?? failUndefined(), this._keyring);
-    const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.dataFeedKey ?? failUndefined(), this._keyring);
+    const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
+    const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 
     // Might be the same as controlFeed above, in case this space was created by the current agent.
-    const genesisFeed = await this._feedStore.openReadOnlyFeed(metadata.genesisFeedKey ?? failUndefined());
+    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     return new Space({
       controlFeed,
       dataFeed,
       genesisFeed,
-      feedProvider: key => this._feedStore.openReadOnlyFeed(key),
+      feedProvider: key => this._feedStore.openFeed(key),
       spaceKey: metadata.key,
       networkManager: this._networkManager,
       initialTimeframe: new Timeframe(),

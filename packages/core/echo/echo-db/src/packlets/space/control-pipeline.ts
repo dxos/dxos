@@ -3,19 +3,20 @@
 //
 
 import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
-import { FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey
-  genesisFeed: FeedDescriptor
-  feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  genesisFeed: FeedWrapper<FeedMessage>
+  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>
   initialTimeframe: Timeframe
 }
 
@@ -26,9 +27,9 @@ export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _partyStateMachine: PartyStateMachine;
 
-  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   constructor ({
     spaceKey,
@@ -37,15 +38,17 @@ export class ControlPipeline {
     initialTimeframe
   }: ControlPipelineParams) {
     this._pipeline = new Pipeline(initialTimeframe);
-    this._pipeline.addFeed(genesisFeed);
+    void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
     this._partyStateMachine.onFeedAdmitted.set(async info => {
-      log('Feed admitted', { info });
+      log('feed admitted', { info });
+
+      // TODO(burdon): Check not stopping.
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
           const feed = await feedProvider(info.key);
-          this._pipeline.addFeed(feed);
+          await this._pipeline.addFeed(feed);
         } catch (err: any) {
           log.catch(err);
         }
@@ -54,8 +57,8 @@ export class ControlPipeline {
       await this.onFeedAdmitted.callIfSet(info);
     });
 
-    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
+    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
   }
 
   get partyState (): PartyState {
@@ -66,20 +69,20 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  setWriteFeed (feed: FeedDescriptor) {
+  setWriteFeed (feed: FeedWrapper<FeedMessage>) {
     this._pipeline.setWriteFeed(feed);
   }
 
-  start () {
-    log('Starting control pipeline');
+  async start () {
+    log('starting...');
     setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {
         try {
-          log('Processing message', { msg });
+          log('processing', { msg });
           if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
-            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
+            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.feedKey));
             if (!result) {
-              log.warn('Credential processing failed', { msg });
+              log.warn('processing failed', { msg });
             }
           }
         } catch (err: any) {
@@ -88,11 +91,13 @@ export class ControlPipeline {
       }
     });
 
-    return this;
+    await this._pipeline.start();
+    log('started');
   }
 
   async stop () {
-    log('Stopping control pipeline');
+    log('stopping...');
     await this._pipeline.stop();
+    log('stopped');
   }
 }

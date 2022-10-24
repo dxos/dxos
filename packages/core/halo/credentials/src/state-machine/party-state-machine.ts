@@ -30,8 +30,8 @@ export class PartyStateMachine implements PartyState {
   private _genesisCredential: Credential | undefined;
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
-  readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
+  readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
 
   constructor (
     private readonly _partyKey: PublicKey

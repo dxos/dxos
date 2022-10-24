@@ -58,7 +58,6 @@
   },
   "devDependencies": {
     "@oclif/test": "^2.1.1",
-    "@types/chai": "^4.2.15",
     "@types/cli-progress": "^3.11.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
