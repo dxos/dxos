@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { SwarmDetails } from '@dxos/devtools-mesh';
-import { SwarmInfo } from '@dxos/network-manager';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 export const SwarmPanel = () => {

@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
 import { SignalState, SignalStatus } from '@dxos/messaging';
-import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 const stringToState = (state: string): SignalState => {
