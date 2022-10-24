@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { useId } from '../../hooks';
-import { ValidationValence } from '../../props';
+import { MessageValence } from '../../props';
 import {
   defaultDescription,
   defaultDisabled,
@@ -24,10 +24,7 @@ import {
   valenceInputBorder
 } from '../../styles';
 
-export enum InputSize {
-  md = 'md',
-  lg = 'lg'
-}
+export type InputSize = 'md' | 'lg'
 
 export interface InputProps
   extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
@@ -40,12 +37,12 @@ export interface InputProps
   disabled?: boolean
   size?: InputSize
   validationMessage?: ReactNode
-  validationValence?: ValidationValence
+  validationValence?: MessageValence
 }
 
 const sizeMap = new Map<InputSize, string>([
-  [InputSize.md, ''],
-  [InputSize.lg, 'text-base']
+  ['md', ''],
+  ['lg', 'text-base']
 ]);
 
 export const Input = ({
@@ -87,7 +84,7 @@ export const Input = ({
   );
 
   const isInvalid =
-    !!validationMessage && validationValence === ValidationValence.error;
+    !!validationMessage && validationValence === 'error';
 
   return (
     <div className={cx('my-4', className)} role='none'>
@@ -107,7 +104,7 @@ export const Input = ({
           defaultFocus,
           defaultPlaceholder,
           defaultHover({ disabled }),
-          sizeMap.get(size || InputSize.md),
+          sizeMap.get(size ?? 'md'),
           'bg-white/50 border text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:text-white',
           valenceInputBorder(validationMessage ? validationValence : undefined),
           disabled && defaultDisabled

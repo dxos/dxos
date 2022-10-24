@@ -4,46 +4,35 @@
 
 import cx from 'classnames';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { useId } from '@dxos/react-ui';
+import { useId } from '../../hooks';
 
-import { TKey } from '../../types';
+export type LoadingSize = 'sm' | 'md' | 'lg' | 'xl'
 
-export enum LoadingSize {
-  sm = 'sm',
-  md = 'md',
-  lg = 'lg',
-  xl = 'xl',
-}
-
-export enum LoadingColor {
-  primary = 'primary',
-  neutral = 'neutral'
-}
+export type LoadingColor = 'primary' | 'neutral'
 
 export interface LoadingProps {
-  labelTKey?: TKey
+  label: string
   size?: LoadingSize
   color?: LoadingColor
   className?: string
 }
 
 const sizeMap = new Map<LoadingSize, string>([
-  [LoadingSize.sm, 'w-4 h-4'],
-  [LoadingSize.md, 'w-8 h-8'],
-  [LoadingSize.lg, 'w-12 h-12'],
-  [LoadingSize.xl, 'w-16 h-16']
+  ['sm', 'w-4 h-4'],
+  ['md', 'w-8 h-8'],
+  ['lg', 'w-12 h-12'],
+  ['xl', 'w-16 h-16']
 ]);
 
-export const UntranslatedLoading = ({
+export const Loading = ({
   size,
   color,
   className,
   label
-}: Omit<LoadingProps, 'labelTKey'> & { label: string }) => {
+}: LoadingProps & { label: string }) => {
   const labelId = useId('loading-label');
-  const sizeClassName = sizeMap.get(size || LoadingSize.md);
+  const sizeClassName = sizeMap.get(size ?? 'md');
   return (
     <div
       role='status' className={cx('flex justify-center p-4', className)}
@@ -55,7 +44,7 @@ export const UntranslatedLoading = ({
         className={cx(
           sizeClassName,
           'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
-          color === LoadingColor.neutral ? 'fill-neutral-400' : 'fill-primary-400'
+          color === 'neutral' ? 'fill-neutral-400' : 'fill-primary-400'
         )}
         viewBox='0 0 100 101' fill='none' xmlns='http://www.w3.org/2000/svg'
       >
@@ -70,15 +59,5 @@ export const UntranslatedLoading = ({
       </svg>
       <span className='sr-only' id={labelId}>{label}</span>
     </div>
-  );
-};
-
-export const Loading = ({ labelTKey, ...props }: LoadingProps) => {
-  const { t } = useTranslation();
-  return (
-    <UntranslatedLoading
-      {...props}
-      label={t(labelTKey ?? 'generic loading label')}
-    />
   );
 };

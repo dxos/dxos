@@ -3,13 +3,14 @@
 //
 
 import cx from 'classnames';
-import React, { PropsWithChildren, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 import { useId } from '../../hooks';
 import { defaultDescription, primaryDescription } from '../../styles';
 import { ButtonProps, buttonStyles } from '../Button';
 
 export interface CompoundButtonProps extends ButtonProps {
+  children?: ReactNode
   description?: ReactNode
   before?: ReactNode
   after?: ReactNode
@@ -21,7 +22,7 @@ export const CompoundButton = ({
   before,
   after,
   ...buttonProps
-}: PropsWithChildren<CompoundButtonProps>) => {
+}: CompoundButtonProps) => {
   const variant = buttonProps.variant || 'default';
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
