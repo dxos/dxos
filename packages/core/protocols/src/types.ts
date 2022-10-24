@@ -4,11 +4,12 @@
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { Timeframe } from '@dxos/timeframe';
 
 import { TYPES } from './proto';
 import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
-import { Timeframe } from './timeframe';
 
+// TODO(burdon): Rename ProtocolMessage.
 export type TypedMessage = TypedProtoMessage<TYPES>
 
 // TODO(burdon): Replace with proto definition.
@@ -17,12 +18,13 @@ export type FeedMeta = {
   seq: number
 }
 
-// TODO(burdon): Replace with proto definition.
-export type FeedMessageBlock = {
-  key: PublicKey
+export type FeedBlock<T> = {
+  feedKey: PublicKey
   seq: number
-  data: FeedMessage
+  data: T
 }
+
+export type FeedMessageBlock = FeedBlock<FeedMessage>
 
 export interface MutationMeta extends FeedMeta {
   memberKey: PublicKey

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
+import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { useClient } from '../client';
 

@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
@@ -23,7 +23,7 @@ describe('ServiceContext', function () {
   } = {}) => {
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
 
     return new ServiceContext(
@@ -70,17 +70,20 @@ describe('ServiceContext', function () {
       const serviceContext = await setupPeer();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
+
       await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
       expect(space.database).toBeTruthy();
       expect(serviceContext.spaceManager!.spaces.has(space.key)).toBeTruthy();
+      await space.close();
     });
 
     it('space genesis with database', async function () {
       const serviceContext = await setupPeer();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
+
       await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
@@ -94,9 +97,11 @@ describe('ServiceContext', function () {
         const [item] = space.database!.select({ type: 'test' }).exec().entities;
         expect(item.model.get('name')).toEqual('test');
       }
+
+      await space.close();
     });
 
-    it('invitations', async function () {
+    it('create and accepts space invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
       const peer1 = await setupPeer({ signalContext });
@@ -129,6 +134,9 @@ describe('ServiceContext', function () {
         const item2 = await space1.database!.waitForItem({ type: 'dxos.example.2' });
         expect(item1.id).toEqual(item2.id);
       }
+
+      await space1.close();
+      await space2.close();
     });
   });
 });

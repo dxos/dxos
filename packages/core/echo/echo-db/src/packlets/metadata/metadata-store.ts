@@ -63,7 +63,7 @@ export class MetadataStore {
       }
       // Loading file size from first 4 bytes.
       const dataSize = fromBytesInt32(await file.read(0, 4));
-      log(`Load: data size ${dataSize}`);
+      log('loaded', { size: dataSize });
 
       // Sanity check.
       {
@@ -75,7 +75,7 @@ export class MetadataStore {
       const data = await file.read(4, dataSize);
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
-      log(`Error loading metadata: ${err}`);
+      log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
     } finally {
       await file.close();
@@ -97,8 +97,8 @@ export class MetadataStore {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
 
       // Saving file size at first 4 bytes.
-      log(`Save: data size ${encoded.length}`);
       await file.write(0, toBytesInt32(encoded.length));
+      log('saved', { size: encoded.length });
 
       // Saving data.
       await file.write(4, encoded);
@@ -112,7 +112,7 @@ export class MetadataStore {
    * Clears storage - doesn't work for now.
    */
   async clear (): Promise<void> {
-    log('Clearing all echo metadata...');
+    log('clearing all metadata');
     await this._directory.delete();
   }
 

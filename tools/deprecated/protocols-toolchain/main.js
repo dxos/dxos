@@ -1,3 +1,7 @@
 #!/usr/bin/env node
 
-require('./dist/src/main')
+//
+// Copyright 2022 DXOS.org
+//
+
+require('./dist/src/main');

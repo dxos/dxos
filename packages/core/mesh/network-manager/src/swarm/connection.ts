@@ -185,7 +185,7 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-    // TODO(marik-d): CLOSING state.
+    // TODO(dmaretskyi): CLOSING state.
 
     log(`Closing ${this.ownId}`);
 

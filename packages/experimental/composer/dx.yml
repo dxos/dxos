@@ -9,8 +9,10 @@ package:
 
 runtime:
   client:
+    mode: local
     storage:
       persistent: true
+
   services:
     signal:
       server: wss://kube.dxos.org/.well-known/dx/signal

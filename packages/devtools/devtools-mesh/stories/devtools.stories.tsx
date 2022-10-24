@@ -25,11 +25,11 @@ import {
   transportProtocolProvider,
   PeerInfo,
   Topology,
-  SwarmInfo,
   ConnectionLog,
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';

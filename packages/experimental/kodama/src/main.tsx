@@ -17,7 +17,7 @@ import { start } from './start';
 import { clear, versionCheck } from './util';
 import { showVersion } from './version';
 
-// Note: nodemon interferes with input.
+// NOTE: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
 

@@ -6,11 +6,6 @@ import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-// TODO(burdon): Error if removed.
-// > @dxos/beast@2.33.8 update:docs /Users/burdon/Code/dxos/dxos/tools/beast
-// > ts-node --esm ./src/main.ts docs
-// /Users/burdon/Code/dxos/dxos/node_modules/.pnpm/ts-node@10.9.1_sx5ynny5elbe7xjikueazwirqy/node_modules/ts-node/src/index.ts:859
-//     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
 import { log } from '@dxos/log';
 
 import { PackageDependencyBuilder } from './package-dependency-builder';

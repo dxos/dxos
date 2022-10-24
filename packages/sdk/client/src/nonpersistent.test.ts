@@ -100,7 +100,7 @@ describe('Client - nonpersistent', function () {
     const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'test-user-2' });
 
     // Wait for invited person to arrive.
-    // TODO(marik-d): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.
+    // TODO(dmaretskyi): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.
     const contactPromise = clientA.halo.queryContacts()
       .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
 

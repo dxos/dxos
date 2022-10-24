@@ -33,7 +33,7 @@ export const getNamespaceName = (type: pb.ReflectionObject): DeclarationFullName
 };
 
 export const getRelativeName = (target: DeclarationFullName, base: DeclarationFullName): DeclarationFullName => {
-  // TODO(marik-d): Optimization: Remove recursion.
+  // TODO(dmaretskyi): Optimization: Remove recursion.
   if (target.length === 1 || base.length === 1) {
     return target;
   } else if (target[0] === base[0]) {

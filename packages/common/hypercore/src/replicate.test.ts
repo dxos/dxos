@@ -10,7 +10,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createReadable } from './streams';
+import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
 
 const noop = () => {};

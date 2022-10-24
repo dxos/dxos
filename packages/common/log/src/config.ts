@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import fs from 'fs';
+
 import type { OwnershipScope } from './ownership';
 
 export interface LogMetadata {
@@ -39,10 +41,10 @@ const levels: {[index: string]: LogLevel} = {
 };
 
 export const shortLevelName = {
-  [LogLevel.DEBUG]: 'DBG',
-  [LogLevel.INFO]: 'INF',
-  [LogLevel.WARN]: 'WRN',
-  [LogLevel.ERROR]: 'ERR'
+  [LogLevel.DEBUG]: 'D',
+  [LogLevel.INFO]: 'I',
+  [LogLevel.WARN]: 'W',
+  [LogLevel.ERROR]: 'E'
 };
 
 export const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
@@ -58,14 +60,30 @@ export enum LogProcessorType {
 // Config
 //
 
+export type ConfigOptions = {
+  column?: number
+}
+
+// TODO(burdon): YML.
+const loadConfig = (filepath?: string): ConfigOptions | undefined => {
+  if (filepath) {
+    const text = fs.readFileSync(filepath, 'utf-8');
+    if (text) {
+      return JSON.parse(text) as ConfigOptions;
+    }
+  }
+};
+
 export interface LogConfig {
   processor?: string
   filter?: string | LogLevel
+  config?: any
 }
 
 export const defaultConfig: LogConfig = {
   processor: ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ?? LogProcessorType.CONSOLE,
-  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO]
+  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO],
+  config: ('process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined)
 };
 
 export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {

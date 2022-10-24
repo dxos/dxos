@@ -12,10 +12,11 @@ export type Path = string | string[];
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export const promise = <T>(o: MaybePromise<T>): Promise<T> =>
+export const promise = <T> (o: MaybePromise<T>): Promise<T> =>
   isPromise(o) ? o : Promise.resolve(o);
 
-export const isPromise = <T>(p: any): p is Promise<T> =>
+// TODO(burdon): import { isPromise } from "util/types"?
+export const isPromise = <T> (p: any): p is Promise<T> =>
   typeof p?.then === 'function';
 
 export type AsyncFunctor<T> = (o: T) => MaybePromise<T>;

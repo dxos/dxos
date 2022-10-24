@@ -9,9 +9,9 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, inMemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import type { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -26,19 +26,14 @@ const createPeer = async (
 ) => {
   const networkManager = new NetworkManager({
     signalManager: new MemorySignalManager(signalContext),
-    transportFactory: inMemoryTransportFactory
+    transportFactory: MemoryTransportFactory
   });
-
   afterTest(() => networkManager.destroy());
   const plugin = new RpcPlugin(onConnect);
   await networkManager.joinProtocolSwarm({
     topic,
     peerId,
-    protocol: createProtocolFactory(
-      topic,
-      peerId,
-      [plugin]
-    ),
+    protocol: createProtocolFactory(topic, peerId, [plugin]),
     topology: new StarTopology(topic)
   });
   return { plugin, networkManager };
@@ -124,7 +119,6 @@ describe('Protocol plugin rpc', function () {
     ]);
 
     const response = await client.rpc.testCall({ data: 'requestData' });
-
     expect(response.data).toEqual('responseData');
   });
 

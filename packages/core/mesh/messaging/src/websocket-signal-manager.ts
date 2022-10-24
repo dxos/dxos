@@ -61,7 +61,7 @@ export class WebsocketSignalManager implements SignalManager {
 
       this._servers.set(host, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
-      this._topicsJoinedPerSignal.set(host, new ComplexMap(key => key.toHex()));
+      this._topicsJoinedPerSignal.set(host, new ComplexMap(PublicKey.hash));
     }
   }
 
@@ -80,7 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
-    log(`Leave ${topic} ${peerId}`);
+    log('leaving', { topic, peerId });
     this._topicsJoined.delete(topic);
     this._scheduleReconcile();
   }

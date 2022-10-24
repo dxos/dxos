@@ -6,6 +6,8 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
+import { truncateKey } from '@dxos/debug';
+
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
 
@@ -24,6 +26,7 @@ export class PublicKey {
    * Creates new instance of PublicKey automatically determining the input format.
    */
   static from (source: PublicKeyLike): PublicKey {
+    assert(source);
     if (source instanceof PublicKey) {
       return source;
     } else if (source instanceof Buffer) {
@@ -54,6 +57,7 @@ export class PublicKey {
    * Creates a new key.
    */
   static random (): PublicKey {
+    // TODO(burdon): Enable seed for debugging.
     return PublicKey.from(randomBytes(32));
   }
 
@@ -125,54 +129,35 @@ export class PublicKey {
     }
   }
 
-  /**
-   * Return underlying Uint8Array representation.
-   */
+  // TODO(burdon): Rename toDebugHex? Make default for toString?
+  truncate (length = 4) {
+    return truncateKey(this, length);
+  }
+
+  toString (): string {
+    return this.toHex();
+  }
+
+  // TODO(burdon): How is this used?
+  toJSON () {
+    return this.toHex();
+  }
+
+  toHex (): string {
+    return this.asBuffer().toString('hex');
+  }
+
+  asBuffer (): Buffer {
+    return Buffer.from(this._value);
+  }
+
   asUint8Array (): Uint8Array {
     return this._value;
   }
 
   /**
-   * Covert this key to buffer.
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  asBuffer (): Buffer {
-    return Buffer.from(this._value);
-  }
-
-  /**
-   * Convert this key to hex-encoded string.
-   */
-  toHex (): string {
-    return this.asBuffer().toString('hex');
-  }
-
-  /**
-   * Same as `PublicKey.humanize()`.
-   */
-  toString (): string {
-    return this.toHex();
-  }
-
-  /**
-   * Same as `PublicKey.humanize()`.
-   */
-  toJSON () {
-    return this.toHex();
-  }
-
-  truncate (n = 4) {
-    const key = this.toHex();
-    if (key.length < n * 2 + 2) {
-      return key;
-    }
-
-    return `${key.substring(0, n)}..${key.substring(key.length - n)}`;
-  }
-
-  /**
-   * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
-   */
-  // TODO(burdon): Factor out for testing.
   [inspect.custom] (depth: number, options: InspectOptionsStylized) {
     if (!options.colors || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
@@ -181,9 +166,6 @@ export class PublicKey {
     const printControlCode = (code: number) => {
       return `\x1b[${code}m`;
     };
-
-    // Compute simple hash of the key.
-    const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
 
     const colors = [
       'red',
@@ -200,9 +182,12 @@ export class PublicKey {
       'cyanBright',
       'whiteBright'
     ];
+
+    // Compute simple hash of the key.
+    const hash = Math.abs(this._value.reduce((acc, val) => acc ^ val | 0, 0));
     const color = colors[hash % colors.length];
 
-    return `<PublicKey ${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])}>`;
+    return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(inspect.colors.reset![0])})`;
   }
 
   /**
@@ -213,11 +198,12 @@ export class PublicKey {
     if (this._value.length !== otherConverted._value.length) {
       return false;
     }
+
     let equal = true;
-    this._value;
     for (let i = 0; i < this._value.length; i++) {
       equal &&= this._value[i] === otherConverted._value[i];
     }
+
     return equal;
   }
 }

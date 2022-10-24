@@ -3,7 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
-import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools';
+import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools/host';
 
 /**
  *
