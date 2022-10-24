@@ -25,15 +25,15 @@ export const AppLayout = () => {
   const navMenuItems = [
     {
       label: <div className='flex items-center'><Planet className='mr-1 h-5 w-5' /><span>{t('spaces label')}</span></div>,
-      url: '/spaces'
+      pathName: '/spaces'
     },
     {
       label: <div className='flex items-center'><DeviceMobileCamera className='mr-1 h-5 w-5' /><span>{t('devices label')}</span></div>,
-      url: '/devices'
+      pathName: '/devices'
     },
     {
       label: <div className='flex items-center'><UserCircle className='mr-1 h-5 w-5' /><span>{t('identity label')}</span></div>,
-      url: '/identity'
+      pathName: '/identity'
     }
   ];
 
@@ -45,9 +45,9 @@ export const AppLayout = () => {
 
       <NavMenu
         items={navMenuItems.map((navMenuItem) => ({
-          triggerLinkProps: { href: navMenuItem.url },
+          triggerLinkProps: { href: `#${navMenuItem.pathName}` },
           children: navMenuItem.label,
-          ...(location.pathname.startsWith(navMenuItem.url) && { active: true })
+          ...(location.pathname.startsWith(navMenuItem.pathName) && { active: true })
         }))}
       />
 
