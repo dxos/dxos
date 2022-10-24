@@ -5,7 +5,7 @@
 import React from 'react';
 
 import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
-import { IconButton, List, ListItem } from '@mui/material';
+import { IconButton } from '@mui/material';
 
 import { SubscribeToSwarmInfoResponse } from '@dxos/protocols/proto/dxos/devtools';
 import { CopyText, JsonTreeView } from '@dxos/react-components';
@@ -29,7 +29,7 @@ export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoV
     </div>
     <JsonTreeView data={{
       ...connectionInfo.events
-        }} />
+    }} />
     {onReturn && (
       <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
         <ArrowBackIos />
