@@ -1,7 +1,7 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 export * from './devtools-context';
-export * from './devtools-host';
 export * from './devtools-host-events';
+export * from './network';
