@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/common/shims/src",
+  "sourceRoot": "packages/common/typings/src",
   "projectType": "library",
   "targets": {
     "build": {
