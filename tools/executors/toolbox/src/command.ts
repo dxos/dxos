@@ -17,7 +17,6 @@ export interface Config {
 
 export interface ToolkitOptions {
   _: string[]
-  basePath: string
 }
 
 /**
@@ -39,7 +38,7 @@ export abstract class Command {
     return path.join(this.context.root, project.root);
   }
 
-  abstract exec (): Promise<void>;
+  abstract exec (): Promise<boolean>;
 
   onInit () {}
 }

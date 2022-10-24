@@ -4,7 +4,7 @@
     "exec": {
       "implementation": "./dist/src/main",
       "schema": "./schema.json",
-      "description": "DXOS NX Toolbox"
+      "description": "DXOS NX Toolbox."
     }
   }
 }

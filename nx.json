@@ -1,4 +1,5 @@
 {
+  // https://nx.dev/reference/nx-json
   "extends": "nx/presets/npm.json",
   "npmScope": "dxos",
   "affected": {
@@ -26,7 +27,10 @@
   },
   // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     // Nx assumes the use of tsconfig.base.json.
     // https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [

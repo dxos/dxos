@@ -13,10 +13,15 @@ import sortPackageJson from 'sort-package-json';
 import { Command } from '../command';
 import { loadJson, sortJson } from '../util';
 
-// Fixed order fields.
-const tsConfigFields = [
+const tsConfigFixedKeys = [
   'extends',
   'compilerOptions'
+];
+
+const projectFixedKeys = [
+  'sourceRoot',
+  'projectType',
+  'targets'
 ];
 
 /**
@@ -26,35 +31,39 @@ const tsConfigFields = [
  * - tsconfig.json
  */
 export class ConfigCommand extends Command {
-  _packageJson: any;
+  _packagePath?: string;
+  _packageJson?: any;
 
   async exec () {
     await this.fixPackage();
     await this.fixTsConfig();
+    await this.fixProject();
+    return true;
   }
 
   override onInit () {
-    this._packageJson = loadJson(path.join(this.path, 'package.json'));
+    this._packagePath = path.join(this.path, 'package.json');
+    this._packageJson = loadJson(this._packagePath);
     assert(this._packageJson);
   }
 
-  /**
-   * Sort `package.json` and patch common fields from the root.
-   */
-  async fixPackage () {
-    const rootPackage = loadJson(path.join(this.context.root, 'package.json'));
-    const commonValues = pick(rootPackage, this.config.config?.package?.common);
-
-    const packagePath = path.join(this.path, 'package.json');
-    const updatedJson = defaultsDeep(this._packageJson, commonValues);
-    const sortedJson = sortPackageJson(JSON.stringify(updatedJson, undefined, 2));
-
-    fs.writeFileSync(packagePath, sortedJson, 'utf-8');
-    console.log(`Updated: ${chalk.green(packagePath)}`);
+  _update (filepath: string, value: any) {
+    fs.writeFileSync(filepath, JSON.stringify(value, undefined, 2), 'utf-8');
+    console.log(`Updated: ${chalk.green(filepath)}`);
   }
 
   /**
-   * Sort `tsconfig.json` and update references.
+   * Process `package.json` and patch common fields from the root.
+   */
+  async fixPackage () {
+    const rootPackage = loadJson(path.join(this.context.root, 'package.json'));
+    const commonKeys = pick(rootPackage, this.config.config?.package?.common);
+    const updated = sortPackageJson(defaultsDeep(this._packageJson, commonKeys));
+    this._update(this._packagePath!, updated);
+  }
+
+  /**
+   * Process `tsconfig.json` and update references.
    */
   async fixTsConfig () {
     const filepath = path.join(this.path, 'tsconfig.json');
@@ -72,9 +81,33 @@ export class ConfigCommand extends Command {
         return undefined;
       }).filter(Boolean);
 
-      const updated = sortJson(tsConfigJson, tsConfigFields);
-      fs.writeFileSync(filepath, JSON.stringify(updated, undefined, 2), 'utf-8');
-      console.log(`Updated: ${chalk.green(filepath)}`);
+      const updated = sortJson(tsConfigJson, {
+        depth: 3,
+        map: {
+          '.': tsConfigFixedKeys,
+          '.references': (value: any) => value.path
+        }
+      });
+
+      this._update(filepath, updated);
+    }
+  }
+
+  /**
+   * Process `project.json`.
+   */
+  async fixProject () {
+    const filepath = path.join(this.path, 'project.json');
+    const projectJson = loadJson(filepath);
+    if (projectJson) {
+      const updated = sortJson(projectJson, {
+        depth: -1,
+        map: {
+          '.': projectFixedKeys
+        }
+      });
+
+      this._update(filepath, updated);
     }
   }
 }
