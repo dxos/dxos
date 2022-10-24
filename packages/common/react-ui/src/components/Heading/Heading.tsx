@@ -3,10 +3,11 @@
 //
 
 import cx from 'classnames';
-import React, { createElement, PropsWithChildren } from 'react';
+import React, { createElement, PropsWithChildren, ReactNode } from 'react';
 
 export interface HeadingProps extends React.ComponentProps<'h1'> {
   level?: 1 | 2 | 3 | 4 | 5 | 6
+  children?: ReactNode
 }
 
 const levelClassNameMap = new Map<number, string>([

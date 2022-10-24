@@ -29,7 +29,8 @@ module.exports = {
       include: [
         '@dxos/react-ui',
         'storybook-dark-mode',
-        'i18next'
+        'i18next',
+        'lodash/merge'
       ]
     },
     build: {
