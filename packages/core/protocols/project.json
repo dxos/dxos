@@ -2,6 +2,12 @@
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec",
+      "options": {
+        "basePath": "packages/core/protocols"
+      }
+    },
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
@@ -63,7 +69,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha",
-    "protobuf-compiler"
+    "mocha"
   ]
 }

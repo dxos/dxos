@@ -1,0 +1,14 @@
+{
+  "name": "@dxos/toolbox",
+  "private": true,
+  "main": "dist/src/main.js",
+  "executors": "./executors.json",
+  "dependencies": {
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.pick": "^4.4.7",
+    "chalk": "^4.1.0",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.pick": "^4.4.0",
+    "sort-package-json": "^1.57.0"
+  }
+}
