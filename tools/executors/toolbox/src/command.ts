@@ -3,8 +3,9 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import fs from 'fs';
 import path from 'path';
+
+import { Workspace } from './workspace';
 
 export interface Config {
   config: {
@@ -23,20 +24,14 @@ export interface ToolkitOptions {
  * Base command for toolbox.
  */
 export abstract class Command {
-  static loadJson = (filename: string) => {
-    const json = fs.readFileSync(filename, 'utf-8');
-    return json ? JSON.parse(json) : undefined;
-  };
-
   constructor (
     public readonly config: Config,
     public readonly options: ToolkitOptions,
-    public readonly context: ExecutorContext
+    public readonly context: ExecutorContext,
+    public readonly workspace: Workspace
   ) {
     this.onInit();
   }
-
-  onInit () {}
 
   get path () {
     const { workspace, projectName } = this.context;
@@ -45,4 +40,6 @@ export abstract class Command {
   }
 
   abstract exec (): Promise<void>;
+
+  onInit () {}
 }
