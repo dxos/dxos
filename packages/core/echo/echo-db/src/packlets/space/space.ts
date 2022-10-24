@@ -6,15 +6,17 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { Timeframe, TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { TypedMessage } from '@dxos/protocols';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
+import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
@@ -29,10 +31,10 @@ type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
 
 export type SpaceParams = {
   spaceKey: PublicKey
-  genesisFeed: FeedDescriptor
-  controlFeed: FeedDescriptor
-  dataFeed: FeedDescriptor
-  feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  genesisFeed: FeedWrapper<FeedMessage>
+  controlFeed: FeedWrapper<FeedMessage>
+  dataFeed: FeedWrapper<FeedMessage>
+  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>
   initialTimeframe: Timeframe
   networkManager: NetworkManager
   networkPlugins: Plugin[]
@@ -47,9 +49,9 @@ export class Space {
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   private readonly _key: PublicKey;
-  private readonly _dataFeed: FeedDescriptor;
-  private readonly _controlFeed: FeedDescriptor;
-  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
+  private readonly _dataFeed: FeedWrapper<FeedMessage>;
+  private readonly _controlFeed: FeedWrapper<FeedMessage>;
+  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;
@@ -98,7 +100,7 @@ export class Space {
           return;
         }
 
-        this._dataPipeline.addFeed(await feedProvider(info.key));
+        await this._dataPipeline.addFeed(await feedProvider(info.key));
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -156,6 +158,7 @@ export class Space {
 
   @synchronized
   async open () {
+    log('opening...');
     if (this._isOpen) {
       return;
     }
@@ -166,21 +169,23 @@ export class Space {
     await this._protocol.start();
 
     this._isOpen = true;
+    log('opened');
   }
 
   @synchronized
   async close () {
+    log('closing...', { key: this._key });
     if (!this._isOpen) {
       return;
     }
 
+    // Closes in reverse order to open.
     await this._protocol.stop();
-
-    // TODO(burdon): Does order matter?
-    await this._controlPipeline.stop();
     await this._closeDataPipeline();
+    await this._controlPipeline.stop();
 
     this._isOpen = false;
+    log('closed');
   }
 
   // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?
@@ -192,13 +197,13 @@ export class Space {
       this._dataPipeline = new Pipeline(new Timeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {
-        this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+        await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
     }
 
     // Create database backend.
     {
-      const feedWriter = mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
+      const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
         '@type': 'dxos.echo.feed.EchoEnvelope',
         ...msg
       }), this._dataPipeline.writer ?? failUndefined());
@@ -218,12 +223,14 @@ export class Space {
       await this._database.initialize();
     }
 
+    await this._dataPipeline.start();
+
     // Start message processing loop.
     setTimeout(async () => {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
-        const { key: feedKey, seq, data } = msg;
-        log('Processing message.', { msg });
+        const { feedKey, seq, data } = msg;
+        log('processing message', { msg });
 
         try {
           const payload = data.payload as TypedMessage;

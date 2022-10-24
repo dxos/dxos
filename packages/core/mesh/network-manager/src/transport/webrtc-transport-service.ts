@@ -15,7 +15,7 @@ import { ComplexMap } from '@dxos/util';
 import { wrtc } from './webrtc';
 
 export class WebRTCTransportService implements BridgeService {
-  protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());
+  protected peers = new ComplexMap<PublicKey, SimplePeer>(PublicKey.hash);
 
   constructor (
     private readonly _webrtcConfig?: any

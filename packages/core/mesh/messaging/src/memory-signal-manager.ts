@@ -22,10 +22,10 @@ export class MemorySignalManagerContext {
   readonly swarmEvent = new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>();
 
   // Mapping from topic to set of peers.
-  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
+  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   // Map of connections for each peer for signaling.
-  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(key => key.toHex());
+  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(PublicKey.hash);
 }
 
 /**
@@ -57,7 +57,7 @@ export class MemorySignalManager implements SignalManager {
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
 
     this._context.swarms.get(topic)!.add(peerId);
@@ -89,7 +89,7 @@ export class MemorySignalManager implements SignalManager {
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
 
     this._context.swarms.get(topic)!.delete(peerId);
@@ -106,18 +106,19 @@ export class MemorySignalManager implements SignalManager {
   async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
     assert(recipient);
     if (!this._context.connections.has(recipient)) {
-      log.warn('Recipient is not subscribed for messages.', { author, recipient });
+      log.warn('recipient is not subscribed for messages', { author, recipient });
       return;
     }
+
     this._context.connections
       .get(recipient)!
       .onMessage.emit({ author, recipient, payload });
   }
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {
-    log(`Subscribing ${peerId} for messages`);
+    log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
   }
 
-  async destroy () { }
+  async destroy () {}
 }

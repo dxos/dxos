@@ -14,7 +14,7 @@ import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../cr
  * Processes device invitation credentials.
  */
 export class DeviceStateMachine {
-  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(key => key.toHex());
+  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 
@@ -24,7 +24,7 @@ export class DeviceStateMachine {
   ) {}
 
   async process (credential: Credential) {
-    log('Credential processed:', credential);
+    log('credential processed:', credential);
 
     // Save device key chain credential when processed by the party state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {

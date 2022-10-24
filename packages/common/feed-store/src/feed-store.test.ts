@@ -1,309 +1,130 @@
 //
-// Copyright 2019 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import faker from 'faker';
 
-import expect from 'expect';
-import hypercore from 'hypercore';
-import assert from 'node:assert';
-import { randomBytes } from 'node:crypto';
-import { callbackify } from 'node:util';
-import pify from 'pify';
-import tempy from 'tempy';
-import waitForExpect from 'wait-for-expect';
-
-import { sleep } from '@dxos/async';
-import { createKeyPair, verifySignature } from '@dxos/crypto';
-import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import { StorageType } from '@dxos/random-access-storage';
 
-import { FeedDescriptor } from './feed-descriptor';
-import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore-types';
+import { TestItemBuilder } from './testing';
 
-interface KeyPair {
-  key: PublicKey
-}
+chai.use(chaiAsPromised);
 
-const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
+describe('FeedStore', function () {
+  it('creates feeds', async function () {
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
 
-const createFeedStore = (storage: Storage, options = {}) => {
-  return new FeedStore(storage.createDirectory('feed'), options);
-};
+    const numFeeds = 5;
+    const feedKeys = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
+      const feedKey = PublicKey.random();
+      await feedStore.openFeed(feedKey);
+      return feedKey;
+    }));
 
-const createDefault = async () => {
-  const directory = tempy.directory();
-
-  return {
-    directory,
-    feedStore: createFeedStore(createStorage({ type: StorageType.NODE, root: directory }), { valueEncoding: 'utf-8' })
-  };
-};
-const keyring = new Keyring();
-
-const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>):
-  Promise<Record<string, FeedDescriptor>> =>
-  Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    [feed, await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)]
-  )));
-
-const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
-
-const head = (feed: HypercoreFeed) => pify(feed.head.bind(feed))();
-
-const createKeyPairs = async () => Object.fromEntries<KeyPair>(await Promise.all(feedNames.map(async feed => {
-  const publicKey = await keyring.createKey();
-  return [feed, { key: publicKey }] as const;
-})));
-
-describe.skip('FeedStore', function () {
-  let keys: Record<string, KeyPair>;
-
-  before(async function () {
-    keys = await createKeyPairs();
-  });
-
-  it('Config default', async function () {
-    const feedStore = await createFeedStore(createStorage({ type: StorageType.RAM }));
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'));
-    expect(feedStore2).toBeInstanceOf(FeedStore);
-  });
-
-  it('Create feed', async function () {
-    const { feedStore } = await createDefault();
-    const { booksFeed: descriptor } = await defaultFeeds(feedStore, keys);
-    const { feed: booksFeed } = descriptor;
-
-    expect(booksFeed).toBeInstanceOf(hypercore);
-
-    const booksFeedDescriptor = await feedStore.openReadWriteFeedWithSigner(descriptor.key, keyring);
-    expect(booksFeedDescriptor).toHaveProperty('key', PublicKey.from(booksFeed.key));
-
-    await append(booksFeed, 'Foundation and Empire');
-    await expect(head(booksFeed)).resolves.toBe('Foundation and Empire');
-
-    // It should return the same opened instance.
-    await expect(feedStore.openReadOnlyFeed(PublicKey.from(booksFeed.key))).resolves.toBe(booksFeedDescriptor);
-  });
-
-  it.skip('Create duplicate feed', async function () {
-    const { feedStore } = await createDefault();
-
-    const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
-    assert(fds.secretKey);
-
-    const [usersFeed, feed2] = await Promise.all([
-      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey),
-      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey)
-    ]);
-    expect(usersFeed.feed).toBe(feed2.feed);
-
-    await append(usersFeed.feed, 'alice');
-    await expect(head(usersFeed.feed)).resolves.toBe('alice');
-  });
-
-  it('Create and close a feed', async function () {
-    const { feedStore } = await createDefault();
-    const publicKey = PublicKey.random();
-
-    const foo = await feedStore.openReadOnlyFeed(publicKey);
-    expect(foo.opened).toBeTruthy();
-
-    await feedStore.close();
-    expect(foo.opened).toBeFalsy();
-  });
-
-  it('Descriptors', async function () {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
-      .toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key)
-      );
-  });
-
-  it('Feeds', async function () {
-    const { feedStore } = await createDefault();
-    const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore, keys);
-
-    expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
-      .toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
-  });
-
-  it('Close feedStore and their feeds', async function () {
-    const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
-
-    expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(3);
-    await feedStore.close();
-    expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(0);
-  });
-
-  it.skip('Default codec: binary', async function () {
-    const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }));
-    expect(feedStore).toBeInstanceOf(FeedStore);
-
-    const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
-    expect(feed).toBeInstanceOf(hypercore);
-    await append(feed, 'test');
-    await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
-  });
-
-  it.skip('on close error should unlock the descriptor', async function () {
-    const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }), {
-      hypercore: () => ({
-        opened: true,
-        ready: (cb: () => void) => {
-          cb();
-        },
-        on: () => {},
-        close: () => {
-          throw new Error('close error');
-        }
-      })
-    });
-
-    const publicKey = PublicKey.random();
-    await feedStore.openReadOnlyFeed(publicKey);
-
-    await expect(feedStore.close()).rejects.toThrow(/close error/);
-  });
-
-  it('feed event does not get called twice', async function () {
-    const { feedStore } = await createDefault();
-
-    let timesCalled = 0;
-    feedStore.feedOpenedEvent.on(() => {
-      timesCalled++;
-    });
-
-    const key = PublicKey.random();
-    await feedStore.openReadOnlyFeed(key);
-
-    await feedStore.openReadOnlyFeed(key);
-    await feedStore.openReadOnlyFeed(key);
-    await feedStore.openReadOnlyFeed(key);
-
-    await sleep(20); // To flush events.
-
-    expect(timesCalled).toEqual(1);
-  });
-
-  it('Two feeds replicating', async function () {
-    const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'));
-    const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed2'));
-
-    const keyring = new Keyring();
-
-    const key = await keyring.createKey();
-    const feed1 = await feedStore1.openReadWriteFeedWithSigner(key, keyring);
-    const feed2 = await feedStore2.openReadOnlyFeed(key);
-
-    const stream1 = feed1.feed.replicate(true);
-    const stream2 = feed2.feed.replicate(false);
-
-    stream1.pipe(stream2).pipe(stream1);
-
-    await feed1.append('test');
-    await waitForExpect(async () => {
-      expect(feed2.feed.length).toBe(1);
-    });
-  });
-
-  it('Two hypercores replicating', async function () {
-    const { publicKey, secretKey } = createKeyPair();
-    const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey });
-    const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { });
-
-    const stream1 = hypercore1.replicate(true);
-    const stream2 = hypercore2.replicate(false);
-
-    stream1.pipe(stream2).pipe(stream1);
-
-    hypercore1.append('test');
-    hypercore2.download();
-    await waitForExpect(async () => {
-      expect(hypercore2.length).toBe(1);
-    });
-  });
-
-  it('Two hypercores replicating with fake crypto', async function () {
-    const MOCK_CRYPTO = {
-      sign: (data: any, secretKey: any, cb: any) => {
-        cb(null, randomBytes(64));
-      },
-      verify: (signature: any, data: any, key: any, cb: any) => {
-        cb(null, true);
+    {
+      for (const feedKey of feedKeys) {
+        const feed = feedStore.getFeed(feedKey)!;
+        expect(feed.key).to.eq(feedKey);
+        expect(feed.properties.opened).to.be.true;
+        expect(feed.properties.readable).to.be.true;
+        expect(feed.properties.writable).to.be.false;
       }
-    };
 
-    const keyring = new Keyring();
-    const publicKey = (await keyring.createKey()).asBuffer().slice(1);
-    const secretKey = Buffer.from('secret');
+      expect(feedStore.size).to.eq(feedKeys.length);
+    }
 
-    // const { public_key, secret_key } = { public_key: randomBytes(64), secret_key: Buffer.from('secret') };
-    // const { public_key, secret_key } = createKeyPair();
-
-    const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey, crypto: MOCK_CRYPTO });
-    const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { crypto: MOCK_CRYPTO });
-
-    const stream1 = hypercore1.replicate(true);
-    const stream2 = hypercore2.replicate(false);
-
-    stream1.pipe(stream2).pipe(stream1);
-
-    hypercore1.append('test');
-    hypercore2.download();
-    await waitForExpect(async () => {
-      expect(hypercore2.length).toBe(1);
-    });
+    {
+      await feedStore.close();
+      expect(feedStore.size).to.eq(0);
+    }
   });
 
-  it('Two hypercores replicating with keyring', async function () {
-    const keyring = new Keyring();
-    const key = await keyring.createKey();
-    const hypercoreKey = key.asBuffer().slice(1);
-    const crypto = {
-      sign: (data: any, secretKey: any, cb: any) => {
-        callbackify(keyring.sign.bind(keyring))(key, data, (err, res) => {
-          if (err) {
-            cb(err);
-            return;
-          }
-          console.log('sign', Buffer.from(res).toString('hex'));
-          cb(null, Buffer.from(res));
+  it('gets an opened feed', async function () {
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
+    const feedKey = PublicKey.random();
+
+    {
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
+      expect(feed.properties.writable).to.be.false;
+      expect(feedStore.size).to.eq(1);
+    }
+
+    {
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
+      expect(feed.properties.writable).to.be.false;
+      expect(feedStore.size).to.eq(1);
+    }
+  });
+
+  it('tries to open an existing readable feed as writable', async function () {
+    const builder = new TestItemBuilder();
+    const feedStore = builder.createFeedStore();
+    const feedKey = PublicKey.random();
+
+    {
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.key).to.eq(feedKey);
+      expect(feed.properties.writable).to.be.false;
+      expect(feedStore.size).to.eq(1);
+    }
+
+    // Attempt to reopen as writable (fail).
+    {
+      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be.rejected;
+    }
+  });
+
+  it('reopens a feed and reads data from storage', async function () {
+    // NOTE: Must use Node so that data is persistent across invocations.
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
+    const builder = new TestItemBuilder();
+    const feedKey = await builder.keyring!.createKey();
+
+    const numBlocks = 10;
+
+    // Write.
+    {
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feed = await feedStore.openFeed(feedKey, { writable: true });
+
+      for (const i of Array.from(Array(numBlocks)).keys()) {
+        await feed.append({
+          id: String(i),
+          value: faker.lorem.sentence()
         });
-      },
-      verify: async (signature: any, data: any, _key: any, cb: any) => {
-        console.log({
-          signature: signature.toString('hex'),
-          data: data.toString('hex'),
-          key: key.toString(),
-          result: await verifySignature(key, data, signature)
-        });
-        callbackify(verifySignature)(key, data, signature, cb);
       }
-    };
 
-    const secretKey = Buffer.from('secret');
+      expect(feed.properties.length).to.eq(numBlocks);
+    }
 
-    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { secretKey, crypto });
-    const hypercore2 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto });
+    // Read.
+    {
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.properties.length).to.eq(numBlocks);
+    }
 
-    const stream1 = hypercore1.replicate(true);
-    const stream2 = hypercore2.replicate(false);
+    // Delete.
+    {
+      const storage = builder.clone().setStorage(StorageType.NODE).storage;
+      await storage.destroy();
+    }
 
-    stream1.pipe(stream2).pipe(stream1);
-
-    hypercore1.append('test');
-    hypercore2.download();
-    await waitForExpect(async () => {
-      expect(hypercore2.length).toBe(1);
-    });
+    // Read (should be empty).
+    {
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.properties.length).to.eq(0);
+    }
   });
 });

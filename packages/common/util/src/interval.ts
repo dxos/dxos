@@ -3,7 +3,7 @@
 //
 
 /**
- * Runs the callback in an exponentially increasing interval
+ * Runs the callback in an exponentially increasing interval.
  * @returns Callback to clear the interval.
  */
 export const exponentialBackoffInterval = (cb: () => void, initialInterval: number): () => void => {
@@ -13,6 +13,7 @@ export const exponentialBackoffInterval = (cb: () => void, initialInterval: numb
     interval *= 2;
     timeoutId = setTimeout(repeat, interval);
   };
+
   let timeoutId = setTimeout(repeat, interval);
   return () => clearTimeout(timeoutId);
 };

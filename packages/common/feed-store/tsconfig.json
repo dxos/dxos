@@ -3,8 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
+      "@dxos/mocha",
+      "@dxos/shims",
       "mocha",
-      "node"
+      "node",
     ]
   },
   "include": [
@@ -16,6 +18,9 @@
     },
     {
       "path": "../crypto"
+    },
+    {
+      "path": "../hypercore"
     },
     {
       "path": "../keys"

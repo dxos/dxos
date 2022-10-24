@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { makeSet, makeMap } from './complex';
 
-const PulicKeySet = makeSet<PublicKey>(key => key.toHex());
+const PulicKeySet = makeSet<PublicKey>(PublicKey.hash);
 
 it('ComplexSet', function () {
   const key1 = PublicKey.random();
@@ -39,7 +39,7 @@ it('ComplexSet', function () {
   expect(Array.from(set.values())).to.deep.equal([key2]);
 });
 
-const PulicKeyMap = makeMap<PublicKey>(key => key.toHex());
+const PulicKeyMap = makeMap<PublicKey>(PublicKey.hash);
 
 it('ComplexMap', function () {
   const key1 = PublicKey.random();

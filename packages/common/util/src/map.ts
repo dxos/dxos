@@ -7,7 +7,7 @@ import assert from 'node:assert';
 /**
  * Map with lazily created values.
  */
-// TODO(burdon): Create multimap (eg, map of sets)?
+// TODO(burdon): Create multi-map (e.g., map of sets)?
 export class LazyMap<K, V> extends Map<K, V> {
   constructor (private _initFn: (key: K) => V) {
     super();

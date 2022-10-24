@@ -24,13 +24,14 @@ const defaultTestingConfig: ConfigProto = {
 };
 
 describe('ServiceHost', function () {
-  it('device invitations', async function () {
+  it('process device invitation', async function () {
     const peer1 = new ClientServiceHost({
       config: new Config(defaultTestingConfig),
       modelFactory: new ModelFactory().registerModel(ObjectModel)
     });
     await peer1.open();
     afterTest(() => peer1.close());
+
     const peer2 = new ClientServiceHost({
       config: new Config(defaultTestingConfig),
       modelFactory: new ModelFactory().registerModel(ObjectModel)
@@ -39,7 +40,6 @@ describe('ServiceHost', function () {
     afterTest(() => peer2.close());
 
     await peer1.services.ProfileService.createProfile({});
-
     const invitation = await until<InvitationDescriptor>((resolve) => {
       const stream = peer1.services.ProfileService.createInvitation();
       stream.subscribe(msg => {

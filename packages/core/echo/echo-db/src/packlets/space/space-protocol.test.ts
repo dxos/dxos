@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { afterTest } from '@dxos/testutils';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
@@ -22,7 +22,7 @@ describe('space/space-protocol', function () {
     const peerId1 = PublicKey.random();
     const networkManager1 = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
     const protocol1 = new SpaceProtocol(
       networkManager1,
@@ -31,12 +31,14 @@ describe('space/space-protocol', function () {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      []
+      }
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+    const networkManager2 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,
@@ -44,8 +46,7 @@ describe('space/space-protocol', function () {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      []
+      }
     );
 
     await protocol1.start();
@@ -64,7 +65,10 @@ describe('space/space-protocol', function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+    const networkManager1 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    });
     const protocol1 = new SpaceProtocol(
       networkManager1,
       topic,
@@ -72,14 +76,16 @@ describe('space/space-protocol', function () {
         peerKey: peerId1,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false // Reject everyone.
-      },
-      []
+      }
     );
 
-    const pAuthFailed = protocol1.authenticationFailed.waitForCount(1);
+    const authFailedPromise = protocol1.authenticationFailed.waitForCount(1);
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+    const networkManager2 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,
@@ -87,8 +93,7 @@ describe('space/space-protocol', function () {
         peerKey: peerId2,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      []
+      }
     );
 
     await protocol1.start();
@@ -97,6 +102,6 @@ describe('space/space-protocol', function () {
     await protocol2.start();
     afterTest(() => protocol2.stop());
 
-    await pAuthFailed;
+    await authFailedPromise;
   });
 });

@@ -18,7 +18,7 @@ import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { SignalMessage } from '../signal';
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 

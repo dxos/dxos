@@ -23,7 +23,9 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "assert": "^2.0.0",
     "util": "^0.12.4"
   },

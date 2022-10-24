@@ -300,7 +300,7 @@ export class RpcPeer {
           assert(response.error.name);
           assert(response.error.message);
           assert(response.error.stack);
-          // TODO(marik-d): Stack trace might be lost because the stream producer function is called asynchronously.
+          // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
           close(new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method));
         } else if (response.payload) {
           next(response.payload);

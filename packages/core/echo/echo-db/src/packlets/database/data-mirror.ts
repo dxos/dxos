@@ -37,7 +37,6 @@ export class DataMirror {
       async diff => {
         for (const addedEntity of diff.added ?? []) {
           log(`Construct: ${JSON.stringify(addedEntity)}`);
-
           assert(addedEntity.itemId);
           assert(addedEntity.genesis);
           assert(addedEntity.genesis.modelType);

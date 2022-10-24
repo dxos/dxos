@@ -7,7 +7,8 @@ import expect from 'expect';
 import { promiseTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { MutationMetaWithTimeframe, Timeframe } from '@dxos/protocols';
+import { MutationMetaWithTimeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Model } from './model';
 import { StateManager } from './state-manager';
@@ -78,7 +79,7 @@ describe('StateManager', function () {
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
   });
 
-  it('late initalization', function () {
+  it('late initialization', function () {
     const stateManager = new StateManager<TestListModel>(TestListModel.meta.type, undefined, createId(), {}, feedA, null);
     expect(stateManager.initialized).toBe(false);
     expect(stateManager.modelType).toEqual(TestListModel.meta.type);
@@ -93,7 +94,7 @@ describe('StateManager', function () {
     expect(stateManager.model.messages).toEqual([{ data: 'message1' }, { data: 'message2' }]);
   });
 
-  it('upate event gets triggered', async function () {
+  it('update event gets triggered', async function () {
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, null);
 
     const gotUpdate = stateManager.model.update.waitForCount(1);
@@ -120,7 +121,7 @@ describe('StateManager', function () {
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
     });
 
-    it('2 optimistic mutations queued together', async function () {
+    it('two optimistic mutations queued together', async function () {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
       feedWriter.written.on(([message, meta]) => stateManager.processMessage({
