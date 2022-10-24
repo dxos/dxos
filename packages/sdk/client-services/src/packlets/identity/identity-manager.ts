@@ -13,8 +13,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Identity } from '../identity';
 
@@ -39,7 +40,7 @@ export class IdentityManager {
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor (
     private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _keyring: Keyring,
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory
@@ -88,12 +89,12 @@ export class IdentityManager {
   }
 
   private async _constructSpace ({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
-    const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeControlFeedKey, this._keyring);
-    const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeDataFeedKey, this._keyring);
+    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
 
     // Might be the same feed as the control feed on the top.
     // It's important to initialize it after writable feeds so that the feed is in the writable state.
-    const genesisFeed = await this._feedStore.openReadOnlyFeed(spaceRecord.genesisFeedKey);
+    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
 
     return new Space({
       spaceKey: spaceRecord.spaceKey,
@@ -102,11 +103,12 @@ export class IdentityManager {
       dataFeed,
       // TODO(dmaretskyi): This might always be the empty timeframe.
       initialTimeframe: new Timeframe(),
-      feedProvider: key => this._feedStore.openReadOnlyFeed(key),
+      feedProvider: key => this._feedStore.openFeed(key),
       networkManager: this._networkManager,
       networkPlugins,
       swarmIdentity,
-      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
+      databaseFactory: async ({ databaseBackend }) =>
+        new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
     });
   }
 

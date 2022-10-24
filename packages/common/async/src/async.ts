@@ -34,7 +34,7 @@ export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: 
 
   const timeoutPromise = new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(error);
+      reject(error ?? new Error(`Timed out after ${timeout}ms`));
     }, timeout);
 
     cancelTimeout = () => {
@@ -53,10 +53,11 @@ export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: 
 /**
  * Returns a Promise which resolves when `condFn` returns truthy. The value returned by
  * `condFn` is used to resolve the Promise.
+ * @param condition Function to call.
  * @param [timeout] How long to wait, in milliseconds (0 = no timeout).
  * @param [interval=10] How frequently to check, in milliseconds.
  */
-export const waitForCondition = (condFn: Function, timeout = 0, interval = 10) => {
+export const waitForCondition = (condition: Function, timeout = 0, interval = 10) => {
   const stopTime = timeout ? Date.now() + timeout : 0;
   const [provider, resolver] = trigger<any>();
   const waiter = async () => {
@@ -64,7 +65,7 @@ export const waitForCondition = (condFn: Function, timeout = 0, interval = 10) =
     while (!stopTime || Date.now() < stopTime) {
       try {
         // eslint-disable-next-line no-await-in-loop
-        const value = await condFn();
+        const value = await condition();
         if (value) {
           resolver(value);
           break;

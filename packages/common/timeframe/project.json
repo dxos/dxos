@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/common/timeframe/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/timeframe/dist",
+        "tsConfig": "packages/common/timeframe/tsconfig.json",
+        "main": "packages/common/timeframe/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+    ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/timeframe/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/common/timeframe/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/timeframe/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/timeframe",
+        "resultsPath": "test-results/packages/common/timeframe",
+        "coveragePath": "coverage/packages/common/timeframe"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

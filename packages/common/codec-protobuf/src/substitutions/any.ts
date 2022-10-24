@@ -35,6 +35,7 @@ export const anySubstitutions = {
         value: data
       };
     },
+
     decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
       if (options.preserveAny) {
         return {

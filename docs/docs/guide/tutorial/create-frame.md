@@ -39,7 +39,7 @@ cd dxos-intro
 yarn
 ```
 
-> Note: `yarn` is required here due to a dependency issue with `wrtc` which causes `npm install` to fail.
+> NOTE: `yarn` is required here due to a dependency issue with `wrtc` which causes `npm install` to fail.
 
 After the dependencies are installed we can run the storybook to see the placeholder frame content:
 
@@ -47,7 +47,7 @@ After the dependencies are installed we can run the storybook to see the placeho
 yarn book
 ```
 
-> Note: the frame template does not use StorybookJS but a stripped down implementation of stories built using esbuild. The details are not included here as they are not relevant to this tutorial but you can find more information on this tool here: [@dxos/esbuild-server](https://github.com/dxos/esbuild-server).
+> NOTE: the frame template does not use StorybookJS but a stripped down implementation of stories built using esbuild. The details are not included here as they are not relevant to this tutorial but you can find more information on this tool here: [@dxos/esbuild-server](https://github.com/dxos/esbuild-server).
 
 ## Update Dependencies
 
@@ -102,7 +102,7 @@ We need to pass a few options to `createItem`, let's walk through what those are
 
 Finally, we need to return the item we've created.
 
-> Note: ECHO APIs which mutate data, such as creating an item or setting a property, are async and return promises.
+> NOTE: ECHO APIs which mutate data, such as creating an item or setting a property, are async and return promises.
 
 ```ts
 const TYPE_TASKS_LIST = 'example:type.tasks.list';

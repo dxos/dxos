@@ -12,6 +12,7 @@ import assert from 'assert';
  * are executed synchronously,
  * and can return results.
  */
+// TODO(burdon): Move to @dxos/async.
 export class Callback<T extends (...args: any[]) => any> {
   private _callback: T | undefined;
 

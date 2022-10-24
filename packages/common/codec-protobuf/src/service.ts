@@ -46,7 +46,7 @@ export class Service {
       assert(method.resolvedResponseType);
       assert(!method.requestStream, 'Streaming RPC requests are not supported.');
 
-      // TODO(marik-d): What about primitive types.
+      // TODO(dmaretskyi): What about primitive types.
       const requestCodec = schema.tryGetCodecForType(method.resolvedRequestType.fullName);
       const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName);
       const methodName = mapRpcMethodName(method.name);

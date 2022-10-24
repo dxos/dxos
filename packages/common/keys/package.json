@@ -18,6 +18,7 @@
     "check": "true"
   },
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "assert": "^2.0.0",
     "randombytes": "^2.1.0",
     "util": "^0.12.4"

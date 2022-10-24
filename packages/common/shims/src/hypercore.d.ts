@@ -23,15 +23,6 @@ declare module 'hypercore' {
   export type Callback<T> = (err: Error | null, result: T) => void
 
   /**
-   * Feed data block.
-   */
-  // TODO(burdon): Remove -- not defined by hypercore.
-  export type FeedBlock = {
-    seq: number
-    data: Buffer
-  }
-
-  /**
    * Download range.
    */
   export type Range = {
@@ -168,7 +159,7 @@ declare module 'hypercore' {
    * Raw hypercore feed.
    * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
    */
-  export interface Hypercore<T = any> extends Nanoresource, HypercoreProperties {
+  export interface Hypercore<T> extends Nanoresource, HypercoreProperties {
 
     // Alias for open.
     ready (cb: Callback<void>): void

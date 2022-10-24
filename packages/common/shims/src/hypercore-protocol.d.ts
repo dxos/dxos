@@ -92,6 +92,7 @@ declare module 'hypercore-protocol' {
     destroy (error?: Error): void
     finalize (): void
     registerExtension (name: string, handlers?: ExtensionHandlers): StreamExtension
+    write (data: any, next: () => void): void
   }
 
   export = ProtocolStream
