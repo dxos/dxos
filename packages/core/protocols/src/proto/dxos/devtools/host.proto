@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "dxos/devtools/swarmLog.proto";
+
 import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
 
@@ -14,7 +16,7 @@ import "dxos/halo/signed.proto";
 import "dxos/keys.proto";
 import "dxos/rpc.proto";
 
-package dxos.devtools;
+package dxos.devtools.host;
 
 //
 // DevtoolsHost
@@ -276,25 +278,6 @@ message SubscribeToSignalTraceResponse {
 message SubscribeToSwarmInfoRequest {}
 
 message SubscribeToSwarmInfoResponse {
-  // TODO(yivlad): Move these types to @dxos/network-manager and import them from there.
-  message SwarmInfo {
-    dxos.keys.PublicKey id = 1;
-    dxos.keys.PublicKey topic = 2;
-    optional string label = 3;
-    bool is_active = 4;
-    message ConnectionInfo {
-      message Json {
-        optional string data = 1;
-      }
-      string state = 1;
-      dxos.keys.PublicKey session_id = 2;
-      dxos.keys.PublicKey remote_peer_id = 3;
-      optional string transport = 4;
-      repeated string protocol_extensions = 5;
-      repeated Json events = 6;
-    }
-    repeated ConnectionInfo connections = 5;
-  }
   repeated SwarmInfo data = 1;
 }
 

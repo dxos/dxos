@@ -50,7 +50,8 @@
     "@dxos/signal": "workspace:*",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/level-js": "~4.0.1",
-    "@types/memdown": "^3.0.0"
+    "@types/memdown": "^3.0.0",
+    "@types/readable-stream": "^2.3.9"
   },
   "publishConfig": {
     "access": "public"
