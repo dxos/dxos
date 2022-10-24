@@ -3644,17 +3644,25 @@ importers:
 
   tools/executors/toolbox:
     specifiers:
+      '@nrwl/devkit': 14.5.7
+      '@nrwl/nx': ^7.8.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pick': ^4.4.7
       '@types/lodash.sortby': ^4.7.7
       chalk: ^4.1.0
+      comment-json: ^4.2.3
       console-table-printer: ^2.11.0
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       lodash.sortby: ^4.7.0
       sort-package-json: ^1.57.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
     dependencies:
+      '@nrwl/devkit': 14.5.7_typescript@4.8.4
+      '@nrwl/nx': 7.8.7
       chalk: 4.1.2
+      comment-json: 4.2.3
       console-table-printer: 2.11.1
       lodash.defaultsdeep: 4.6.1
       lodash.pick: 4.4.0
@@ -3664,6 +3672,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pick': 4.4.7
       '@types/lodash.sortby': 4.7.7
+      ts-node: 10.9.1_typescript@4.8.4
+      typescript: 4.8.4
 
   tools/log-hook:
     specifiers:
@@ -7204,6 +7214,20 @@ packages:
       - typescript
     dev: true
 
+  /@nrwl/devkit/14.5.7_typescript@4.8.4:
+    resolution: {integrity: sha512-ls28Y1xz/wwlmTL3Wk6Th3NcUPrFuc8K3xept2dgD9oRZTnW/DdC3nLzjov8xqBJ1DrxFVOG5a+FmPc7UENj/g==}
+    peerDependencies:
+      nx: '>= 13.10 <= 15'
+    dependencies:
+      '@phenomnomnominal/tsquery': 4.1.1_typescript@4.8.4
+      ejs: 3.1.8
+      ignore: 5.2.0
+      semver: 7.3.4
+      tslib: 2.4.0
+    transitivePeerDependencies:
+      - typescript
+    dev: false
+
   /@nrwl/eslint-plugin-nx/14.5.7_nrc2d4knn7wn75eoukzzbkawsm:
     resolution: {integrity: sha512-4nnQg/vzcg1eYRRFk9WFPed7NxVsqqnYZcMbEPwJzqEOkbGjiGQ+TTivfhlV/nVqPlHTTCl19ufjgjv1gI5OKA==}
     peerDependencies:
@@ -7336,6 +7360,13 @@ packages:
     transitivePeerDependencies:
       - debug
     dev: true
+
+  /@nrwl/nx/7.8.7:
+    resolution: {integrity: sha512-a/pOozIT86IIWue6MSwN2EKO4grJ8My7QMl+g535/vrDg75riyBTkWF+nX6VM/JjGz40Y5nFZaX94924cZWt5g==}
+    deprecated: This package has been replaced by @nrwl/workspace. See https://nx.dev/angular/guides/nx7-to-nx8 on how to upgrade.
+    peerDependencies:
+      jasmine-marbles: 0.4.0
+    dev: false
 
   /@nrwl/storybook/14.5.7_7kczsssnejxhpxxhxf4j7nky4q:
     resolution: {integrity: sha512-nwWR54lufy8ykqZDVXy5kCUkdOKxWzXCgqgbe2jTCItA1Cps2cgZHKadfsw/klaQwIoERnhiCHu4BfbWh89MtQ==}
@@ -7766,7 +7797,6 @@ packages:
     dependencies:
       esquery: 1.4.0
       typescript: 4.8.4
-    dev: true
 
   /@playwright/test/1.27.1:
     resolution: {integrity: sha512-mrL2q0an/7tVqniQQF6RBL2saskjljXzqNcCOVMUjRIgE6Y38nCNaP+Dc2FBW06bcpD3tqIws/HT9qiMHbNU0A==}
@@ -13866,6 +13896,10 @@ packages:
     resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
     dev: false
 
+  /array-timsort/1.0.3:
+    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
+    dev: false
+
   /array-union/1.0.2:
     resolution: {integrity: sha512-Dxr6QJj/RdU/hCaBjOfxW+q6lyuVE6JFWIrAUpuOOhoJJoQ99cUn3igRaHVB5P9WrgFVN0FfArM3x0cueOU8ng==}
     engines: {node: '>=0.10.0'}
@@ -15659,6 +15693,17 @@ packages:
     engines: {node: ^12.20.0 || >=14}
     dev: true
 
+  /comment-json/4.2.3:
+    resolution: {integrity: sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==}
+    engines: {node: '>= 6'}
+    dependencies:
+      array-timsort: 1.0.3
+      core-util-is: 1.0.3
+      esprima: 4.0.1
+      has-own-prop: 2.0.0
+      repeat-string: 1.6.1
+    dev: false
+
   /common-ancestor-path/1.0.1:
     resolution: {integrity: sha512-L3sHRo1pXXEqX8VU28kfgUY+YGsk09hPqZiZmLacNib6XNTCM8ubYeT7ryXQw8asB1sKgcU5lkB7ONug08aB8w==}
     dev: false
@@ -15726,7 +15771,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -20263,6 +20308,11 @@ packages:
     dependencies:
       is-glob: 3.1.0
     dev: true
+
+  /has-own-prop/2.0.0:
+    resolution: {integrity: sha512-Pq0h+hvsVm6dDEa8x82GnLSYHOzNDt7f0ddFa3FqcQlgzEiptPqL+XrOJNavjOzSYiYWIrgeVYYgGlLmnxwilQ==}
+    engines: {node: '>=8'}
+    dev: false
 
   /has-property-descriptors/1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
@@ -28479,7 +28529,6 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
-    dev: true
 
   /semver/7.3.5:
     resolution: {integrity: sha512-PoeGJYh8HK4BTO/a9Tf6ZG3veo/A7ZVsYrSA6J8ny9nb3B1VrpkuN+z9OE5wfE5p6H4LchYZsegiQgbJD94ZFQ==}
@@ -30444,6 +30493,36 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 16.11.66
+      acorn: 8.8.0
+      acorn-walk: 8.2.0
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 4.8.4
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+
+  /ts-node/10.9.1_typescript@4.8.4:
+    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.9
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.3
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3

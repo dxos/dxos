@@ -2,9 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { parse } from 'comment-json';
 import fs from 'fs';
 
-export const loadJson = (filename: string) => {
+// TODO(burdon): NOTE: Warn if comments before stripping.
+// TODO(burdon): Generalize into template builder.
+export const loadJson = (filename: string): any => {
   const json = fs.readFileSync(filename, 'utf-8');
-  return json ? JSON.parse(json) : undefined;
+  try {
+    return json ? parse(json, undefined, true) : undefined;
+  } catch (err) {
+    console.error(`Invalid file: ${filename}`, err);
+  }
 };

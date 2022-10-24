@@ -34,6 +34,9 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
   const { _ } = options;
   const [, cmd] = _;
 
+  console.log(context.workspace);
+  process.exit();
+
   // TODO(burdon): Caching?
   const workspace = new Workspace(context.root, context.workspace);
 
