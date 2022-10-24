@@ -10,6 +10,13 @@ import { ConfigCommand } from './commands';
 import { loadJson } from './util';
 import { Workspace } from './workspace';
 
+// TODO(burdon): Run via executor or walk workspace.json config?
+// TODO(burdon): Enable sorting of root-level config files via CLI.
+
+// TODO(burdon): Deps check.
+// TODO(burdon): Protobuf typedef generator (from protocols).
+// TODO(burdon): X tools.
+
 export default async (options: ToolkitOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing toolbox...');
   if (context.isVerbose) {
@@ -24,7 +31,7 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   // Load config.
   const configPath = path.join(context.root, 'toolbox.json');
-  const config = loadJson(configPath);
+  const config = loadJson(configPath) ?? {};
 
   let command: Command;
   switch (cmd) {
