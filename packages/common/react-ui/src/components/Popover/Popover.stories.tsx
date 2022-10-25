@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { templateForComponent } from '../../testing';
-import { Button } from '../Button';
+import { Avatar } from '../Avatar';
 import { Popover, PopoverProps } from './Popover';
 
 export default {
@@ -24,7 +24,9 @@ export const Default = templateForComponent(Template)({
   children: ''
 });
 Default.args = {
-  openTrigger: <Button>Open popover</Button>,
+  openTrigger: (
+    <Avatar label={<span>Open popover</span>} fallbackValue='open popover' />
+  ),
   children: 'Popover content',
   closeLabel: 'Close'
 };
