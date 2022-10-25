@@ -71,11 +71,13 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    Telemetry.init({
-      apiKey: TELEMETRY_KEY,
-      batchSize: 20,
-      enable: Boolean(TELEMETRY_KEY) && !disableTelemetry
-    });
+    if (TELEMETRY_KEY) {
+      Telemetry.init({
+        apiKey: TELEMETRY_KEY,
+        batchSize: 20,
+        enable: Boolean(TELEMETRY_KEY) && !disableTelemetry
+      });
+    }
 
     Telemetry.event({
       machineId,
