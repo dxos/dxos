@@ -9,10 +9,12 @@ import { v4 as uuid, validate as validateUuid } from 'uuid';
 
 import { captureException } from '@dxos/sentry';
 
-export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development';
-export const DX_RELEASE = process.env.DX_RELEASE ?? 'development';
-export const TELEMETRY_KEY = process.env.SEGMENT_API_KEY;
-export const SENTRY_DESTINATION = process.env.SENTRY_DSN;
+import telemetryrc from './telemetryrc.json';
+
+export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? telemetryrc.DX_ENVIRONMENT;
+export const DX_RELEASE = process.env.DX_RELEASE ?? telemetryrc.DX_RELEASE;
+export const SENTRY_DESTINATION = process.env.SENTRY_DSN ?? telemetryrc.SENTRY_DESTINATION;
+export const TELEMETRY_KEY = process.env.SEGMENT_API_KEY ?? telemetryrc.TELEMETRY_KEY;
 
 export type TelemetryContext = {
   machineId: string;
