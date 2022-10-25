@@ -39,7 +39,11 @@ it('waitForEvent', async function () {
 
 it('waitForEvent (with test)', async function () {
   const emitter = new EventEmitter();
-  const waiting = waitForEvent(emitter, 'test', value => (value === 300) && value);
+  const waiting = waitForEvent(
+    emitter,
+    'test',
+    (value) => value === 300 && value
+  );
 
   setTimeout(() => emitter.emit('test', 100), 10);
   setTimeout(() => emitter.emit('test', 200), 20);

@@ -31,5 +31,5 @@ export const createReadable = (stream: StreamXReadable): Readable => {
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
  */
 export const createAsyncIterator = (stream: Readable): AsyncIterator<any> => {
-  return (stream)[Symbol.asyncIterator]();
+  return stream[Symbol.asyncIterator]();
 };

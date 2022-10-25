@@ -26,9 +26,9 @@ const ListItem = styled('li')(({ theme }) => ({
 }));
 
 export interface RegistryTypeFilterProps {
-  types: RegistryType[]
-  selected?: CID[]
-  onSelectedChange: (selected: CID[]) => void
+  types: RegistryType[];
+  selected?: CID[];
+  onSelectedChange: (selected: CID[]) => void;
 }
 
 /**
@@ -39,11 +39,14 @@ export const RegistryTypeFilter = ({
   selected: controlledSelected = [],
   onSelectedChange
 }: RegistryTypeFilterProps) => {
-  const [selected, setSelected] = useControlledState<CID[]>(controlledSelected, onSelectedChange);
+  const [selected, setSelected] = useControlledState<CID[]>(
+    controlledSelected,
+    onSelectedChange
+  );
 
   return (
     <List>
-      {types.map(type => (
+      {types.map((type) => (
         <ListItem key={type.type.messageName}>
           <Chip
             label={getTypeName(type)}
@@ -51,7 +54,11 @@ export const RegistryTypeFilter = ({
             color={selected?.includes(type.cid) ? 'primary' : undefined}
             onClick={() => {
               const on = selected?.includes(type.cid);
-              setSelected(on ? selected?.filter((t: CID) => t !== type.cid) : [...selected, type.cid]);
+              setSelected(
+                on
+                  ? selected?.filter((t: CID) => t !== type.cid)
+                  : [...selected, type.cid]
+              );
             }}
           />
         </ListItem>

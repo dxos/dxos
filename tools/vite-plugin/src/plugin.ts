@@ -18,7 +18,7 @@ export const dxosPlugin = (): Plugin => ({
     const devPath = root && resolve(root, 'dx-dev.yml');
 
     return {
-    // TODO(wittjosiah): This shouldn't be required.
+      // TODO(wittjosiah): This shouldn't be required.
       resolve: {
         alias: {
           'node:assert': 'assert/',
@@ -34,8 +34,8 @@ export const dxosPlugin = (): Plugin => ({
             // TODO(wittjosiah): This shouldn't be required.
             {
               name: 'sodium-universal-patch',
-              setup: build => {
-                build.onResolve({ filter: /sodium-native/ }, args => {
+              setup: (build) => {
+                build.onResolve({ filter: /sodium-native/ }, (args) => {
                   return { path: require.resolve('sodium-javascript') };
                 });
               }
@@ -46,9 +46,9 @@ export const dxosPlugin = (): Plugin => ({
       build: {
         rollupOptions: {
           plugins: [
-          // `null` targets all source code files.
-          // https://github.com/FredKSchott/rollup-plugin-polyfill-node#options
-          // TODO(wittjosiah): Specifically target our deps?
+            // `null` targets all source code files.
+            // https://github.com/FredKSchott/rollup-plugin-polyfill-node#options
+            // TODO(wittjosiah): Specifically target our deps?
             RollupNodeGlobalsPlugin({ include: null }),
             RollupConfigPlugin({ configPath, envPath, devPath })
           ]

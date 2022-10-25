@@ -11,12 +11,9 @@ const kDebugInfoProperties = Symbol('kDebugInfoProperties');
 export class OwnershipScope {
   public instance: any;
 
-  constructor (
-    public constr: any,
-    public parent?: OwnershipScope
-  ) {}
+  constructor(public constr: any, public parent?: OwnershipScope) {}
 
-  getInfo () {
+  getInfo() {
     if (!this.instance) {
       return {};
     }
@@ -28,7 +25,7 @@ export class OwnershipScope {
     return info;
   }
 
-  [inspect.custom] () {
+  [inspect.custom]() {
     return {
       className: this.constr.name,
       info: this.getInfo(),
@@ -37,7 +34,7 @@ export class OwnershipScope {
   }
 }
 
-function decorateMethodWeakReturnOwnership (prototype: any, key: string) {
+function decorateMethodWeakReturnOwnership(prototype: any, key: string) {
   const original = prototype[key];
   prototype[key] = function (...args: any) {
     const res = original.apply(this, ...args);
@@ -58,7 +55,9 @@ function decorateMethodWeakReturnOwnership (prototype: any, key: string) {
   };
 }
 
-export function ownershipClass<T extends {new (...args: any[]): {}}>(constr: T) {
+export function ownershipClass<T extends { new (...args: any[]): {} }>(
+  constr: T
+) {
   for (const key of Object.getOwnPropertyNames(constr.prototype)) {
     if (key !== 'constructor' && typeof constr.prototype[key] === 'function') {
       decorateMethodWeakReturnOwnership(constr.prototype, key);
@@ -66,18 +65,27 @@ export function ownershipClass<T extends {new (...args: any[]): {}}>(constr: T) 
   }
 
   return class extends constr {
-    constructor (...args: any[]) {
+    constructor(...args: any[]) {
       const currentCausality = (globalThis as any)[kCurrentOwnershipScope];
-      (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(constr, currentCausality);
+      (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(
+        constr,
+        currentCausality
+      );
       super(...args);
-      (this as any)[kOwnershipScope] = (globalThis as any)[kCurrentOwnershipScope];
+      (this as any)[kOwnershipScope] = (globalThis as any)[
+        kCurrentOwnershipScope
+      ];
       (this as any)[kOwnershipScope].instance = this;
       (globalThis as any)[kCurrentOwnershipScope] = currentCausality;
     }
   };
 }
 
-export const debugInfo = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+export const debugInfo = (
+  target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+) => {
   // console.log(target, propertyKey, descriptor);
   (target[kDebugInfoProperties] ??= []).push(propertyKey);
 };

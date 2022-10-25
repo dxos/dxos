@@ -12,7 +12,10 @@ import { afterTest } from '@dxos/testutils';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
-import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
+import {
+  createInMemoryDatabase,
+  createRemoteDatabaseFromDataServiceHost
+} from './testing';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -26,16 +29,27 @@ describe('Database', function () {
       return backend;
     };
 
-    const setupFrontend = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
-      const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, dataServiceHost);
+    const setupFrontend = async (
+      modelFactory: ModelFactory,
+      dataServiceHost: DataServiceHost
+    ) => {
+      const frontend = await createRemoteDatabaseFromDataServiceHost(
+        modelFactory,
+        dataServiceHost
+      );
       afterTest(() => frontend.destroy());
       return frontend;
     };
 
     const setupDatabase = async () => {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+      const modelFactory = new ModelFactory()
+        .registerModel(ObjectModel)
+        .registerModel(TestListModel);
       const backend = await setupBackend(modelFactory);
-      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
+      const frontend = await setupFrontend(
+        modelFactory,
+        backend.createDataServiceHost()
+      );
       return { backend, frontend };
     };
 
@@ -67,9 +81,14 @@ describe('Database', function () {
 
       const backendItem = await backend.createItem({ model: ObjectModel });
 
-      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
+      const frontend = await setupFrontend(
+        modelFactory,
+        backend.createDataServiceHost()
+      );
 
-      const item = await frontend.waitForItem(item => item.id === backendItem.id);
+      const item = await frontend.waitForItem(
+        (item) => item.id === backendItem.id
+      );
       expect(item.model).toBeInstanceOf(ObjectModel);
     });
 
@@ -97,9 +116,15 @@ describe('Database', function () {
     it('creates two items with ObjectModel', async function () {
       const { frontend: database } = await setupDatabase();
 
-      const item1 = await database.createItem({ model: ObjectModel, type: 'test' });
+      const item1 = await database.createItem({
+        model: ObjectModel,
+        type: 'test'
+      });
       await item1.model.set('prop1', 'x');
-      const item2 = await database.createItem({ model: ObjectModel, type: 'test' });
+      const item2 = await database.createItem({
+        model: ObjectModel,
+        type: 'test'
+      });
       await item2.model.set('prop1', 'y');
 
       expect(item1.model.get('prop1')).toEqual('x');
@@ -109,7 +134,10 @@ describe('Database', function () {
       const { frontend: database } = await setupDatabase();
 
       const parent = await database.createItem({ model: ObjectModel });
-      const child = await database.createItem({ model: ObjectModel, parent: parent.id });
+      const child = await database.createItem({
+        model: ObjectModel,
+        parent: parent.id
+      });
 
       const result = database.select().exec();
       expect(result.entities).toHaveLength(2);
@@ -147,24 +175,56 @@ describe('Database', function () {
     it('directed links', async function () {
       const { frontend: database } = await setupDatabase();
 
-      const p1 = await database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props: { name: 'Person-1' } });
-      const p2 = await database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props: { name: 'Person-2' } });
+      const p1 = await database.createItem({
+        model: ObjectModel,
+        type: OBJECT_PERSON,
+        props: { name: 'Person-1' }
+      });
+      const p2 = await database.createItem({
+        model: ObjectModel,
+        type: OBJECT_PERSON,
+        props: { name: 'Person-2' }
+      });
 
-      const org1 = await database.createItem({ model: ObjectModel, type: OBJECT_ORG, props: { name: 'Org-1' } });
-      const org2 = await database.createItem({ model: ObjectModel, type: OBJECT_ORG, props: { name: 'Org-2' } });
+      const org1 = await database.createItem({
+        model: ObjectModel,
+        type: OBJECT_ORG,
+        props: { name: 'Org-1' }
+      });
+      const org2 = await database.createItem({
+        model: ObjectModel,
+        type: OBJECT_ORG,
+        props: { name: 'Org-2' }
+      });
 
-      await database.createLink({ source: org1, type: LINK_EMPLOYEE, target: p1 });
-      await database.createLink({ source: org1, type: LINK_EMPLOYEE, target: p2 });
-      await database.createLink({ source: org2, type: LINK_EMPLOYEE, target: p2 });
+      await database.createLink({
+        source: org1,
+        type: LINK_EMPLOYEE,
+        target: p1
+      });
+      await database.createLink({
+        source: org1,
+        type: LINK_EMPLOYEE,
+        target: p2
+      });
+      await database.createLink({
+        source: org2,
+        type: LINK_EMPLOYEE,
+        target: p2
+      });
 
       // Find all employees for org.
       expect(
-        org1.links.filter(link => link.type === LINK_EMPLOYEE).map(link => link.target)
+        org1.links
+          .filter((link) => link.type === LINK_EMPLOYEE)
+          .map((link) => link.target)
       ).toStrictEqual([p1, p2]);
 
       // Find all orgs for person.
       expect(
-        p2.refs.filter(link => link.type === LINK_EMPLOYEE).map(link => link.source)
+        p2.refs
+          .filter((link) => link.type === LINK_EMPLOYEE)
+          .map((link) => link.source)
       ).toStrictEqual([org1, org2]);
     });
 
@@ -190,8 +250,12 @@ describe('Database', function () {
         await backendItem.model.sendMessage('foo');
         await backendItem.model.sendMessage('bar');
 
-        const frontendItem: Item<TestListModel> = await frontend.waitForItem(item => item.id === backendItem.id);
-        await frontendItem.model.update.waitForCondition(() => frontendItem.model.messages.length === 2);
+        const frontendItem: Item<TestListModel> = await frontend.waitForItem(
+          (item) => item.id === backendItem.id
+        );
+        await frontendItem.model.update.waitForCondition(
+          () => frontendItem.model.messages.length === 2
+        );
 
         expect(frontendItem.model.messages).toHaveLength(2);
       });
@@ -199,29 +263,45 @@ describe('Database', function () {
 
     describe('queries', function () {
       it('wait for item', async function () {
-        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const modelFactory = new ModelFactory()
+          .registerModel(ObjectModel)
+          .registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         {
           const waiting = database.waitForItem({ type: 'example:type/test-1' });
-          const item = await database.createItem({ model: ObjectModel, type: 'example:type/test-1' });
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+          const item = await database.createItem({
+            model: ObjectModel,
+            type: 'example:type/test-1'
+          });
+          expect(
+            await promiseTimeout(waiting, 100, new Error('timeout'))
+          ).toEqual(item);
         }
 
         {
-          const item = await database.createItem({ model: ObjectModel, type: 'example:type/test-2' });
+          const item = await database.createItem({
+            model: ObjectModel,
+            type: 'example:type/test-2'
+          });
           const waiting = database.waitForItem({ type: 'example:type/test-2' });
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+          expect(
+            await promiseTimeout(waiting, 100, new Error('timeout'))
+          ).toEqual(item);
         }
       });
 
       it('query deleted items', async function () {
-        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const modelFactory = new ModelFactory()
+          .registerModel(ObjectModel)
+          .registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
-        await Promise.all(Array.from({ length: 10 }).map(() =>
-          database.createItem({ model: TestListModel })
-        ));
+        await Promise.all(
+          Array.from({ length: 10 }).map(() =>
+            database.createItem({ model: TestListModel })
+          )
+        );
 
         const result = database.select().exec();
         const items = result.entities;
@@ -237,18 +317,24 @@ describe('Database', function () {
         }
 
         {
-          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          const result = database
+            .select()
+            .exec({ deleted: ItemFilterDeleted.SHOW_DELETED });
           expect(result.entities).toHaveLength(10);
         }
 
         {
-          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          const result = database
+            .select()
+            .exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(result.entities).toHaveLength(1);
         }
       });
 
       it('link between items generates updates to items', async function () {
-        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const modelFactory = new ModelFactory()
+          .registerModel(ObjectModel)
+          .registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         const item1 = await database.createItem({ model: ObjectModel });
@@ -272,7 +358,9 @@ describe('Database', function () {
       });
 
       it('adding an item emits update for parent', async function () {
-        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
+        const modelFactory = new ModelFactory()
+          .registerModel(ObjectModel)
+          .registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         const parentItem = await database.createItem({ model: ObjectModel });
@@ -294,8 +382,15 @@ describe('Database', function () {
         const modelFactory = new ModelFactory().registerModel(ObjectModel);
         const database = await setupBackend(modelFactory);
 
-        await Promise.all(Array.from({ length: 8 }).map(() => database.createItem({ model: ObjectModel })));
-        const { value } = database.reduce(0).call((items) => items.length).exec();
+        await Promise.all(
+          Array.from({ length: 8 }).map(() =>
+            database.createItem({ model: ObjectModel })
+          )
+        );
+        const { value } = database
+          .reduce(0)
+          .call((items) => items.length)
+          .exec();
         expect(value).toBe(8);
       });
     });

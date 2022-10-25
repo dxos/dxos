@@ -12,14 +12,14 @@ import { defaultDescription, defaultFocus } from '../../styles';
 import { Tooltip } from '../Tooltip';
 
 export interface DialogProps {
-  title: ReactNode
-  openTrigger?: ReactNode
-  closeTriggers?: [ReactNode, ...ReactNode[]]
-  titleVisuallyHidden?: boolean
-  description?: ReactNode
-  children?: ReactNode
-  closeLabel?: string
-  initiallyOpen?: boolean
+  title: ReactNode;
+  openTrigger?: ReactNode;
+  closeTriggers?: [ReactNode, ...ReactNode[]];
+  titleVisuallyHidden?: boolean;
+  description?: ReactNode;
+  children?: ReactNode;
+  closeLabel?: string;
+  initiallyOpen?: boolean;
 }
 
 export const Dialog = ({
@@ -36,9 +36,7 @@ export const Dialog = ({
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       {openTrigger && (
-        <DialogPrimitive.Trigger asChild>
-          {openTrigger}
-        </DialogPrimitive.Trigger>
+        <DialogPrimitive.Trigger asChild>{openTrigger}</DialogPrimitive.Trigger>
       )}
       <Transition.Root show={isOpen}>
         <Transition.Child

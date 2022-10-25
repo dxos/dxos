@@ -22,16 +22,20 @@ describe('HypercoreFactory', function () {
     const numBlocks = 100;
 
     // Create feeds.
-    const feeds = await Promise.all(Array.from({ length: numFeeds }).map(async () => {
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = factory.createFeed(publicKey, { secretKey });
-      await feed.open();
-      return feed;
-    }));
+    const feeds = await Promise.all(
+      Array.from({ length: numFeeds }).map(async () => {
+        const { publicKey, secretKey } = createKeyPair();
+        const feed = factory.createFeed(publicKey, { secretKey });
+        await feed.open();
+        return feed;
+      })
+    );
 
     // Write data.
     {
-      const data = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
+      const data = Array.from({ length: numBlocks }).map((_, i) =>
+        createDataItem(i)
+      );
       for await (const datum of data) {
         const feed = faker.random.arrayElement(feeds);
         await py(feed, feed.append)(Buffer.from(JSON.stringify(datum)));
@@ -52,6 +56,6 @@ describe('HypercoreFactory', function () {
       expect(blocks.length).to.eq(feed.length);
     }
 
-    await Promise.all(feeds.map(feed => feed.close()));
+    await Promise.all(feeds.map((feed) => feed.close()));
   });
 });

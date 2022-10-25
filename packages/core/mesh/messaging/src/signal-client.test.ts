@@ -42,9 +42,9 @@ describe('SignalClient', function () {
     const signalMock1 =
       mockFn<
         (message: {
-          author: PublicKey
-          recipient: PublicKey
-          payload: Any
+          author: PublicKey;
+          recipient: PublicKey;
+          payload: Any;
         }) => Promise<void>
       >().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
@@ -100,9 +100,9 @@ describe('SignalClient', function () {
     const signalMock =
       mockFn<
         (message: {
-          author: PublicKey
-          recipient: PublicKey
-          payload: Any
+          author: PublicKey;
+          recipient: PublicKey;
+          payload: Any;
         }) => Promise<void>
       >().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
@@ -144,8 +144,7 @@ describe('SignalClient', function () {
     //   const peers = await api1.lookup(topic);
     //   expect(peers.length).toEqual(2);
     // }, 4_000);
-  })
-    .timeout(5_000);
+  }).timeout(5_000);
 
   // Skip because communication between signal servers is not yet implemented.
   it.skip(
@@ -155,17 +154,17 @@ describe('SignalClient', function () {
       const peer1 = PublicKey.random();
       const peer2 = PublicKey.random();
       const signalMock =
-          mockFn<
-            ({
-              author,
-              recipient,
-              payload
-            }: {
-              author: PublicKey
-              recipient: PublicKey
-              payload: Any
-            }) => Promise<void>
-          >().resolvesTo();
+        mockFn<
+          ({
+            author,
+            recipient,
+            payload
+          }: {
+            author: PublicKey;
+            recipient: PublicKey;
+            payload: Any;
+          }) => Promise<void>
+        >().resolvesTo();
 
       const api1 = new SignalClient(broker1.url(), async () => {});
       afterTest(() => api1.close());
@@ -190,6 +189,5 @@ describe('SignalClient', function () {
         expect(signalMock).toHaveBeenCalledWith([message]);
       }, 4_000);
     }
-  )
-    .timeout(5_000);
+  ).timeout(5_000);
 });

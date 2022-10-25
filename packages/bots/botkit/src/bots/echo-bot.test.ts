@@ -27,9 +27,13 @@ describe('Echo Bot', function () {
       command
     });
 
-    const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
+    const item = await party.database.waitForItem<ObjectModel>({
+      type: TEST_ECHO_TYPE
+    });
     const payload = item.model.get('payload');
-    expect(PublicKey.from(payload).toString()).toBe(PublicKey.from(command).toString());
+    expect(PublicKey.from(payload).toString()).toBe(
+      PublicKey.from(command).toString()
+    );
 
     await bot.stop();
     await client.destroy();

@@ -7,7 +7,11 @@ import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
 
-const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
+const sendToIFrame = (
+  iframe: HTMLIFrameElement,
+  origin: string,
+  message: MessageData
+) => {
   if (!iframe.contentWindow) {
     log.debug('IFrame content window missing', { origin });
     return;
@@ -22,11 +26,11 @@ const sendToParentWindow = (origin: string, message: MessageData) => {
 };
 
 export type IFramePortOptions = {
-  channel: string
-  iframe?: HTMLIFrameElement
-  origin?: string
-  onOrigin?: (origin: string) => void
-}
+  channel: string;
+  iframe?: HTMLIFrameElement;
+  origin?: string;
+  onOrigin?: (origin: string) => void;
+};
 
 /**
  * Create a RPC port with an iframe over window messaging.
@@ -43,13 +47,16 @@ export const createIFramePort = ({
   onOrigin
 }: IFramePortOptions): RpcPort => {
   return {
-    send: async data => {
+    send: async (data) => {
       if (!origin) {
         log.warn('No origin set yet', { channel });
         return;
       }
 
-      const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+      const payload = data.buffer.slice(
+        data.byteOffset,
+        data.byteOffset + data.byteLength
+      );
       const message = { channel, payload };
       if (iframe) {
         sendToIFrame(iframe, origin, message);
@@ -57,7 +64,7 @@ export const createIFramePort = ({
         sendToParentWindow(origin, message);
       }
     },
-    subscribe: callback => {
+    subscribe: (callback) => {
       const handler = (event: MessageEvent<unknown>) => {
         if (!iframe && event.source !== window.parent) {
           // Not from parent window.
@@ -67,11 +74,12 @@ export const createIFramePort = ({
           return;
         }
 
-        const isMessageData = event.data &&
+        const isMessageData =
+          event.data &&
           typeof event.data === 'object' &&
           'channel' in event.data &&
           'payload' in event.data;
-        const message = isMessageData ? event.data as MessageData : undefined;
+        const message = isMessageData ? (event.data as MessageData) : undefined;
         if (message?.channel !== channel) {
           return;
         }
@@ -108,5 +116,5 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
-  return document.getElementById(id) as HTMLIFrameElement ?? create();
+  return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

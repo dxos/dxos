@@ -20,7 +20,7 @@ const KEYS_TO_FILE = {
 };
 
 export class ConfigPlugin {
-  constructor ({ path = DEFAULT_PATH, dynamic = false } = {}) {
+  constructor({ path = DEFAULT_PATH, dynamic = false } = {}) {
     this._path = path;
     this._dynamic = dynamic;
   }
@@ -29,36 +29,45 @@ export class ConfigPlugin {
    * @param {Compiler} compiler webpack compiler instance
    * @returns {void}
    */
-  apply (compiler) {
+  apply(compiler) {
     /* Grab info from compiler, and set a __DXOS_CONFIG__ with { publicUrl, useLocal }. Add to generated keys.
      * Append the generated keys to DefinePlugin (see constructor)
      * Use Context Replacement to use loaders/browser.
      */
-    const definitions = Object.entries(KEYS_TO_FILE).reduce((prev, [key, value]) => {
-      let content = {};
-      try {
-        content = yaml.load(fs.readFileSync(resolve(this._path, value)));
+    const definitions = Object.entries(KEYS_TO_FILE).reduce(
+      (prev, [key, value]) => {
+        let content = {};
+        try {
+          content = yaml.load(fs.readFileSync(resolve(this._path, value)));
 
-        if (value === 'envs-map.yml') {
-          content = mapFromKeyValues(content, process.env);
+          if (value === 'envs-map.yml') {
+            content = mapFromKeyValues(content, process.env);
+          }
+        } catch (err) {
+          // code compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
+          // code   const error = new WebpackError(`
+          // code   `)
+          // code   error.name = 'EnvVariableNotDefinedError';
+          // code   compilation.errors.push(error);
+          // code });
         }
-      } catch (err) {
-        // code compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
-        // code   const error = new WebpackError(`
-        // code   `)
-        // code   error.name = 'EnvVariableNotDefinedError';
-        // code   compilation.errors.push(error);
-        // code });
+        return {
+          ...prev,
+          [key]: JSON.stringify(content)
+        };
+      },
+      {
+        __DXOS_CONFIG__: JSON.stringify({
+          dynamic: this._dynamic,
+          publicUrl: compiler.options.output.publicPath
+        })
       }
-      return {
-        ...prev,
-        [key]: JSON.stringify(content)
-      };
-    }, {
-      __DXOS_CONFIG__: JSON.stringify({ dynamic: this._dynamic, publicUrl: compiler.options.output.publicPath })
-    });
+    );
 
     new DefinePlugin(definitions).apply(compiler);
-    new NormalModuleReplacementPlugin(/[/\\]loaders[/\\]index.js/, './browser.js').apply(compiler);
+    new NormalModuleReplacementPlugin(
+      /[/\\]loaders[/\\]index.js/,
+      './browser.js'
+    ).apply(compiler);
   }
 }

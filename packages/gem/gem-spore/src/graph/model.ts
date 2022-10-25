@@ -10,8 +10,8 @@ import { emptyGraph, GraphData, GraphNode, GraphLink } from './types';
  * Graph accessor.
  */
 export interface GraphModel<T extends GraphNode> {
-  get graph (): GraphData<T>
-  subscribe (callback: (graph: GraphData<T>) => void): () => void
+  get graph(): GraphData<T>;
+  subscribe(callback: (graph: GraphData<T>) => void): () => void;
 }
 
 /**
@@ -20,33 +20,31 @@ export interface GraphModel<T extends GraphNode> {
 export class GraphBuilder<T extends GraphNode> {
   readonly updated = new EventEmitter<GraphData<T>>();
 
-  constructor (
-    private readonly _graph = emptyGraph
-  ) {}
+  constructor(private readonly _graph = emptyGraph) {}
 
-  get graph (): GraphData<T> {
+  get graph(): GraphData<T> {
     return this._graph;
   }
 
-  clear () {
+  clear() {
     this._graph.nodes = [];
     this._graph.links = [];
     this.update();
   }
 
-  subscribe (callback: (graph: GraphData<T>) => void): () => void {
+  subscribe(callback: (graph: GraphData<T>) => void): () => void {
     return this.updated.on(callback);
   }
 
   /**
    * Trigger update.
    */
-  update () {
+  update() {
     this.updated.emit(this._graph);
   }
 
-  getNode (id: string): GraphNode | undefined {
-    return this._graph.nodes.find(node => node.id === id);
+  getNode(id: string): GraphNode | undefined {
+    return this._graph.nodes.find((node) => node.id === id);
   }
 
   /**
@@ -55,8 +53,8 @@ export class GraphBuilder<T extends GraphNode> {
    * @param source
    * @param target
    */
-  getLinks (id: string, source = true, target = false): GraphLink[] {
-    return this._graph.links.filter(link => {
+  getLinks(id: string, source = true, target = false): GraphLink[] {
+    return this._graph.links.filter((link) => {
       if (source && link.source === id) {
         return true;
       }
@@ -70,21 +68,21 @@ export class GraphBuilder<T extends GraphNode> {
 
   // TODO(burdon): Batch mode.
 
-  addNode (node: GraphNode, update = true) {
+  addNode(node: GraphNode, update = true) {
     this._graph.nodes.push(node);
 
     update && this.update();
     return this;
   }
 
-  addLink (link: GraphLink, update = true) {
+  addLink(link: GraphLink, update = true) {
     this._graph.links.push(link);
 
     update && this.update();
     return this;
   }
 
-  createLink (source: GraphNode, target: GraphNode, update = true) {
+  createLink(source: GraphNode, target: GraphNode, update = true) {
     this._graph.links.push({
       id: `${source.id}-${target.id}`,
       source: source.id,

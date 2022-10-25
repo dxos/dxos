@@ -12,10 +12,10 @@ import { useSvgContext } from './useSvgContext';
 export type ZoomExtent = [min: number, max: number];
 
 export type ZoomOptions = {
-  enabled?: boolean
-  extent?: ZoomExtent
-  onDblClick?: (zoom: ZoomHandler) => void
-}
+  enabled?: boolean;
+  extent?: ZoomExtent;
+  onDblClick?: (zoom: ZoomHandler) => void;
+};
 
 export const defaultOptions: ZoomOptions = {
   enabled: true,
@@ -31,7 +31,7 @@ export class ZoomHandler {
   private _enabled: boolean;
   private readonly _options: ZoomOptions;
 
-  constructor (
+  constructor(
     private readonly _ref: RefObject<SVGGElement>,
     private readonly _context: SVGContext,
     options: ZoomOptions
@@ -40,41 +40,45 @@ export class ZoomHandler {
     this._enabled = this._options.enabled ?? true;
 
     // https://github.com/d3/d3-zoom#zoom
-    this._zoom = d3.zoom()
+    this._zoom = d3
+      .zoom()
       .scaleExtent(this._options.extent ?? defaultOptions.extent);
   }
 
   /**
    * Gets the refence which the transform is applied to.
    */
-  get ref () {
+  get ref() {
     return this._ref;
   }
 
-  get zoom () {
+  get zoom() {
     return this._zoom;
   }
 
-  init () {
+  init() {
     this.setEnabled(this._enabled);
   }
 
-  setEnabled (enable: boolean) {
+  setEnabled(enable: boolean) {
     if (enable) {
       d3.select(this._context.svg)
         .call(this._zoom)
-        .on('dblclick.zoom',
-          this._options?.onDblClick ? () => this._options.onDblClick(this) : null);
+        .on(
+          'dblclick.zoom',
+          this._options?.onDblClick
+            ? () => this._options.onDblClick(this)
+            : null
+        );
     } else {
-      d3.select(this._context.svg)
-        .on('.zoom', null); // Unbind the internal event handler.
+      d3.select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.
     }
 
     this._enabled = enable;
     return this;
   }
 
-  reset (duration = 500) {
+  reset(duration = 500) {
     d3.select(this._context.svg)
       .transition()
       .duration(duration)

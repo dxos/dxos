@@ -10,17 +10,20 @@ const log = debug('dxos:extension:content');
 const port = browser.runtime.connect({ name: 'content' });
 
 // Forward messages from background script to DXOS Client.
-port.onMessage.addListener(message => {
+port.onMessage.addListener((message) => {
   log('Received message from background:', message);
 
-  window.postMessage({
-    data: message.data,
-    source: 'content-script'
-  }, '*');
+  window.postMessage(
+    {
+      data: message.data,
+      source: 'content-script'
+    },
+    '*'
+  );
 });
 
 // Forward messages from DXOS Client to background script.
-window.addEventListener('message', event => {
+window.addEventListener('message', (event) => {
   if (event.source !== window) {
     return;
   }

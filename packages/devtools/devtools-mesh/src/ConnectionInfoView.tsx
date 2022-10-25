@@ -11,31 +11,44 @@ import { ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { CopyText, JsonTreeView } from '@dxos/react-components';
 
 export interface ConnectionInfoViewProps {
-  connectionInfo: ConnectionInfo
-  onReturn?: () => void
+  connectionInfo: ConnectionInfo;
+  onReturn?: () => void;
 }
 
 // TODO(burdon): Convert to table.
-export const ConnectionInfoView = ({ connectionInfo, onReturn }: ConnectionInfoViewProps) => (
+export const ConnectionInfoView = ({
+  connectionInfo,
+  onReturn
+}: ConnectionInfoViewProps) => (
   <div>
     <div>State: {connectionInfo.state}</div>
-    <div>Session id: <CopyText value={connectionInfo.sessionId.toHex()} /></div>
-    <div>Remote peer id: <CopyText value={connectionInfo.remotePeerId.toHex()} /></div>
-    <div>Transport: {connectionInfo.transport}</div>
-    <div>Protocol extensions: {connectionInfo.protocolExtensions?.join(',')}</div>
-    <hr />
     <div>
-      Connection events:
+      Session id: <CopyText value={connectionInfo.sessionId.toHex()} />
     </div>
-    <JsonTreeView data={{
-      ...connectionInfo.events
-    }} />
+    <div>
+      Remote peer id: <CopyText value={connectionInfo.remotePeerId.toHex()} />
+    </div>
+    <div>Transport: {connectionInfo.transport}</div>
+    <div>
+      Protocol extensions: {connectionInfo.protocolExtensions?.join(',')}
+    </div>
+    <hr />
+    <div>Connection events:</div>
+    <JsonTreeView
+      data={{
+        ...connectionInfo.events
+      }}
+    />
     {onReturn && (
-      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
+      <IconButton
+        size='small'
+        onClick={onReturn}
+        title='Back'
+        style={{ borderRadius: 5 }}
+      >
         <ArrowBackIos />
         Back
       </IconButton>
-    )
-    }
+    )}
   </div>
 );

@@ -48,7 +48,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * @param {Buffer} peerId
    * @param {Boolean} uppercase Fold payload case to upper if set.
    */
-  constructor (peerId: Buffer, uppercase = false) {
+  constructor(peerId: Buffer, uppercase = false) {
     super();
     assert(Buffer.isBuffer(peerId));
 
@@ -62,7 +62,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * This node's id.
    * @return {Buffer}
    */
-  get peerId () {
+  get peerId() {
     return this._peerId;
   }
 
@@ -70,7 +70,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * Array of the currently connected peers' node ids (not including our id).
    * @return {{Protocol}[]}
    */
-  get peers () {
+  get peers() {
     return Array.from(this._peers.values());
   }
 
@@ -79,7 +79,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * Called when a new peer transport connection is established.
    * @return {Extension}
    */
-  createExtension () {
+  createExtension() {
     return new Extension(EXTENSION_NAME, { binary: true })
       .setInitHandler(this._init.bind(this))
       .setMessageHandler(this._receive.bind(this))
@@ -96,7 +96,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * @param payload Message to send
    * @return Message received from peer in response to our request.
    */
-  async send (peerId: Buffer, payload: string): Promise<string> {
+  async send(peerId: Buffer, payload: string): Promise<string> {
     assert(Buffer.isBuffer(peerId));
     const peerIdStr = PublicKey.stringify(peerId);
     const peer = this._peers.get(peerIdStr);
@@ -107,11 +107,11 @@ export class TestProtocolPlugin extends EventEmitter {
     return await extension.send(encoded, { oneway: true });
   }
 
-  private async _init (protocol: Protocol) {
+  private async _init(protocol: Protocol) {
     this.initCalled = true;
   }
 
-  async _receive (protocol: Protocol, data: any) {
+  async _receive(protocol: Protocol, data: any) {
     const peerId = getPeerId(protocol);
     assert(peerId !== undefined);
     const peerIdStr = PublicKey.stringify(peerId);
@@ -123,7 +123,7 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('receive', protocol, payload);
   }
 
-  async _onPeerConnect (protocol: Protocol) {
+  async _onPeerConnect(protocol: Protocol) {
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -137,7 +137,7 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('connect', protocol);
   }
 
-  async _onPeerDisconnect (protocol: Protocol) {
+  async _onPeerDisconnect(protocol: Protocol) {
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -152,8 +152,13 @@ export class TestProtocolPlugin extends EventEmitter {
  * @return {ProtocolProvider}
  */
 // TODO(dboreham): Try to encapsulate swarm_key, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: any) => protocolFactory({
-  getTopics: () => [swarmKey],
-  session: { peerId: PublicKey.stringify(nodeId) },
-  plugins: [protocolPlugin]
-});
+export const testProtocolProvider = (
+  swarmKey: Buffer,
+  nodeId: Buffer,
+  protocolPlugin: any
+) =>
+  protocolFactory({
+    getTopics: () => [swarmKey],
+    session: { peerId: PublicKey.stringify(nodeId) },
+    plugins: [protocolPlugin]
+  });

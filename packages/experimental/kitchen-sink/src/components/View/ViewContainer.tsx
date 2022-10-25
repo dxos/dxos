@@ -17,12 +17,12 @@ import { graphStyles } from '../Theme';
 import { ViewType } from './ViewSelector';
 
 interface ViewContainerProps {
-  value: string
-  model?: EchoGraphModel
-  items?: Item<ObjectModel>[]
-  itemAdapter: ItemAdapter
-  selected?: Set<ItemID>
-  onCreateItem?: (type: string, title: string, parent?: ItemID) => void
+  value: string;
+  model?: EchoGraphModel;
+  items?: Item<ObjectModel>[];
+  itemAdapter: ItemAdapter;
+  selected?: Set<ItemID>;
+  onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
 export const ViewContainer = ({
@@ -36,10 +36,7 @@ export const ViewContainer = ({
   <>
     {value === ViewType.List && (
       <BoxContainer expand column>
-        <EchoList
-          itemAdapter={itemAdapter}
-          items={items}
-        />
+        <EchoList itemAdapter={itemAdapter} items={items} />
       </BoxContainer>
     )}
 

@@ -25,7 +25,11 @@ describe('space/space', function () {
 
     {
       // Genesis
-      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+      const generator = new CredentialGenerator(
+        agent.keyring,
+        agent.identityKey,
+        agent.deviceKey
+      );
       const credentials = [
         ...(await generator.createSpaceGenesis(space.key, controlKey)),
         await generator.createFeedAdmission(
@@ -43,13 +47,19 @@ describe('space/space', function () {
       }
 
       // TODO(burdon): Debugging only.
-      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+      await space.controlPipeline.state!.waitUntilTimeframe(
+        space.controlPipeline.state!.endTimeframe
+      );
     }
 
     {
       assert(space.database);
-      const item1 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
-      const item2 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
+      const item1 = await space.database.createItem<ObjectModel>({
+        type: 'dxos.example'
+      });
+      const item2 = await space.database.createItem<ObjectModel>({
+        type: 'dxos.example'
+      });
 
       await item1.model.set('key_1', 'value_1');
       await item2.model.set('key_2', 'value_2');
@@ -57,7 +67,9 @@ describe('space/space', function () {
       expect(item1.model.get('key_1')).toEqual('value_1');
       expect(item2.model.get('key_2')).toEqual('value_2');
 
-      expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
+      expect(
+        space.database.select({ type: 'dxos.example' }).exec().entities
+      ).toHaveLength(2);
     }
   });
 
@@ -65,7 +77,7 @@ describe('space/space', function () {
     const agentFactory = new TestAgentFactory();
 
     // TODO(burdon): Factor out?
-    const run = <T> (cb: () => Promise<T>): Promise<T> => cb();
+    const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 
     //
     // Agent 1
@@ -81,7 +93,11 @@ describe('space/space', function () {
 
       {
         // Genesis
-        const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+        const generator = new CredentialGenerator(
+          agent.keyring,
+          agent.identityKey,
+          agent.deviceKey
+        );
         const credentials = [
           ...(await generator.createSpaceGenesis(space.key, controlKey)),
           await generator.createFeedAdmission(
@@ -98,7 +114,9 @@ describe('space/space', function () {
           });
         }
 
-        await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+        await space.controlPipeline.state!.waitUntilTimeframe(
+          space.controlPipeline.state!.endTimeframe
+        );
       }
 
       return [agent, spaceContext];
@@ -111,7 +129,10 @@ describe('space/space', function () {
       // NOTE: The genesisKey would be passed as part of the invitation.
       const agent = await agentFactory.createAgent();
       const spaceContext = await agent.createSpace(
-        agent.identityKey, spaceContext1.space.key, spaceContext1.genesisKey);
+        agent.identityKey,
+        spaceContext1.space.key,
+        spaceContext1.genesisKey
+      );
       const { space } = spaceContext;
 
       await space.open();
@@ -126,7 +147,11 @@ describe('space/space', function () {
 
     {
       // Write invitation from agent 1.
-      const generator = new CredentialGenerator(agent1.keyring, agent1.identityKey, agent1.deviceKey);
+      const generator = new CredentialGenerator(
+        agent1.keyring,
+        agent1.identityKey,
+        agent1.deviceKey
+      );
       const credentials = await generator.createMemberInvitation(
         spaceContext1.space.key,
         agent2.identityKey,
@@ -148,26 +173,36 @@ describe('space/space', function () {
 
       // Agent 1 reads all feed messages.
       await spaceContext1.space.controlPipeline.state!.waitUntilTimeframe(
-        spaceContext1.space.controlPipeline.state!.endTimeframe);
+        spaceContext1.space.controlPipeline.state!.endTimeframe
+      );
 
       // Agent 2 reads all feed messages.
       await spaceContext2.space.controlPipeline.state!.waitUntilTimeframe(
-        spaceContext1.space.controlPipeline.state!.endTimeframe);
+        spaceContext1.space.controlPipeline.state!.endTimeframe
+      );
     }
 
     // TODO(burdon): Write multiple items.
 
     {
       // Check item replicated from 1 => 2.
-      const item1 = await spaceContext1.space.database!.createItem({ type: 'dxos.example.1' });
-      const item2 = await spaceContext2.space.database!.waitForItem({ type: 'dxos.example.1' });
+      const item1 = await spaceContext1.space.database!.createItem({
+        type: 'dxos.example.1'
+      });
+      const item2 = await spaceContext2.space.database!.waitForItem({
+        type: 'dxos.example.1'
+      });
       expect(item1.id).toEqual(item2.id);
     }
 
     {
       // Check item replicated from 2 => 1.
-      const item1 = await spaceContext2.space.database!.createItem({ type: 'dxos.example.2' });
-      const item2 = await spaceContext1.space.database!.waitForItem({ type: 'dxos.example.2' });
+      const item1 = await spaceContext2.space.database!.createItem({
+        type: 'dxos.example.2'
+      });
+      const item2 = await spaceContext1.space.database!.waitForItem({
+        type: 'dxos.example.2'
+      });
       expect(item1.id).toEqual(item2.id);
     }
   });

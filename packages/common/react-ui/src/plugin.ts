@@ -12,10 +12,10 @@ import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Plugin } from 'vite';
 
 export interface VitePluginTailwindOptions {
-  jit?: boolean
-  cssPath?: string
-  virtualFileId?: string
-  content: string[]
+  jit?: boolean;
+  cssPath?: string;
+  virtualFileId?: string;
+  content: string[];
 }
 
 export const themePlugin = (options: VitePluginTailwindOptions) => {
@@ -179,15 +179,30 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       },
                       'exit-to-left': {
                         '0%': { transform: 'translateX(0)', opacity: '1' },
-                        '100%': { transform: 'translateX(-200px)', opacity: '0' }
+                        '100%': {
+                          transform: 'translateX(-200px)',
+                          opacity: '0'
+                        }
                       },
                       'scale-in-content': {
-                        '0%': { transform: 'rotateX(-30deg) scale(0.9)', opacity: '0' },
-                        '100%': { transform: 'rotateX(0deg) scale(1)', opacity: '1' }
+                        '0%': {
+                          transform: 'rotateX(-30deg) scale(0.9)',
+                          opacity: '0'
+                        },
+                        '100%': {
+                          transform: 'rotateX(0deg) scale(1)',
+                          opacity: '1'
+                        }
                       },
                       'scale-out-content': {
-                        '0%': { transform: 'rotateX(0deg) scale(1)', opacity: '1' },
-                        '100%': { transform: 'rotateX(-10deg) scale(0.95)', opacity: '0' }
+                        '0%': {
+                          transform: 'rotateX(0deg) scale(1)',
+                          opacity: '1'
+                        },
+                        '100%': {
+                          transform: 'rotateX(-10deg) scale(0.95)',
+                          opacity: '0'
+                        }
                       },
                       'fade-in': {
                         '0%': { opacity: '0' },
@@ -211,7 +226,10 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                         '100%': { transform: 'translateY(0)' }
                       },
                       'toast-swipe-out': {
-                        '0%': { transform: 'translateX(var(--radix-toast-swipe-end-x))' },
+                        '0%': {
+                          transform:
+                            'translateX(var(--radix-toast-swipe-end-x))'
+                        },
                         '100%': {
                           transform: 'translateX(calc(100% + 1rem))'
                         }
@@ -220,14 +238,18 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                     animation: {
                       // Dropdown menu
                       'scale-in': 'scale-in 0.2s ease-in-out',
-                      'slide-down': 'slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-down':
+                        'slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       'slide-up': 'slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       // Tooltip
-                      'slide-up-fade': 'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-up-fade':
+                        'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                       'slide-right-fade':
                         'slide-right-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      'slide-down-fade': 'slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      'slide-left-fade': 'slide-left-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-down-fade':
+                        'slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-left-fade':
+                        'slide-left-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                       // Navigation menu
                       'enter-from-right': 'enter-from-right 0.25s ease',
                       'enter-from-left': 'enter-from-left 0.25s ease',
@@ -243,14 +265,18 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                         'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
                       'toast-slide-in-bottom':
                         'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards'
+                      'toast-swipe-out':
+                        'toast-swipe-out 100ms ease-out forwards'
                     }
                   }
                 },
                 plugins: [tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
                 content: [
-                  resolve(root || './', 'node_modules/@dxos/react-ui/dist/**/*.js'),
+                  resolve(
+                    root || './',
+                    'node_modules/@dxos/react-ui/dist/**/*.js'
+                  ),
                   ...config.content
                 ]
               }),

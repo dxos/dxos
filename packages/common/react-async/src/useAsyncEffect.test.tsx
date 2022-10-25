@@ -11,9 +11,10 @@ import waitForExpect from 'wait-for-expect';
 
 import { useAsyncEffect } from './useAsyncEffect';
 
-const doAsync = async <T, >(value: T) => await new Promise<T>((resolve) => {
-  resolve(value);
-});
+const doAsync = async <T,>(value: T) =>
+  await new Promise<T>((resolve) => {
+    resolve(value);
+  });
 
 const Test = () => {
   const [value, setValue] = useState<string>();
@@ -26,9 +27,7 @@ const Test = () => {
     }
   }, []);
 
-  return (
-    <h1>{value}</h1>
-  );
+  return <h1>{value}</h1>;
 };
 
 let rootContainer: HTMLElement;

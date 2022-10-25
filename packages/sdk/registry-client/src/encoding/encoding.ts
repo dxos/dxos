@@ -14,7 +14,10 @@ import { CID, RegistryType } from '../api';
 const getProtoTypeFromTypeRecord = (record: RegistryType): Type =>
   record.type.protobufDefs.lookupType(record.type.messageName);
 
-export type RecordExtension<T> = { '@type': CID } & Pick<T, Exclude<keyof T, '@type'>>
+export type RecordExtension<T> = { '@type': CID } & Pick<
+  T,
+  Exclude<keyof T, '@type'>
+>;
 
 const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.
@@ -49,7 +52,10 @@ export const decodeExtensionPayload = async (
       OBJECT_CONVERSION_OPTIONS
     );
 
-    return { '@type': typeCid, ...(await mapMessage(dataType, mapper, dataJson)) };
+    return {
+      '@type': typeCid,
+      ...(await mapMessage(dataType, mapper, dataJson))
+    };
   };
   return mapper(extension, RECORD_EXTENSION_NAME);
 };

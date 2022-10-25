@@ -21,7 +21,7 @@ export const useMembers = (party: Party | undefined) => {
       // TODO(wittjosiah): Remove interval.
       const update = setInterval(() => {
         const newMembers = party.queryMembers().value;
-        const isNameFilled = newMembers.every(m => m.displayName);
+        const isNameFilled = newMembers.every((m) => m.displayName);
         setMembers(newMembers);
         if (isNameFilled) {
           clearInterval(update);

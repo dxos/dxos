@@ -4,7 +4,10 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  Credential,
+  PartyMember
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
@@ -12,10 +15,10 @@ import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 
 export interface PartyState {
-  readonly genesisCredential: Credential | undefined
-  readonly members: ReadonlyMap<PublicKey, MemberInfo>
-  readonly feeds: ReadonlyMap<PublicKey, FeedInfo>
-  readonly credentials: Credential[]
+  readonly genesisCredential: Credential | undefined;
+  readonly members: ReadonlyMap<PublicKey, MemberInfo>;
+  readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
+  readonly credentials: Credential[];
 }
 
 /**
@@ -33,30 +36,28 @@ export class PartyStateMachine implements PartyState {
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
 
-  constructor (
-    private readonly _partyKey: PublicKey
-  ) {}
+  constructor(private readonly _partyKey: PublicKey) {}
 
-  get genesisCredential (): Credential | undefined {
+  get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
   }
 
-  get members (): ReadonlyMap<PublicKey, MemberInfo> {
+  get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members.members;
   }
 
-  get feeds (): ReadonlyMap<PublicKey, FeedInfo> {
+  get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
     return this._feeds.feeds;
   }
 
-  get credentials (): Credential[] {
+  get credentials(): Credential[] {
     return this._credentials;
   }
 
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  async process (credential: Credential, fromFeed: PublicKey): Promise<boolean> {
+  async process(credential: Credential, fromFeed: PublicKey): Promise<boolean> {
     const result = await verifyCredential(credential);
     if (result.kind !== 'pass') {
       log.warn(`Invalid credential: ${result.errors.join(', ')}`);
@@ -81,22 +82,30 @@ export class PartyStateMachine implements PartyState {
         break;
       case 'dxos.halo.credentials.PartyMember':
         if (!this._genesisCredential) {
-          log.warn('Party must have a genesis credential before adding members.');
+          log.warn(
+            'Party must have a genesis credential before adding members.'
+          );
           return false;
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(`Party member ${credential.issuer} is not authorized to invite new members.`);
+          log.warn(
+            `Party member ${credential.issuer} is not authorized to invite new members.`
+          );
           return false;
         }
         await this._members.process(credential);
         break;
       case 'dxos.halo.credentials.AdmittedFeed':
         if (!this._genesisCredential) {
-          log.warn('Party must have a genesis credential before admitting feeds.');
+          log.warn(
+            'Party must have a genesis credential before admitting feeds.'
+          );
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(`Party member ${credential.issuer} is not authorized to admit feeds.`);
+          log.warn(
+            `Party member ${credential.issuer} is not authorized to admit feeds.`
+          );
           return false;
         }
         // TODO(dmaretskyi): Check that the feed owner is a member of the party.
@@ -110,11 +119,14 @@ export class PartyStateMachine implements PartyState {
     return true;
   }
 
-  private _canInviteNewMembers (key: PublicKey): boolean {
-    return key.equals(this._partyKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
+  private _canInviteNewMembers(key: PublicKey): boolean {
+    return (
+      key.equals(this._partyKey) ||
+      this._members.getRole(key) === PartyMember.Role.ADMIN
+    );
   }
 
-  private _canAdmitFeeds (key: PublicKey): boolean {
+  private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
     return role === PartyMember.Role.MEMBER || role === PartyMember.Role.ADMIN;
   }

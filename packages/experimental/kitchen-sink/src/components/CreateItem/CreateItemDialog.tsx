@@ -4,17 +4,25 @@
 
 import React, { ReactNode, useState } from 'react';
 
-import { Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  TextField,
+  Typography
+} from '@mui/material';
 
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 interface CreateItemDialogProps {
-  open: boolean
-  type?: string
-  itemAdapter: ItemAdapter
-  onCreate: (title: string) => void
-  onCancel: () => void
-  children?: ReactNode
+  open: boolean;
+  type?: string;
+  itemAdapter: ItemAdapter;
+  onCreate: (title: string) => void;
+  onCancel: () => void;
+  children?: ReactNode;
 }
 
 export const CreateItemDialog = ({
@@ -26,7 +34,8 @@ export const CreateItemDialog = ({
   children
 }: CreateItemDialogProps) => {
   const [title, setTitle] = useState<string>('');
-  const { label = 'Item', icon: Icon } = (type ? itemAdapter.meta?.(type) : undefined) ?? {};
+  const { label = 'Item', icon: Icon } =
+    (type ? itemAdapter.meta?.(type) : undefined) ?? {};
 
   const handleSubmit = () => {
     const value = title.trim();
@@ -55,19 +64,13 @@ export const CreateItemDialog = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      fullWidth
-      maxWidth='xs'
-    >
+    <Dialog open={open} fullWidth maxWidth='xs'>
       <DialogContent>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant='h6' sx={{ flex: 1 }}>
             New {label}
           </Typography>
-          {Icon && (
-            <Icon />
-          )}
+          {Icon && <Icon />}
         </Box>
       </DialogContent>
 

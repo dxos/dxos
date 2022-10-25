@@ -11,20 +11,27 @@ import { attachDocComment } from './doc-comment';
 
 const f = ts.factory;
 
-export const createEnumDeclaration = (type: protobufjs.Enum, ctx: GeneratorContext) => {
+export const createEnumDeclaration = (
+  type: protobufjs.Enum,
+  ctx: GeneratorContext
+) => {
   const declaration = f.createEnumDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
-    Object.entries(type.values).map(([name, id]) => f.createEnumMember(
-      name,
-      f.createNumericLiteral(id)
-    ))
+    Object.entries(type.values).map(([name, id]) =>
+      f.createEnumMember(name, f.createNumericLiteral(id))
+    )
   );
 
   const commentSections = type.comment ? [type.comment] : [];
   if (type.filename) {
-    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`);
+    commentSections.push(
+      `Defined in:\n  {@link file://./${relative(
+        dirname(ctx.outputFilename),
+        type.filename
+      )}}`
+    );
   }
 
   if (commentSections.length === 0) {

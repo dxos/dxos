@@ -13,9 +13,7 @@ import { MemberAvatar } from './MemberAvatar';
 /**
  * List of member avatars.
  */
-export const MemberList = ({ members }: {
-  members: PartyMember[]
-}) => (
+export const MemberList = ({ members }: { members: PartyMember[] }) => (
   <Box
     sx={{
       display: 'flex',
@@ -23,7 +21,7 @@ export const MemberList = ({ members }: {
     }}
   >
     <AvatarGroup>
-      {members.map(member => (
+      {members.map((member) => (
         <MemberAvatar key={member.publicKey.toString()} member={member} />
       ))}
     </AvatarGroup>

@@ -20,11 +20,11 @@ test('remarkSnippets with remark', async () => {
 
   // Process content.
   const original = toMarkdown(tree as any);
-  const processor = remark()
-    .use(remarkSnippets);
+  const processor = remark().use(remarkSnippets);
 
-  processor
-    .data({ config: { baseDir: path.join(process.cwd(), './testing/docs') } });
+  processor.data({
+    config: { baseDir: path.join(process.cwd(), './testing/docs') }
+  });
 
   const { value } = await processor.process(original);
 
@@ -33,7 +33,9 @@ test('remarkSnippets with remark', async () => {
   const [snippet] = processed.match(/```([\s\S]*?)```/gm);
 
   // Test inserted file.
-  const text = removeTrailing(fs.readFileSync('./testing/src/test.proto').toString());
+  const text = removeTrailing(
+    fs.readFileSync('./testing/src/test.proto').toString()
+  );
   const test = `\`\`\`protobuf\n${text}\n\`\`\``;
   expect(snippet).toBe(test);
 });

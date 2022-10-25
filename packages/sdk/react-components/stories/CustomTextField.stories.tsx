@@ -25,11 +25,13 @@ export const Primary = () => {
 
   return (
     <Container>
-      {sizes.map(size => (
+      {sizes.map((size) => (
         <Box key={size}>
-          {variants.map(variant => (
+          {variants.map((variant) => (
             <Box key={variant} sx={{ padding: 2 }}>
-              <Typography color='primary' gutterBottom>{size}-{variant}</Typography>
+              <Typography color='primary' gutterBottom>
+                {size}-{variant}
+              </Typography>
               <CustomTextField
                 margin='none'
                 size={size}
@@ -63,9 +65,7 @@ export const Secondary = () => {
         />
       </Box>
       <Box sx={{ padding: 2 }}>
-        <Button onClick={() => setEditing(!editing)}>
-          Toggle
-        </Button>
+        <Button onClick={() => setEditing(!editing)}>Toggle</Button>
       </Box>
     </Container>
   );

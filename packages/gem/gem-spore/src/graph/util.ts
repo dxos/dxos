@@ -15,7 +15,10 @@ import { Point } from '@dxos/gem-core';
  * @return {[Point, Point]}
  */
 export const getCircumferencePoints = (
-  p1: Point, p2: Point, r1: number, r2: number
+  p1: Point,
+  p2: Point,
+  r1: number,
+  r2: number
 ): [Point, Point] => {
   const [x1, y1] = p1;
   const [x2, y2] = p2;

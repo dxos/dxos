@@ -8,11 +8,25 @@ import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import {
+  MemorySignalManagerContext,
+  MemorySignalManager
+} from '@dxos/messaging';
+import {
+  createProtocolFactory,
+  MemoryTransportFactory,
+  NetworkManager,
+  StarTopology
+} from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import type { TestService } from '@dxos/protocols/proto/example/testing/rpc';
-import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
+import {
+  RpcPeer,
+  createRpcServer,
+  createRpcClient,
+  RpcPort,
+  ProtoRpcPeer
+} from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { RpcPlugin } from './rpc-plugin';
@@ -107,16 +121,10 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      serverConnected,
-      clientConnected
-    ]);
+    await Promise.all([serverConnected, clientConnected]);
     assert(client);
     assert(server);
-    await Promise.all([
-      server.open(),
-      client.open()
-    ]);
+    await Promise.all([server.open(), client.open()]);
 
     const response = await client.rpc.testCall({ data: 'requestData' });
     expect(response.data).toEqual('responseData');
@@ -160,10 +168,7 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      client1Connected,
-      client2Connected
-    ]);
+    await Promise.all([client1Connected, client2Connected]);
     assert(client1);
     assert(client2);
 

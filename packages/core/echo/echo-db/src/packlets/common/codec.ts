@@ -10,7 +10,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 /**
  * Codec for feed messages.
  */
-export const codec: Codec<FeedMessage> = schema.getCodecForType('dxos.echo.feed.FeedMessage');
+export const codec: Codec<FeedMessage> = schema.getCodecForType(
+  'dxos.echo.feed.FeedMessage'
+);
 
 /**
  * Value encoding used by feed store.

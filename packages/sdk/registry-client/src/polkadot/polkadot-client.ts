@@ -5,7 +5,10 @@
 import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair } from '@polkadot/api/types';
 
-import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler';
+import {
+  ApiTransactionHandler,
+  SignTxFunction
+} from './api-transaction-handler';
 
 /**
  * Base functionality for derived clients.
@@ -13,9 +16,9 @@ import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler
 export class PolkadotClient {
   protected transactionsHandler: ApiTransactionHandler;
 
-  constructor (
+  constructor(
     protected api: ApiPromise,
-    signFn: SignTxFunction | AddressOrPair = tx => tx
+    signFn: SignTxFunction | AddressOrPair = (tx) => tx
   ) {
     this.transactionsHandler = new ApiTransactionHandler(api, signFn);
   }

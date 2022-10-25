@@ -12,10 +12,15 @@ import { TestType } from '@dxos/client-testing';
  * @param text
  */
 // TODO(burdon): Create utility class.
-export const execSelection = (party: Party, text: string): Selection<any> | undefined => {
+export const execSelection = (
+  party: Party,
+  text: string
+): Selection<any> | undefined => {
   try {
     // eslint-disable-next-line no-new-func
-    const exec = new Function(`"use strict"; return function(party) { return party.${text} }`)();
+    const exec = new Function(
+      `"use strict"; return function(party) { return party.${text} }`
+    )();
     const result = exec(party);
     if (result instanceof Selection) {
       return result;

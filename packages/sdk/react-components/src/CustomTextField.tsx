@@ -2,27 +2,39 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { FunctionComponent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, {
+  FunctionComponent,
+  KeyboardEvent,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 
 import {
   Clear as ResetIcon,
   MenuOpen as DefaultEditIcon
 } from '@mui/icons-material';
 import {
-  useTheme, BaseTextFieldProps, Box, IconButton, InputAdornment, TextField, Typography
+  useTheme,
+  BaseTextFieldProps,
+  Box,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Typography
 } from '@mui/material';
 
 export interface CustomTextFieldProps extends BaseTextFieldProps {
-  value?: string
-  editing?: boolean
-  readonly?: boolean
-  saveOnBlur?: boolean
-  clickToEdit?: boolean
-  placeholder?: string
-  editIcon?: FunctionComponent
-  onUpdate?: (value: string) => void
-  spellCheck?: boolean
-  autoComplete?: string
+  value?: string;
+  editing?: boolean;
+  readonly?: boolean;
+  saveOnBlur?: boolean;
+  clickToEdit?: boolean;
+  placeholder?: string;
+  editIcon?: FunctionComponent;
+  onUpdate?: (value: string) => void;
+  spellCheck?: boolean;
+  autoComplete?: string;
 }
 
 /**
@@ -71,7 +83,11 @@ export const CustomTextField = ({
     setText(value || '');
   };
 
-  const handleChange = ({ target: { value } }: { target: { value: string }}) => {
+  const handleChange = ({
+    target: { value }
+  }: {
+    target: { value: string };
+  }) => {
     setText(value);
   };
 
@@ -128,9 +144,9 @@ export const CustomTextField = ({
 
   // eslint-disable-next-line
   // TODO(burdon): Use https://mui.com/components/text-fields/#unstyled.
-  const variantProps: {[key: string]: any | undefined} = {
-    'small': {
-      'standard': {
+  const variantProps: { [key: string]: any | undefined } = {
+    small: {
+      standard: {
         '.MuiTypography-root': {
           height: 29 // Total=29.
         },
@@ -139,7 +155,7 @@ export const CustomTextField = ({
           marginTop: '-3px'
         }
       },
-      'filled': {
+      filled: {
         '.MuiTypography-root': {
           height: 28, // Total=48.
           paddingTop: '20px',
@@ -150,7 +166,7 @@ export const CustomTextField = ({
           paddingRight: '12px'
         }
       },
-      'outlined': {
+      outlined: {
         '.MuiTypography-root': {
           height: 32, // Total=40.
           paddingTop: '8px',
@@ -163,8 +179,8 @@ export const CustomTextField = ({
         }
       }
     },
-    'medium': {
-      'standard': {
+    medium: {
+      standard: {
         '.MuiTypography-root': {
           height: 29, // Total=32.
           paddingTop: '3px'
@@ -174,7 +190,7 @@ export const CustomTextField = ({
           marginTop: '-1px'
         }
       },
-      'filled': {
+      filled: {
         '.MuiTypography-root': {
           height: 32, // Total=56.
           paddingTop: '24px',
@@ -185,7 +201,7 @@ export const CustomTextField = ({
           paddingRight: '12px'
         }
       },
-      'outlined': {
+      outlined: {
         '.MuiTypography-root': {
           height: 41, // Total=56.
           paddingTop: '15px',
@@ -204,7 +220,12 @@ export const CustomTextField = ({
 
   return (
     <Box
-      sx={{ display: 'flex', flex: 1, alignItems: 'flex-start', ...customProps }}
+      sx={{
+        display: 'flex',
+        flex: 1,
+        alignItems: 'flex-start',
+        ...customProps
+      }}
       onMouseOver={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
     >
@@ -219,7 +240,7 @@ export const CustomTextField = ({
       </Typography>
 
       <Box sx={{ flex: 1 }} />
-      {(mouseOver) && (
+      {mouseOver && (
         <Box className='edit-button'>
           <IconButton
             size='small'

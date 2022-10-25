@@ -8,8 +8,8 @@ import { createTestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
 export interface BrokerSetup {
-  broker: Awaited<ReturnType<typeof createTestBroker>>
-  config: Config
+  broker: Awaited<ReturnType<typeof createTestBroker>>;
+  config: Config;
 }
 
 export const setupBroker: () => Promise<BrokerSetup> = async () => {

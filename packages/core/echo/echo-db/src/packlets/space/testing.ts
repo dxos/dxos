@@ -5,7 +5,11 @@
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  SignalManager
+} from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -21,11 +25,11 @@ import { Space } from './space';
 // TODO(burdon): Factor out and share across tests?
 
 export type TestSpaceContext = {
-  space: Space
-  genesisKey: PublicKey
-  controlKey: PublicKey
-  dataKey: PublicKey
-}
+  space: Space;
+  genesisKey: PublicKey;
+  controlKey: PublicKey;
+  dataKey: PublicKey;
+};
 
 /**
  * Independent agent able to swarm and create spaces.
@@ -34,7 +38,7 @@ export type TestSpaceContext = {
 export class TestAgent {
   public readonly feedStore: FeedStore<FeedMessage>;
 
-  constructor (
+  constructor(
     public readonly keyring: Keyring,
     public readonly identityKey: PublicKey,
     public readonly deviceKey: PublicKey,
@@ -51,7 +55,7 @@ export class TestAgent {
     });
   }
 
-  async createSpace (
+  async createSpace(
     identityKey: PublicKey,
     spaceKey?: PublicKey,
     genesisKey?: PublicKey
@@ -61,7 +65,9 @@ export class TestAgent {
     }
 
     const controlFeed = await this.openWritableFeed();
-    const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
+    const genesisFeed = genesisKey
+      ? await this.feedStore.openFeed(genesisKey)
+      : controlFeed;
     const dataFeed = await this.openWritableFeed();
 
     const space = new Space({
@@ -69,7 +75,7 @@ export class TestAgent {
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: feedKey => this.feedStore.openFeed(feedKey),
+      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
       initialTimeframe: new Timeframe(),
       networkManager: new NetworkManager({
         signalManager: this._signalManager,
@@ -82,7 +88,11 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       databaseFactory: async ({ databaseBackend }) =>
-        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+        new Database(
+          new ModelFactory().registerModel(ObjectModel),
+          databaseBackend,
+          identityKey
+        )
     });
 
     return {
@@ -93,7 +103,7 @@ export class TestAgent {
     };
   }
 
-  async openWritableFeed () {
+  async openWritableFeed() {
     const key = await this.keyring.createKey();
     return this.feedStore.openFeed(key, { writable: true });
   }
@@ -103,15 +113,20 @@ export class TestAgent {
  * Creates test agents with common signaling.
  */
 export class TestAgentFactory {
-  constructor (
+  constructor(
     private readonly _signalContext: MemorySignalManagerContext = new MemorySignalManagerContext()
   ) {}
 
-  async createAgent (): Promise<TestAgent> {
+  async createAgent(): Promise<TestAgent> {
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    return new TestAgent(keyring, identityKey, deviceKey, new MemorySignalManager(this._signalContext));
+    return new TestAgent(
+      keyring,
+      identityKey,
+      deviceKey,
+      new MemorySignalManager(this._signalContext)
+    );
   }
 }
