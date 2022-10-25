@@ -8,13 +8,12 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import { useProfile } from '@dxos/react-client';
 import {
-  Main,
   NavMenu,
   NavMenuSeparatorProps,
   useTranslation
 } from '@dxos/react-uikit';
 
-const iconAttributes = { className: 'mr-1 h-5 w-5' };
+const iconAttributes = { className: 'h-5 w-5' };
 
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
@@ -61,12 +60,13 @@ export const AppLayout = () => {
   ];
 
   return (
-    <Main className='mt-24'>
+    <div role='none' className='mt-24'>
+      <div role='none' className='fixed top-5 left-0 right-0'>
         <NavMenu
           items={centerMenuItems.map((navMenuItem) => (('separator' in navMenuItem) ? navMenuItem : {
             triggerLinkProps: { href: `#${navMenuItem.pathName}` },
             children: (
-              <div className='flex items-center'>
+              <div className='flex items-center gap-1'>
                 {navMenuItem.icon}
                 <span>{navMenuItem.label}</span>
               </div>
@@ -75,10 +75,28 @@ export const AppLayout = () => {
               active: true
             })
           }))}
-          className='fixed top-5 left-0 right-0'
+          className='hidden md:flex'
         />
 
+        <NavMenu
+          items={centerMenuItems.map((navMenuItem) => (('separator' in navMenuItem) ? navMenuItem : {
+            triggerLinkProps: { href: `#${navMenuItem.pathName}` },
+            children: navMenuItem.icon,
+            tooltip: {
+              align: 'center',
+              tooltipLabelsTrigger: true,
+              content: navMenuItem.label,
+              sideOffset: 8
+            },
+            ...(navMenuItem.pathName.length > 1 && location.pathname.startsWith(navMenuItem.pathName) && {
+              active: true
+            })
+          }))}
+          className='flex md:hidden'
+        />
+      </div>
+
       <Outlet />
-    </Main>
+    </div>
   );
 };

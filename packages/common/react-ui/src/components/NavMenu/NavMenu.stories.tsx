@@ -44,6 +44,10 @@ Default.args = {
     },
     {
       triggerLinkProps: { href: '#Goodbye' },
+      tooltip: {
+        content: 'More info about Goodbye',
+        sideOffset: 8
+      },
       children: 'Goodbye'
     }
   ]

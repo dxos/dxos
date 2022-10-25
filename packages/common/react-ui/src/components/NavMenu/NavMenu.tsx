@@ -4,10 +4,16 @@
 
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import cx from 'classnames';
-import React, { ComponentProps, ReactNode } from 'react';
+import React, {
+  ComponentProps,
+  ForwardedRef,
+  forwardRef,
+  ReactNode
+} from 'react';
 
 import { defaultFocus, defaultHover } from '../../styles';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
+import { Tooltip, TooltipProps } from '../Tooltip';
 
 interface NavMenuItemSharedProps {
   children: ReactNode
@@ -21,6 +27,10 @@ export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
   children: ReactNode
 }
 
+export interface NavMenuTooltipLinkItemProps extends NavMenuLinkItemProps {
+  tooltip: Omit<TooltipProps, 'children'>
+}
+
 export interface NavMenuInvokerItemProps extends NavMenuItemSharedProps {
   content: ReactNode
   children: ReactNode
@@ -30,13 +40,17 @@ export interface NavMenuSeparatorProps {
   separator: true
 }
 
-export type NavMenuItem = NavMenuLinkItemProps | NavMenuInvokerItemProps | NavMenuSeparatorProps;
+export type NavMenuItem =
+  NavMenuTooltipLinkItemProps
+  | NavMenuLinkItemProps
+  | NavMenuInvokerItemProps
+  | NavMenuSeparatorProps;
 
 export interface NavMenuProps extends ComponentProps<typeof NavigationMenuPrimitive.Root> {
   items: NavMenuItem[]
 }
 
-const NavMenuInvokerItem = ({
+const NavMenuInvokerItem = forwardRef(({
   content,
   children,
   active
@@ -66,14 +80,14 @@ const NavMenuInvokerItem = ({
       </NavigationMenuPrimitive.Content>
     </NavigationMenuPrimitive.Item>
   );
-};
+});
 
-const NavMenuLinkItem = ({
+const NavMenuLinkItem = forwardRef(({
   triggerLinkProps,
   children,
   active
-}: NavMenuLinkItemProps) => (
-  <NavigationMenuPrimitive.Item asChild>
+}: NavMenuLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
+  <NavigationMenuPrimitive.Item asChild ref={ref}>
     <NavigationMenuPrimitive.Link
       {...triggerLinkProps}
       className={cx(
@@ -87,29 +101,64 @@ const NavMenuLinkItem = ({
       {children}
     </NavigationMenuPrimitive.Link>
   </NavigationMenuPrimitive.Item>
-);
+));
+
+const NavMenuTooltipLinkItem = forwardRef(({
+  tooltip,
+  triggerLinkProps,
+  active,
+  children
+}: NavMenuTooltipLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
+  <Tooltip {...tooltip}>
+    <NavigationMenuPrimitive.Item asChild ref={ref}>
+      <NavigationMenuPrimitive.Link
+        {...triggerLinkProps}
+        className={cx(
+          'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
+          active ? primaryButtonColors : defaultButtonColors,
+          defaultFocus,
+          defaultHover({}),
+          triggerLinkProps.className
+        )}
+      >
+        {children}
+      </NavigationMenuPrimitive.Link>
+    </NavigationMenuPrimitive.Item>
+  </Tooltip>
+));
 
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className='h-5 border-l border-neutral-300 dark:border-neutral-700' />;
+  return (
+    <span
+      role='none'
+      className='h-5 border-l border-neutral-300 dark:border-neutral-700' />
+  );
 };
 
+const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;
 const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
 const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
 export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
-    <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
+    <NavigationMenuPrimitive.Root
+      {...rootProps}
+      className={cx('flex justify-center', rootProps.className)}>
       <NavigationMenuPrimitive.List
-        className='relative flex flex-row items-center rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
-        {items.map((item: NavMenuItem, i) => (
-          isLinkItem(item)
-            ? <NavMenuLinkItem {...item} />
-            : isSeparator(item)
-              ? <NavMenuSeparatorItem {...item} />
-              : <NavMenuInvokerItem {...item} />
-        ))}
+        className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation'>
+        {items.map((item: NavMenuItem, i) => {
+          return (
+            isTooltipLinkItem(item)
+              ? <NavMenuTooltipLinkItem {...item} />
+              : isLinkItem(item)
+                ? <NavMenuLinkItem {...item} />
+                : isSeparator(item)
+                  ? <NavMenuSeparatorItem {...item} />
+                  : <NavMenuInvokerItem {...item} />
+          );
+        })}
 
         <NavigationMenuPrimitive.Indicator
           className={cx(

@@ -4,23 +4,39 @@
 
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import cx from 'classnames';
-import React, { ReactNode, useState } from 'react';
+import React, { ComponentProps, ReactNode, useState } from 'react';
 
+import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
 
-export interface TooltipProps {
+export interface TooltipProps
+  extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
   content: ReactNode
   children: ReactNode
+  tooltipLabelsTrigger?: boolean
 }
 
-export const Tooltip = ({ content, children }: TooltipProps) => {
+export const Tooltip = ({
+  content,
+  children,
+  tooltipLabelsTrigger,
+  ...contentProps
+}: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const labelId = useId('tooltipLabel');
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipPrimitive.Trigger asChild>
+      <TooltipPrimitive.Trigger
+        asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
         {children}
       </TooltipPrimitive.Trigger>
+      {
+        tooltipLabelsTrigger &&
+        <span id={labelId} className='sr-only'>{content}</span>
+      }
       <TooltipPrimitive.Content
+        forceMount
+        {...contentProps}
         className={cx(
           'radix-side-top:animate-slide-down-fade',
           'radix-side-right:animate-slide-left-fade',
@@ -29,9 +45,9 @@ export const Tooltip = ({ content, children }: TooltipProps) => {
           'inline-flex items-center rounded-md px-4 py-2.5',
           'shadow-lg bg-white dark:bg-neutral-800',
           !isOpen && 'sr-only',
-          defaultTooltip
+          defaultTooltip,
+          contentProps.className
         )}
-        forceMount
       >
         <TooltipPrimitive.Arrow
           className='fill-current text-white dark:text-neutral-800'
