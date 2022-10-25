@@ -41,10 +41,10 @@ const main = async () => {
         input,
         output = process.cwd()
       }: {
-        _: string[]
-        dry: boolean
-        input: string
-        output: string
+        _: string[];
+        dry: boolean;
+        input: string;
+        output: string;
       }) => {
         const tstart = Date.now();
         const [template] = _;
@@ -56,9 +56,7 @@ const main = async () => {
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input
-            ? JSON.parse((await fs.readFile(input)).toString())
-            : {}
+          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {}
         });
         if (!dry) {
           console.log(`output folder: ${output}`);

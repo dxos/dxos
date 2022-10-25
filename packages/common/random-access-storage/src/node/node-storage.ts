@@ -14,7 +14,7 @@ import { AbstractStorage, StorageType } from '../common';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected override _createFile (
+  protected override _createFile(
     path: string,
     filename: string,
     opts: any = {}
@@ -27,7 +27,7 @@ export class NodeStorage extends AbstractStorage {
     return file;
   }
 
-  protected override async _destroy () {
+  protected override async _destroy() {
     await del(this.path, { force: true });
   }
 }

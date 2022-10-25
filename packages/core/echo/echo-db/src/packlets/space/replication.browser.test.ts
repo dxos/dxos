@@ -43,7 +43,9 @@ describe('replication', function () {
       })
     });
 
-    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), { writable: true });
+    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), {
+      writable: true
+    });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
     const stream1 = feed1.replicate(true, { live: true });

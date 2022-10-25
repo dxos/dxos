@@ -26,7 +26,7 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map(party => (
+      {parties.map((party) => (
         <Box key={party.key.toHex()}>
           <CopyText value={party.key.toHex()} />
         </Box>
@@ -114,10 +114,12 @@ export const Primary = () => {
   return (
     <FullScreen>
       <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}
+        >
           <ClientProvider>
             <RegistryProvider registry={mockRegistry}>
               <ProfileInitializer>
@@ -147,7 +149,7 @@ export const Primary = () => {
 const AutoInvitationGenerator = ({
   onInvite
 }: {
-  onInvite: (invitationCode: string) => void
+  onInvite: (invitationCode: string) => void;
 }) => {
   const client = useClient();
   const [pin, setPin] = useState('');
@@ -163,13 +165,7 @@ const AutoInvitationGenerator = ({
     });
   }, []);
 
-  return (
-    <Box>
-      {pin && (
-        <Passcode value={pin} />
-      )}
-    </Box>
-  );
+  return <Box>{pin && <Passcode value={pin} />}</Box>;
 };
 
 export const Secondary = () => {
@@ -178,15 +174,19 @@ export const Secondary = () => {
   return (
     <FullScreen>
       <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}
+        >
           <ClientProvider>
             <ProfileInitializer>
               <Column>
                 <AutoInvitationGenerator
-                  onInvite={invitationCode => setInvitationCode(invitationCode)}
+                  onInvite={(invitationCode) =>
+                    setInvitationCode(invitationCode)
+                  }
                 />
               </Column>
             </ProfileInitializer>
@@ -195,11 +195,7 @@ export const Secondary = () => {
           <ClientProvider>
             <ProfileInitializer>
               <Column>
-                {invitationCode && (
-                  <Receiver
-                    invitationCode={invitationCode}
-                  />
-                )}
+                {invitationCode && <Receiver invitationCode={invitationCode} />}
               </Column>
             </ProfileInitializer>
           </ClientProvider>

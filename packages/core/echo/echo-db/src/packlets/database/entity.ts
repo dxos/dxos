@@ -24,7 +24,7 @@ export class Entity<M extends Model | null = Model> {
    */
   public _stateManager!: StateManager<NonNullable<M>>;
 
-  constructor (
+  constructor(
     protected readonly _itemManager: ItemManager,
     private readonly _id: ItemID,
     private readonly _type: ItemType | undefined,
@@ -33,27 +33,29 @@ export class Entity<M extends Model | null = Model> {
     this._stateManager = stateManager;
 
     if (this._stateManager.initialized) {
-      this._subscriptions.add(this._stateManager.model.subscribe(() => this._onUpdate.emit(this)));
+      this._subscriptions.add(
+        this._stateManager.model.subscribe(() => this._onUpdate.emit(this))
+      );
     }
   }
 
-  get id (): ItemID {
+  get id(): ItemID {
     return this._id;
   }
 
-  get type (): ItemType | undefined {
+  get type(): ItemType | undefined {
     return this._type;
   }
 
-  get modelType (): string {
+  get modelType(): string {
     return this._stateManager.modelType;
   }
 
-  get modelMeta (): ModelMeta {
+  get modelMeta(): ModelMeta {
     return this._stateManager.model.modelMeta;
   }
 
-  get model (): M {
+  get model(): M {
     if (!this._stateManager.initialized) {
       return null as any;
     }
@@ -65,7 +67,7 @@ export class Entity<M extends Model | null = Model> {
    * Subscribe for updates.
    * @param listener
    */
-  subscribe (listener: (entity: this) => void) {
+  subscribe(listener: (entity: this) => void) {
     return this._onUpdate.on(listener as any);
   }
 }

@@ -8,7 +8,10 @@ import { useClient, useHaloInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'>
+export type HaloSharingDialogProps = Omit<
+  SharingDialogProps,
+  'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'
+>;
 
 /**
  * Manages the workflow for inviting a new device to a HALO party.
@@ -25,7 +28,7 @@ export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
       onCreateInvitation={async () => {
         await client.halo.createInvitation();
       }}
-      onCancelInvitation={invitation => invitation.cancel()}
+      onCancelInvitation={(invitation) => invitation.cancel()}
     />
   );
 };

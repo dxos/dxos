@@ -7,7 +7,7 @@ import { Context, createContext } from 'react';
 import { Client } from '@dxos/client';
 
 interface ClientContextProps {
-  client: Client
+  client: Client;
 }
 
 export const ClientContext: Context<ClientContextProps | undefined> =

@@ -3,21 +3,21 @@
 //
 
 export type InitOptions = {
-  apiKey?: string
-  batchSize?: number
-  enable?: boolean
+  apiKey?: string;
+  batchSize?: number;
+  enable?: boolean;
 };
 
 type CommonOptions = {
-  machineId: string
-  identityId: string
-  name: string
-  properties?: Record<string, string>
-  timestamp?: Date
-}
+  machineId: string;
+  identityId: string;
+  name: string;
+  properties?: Record<string, string>;
+  timestamp?: Date;
+};
 
 export type PageOptions = CommonOptions & {
-  category?: string
-}
+  category?: string;
+};
 
 export type EventOptions = CommonOptions;

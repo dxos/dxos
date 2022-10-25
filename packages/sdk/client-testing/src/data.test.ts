@@ -19,18 +19,18 @@ debug.enable('dxos:client-testing');
 
 type DataType = {
   [TestType.Org]: {
-    id: string
-    type?: string
-    name?: string
-  }[]
+    id: string;
+    type?: string;
+    name?: string;
+  }[];
 
   [TestType.Person]: {
-    id: string
-    type?: string
-    org?: string
-    name?: string
-  }[]
-}
+    id: string;
+    type?: string;
+    org?: string;
+    name?: string;
+  }[];
+};
 
 const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
@@ -47,7 +47,8 @@ describe.only('Builders', function () {
     return testCallback(async (client, party) => {
       await buildTestParty(new PartyBuilder(party));
 
-      const { entities } = await party.database.select()
+      const { entities } = await party.database
+        .select()
         .filter(({ type }) => type === TestType.Org)
         .exec();
 
@@ -79,22 +80,24 @@ describe.only('Builders', function () {
         numPeople: 5
       });
 
-      const { entities: orgs } = await party.database.select()
+      const { entities: orgs } = await party.database
+        .select()
         .filter(({ type }) => type === TestType.Org)
         .exec();
 
-      const { entities: people } = await party.database.select()
+      const { entities: people } = await party.database
+        .select()
         .filter(({ type }) => type === TestType.Person)
         .exec();
 
       const data: DataType = {
-        [TestType.Org]: orgs.map(item => ({
+        [TestType.Org]: orgs.map((item) => ({
           id: item.id,
           type: item.type,
           name: item.model.get('name')
         })),
 
-        [TestType.Person]: people.map(item => ({
+        [TestType.Person]: people.map((item) => ({
           id: item.id,
           type: item.type,
           name: item.model.get('name'),
@@ -140,7 +143,8 @@ describe.only('Builders', function () {
       }
 
       {
-        const { entities } = await party.database.select()
+        const { entities } = await party.database
+          .select()
           .filter(({ type }) => type === TestType.Org)
           .exec();
 
@@ -149,31 +153,38 @@ describe.only('Builders', function () {
         log(output, '\n');
 
         // Log table.
-        const rows = columnify(entities.map(item => ({
-          id: chalk.blue(logKey(item.id)),
-          type: chalk.magenta(logString(item.type)),
-          name: chalk.green(logString(item.model.get('name')))
-        })), {
-          columns: ['id', 'type', 'name']
-        });
+        const rows = columnify(
+          entities.map((item) => ({
+            id: chalk.blue(logKey(item.id)),
+            type: chalk.magenta(logString(item.type)),
+            name: chalk.green(logString(item.model.get('name')))
+          })),
+          {
+            columns: ['id', 'type', 'name']
+          }
+        );
 
         log('\n' + rows + '\n');
       }
 
       {
-        const { entities } = await party.database.select()
+        const { entities } = await party.database
+          .select()
           .filter(({ type }) => type === TestType.Person)
           .exec();
 
         // Log table.
-        const rows = columnify(entities.map(item => ({
-          id: chalk.blue(logKey(item.id)),
-          type: chalk.magenta(logString(item.type)),
-          name: chalk.green(logString(item.model.get('name'))),
-          org: chalk.red(logString(item.parent?.model.get('name')))
-        })), {
-          columns: ['id', 'type', 'name', 'org']
-        });
+        const rows = columnify(
+          entities.map((item) => ({
+            id: chalk.blue(logKey(item.id)),
+            type: chalk.magenta(logString(item.type)),
+            name: chalk.green(logString(item.model.get('name'))),
+            org: chalk.red(logString(item.parent?.model.get('name')))
+          })),
+          {
+            columns: ['id', 'type', 'name', 'org']
+          }
+        );
 
         log('\n' + rows + '\n');
       }

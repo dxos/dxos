@@ -6,7 +6,7 @@ import { Box, Text, render } from 'ink';
 import React from 'react';
 
 export const showVersion = (name: string, version: string) => {
-  render((
+  render(
     <Box
       flexDirection='column'
       margin={1}
@@ -14,12 +14,11 @@ export const showVersion = (name: string, version: string) => {
       borderStyle='double'
       borderColor='red'
     >
+      <Text>New version: {version}</Text>
       <Text>
-        New version: {version}
-      </Text>
-      <Text>
-        Update: <Text color='yellow'>npm -g up {name}</Text> or <Text color='yellow'>yarn global upgrade {name}</Text>
+        Update: <Text color='yellow'>npm -g up {name}</Text> or{' '}
+        <Text color='yellow'>yarn global upgrade {name}</Text>
       </Text>
     </Box>
-  ));
+  );
 };

@@ -8,7 +8,10 @@ import waitForExpect from 'wait-for-expect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext
+} from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -85,7 +88,9 @@ describe('space/replicator-plugin', function () {
       })
     });
 
-    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), { writable: true });
+    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), {
+      writable: true
+    });
     await feed1.append({ timeframe: new Timeframe() });
 
     const feed2 = await feedStore2.openFeed(feed1.key);

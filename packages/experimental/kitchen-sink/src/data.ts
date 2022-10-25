@@ -26,28 +26,33 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
     return 1;
   }
 
-  return (ta < tb) ? -1 : (ta > tb) ? 1 : 0;
+  return ta < tb ? -1 : ta > tb ? 1 : 0;
 };
 
 /**
  * Filter items.
  */
-export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => {
+export const useQuery = (
+  party?: Party,
+  query?: string
+): Item<ObjectModel>[] => {
   const text = query?.toLowerCase();
-  const items = useSelection(party?.select()
-    .filter(item => {
-      if (!item.type?.startsWith('example:')) {
-        return false;
-      }
+  const items =
+    useSelection(
+      party?.select().filter((item) => {
+        if (!item.type?.startsWith('example:')) {
+          return false;
+        }
 
-      if (!text) {
-        return true;
-      }
+        if (!text) {
+          return true;
+        }
 
-      const title = itemAdapter.title(item)?.toLowerCase();
-      return title?.indexOf(text) !== -1;
-    }),
-  [text]) ?? [];
+        const title = itemAdapter.title(item)?.toLowerCase();
+        return title?.indexOf(text) !== -1;
+      }),
+      [text]
+    ) ?? [];
 
   items.sort(sortItems);
   return items;

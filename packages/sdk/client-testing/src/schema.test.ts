@@ -6,7 +6,15 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Item, ObjectModel, Party, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
+import {
+  Item,
+  ObjectModel,
+  Party,
+  Schema,
+  SchemaField,
+  TYPE_SCHEMA,
+  Client
+} from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
 import { log, SchemaBuilder, TestType } from './builders';
@@ -65,13 +73,17 @@ describe('Schemas', function () {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const items = await party.database.select()
-      .filter(item => Boolean(item.type) && [orgSchema.name, personSchema.name].includes(item.type as string))
-      .exec()
-      .entities;
+    const items = await party.database
+      .select()
+      .filter(
+        (item) =>
+          Boolean(item.type) &&
+          [orgSchema.name, personSchema.name].includes(item.type as string)
+      )
+      .exec().entities;
 
-    [orgSchema, personSchema].forEach(schema => {
-      items.forEach(item => {
+    [orgSchema, personSchema].forEach((schema) => {
+      items.forEach((item) => {
         expect(schema.validate(item.model)).toBeTruthy();
       });
     });
@@ -96,14 +108,16 @@ describe('Schemas', function () {
       .select({ type: builder.defaultSchemas[TestType.Person].schema })
       .exec();
 
-    [...orgs, ...people].forEach(item => {
-      const schemaItem = schemas.find(schema => schema.model.get('schema') === item.type);
+    [...orgs, ...people].forEach((item) => {
+      const schemaItem = schemas.find(
+        (schema) => schema.model.get('schema') === item.type
+      );
       const schema = new Schema(schemaItem!.model);
       expect(schema.validate(item.model)).toBeTruthy();
     });
 
     // Log tables.
-    schemas.forEach(schema => {
+    schemas.forEach((schema) => {
       const type = schema.model.get('schema');
       const { entities: items } = party.database.select({ type }).exec();
       log(renderSchemaItemsTable(schema, items, party));
@@ -117,39 +131,48 @@ describe('Schemas', function () {
  * @param items
  * @param [party]
  */
-const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
+const renderSchemaItemsTable = (
+  schema: Item<ObjectModel>,
+  items: Item<ObjectModel>[],
+  party?: Party
+) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 
   const logKey = (id: string) => truncateKey(id, 4);
   const logString = (value: string) => truncate(value, 24, true);
 
-  const values = items.map((item) => fields.reduce<{ [key: string]: any }>((row, { key, type, ref }) => {
-    const value = item.model.get(key);
-    switch (type) {
-      case 'string': {
-        row[key] = chalk.green(logString(value));
-        break;
-      }
+  const values = items.map((item) =>
+    fields.reduce<{ [key: string]: any }>(
+      (row, { key, type, ref }) => {
+        const value = item.model.get(key);
+        switch (type) {
+          case 'string': {
+            row[key] = chalk.green(logString(value));
+            break;
+          }
 
-      case 'ref': {
-        if (party) {
-          const { field } = ref!;
-          const item = party.database.getItem(value);
-          row[key] = chalk.red(logString(item?.model.get(field)));
-        } else {
-          row[key] = chalk.red(logKey(value));
+          case 'ref': {
+            if (party) {
+              const { field } = ref!;
+              const item = party.database.getItem(value);
+              row[key] = chalk.red(logString(item?.model.get(field)));
+            } else {
+              row[key] = chalk.red(logKey(value));
+            }
+            break;
+          }
+
+          default: {
+            row[key] = value;
+          }
         }
-        break;
-      }
 
-      default: {
-        row[key] = value;
-      }
-    }
-
-    return row;
-  }, { id: chalk.blue(logKey(item.id)) }));
+        return row;
+      },
+      { id: chalk.blue(logKey(item.id)) }
+    )
+  );
 
   return columnify(values, { columns: ['id', ...columns] });
 };

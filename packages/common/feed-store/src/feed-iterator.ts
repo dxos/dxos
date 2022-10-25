@@ -14,28 +14,30 @@ import { FeedBlock } from './types';
 /**
  * Base class for an async iterable feed.
  */
-export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
+export abstract class AbstractFeedIterator<T>
+  implements AsyncIterable<FeedBlock<T>>
+{
   private readonly _stopTrigger = new Trigger();
 
   protected _open = false;
   protected _running = false;
 
-  toJSON () {
+  toJSON() {
     return {
       open: this.isOpen,
       running: this.isRunning
     };
   }
 
-  get isOpen () {
+  get isOpen() {
     return this._open;
   }
 
-  get isRunning () {
+  get isRunning() {
     return this._running;
   }
 
-  async open () {
+  async open() {
     if (!this._open) {
       log('opening...');
       await this._onOpen();
@@ -46,7 +48,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     }
   }
 
-  async close () {
+  async close() {
     if (this._open) {
       log('closing...');
       await this.stop();
@@ -57,14 +59,14 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     }
   }
 
-  async start () {
+  async start() {
     assert(this._open);
     if (!this._running) {
       this._running = true;
     }
   }
 
-  async stop () {
+  async stop() {
     assert(this._open);
     if (this._running) {
       this._running = false;
@@ -76,11 +78,11 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
   // AsyncIterable
   //
 
-  [Symbol.asyncIterator] () {
+  [Symbol.asyncIterator]() {
     return this._generator();
   }
 
-  async * _generator () {
+  async *_generator() {
     log('started');
     while (this._running) {
       const block = await Promise.race([
@@ -98,9 +100,9 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     log('stopped');
   }
 
-  abstract _onOpen (): Promise<void>
-  abstract _onClose (): Promise<void>
-  abstract _nextBlock (): Promise<FeedBlock<T> | undefined>;
+  abstract _onOpen(): Promise<void>;
+  abstract _onClose(): Promise<void>;
+  abstract _nextBlock(): Promise<FeedBlock<T> | undefined>;
 }
 
 /**
@@ -109,22 +111,20 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 export class FeedIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
-  constructor (
-    private readonly _feed: FeedWrapper<T>
-  ) {
+  constructor(private readonly _feed: FeedWrapper<T>) {
     super();
     this._queue = new FeedQueue<T>(this._feed);
   }
 
-  override async _onOpen (): Promise<void> {
+  override async _onOpen(): Promise<void> {
     await this._queue.open();
   }
 
-  override async _onClose (): Promise<void> {
+  override async _onClose(): Promise<void> {
     await this._queue.close();
   }
 
-  override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
+  override async _nextBlock(): Promise<FeedBlock<T> | undefined> {
     return this._queue.pop();
   }
 }

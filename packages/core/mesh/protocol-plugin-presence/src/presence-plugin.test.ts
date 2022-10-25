@@ -22,29 +22,31 @@ const TIMEOUT = 30 * 1000;
 
 const random = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
-const generator = new ProtocolNetworkGenerator(async (topic, peerId): Promise<any> => {
-  const presence = new PresencePlugin(peerId, {
-    metadata: { shareStr: 'test1', shareBuf: Buffer.from('test2') }
-  });
+const generator = new ProtocolNetworkGenerator(
+  async (topic, peerId): Promise<any> => {
+    const presence = new PresencePlugin(peerId, {
+      metadata: { shareStr: 'test1', shareBuf: Buffer.from('test2') }
+    });
 
-  const createStream = ({ initiator }: {initiator: boolean | undefined}) => new Protocol({
-    streamOptions: {
-      live: true
-    },
-    discoveryKey: topic,
-    initiator: !!initiator,
-    userSession: { peerId: PublicKey.stringify(peerId) }
-  })
-    .setExtension(presence.createExtension())
-    .init()
-    .stream;
+    const createStream = ({ initiator }: { initiator: boolean | undefined }) =>
+      new Protocol({
+        streamOptions: {
+          live: true
+        },
+        discoveryKey: topic,
+        initiator: !!initiator,
+        userSession: { peerId: PublicKey.stringify(peerId) }
+      })
+        .setExtension(presence.createExtension())
+        .init().stream;
 
-  return { id: peerId, presence, createStream };
-});
+    return { id: peerId, presence, createStream };
+  }
+);
 
 const links = (graph: Graph) => {
   const links: string[] = [];
-  graph.forEachLink(link => {
+  graph.forEachLink((link) => {
     const t = [link.fromId, link.toId].sort();
     links.push(t.join(' --> '));
   });
@@ -68,36 +70,57 @@ it('presence', async function () {
 
   const peer1 = random(network.peers) as any;
 
-  await waitForExpect(() => {
-    expect(network.connections.length).to.equal(peer1.presence.graph.getLinksCount());
-  }, TIMEOUT, 2 * 1000);
+  await waitForExpect(
+    () => {
+      expect(network.connections.length).to.equal(
+        peer1.presence.graph.getLinksCount()
+      );
+    },
+    TIMEOUT,
+    2 * 1000
+  );
 
   log('original network');
-  links(network.graph).forEach(val => log(val));
+  links(network.graph).forEach((val) => log(val));
 
   log('presence network');
-  links(peer1.presence.graph).forEach(val => log(val));
+  links(peer1.presence.graph).forEach((val) => log(val));
 
-  await waitForExpect(() => {
-    const pathFinder = path.nba(peer1.presence.graph);
-    const fromId = peer1.id.toString('hex');
+  await waitForExpect(
+    () => {
+      const pathFinder = path.nba(peer1.presence.graph);
+      const fromId = peer1.id.toString('hex');
 
-    const result = network.peers
-      .filter((peer: any) => peer !== peer1)
-      .reduce((prev: any, peer: any) => prev && pathFinder.find(fromId, peer.id.toString('hex')).length > 0, true);
+      const result = network.peers
+        .filter((peer: any) => peer !== peer1)
+        .reduce(
+          (prev: any, peer: any) =>
+            prev && pathFinder.find(fromId, peer.id.toString('hex')).length > 0,
+          true
+        );
 
-    expect(result).to.be.true;
-  }, TIMEOUT, 5 * 1000);
+      expect(result).to.be.true;
+    },
+    TIMEOUT,
+    5 * 1000
+  );
 
   peer1.presence.graph.forEachNode((node: any) => {
-    expect(node.data.metadata).to.deep.equal({ shareStr: 'test1', shareBuf: Buffer.from('test2') });
+    expect(node.data.metadata).to.deep.equal({
+      shareStr: 'test1',
+      shareBuf: Buffer.from('test2')
+    });
   });
 
   log('network full connected');
 
   await network.destroy();
 
-  await waitForExpect(() => {
-    expect(peer1.presence.graph.getNodesCount()).to.equal(1);
-  }, TIMEOUT, 2 * 1000);
+  await waitForExpect(
+    () => {
+      expect(peer1.presence.graph.getNodesCount()).to.equal(1);
+    },
+    TIMEOUT,
+    2 * 1000
+  );
 });

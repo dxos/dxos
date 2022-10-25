@@ -8,10 +8,17 @@ import assert from 'node:assert';
 import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import {
+  createProtocolFactory,
+  NetworkManager,
+  StarTopology
+} from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
+import {
+  BotFactoryService,
+  BotPackageSpecifier
+} from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';
@@ -26,61 +33,65 @@ export class BotFactoryClient {
   private _connectedTopic?: PublicKey;
   private _isReady = false;
 
-  constructor (
-    private readonly _networkManager: NetworkManager
-  ) {}
+  constructor(private readonly _networkManager: NetworkManager) {}
 
-  get isReady () {
+  get isReady() {
     return this._isReady;
   }
 
   // TODO(burdon): Remove
-  get botFactory (): BotFactoryService {
+  get botFactory(): BotFactoryService {
     assert(this._rpc, 'Not started.'); // TODO(burdon): Remove.
     return this._rpc.rpc;
   }
 
-  getBot (id: string) {
+  getBot(id: string) {
     assert(this._rpc, 'Not started.');
     return new BotHandle(id, this._rpc);
   }
 
   // TODO(burdon): Rename listBots?
-  async getBots () {
+  async getBots() {
     assert(this._rpc, 'Not started.');
     const { bots } = await this._rpc.rpc.getBots();
     return bots || [];
   }
 
   // TODO(burdon): Rename connect/disconnect?
-  async start (topic: PublicKey): Promise<void> {
+  async start(topic: PublicKey): Promise<void> {
     log(`Connecting: ${topic.toString()}`);
     this._connectedTopic = topic;
     const peerId = PublicKey.random();
     const portPromise = new Promise<RpcPort>((resolve) => {
-      this._networkManager.joinProtocolSwarm({
-        topic,
-        peerId,
-        topology: new StarTopology(topic),
-        protocol: createProtocolFactory(topic, peerId, [
-          new RpcPlugin(async (port) => {
-            log('Connected.');
-            resolve(port);
-          })
-        ])
-      }).catch(err => log(err));
+      this._networkManager
+        .joinProtocolSwarm({
+          topic,
+          peerId,
+          topology: new StarTopology(topic),
+          protocol: createProtocolFactory(topic, peerId, [
+            new RpcPlugin(async (port) => {
+              log('Connected.');
+              resolve(port);
+            })
+          ])
+        })
+        .catch((err) => log(err));
     });
 
     // TODO(burdon): Retry.
     // TODO(yivlad): Convert promiseTimeout to typescript.
-    const port = await promiseTimeout(portPromise, 30_000, new Error('Timeout on connecting to bot factory.'));
+    const port = await promiseTimeout(
+      portPromise,
+      30_000,
+      new Error('Timeout on connecting to bot factory.')
+    );
     const service = schema.getService('dxos.bot.BotFactoryService');
     this._rpc = createRpcClient(service, { port, timeout: 60_000 });
     await this._rpc.open();
     this._isReady = true;
   }
 
-  async stop () {
+  async stop() {
     log('Disconnecting...');
     this._rpc?.close();
     if (this._connectedTopic) {
@@ -94,7 +105,7 @@ export class BotFactoryClient {
    * Spawns a bot and starts it.
    * @param party Party that the bot will join.
    */
-  async spawn (spec: BotPackageSpecifier, party: Party) {
+  async spawn(spec: BotPackageSpecifier, party: Party) {
     if (!this._rpc) {
       await this.start(party.key);
       assert(this._rpc, 'Not started.');

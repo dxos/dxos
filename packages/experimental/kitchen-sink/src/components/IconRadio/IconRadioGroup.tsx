@@ -7,16 +7,18 @@ import React, { ReactNode, createContext } from 'react';
 import { Box } from '@mui/material';
 
 interface IconRadioGroupContextProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const IconRadioGroupContext = createContext<IconRadioGroupContextProps | undefined>(undefined);
+export const IconRadioGroupContext = createContext<
+  IconRadioGroupContextProps | undefined
+>(undefined);
 
 interface IconRadioGroupProps {
-  children: ReactNode
-  value: string
-  onChange: (value: string) => void
+  children: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 export const IconRadioGroup = ({

@@ -22,7 +22,9 @@ describe('Config hook', function () {
 
   it('should return default client config when no config is passed in a context', function () {
     const client = new Client({});
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const wrapper = ({ children }: any) => (
+      <ClientProvider client={client}>{children}</ClientProvider>
+    );
     const { result } = renderHook(render, { wrapper });
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
@@ -39,8 +41,12 @@ describe('Config hook', function () {
       }
     };
     const client = new Client(config);
-    const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
+    const wrapper = ({ children }: any) => (
+      <ClientProvider client={client}>{children}</ClientProvider>
+    );
     const { result } = renderHook(render, { wrapper });
-    expect(result.current.get('runtime.client.storage')).toEqual(config.runtime?.client?.storage);
+    expect(result.current.get('runtime.client.storage')).toEqual(
+      config.runtime?.client?.storage
+    );
   });
 });

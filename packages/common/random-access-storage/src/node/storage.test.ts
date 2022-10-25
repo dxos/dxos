@@ -16,7 +16,8 @@ import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 
-const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
+const temp = () =>
+  path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 
 const write = async (file: File, data = 'test') => {
   const buffer = Buffer.from(data);
@@ -39,8 +40,13 @@ describe('testing node storage types', function () {
     return del(ROOT_DIRECTORY);
   });
 
-  for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
-    storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+  for (const storageType of [
+    StorageType.RAM,
+    StorageType.NODE
+  ] as StorageType[]) {
+    storageTests(storageType, () =>
+      createStorage({ type: storageType, root: ROOT_DIRECTORY })
+    );
   }
 
   it('create storage with node file by default', async function () {
@@ -57,7 +63,9 @@ describe('testing node storage types', function () {
     const file = storageDir.getOrCreateFile('file');
     await write(file);
     // TODO(burdon): Why test undefined?
-    await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
+    await expect(
+      fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)
+    ).resolves.toBeUndefined();
   });
 
   it('delete directory', async function () {
@@ -70,7 +78,9 @@ describe('testing node storage types', function () {
 
     // Check dir destroy.
     await storageDir.delete();
-    await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
+    await expect(
+      fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)
+    ).rejects.toThrow(/ENOENT/);
   });
 
   it('destroy storage', async function () {
@@ -87,7 +97,9 @@ describe('testing node storage types', function () {
   });
 
   it('should throw an assert error if invalid type for platform', function () {
-    expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
+    expect(() =>
+      createStorage({ type: StorageType.IDB, root: 'error' })
+    ).toThrow(/Invalid/);
   });
 
   it('file exists and destroys in subDirectory', async function () {
@@ -97,7 +109,9 @@ describe('testing node storage types', function () {
     const storageSubDirectory = storageDir.createDirectory('sub');
     const file = storageSubDirectory.getOrCreateFile('file');
     await write(file);
-    await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
+    await expect(
+      fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)
+    ).resolves.toBeUndefined();
 
     await storage.destroy();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);

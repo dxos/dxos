@@ -5,13 +5,13 @@
 import { PublicKey } from '@dxos/keys';
 
 export type WriteReceipt = {
-  feedKey: PublicKey
-  seq: number
-}
+  feedKey: PublicKey;
+  seq: number;
+};
 
 /**
  * Async feed writer.
  */
 export interface FeedWriter<T extends {}> {
-  write (data: T): Promise<WriteReceipt>
+  write(data: T): Promise<WriteReceipt>;
 }

@@ -25,7 +25,8 @@ const Test = () => {
           {
             id: 'test',
             label: 'Test',
-            component: () => ( // TODO(burdon): Client Context.
+            component: () => (
+              // TODO(burdon): Client Context.
               <Join />
             )
           },
@@ -40,16 +41,12 @@ const Test = () => {
                   {
                     id: 'sub1',
                     label: 'Sub 1',
-                    component: () => (
-                      <Text>Sub 1</Text>
-                    )
+                    component: () => <Text>Sub 1</Text>
                   },
                   {
                     id: 'sub2',
                     label: 'Sub 2',
-                    component: () => (
-                      <Text>Sub 2</Text>
-                    )
+                    component: () => <Text>Sub 2</Text>
                   }
                 ]}
               />

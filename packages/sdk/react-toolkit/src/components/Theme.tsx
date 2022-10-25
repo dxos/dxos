@@ -4,7 +4,12 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { colors, createTheme as createMuiTheme, ThemeOptions, Theme } from '@mui/material';
+import {
+  colors,
+  createTheme as createMuiTheme,
+  ThemeOptions,
+  Theme
+} from '@mui/material';
 
 // https://material-ui.com/customization/theming
 const defaultThemeProperties: ThemeOptions = {
@@ -36,4 +41,5 @@ const defaultThemeProperties: ThemeOptions = {
   }
 };
 
-export const createTheme = (base: ThemeOptions): Theme => createMuiTheme(defaultsDeep(base, defaultThemeProperties));
+export const createTheme = (base: ThemeOptions): Theme =>
+  createMuiTheme(defaultsDeep(base, defaultThemeProperties));

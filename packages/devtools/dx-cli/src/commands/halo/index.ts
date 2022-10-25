@@ -12,7 +12,7 @@ export default class Halo extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'Show HALO profile.';
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
       const profile = client.halo.profile;
       if (!profile) {

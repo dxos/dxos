@@ -13,10 +13,9 @@ import { App } from './App';
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 (() => {
-  createRoot(document.getElementById('root')!)
-    .render(
-      <ClientProvider config={configProvider}>
-        <App />
-      </ClientProvider>
-    );
+  createRoot(document.getElementById('root')!).render(
+    <ClientProvider config={configProvider}>
+      <App />
+    </ClientProvider>
+  );
 })();

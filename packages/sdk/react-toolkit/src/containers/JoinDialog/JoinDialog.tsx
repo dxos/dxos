@@ -13,7 +13,8 @@ import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
 
-const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
+const invitationCodeFromUrl = (text: string) =>
+  text.substring(text.lastIndexOf('/') + 1);
 
 enum PartyJoinState {
   INIT,
@@ -22,18 +23,18 @@ enum PartyJoinState {
 }
 
 type JoinOptions = {
-  invitation: InvitationDescriptor
-  secretProvider: SecretProvider
-}
+  invitation: InvitationDescriptor;
+  secretProvider: SecretProvider;
+};
 
 export interface JoinDialogProps {
-  open: boolean
-  title: string
-  invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
-  onClose?: () => void
-  closeOnSuccess?: boolean
-  modal?: boolean
+  open: boolean;
+  title: string;
+  invitationCode?: string;
+  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>;
+  onClose?: () => void;
+  closeOnSuccess?: boolean;
+  modal?: boolean;
 }
 
 /**
@@ -50,11 +51,14 @@ export const JoinDialog = ({
   closeOnSuccess = true,
   modal
 }: JoinDialogProps) => {
-  const [state, setState] = useState(initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT);
+  const [state, setState] = useState(
+    initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT
+  );
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
-  const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
+  const [secretProvider, secretResolver, resetSecret] =
+    useSecretProvider<Buffer>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
@@ -99,8 +103,9 @@ export const JoinDialog = ({
     } catch (err: any) {
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
-        const messages: {[index: string]: string} = {
-          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed. Please try again.',
+        const messages: { [index: string]: string } = {
+          ERR_EXTENSION_RESPONSE_FAILED:
+            'Authentication failed. Please try again.',
           ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the party.'
         };
 
@@ -130,7 +135,7 @@ export const JoinDialog = ({
     // TODO(burdon): The paste event only seems to be called the first time.
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/paste_event
     const pasteListener = (event: any) => {
-      const invitationCode = (event.clipboardData).getData('text');
+      const invitationCode = event.clipboardData.getData('text');
       setInvitationCode(invitationCode);
       void handleProcessInvitation(invitationCode);
       event.preventDefault();
@@ -153,32 +158,35 @@ export const JoinDialog = ({
         spellCheck={false}
         value={invitationCode}
         onChange={(event) => setInvitationCode(event.target.value)}
-        onKeyDown={handleKey('Enter', () => handleProcessInvitation(invitationCode))}
+        onKeyDown={handleKey('Enter', () =>
+          handleProcessInvitation(invitationCode)
+        )}
       />
     );
 
     const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={() => handleProcessInvitation(invitationCode)}>Accept</Button>
+        <Button onClick={() => handleProcessInvitation(invitationCode)}>
+          Accept
+        </Button>
       </>
     );
 
     const authenticateContent = (
       <>
-        <Typography variant='body1'>
-          Enter the passcode.
-        </Typography>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginTop: 3
-        }}
+        <Typography variant='body1'>Enter the passcode.</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 3
+          }}
         >
           <Passcode
             length={4}
-            onSubmit={value => handleAuthenticate(value)}
+            onSubmit={(value) => handleAuthenticate(value)}
           />
           <HashIcon
             sx={{ marginLeft: 2 }}
@@ -189,9 +197,7 @@ export const JoinDialog = ({
       </>
     );
 
-    const authenticateActions = (
-      <Button onClick={handleCancel}>Cancel</Button>
-    );
+    const authenticateActions = <Button onClick={handleCancel}>Cancel</Button>;
 
     const errorActions = (
       <>
@@ -235,12 +241,5 @@ export const JoinDialog = ({
 
   const dialogProps = getDialogProps(state);
 
-  return (
-    <Dialog
-      maxWidth='xs'
-      modal={modal}
-      open={open}
-      {...dialogProps}
-    />
-  );
+  return <Dialog maxWidth='xs' modal={modal} open={open} {...dialogProps} />;
 };

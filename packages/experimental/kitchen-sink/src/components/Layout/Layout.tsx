@@ -7,14 +7,19 @@ import React, { useState, ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import {
-  CloseButton, OpenButton, SlidingAppBar, SlidingContent, SlidingDrawer, Toolbar
+  CloseButton,
+  OpenButton,
+  SlidingAppBar,
+  SlidingContent,
+  SlidingDrawer,
+  Toolbar
 } from '@dxos/react-components';
 
 export interface LayoutProps {
-  children?: ReactNode
-  title?: string
-  sidebar?: ReactNode
-  width?: number
+  children?: ReactNode;
+  title?: string;
+  sidebar?: ReactNode;
+  width?: number;
 }
 
 export const Layout = ({
@@ -26,33 +31,25 @@ export const Layout = ({
   const [open, setOpen] = useState(true);
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flex: 1
-    }}>
-      <SlidingAppBar
-        direction='left'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+    <Box
+      sx={{
+        display: 'flex',
+        flex: 1
+      }}
+    >
+      <SlidingAppBar direction='left' drawerOpen={open} drawerWidth={width}>
         <Toolbar
           disableGutters
           variant='dense'
           sx={{ marginLeft: 1, marginRight: 1 }}
         >
-          {!open && (
-            <OpenButton onOpen={() => setOpen(true)} />
-          )}
+          {!open && <OpenButton onOpen={() => setOpen(true)} />}
           <Typography>{title}</Typography>
         </Toolbar>
       </SlidingAppBar>
 
       {/* Main content. */}
-      <SlidingContent
-        direction='left'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+      <SlidingContent direction='left' drawerOpen={open} drawerWidth={width}>
         <Toolbar variant='dense' />
         {children}
       </SlidingContent>
@@ -70,10 +67,7 @@ export const Layout = ({
           variant='dense'
           sx={{ marginLeft: 2, marginRight: 1 }}
         >
-          <CloseButton
-            direction='left'
-            onClose={() => setOpen(false)}
-          />
+          <CloseButton direction='left' onClose={() => setOpen(false)} />
         </Toolbar>
         {sidebar}
       </SlidingDrawer>

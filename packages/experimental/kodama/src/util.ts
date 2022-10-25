@@ -18,7 +18,10 @@ export const clear = () => {
 /**
  * Check version against NPM.
  */
-export const versionCheck = async (name: string, version: string): Promise<string | undefined> => {
+export const versionCheck = async (
+  name: string,
+  version: string
+): Promise<string | undefined> => {
   const npm = new NPM();
   const repo = await npm.repo(name).package();
   const max = version !== compare.max([repo.version, version]);

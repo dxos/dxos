@@ -7,7 +7,10 @@ import debug from 'debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
+import {
+  EchoEnvelope,
+  ItemMutation
+} from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
@@ -60,7 +63,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * @param _writeStream  Write stream (if not read-only).
    * @param parent        Parent Item (if not a root Item).
    */
-  constructor (
+  constructor(
     itemManager: ItemManager,
     itemId: ItemID,
     itemType: ItemType | undefined, // TODO(burdon): Why allow undefined?
@@ -72,39 +75,51 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     this._updateParent(parent);
   }
 
-  override toString () {
-    return `Item(${JSON.stringify({ itemId: this.id, parentId: this.parent?.id, itemType: this.type })})`;
+  override toString() {
+    return `Item(${JSON.stringify({
+      itemId: this.id,
+      parentId: this.parent?.id,
+      itemType: this.type
+    })})`;
   }
 
-  get readOnly () {
+  get readOnly() {
     return !this._writeStream || this._deleted;
   }
 
-  get deleted () {
+  get deleted() {
     return this._deleted;
   }
 
-  get parent (): Item<any> | null {
+  get parent(): Item<any> | null {
     return this._parent;
   }
 
-  get children (): Item<any>[] {
-    return Array.from(this._children.values()).filter(item => !item.deleted);
+  get children(): Item<any>[] {
+    return Array.from(this._children.values()).filter((item) => !item.deleted);
   }
 
-  get links (): Link<any, any, any>[] {
-    return Array.from(this._links.values()).filter(link => !link._isDangling());
+  get links(): Link<any, any, any>[] {
+    return Array.from(this._links.values()).filter(
+      (link) => !link._isDangling()
+    );
   }
 
-  get refs (): Link<any, any, any>[] {
-    return Array.from(this._refs.values()).filter(link => !link._isDangling());
+  get refs(): Link<any, any, any>[] {
+    return Array.from(this._refs.values()).filter(
+      (link) => !link._isDangling()
+    );
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
-  select (): Selection<Item<any>> {
-    return createItemSelection(this as Item, this._itemManager.debouncedUpdate, undefined);
+  select(): Selection<Item<any>> {
+    return createItemSelection(
+      this as Item,
+      this._itemManager.debouncedUpdate,
+      undefined
+    );
   }
 
   /**
@@ -115,7 +130,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
   // TODO(burdon): Garbage collection (snapshots should drop deleted items).
   // TODO(burdon): Prevent updates to model if deleted.
   // TODO(burdon): If deconstructed (itemManager.deconstructItem) then how to query?
-  async delete () {
+  async delete() {
     if (!this._writeStream) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
@@ -138,7 +153,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
   /**
    * Restore deleted item.
    */
-  async restore () {
+  async restore() {
     if (!this._writeStream) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
@@ -159,14 +174,16 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
   }
 
   // TODO(telackey): This does not allow null or undefined as a parent_id, but should it since we allow a null parent?
-  async setParent (parentId: ItemID): Promise<void> {
+  async setParent(parentId: ItemID): Promise<void> {
     if (!this._writeStream || this.readOnly) {
       throw new Error(`Item is read-only: ${this.id}`);
     }
 
     // Wait for mutation below to be processed.
     // TODO(burdon): Refine to wait for this specific mutation.
-    const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
+    const onUpdate = this._onUpdate.waitFor(
+      () => parentId === this._parent?.id
+    );
 
     await this._writeStream.write({
       itemId: this.id,
@@ -182,7 +199,10 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * Process a mutation from the stream.
    * @private (Package-private).
    */
-  _processMutation (mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
+  _processMutation(
+    mutation: ItemMutation,
+    getItem: (itemId: ItemID) => Item<any> | undefined
+  ) {
     log('_processMutation %s', JSON.stringify(mutation));
 
     const { action, parentId } = mutation;
@@ -212,7 +232,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * Atomically update parent/child relationship.
    * @param parent
    */
-  private _updateParent (parent: Item<any> | null | undefined) {
+  private _updateParent(parent: Item<any> | null | undefined) {
     if (this._parent) {
       this._parent._children.delete(this);
     }

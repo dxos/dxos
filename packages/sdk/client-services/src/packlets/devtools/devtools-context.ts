@@ -9,11 +9,11 @@ import { NetworkManager } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 export interface DevtoolsServiceDependencies {
-  debug: any
-  config: Config
-  feedStore: FeedStore<FeedMessage>
-  networkManager: NetworkManager
-  keyring: any
-  echo: any
-  modelFactory: ModelFactory
+  debug: any;
+  config: Config;
+  feedStore: FeedStore<FeedMessage>;
+  networkManager: NetworkManager;
+  keyring: any;
+  echo: any;
+  modelFactory: ModelFactory;
 }

@@ -24,7 +24,9 @@ export const createMessageSelector = (
   return (messages: FeedBlock<FeedMessage>[]) => {
     // Pick the first candidate with a valid timeframe that has no gaps.
     for (let i = 0; i < messages.length; i++) {
-      const { data: { timeframe } } = messages[i];
+      const {
+        data: { timeframe }
+      } = messages[i];
       assert(timeframe);
 
       if (!timeframeClock.hasGaps(timeframe)) {

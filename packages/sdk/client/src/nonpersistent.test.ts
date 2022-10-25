@@ -48,7 +48,9 @@ describe('Client - nonpersistent', function () {
     expect(item.model.get('foo')).toEqual('bar');
 
     await client.destroy();
-  }).timeout(10_000).retries(10);
+  })
+    .timeout(10_000)
+    .retries(10);
 
   it('invitations', async function () {
     if (mochaExecutor.environment === 'webkit') {
@@ -64,7 +66,10 @@ describe('Client - nonpersistent', function () {
     });
 
     const party1 = await clientA.echo.createParty();
-    const item = await party1.database.createItem({ model: ObjectModel, type: 'example:item/test' });
+    const item = await party1.database.createItem({
+      model: ObjectModel,
+      type: 'example:item/test'
+    });
     await item.model.set('foo', 'bar');
 
     const clientB = new Client(defaultTestingConfig);
@@ -75,34 +80,55 @@ describe('Client - nonpersistent', function () {
     });
 
     const invite = await party1.createInvitation();
-    const party2 = await clientB.echo.acceptInvitation(invite.descriptor).getParty();
+    const party2 = await clientB.echo
+      .acceptInvitation(invite.descriptor)
+      .getParty();
 
     await party2.database.waitForItem({ type: 'example:item/test' });
-    const otherItem = party2.database.select({ type: 'example:item/test' }).exec().entities[0];
+    const otherItem = party2.database
+      .select({ type: 'example:item/test' })
+      .exec().entities[0];
     expect(otherItem.model.get('foo')).toEqual('bar');
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(10_000).retries(10);
+  })
+    .timeout(10_000)
+    .retries(10);
 
   it.skip('offline invitations', async function () {
-    if (mochaExecutor.environment === 'webkit' || mochaExecutor.environment === 'chromium') {
+    if (
+      mochaExecutor.environment === 'webkit' ||
+      mochaExecutor.environment === 'chromium'
+    ) {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }
 
     const clientA = new Client(defaultTestingConfig);
     await clientA.initialize();
-    await clientA.halo.createProfile({ ...createKeyPair(), username: 'test-user-1' });
+    await clientA.halo.createProfile({
+      ...createKeyPair(),
+      username: 'test-user-1'
+    });
 
     const clientB = new Client(defaultTestingConfig);
     await clientB.initialize();
-    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'test-user-2' });
+    const profileB = await clientB.halo.createProfile({
+      ...createKeyPair(),
+      username: 'test-user-2'
+    });
 
     // Wait for invited person to arrive.
     // TODO(dmaretskyi): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.
-    const contactPromise = clientA.halo.queryContacts()
-      .update.waitFor(contacts => !!contacts.find(contact => contact.publicKey.equals(profileB.publicKey)));
+    const contactPromise = clientA.halo
+      .queryContacts()
+      .update.waitFor(
+        (contacts) =>
+          !!contacts.find((contact) =>
+            contact.publicKey.equals(profileB.publicKey)
+          )
+      );
 
     // Online (adds contact).
     {
@@ -116,11 +142,15 @@ describe('Client - nonpersistent', function () {
     // Offline (use existing contact).
     {
       const party2A = await clientA.echo.createParty();
-      const invite2 = await party2A.createInvitation({ inviteeKey: contact.publicKey });
+      const invite2 = await party2A.createInvitation({
+        inviteeKey: contact.publicKey
+      });
       await clientB.echo.acceptInvitation(invite2.descriptor).getParty();
     }
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(20_000).retries(10);
+  })
+    .timeout(20_000)
+    .retries(10);
 });

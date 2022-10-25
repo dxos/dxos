@@ -36,7 +36,7 @@ export const combineSourceMaps = (prevMap: string, nextMap: string) => {
 };
 
 export type SourcePosition = {
-  line: number
-  column: number
-  filename: string
-}
+  line: number;
+  column: number;
+  filename: string;
+};

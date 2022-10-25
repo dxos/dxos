@@ -39,16 +39,17 @@ const useCustomStyles = makeStyles(() => ({
 */
 
 export interface PeerGraphProps {
-  peers: PeerInfo[]
-  size: { width: number | null, height: number | null }
-  onClick?: (id: PublicKey) => void
+  peers: PeerInfo[];
+  size: { width: number | null; height: number | null };
+  onClick?: (id: PublicKey) => void;
 }
 
 export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
   const [data, setData] = useState<any>({ nodes: [], links: [] });
 
   const buildGraph = (peers: PeerInfo[]) => {
-    const nodes: any[] = []; const links: any[] = [];
+    const nodes: any[] = [];
+    const links: any[] = [];
     for (const peer of peers) {
       nodes.push({
         id: peer.id.toHex(),
@@ -77,7 +78,6 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
       // const handle = ({ source }: any) => {
       //   onClick!(PublicKey.from(source.id));
       // };
-
       // drag.on('click', handle);
       // return () => drag.off('click', handle);
     }

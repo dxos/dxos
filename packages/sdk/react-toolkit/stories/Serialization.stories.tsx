@@ -9,7 +9,11 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { Party } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
-import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
+import {
+  FileUploadDialog,
+  FullScreen,
+  useFileDownload
+} from '@dxos/react-components';
 
 import { usePartySerializer } from '../src';
 
@@ -46,11 +50,7 @@ const ImportStory = () => {
           Import
         </Button>
       </Toolbar>
-      {party && (
-        <Box sx={{ padding: 2 }}>
-          Party: {party.key.toHex()}
-        </Box>
-      )}
+      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
     </FullScreen>
   );
 };
@@ -85,11 +85,7 @@ const ExportStory = () => {
           Export
         </Button>
       </Toolbar>
-      {party && (
-        <Box sx={{ padding: 2 }}>
-          Party: {party.key.toHex()}
-        </Box>
-      )}
+      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
     </FullScreen>
   );
 };

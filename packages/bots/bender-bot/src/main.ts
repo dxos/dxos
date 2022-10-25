@@ -9,15 +9,15 @@ import { BotService } from '@dxos/protocols/proto/dxos/service/scheduler';
 import { BotRPCPeer } from './bot-rpc-peer';
 
 const main = async () => {
-  const wsEndpoint = process.env.WS_ENDPOINT ?? raise(new Error('WS_ENDPOINT is not set'));
+  const wsEndpoint =
+    process.env.WS_ENDPOINT ?? raise(new Error('WS_ENDPOINT is not set'));
 
   const botService: BotService = {
     call: () => {
       return raise(new Error('Not implemented'));
     },
 
-    healthcheck: async () => {
-    }
+    healthcheck: async () => {}
   };
 
   const rpc = new BotRPCPeer(wsEndpoint, botService);
@@ -53,7 +53,7 @@ const main = async () => {
   });
 };
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

@@ -11,23 +11,21 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 export interface EchoCardProps {
-  item: Item<ObjectModel>
-  itemAdapter: ItemAdapter
-  children?: ReactNode
+  item: Item<ObjectModel>;
+  itemAdapter: ItemAdapter;
+  children?: ReactNode;
 }
 
-export const EchoCard = ({
-  item,
-  itemAdapter,
-  children
-}: EchoCardProps) => {
+export const EchoCard = ({ item, itemAdapter, children }: EchoCardProps) => {
   const { icon: Icon, color } = itemAdapter.meta?.(item.type!) ?? {};
 
   return (
-    <Card sx={{
-      width: 280,
-      margin: 1
-    }}>
+    <Card
+      sx={{
+        width: 280,
+        margin: 1
+      }}
+    >
       <CardHeader
         sx={{
           alignItems: 'start',
@@ -50,9 +48,7 @@ export const EchoCard = ({
         subheader={itemAdapter.description(item)}
       />
 
-      <CardContent>
-        {children}
-      </CardContent>
+      <CardContent>{children}</CardContent>
     </Card>
   );
 };

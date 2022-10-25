@@ -5,7 +5,7 @@
 import { DXOSError } from '@dxos/debug';
 
 export class xxxError extends DXOSError {
-  constructor () {
+  constructor() {
     super('XXX', 'xxx.');
   }
 }

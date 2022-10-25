@@ -8,11 +8,14 @@ import { resolve } from 'path';
 import { promisify } from 'util';
 
 export interface MochaExecutorOptions {
-  testPatterns: string[]
-  config: string
+  testPatterns: string[];
+  config: string;
 }
 
-export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+export default async (
+  options: MochaExecutorOptions,
+  context: ExecutorContext
+): Promise<{ success: boolean }> => {
   console.info('Executing playwright...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
@@ -25,7 +28,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     .then(async () => {
       const args = [
         `--config ${resolve(context.root, options.config)}`,
-        ...(options.testPatterns.map(pattern => resolve(context.root, pattern)))
+        ...options.testPatterns.map((pattern) => resolve(context.root, pattern))
       ];
 
       // TODO(wittjosiah): Run playwright programatically.

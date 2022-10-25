@@ -7,34 +7,34 @@ import defaultsDeep from 'lodash.defaultsdeep';
 // TODO(burdon): Make types relevant to ERD, etc.
 
 type Style = {
-  readonly id: string
-  readonly properties: any
-}
+  readonly id: string;
+  readonly properties: any;
+};
 
 type Node = {
-  readonly id: string
-  readonly label?: string
-  readonly className?: string
-  readonly style?: any
-  readonly href?: string
-}
+  readonly id: string;
+  readonly label?: string;
+  readonly className?: string;
+  readonly style?: any;
+  readonly href?: string;
+};
 
 type Link = {
-  readonly source: string
-  readonly target: string
-  readonly style?: any
-}
+  readonly source: string;
+  readonly target: string;
+  readonly style?: any;
+};
 
 type Subgraph = {
-  readonly id: string
-  readonly label?: string
-  readonly style?: any
-}
+  readonly id: string;
+  readonly label?: string;
+  readonly style?: any;
+};
 
 export interface SubgraphBuilder {
-  addNode (node: Node): SubgraphBuilder
-  addSubgraph (subgraph: Subgraph): SubgraphBuilder
-  build (indent?: number): string[]
+  addNode(node: Node): SubgraphBuilder;
+  addSubgraph(subgraph: Subgraph): SubgraphBuilder;
+  build(indent?: number): string[];
 }
 
 const ROOT_SUBGRAPH_ID = '_root_';
@@ -46,40 +46,54 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _subgraphs = new Set<SubgraphBuilder>();
 
-  constructor (
+  constructor(
     readonly id: string,
     readonly label?: string,
     readonly style?: string
   ) {}
 
-  addSubgraph ({ id, label, style }: Subgraph) {
+  addSubgraph({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
     this._subgraphs.add(subgraph);
     return subgraph;
   }
 
-  addNode (node: Node) {
+  addNode(node: Node) {
     this._nodes.add(node);
     return this;
   }
 
-  build (indent = -1): string[] {
+  build(indent = -1): string[] {
     const line = (str: string, i = indent) => ' '.repeat(i * 2) + str;
 
-    const section = (lines: string[]) => lines.length ? lines : undefined;
+    const section = (lines: string[]) => (lines.length ? lines : undefined);
 
     const sections = [
       // Current style.
-      this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
+      this.style &&
+        line(
+          `style ${this.id} ${Flowchart.renderProperties(this.style)}`,
+          indent + 1
+        ),
 
       // Nodes.
-      section(Array.from(this._nodes.values())
-        .map(node => Flowchart.renderNode(node).map(str => line(str, indent + 1))).flat()),
+      section(
+        Array.from(this._nodes.values())
+          .map((node) =>
+            Flowchart.renderNode(node).map((str) => line(str, indent + 1))
+          )
+          .flat()
+      ),
 
       // Recursively render subgraphs.
-      section(Array.from(this._subgraphs.values())
-        .map(subgraph => ['', subgraph.build(indent + 1)].flat()).flat())
-    ].filter(Boolean).flat() as string[];
+      section(
+        Array.from(this._subgraphs.values())
+          .map((subgraph) => ['', subgraph.build(indent + 1)].flat())
+          .flat()
+      )
+    ]
+      .filter(Boolean)
+      .flat() as string[];
 
     if (indent >= 0) {
       return [
@@ -94,10 +108,10 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 }
 
 type FlowchartOptions = {
-  direction?: 'LR' | 'RL' | 'TD'
-  curve?: 'basis' | 'bump' | 'normal' | 'step'
-  linkStyle?: any
-}
+  direction?: 'LR' | 'RL' | 'TD';
+  curve?: 'basis' | 'bump' | 'normal' | 'step';
+  linkStyle?: any;
+};
 
 export const FlowchartDefaultOptions: FlowchartOptions = {
   direction: 'LR',
@@ -116,9 +130,7 @@ export class Flowchart implements SubgraphBuilder {
   private readonly _options: FlowchartOptions;
   private readonly _config: any;
 
-  constructor (
-    options?: FlowchartOptions
-  ) {
+  constructor(options?: FlowchartOptions) {
     this._options = defaultsDeep({}, options, FlowchartDefaultOptions);
     this._config = {
       flowchart: {
@@ -130,12 +142,12 @@ export class Flowchart implements SubgraphBuilder {
   addNode = this._root.addNode.bind(this._root);
   addSubgraph = this._root.addSubgraph.bind(this._root);
 
-  addClassDef (id: string, properties: any) {
+  addClassDef(id: string, properties: any) {
     this._classDefs.add({ id, properties });
     return this;
   }
 
-  addLink (link: Link) {
+  addLink(link: Link) {
     this._links.add(link);
     return this;
   }
@@ -143,17 +155,36 @@ export class Flowchart implements SubgraphBuilder {
   /**
    * Generate mermaid document.
    */
-  build () {
-    const section = (label: string, lines: string[]) => lines.length ? ['', `%% ${label}`, ...lines] : undefined;
+  build() {
+    const section = (label: string, lines: string[]) =>
+      lines.length ? ['', `%% ${label}`, ...lines] : undefined;
 
     const sections = [
-      section('Classes', Array.from(this._classDefs.values()).map(classDef => Flowchart.renderClassDef(classDef))),
+      section(
+        'Classes',
+        Array.from(this._classDefs.values()).map((classDef) =>
+          Flowchart.renderClassDef(classDef)
+        )
+      ),
       section('Nodes', this._root.build()),
-      section('Links', [
-        this._options.linkStyle && Flowchart.renderLinkStyle({ id: 'default', properties: this._options.linkStyle }),
-        Array.from(this._links.values()).map((link, i) => Flowchart.renderLink(link, i)).flat()
-      ].filter(Boolean).flat())
-    ].filter(Boolean).flat();
+      section(
+        'Links',
+        [
+          this._options.linkStyle &&
+            Flowchart.renderLinkStyle({
+              id: 'default',
+              properties: this._options.linkStyle
+            }),
+          Array.from(this._links.values())
+            .map((link, i) => Flowchart.renderLink(link, i))
+            .flat()
+        ]
+          .filter(Boolean)
+          .flat()
+      )
+    ]
+      .filter(Boolean)
+      .flat();
 
     return [
       '```mermaid',
@@ -165,7 +196,7 @@ export class Flowchart implements SubgraphBuilder {
     ].flat() as string[];
   }
 
-  render () {
+  render() {
     return this.build().join('\n');
   }
 
@@ -174,47 +205,56 @@ export class Flowchart implements SubgraphBuilder {
   //
 
   // https://mermaid-js.github.io/mermaid/#/directives
-  static renderDirective (directive: string, properties: any): string {
-    return `%%{ ${directive}: ${JSON.stringify(properties).replace(/"/g, '\'')} }%%`;
+  static renderDirective(directive: string, properties: any): string {
+    return `%%{ ${directive}: ${JSON.stringify(properties).replace(
+      /"/g,
+      "'"
+    )} }%%`;
   }
 
-  static renderProperties (properties: any): string {
-    return Object.entries(properties).map(([key, value]) => `${key}:${value}`).join(',');
+  static renderProperties(properties: any): string {
+    return Object.entries(properties)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(',');
   }
 
-  static renderStyle ({ id, properties }: Style): string {
+  static renderStyle({ id, properties }: Style): string {
     return `style ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
-  static renderLinkStyle ({ id, properties }: Style): string {
+  static renderLinkStyle({ id, properties }: Style): string {
     return `linkStyle ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
   // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-and-classes
-  static renderClassDef ({ id, properties }: Style): string {
+  static renderClassDef({ id, properties }: Style): string {
     return `classDef ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
-  static renderNode (node: Node): string[] {
+  static renderNode(node: Node): string[] {
     const def = [
       node.id,
       node.label && `("${node.label}")`,
       node.className && `:::${node.className}`
-    ].filter(Boolean).join('');
+    ]
+      .filter(Boolean)
+      .join('');
 
     return [
       def,
-      node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
+      node.style &&
+        `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`
     ].filter(Boolean) as string[];
   }
 
-  static renderLink (link: Link, i: number): string[] {
+  static renderLink(link: Link, i: number): string[] {
     return [
       `${link.source} --> ${link.target}`,
-      link.style && Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
+      link.style &&
+        Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
     ].filter(Boolean);
   }
 }

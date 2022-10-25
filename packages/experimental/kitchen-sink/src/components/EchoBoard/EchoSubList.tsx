@@ -5,7 +5,16 @@
 import React, { useState } from 'react';
 
 import { Add as AddIcon } from '@mui/icons-material';
-import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import {
+  colors,
+  Box,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography
+} from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -15,10 +24,10 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 import { CreateItemDialog } from '../CreateItem';
 
 export interface EchoChildListProps {
-  item: Item<ObjectModel>
-  itemAdapter: ItemAdapter
-  type: string
-  onCreateItem?: (type: string, title: string, parent?: ItemID) => void
+  item: Item<ObjectModel>;
+  itemAdapter: ItemAdapter;
+  type: string;
+  onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
 export const EchoSubList = ({
@@ -46,31 +55,29 @@ export const EchoSubList = ({
       )}
 
       <Box key={type}>
-        <Box sx={{
-          display: 'flex',
-          flex: 1,
-          alignItems: 'center'
-        }}>
-          <Typography sx={{
+        <Box
+          sx={{
+            display: 'flex',
             flex: 1,
-            color: colors.blue[700],
-            fontVariant: 'all-petite-caps'
-          }}>
+            alignItems: 'center'
+          }}
+        >
+          <Typography
+            sx={{
+              flex: 1,
+              color: colors.blue[700],
+              fontVariant: 'all-petite-caps'
+            }}
+          >
             {plural}
           </Typography>
           {onCreateItem && (
-            <IconButton
-              size='small'
-              onClick={() => setShowDialog(true)}
-            >
+            <IconButton size='small' onClick={() => setShowDialog(true)}>
               <AddIcon />
             </IconButton>
           )}
         </Box>
-        <List
-          dense
-          disablePadding
-        >
+        <List dense disablePadding>
           {itemAdapter.linkedItems?.(item, type).map((item) => (
             <ListItem
               key={item.id}

@@ -22,13 +22,15 @@ describe('Streams', function () {
     const [processed, incProcessed] = latch({ count: numBlocks });
 
     const stream = core.createReadStream({ live: true });
-    const consumer: Writable = stream.pipe(new Writable({
-      write: (data: any, next: () => void) => {
-        log('received', { data: String(data) });
-        incProcessed();
-        next();
-      }
-    }));
+    const consumer: Writable = stream.pipe(
+      new Writable({
+        write: (data: any, next: () => void) => {
+          log('received', { data: String(data) });
+          incProcessed();
+          next();
+        }
+      })
+    );
 
     {
       const append = util.promisify(core.append.bind(core));

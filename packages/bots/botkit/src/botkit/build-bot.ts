@@ -5,11 +5,11 @@
 import { build } from 'esbuild';
 
 export interface BuildBotOptions {
-  entryPoint: string
-  outfile: string
+  entryPoint: string;
+  outfile: string;
 }
 
-export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
+export const buildBot = async ({ entryPoint, outfile }: BuildBotOptions) => {
   await build({
     bundle: true,
     entryPoints: [entryPoint],

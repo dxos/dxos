@@ -4,7 +4,11 @@
 
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  Credential,
+  PartyMember
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from './credential-factory';
 
@@ -14,7 +18,7 @@ import { createCredential } from './credential-factory';
  * Utility class for generating credential messages, where the issuer is the current identity or device.
  */
 export class CredentialGenerator {
-  constructor (
+  constructor(
     private readonly _keyring: Signer,
     private readonly _identityKey: PublicKey,
     private readonly _deviceKey: PublicKey
@@ -23,7 +27,7 @@ export class CredentialGenerator {
   /**
    * Create genesis messages for new Space.
    */
-  async createSpaceGenesis (
+  async createSpaceGenesis(
     partyKey: PublicKey,
     controlKey: PublicKey
   ): Promise<Credential[]> {
@@ -49,7 +53,11 @@ export class CredentialGenerator {
         }
       }),
 
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL)
+      await this.createFeedAdmission(
+        partyKey,
+        controlKey,
+        AdmittedFeed.Designation.CONTROL
+      )
     ];
   }
 
@@ -57,7 +65,7 @@ export class CredentialGenerator {
    * Create invitation.
    * Admit identity and control and data feeds.
    */
-  async createMemberInvitation (
+  async createMemberInvitation(
     partyKey: PublicKey,
     identityKey: PublicKey,
     deviceKey: PublicKey,
@@ -76,17 +84,23 @@ export class CredentialGenerator {
         }
       }),
 
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(partyKey, dataKey, AdmittedFeed.Designation.DATA)
+      await this.createFeedAdmission(
+        partyKey,
+        controlKey,
+        AdmittedFeed.Designation.CONTROL
+      ),
+      await this.createFeedAdmission(
+        partyKey,
+        dataKey,
+        AdmittedFeed.Designation.DATA
+      )
     ];
   }
 
   /**
    * Add device to space.
    */
-  async createDeviceAuthorization (
-    deviceKey: PublicKey
-  ): Promise<Credential> {
+  async createDeviceAuthorization(deviceKey: PublicKey): Promise<Credential> {
     return createCredential({
       signer: this._keyring,
       issuer: this._identityKey,
@@ -102,7 +116,7 @@ export class CredentialGenerator {
   /**
    * Add feed to space.
    */
-  async createFeedAdmission (
+  async createFeedAdmission(
     partyKey: PublicKey,
     feedKey: PublicKey,
     designation: AdmittedFeed.Designation

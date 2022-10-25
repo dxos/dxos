@@ -8,7 +8,13 @@ import { it as test } from 'mocha';
 import { MyKey } from './my-key';
 import { schema } from './proto';
 import {
-  ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp
+  ComplexFields,
+  OptionalScalars,
+  Outer,
+  Scalars,
+  TaskList,
+  TaskType,
+  WithTimestamp
 } from './proto/gen/example/testing/types';
 import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 
@@ -70,7 +76,10 @@ describe('Schema', function () {
     const codec = schema.getCodecForType('example.testing.types.ComplexFields');
 
     const initial: ComplexFields = {
-      repeatedField: [new MyKey(Buffer.from('foo')), new MyKey(Buffer.from('bar'))],
+      repeatedField: [
+        new MyKey(Buffer.from('foo')),
+        new MyKey(Buffer.from('bar'))
+      ],
       requiredField: new MyKey(Buffer.from('foo')),
       mappedField: {
         foo: new MyKey(Buffer.from('foo')),
@@ -216,7 +225,9 @@ describe('Schema', function () {
     });
 
     test('optional', () => {
-      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
+      const codec = schema.getCodecForType(
+        'example.testing.types.OptionalScalars'
+      );
 
       const initial: OptionalScalars = {
         doubleField: 0.52,
@@ -244,7 +255,9 @@ describe('Schema', function () {
     });
 
     test('empty optional', () => {
-      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
+      const codec = schema.getCodecForType(
+        'example.testing.types.OptionalScalars'
+      );
 
       const initial: OptionalScalars = {};
 
@@ -256,7 +269,9 @@ describe('Schema', function () {
     });
 
     describe('optional fields are assigned undefined when missing on the wire', function () {
-      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
+      const codec = schema.getCodecForType(
+        'example.testing.types.OptionalScalars'
+      );
 
       const expected: OptionalScalars = {};
 

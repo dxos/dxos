@@ -13,7 +13,7 @@ describe('Code analysis', function () {
     const sourceFile = project.getSourceFileOrThrow('tools/beast/src/types.ts');
     const types = sourceFile.getTypeAliases();
     expect(types.length).toBeTruthy();
-    types.forEach(type => {
+    types.forEach((type) => {
       console.log(type.getName());
     });
   });

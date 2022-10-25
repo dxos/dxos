@@ -11,7 +11,11 @@ export const FullScreen = ({
   children,
   style,
   className
-}: { children?: ReactNode, style?: any, className?: string }) => {
+}: {
+  children?: ReactNode;
+  style?: any;
+  className?: string;
+}) => {
   return (
     <div
       className={className}

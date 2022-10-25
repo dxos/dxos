@@ -14,7 +14,7 @@ import { BrowserStorage } from './browser-storage';
 export class IDbStorage extends BrowserStorage {
   public override type: StorageType = StorageType.IDB;
 
-  protected override _createFileStorage (path: string) {
+  protected override _createFileStorage(path: string) {
     return idb(path);
   }
 }

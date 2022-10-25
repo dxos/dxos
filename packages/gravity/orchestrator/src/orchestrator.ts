@@ -5,11 +5,19 @@
 import assert from 'node:assert';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
-import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
+import {
+  BotContainer,
+  BotController,
+  BotFactory,
+  BotPackageSpecifier
+} from '@dxos/botkit';
 import { Party, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManagerContext,
+  MemorySignalManager
+} from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
@@ -18,29 +26,29 @@ const signalContext = new MemorySignalManagerContext();
 
 export class Orchestrator {
   private _client: Client | undefined;
-  private _botFactoryClient = new BotFactoryClient(new NetworkManager({
-    signalManager: new MemorySignalManager(signalContext),
-    transportFactory: MemoryTransportFactory
-  }));
+  private _botFactoryClient = new BotFactoryClient(
+    new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: MemoryTransportFactory
+    })
+  );
 
   private _party: Party | undefined;
   private _config?: Config;
   private _broker?: TestBroker;
 
-  constructor (
-    private readonly _botContainer: BotContainer
-  ) { }
+  constructor(private readonly _botContainer: BotContainer) {}
 
-  get party (): Party {
+  get party(): Party {
     assert(this._party);
     return this._party;
   }
 
-  get botFactoryClient (): BotFactoryClient {
+  get botFactoryClient(): BotFactoryClient {
     return this._botFactoryClient;
   }
 
-  async initialize () {
+  async initialize() {
     const port = randomInt(40000, 10000);
     this._broker = await createTestBroker(port);
     this._config = new Config({
@@ -61,23 +69,29 @@ export class Orchestrator {
 
     const topic = PublicKey.random();
 
-    const botFactory = new BotFactory({ config: this._config, botContainer: this._botContainer });
-    const botController = new BotController(botFactory, new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext),
-      transportFactory: MemoryTransportFactory
-    }));
+    const botFactory = new BotFactory({
+      config: this._config,
+      botContainer: this._botContainer
+    });
+    const botController = new BotController(
+      botFactory,
+      new NetworkManager({
+        signalManager: new MemorySignalManager(signalContext),
+        transportFactory: MemoryTransportFactory
+      })
+    );
     await botController.start(topic);
     await this._botFactoryClient.start(topic);
   }
 
-  async stop () {
+  async stop() {
     await this._botFactoryClient.botFactory.removeAll();
     await this._botFactoryClient.stop();
     await this._client?.destroy();
     await this._broker?.stop();
   }
 
-  async spawnBot (botPackageSpecifier: BotPackageSpecifier) {
+  async spawnBot(botPackageSpecifier: BotPackageSpecifier) {
     assert(this._party);
     return await this._botFactoryClient.spawn(botPackageSpecifier, this._party);
   }

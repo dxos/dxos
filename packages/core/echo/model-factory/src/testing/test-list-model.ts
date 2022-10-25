@@ -8,22 +8,24 @@ import type { TestListMutation } from '@dxos/protocols/proto/example/testing/dat
 import { Model } from '../model';
 import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
 
-class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
+class TestListModelStateMachine
+  implements StateMachine<TestListMutation[], TestListMutation, any>
+{
   private _messages: TestListMutation[] = [];
 
-  getState (): TestListMutation[] {
+  getState(): TestListMutation[] {
     return this._messages;
   }
 
-  process (mutation: TestListMutation, meta: MutationProcessMeta): void {
+  process(mutation: TestListMutation, meta: MutationProcessMeta): void {
     this._messages.push(mutation);
   }
 
-  snapshot () {
+  snapshot() {
     throw new Error('Method not implemented.');
   }
 
-  reset (snapshot: any): void {
+  reset(snapshot: any): void {
     throw new Error('Method not implemented.');
   }
 }
@@ -35,14 +37,16 @@ export class TestListModel extends Model<TestListMutation[], TestListMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test-list',
     stateMachine: () => new TestListModelStateMachine(),
-    mutationCodec: schema.getCodecForType('example.testing.data.TestListMutation')
+    mutationCodec: schema.getCodecForType(
+      'example.testing.data.TestListMutation'
+    )
   };
 
-  get messages () {
+  get messages() {
     return this._getState();
   }
 
-  async sendMessage (data: string) {
+  async sendMessage(data: string) {
     const receipt = await this.write({ data });
     await receipt.waitToBeProcessed();
   }
