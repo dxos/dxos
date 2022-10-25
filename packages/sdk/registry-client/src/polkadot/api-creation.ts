@@ -16,9 +16,7 @@ export const registryTypes: RegistryTypes = Object.values(definitions).reduce(
   {}
 ) as unknown as RegistryTypes;
 
-export const createKeyring = async (
-  options?: KeyringOptions
-): Promise<Keyring> => {
+export const createKeyring = async (options?: KeyringOptions): Promise<Keyring> => {
   // The keyring need to be created AFTER api is created or we need to wait for WASM init.
   // https://polkadot.js.org/docs/api/start/keyring#creating-a-keyring-instance
   await cryptoWaitReady();
@@ -31,6 +29,5 @@ export const createKeyring = async (
  */
 export const createApiPromise = async (endpoint: string) => {
   const provider = new WsProvider(endpoint);
-  return await new ApiPromise({ provider, types: registryTypes, rpc: jsonrpc })
-    .isReady;
+  return await new ApiPromise({ provider, types: registryTypes, rpc: jsonrpc }).isReady;
 };

@@ -4,14 +4,7 @@
 
 import React from 'react';
 
-import {
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography
-} from '@mui/material';
+import { List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -42,10 +35,7 @@ export const EchoList = ({ items = [], itemAdapter }: EchoListProps) => (
                   <Icon />
                 </ListItemIcon>
               )}
-              <ListItemText
-                primary={itemAdapter.title(item)}
-                secondary={itemAdapter.description(item)}
-              />
+              <ListItemText primary={itemAdapter.title(item)} secondary={itemAdapter.description(item)} />
             </ListItemButton>
           );
         })}

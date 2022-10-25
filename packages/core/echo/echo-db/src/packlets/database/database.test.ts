@@ -12,10 +12,7 @@ import { afterTest } from '@dxos/testutils';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemFilterDeleted } from './selection';
-import {
-  createInMemoryDatabase,
-  createRemoteDatabaseFromDataServiceHost
-} from './testing';
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from './testing';
 
 const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
@@ -29,27 +26,16 @@ describe('Database', function () {
       return backend;
     };
 
-    const setupFrontend = async (
-      modelFactory: ModelFactory,
-      dataServiceHost: DataServiceHost
-    ) => {
-      const frontend = await createRemoteDatabaseFromDataServiceHost(
-        modelFactory,
-        dataServiceHost
-      );
+    const setupFrontend = async (modelFactory: ModelFactory, dataServiceHost: DataServiceHost) => {
+      const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, dataServiceHost);
       afterTest(() => frontend.destroy());
       return frontend;
     };
 
     const setupDatabase = async () => {
-      const modelFactory = new ModelFactory()
-        .registerModel(ObjectModel)
-        .registerModel(TestListModel);
+      const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
       const backend = await setupBackend(modelFactory);
-      const frontend = await setupFrontend(
-        modelFactory,
-        backend.createDataServiceHost()
-      );
+      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
       return { backend, frontend };
     };
 
@@ -67,10 +53,7 @@ describe('Database', function () {
       expect(item!.model).toBeInstanceOf(ObjectModel);
 
       // Mutate model
-      await Promise.all([
-        item!.model.update.waitForCount(1),
-        backendItem.model.set('foo', 'bar')
-      ]);
+      await Promise.all([item!.model.update.waitForCount(1), backendItem.model.set('foo', 'bar')]);
 
       expect(item!.model.get('foo')).toEqual('bar');
     });
@@ -81,14 +64,9 @@ describe('Database', function () {
 
       const backendItem = await backend.createItem({ model: ObjectModel });
 
-      const frontend = await setupFrontend(
-        modelFactory,
-        backend.createDataServiceHost()
-      );
+      const frontend = await setupFrontend(modelFactory, backend.createDataServiceHost());
 
-      const item = await frontend.waitForItem(
-        (item) => item.id === backendItem.id
-      );
+      const item = await frontend.waitForItem((item) => item.id === backendItem.id);
       expect(item.model).toBeInstanceOf(ObjectModel);
     });
 
@@ -214,18 +192,16 @@ describe('Database', function () {
       });
 
       // Find all employees for org.
-      expect(
-        org1.links
-          .filter((link) => link.type === LINK_EMPLOYEE)
-          .map((link) => link.target)
-      ).toStrictEqual([p1, p2]);
+      expect(org1.links.filter((link) => link.type === LINK_EMPLOYEE).map((link) => link.target)).toStrictEqual([
+        p1,
+        p2
+      ]);
 
       // Find all orgs for person.
-      expect(
-        p2.refs
-          .filter((link) => link.type === LINK_EMPLOYEE)
-          .map((link) => link.source)
-      ).toStrictEqual([org1, org2]);
+      expect(p2.refs.filter((link) => link.type === LINK_EMPLOYEE).map((link) => link.source)).toStrictEqual([
+        org1,
+        org2
+      ]);
     });
 
     describe('non-idempotent models', function () {
@@ -250,12 +226,8 @@ describe('Database', function () {
         await backendItem.model.sendMessage('foo');
         await backendItem.model.sendMessage('bar');
 
-        const frontendItem: Item<TestListModel> = await frontend.waitForItem(
-          (item) => item.id === backendItem.id
-        );
-        await frontendItem.model.update.waitForCondition(
-          () => frontendItem.model.messages.length === 2
-        );
+        const frontendItem: Item<TestListModel> = await frontend.waitForItem((item) => item.id === backendItem.id);
+        await frontendItem.model.update.waitForCondition(() => frontendItem.model.messages.length === 2);
 
         expect(frontendItem.model.messages).toHaveLength(2);
       });
@@ -263,9 +235,7 @@ describe('Database', function () {
 
     describe('queries', function () {
       it('wait for item', async function () {
-        const modelFactory = new ModelFactory()
-          .registerModel(ObjectModel)
-          .registerModel(TestListModel);
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         {
@@ -274,9 +244,7 @@ describe('Database', function () {
             model: ObjectModel,
             type: 'example:type/test-1'
           });
-          expect(
-            await promiseTimeout(waiting, 100, new Error('timeout'))
-          ).toEqual(item);
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
         {
@@ -285,23 +253,15 @@ describe('Database', function () {
             type: 'example:type/test-2'
           });
           const waiting = database.waitForItem({ type: 'example:type/test-2' });
-          expect(
-            await promiseTimeout(waiting, 100, new Error('timeout'))
-          ).toEqual(item);
+          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
       });
 
       it('query deleted items', async function () {
-        const modelFactory = new ModelFactory()
-          .registerModel(ObjectModel)
-          .registerModel(TestListModel);
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
-        await Promise.all(
-          Array.from({ length: 10 }).map(() =>
-            database.createItem({ model: TestListModel })
-          )
-        );
+        await Promise.all(Array.from({ length: 10 }).map(() => database.createItem({ model: TestListModel })));
 
         const result = database.select().exec();
         const items = result.entities;
@@ -317,24 +277,18 @@ describe('Database', function () {
         }
 
         {
-          const result = database
-            .select()
-            .exec({ deleted: ItemFilterDeleted.SHOW_DELETED });
+          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED });
           expect(result.entities).toHaveLength(10);
         }
 
         {
-          const result = database
-            .select()
-            .exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
+          const result = database.select().exec({ deleted: ItemFilterDeleted.SHOW_DELETED_ONLY });
           expect(result.entities).toHaveLength(1);
         }
       });
 
       it('link between items generates updates to items', async function () {
-        const modelFactory = new ModelFactory()
-          .registerModel(ObjectModel)
-          .registerModel(TestListModel);
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         const item1 = await database.createItem({ model: ObjectModel });
@@ -358,9 +312,7 @@ describe('Database', function () {
       });
 
       it('adding an item emits update for parent', async function () {
-        const modelFactory = new ModelFactory()
-          .registerModel(ObjectModel)
-          .registerModel(TestListModel);
+        const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
         const parentItem = await database.createItem({ model: ObjectModel });
@@ -382,11 +334,7 @@ describe('Database', function () {
         const modelFactory = new ModelFactory().registerModel(ObjectModel);
         const database = await setupBackend(modelFactory);
 
-        await Promise.all(
-          Array.from({ length: 8 }).map(() =>
-            database.createItem({ model: ObjectModel })
-          )
-        );
+        await Promise.all(Array.from({ length: 8 }).map(() => database.createItem({ model: ObjectModel })));
         const { value } = database
           .reduce(0)
           .call((items) => items.length)

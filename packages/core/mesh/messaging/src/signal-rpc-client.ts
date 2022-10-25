@@ -9,10 +9,7 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import {
-  Message as SignalMessage,
-  Signal
-} from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Message as SignalMessage, Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 interface Services {
@@ -103,15 +100,7 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage({
-    author,
-    recipient,
-    payload
-  }: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }) {
+  async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
     log('sendMessage', { author, recipient, payload });
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({

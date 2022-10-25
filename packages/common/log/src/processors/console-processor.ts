@@ -5,13 +5,7 @@
 import chalk from 'chalk';
 import { inspect } from 'node:util';
 
-import {
-  ConfigOptions,
-  LogLevel,
-  LogProcessor,
-  shortLevelName,
-  shouldLog
-} from '../config';
+import { ConfigOptions, LogLevel, LogProcessor, shortLevelName, shouldLog } from '../config';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
@@ -21,12 +15,7 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
-  const str =
-    text && length
-      ? right
-        ? text.slice(-length)
-        : text.substring(0, length)
-      : text ?? '';
+  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
 };
 
@@ -41,23 +30,15 @@ export type FormatParts = {
   context?: string;
 };
 
-export type Format = (
-  parts: FormatParts,
-  options: ConfigOptions
-) => (string | undefined)[];
+export type Format = (parts: FormatParts, options: ConfigOptions) => (string | undefined)[];
 
 // TODO(burdon): File path must come fist for console hyperlinks?
-export const DEFAULT_FORMATTER: Format = (
-  { path, line, level, message, context },
-  { column } = {}
-) => {
+export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column } = {}) => {
   const filepath = `${path}:${line}`;
   return [
     path !== undefined && line !== undefined ? chalk.grey(filepath) : undefined, // Don't truncate for terminal output.
     column ? ''.padStart(column - filepath.length) : undefined,
-    chalk[LEVEL_COLORS[level]](
-      column ? shortLevelName[level] : LogLevel[level]
-    ),
+    chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
     message,
     context
   ];

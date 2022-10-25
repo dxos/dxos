@@ -35,22 +35,16 @@ export class WebRTCTransport implements Transport {
     private readonly _sendSignal: (msg: SignalMessage) => void,
     private readonly _webrtcConfig?: any
   ) {
-    log(
-      `Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`
-    );
+    log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
 
     log(
-      `Creating WebRTC connection topic=${this._topic} ownId=${
-        this._ownId
-      } remoteId=${this._remoteId} initiator=${
+      `Creating WebRTC connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${
         this._initiator
       } webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
     );
     this._peer = new SimplePeerConstructor({
       initiator: this._initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
-        ? undefined
-        : wrtc ?? raise(new Error('wrtc not available')),
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
       config: this._webrtcConfig
     });
     this._peer.on('signal', async (data) => {
@@ -114,9 +108,7 @@ export class WebRTCTransport implements Transport {
 
 // TODO(burdon): Pass in opts?
 // TODO(dmaretskyi): Convert to class.
-export const createWebRTCTransportFactory = (
-  webrtcConfig?: any
-): TransportFactory => ({
+export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
   create: (opts) =>
     new WebRTCTransport(
       opts.initiator,

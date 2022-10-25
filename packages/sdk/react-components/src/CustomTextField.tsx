@@ -2,27 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, {
-  FunctionComponent,
-  KeyboardEvent,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import React, { FunctionComponent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import {
-  Clear as ResetIcon,
-  MenuOpen as DefaultEditIcon
-} from '@mui/icons-material';
-import {
-  useTheme,
-  BaseTextFieldProps,
-  Box,
-  IconButton,
-  InputAdornment,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Clear as ResetIcon, MenuOpen as DefaultEditIcon } from '@mui/icons-material';
+import { useTheme, BaseTextFieldProps, Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
 
 export interface CustomTextFieldProps extends BaseTextFieldProps {
   value?: string;
@@ -83,11 +66,7 @@ export const CustomTextField = ({
     setText(value || '');
   };
 
-  const handleChange = ({
-    target: { value }
-  }: {
-    target: { value: string };
-  }) => {
+  const handleChange = ({ target: { value } }: { target: { value: string } }) => {
     setText(value);
   };
 
@@ -242,11 +221,7 @@ export const CustomTextField = ({
       <Box sx={{ flex: 1 }} />
       {mouseOver && (
         <Box className='edit-button'>
-          <IconButton
-            size='small'
-            title='Edit'
-            onClick={() => !readonly && setEditing(true)}
-          >
+          <IconButton size='small' title='Edit' onClick={() => !readonly && setEditing(true)}>
             <EditIcon />
           </IconButton>
         </Box>

@@ -21,10 +21,7 @@ export interface SVGCOntextProviderProps {
  * @param children
  * @constructor
  */
-export const SVGContextProvider = ({
-  context: provided,
-  children
-}: SVGCOntextProviderProps) => {
+export const SVGContextProvider = ({ context: provided, children }: SVGCOntextProviderProps) => {
   const { ref: resizeRef, width, height } = useResizeObserver<HTMLDivElement>();
   const context = useMemo<SVGContext>(() => provided || new SVGContext(), []);
 
@@ -44,10 +41,7 @@ export const SVGContextProvider = ({
   return (
     <SVGContextDef.Provider value={context}>
       {/* Flex is imporant otherwise div has extra padding.  */}
-      <div
-        ref={resizeRef}
-        style={{ display: 'flex', width: '100%', height: '100%' }}
-      >
+      <div ref={resizeRef} style={{ display: 'flex', width: '100%', height: '100%' }}>
         {children}
       </div>
     </SVGContextDef.Provider>

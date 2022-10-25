@@ -32,11 +32,7 @@ export class ClientServiceProxy implements ClientServiceProvider {
   readonly services: ClientServices;
 
   async open(onProgressCallback?: ((progress: any) => void) | undefined) {
-    await promiseTimeout(
-      this._client.open(),
-      this._timeout,
-      new RemoteServiceConnectionTimeout()
-    );
+    await promiseTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 
   async close() {

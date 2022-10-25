@@ -6,12 +6,8 @@ import { useEffect, useState } from 'react';
 
 import { InvitationProxy, InvitationRequest } from '@dxos/client';
 
-export const useInvitations = (
-  invitationProxy: InvitationProxy | undefined
-) => {
-  const [invitations, setInvitations] = useState<InvitationRequest[]>(
-    invitationProxy?.activeInvitations ?? []
-  );
+export const useInvitations = (invitationProxy: InvitationProxy | undefined) => {
+  const [invitations, setInvitations] = useState<InvitationRequest[]>(invitationProxy?.activeInvitations ?? []);
 
   useEffect(() => {
     setInvitations(invitationProxy?.activeInvitations ?? []);

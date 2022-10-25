@@ -3,14 +3,7 @@
 //
 
 import cx from 'classnames';
-import React, {
-  ChangeEvent,
-  ComponentProps,
-  ReactNode,
-  useCallback,
-  useState,
-  useTransition
-} from 'react';
+import React, { ChangeEvent, ComponentProps, ReactNode, useCallback, useState, useTransition } from 'react';
 
 import { useId } from '../../hooks';
 import { MessageValence } from '../../props';
@@ -26,8 +19,7 @@ import {
 
 export type InputSize = 'md' | 'lg';
 
-export interface InputProps
-  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
+export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
   label: ReactNode;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
@@ -67,9 +59,7 @@ export const Input = ({
 
   const [_isPending, startTransition] = useTransition();
 
-  const [internalValue, setInternalValue] = useState<string>(
-    initialValue?.toString() || ''
-  );
+  const [internalValue, setInternalValue] = useState<string>(initialValue?.toString() || '');
 
   const onInternalChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -125,19 +115,13 @@ export const Input = ({
           className={cx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
         >
           {validationMessage && (
-            <span
-              id={validationId}
-              className={valenceColorText(validationValence)}
-            >
+            <span id={validationId} className={valenceColorText(validationValence)}>
               {validationMessage}{' '}
             </span>
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={cx(
-              defaultDescription,
-              descriptionVisuallyHidden && 'sr-only'
-            )}
+            className={cx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
           >
             {description}
           </span>

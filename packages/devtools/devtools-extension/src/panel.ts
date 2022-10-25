@@ -20,20 +20,14 @@ window.document.body.appendChild(sandbox);
 
 window.addEventListener('message', async (event) => {
   const message = event.data;
-  if (
-    typeof message !== 'object' ||
-    message === null ||
-    message.source !== 'sandbox'
-  ) {
+  if (typeof message !== 'object' || message === null || message.source !== 'sandbox') {
     return;
   }
 
   if (message.data === 'open-rpc') {
     log('Opening RPC Server...');
     await waitForDXOS();
-    await browser.devtools.inspectedWindow.eval(
-      'window.__DXOS__.openClientRpcServer()'
-    );
+    await browser.devtools.inspectedWindow.eval('window.__DXOS__.openClientRpcServer()');
 
     sandbox.contentWindow?.postMessage(
       {

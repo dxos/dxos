@@ -15,10 +15,7 @@ const f = ts.factory;
 /**
  * {@link file://./../configure.ts#l5}
  */
-export const createMessageDeclaration = (
-  type: protobufjs.Type,
-  ctx: GeneratorContext
-) => {
+export const createMessageDeclaration = (type: protobufjs.Type, ctx: GeneratorContext) => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -27,17 +24,11 @@ export const createMessageDeclaration = (
     undefined,
     type.fieldsArray.map((field) => {
       const isRequired =
-        field.required ||
-        (!field.getOption('proto3_optional') &&
-          !field.repeated &&
-          !field.map &&
-          !field.partOf);
+        field.required || (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf);
 
       const signature = f.createPropertySignature(
         undefined,
-        field.name.includes('.')
-          ? f.createStringLiteral(field.name)
-          : field.name,
+        field.name.includes('.') ? f.createStringLiteral(field.name) : field.name,
         isRequired ? undefined : f.createToken(ts.SyntaxKind.QuestionToken),
         getFieldType(field, ctx.subs)
       );
@@ -49,12 +40,7 @@ export const createMessageDeclaration = (
 
   const commentSections = type.comment ? [type.comment] : [];
   if (type.filename) {
-    commentSections.push(
-      `Defined in:\n  {@link file://./${relative(
-        dirname(ctx.outputFilename),
-        type.filename
-      )}}`
-    );
+    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`);
   }
 
   if (commentSections.length === 0) {

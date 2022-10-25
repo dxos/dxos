@@ -6,10 +6,7 @@ import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import {
-  Chain,
-  PartyMember
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
@@ -449,17 +446,16 @@ describe('verifier', function () {
         chain
       });
 
-      credential.proof.chain!.credential.proof.chain!.credential =
-        await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            deviceKey: device1,
-            identityKey: identity
-          },
-          subject: device1,
-          issuer: device2,
-          signer: keyring
-        });
+      credential.proof.chain!.credential.proof.chain!.credential = await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          deviceKey: device1,
+          identityKey: identity
+        },
+        subject: device1,
+        issuer: device2,
+        signer: keyring
+      });
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail'

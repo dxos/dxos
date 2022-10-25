@@ -36,9 +36,7 @@ interface ComponentProps {
   };
 }
 
-const Component = ({
-  options = { grid: true, zoom: true }
-}: ComponentProps) => {
+const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => {
   const context = useSvgContext();
 
   // Grid

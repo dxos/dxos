@@ -16,11 +16,7 @@ import { truncate, truncateKey } from '@dxos/debug';
  * @param item
  * @param [party] Optionally test reference exists.
  */
-export const validateItem = (
-  schema: Item<ObjectModel>,
-  item: Item<ObjectModel>,
-  party?: Party
-) => {
+export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, party?: Party) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   return fields.every(({ key, type, required, ref }) => {
     const value = item.model.get(key);
@@ -55,11 +51,7 @@ export const validateItem = (
  * @param items
  * @param [party]
  */
-export const renderItems = (
-  schema: Item<ObjectModel>,
-  items: Item<ObjectModel>[],
-  party?: Party
-) => {
+export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 

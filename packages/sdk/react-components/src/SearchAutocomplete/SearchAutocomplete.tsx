@@ -18,12 +18,7 @@ export interface SearchAutocompleteProps<T> {
 /**
  * Registry search with optional filters.
  */
-export const SearchAutocomplete = ({
-  model,
-  clearOnSelect,
-  onSelect,
-  groupBy
-}: SearchAutocompleteProps<any>) => {
+export const SearchAutocomplete = ({ model, clearOnSelect, onSelect, groupBy }: SearchAutocompleteProps<any>) => {
   const [results, setResults] = useState(model.results);
   useEffect(() => model.subscribe((values) => setResults(values)), [model]);
 

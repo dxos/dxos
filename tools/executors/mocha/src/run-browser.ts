@@ -6,13 +6,7 @@ import chalk from 'chalk';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import {
-  BrowserType,
-  buildTests,
-  getNewBrowserContext,
-  outputResults,
-  runTests
-} from './browser';
+import { BrowserType, buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
 import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {
@@ -28,20 +22,11 @@ export type BrowserOptions = {
   browserArgs?: string[];
 };
 
-export const runBrowser = async (
-  name: string,
-  browserType: BrowserType,
-  options: BrowserOptions
-) => {
+export const runBrowser = async (name: string, browserType: BrowserType, options: BrowserOptions) => {
   console.log(chalk`\nRunning in {blue {bold ${browserType}}}\n`);
 
   const { page } = await getNewBrowserContext(browserType, options);
-  const results = await runTests(
-    page,
-    browserType,
-    join(options.outputPath, 'out/bundle.js'),
-    options
-  );
+  const results = await runTests(page, browserType, join(options.outputPath, 'out/bundle.js'), options);
   const exitCode = await outputResults(results, {
     name,
     browserType,
@@ -52,17 +37,11 @@ export const runBrowser = async (
   if (success) {
     console.log(chalk`\n{green Passed in {blue {bold ${browserType}}}}\n`);
   } else {
-    console.log(
-      chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`
-    );
+    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
   }
 
   if (options.stayOpen) {
-    console.log(
-      `\nCompleted with ${
-        success ? 'success' : 'failure'
-      }. Browser window stays open.`
-    );
+    console.log(`\nCompleted with ${success ? 'success' : 'failure'}. Browser window stays open.`);
 
     await new Promise((resolve) => {
       page.on('close', resolve);

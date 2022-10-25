@@ -4,18 +4,11 @@
 
 import expect from 'expect';
 
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import {
-  createStorage,
-  Storage,
-  StorageType
-} from '@dxos/random-access-storage';
+import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from './service-context';
@@ -33,11 +26,7 @@ describe('ServiceContext', function () {
       transportFactory: MemoryTransportFactory
     });
 
-    return new ServiceContext(
-      storage,
-      networkManager,
-      new ModelFactory().registerModel(ObjectModel)
-    );
+    return new ServiceContext(storage, networkManager, new ModelFactory().registerModel(ObjectModel));
   };
 
   describe('Identity management', function () {
@@ -66,9 +55,7 @@ describe('ServiceContext', function () {
       expect(peer2.identityManager.identity).toBeFalsy();
 
       const invitation = await peer1.haloInvitations.createInvitation();
-      const identity2 = await peer2.haloInvitations.acceptInvitation(
-        invitation
-      );
+      const identity2 = await peer2.haloInvitations.acceptInvitation(invitation);
 
       expect(identity2.identityKey).toEqual(identity1.identityKey);
     });

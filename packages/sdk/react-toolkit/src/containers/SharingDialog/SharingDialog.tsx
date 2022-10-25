@@ -5,18 +5,8 @@
 import React, { useState } from 'react';
 import urlJoin from 'url-join';
 
-import {
-  Face as NewIcon,
-  Contacts as AddressIcon,
-  Adb as BotIcon
-} from '@mui/icons-material';
-import {
-  Box,
-  Button,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography
-} from '@mui/material';
+import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
+import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { InvitationRequest, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
@@ -28,9 +18,7 @@ import { SpawnBotPanel } from './SpawnBotPanel';
 
 const defaultCreateUrl = (invitationCode: string) => {
   // TODO(burdon): By-pass keyhole with fake code.
-  const kubeCode = [...new Array(6)]
-    .map(() => Math.floor(Math.random() * 10))
-    .join('');
+  const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
   const invitationPath = `/invitation/${invitationCode}`; // App-specific.
   const { origin, pathname } = window.location;
   return urlJoin(origin, pathname, `?code=${kubeCode}`, `/#${invitationPath}`);
@@ -77,8 +65,7 @@ export const SharingDialog = ({
   const [memberType, setMemberType] = useState(MemberType.ONLINE);
   const [bot, setBot] = useState<ResourceSet>();
 
-  const active =
-    memberType === MemberType.ONLINE || (memberType === MemberType.BOT && bot);
+  const active = memberType === MemberType.ONLINE || (memberType === MemberType.BOT && bot);
 
   const handleInvitation = () => {
     switch (memberType) {
@@ -108,9 +95,7 @@ export const SharingDialog = ({
       content={
         <>
           <Typography variant='body2' sx={{ marginBottom: 2 }}>
-            {`Add collaborators ${
-              onCreateBotInvitation ? 'and bots' : ''
-            } to the party.`}
+            {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the party.`}
           </Typography>
 
           <Box
@@ -130,18 +115,12 @@ export const SharingDialog = ({
                   value={memberType}
                   onChange={(_, value) => setMemberType(value)}
                 >
-                  <ToggleButton
-                    value={MemberType.ONLINE}
-                    title='New invitation'
-                  >
+                  <ToggleButton value={MemberType.ONLINE} title='New invitation'>
                     <NewIcon />
                   </ToggleButton>
                   {/* TODO(burdon): Address book for offline invitations. */}
                   {onCreateOfflineInvitation && (
-                    <ToggleButton
-                      value={MemberType.OFFLINE}
-                      title='Addresss book'
-                    >
+                    <ToggleButton value={MemberType.OFFLINE} title='Addresss book'>
                       <AddressIcon />
                     </ToggleButton>
                   )}
@@ -153,17 +132,13 @@ export const SharingDialog = ({
                 </ToggleButtonGroup>
 
                 <Box sx={{ flex: 1, paddingLeft: 3, paddingRight: 3 }}>
-                  {memberType === MemberType.BOT && (
-                    <SpawnBotPanel onSelect={(resource) => setBot(resource)} />
-                  )}
+                  {memberType === MemberType.BOT && <SpawnBotPanel onSelect={(resource) => setBot(resource)} />}
                 </Box>
               </>
             )}
 
             <Button disabled={!active} onClick={handleInvitation}>
-              {memberType === MemberType.ONLINE
-                ? 'Create invitation'
-                : 'Send invitation'}
+              {memberType === MemberType.ONLINE ? 'Create invitation' : 'Send invitation'}
             </Button>
           </Box>
 
@@ -180,11 +155,7 @@ export const SharingDialog = ({
               <PendingInvitation
                 key={i}
                 invitationCode={invitation.descriptor.encode().toString()}
-                pin={
-                  invitation.hasConnected
-                    ? invitation.secret.toString()
-                    : undefined
-                }
+                pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
                 createUrl={createUrl}
                 onCancel={() => onCancelInvitation(invitation)}
               />

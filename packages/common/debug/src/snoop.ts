@@ -40,21 +40,11 @@ export class Snoop {
   }
 
   in(label: string, level: SnoopLevel, ...args: any[]) {
-    return this.format(
-      '<',
-      label,
-      level === SnoopLevel.DEFAULT ? '' : `(${String(...args)})`,
-      level
-    );
+    return this.format('<', label, level === SnoopLevel.DEFAULT ? '' : `(${String(...args)})`, level);
   }
 
   out(label: string, level: SnoopLevel, result: any) {
-    return this.format(
-      '>',
-      label,
-      level === SnoopLevel.DEFAULT ? '' : ` = ${String(result)}`,
-      level
-    );
+    return this.format('>', label, level === SnoopLevel.DEFAULT ? '' : ` = ${String(result)}`, level);
   }
 
   sync(f: any, label?: string, level: SnoopLevel = SnoopLevel.VERBOSE) {

@@ -80,9 +80,7 @@ const EditorContainer: FC<{
     if (invitation) {
       setTimeout(async () => {
         client.echo.registerModel(TextModel);
-        const accept = await client.echo.acceptInvitation(
-          invitation.descriptor
-        );
+        const accept = await client.echo.acceptInvitation(invitation.descriptor);
         accept.authenticate(Buffer.from(invitation.secret));
         const party = await accept.getParty();
         log(`Joined: ${party.key.toHex()}`);
@@ -121,12 +119,7 @@ const EditorContainer: FC<{
             }}
           >
             <Editor id={id} item={item}>
-              <CollaborationPlugin
-                id={id}
-                providerFactory={providerFactory}
-                shouldBootstrap={true}
-                username={id}
-              />
+              <CollaborationPlugin id={id} providerFactory={providerFactory} shouldBootstrap={true} username={id} />
             </Editor>
           </div>
 
@@ -143,9 +136,7 @@ const EditorContainer: FC<{
               <tbody>
                 <tr>
                   <td style={{ width: 60 }}>Profile</td>
-                  <td>
-                    {truncateKey(client.halo.profile!.publicKey.toHex(), 8)}
-                  </td>
+                  <td>{truncateKey(client.halo.profile!.publicKey.toHex(), 8)}</td>
                 </tr>
                 <tr>
                   <td>Party</td>

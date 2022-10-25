@@ -7,10 +7,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { schema } from '@dxos/protocols';
-import {
-  BotHost,
-  BotService
-} from '@dxos/protocols/proto/dxos/service/scheduler';
+import { BotHost, BotService } from '@dxos/protocols/proto/dxos/service/scheduler';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 const log = debug('dxos:network-manager:bot-rpc-client');
@@ -24,10 +21,7 @@ export class BotRPCPeer {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor(
-    private readonly _url: string,
-    private readonly _handlers: BotService
-  ) {
+  constructor(private readonly _url: string, private readonly _handlers: BotService) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
       try {

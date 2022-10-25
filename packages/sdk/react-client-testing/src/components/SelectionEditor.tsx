@@ -2,13 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, {
-  ChangeEvent,
-  KeyboardEvent,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { TextField } from '@mui/material';
 
@@ -45,12 +39,7 @@ const completions = [
  * Simple editor that evaluates text as method calls against a party object.
  * @constructor
  */
-export const SelectionEditor = ({
-  onChange,
-  initialValue,
-  delay = 500,
-  rows = 6
-}: SelectionEditorProps) => {
+export const SelectionEditor = ({ onChange, initialValue, delay = 500, rows = 6 }: SelectionEditorProps) => {
   const inputRef = useRef<HTMLInputElement>();
   const [text, setText] = useState<string>(initialValue ?? '');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();

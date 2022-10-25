@@ -10,16 +10,8 @@ import waitForExpect from 'wait-for-expect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import {
-  MemorySignalManagerContext,
-  MemorySignalManager,
-  WebsocketSignalManager
-} from '@dxos/messaging';
-import {
-  createWebRTCTransportFactory,
-  MemoryTransportFactory,
-  NetworkManager
-} from '@dxos/network-manager';
+import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';

@@ -15,11 +15,7 @@ export class Directory {
     public readonly path: string,
     // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
     private readonly _getFiles: () => File[],
-    private readonly _getOrCreateFile: (
-      path: string,
-      filename: string,
-      opts?: any
-    ) => File,
+    private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
     private readonly _delete: () => Promise<void>
   ) {}
 
@@ -31,13 +27,7 @@ export class Directory {
    * Create a new sub-directory.
    */
   createDirectory(path: string): Directory {
-    return new Directory(
-      this.type,
-      getFullPath(this.path, path),
-      this._getFiles,
-      this._getOrCreateFile,
-      this._delete
-    );
+    return new Directory(this.type, getFullPath(this.path, path), this._getFiles, this._getOrCreateFile, this._delete);
   }
 
   /**

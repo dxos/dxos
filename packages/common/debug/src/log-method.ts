@@ -14,10 +14,7 @@ export function logMethod(
       const result = method.apply(this, args);
       if (typeof result.catch === 'function') {
         result.catch((err: any) => {
-          console.log(
-            `Rejected ${target.constructor.name}.${propertyName}`,
-            err
-          );
+          console.log(`Rejected ${target.constructor.name}.${propertyName}`, err);
         });
       }
       return result;

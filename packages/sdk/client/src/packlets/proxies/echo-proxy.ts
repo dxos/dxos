@@ -5,10 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, EventSubscriptions, latch } from '@dxos/async';
-import {
-  ClientServiceProvider,
-  InvitationDescriptor
-} from '@dxos/client-services';
+import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -26,9 +23,7 @@ import { ClientServiceProxy } from './service-proxy';
  * Client proxy to local/remote ECHO service.
  */
 export class EchoProxy implements Echo {
-  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(
-    PublicKey.hash
-  );
+  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
 
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new EventSubscriptions();
@@ -74,14 +69,11 @@ export class EchoProxy implements Echo {
   async _open() {
     const gotParties = this._partiesChanged.waitForCount(1);
 
-    const partiesStream =
-      this._serviceProvider.services.PartyService.subscribeParties();
+    const partiesStream = this._serviceProvider.services.PartyService.subscribeParties();
     partiesStream.subscribe(async (data) => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
-          await this._haloProxy.profileChanged.waitForCondition(
-            () => !!this._haloProxy.profile
-          );
+          await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
           const partyProxy = new PartyProxy(
             this._serviceProvider,
@@ -142,8 +134,7 @@ export class EchoProxy implements Echo {
   async createParty(): Promise<Party> {
     const [done, partyReceived] = latch();
 
-    const party =
-      await this._serviceProvider.services.PartyService.createParty();
+    const party = await this._serviceProvider.services.PartyService.createParty();
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -164,9 +155,7 @@ export class EchoProxy implements Echo {
   async cloneParty(snapshot: PartySnapshot): Promise<Party> {
     const [done, partyReceived] = latch();
 
-    const party = await this._serviceProvider.services.PartyService.cloneParty(
-      snapshot
-    );
+    const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -192,9 +181,7 @@ export class EchoProxy implements Echo {
    *
    */
   queryParties(): ResultSet<Party> {
-    return new ResultSet<Party>(this._partiesChanged, () =>
-      Array.from(this._parties.values())
-    );
+    return new ResultSet<Party>(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
   /**
@@ -202,37 +189,25 @@ export class EchoProxy implements Echo {
    *
    * To be used with `party.createInvitation` on the inviter side.
    */
-  acceptInvitation(
-    invitationDescriptor: InvitationDescriptor
-  ): PartyInvitation {
-    const invitationProcessStream =
-      this._serviceProvider.services.PartyService.acceptInvitation(
-        invitationDescriptor.toProto()
-      );
-    const { authenticate, waitForFinish } =
-      InvitationProxy.handleInvitationRedemption({
-        stream: invitationProcessStream,
-        invitationDescriptor,
-        onAuthenticate: async (request) => {
-          await this._serviceProvider.services.PartyService.authenticateInvitation(
-            request
-          );
-        }
-      });
+  acceptInvitation(invitationDescriptor: InvitationDescriptor): PartyInvitation {
+    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
+      invitationDescriptor.toProto()
+    );
+    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
+      stream: invitationProcessStream,
+      invitationDescriptor,
+      onAuthenticate: async (request) => {
+        await this._serviceProvider.services.PartyService.authenticateInvitation(request);
+      }
+    });
 
     const waitForParty = async () => {
       const process = await waitForFinish();
       assert(process.partyKey);
-      await this._partiesChanged.waitForCondition(() =>
-        this._parties.has(process.partyKey!)
-      );
+      await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
       return this.getParty(process.partyKey) ?? failUndefined();
     };
 
-    return new PartyInvitation(
-      invitationDescriptor,
-      waitForParty(),
-      authenticate
-    );
+    return new PartyInvitation(invitationDescriptor, waitForParty(), authenticate);
   }
 }

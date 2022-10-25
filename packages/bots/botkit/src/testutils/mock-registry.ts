@@ -26,9 +26,7 @@ export const createMockRegistryWithBot = async (botPath: string) => {
   await registerMockTypes(registry);
   const types = await registry.listTypeRecords();
 
-  const botType = types.find(
-    ({ type }) => type?.messageName === '.dxos.type.Bot'
-  );
+  const botType = types.find(({ type }) => type?.messageName === '.dxos.type.Bot');
   assert(botType, 'Bot type not found.');
 
   const botRecordCid = await registerMockRecord(registry, {

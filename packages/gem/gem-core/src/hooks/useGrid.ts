@@ -59,16 +59,8 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
 
   // Major grid lines.
   const majorSize = context.scale.gridSize;
-  const xMajor = d3.range(
-    -mod((x + width / 2) * s, majorSize),
-    mod((-x + width / 2) * s, majorSize, 1),
-    majorSize
-  );
-  const yMajor = d3.range(
-    -mod((y + height / 2) * s, majorSize),
-    mod((-y + height / 2) * s, majorSize, 1),
-    majorSize
-  );
+  const xMajor = d3.range(-mod((x + width / 2) * s, majorSize), mod((-x + width / 2) * s, majorSize, 1), majorSize);
+  const yMajor = d3.range(-mod((y + height / 2) * s, majorSize), mod((-y + height / 2) * s, majorSize, 1), majorSize);
   const major = [
     ...xMajor
       .filter((x) => !options.axis || x)
@@ -93,21 +85,10 @@ const createGrid = (context: SVGContext, options: GridOptions): PathGroup[] => {
   // Minor grid lines.
   // Find nearest power of 2 to gridSize.
   // TODO(burdon): Doesn't work is scale is not power of 2.
-  const minorSize = Math.pow(
-    2,
-    Math.round(Math.log2(s * context.scale.gridSize))
-  );
+  const minorSize = Math.pow(2, Math.round(Math.log2(s * context.scale.gridSize)));
   if (majorSize > minorSize) {
-    const xMinor = d3.range(
-      -mod((x + width / 2) * s, minorSize),
-      mod((-x + width / 2) * s, minorSize, 1),
-      minorSize
-    );
-    const yMinor = d3.range(
-      -mod((y + height / 2) * s, minorSize),
-      mod((-y + height / 2) * s, minorSize, 1),
-      minorSize
-    );
+    const xMinor = d3.range(-mod((x + width / 2) * s, minorSize), mod((-x + width / 2) * s, minorSize, 1), minorSize);
+    const yMinor = d3.range(-mod((y + height / 2) * s, minorSize), mod((-y + height / 2) * s, minorSize, 1), minorSize);
     const minor = [
       ...xMinor
         .filter((x) => xMajor.indexOf(x) === -1)
@@ -199,9 +180,7 @@ export class GridController {
  * Creates a reference to a SVG Group element which renders a grid.
  * @param options
  */
-export const useGrid = (
-  options: GridOptions = defaultOptions
-): GridController => {
+export const useGrid = (options: GridOptions = defaultOptions): GridController => {
   const ref = useRef<SVGGElement>();
   const context = useSvgContext();
   const grid = useMemo(() => new GridController(ref, context, options), []);

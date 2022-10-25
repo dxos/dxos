@@ -64,12 +64,7 @@ export class PackageDependencyBuilder {
     const dir = project.subdir;
     const createLink = (p: Project) => {
       const name = p.package.name;
-      const link = path.join(
-        '../',
-        path.relative(dir, p.subdir),
-        docsDir,
-        'README.md'
-      );
+      const link = path.join('../', path.relative(dir, p.subdir), docsDir, 'README.md');
       return `[\`${name}\`](${link})`;
     };
 
@@ -82,11 +77,7 @@ export class PackageDependencyBuilder {
         const link = createLink(sub);
         content.push(
           `| ${link} | ${
-            array(project.dependencies).some(
-              (sub) => sub.package.name === packageName
-            )
-              ? '&check;'
-              : ''
+            array(project.dependencies).some((sub) => sub.package.name === packageName) ? '&check;' : ''
           } |`
         );
       });
@@ -135,9 +126,7 @@ export class PackageDependencyBuilder {
             // Don't link excluded packages.
             !this._options.exclude?.includes(sub.package.name) &&
             // Skip any descendents that depend directly on the package.
-            !array(current.dependencies).some((packageName) =>
-              packageName.descendents.has(sub.package.name)
-            )
+            !array(current.dependencies).some((packageName) => packageName.descendents.has(sub.package.name))
           ) {
             flowchart.addLink({
               source: safeName(current.package.name),
@@ -170,10 +159,7 @@ export class PackageDependencyBuilder {
       // Map projects into folder tree.
       //
       {
-        const getOrCreateFolder = (
-          folders: Map<string, Folder>,
-          parts: string[]
-        ): Folder => {
+        const getOrCreateFolder = (folders: Map<string, Folder>, parts: string[]): Folder => {
           const [name, ...rest] = parts;
           let folder = folders.get(name);
           if (!folder) {
@@ -210,11 +196,7 @@ export class PackageDependencyBuilder {
       // Construct graph tree.
       //
       {
-        const process = (
-          graph: SubgraphBuilder,
-          folders: Map<string, Folder>,
-          parent?: Folder
-        ) => {
+        const process = (graph: SubgraphBuilder, folders: Map<string, Folder>, parent?: Folder) => {
           array(folders).forEach((folder) => {
             const hidden = parent && folder.label === '_';
             const sub = graph.addSubgraph({
@@ -236,13 +218,8 @@ export class PackageDependencyBuilder {
               sub.addNode({
                 id: safeName(packageName),
                 label: packageName,
-                className:
-                  packageName === project.package.name ? 'root' : 'def',
-                href: path.join(
-                  baseUrl,
-                  this._projectMap.getProjectByPackage(packageName)!.subdir,
-                  docsDir
-                )
+                className: packageName === project.package.name ? 'root' : 'def',
+                href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
               });
             });
 

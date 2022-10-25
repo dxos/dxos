@@ -56,10 +56,7 @@ export const KubeStatus = () => {
 
   return (
     <Box flexDirection='column'>
-      <SyntaxHighlight
-        language='json'
-        code={JSON.stringify(status, undefined, 2)}
-      />
+      <SyntaxHighlight language='json' code={JSON.stringify(status, undefined, 2)} />
     </Box>
   );
 };

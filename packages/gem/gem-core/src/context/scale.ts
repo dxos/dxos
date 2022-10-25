@@ -5,14 +5,7 @@
 import * as d3 from 'd3';
 import type { ZoomTransform } from 'd3';
 
-import {
-  Bounds,
-  Fraction,
-  FractionUtil,
-  ScreenBounds,
-  Point,
-  Vertex
-} from '../util';
+import { Bounds, Fraction, FractionUtil, ScreenBounds, Point, Vertex } from '../util';
 
 /**
  * Scale to map vector space to view (screen) space.
@@ -49,8 +42,7 @@ export class Scale {
    */
   readonly model = {
     // TODO(burdon): Precision depends on scale.
-    snapValues: (array: Fraction[]): Fraction[] =>
-      array.map((n) => FractionUtil.round(n)),
+    snapValues: (array: Fraction[]): Fraction[] => array.map((n) => FractionUtil.round(n)),
 
     snapVertex: ({ x, y }: Vertex): Vertex => {
       const [sx, sy] = this.model.snapValues([x, y]);
@@ -67,9 +59,7 @@ export class Scale {
     },
 
     toValues: (values: Fraction[]): number[] => {
-      return values.map((value) =>
-        Math.round(FractionUtil.toNumber(value) * this._gridSize)
-      );
+      return values.map((value) => Math.round(FractionUtil.toNumber(value) * this._gridSize));
     },
 
     toPoint: (point: Vertex): Point => {
@@ -95,13 +85,9 @@ export class Scale {
    * Screen points are represented by floating numbers and use translated SVG coordinates (with the y-axis inverted).
    */
   readonly screen = {
-    snapValues: (array: number[]): number[] =>
-      array.map((n) => Math.round(n / this._gridSize) * this._gridSize),
+    snapValues: (array: number[]): number[] => array.map((n) => Math.round(n / this._gridSize) * this._gridSize),
 
-    snapPoint: ([x, y]): Point =>
-      [x, y].map(
-        (n) => Math.round(n / this._gridSize) * this._gridSize
-      ) as Point,
+    snapPoint: ([x, y]): Point => [x, y].map((n) => Math.round(n / this._gridSize) * this._gridSize) as Point,
 
     snapBounds: ({ x, y, width, height }): ScreenBounds => {
       [x, y, width, height] = this.screen.snapValues([x, y, width, height]);
@@ -109,16 +95,11 @@ export class Scale {
     },
 
     toValue: (value: number): Fraction => {
-      return FractionUtil.divide(FractionUtil.toFraction(value), [
-        this._gridSize,
-        1
-      ]);
+      return FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]);
     },
 
     toValues: (values: number[]): Fraction[] => {
-      return values.map((value) =>
-        FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1])
-      );
+      return values.map((value) => FractionUtil.divide(FractionUtil.toFraction(value), [this._gridSize, 1]));
     },
 
     toVertex: (point: Point): Vertex => {
@@ -131,10 +112,7 @@ export class Scale {
 
     toBounds: (bounds: ScreenBounds): Bounds => {
       const { x, y } = this.screen.toVertex([bounds.x, bounds.y]);
-      const [width, height] = this.screen.toValues([
-        bounds.width,
-        bounds.height
-      ]);
+      const [width, height] = this.screen.toValues([bounds.width, bounds.height]);
 
       return {
         x,

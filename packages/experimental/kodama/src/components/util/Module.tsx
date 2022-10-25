@@ -32,11 +32,7 @@ const Toolbar: FC<{
         <Box key={id} marginRight={1}>
           {i !== 0 && <Text color='#666'>| </Text>}
 
-          <Text
-            dimColor={!focused}
-            color={selected === id ? 'green' : 'white'}
-            underline={selected === id}
-          >
+          <Text dimColor={!focused} color={selected === id ? 'green' : 'white'} underline={selected === id}>
             {label}
           </Text>
         </Box>
@@ -62,10 +58,7 @@ export const Module: FC<{
   const { isFocused } = useFocus({ id: ourPath });
 
   const showContent = activePath?.startsWith(ourPath);
-  const Component = useMemo(
-    () => items.find((item) => item.id === activeItem)?.component,
-    [activeItem]
-  );
+  const Component = useMemo(() => items.find((item) => item.id === activeItem)?.component, [activeItem]);
 
   // Init.
   useEffect(() => {

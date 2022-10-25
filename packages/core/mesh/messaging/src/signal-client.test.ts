@@ -40,13 +40,7 @@ describe('SignalClient', function () {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const signalMock1 =
-      mockFn<
-        (message: {
-          author: PublicKey;
-          recipient: PublicKey;
-          payload: Any;
-        }) => Promise<void>
-      >().resolvesTo();
+      mockFn<(message: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
@@ -76,14 +70,10 @@ describe('SignalClient', function () {
     afterTest(() => api2.close());
 
     const promise1 = api1.swarmEvent.waitFor(
-      ({ swarmEvent }) =>
-        !!swarmEvent.peerAvailable &&
-        peer2.equals(swarmEvent.peerAvailable.peer)
+      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)
     );
     const promise2 = api2.swarmEvent.waitFor(
-      ({ swarmEvent }) =>
-        !!swarmEvent.peerAvailable &&
-        peer1.equals(swarmEvent.peerAvailable.peer)
+      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer)
     );
 
     await api1.join({ topic, peerId: peer1 });
@@ -98,13 +88,7 @@ describe('SignalClient', function () {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const signalMock =
-      mockFn<
-        (message: {
-          author: PublicKey;
-          recipient: PublicKey;
-          payload: Any;
-        }) => Promise<void>
-      >().resolvesTo();
+      mockFn<(message: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
@@ -147,47 +131,36 @@ describe('SignalClient', function () {
   }).timeout(5_000);
 
   // Skip because communication between signal servers is not yet implemented.
-  it.skip(
-    'newly joined peer can receive signals from other signal servers',
-    async function () {
-      const topic = PublicKey.random();
-      const peer1 = PublicKey.random();
-      const peer2 = PublicKey.random();
-      const signalMock =
-        mockFn<
-          ({
-            author,
-            recipient,
-            payload
-          }: {
-            author: PublicKey;
-            recipient: PublicKey;
-            payload: Any;
-          }) => Promise<void>
-        >().resolvesTo();
+  it.skip('newly joined peer can receive signals from other signal servers', async function () {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+    const signalMock =
+      mockFn<
+        ({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
+      >().resolvesTo();
 
-      const api1 = new SignalClient(broker1.url(), async () => {});
-      afterTest(() => api1.close());
-      const api2 = new SignalClient(broker2.url(), signalMock);
-      afterTest(() => api2.close());
+    const api1 = new SignalClient(broker1.url(), async () => {});
+    afterTest(() => api1.close());
+    const api2 = new SignalClient(broker2.url(), signalMock);
+    afterTest(() => api2.close());
 
-      await api1.join({ topic, peerId: peer1 });
-      await sleep(3000);
-      await api2.join({ topic, peerId: peer2 });
+    await api1.join({ topic, peerId: peer1 });
+    await sleep(3000);
+    await api2.join({ topic, peerId: peer2 });
 
-      const message = {
-        author: peer2,
-        recipient: peer1,
-        payload: {
-          type_url: 'something',
-          value: Buffer.from('0')
-        }
-      };
-      await api1.sendMessage(message);
+    const message = {
+      author: peer2,
+      recipient: peer1,
+      payload: {
+        type_url: 'something',
+        value: Buffer.from('0')
+      }
+    };
+    await api1.sendMessage(message);
 
-      await waitForExpect(() => {
-        expect(signalMock).toHaveBeenCalledWith([message]);
-      }, 4_000);
-    }
-  ).timeout(5_000);
+    await waitForExpect(() => {
+      expect(signalMock).toHaveBeenCalledWith([message]);
+    }, 4_000);
+  }).timeout(5_000);
 });

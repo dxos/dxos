@@ -29,15 +29,7 @@ const main = () => {
 
     .command({
       command: 'list',
-      handler: ({
-        json,
-        verbose,
-        baseDir
-      }: {
-        json: boolean;
-        verbose?: boolean;
-        baseDir: string;
-      }) => {
+      handler: ({ json, verbose, baseDir }: { json: boolean; verbose?: boolean; baseDir: string }) => {
         const processor = new WorkspaceProcessor(baseDir, { verbose }).init();
         const projects = processor.getProjects().map((p) => p.package.name);
 
@@ -159,9 +151,7 @@ const main = () => {
         });
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
-            console.log(
-              `Updating: ${project.name.padEnd(32)} ${project.subdir}`
-            );
+            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
           }
 
           builder.createDocs(project, outDir, baseUrl);

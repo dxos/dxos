@@ -46,11 +46,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _subgraphs = new Set<SubgraphBuilder>();
 
-  constructor(
-    readonly id: string,
-    readonly label?: string,
-    readonly style?: string
-  ) {}
+  constructor(readonly id: string, readonly label?: string, readonly style?: string) {}
 
   addSubgraph({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
@@ -70,18 +66,12 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
     const sections = [
       // Current style.
-      this.style &&
-        line(
-          `style ${this.id} ${Flowchart.renderProperties(this.style)}`,
-          indent + 1
-        ),
+      this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
 
       // Nodes.
       section(
         Array.from(this._nodes.values())
-          .map((node) =>
-            Flowchart.renderNode(node).map((str) => line(str, indent + 1))
-          )
+          .map((node) => Flowchart.renderNode(node).map((str) => line(str, indent + 1)))
           .flat()
       ),
 
@@ -96,11 +86,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
       .flat() as string[];
 
     if (indent >= 0) {
-      return [
-        line(`subgraph ${this.id} [${this.label ?? this.id}]`),
-        sections,
-        line('end')
-      ].flat();
+      return [line(`subgraph ${this.id} [${this.label ?? this.id}]`), sections, line('end')].flat();
     } else {
       return sections;
     }
@@ -156,15 +142,12 @@ export class Flowchart implements SubgraphBuilder {
    * Generate mermaid document.
    */
   build() {
-    const section = (label: string, lines: string[]) =>
-      lines.length ? ['', `%% ${label}`, ...lines] : undefined;
+    const section = (label: string, lines: string[]) => (lines.length ? ['', `%% ${label}`, ...lines] : undefined);
 
     const sections = [
       section(
         'Classes',
-        Array.from(this._classDefs.values()).map((classDef) =>
-          Flowchart.renderClassDef(classDef)
-        )
+        Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
       ),
       section('Nodes', this._root.build()),
       section(
@@ -206,10 +189,7 @@ export class Flowchart implements SubgraphBuilder {
 
   // https://mermaid-js.github.io/mermaid/#/directives
   static renderDirective(directive: string, properties: any): string {
-    return `%%{ ${directive}: ${JSON.stringify(properties).replace(
-      /"/g,
-      "'"
-    )} }%%`;
+    return `%%{ ${directive}: ${JSON.stringify(properties).replace(/"/g, "'")} }%%`;
   }
 
   static renderProperties(properties: any): string {
@@ -232,18 +212,13 @@ export class Flowchart implements SubgraphBuilder {
   }
 
   static renderNode(node: Node): string[] {
-    const def = [
-      node.id,
-      node.label && `("${node.label}")`,
-      node.className && `:::${node.className}`
-    ]
+    const def = [node.id, node.label && `("${node.label}")`, node.className && `:::${node.className}`]
       .filter(Boolean)
       .join('');
 
     return [
       def,
-      node.style &&
-        `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
+      node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`
@@ -253,8 +228,7 @@ export class Flowchart implements SubgraphBuilder {
   static renderLink(link: Link, i: number): string[] {
     return [
       `${link.source} --> ${link.target}`,
-      link.style &&
-        Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
+      link.style && Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
     ].filter(Boolean);
   }
 }

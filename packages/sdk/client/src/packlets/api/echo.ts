@@ -56,9 +56,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(
-    options?: CreationInvitationOptions
-  ): Promise<InvitationRequest>;
+  createInvitation(options?: CreationInvitationOptions): Promise<InvitationRequest>;
 
   createSnapshot(): Promise<PartySnapshot>;
 }

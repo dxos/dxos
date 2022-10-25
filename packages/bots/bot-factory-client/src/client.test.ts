@@ -4,10 +4,7 @@
 
 import expect from 'expect';
 
-import {
-  MemorySignalManagerContext,
-  MemorySignalManager
-} from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 
 import { BotFactoryClient } from './client';

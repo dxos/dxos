@@ -53,9 +53,7 @@ describe('Stream', function () {
       close(error);
     });
 
-    expect(await Stream.consume(stream)).to.deep.equal([
-      { closed: true, error }
-    ]);
+    expect(await Stream.consume(stream)).to.deep.equal([{ closed: true, error }]);
   });
 
   it('subscribe gets all updates', async function () {

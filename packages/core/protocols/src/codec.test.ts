@@ -8,9 +8,7 @@ import { schema } from './proto';
 
 describe('Codec', function () {
   it('encodes and decodes messages', async function () {
-    const codec = schema.getCodecForType(
-      'example.testing.data.TestItemMutation'
-    );
+    const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
 
     // TODO(burdon): Test substitutions.
     const buffer = codec.encode({

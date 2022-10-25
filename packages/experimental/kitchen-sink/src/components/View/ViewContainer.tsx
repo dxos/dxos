@@ -25,14 +25,7 @@ interface ViewContainerProps {
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
-export const ViewContainer = ({
-  value,
-  model,
-  items,
-  itemAdapter,
-  selected,
-  onCreateItem
-}: ViewContainerProps) => (
+export const ViewContainer = ({ value, model, items, itemAdapter, selected, onCreateItem }: ViewContainerProps) => (
   <>
     {value === ViewType.List && (
       <BoxContainer expand column>
@@ -42,22 +35,13 @@ export const ViewContainer = ({
 
     {value === ViewType.Board && (
       <BoxContainer expand>
-        <EchoBoard
-          itemAdapter={itemAdapter}
-          items={items}
-          onCreateItem={onCreateItem}
-        />
+        <EchoBoard itemAdapter={itemAdapter} items={items} onCreateItem={onCreateItem} />
       </BoxContainer>
     )}
 
     {value === ViewType.Graph && (
       <BoxContainer expand>
-        <EchoGraph
-          model={model}
-          selected={selected}
-          itemAdapter={itemAdapter}
-          styles={graphStyles}
-        />
+        <EchoGraph model={model} selected={selected} itemAdapter={itemAdapter} styles={graphStyles} />
       </BoxContainer>
     )}
   </>

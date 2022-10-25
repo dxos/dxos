@@ -28,10 +28,7 @@ export class TimeframeClock {
   }
 
   updateTimeframe(key: PublicKey, seq: number) {
-    this._timeframe = Timeframe.merge(
-      this._timeframe,
-      new Timeframe([[key, seq]])
-    );
+    this._timeframe = Timeframe.merge(this._timeframe, new Timeframe([[key, seq]]));
     this.update.emit(this._timeframe);
   }
 

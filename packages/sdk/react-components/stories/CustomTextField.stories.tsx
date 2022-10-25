@@ -56,13 +56,7 @@ export const Secondary = () => {
   return (
     <Container>
       <Box>
-        <CustomTextField
-          autoFocus
-          clickToEdit
-          variant='standard'
-          editing={editing}
-          value='Test'
-        />
+        <CustomTextField autoFocus clickToEdit variant='standard' editing={editing} value='Test' />
       </Box>
       <Box sx={{ padding: 2 }}>
         <Button onClick={() => setEditing(!editing)}>Toggle</Button>

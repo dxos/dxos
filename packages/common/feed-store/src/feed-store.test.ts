@@ -79,8 +79,7 @@ describe('FeedStore', function () {
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be
-        .rejected;
+      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be.rejected;
     }
   });
 
@@ -97,10 +96,7 @@ describe('FeedStore', function () {
 
     // Write.
     {
-      const feedStore = builder
-        .clone()
-        .setStorage(StorageType.NODE)
-        .createFeedStore();
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });
 
       for (const i of Array.from(Array(numBlocks)).keys()) {
@@ -115,10 +111,7 @@ describe('FeedStore', function () {
 
     // Read.
     {
-      const feedStore = builder
-        .clone()
-        .setStorage(StorageType.NODE)
-        .createFeedStore();
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(numBlocks);
     }
@@ -131,10 +124,7 @@ describe('FeedStore', function () {
 
     // Read (should be empty).
     {
-      const feedStore = builder
-        .clone()
-        .setStorage(StorageType.NODE)
-        .createFeedStore();
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(0);
     }

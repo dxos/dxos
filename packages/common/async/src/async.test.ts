@@ -50,9 +50,7 @@ it('promiseTimeout', async function () {
 
   {
     const promise = timeout(() => 'test', 200);
-    await expectToThrow(() =>
-      promiseTimeout(promise, 100, new Error('timeout'))
-    );
+    await expectToThrow(() => promiseTimeout(promise, 100, new Error('timeout')));
   }
 });
 

@@ -3,16 +3,8 @@
 //
 
 import { schema } from '@dxos/protocols';
-import {
-  PartyService,
-  ProfileService,
-  SystemService,
-  HaloService
-} from '@dxos/protocols/proto/dxos/client';
-import {
-  DevtoolsHost,
-  TracingService
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { PartyService, ProfileService, SystemService, HaloService } from '@dxos/protocols/proto/dxos/client';
+import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle } from '@dxos/rpc';
 
@@ -42,8 +34,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
 export interface ClientServiceProvider {
   services: ClientServices;
-  open(
-    onProgressCallback?: ((progress: any) => void) | undefined
-  ): Promise<void>;
+  open(onProgressCallback?: ((progress: any) => void) | undefined): Promise<void>;
   close(): Promise<void>;
 }

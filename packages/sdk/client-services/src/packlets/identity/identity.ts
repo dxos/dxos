@@ -41,10 +41,7 @@ export class Identity {
 
     this._signer = signer;
     this._space = space;
-    this._deviceStateMachine = new DeviceStateMachine(
-      this.identityKey,
-      this.deviceKey
-    );
+    this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
     // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
@@ -96,10 +93,7 @@ export class Identity {
    * Requires identity to be ready.
    */
   getIdentityCredentialSigner(): CredentialSigner {
-    assert(
-      this._deviceStateMachine.deviceCredentialChain,
-      'Device credential chain is not ready.'
-    );
+    assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
     return createCredentialSignerWithChain(
       this._signer,
       this._deviceStateMachine.deviceCredentialChain,

@@ -47,30 +47,18 @@ describe('DataMirror', function () {
     dataServiceRouter.trackParty(partyKey, dataServiceHost);
 
     const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
-    const dataMirror = new DataMirror(
-      mirrorItemManager,
-      dataServiceRouter,
-      partyKey
-    );
+    const dataMirror = new DataMirror(mirrorItemManager, dataServiceRouter, partyKey);
 
     dataMirror.open();
 
     // Create item
-    const promise = promiseTimeout(
-      mirrorItemManager.debouncedUpdate.waitForCount(1),
-      1000,
-      new Error('timeout')
-    );
+    const promise = promiseTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
-    const item = (await itemManager.createItem(
-      ObjectModel.meta.type
-    )) as Item<ObjectModel>;
+    const item = (await itemManager.createItem(ObjectModel.meta.type)) as Item<ObjectModel>;
 
     await promise;
 
-    const mirroredItem = (await mirrorItemManager.getItem(item.id)) as
-      | Item<ObjectModel>
-      | undefined;
+    const mirroredItem = (await mirrorItemManager.getItem(item.id)) as Item<ObjectModel> | undefined;
 
     expect(mirroredItem).not.toBeUndefined();
     expect(mirroredItem!.id).toEqual(item.id);
@@ -78,11 +66,7 @@ describe('DataMirror', function () {
 
     // Mutate model
     await Promise.all([
-      promiseTimeout(
-        mirroredItem!.model.update.waitForCount(1),
-        1000,
-        new Error('timeout')
-      ),
+      promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
       item.model.set('foo', 'bar')
     ]);
 

@@ -11,15 +11,9 @@ import { decodeExtensionPayload, encodeExtensionPayload } from './encoding';
 
 describe('Record encoding', function () {
   const mockTypes = createMockTypes();
-  const serviceType =
-    mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ??
-    raise(new Error());
-  const ipfsType =
-    mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ??
-    raise(new Error());
-  const lookupType = async (cid) =>
-    mockTypes.find((type) => type.cid.equals(cid)) ??
-    raise(new Error('Not found.'));
+  const serviceType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
+  const ipfsType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
+  const lookupType = async (cid) => mockTypes.find((type) => type.cid.equals(cid)) ?? raise(new Error('Not found.'));
 
   it('record without extensions', async function () {
     const data = {

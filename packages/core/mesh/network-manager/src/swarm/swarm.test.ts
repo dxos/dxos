@@ -11,11 +11,7 @@ import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  Messenger
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
 import { FullyConnectedTopology } from '../topology';
@@ -65,16 +61,8 @@ describe('Swarm', function () {
     expect(swarm2.connections.length).toEqual(0);
 
     const promise = Promise.all([
-      promiseTimeout(
-        swarm1.connected.waitForCount(1),
-        3000,
-        new Error('Swarm1 connect timeout.')
-      ),
-      promiseTimeout(
-        swarm2.connected.waitForCount(1),
-        3000,
-        new Error('Swarm2 connect timeout.')
-      )
+      promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+      promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
     // Behavior of the Signal Server.
@@ -114,10 +102,7 @@ describe('Swarm', function () {
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
 
-    const connectPromises = Promise.all([
-      swarm1.connected.waitForCount(1),
-      swarm2.connected.waitForCount(1)
-    ]);
+    const connectPromises = Promise.all([swarm1.connected.waitForCount(1), swarm2.connected.waitForCount(1)]);
 
     swarm1.onSwarmEvent({
       peerAvailable: {
@@ -142,10 +127,7 @@ describe('Swarm', function () {
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
 
-    const connectPromises = Promise.all([
-      swarm1.connected.waitForCount(1),
-      swarm2.connected.waitForCount(1)
-    ]);
+    const connectPromises = Promise.all([swarm1.connected.waitForCount(1), swarm2.connected.waitForCount(1)]);
 
     swarm1.onSwarmEvent({
       peerAvailable: {
@@ -179,16 +161,8 @@ describe('Swarm', function () {
     const { swarm1, swarm2, peerId2 } = setupSwarm();
 
     const promise = Promise.all([
-      promiseTimeout(
-        swarm1.connected.waitForCount(1),
-        3000,
-        new Error('Swarm1 connect timeout.')
-      ),
-      promiseTimeout(
-        swarm2.connected.waitForCount(1),
-        3000,
-        new Error('Swarm2 connect timeout.')
-      )
+      promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+      promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
     swarm1.onSwarmEvent({

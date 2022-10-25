@@ -48,17 +48,13 @@ export const Graph = ({
   const { projector, renderer } = useMemo(() => {
     const projector = controlledProjector ?? new GraphForceProjector(context);
     const renderer = new GraphRenderer(context, graphRef, {
-      drag: drag
-        ? createSimulationDrag(context, projector.simulation)
-        : undefined,
+      drag: drag ? createSimulationDrag(context, projector.simulation) : undefined,
       arrows: {
         end: arrows
       },
       labels,
       attributes,
-      onNodeClick: onSelect
-        ? (node: GraphLayoutNode<any>) => onSelect(node)
-        : undefined
+      onNodeClick: onSelect ? (node: GraphLayoutNode<any>) => onSelect(node) : undefined
     });
 
     return {
@@ -68,9 +64,7 @@ export const Graph = ({
   }, []);
 
   useEffect(() => {
-    const subscribeProjector = projector.updated.on(({ layout }) =>
-      renderer.update(layout)
-    );
+    const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     const subscribeModel = model?.subscribe((graph) => projector.update(graph));
     projector.update(model?.graph);
 

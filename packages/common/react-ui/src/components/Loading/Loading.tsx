@@ -25,20 +25,11 @@ const sizeMap = new Map<LoadingSize, string>([
   ['xl', 'w-16 h-16']
 ]);
 
-export const Loading = ({
-  size,
-  color,
-  className,
-  label
-}: LoadingProps & { label: string }) => {
+export const Loading = ({ size, color, className, label }: LoadingProps & { label: string }) => {
   const labelId = useId('loading-label');
   const sizeClassName = sizeMap.get(size ?? 'md');
   return (
-    <div
-      role='status'
-      className={cx('flex justify-center p-4', className)}
-      aria-labelledby={labelId}
-    >
+    <div role='status' className={cx('flex justify-center p-4', className)} aria-labelledby={labelId}>
       <svg
         role='none'
         aria-hidden='true'

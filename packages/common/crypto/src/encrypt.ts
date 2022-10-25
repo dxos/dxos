@@ -12,11 +12,7 @@ import assert from 'node:assert';
  * @param cipher see https://cryptojs.gitbook.io/docs/#ciphers
  * @returns ciphertext
  */
-export const encrypt = (
-  plaintext: string,
-  passphrase: string,
-  cipher = 'AES'
-) => {
+export const encrypt = (plaintext: string, passphrase: string, cipher = 'AES') => {
   assert(typeof passphrase === 'string');
   assert(typeof cipher === 'string');
 
@@ -30,11 +26,7 @@ export const encrypt = (
  * @param cipher see https://cryptojs.gitbook.io/docs/#ciphers
  * @returns plaintext
  */
-export const decrypt = (
-  ciphertext: string,
-  passphrase: string,
-  cipher = 'AES'
-) => {
+export const decrypt = (ciphertext: string, passphrase: string, cipher = 'AES') => {
   assert(typeof ciphertext === 'string');
   assert(typeof passphrase === 'string');
   assert(typeof cipher === 'string');

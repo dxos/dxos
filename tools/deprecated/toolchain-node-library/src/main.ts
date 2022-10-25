@@ -10,22 +10,11 @@ import { sync as glob } from 'glob';
 import { join } from 'path';
 import { Arguments, Argv } from 'yargs';
 
-import {
-  FixMemdownPlugin,
-  NodeGlobalsPolyfillPlugin,
-  NodeModulesPlugin
-} from '@dxos/esbuild-plugins';
+import { FixMemdownPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 import { Config, defaults } from './config';
 import { Project } from './project';
-import {
-  execCommand,
-  execJest,
-  execTool,
-  execLint,
-  execMocha,
-  execScript
-} from './tools';
+import { execCommand, execJest, execTool, execLint, execMocha, execScript } from './tools';
 
 const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
@@ -42,12 +31,7 @@ export type Handler<T> = (argv: Arguments<T>) => Promise<void>;
  * @param verbose
  */
 export const handler =
-  <T>(
-    title: string,
-    handler: Handler<T>,
-    timeout = false,
-    verbose = true
-  ): Handler<T> =>
+  <T>(title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> =>
   async (argv: Arguments<T>) => {
     const t =
       timeout &&
@@ -59,12 +43,7 @@ export const handler =
     const start = Date.now();
     verbose && log(chalk`\n{green.bold ${title} started}`);
     await handler(argv);
-    verbose &&
-      log(
-        chalk`\n{green.bold ${title} complete} in {bold ${
-          Date.now() - start
-        }} ms\n`
-      );
+    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
 
     t && clearTimeout(t);
   };
@@ -79,11 +58,7 @@ const buildProto = async (config: Config, project: Project) => {
   const protoBase = project.toolchainConfig.protoBase ?? config.protobuf.base;
   const output = join(project.packageRoot, protoBase, config.protobuf.output);
   const src = join(project.packageRoot, protoBase, config.protobuf.src);
-  const substitutions = join(
-    project.packageRoot,
-    protoBase,
-    config.protobuf.substitutions
-  );
+  const substitutions = join(project.packageRoot, protoBase, config.protobuf.substitutions);
 
   try {
     fs.rmSync(output, { recursive: true, force: true });
@@ -134,10 +109,7 @@ export interface BundleOptions {
   polyfill?: boolean;
 }
 
-export const execLibraryBundle = async (
-  config: Config,
-  options: BundleOptions = {}
-) => {
+export const execLibraryBundle = async (config: Config, options: BundleOptions = {}) => {
   const project = Project.load(config);
   const outdir = 'dist';
   const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
@@ -176,10 +148,7 @@ export const execLibraryBundle = async (
 /**
  * Creates a bundled build of the current package.
  */
-export const execBuildBundle = async (
-  config: Config,
-  options: BuildOptions = {}
-) => {
+export const execBuildBundle = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
   const outdir = project.esbuildConfig.outdir ?? defaults.esbuild.outdir;
 
@@ -198,24 +167,16 @@ export const execBuildBundle = async (
     const name = filename.split('.')[0];
 
     fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
-    await execTool('terser', [
-      join(outdir, name + '.orig.js'),
-      '-o',
-      join(outdir, name + '.js')
-    ]);
+    await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
 };
 
 /**
  * Creates a static build of the storybook for the current package.
  */
-export const execBuildBook = async (
-  config: Config,
-  options: BuildOptions = {}
-) => {
+export const execBuildBook = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
-  const outdir =
-    project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
+  const outdir = project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
 
   fs.rmSync(join(project.packageRoot, outdir), {
     recursive: true,
@@ -229,11 +190,7 @@ export const execBuildBook = async (
     const name = 'index';
 
     fs.renameSync(join(outdir, name + '.js'), join(outdir, name + '.orig.js'));
-    await execTool('terser', [
-      join(outdir, name + '.orig.js'),
-      '-o',
-      join(outdir, name + '.js')
-    ]);
+    await execTool('terser', [join(outdir, name + '.orig.js'), '-o', join(outdir, name + '.js')]);
   }
 };
 
@@ -355,8 +312,7 @@ export const setupCoreCommands = (yargs: Argv) =>
           // Additional test steps execution placed here to allow to run tests without additional steps.
           // Additional test steps are executed by default only when build:test is run.
           if (argv.additional) {
-            for (const step of project.toolchainConfig.additionalTestSteps ??
-              []) {
+            for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
               log(chalk`\n{green.bold ${step}}`);
               await execScript(project, step, []);
             }
@@ -446,10 +402,7 @@ export const setupCoreCommands = (yargs: Argv) =>
       async ({ command, _ }) => {
         const project = Project.load(defaults);
         if (project.packageJsonContents.scripts?.[command]) {
-          await execCommand(
-            project.packageJsonContents.scripts?.[command],
-            _.map(String)
-          );
+          await execCommand(project.packageJsonContents.scripts?.[command], _.map(String));
         } else {
           await execCommand(command, _.map(String));
         }

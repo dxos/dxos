@@ -82,9 +82,7 @@ export class Client {
   private readonly _options: ClientOptions;
   private readonly _mode: Runtime.Client.Mode;
 
-  private readonly _modelFactory = new ModelFactory().registerModel(
-    ObjectModel
-  );
+  private readonly _modelFactory = new ModelFactory().registerModel(ObjectModel);
 
   private _initialized = false;
   private _serviceProvider!: ClientServiceProvider;
@@ -98,10 +96,7 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   // TODO(burdon): What are the defaults if `{}` is passed?
-  constructor(
-    config: ConfigProto | Config = defaultConfig,
-    options: ClientOptions = {}
-  ) {
+  constructor(config: ConfigProto | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -109,10 +104,7 @@ export class Client {
     this._config = config instanceof Config ? config : new Config(config);
     this._options = options;
 
-    if (
-      Object.keys(this._config.values).length > 0 &&
-      this._config.values.version !== EXPECTED_CONFIG_VERSION
-    ) {
+    if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
       throw new InvalidConfigurationError(
         `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
       );
@@ -121,10 +113,7 @@ export class Client {
     // TODO(burdon): Library should not set app-level globals.
     // debug.enable(this._config.values.runtime?.client?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
-    this._mode = this._config.get(
-      'runtime.client.mode',
-      Runtime.Client.Mode.AUTOMATIC
-    )!;
+    this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
     log(`mode=${Runtime.Client.Mode[this._mode]}`);
   }
 
@@ -211,11 +200,7 @@ export class Client {
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(
-      this._serviceProvider,
-      this._modelFactory,
-      this._halo
-    );
+    this._echo = new EchoProxy(this._serviceProvider, this._modelFactory, this._halo);
 
     await this._halo._open();
     await this._echo._open();
@@ -255,13 +240,9 @@ export class Client {
     });
   }
 
-  private async initializeRemote(
-    onProgressCallback: Parameters<this['initialize']>[0]
-  ) {
+  private async initializeRemote(onProgressCallback: Parameters<this['initialize']>[0]) {
     if (!this._options.rpcPort && isNode()) {
-      throw new Error(
-        'RPC port is required to run client in remote mode on Node environment.'
-      );
+      throw new Error('RPC port is required to run client in remote mode on Node environment.');
     }
 
     log('Creating client proxy.');
@@ -273,9 +254,7 @@ export class Client {
   }
 
   // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
-  private async initializeLocal(
-    onProgressCallback: Parameters<this['initialize']>[0]
-  ) {
+  private async initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
     this._serviceProvider = new ClientServiceHost({
       config: this._config,
@@ -285,9 +264,7 @@ export class Client {
     await this._serviceProvider.open(onProgressCallback);
   }
 
-  private async initializeAuto(
-    onProgressCallback: Parameters<this['initialize']>[0]
-  ) {
+  private async initializeAuto(onProgressCallback: Parameters<this['initialize']>[0]) {
     if (!this._options.rpcPort && isNode()) {
       await this.initializeLocal(onProgressCallback);
     } else {

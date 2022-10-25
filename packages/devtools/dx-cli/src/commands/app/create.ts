@@ -58,10 +58,7 @@ export default class Create extends BaseCommand {
 
       // Copy vite patch.
       await mkdir(`${templateDirectory}/patches`);
-      await copyFile(
-        `${tmpDirectory}/patches/vite@3.0.9.patch`,
-        `${templateDirectory}/patches/vite@3.0.9.patch`
-      );
+      await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       // Remove unneccessary files.
       await rm(`${templateDirectory}/project.json`);

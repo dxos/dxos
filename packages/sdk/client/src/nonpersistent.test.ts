@@ -80,14 +80,10 @@ describe('Client - nonpersistent', function () {
     });
 
     const invite = await party1.createInvitation();
-    const party2 = await clientB.echo
-      .acceptInvitation(invite.descriptor)
-      .getParty();
+    const party2 = await clientB.echo.acceptInvitation(invite.descriptor).getParty();
 
     await party2.database.waitForItem({ type: 'example:item/test' });
-    const otherItem = party2.database
-      .select({ type: 'example:item/test' })
-      .exec().entities[0];
+    const otherItem = party2.database.select({ type: 'example:item/test' }).exec().entities[0];
     expect(otherItem.model.get('foo')).toEqual('bar');
 
     await clientA.destroy();
@@ -97,10 +93,7 @@ describe('Client - nonpersistent', function () {
     .retries(10);
 
   it.skip('offline invitations', async function () {
-    if (
-      mochaExecutor.environment === 'webkit' ||
-      mochaExecutor.environment === 'chromium'
-    ) {
+    if (mochaExecutor.environment === 'webkit' || mochaExecutor.environment === 'chromium') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }
@@ -123,12 +116,7 @@ describe('Client - nonpersistent', function () {
     // TODO(dmaretskyi): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.
     const contactPromise = clientA.halo
       .queryContacts()
-      .update.waitFor(
-        (contacts) =>
-          !!contacts.find((contact) =>
-            contact.publicKey.equals(profileB.publicKey)
-          )
-      );
+      .update.waitFor((contacts) => !!contacts.find((contact) => contact.publicKey.equals(profileB.publicKey)));
 
     // Online (adds contact).
     {

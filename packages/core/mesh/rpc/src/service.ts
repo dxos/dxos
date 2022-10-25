@@ -2,11 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import {
-  EncodingOptions,
-  ServiceDescriptor,
-  ServiceHandler
-} from '@dxos/codec-protobuf';
+import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
@@ -15,9 +11,7 @@ export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> };
 /**
  * Groups multiple services together so they can be served over one RPC peer.
  */
-export const createServiceBundle = <S>(
-  services: ServiceBundle<S>
-): ServiceBundle<S> => services;
+export const createServiceBundle = <S>(services: ServiceBundle<S>): ServiceBundle<S> => services;
 
 /**
  * A type-safe RPC peer.
@@ -34,8 +28,7 @@ export class ProtoRpcPeer<S> {
   }
 }
 
-export interface ProtoRpcPeerOptions<Client, Server>
-  extends Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'> {
+export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'> {
   /**
    * Services that are expected to be serviced by the counter-party.
    */
@@ -72,10 +65,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(
-      handlers[serviceName] as any,
-      encodingOptions
-    );
+    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(handlers[serviceName] as any, encodingOptions);
   }
 
   const peer = new RpcPeer({
@@ -106,8 +96,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     requestedRpcs[serviceName] = requested[serviceName].createClient(
       {
         call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-        callStream: (method, req) =>
-          peer.callStream(`${serviceFqn}.${method}`, req)
+        callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
       },
       encodingOptions
     );
@@ -142,8 +131,7 @@ export const createRpcClient = <S>(
 /**
  * @deprecated
  */
-export interface RpcServerOptions<S>
-  extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
   service: ServiceDescriptor<S>;
   handlers: S;
 }
@@ -152,11 +140,7 @@ export interface RpcServerOptions<S>
  * Create a type-safe RPC server.
  * @deprecated Use createProtoRpcPeer instead.
  */
-export const createRpcServer = <S>({
-  service,
-  handlers,
-  ...rest
-}: RpcServerOptions<S>): RpcPeer => {
+export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOptions<S>): RpcPeer => {
   const server = service.createServer(handlers);
 
   const peer = new RpcPeer({
@@ -187,8 +171,7 @@ export const createBundledRpcClient = <S>(
 /**
  * @deprecated
  */
-export interface RpcBundledServerOptions<S>
-  extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
   services: ServiceBundle<S>;
   handlers: S;
 }
@@ -197,19 +180,13 @@ export interface RpcBundledServerOptions<S>
  * Create type-safe RPC server from a service bundle.
  * @deprecated Use createProtoRpcPeer instead.
  */
-export const createBundledRpcServer = <S>({
-  services,
-  handlers,
-  ...rest
-}: RpcBundledServerOptions<S>): RpcPeer => {
+export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
   const rpc: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
 
-    rpc[serviceFqn] = services[serviceName].createServer(
-      handlers[serviceName] as any
-    );
+    rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 
   const peer = new RpcPeer({
@@ -235,9 +212,7 @@ export const createBundledRpcServer = <S>({
   return peer;
 };
 
-const parseMethodName = (
-  method: string
-): [serviceName: string, methodName: string] => {
+const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
   const separator = method.lastIndexOf('.');
   const serviceName = method.slice(0, separator);
   const methodName = method.slice(separator + 1);

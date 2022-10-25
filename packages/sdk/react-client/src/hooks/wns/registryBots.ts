@@ -60,9 +60,7 @@ export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
         setRegistryBots(botRecords);
       } else {
         const filterByKeywords = (bot: RegistryBotRecord) =>
-          bot.keywords.some((botKeyword) =>
-            sortByKeywords.includes(botKeyword)
-          );
+          bot.keywords.some((botKeyword) => sortByKeywords.includes(botKeyword));
         const sortedBotRecords = [
           ...botRecords.filter((bot) => filterByKeywords(bot)),
           ...botRecords.filter((bot) => !filterByKeywords(bot))

@@ -6,11 +6,7 @@ import { WebRTCTransportService } from '@dxos/network-manager';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
-import {
-  iframeServiceBundle,
-  WorkerServiceBundle,
-  workerServiceBundle
-} from './services';
+import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 
 export type IframeRuntimeParams = {
   systemPort: RpcPort;

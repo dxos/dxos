@@ -9,9 +9,7 @@
  * any-promise which does not work in web workers due to using window in its
  * browser shim.
  */
-export const streamToArray = (
-  stream: NodeJS.ReadableStream
-): Promise<any[]> => {
+export const streamToArray = (stream: NodeJS.ReadableStream): Promise<any[]> => {
   let deferred: Promise<any[]>;
 
   if (!stream.readable) {

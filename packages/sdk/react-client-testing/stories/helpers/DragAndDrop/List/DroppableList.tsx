@@ -2,11 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy
-} from '@dnd-kit/sortable';
+import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import React, { CSSProperties } from 'react';
 
 import { DraggableContainer } from '../DraggableContainer';
@@ -21,12 +17,7 @@ interface DroppableListProps {
   activeId?: string;
 }
 
-export const DroppableList = ({
-  id,
-  items,
-  horizontal = false,
-  style = {}
-}: DroppableListProps) => {
+export const DroppableList = ({ id, items, horizontal = false, style = {} }: DroppableListProps) => {
   const itemIds = items.map((item) => item.id);
 
   return (
@@ -45,18 +36,10 @@ export const DroppableList = ({
       <SortableContext
         id={id}
         items={itemIds}
-        strategy={
-          horizontal
-            ? horizontalListSortingStrategy
-            : verticalListSortingStrategy
-        }
+        strategy={horizontal ? horizontalListSortingStrategy : verticalListSortingStrategy}
       >
         {items.map((item) => (
-          <DraggableContainer
-            key={item.id}
-            id={item.id}
-            placeholderStyles={{ opacity: 0.5 }}
-          >
+          <DraggableContainer key={item.id} id={item.id} placeholderStyles={{ opacity: 0.5 }}>
             <ListItem item={item} style={{ padding: 8 }} />
           </DraggableContainer>
         ))}

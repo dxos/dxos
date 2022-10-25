@@ -333,9 +333,7 @@ export class HumanHasher {
     }
 
     // Catch any left-over bytes in the last segment.
-    segments[segments.length - 1] = segments[segments.length - 1].concat(
-      bytes.slice(target * segSize)
-    );
+    segments[segments.length - 1] = segments[segments.length - 1].concat(bytes.slice(target * segSize));
 
     const checksums = segments.map((x) => x.reduce((acc, curr) => acc ^ curr));
     return checksums;

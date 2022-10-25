@@ -19,8 +19,7 @@ export interface FeedStoreOptions<T extends {}> {
  * Persistent hypercore store.
  */
 export class FeedStore<T extends {}> {
-  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> =
-    new ComplexMap(PublicKey.hash);
+  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
 
   private readonly _factory: FeedFactory<T>;
 
@@ -49,10 +48,7 @@ export class FeedStore<T extends {}> {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  async openFeed(
-    feedKey: PublicKey,
-    { writable }: FeedOptions = {}
-  ): Promise<FeedWrapper<T>> {
+  async openFeed(feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
 
     let feed = this.getFeed(feedKey);
@@ -60,9 +56,7 @@ export class FeedStore<T extends {}> {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).
       // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
       if (writable && !feed.properties.writable) {
-        throw new Error(
-          `Read-only feed is already open: ${feedKey.truncate()}`
-        );
+        throw new Error(`Read-only feed is already open: ${feedKey.truncate()}`);
       } else {
         await feed.open();
         return feed;
@@ -85,9 +79,7 @@ export class FeedStore<T extends {}> {
    */
   async close() {
     log('closing...');
-    await Promise.all(
-      Array.from(this._feeds.values()).map((feed) => feed.close())
-    );
+    await Promise.all(Array.from(this._feeds.values()).map((feed) => feed.close()));
     this._feeds.clear();
     log('closed');
   }
