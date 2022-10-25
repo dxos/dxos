@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
-import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
+import { createFeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
@@ -17,18 +17,12 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
-// TODO(burdon): Remove?
-class MockFeedWriter<T extends {}> implements FeedWriter<T> {
-  constructor(private readonly _writer: (data: T) => Promise<WriteReceipt>) {}
-
-  async write(data: T): Promise<WriteReceipt> {
-    return this._writer(data);
-  }
-}
-
-// TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
-// TODO(burdon): Rename and/or move to separate testing package.
-export class TestRig<M extends Model<any>> {
+/**
+ * Factory for peers to test model replication.
+ * @deprecated
+ */
+// TODO(burdon): This is exported to @dxos/object-model.
+export class TestBuilder<M extends Model<any>> {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
 
   private readonly _replicationFinished = new Trigger();
@@ -37,10 +31,6 @@ export class TestRig<M extends Model<any>> {
 
   constructor(private readonly _modelFactory: ModelFactory, private readonly _modelConstructor: ModelConstructor<M>) {
     this._replicationFinished.wake();
-  }
-
-  get replicating() {
-    return this._replicating;
   }
 
   configureReplication(value: boolean) {
@@ -56,8 +46,8 @@ export class TestRig<M extends Model<any>> {
 
   createPeer(): TestPeer<M> {
     const key = PublicKey.random();
-    const writer = new MockFeedWriter<Uint8Array>((mutation: Uint8Array) => {
-      return Promise.resolve(this._writeMessage(key, mutation));
+    const writer = createFeedWriter<Uint8Array>((data: Uint8Array) => {
+      return Promise.resolve(this._writeMessage(key, data));
     });
 
     const id = PublicKey.random().toHex();
@@ -128,7 +118,6 @@ export class TestRig<M extends Model<any>> {
 
 export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
-
   public mutations: ModelMessage<Uint8Array>[] = [];
 
   constructor(public readonly stateManager: StateManager<M>, public readonly key: PublicKey) {}

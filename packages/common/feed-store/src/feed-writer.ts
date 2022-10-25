@@ -9,9 +9,12 @@ export type WriteReceipt = {
   seq: number;
 };
 
-/**
- * Async feed writer.
- */
 export interface FeedWriter<T extends {}> {
   write(data: T): Promise<WriteReceipt>;
 }
+
+export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteReceipt>): FeedWriter<T> => ({
+  write: async (data: T) => {
+    return cb(data);
+  }
+});
