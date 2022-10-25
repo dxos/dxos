@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FeedFactory, FeedStore, TestBuilder } from '@dxos/feed-store';
+import { FeedStore, TestBuilder } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -10,12 +10,14 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, Plugin } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { Database } from '../database';
 import { AuthProvider, AuthVerifier, Space, SpaceProtocol } from '../space';
+
+// TODO(burdon): Create composite with feed-store builder.
+// TODO(burdon): Use in other tests outside of echo.
 
 /**
  * Builder with default encoder and generator.
@@ -27,9 +29,6 @@ export class TestFeedBuilder extends TestBuilder<FeedMessage> {
     });
   }
 }
-
-// TODO(burdon): Create composite with feed-store builder.
-// TODO(burdon): Use in other tests outside of echo.
 
 export type NetworkManagerProvider = () => NetworkManager;
 
@@ -48,6 +47,9 @@ export const WebsocketNetworkManagerProvider =
       signalManager: new WebsocketSignalManager([signalUrl]),
       transportFactory: createWebRTCTransportFactory()
     });
+
+export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
+export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
 /**
  * Factory for test agents.
@@ -70,13 +72,11 @@ export class TestAgentBuilder {
   }
 }
 
-export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
-export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
-
 /**
  * Test peer able to create and replicate spaces.
  */
 export class TestPeer {
+  public readonly builder: TestFeedBuilder;
   public readonly feedStore: FeedStore<FeedMessage>;
 
   constructor(
@@ -85,15 +85,8 @@ export class TestPeer {
     public readonly identityKey: PublicKey,
     public readonly deviceKey: PublicKey
   ) {
-    this.feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
-        root: createStorage({ type: StorageType.RAM }).createDirectory(),
-        signer: keyring,
-        hypercore: {
-          valueEncoding
-        }
-      })
-    });
+    this.builder = new TestFeedBuilder().setKeyring(keyring);
+    this.feedStore = this.builder.createFeedStore();
   }
 
   createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {
