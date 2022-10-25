@@ -28,8 +28,7 @@ export const Default = templateForComponent(Template)({
 });
 Default.args = {
   openTrigger: <Button>Open popover</Button>,
-  children: 'Popover content',
-  closeLabel: 'Close'
+  children: 'Popover content'
 };
 
 export const AvatarTrigger = templateForComponent(Template)({
