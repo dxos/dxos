@@ -11,9 +11,9 @@ import { defaultTooltip } from '../../styles';
 
 export interface TooltipProps
   extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
-  content: ReactNode
-  children: ReactNode
-  tooltipLabelsTrigger?: boolean
+  content: ReactNode;
+  children: ReactNode;
+  tooltipLabelsTrigger?: boolean;
 }
 
 export const Tooltip = ({
@@ -27,13 +27,16 @@ export const Tooltip = ({
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       <TooltipPrimitive.Trigger
-        asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
+        asChild
+        {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}
+      >
         {children}
       </TooltipPrimitive.Trigger>
-      {
-        tooltipLabelsTrigger &&
-        <span id={labelId} className='sr-only'>{content}</span>
-      }
+      {tooltipLabelsTrigger && (
+        <span id={labelId} className='sr-only'>
+          {content}
+        </span>
+      )}
       <TooltipPrimitive.Content
         forceMount
         {...contentProps}
@@ -49,9 +52,7 @@ export const Tooltip = ({
           contentProps.className
         )}
       >
-        <TooltipPrimitive.Arrow
-          className='fill-current text-white dark:text-neutral-800'
-        />
+        <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
         {content}
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Root>

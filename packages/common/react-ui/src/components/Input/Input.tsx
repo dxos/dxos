@@ -24,20 +24,20 @@ import {
   valenceInputBorder
 } from '../../styles';
 
-export type InputSize = 'md' | 'lg'
+export type InputSize = 'md' | 'lg';
 
 export interface InputProps
   extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
-  label: ReactNode
-  labelVisuallyHidden?: boolean
-  description?: ReactNode
-  descriptionVisuallyHidden?: boolean
-  initialValue?: string
-  onChange?: (value: string) => void
-  disabled?: boolean
-  size?: InputSize
-  validationMessage?: ReactNode
-  validationValence?: MessageValence
+  label: ReactNode;
+  labelVisuallyHidden?: boolean;
+  description?: ReactNode;
+  descriptionVisuallyHidden?: boolean;
+  initialValue?: string;
+  onChange?: (value: string) => void;
+  disabled?: boolean;
+  size?: InputSize;
+  validationMessage?: ReactNode;
+  validationValence?: MessageValence;
 }
 
 const sizeMap = new Map<InputSize, string>([
@@ -83,8 +83,7 @@ export const Input = ({
     [onChange]
   );
 
-  const isInvalid =
-    !!validationMessage && validationValence === 'error';
+  const isInvalid = !!validationMessage && validationValence === 'error';
 
   return (
     <div className={cx('my-4', className)} role='none'>
@@ -123,9 +122,7 @@ export const Input = ({
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
-          className={cx(
-            descriptionVisuallyHidden && !isInvalid && 'sr-only'
-          )}
+          className={cx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
         >
           {validationMessage && (
             <span
@@ -137,7 +134,10 @@ export const Input = ({
           )}
           <span
             {...(isInvalid && { id: descriptionId })}
-            className={cx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
+            className={cx(
+              defaultDescription,
+              descriptionVisuallyHidden && 'sr-only'
+            )}
           >
             {description}
           </span>

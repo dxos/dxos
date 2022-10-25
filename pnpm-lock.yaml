@@ -271,6 +271,8 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
@@ -283,6 +285,7 @@ importers:
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       debug: ^4.3.3
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
@@ -302,12 +305,15 @@ importers:
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/util': link:../../common/util
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       debug: 4.3.4
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
@@ -26433,7 +26439,6 @@ packages:
       react: '>=16'
     dependencies:
       react: 18.2.0
-    dev: true
 
   /picocolors/0.2.1:
     resolution: {integrity: sha512-cMlDqaLEqfSaW8Z7N5Jw+lyIW869EzT73/F5lhtY9cLGoVxSXznfgfXMO0Z5K0o0Q2TkTXq+0KFsdnSe3jDViA==}

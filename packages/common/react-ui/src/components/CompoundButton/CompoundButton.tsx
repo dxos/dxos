@@ -10,10 +10,10 @@ import { defaultDescription, primaryDescription } from '../../styles';
 import { ButtonProps, buttonStyles } from '../Button';
 
 export interface CompoundButtonProps extends ButtonProps {
-  children?: ReactNode
-  description?: ReactNode
-  before?: ReactNode
-  after?: ReactNode
+  children?: ReactNode;
+  description?: ReactNode;
+  before?: ReactNode;
+  after?: ReactNode;
 }
 
 export const CompoundButton = ({
