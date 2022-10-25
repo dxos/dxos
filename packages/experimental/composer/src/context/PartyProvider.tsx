@@ -14,15 +14,17 @@ import React, {
 
 import { InvitationDescriptor } from '@dxos/client';
 import type { Party } from '@dxos/client';
+import { truncateKey } from '@dxos/debug';
 import {
   useClient,
+  useParties,
   usePartyInvitations,
   useSecretProvider
 } from '@dxos/react-client';
 import { Button, Group, Input } from '@dxos/react-ui';
 
 export interface PartyContextValue {
-  party?: Party
+  party?: Party;
 }
 
 const textEncoder = new TextEncoder();
@@ -31,11 +33,13 @@ export const PartyContext = createContext<PartyContextValue>({});
 
 export const PartyProvider = (props: PropsWithChildren<{}>) => {
   const client = useClient();
+  const parties = useParties();
   const [party, setParty] = useState<Party>();
   const [loading, setLoading] = useState<boolean>(false);
   const [invitationCodeValue, setInvitationCodeValue] = useState('');
   const partyInvitations = usePartyInvitations(party?.key);
-  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
+  const [secretProvider, secretResolver, _resetSecret] =
+    useSecretProvider<Uint8Array>();
 
   useEffect(() => {
     if (party) {
@@ -106,34 +110,56 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
           </div>
         </>
       ) : (
-        <Group
-          className='my-8 mx-auto w-72'
-          label={{
-            level: 1,
-            className: 'text-xl text-center mb-3',
-            children: 'Create or join a space'
-          }}
-        >
-          <Button
-            variant='primary'
-            className='w-full'
-            onClick={onCreate}
-            {...(loading && { disabled: true })}
+        <>
+          <Group
+            className='my-8 mx-auto w-72'
+            label={{
+              level: 1,
+              className: 'text-xl text-center mb-3',
+              children: 'Create or join a space'
+            }}
           >
-            Create
-          </Button>
-          <p className='text-center'>or</p>
-          <div role='none' className='flex items-center gap-2'>
-            <Input {...inviteCodeInputProps} />
             <Button
               variant='primary'
-              onClick={onJoin}
+              className='w-full'
+              onClick={onCreate}
               {...(loading && { disabled: true })}
             >
-              Join
+              Create
             </Button>
-          </div>
-        </Group>
+            <p className='text-center'>or</p>
+            <div role='none' className='flex items-center gap-2'>
+              <Input {...inviteCodeInputProps} />
+              <Button
+                variant='primary'
+                onClick={onJoin}
+                {...(loading && { disabled: true })}
+              >
+                Join
+              </Button>
+            </div>
+          </Group>
+          {parties.length > 0 && (
+            <Group
+              className='my-8 mx-auto w-72 flex flex-col gap-4'
+              label={{
+                level: 1,
+                className: 'text-xl text-center mb-3',
+                children: 'Your Spaces'
+              }}
+            >
+              {parties.map((party) => (
+                <Button
+                  key={party.key.toHex()}
+                  className='width-full truncate'
+                  onClick={() => setParty(party)}
+                >
+                  {truncateKey(party.key)}
+                </Button>
+              ))}
+            </Group>
+          )}
+        </>
       )}
     </PartyContext.Provider>
   );

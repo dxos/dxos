@@ -7,14 +7,18 @@ import protobufjs from 'protobufjs';
 
 import { Substitutions } from './common';
 
-export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>
+export type MapingDescriptors = Partial<
+  Record<string, (value: any, ...extraArgs: any) => any>
+>;
 
 export interface BidirectionalMapingDescriptors {
-  encode: MapingDescriptors
-  decode: MapingDescriptors
+  encode: MapingDescriptors;
+  decode: MapingDescriptors;
 }
 
-export const createMappingDescriptors = (substitutions: Substitutions): BidirectionalMapingDescriptors => {
+export const createMappingDescriptors = (
+  substitutions: Substitutions
+): BidirectionalMapingDescriptors => {
   const encode: MapingDescriptors = {};
   const decode: MapingDescriptors = {};
   for (const type of Object.keys(substitutions)) {
@@ -29,7 +33,11 @@ export const createMappingDescriptors = (substitutions: Substitutions): Bidirect
 
 export type FieldMapper = (value: any, typeName: string) => Promise<any>;
 
-export const mapMessage = async (type: protobufjs.Type, mapper: FieldMapper, obj: any) => {
+export const mapMessage = async (
+  type: protobufjs.Type,
+  mapper: FieldMapper,
+  obj: any
+) => {
   const res: any = {};
   for (const field of type.fieldsArray) {
     if (!(field.name in obj)) {
@@ -41,20 +49,33 @@ export const mapMessage = async (type: protobufjs.Type, mapper: FieldMapper, obj
   return res;
 };
 
-const mapField = async (field: protobufjs.Field, mapper: FieldMapper, value: any) => {
+const mapField = async (
+  field: protobufjs.Field,
+  mapper: FieldMapper,
+  value: any
+) => {
   if (!field.required && (value === null || value === undefined)) {
     return value;
   } else if (field.repeated) {
-    return await Promise.all(value.map((value: any) => mapScalarField(field, mapper, value)));
+    return await Promise.all(
+      value.map((value: any) => mapScalarField(field, mapper, value))
+    );
   } else if (field.map) {
     assert(field instanceof protobufjs.MapField);
-    return await asyncObjectMap((value) => mapScalarField(field, mapper, value), value);
+    return await asyncObjectMap(
+      (value) => mapScalarField(field, mapper, value),
+      value
+    );
   } else {
     return mapScalarField(field, mapper, value);
   }
 };
 
-const mapScalarField = async (field: protobufjs.Field, mapper: FieldMapper, value: any) => {
+const mapScalarField = async (
+  field: protobufjs.Field,
+  mapper: FieldMapper,
+  value: any
+) => {
   if (!field.resolved) {
     field.resolve();
   }
@@ -77,9 +98,11 @@ const asyncObjectMap = async <K extends keyof any, T, U>(
 ): Promise<Record<K, U>> => {
   const res: Record<K, U> = {} as any;
 
-  await Promise.all(Object.entries(record).map(async ([key, value]) => {
-    res[key as keyof typeof res] = await map(value as T, key as K);
-  }));
+  await Promise.all(
+    Object.entries(record).map(async ([key, value]) => {
+      res[key as keyof typeof res] = await map(value as T, key as K);
+    })
+  );
 
   return res;
 };

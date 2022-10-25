@@ -13,17 +13,18 @@ const fetchBound = fetch;
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
-export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage.getItem(item) || '{}');
+export const LocalStorage = (item = 'options') =>
+  JSON.parse(window.localStorage.getItem(item) || '{}');
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
   return dynamic
     ? await fetchBound(`${publicUrl}${CONFIG_ENDPOINT}`)
-      .then(res => res.json())
-      .catch(error => {
-        console.warn('Failed to fetch dynamic config.', error);
-        return __CONFIG_DYNAMICS__;
-      })
+        .then((res) => res.json())
+        .catch((error) => {
+          console.warn('Failed to fetch dynamic config.', error);
+          return __CONFIG_DYNAMICS__;
+        })
     : __CONFIG_DYNAMICS__;
 };
 

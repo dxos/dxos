@@ -10,10 +10,10 @@ import { useAppState } from '../../hooks';
 import { Panel } from './Panel';
 
 export type ListItem = {
-  id: string
-  key?: string
-  text: string
-}
+  id: string;
+  key?: string;
+  text: string;
+};
 
 const Key: FC<{ id: string }> = ({ id }) => (
   <>
@@ -24,14 +24,10 @@ const Key: FC<{ id: string }> = ({ id }) => (
 );
 
 const ListItem: FC<{
-  item?: ListItem
-  selected?: boolean
-  onUpdate?: (item: { id?: string, text: string }) => void
-}> = ({
-  item,
-  selected,
-  onUpdate
-}) => {
+  item?: ListItem;
+  selected?: boolean;
+  onUpdate?: (item: { id?: string; text: string }) => void;
+}> = ({ item, selected, onUpdate }) => {
   const [text, setText] = useState(item?.text);
 
   // Save when lose focus.
@@ -75,9 +71,7 @@ const ListItem: FC<{
               onSubmit={(text: string) => handleSubmit(text)}
             />
           )}
-          {!onUpdate && (
-            <Text>{item?.text}</Text>
-          )}
+          {!onUpdate && <Text>{item?.text}</Text>}
         </>
       )}
     </Box>
@@ -85,15 +79,15 @@ const ListItem: FC<{
 };
 
 export const List: FC<{
-  id: string // Identifies source of data.
-  focusId?: string // If dynamic then the focus position will change each time.
-  items: ListItem[]
-  pageSize?: number
-  title?: string
-  showCount?: boolean
-  onUpdate?: (item: { id?: string, text: string }) => void
-  onSelect?: (id: string) => void
-  onCancel?: () => void
+  id: string; // Identifies source of data.
+  focusId?: string; // If dynamic then the focus position will change each time.
+  items: ListItem[];
+  pageSize?: number;
+  title?: string;
+  showCount?: boolean;
+  onUpdate?: (item: { id?: string; text: string }) => void;
+  onSelect?: (id: string) => void;
+  onCancel?: () => void;
 }> = ({
   id,
   focusId,
@@ -108,7 +102,10 @@ export const List: FC<{
   const [{ debug }] = useAppState();
   const { isFocused } = useFocus({ id: focusId });
   const { focusPrevious, focusNext } = useFocusManager();
-  const [{ cursor, startIndex }, setPosition] = useState({ cursor: onUpdate ? -1 : 0, startIndex: 0 });
+  const [{ cursor, startIndex }, setPosition] = useState({
+    cursor: onUpdate ? -1 : 0,
+    startIndex: 0
+  });
 
   // Reset if data changed.
   useEffect(() => {
@@ -119,60 +116,64 @@ export const List: FC<{
   const visibleItems = items.slice(startIndex, startIndex + pageSize);
   const showInput = onUpdate && isFocused;
 
-  useInput((input, key) => {
-    // Escape.
-    if (key.escape) {
-      setTimeout(() => { // Hack to avoid React state update on TextInput.
-        onCancel?.();
-      });
-    }
-
-    // Select.
-    if (key.return && onSelect) {
-      const id = items[cursor]?.id;
-      if (id) {
-        onSelect(id);
-      }
-    }
-
-    // Up.
-    if (key.upArrow) {
-      if (cursor === 0) {
-        focusPrevious();
-      } else {
-        setPosition(({ cursor, startIndex }) => {
-          const i = (cursor === -1) ? items.length - 1 : cursor - 1;
-          if (i < startIndex) {
-            startIndex = i;
-          }
-
-          return { cursor: i, startIndex };
+  useInput(
+    (input, key) => {
+      // Escape.
+      if (key.escape) {
+        setTimeout(() => {
+          // Hack to avoid React state update on TextInput.
+          onCancel?.();
         });
       }
-    }
 
-    // Down.
-    if (key.downArrow) {
-      if (cursor === -1 || (!showInput && cursor === items.length - 1)) {
-        focusNext();
-        return;
+      // Select.
+      if (key.return && onSelect) {
+        const id = items[cursor]?.id;
+        if (id) {
+          onSelect(id);
+        }
       }
 
-      if (cursor !== -1) {
-        setPosition(({ cursor, startIndex }) => {
-          const i = (cursor === items.length - 1) ? -1 : cursor + 1;
-          if (i === -1) {
-            startIndex = Math.max(0, items.length - pageSize);
-          } else if (i >= startIndex + pageSize) {
-            startIndex = i + 1 - pageSize;
-          }
+      // Up.
+      if (key.upArrow) {
+        if (cursor === 0) {
+          focusPrevious();
+        } else {
+          setPosition(({ cursor, startIndex }) => {
+            const i = cursor === -1 ? items.length - 1 : cursor - 1;
+            if (i < startIndex) {
+              startIndex = i;
+            }
 
-          // TODO(burdon): Don't set -1 if created item isn't selected.
-          return { cursor: i, startIndex };
-        });
+            return { cursor: i, startIndex };
+          });
+        }
       }
-    }
-  }, { isActive: isFocused });
+
+      // Down.
+      if (key.downArrow) {
+        if (cursor === -1 || (!showInput && cursor === items.length - 1)) {
+          focusNext();
+          return;
+        }
+
+        if (cursor !== -1) {
+          setPosition(({ cursor, startIndex }) => {
+            const i = cursor === items.length - 1 ? -1 : cursor + 1;
+            if (i === -1) {
+              startIndex = Math.max(0, items.length - pageSize);
+            } else if (i >= startIndex + pageSize) {
+              startIndex = i + 1 - pageSize;
+            }
+
+            // TODO(burdon): Don't set -1 if created item isn't selected.
+            return { cursor: i, startIndex };
+          });
+        }
+      }
+    },
+    { isActive: isFocused }
+  );
 
   return (
     <Panel highlight={isFocused}>
@@ -198,10 +199,13 @@ export const List: FC<{
           <Box marginTop={visibleItems.length ? 1 : 0}>
             <ListItem
               selected={cursor === -1}
-              onUpdate={item => {
+              onUpdate={(item) => {
                 onUpdate?.(item);
                 if (!item.id) {
-                  setPosition({ cursor: -1, startIndex: Math.max(0, items.length + 1 - pageSize) });
+                  setPosition({
+                    cursor: -1,
+                    startIndex: Math.max(0, items.length + 1 - pageSize)
+                  });
                 }
               }}
             />
@@ -211,9 +215,7 @@ export const List: FC<{
         {showCount && (
           <Box marginTop={showInput || visibleItems.length ? 1 : 0}>
             <Text color='gray'>{items.length} items</Text>
-            {debug && (
-              <Text color='gray'> {cursor}</Text>
-            )}
+            {debug && <Text color='gray'> {cursor}</Text>}
           </Box>
         )}
       </Box>

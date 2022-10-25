@@ -20,11 +20,13 @@ test('services', async () => {
 
   const client = service.createClient(server);
   const response = await client.countTasks({
-    tasks: [{
-      id: 'task-1',
-      key: new MyKey(new Uint8Array([1, 2, 3])),
-      type: TaskType.COMPLETED
-    }]
+    tasks: [
+      {
+        id: 'task-1',
+        key: new MyKey(new Uint8Array([1, 2, 3])),
+        type: TaskType.COMPLETED
+      }
+    ]
   });
 
   expect(response.count).toEqual(1);

@@ -10,17 +10,25 @@ import { join } from 'path';
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export interface EsbuildExecutorOptions {
-  entryPoints: string[]
-  outdir?: string
-  outfile?: string
-  bundlePackages?: string[]
+  entryPoints: string[];
+  outdir?: string;
+  outfile?: string;
+  bundlePackages?: string[];
 }
 
-export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing "esbuild"...');
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+export default async (
+  options: EsbuildExecutorOptions,
+  context: ExecutorContext
+): Promise<{ success: boolean }> => {
+  console.info('Executing esbuild...');
+  if (context.isVerbose) {
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
 
-  const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
+  const packagePath = join(
+    context.workspace.projects[context.projectName!].root,
+    'package.json'
+  );
 
   const result = await build({
     entryPoints: options.entryPoints,

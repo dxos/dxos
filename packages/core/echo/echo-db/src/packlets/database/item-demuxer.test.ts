@@ -12,8 +12,8 @@ import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
@@ -25,18 +25,23 @@ describe('Item demuxer', function () {
   it('set-up', async function () {
     const memberKey = PublicKey.random();
 
-    const modelFactory = new ModelFactory()
-      .registerModel(TestModel);
+    const modelFactory = new ModelFactory().registerModel(TestModel);
 
     const feedWriter = new MockFeedWriter();
-    const itemManager = new ItemManager(modelFactory, PublicKey.random(), feedWriter);
+    const itemManager = new ItemManager(
+      modelFactory,
+      PublicKey.random(),
+      feedWriter
+    );
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     const inboundStream = itemDemuxer.open();
-    feedWriter.written.on(([msg, meta]) => inboundStream({
-      data: msg,
-      meta: { ...meta, memberKey }
-    } as any));
+    feedWriter.written.on(([msg, meta]) =>
+      inboundStream({
+        data: msg,
+        meta: { ...meta, memberKey }
+      } as any)
+    );
 
     //
     // Query for items.
@@ -44,7 +49,9 @@ describe('Item demuxer', function () {
 
     const [updatedItems, onUpdateItem] = latch();
     const unsubscribe = itemManager.update.on(() => {
-      const items = Array.from(itemManager.entities.values()).filter(entity => entity instanceof Item);
+      const items = Array.from(itemManager.entities.values()).filter(
+        (entity) => entity instanceof Item
+      );
       expect(items).toHaveLength(1);
       onUpdateItem();
     });
@@ -57,6 +64,7 @@ describe('Item demuxer', function () {
         modelType: TestModel.meta.type
       }
     };
+
     await feedWriter.write(message);
 
     //
@@ -74,7 +82,7 @@ describe('Item demuxer', function () {
 
     const [updated, onUpdate] = latch();
     const model: TestModel = item?.model as TestModel;
-    model.subscribe(model => {
+    model.subscribe((model) => {
       expect((model as TestModel).keys.length).toBe(1);
       onUpdate();
     });
@@ -94,39 +102,46 @@ describe('Item demuxer', function () {
   });
 
   it('models can be registered after item was already created', async function () {
-    const modelFactory = new ModelFactory()
-      .registerModel(ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
+    // TODO(burdon): Create mock.
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), {
       write: async (message) => {
         void processEchoMessage(message);
         return { feedKey: PublicKey.random(), seq: 0 };
       }
     });
+
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     const processor = itemDemuxer.open();
-    const processEchoMessage = (message: EchoEnvelope) => processor({
-      meta: {
-        feedKey: PublicKey.random(),
-        memberKey: PublicKey.random(),
-        seq: 0,
-        timeframe: new Timeframe()
-      },
-      data: message
-    });
+    const processEchoMessage = (message: EchoEnvelope) =>
+      processor({
+        meta: {
+          feedKey: PublicKey.random(),
+          memberKey: PublicKey.random(),
+          seq: 0,
+          timeframe: new Timeframe()
+        },
+        data: message
+      });
 
-    void processEchoMessage(checkType<EchoEnvelope>({
-      itemId: 'foo',
-      genesis: {
-        modelType: TestModel.meta.type
-      }
-    }));
-    void processEchoMessage(checkType<EchoEnvelope>({
-      itemId: 'bar',
-      genesis: {
-        modelType: ObjectModel.meta.type
-      }
-    }));
+    void processEchoMessage(
+      checkType<EchoEnvelope>({
+        itemId: 'foo',
+        genesis: {
+          modelType: TestModel.meta.type
+        }
+      })
+    );
+
+    void processEchoMessage(
+      checkType<EchoEnvelope>({
+        itemId: 'bar',
+        genesis: {
+          modelType: ObjectModel.meta.type
+        }
+      })
+    );
 
     {
       await itemManager.update.waitForCount(1);

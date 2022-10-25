@@ -8,21 +8,33 @@ import React, { useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { Item, ItemID, ObjectModel } from '@dxos/client';
-import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
-import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
+import {
+  Grid,
+  SVG,
+  SVGContextProvider,
+  Zoom,
+  useSvgContext
+} from '@dxos/gem-core';
+import {
+  defaultGraphStyles,
+  Graph,
+  GraphLayoutNode,
+  GraphForceProjector,
+  Markers
+} from '@dxos/gem-spore';
 import { useDynamicRef } from '@dxos/react-async';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 import { EchoGraphModel } from './model';
 
 export interface EchoGraphProps {
-  model?: EchoGraphModel
-  selected?: Set<ItemID>
-  itemAdapter: ItemAdapter
-  styles?: any
+  model?: EchoGraphModel;
+  selected?: Set<ItemID>;
+  itemAdapter: ItemAdapter;
+  styles?: any;
   options?: {
-    grid?: boolean
-  }
+    grid?: boolean;
+  };
 }
 
 export const EchoGraph = ({
@@ -33,21 +45,30 @@ export const EchoGraph = ({
   options = {}
 }: EchoGraphProps) => {
   const context = useSvgContext();
-  const projector = useMemo(() => new GraphForceProjector(context, {
-    forces: {
-      radial: {
-        strength: 0.02
-      }
-    }
-  }), []);
+  const projector = useMemo(
+    () =>
+      new GraphForceProjector(context, {
+        forces: {
+          radial: {
+            strength: 0.02
+          }
+        }
+      }),
+    []
+  );
 
   // TODO(burdon): Hack for stale callback.
-  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
+  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(
+    () => selected,
+    [selected]
+  );
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;
     return {
       class: selected?.size
-        ? (selected?.has(node.id) ? 'selected' : 'undefined')
+        ? selected?.has(node.id)
+          ? 'selected'
+          : 'undefined'
         : node.data!.type!.replaceAll(/\W/g, '_')
     };
   };
@@ -65,9 +86,7 @@ export const EchoGraph = ({
       <SVGContextProvider>
         <SVG>
           <Markers />
-          {options.grid !== false && (
-            <Grid axis />
-          )}
+          {options.grid !== false && <Grid axis />}
           <Zoom>
             <Graph
               className={clsx(defaultGraphStyles, styles)}
@@ -76,10 +95,12 @@ export const EchoGraph = ({
               model={model}
               projector={projector}
               attributes={{
-                node: (node: GraphLayoutNode<Item<ObjectModel>>) => getAttributes(node)
+                node: (node: GraphLayoutNode<Item<ObjectModel>>) =>
+                  getAttributes(node)
               }}
               labels={{
-                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) => highlight ? itemAdapter.title(node.data!) : undefined
+                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
+                  highlight ? itemAdapter.title(node.data!) : undefined
               }}
             />
           </Zoom>

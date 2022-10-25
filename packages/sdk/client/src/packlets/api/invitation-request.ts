@@ -35,7 +35,7 @@ export class InvitationRequest {
 
   readonly canceled = new Event();
 
-  constructor (
+  constructor(
     private readonly _descriptor: InvitationDescriptor,
     connected: Event,
     finished: Event,
@@ -50,42 +50,47 @@ export class InvitationRequest {
     });
   }
 
-  get descriptor (): InvitationDescriptor {
+  get descriptor(): InvitationDescriptor {
     return this._descriptor;
   }
 
-  get secret (): Uint8Array {
+  get secret(): Uint8Array {
     return this._descriptor.secret ?? Buffer.from('todo');
   }
 
   /**
    * True if the connected event has been fired.
    */
-  get hasConnected (): boolean {
+  get hasConnected(): boolean {
     return this._hasConnected;
   }
 
   /**
    * Wait until connected.
    */
-  async wait (timeout?: number) {
-    await until((resolve, reject) => {
-      this.canceled.on(resolve);
-      this.finished.on(resolve);
-      this.error.on(reject);
-    }, timeout ? timeout * 1_000 : 0);
+  async wait(timeout?: number) {
+    await until(
+      (resolve, reject) => {
+        this.canceled.on(resolve);
+        this.finished.on(resolve);
+        this.error.on(reject);
+      },
+      timeout ? timeout * 1_000 : 0
+    );
   }
 
   /**
    * Cancel the invitation.
    */
-  cancel () {
+  cancel() {
     assert(!this._isCanceled, new Error('Invitation is already canceled'));
     this._isCanceled = true;
     this.canceled.emit();
   }
 
-  toString () {
-    return `InvitationRequest(${JSON.stringify(this._descriptor.toQueryParameters())})`;
+  toString() {
+    return `InvitationRequest(${JSON.stringify(
+      this._descriptor.toQueryParameters()
+    )})`;
   }
 }

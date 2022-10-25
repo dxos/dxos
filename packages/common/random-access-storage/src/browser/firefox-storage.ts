@@ -14,7 +14,7 @@ import { BrowserStorage } from './browser-storage';
 export class FirefoxStorage extends BrowserStorage {
   public override type: StorageType = StorageType.FIREFOX;
 
-  protected override _createFileStorage (path: string) {
+  protected override _createFileStorage(path: string) {
     return raw({ name: path });
   }
 }

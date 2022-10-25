@@ -14,7 +14,7 @@ import { Client } from './packlets/proxies';
 describe('Client - persistent', function () {
   it.skip('reset storage', async function () {
     const client = new Client();
-    await client.initialize(); // TODO(marik-d): This line does not work.
+    await client.initialize(); // TODO(dmaretskyi): This line does not work.
     await client.halo.createProfile({
       ...createKeyPair(),
       username: 'test-user-1'
@@ -28,7 +28,7 @@ describe('Client - persistent', function () {
 
     // We create another client instance after reset here because the first one becomes unusable.
     // In a browser this would be modeled as a page reload.
-    // TODO(marik-d): Second client fails to initialize in firefox.
+    // TODO(dmaretskyi): Second client fails to initialize in firefox.
     if (mochaExecutor.environment !== 'firefox') {
       const client2 = new Client({
         version: 1,
@@ -48,7 +48,9 @@ describe('Client - persistent', function () {
       });
       expect(client2.echo.queryParties().value.length).toBe(0);
     }
-  }).timeout(10_000).retries(10);
+  })
+    .timeout(10_000)
+    .retries(10);
 
   /*
   it('MetadataStore save/load', async () => {

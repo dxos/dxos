@@ -12,20 +12,18 @@ import { SwarmController, Topology } from './topology';
 export class StarTopology implements Topology {
   private _controller?: SwarmController;
 
-  constructor (
-    private readonly _centralPeer: PublicKey
-  ) {}
+  constructor(private readonly _centralPeer: PublicKey) {}
 
-  toString () {
+  toString() {
     return `StarTopology(${this._centralPeer})`;
   }
 
-  init (controller: SwarmController): void {
+  init(controller: SwarmController): void {
     assert(!this._controller, 'Already initialized.');
     this._controller = controller;
   }
 
-  update (): void {
+  update(): void {
     assert(this._controller, 'Not initialized.');
     const { candidates, connected, ownPeerId } = this._controller.getState();
     if (!ownPeerId.equals(this._centralPeer)) {
@@ -41,21 +39,30 @@ export class StarTopology implements Topology {
 
     for (const peer of candidates) {
       // Connect to central peer.
-      if (peer.equals(this._centralPeer) || ownPeerId.equals(this._centralPeer)) {
+      if (
+        peer.equals(this._centralPeer) ||
+        ownPeerId.equals(this._centralPeer)
+      ) {
         log(`Connecting to peer ${peer}`);
         this._controller.connect(peer);
       }
     }
   }
 
-  async onOffer (peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: PublicKey): Promise<boolean> {
     assert(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
-    log(`Offer from ${peer} isCentral=${peer.equals(this._centralPeer)} isSelfCentral=${ownPeerId.equals(this._centralPeer)}`);
-    return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
+    log(
+      `Offer from ${peer} isCentral=${peer.equals(
+        this._centralPeer
+      )} isSelfCentral=${ownPeerId.equals(this._centralPeer)}`
+    );
+    return (
+      ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer)
+    );
   }
 
-  async destroy (): Promise<void> {
+  async destroy(): Promise<void> {
     // Nothing to do.
   }
 }

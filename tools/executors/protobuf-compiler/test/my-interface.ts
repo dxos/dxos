@@ -3,5 +3,5 @@
 //
 
 export interface MyInterfaceSubstitution {
-  data: string
+  data: string;
 }

@@ -12,11 +12,11 @@ import { RegistryType, ResourceSet } from '@dxos/registry-client';
 import { RegistrySearchModel } from './RegistrySearchModel';
 
 export interface RegistrySearchPanelProps {
-  model: RegistrySearchModel
-  types?: RegistryType[]
-  versions?: boolean
-  clearOnSelect?: boolean
-  onSelect: (resource: ResourceSet, version?: string) => void
+  model: RegistrySearchModel;
+  types?: RegistryType[];
+  versions?: boolean;
+  clearOnSelect?: boolean;
+  onSelect: (resource: ResourceSet, version?: string) => void;
 }
 
 /**
@@ -79,7 +79,7 @@ export const RegistrySearchPanel = ({
         />
       )}
 
-      {(versions && resource) && (
+      {versions && resource && (
         <Autocomplete
           fullWidth
           autoHighlight
@@ -88,7 +88,7 @@ export const RegistrySearchPanel = ({
           options={resourceTags}
           noOptionsText='No matches'
           onChange={(event, value) => value && handleVersionSelect(value)}
-          renderInput={params => (
+          renderInput={(params) => (
             <TextField
               {...params}
               autoFocus

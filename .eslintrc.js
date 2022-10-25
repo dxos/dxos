@@ -7,10 +7,6 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 module.exports = {
   root: true,
   ignorePatterns: [
-    // Binaries
-    'bin',
-    'main.js',
-
     // Build Artifacts
     'dist',
     'out',

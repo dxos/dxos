@@ -21,9 +21,7 @@ export class PublisherRpcPeer {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor (
-    private readonly _url: string
-  ) {
+  constructor(private readonly _url: string) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
       try {
@@ -60,10 +58,10 @@ export class PublisherRpcPeer {
       noHandshake: true,
       timeout: 1_000_000,
       port: {
-        send: msg => {
+        send: (msg) => {
           this._socket.send(msg);
         },
-        subscribe: cb => {
+        subscribe: (cb) => {
           this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
             if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
               cb(Buffer.from(await msg.data.arrayBuffer()));
@@ -76,11 +74,11 @@ export class PublisherRpcPeer {
     });
   }
 
-  get rpc (): Publisher {
+  get rpc(): Publisher {
     return this._rpc.rpc.Publisher;
   }
 
-  async close () {
+  async close() {
     try {
       await this._rpc.close();
     } finally {

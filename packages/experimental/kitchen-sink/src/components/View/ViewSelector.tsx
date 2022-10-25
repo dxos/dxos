@@ -19,22 +19,31 @@ export enum ViewType {
 }
 
 interface ViewSelectorProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const ViewSelector = ({
-  value,
-  onChange
-}: ViewSelectorProps) => (
+export const ViewSelector = ({ value, onChange }: ViewSelectorProps) => (
   <IconRadioGroup value={value} onChange={onChange}>
-    <IconRadio data-id='test-button-view-list' value={ViewType.List} size='small'>
+    <IconRadio
+      data-id='test-button-view-list'
+      value={ViewType.List}
+      size='small'
+    >
       <ListIcon />
     </IconRadio>
-    <IconRadio data-id='test-button-view-board' value={ViewType.Board} size='small'>
+    <IconRadio
+      data-id='test-button-view-board'
+      value={ViewType.Board}
+      size='small'
+    >
       <GridIcon />
     </IconRadio>
-    <IconRadio data-id='test-button-view-graph' value={ViewType.Graph} size='small'>
+    <IconRadio
+      data-id='test-button-view-graph'
+      value={ViewType.Graph}
+      size='small'
+    >
       <GraphIcon />
     </IconRadio>
   </IconRadioGroup>

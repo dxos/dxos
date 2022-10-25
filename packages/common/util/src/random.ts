@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+// TODO(burdon): Random class utility.
 // TODO(burdon): Make object { min, max }.
 export const randomInt = (max: number, min: number) => {
   min = Math.ceil(min);

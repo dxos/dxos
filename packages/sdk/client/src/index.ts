@@ -26,19 +26,12 @@ export {
   InvitationDescriptor
 } from '@dxos/client-services';
 
-export {
-  PublicKey
-} from '@dxos/keys';
+export { PublicKey } from '@dxos/keys';
 
-export {
-  ItemID
-} from '@dxos/protocols';
+export { ItemID } from '@dxos/protocols';
 
 // TODO(burdon): Remove exported protos?
-export {
-  KeyRecord,
-  KeyType
-} from '@dxos/protocols/proto/dxos/halo/keys';
+export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 export {
   Profile,
@@ -46,10 +39,7 @@ export {
   SignResponse
 } from '@dxos/protocols/proto/dxos/client';
 
-export {
-  ObjectModel,
-  OrderedList
-} from '@dxos/object-model';
+export { ObjectModel, OrderedList } from '@dxos/object-model';
 
 // TODO(wittjosiah): Remove.
 export {

@@ -4,7 +4,12 @@
 
 import React, { Component, FunctionComponent, PropsWithChildren } from 'react';
 
-import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../../components';
+import {
+  ErrorIndicator,
+  ErrorIndicatorProps,
+  ErrorView,
+  ErrorViewProps
+} from '../../components';
 import { ErrorContext } from '../../hooks';
 import { GlobalErrorWrapper } from './GlobalErrorWrapper';
 
@@ -12,16 +17,16 @@ import { GlobalErrorWrapper } from './GlobalErrorWrapper';
 // TODO(burdon): Configure loading indicator (that can be reset downstream).
 
 interface ErrorBoundaryProps {
-  indicator?: FunctionComponent<ErrorIndicatorProps> | null
-  view: FunctionComponent<ErrorViewProps>
-  onError: (error: Error) => boolean
-  onReload?: () => void
-  onReset?: () => void
+  indicator?: FunctionComponent<ErrorIndicatorProps> | null;
+  view: FunctionComponent<ErrorViewProps>;
+  onError: (error: Error) => boolean;
+  onReload?: () => void;
+  onReset?: () => void;
 }
 
 interface ErrorBoundaryState {
-  errors: Error[]
-  fatal: boolean
+  errors: Error[];
+  fatal: boolean;
 }
 
 /**
@@ -30,7 +35,10 @@ interface ErrorBoundaryState {
  * https://reactjs.org/docs/error-boundaries.html
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
-export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  PropsWithChildren<ErrorBoundaryProps>,
+  ErrorBoundaryState
+> {
   static defaultProps = {
     indicator: ErrorIndicator, // TODO(burdon): Debug only.
     view: ErrorView,
@@ -44,14 +52,14 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     fatal: false // Whether the head error is fatal or not.
   };
 
-  // Note: Render errors also trigger global onerror before componentDidCatch.
-  override componentDidCatch (err: Error) {
+  // NOTE: Render errors also trigger global onerror before componentDidCatch.
+  override componentDidCatch(err: Error) {
     const { errors } = this.state;
 
     this.setState({ errors: [err, ...errors], fatal: true });
   }
 
-  override render () {
+  override render() {
     const { children, onReload, onReset, indicator, view: View } = this.props;
     const { errors, fatal } = this.state;
 
@@ -67,13 +75,7 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     };
 
     if (fatal) {
-      return (
-        <View
-          error={errors[0]}
-          onReload={onReload}
-          onReset={onReset}
-        />
-      );
+      return <View error={errors[0]} onReload={onReload} onReset={onReset} />;
     }
 
     return (

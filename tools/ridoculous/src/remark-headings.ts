@@ -9,10 +9,10 @@ import { directiveRegex, visitDirectives } from './util.js';
 
 const formatNumber = (n: number[]) => n.join('.') + '.';
 
-type Node = { children: Node[] }
+type Node = { children: Node[] };
 
 interface Options {
-  autoNumber?: boolean
+  autoNumber?: boolean;
 }
 
 /**
@@ -33,7 +33,7 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
       const depth = node.depth - 2;
       if (depth >= 0) {
         let ignore = false;
-        visit(node, 'html', node => {
+        visit(node, 'html', (node) => {
           const [, directive] = node.value.trim().match(directiveRegex);
           if (directive === 'ignore') {
             ignore = true;
@@ -43,7 +43,7 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
           return;
         }
 
-        visit(node, 'text', node => {
+        visit(node, 'text', (node) => {
           if (depth >= numbers.length) {
             numbers.push(1);
           } else {
@@ -53,7 +53,7 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
 
           // Update number.
           const match = node.value.match(/(?:(\S+)\s)?\s*(.+)/);
-          const [,, title] = match;
+          const [, , title] = match;
           const number = formatNumber(numbers);
           node.value = autoNumber ? `${number} ${title}` : title;
 
@@ -61,8 +61,12 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
           // Generate links conformant to auto GH headings.
           // https://github.com/rehypejs/rehype-autolink-headings
           const link =
-            number.replace(/\D/g, '') + '-' +
-            title.replace(/\s+/g, '-').replace(/[^\w\s-]/g, '').toLowerCase();
+            number.replace(/\D/g, '') +
+            '-' +
+            title
+              .replace(/\s+/g, '-')
+              .replace(/[^\w\s-]/g, '')
+              .toLowerCase();
 
           // Create TOC.
           let list: any;
@@ -76,15 +80,14 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
 
             // Add to the latest list item.
             const parentList = stack[depth - 1];
-            const parentListItem = parentList.children[parentList.children.length - 1];
+            const parentListItem =
+              parentList.children[parentList.children.length - 1];
             parentListItem?.children.push(list); // Add after the list item's paragraph.
           }
 
           const listItem = u('listItem', { spread: false }, [
             u('paragraph', {}, [
-              u('link', { url: `#${link}` }, [
-                u('text', { value: node.value })
-              ])
+              u('link', { url: `#${link}` }, [u('text', { value: node.value })])
             ])
           ]);
 

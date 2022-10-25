@@ -37,46 +37,44 @@ const tableStyles = css`
 `;
 
 const Container: FC<{
-  children: ReactNode
-}> = ({
-  children
-}) => (
-  <div style={{
-    display: 'flex',
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    overflow: 'hidden'
-  }}>
-    <div style={{
+  children: ReactNode;
+}> = ({ children }) => (
+  <div
+    style={{
       display: 'flex',
-      flex: 1,
-      maxHeight: '100%',
-      backgroundColor: '#FAFAFA'
-    }}>
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      overflow: 'hidden'
+    }}
+  >
+    <div
+      style={{
+        display: 'flex',
+        flex: 1,
+        maxHeight: '100%',
+        backgroundColor: '#FAFAFA'
+      }}
+    >
       {children}
     </div>
   </div>
 );
 
 type InvitationInfo = {
-  descriptor: InvitationDescriptor
-  secret: string
-}
+  descriptor: InvitationDescriptor;
+  secret: string;
+};
 
 const DOCMENT_TYPE = 'example:type/document';
 
 const EditorContainer: FC<{
-  id: string
-  invitation?: InvitationInfo
-  onInvite?: (invitation: InvitationInfo) => void
-}> = ({
-  id,
-  invitation,
-  onInvite
-}) => {
+  id: string;
+  invitation?: InvitationInfo;
+  onInvite?: (invitation: InvitationInfo) => void;
+}> = ({ id, invitation, onInvite }) => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [item, setItem] = useState<Item<TextModel>>();
@@ -87,7 +85,10 @@ const EditorContainer: FC<{
         client.echo.registerModel(TextModel);
         const party = await client.echo.createParty();
         const invitation = await party.createInvitation();
-        onInvite({ descriptor: invitation.descriptor, secret: invitation.secret.toString() });
+        onInvite({
+          descriptor: invitation.descriptor,
+          secret: invitation.secret.toString()
+        });
         log(`Created: ${party.key.toHex()}`);
         setParty(party);
 
@@ -103,7 +104,9 @@ const EditorContainer: FC<{
     if (invitation) {
       setTimeout(async () => {
         client.echo.registerModel(TextModel);
-        const accept = await client.echo.acceptInvitation(invitation.descriptor);
+        const accept = await client.echo.acceptInvitation(
+          invitation.descriptor
+        );
         accept.authenticate(Buffer.from(invitation.secret));
         const party = await accept.getParty();
         log(`Joined: ${party.key.toHex()}`);
@@ -118,40 +121,47 @@ const EditorContainer: FC<{
 
   // TODO(burdon): Display client ID.
   return (
-    <div style={{
-      display: 'flex',
-      flex: 1,
-      margin: 8,
-      padding: 8,
-      border: '1px solid #ccc'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flex: 1,
+        margin: 8,
+        padding: 8,
+        border: '1px solid #ccc'
+      }}
+    >
       {party && item && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1
-        }}>
-          <div style={{
+        <div
+          style={{
             display: 'flex',
+            flexDirection: 'column',
             flex: 1
-          }}>
-            <Editor
-              id={id}
-              item={item}
-            />
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flex: 1
+            }}
+          >
+            <Editor id={id} item={item} />
           </div>
-          <div style={{
-            display: 'flex',
-            flexShrink: 0,
-            overflow: 'hidden',
-            padding: 8,
-            fontFamily: 'monospace'
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              flexShrink: 0,
+              overflow: 'hidden',
+              padding: 8,
+              fontFamily: 'monospace'
+            }}
+          >
             <table className={tableStyles}>
               <tbody>
                 <tr>
                   <td style={{ width: 60 }}>Profile</td>
-                  <td>{truncateKey(client.halo.profile!.publicKey.toHex(), 8)}</td>
+                  <td>
+                    {truncateKey(client.halo.profile!.publicKey.toHex(), 8)}
+                  </td>
                 </tr>
                 <tr>
                   <td>Party</td>
@@ -177,19 +187,13 @@ export const Primary = () => {
     <Container>
       <ClientProvider>
         <ProfileInitializer>
-          <EditorContainer
-            id='editor-1'
-            onInvite={setInvitation}
-          />
+          <EditorContainer id='editor-1' onInvite={setInvitation} />
         </ProfileInitializer>
       </ClientProvider>
 
       <ClientProvider>
         <ProfileInitializer>
-          <EditorContainer
-            id='editor-2'
-            invitation={invitation}
-          />
+          <EditorContainer id='editor-2' invitation={invitation} />
         </ProfileInitializer>
       </ClientProvider>
     </Container>

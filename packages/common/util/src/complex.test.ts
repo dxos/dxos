@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { makeSet, makeMap } from './complex';
 
-const PulicKeySet = makeSet<PublicKey>(key => key.toHex());
+const PulicKeySet = makeSet<PublicKey>(PublicKey.hash);
 
 it('ComplexSet', function () {
   const key1 = PublicKey.random();
@@ -39,7 +39,7 @@ it('ComplexSet', function () {
   expect(Array.from(set.values())).to.deep.equal([key2]);
 });
 
-const PulicKeyMap = makeMap<PublicKey>(key => key.toHex());
+const PulicKeyMap = makeMap<PublicKey>(PublicKey.hash);
 
 it('ComplexMap', function () {
   const key1 = PublicKey.random();
@@ -65,7 +65,10 @@ it('ComplexMap', function () {
   expect(map.has(key3)).to.be.false;
   expect(map.get(key1)).to.equal('b');
   expect(map.get(key2)).to.equal('c');
-  expect(Array.from(map.entries())).to.deep.equal([[key1, 'b'], [key2, 'c']]);
+  expect(Array.from(map.entries())).to.deep.equal([
+    [key1, 'b'],
+    [key2, 'c']
+  ]);
   expect(Array.from(map.keys())).to.deep.equal([key1, key2]);
   expect(Array.from(map.values())).to.deep.equal(['b', 'c']);
 

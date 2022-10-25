@@ -12,7 +12,11 @@ import { EffectCallback, useEffect, useRef } from 'react';
  * @param deps
  * @param delay
  */
-export const useDebouncedEffect = (f: EffectCallback, deps: any[], delay = 1000) => {
+export const useDebouncedEffect = (
+  f: EffectCallback,
+  deps: any[],
+  delay = 1000
+) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
     if (timeoutRef.current) {

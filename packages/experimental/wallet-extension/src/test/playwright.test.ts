@@ -28,7 +28,9 @@ describe('Playwright tests for Wallet Extension', function () {
   });
 
   it('Installs properly', async function () {
-    await page.goto(`chrome-extension://${await getExtensionId()}/popup/fullscreen.html`);
+    await page.goto(
+      `chrome-extension://${await getExtensionId()}/popup/fullscreen.html`
+    );
     await page.waitForSelector("//*[contains(text(),'Welcome to DXOS')]");
   });
 

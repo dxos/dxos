@@ -12,18 +12,21 @@ import { useAsync } from './useAsync';
 const BOT_TYPE_DXN = DXN.parse('dxos:type/bot');
 
 export interface BotData {
-  dxn: DXN
-  tag?: string
-  version?: string
-  description?: string
-  created?: string
+  dxn: DXN;
+  tag?: string;
+  version?: string;
+  description?: string;
+  created?: string;
 }
 export interface Result {
-  bots: BotData[]
-  error?: unknown
+  bots: BotData[];
+  error?: unknown;
 }
 
-const mergeResourceRecords = (records: RegistryRecord[], resources: ResourceSet[]) => {
+const mergeResourceRecords = (
+  records: RegistryRecord[],
+  resources: ResourceSet[]
+) => {
   const bots: BotData[] = [];
   for (const resource of resources) {
     for (const tag of Object.keys(resource.tags)) {
@@ -47,15 +50,19 @@ const mergeResourceRecords = (records: RegistryRecord[], resources: ResourceSet[
  */
 export const useBots = (): Result => {
   const registry = useRegistry();
-  const { data, error } = useAsync(async () => {
-    const botType = await registry.getResource(BOT_TYPE_DXN);
-    assert(botType, new Error('Bot type not found.'));
-    const records = await registry.listRecords({ type: botType });
-    const resources = await registry.listResources();
+  const { data, error } = useAsync(
+    async () => {
+      const botType = await registry.getResource(BOT_TYPE_DXN);
+      assert(botType, new Error('Bot type not found.'));
+      const records = await registry.listRecords({ type: botType });
+      const resources = await registry.listResources();
 
-    const bots = mergeResourceRecords(records, resources);
-    return bots;
-  }, [], []);
+      const bots = mergeResourceRecords(records, resources);
+      return bots;
+    },
+    [],
+    []
+  );
 
   return {
     bots: data,

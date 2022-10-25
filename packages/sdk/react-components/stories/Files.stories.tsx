@@ -42,12 +42,8 @@ export const Primary = () => {
       />
 
       <Box sx={{ margin: 2 }}>
-        <Button onClick={() => setShowUpload(true)}>
-          Upload
-        </Button>
-        <Button onClick={handleDownload}>
-          Download
-        </Button>
+        <Button onClick={() => setShowUpload(true)}>Upload</Button>
+        <Button onClick={handleDownload}>Download</Button>
       </Box>
 
       <Box sx={{ margin: 2 }}>
@@ -55,7 +51,7 @@ export const Primary = () => {
           autoFocus
           fullWidth
           value={data}
-          onChange={event => setData(event.target.value)}
+          onChange={(event) => setData(event.target.value)}
         />
       </Box>
     </Box>

@@ -21,7 +21,7 @@ export default class Invite extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args, flags } = await this.parse(Invite);
     let { key } = args;
     const { timeout } = flags;
@@ -32,7 +32,7 @@ export default class Invite extends BaseCommand {
         key = await selectSpace(parties);
       }
 
-      const party = parties.find(party => party.key.toHex().startsWith(key));
+      const party = parties.find((party) => party.key.toHex().startsWith(key));
       if (!party) {
         this.log(`Invalid key: ${truncateKey(key)}`);
         return;

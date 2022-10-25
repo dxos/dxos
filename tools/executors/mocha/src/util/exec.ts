@@ -17,9 +17,13 @@ export const execTool = async (
 ) => {
   const child = spawn(name, args, opts);
 
-  // Note: Inheriting stdio of child process breaks Nx CLI output.
-  child.stdout?.on('data', (data: Buffer) => process.stdout.write(data.toString('utf8')));
-  child.stderr?.on('data', (data: Buffer) => process.stderr.write(data.toString('utf8')));
+  // NOTE: Inheriting stdio of child process breaks Nx CLI output.
+  child.stdout?.on('data', (data: Buffer) =>
+    process.stdout.write(data.toString('utf8'))
+  );
+  child.stderr?.on('data', (data: Buffer) =>
+    process.stderr.write(data.toString('utf8'))
+  );
 
   const exitCode = await new Promise<number | null>((resolve, reject) => {
     child.on('exit', (code) => {

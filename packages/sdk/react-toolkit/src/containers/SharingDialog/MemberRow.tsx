@@ -11,27 +11,28 @@ import { PartyMember } from '@dxos/client';
 import { MemberAvatar } from '@dxos/react-components';
 
 export interface MemberRowProps {
-  member: PartyMember
-  onRemove?: () => void
+  member: PartyMember;
+  onRemove?: () => void;
 }
 
 /**
  * Party member row.
  */
-export const MemberRow = ({
-  member,
-  onRemove
-}: MemberRowProps) => (
-  <Box sx={{
-    display: 'flex',
-    flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: 40
-  }}>
+export const MemberRow = ({ member, onRemove }: MemberRowProps) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flex: 1,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      minHeight: 40
+    }}
+  >
     <MemberAvatar key={member.publicKey.toString()} member={member} />
 
-    <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
+    <Typography
+      sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}
+    >
       {member.displayName}
     </Typography>
 

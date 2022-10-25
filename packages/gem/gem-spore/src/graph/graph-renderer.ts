@@ -8,35 +8,40 @@ import { D3Callable, D3Selection } from '@dxos/gem-core';
 
 import { Renderer } from '../scene';
 import { createBullets } from './bullets';
-import { GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
+import {
+  GraphLayout,
+  GraphLayoutLink,
+  GraphLayoutNode,
+  GraphNode
+} from './types';
 import { getCircumferencePoints } from './util';
 
 export type LabelOptions<N extends GraphNode> = {
-  text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined
-}
+  text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
+};
 
 export type AttributesOptions<N extends GraphNode> = {
   node?: (node: GraphLayoutNode<N>) => {
-    class?: string
-  }
+    class?: string;
+  };
 
   link?: (link: GraphLayoutLink<N>) => {
-    class?: string
-  }
-}
+    class?: string;
+  };
+};
 
 export type GraphRendererOptions<N extends GraphNode> = {
-  drag?: D3Callable
+  drag?: D3Callable;
   arrows?: {
-    start?: boolean // TODO(burdon): Replace with marker id.
-    end?: boolean
-  }
-  highlight?: boolean
-  labels?: LabelOptions<N>
-  attributes?: AttributesOptions<N>
-  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void
-  onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void
-}
+    start?: boolean; // TODO(burdon): Replace with marker id.
+    end?: boolean;
+  };
+  highlight?: boolean;
+  labels?: LabelOptions<N>;
+  attributes?: AttributesOptions<N>;
+  onNodeClick?: (node: GraphLayoutNode<N>, event: MouseEvent) => void;
+  onLinkClick?: (node: GraphLayoutLink<N>, event: MouseEvent) => void;
+};
 
 const line = d3.line();
 
@@ -45,7 +50,7 @@ const line = d3.line();
  * @param group
  * @param options
  */
-const createNode: D3Callable = <N extends GraphNode> (
+const createNode: D3Callable = <N extends GraphNode>(
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
@@ -60,7 +65,9 @@ const createNode: D3Callable = <N extends GraphNode> (
   // Click.
   if (options.onNodeClick) {
     circle.on('click', (event: MouseEvent) => {
-      const node = d3.select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
+      const node = d3
+        .select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement)
+        .datum();
       options.onNodeClick(node, event);
     });
   }
@@ -75,7 +82,7 @@ const createNode: D3Callable = <N extends GraphNode> (
           d3.select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
             .raise()
             .select('text')
-            .text(d => options.labels.text(d, true));
+            .text((d) => options.labels.text(d, true));
         }
       })
       .on('mouseout', function () {
@@ -84,16 +91,17 @@ const createNode: D3Callable = <N extends GraphNode> (
         if (options.labels) {
           d3.select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
             .select('text')
-            .text(d => options.labels.text(d));
+            .text((d) => options.labels.text(d));
         }
       });
   }
 
   // Label.
   if (options.labels) {
-    group.append('text')
+    group
+      .append('text')
       .style('dominant-baseline', 'middle')
-      .text(d => options.labels.text(d));
+      .text((d) => options.labels.text(d));
   }
 };
 
@@ -102,7 +110,7 @@ const createNode: D3Callable = <N extends GraphNode> (
  * @param group
  * @param options
  */
-const updateNode: D3Callable = <N extends GraphNode> (
+const updateNode: D3Callable = <N extends GraphNode>(
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
@@ -115,18 +123,20 @@ const updateNode: D3Callable = <N extends GraphNode> (
   }
 
   // Update circles.
-  group.select<SVGCircleElement>('circle')
-    .attr('cx', d => d.x)
-    .attr('cy', d => d.y)
-    .attr('r', d => d.r);
+  group
+    .select<SVGCircleElement>('circle')
+    .attr('cx', (d) => d.x)
+    .attr('cy', (d) => d.y)
+    .attr('r', (d) => d.r);
 
   // Update labels.
   if (options.labels) {
-    group.select<SVGTextElement>('text')
-      .style('text-anchor', d => (d.x >= 0) ? 'start' : 'end')
-      .attr('dx', d => (d.r + 6) * (d.x >= 0 ? 1 : -1))
-      .attr('x', d => d.x)
-      .attr('y', d => d.y);
+    group
+      .select<SVGTextElement>('text')
+      .style('text-anchor', (d) => (d.x >= 0 ? 'start' : 'end'))
+      .attr('dx', (d) => (d.r + 6) * (d.x >= 0 ? 1 : -1))
+      .attr('x', (d) => d.x)
+      .attr('y', (d) => d.y);
   }
 };
 
@@ -135,7 +145,7 @@ const updateNode: D3Callable = <N extends GraphNode> (
  * @param group
  * @param options
  */
-const createLink: D3Callable = <N extends GraphNode> (
+const createLink: D3Callable = <N extends GraphNode>(
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
@@ -149,11 +159,16 @@ const createLink: D3Callable = <N extends GraphNode> (
   //     });
   // }
 
-  group.append('path')
+  group
+    .append('path')
     .attr('class', 'link')
     .attr('pointer-events', 'none')
-    .attr('marker-start', () => options.arrows?.start ? 'url(#marker-arrow-start)' : undefined)
-    .attr('marker-end', () => options.arrows?.end ? 'url(#marker-arrow-end)' : undefined);
+    .attr('marker-start', () =>
+      options.arrows?.start ? 'url(#marker-arrow-start)' : undefined
+    )
+    .attr('marker-end', () =>
+      options.arrows?.end ? 'url(#marker-arrow-end)' : undefined
+    );
 };
 
 /**
@@ -161,7 +176,7 @@ const createLink: D3Callable = <N extends GraphNode> (
  * @param group
  * @param options
  */
-const updateLink: D3Callable = <N extends GraphNode> (
+const updateLink: D3Callable = <N extends GraphNode>(
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
@@ -173,80 +188,82 @@ const updateLink: D3Callable = <N extends GraphNode> (
     });
   }
 
-  group.selectAll<SVGPathElement, GraphLayoutLink<N>>('path')
-    .attr('d', d => {
-      const { source, target } = d;
-      if (!source.initialized || !target.initialized) {
-        return;
-      }
+  group.selectAll<SVGPathElement, GraphLayoutLink<N>>('path').attr('d', (d) => {
+    const { source, target } = d;
+    if (!source.initialized || !target.initialized) {
+      return;
+    }
 
-      return line(
-        getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r)
-      );
-    });
+    return line(
+      getCircumferencePoints(
+        [source.x, source.y],
+        [target.x, target.y],
+        source.r,
+        target.r
+      )
+    );
+  });
 };
 
 /**
  * Renders the Graph layout.
  */
-export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
-  update (layout: GraphLayout<N>) {
+export class GraphRenderer<N extends GraphNode> extends Renderer<
+  GraphLayout<N>,
+  GraphRendererOptions<N>
+> {
+  update(layout: GraphLayout<N>) {
     const root = d3.select(this.root);
 
     //
     // Guides
     //
 
-    root.selectAll('g.guides')
+    root
+      .selectAll('g.guides')
       .data([{ id: 'guides' }])
       .join('g')
       .attr('class', 'guides')
-      .selectAll<SVGCircleElement, { cx: number, cy: number, r: number }>('circle.guide')
+      .selectAll<SVGCircleElement, { cx: number; cy: number; r: number }>(
+        'circle.guide'
+      )
       .data(layout.guides ?? [])
       .join(
-        enter => enter
-          .append('circle')
-          .attr('r', 0),
-        update => update,
-        exit => exit
-          .transition()
-          .duration(500)
-          .attr('r', 0)
-          .remove()
+        (enter) => enter.append('circle').attr('r', 0),
+        (update) => update,
+        (exit) => exit.transition().duration(500).attr('r', 0).remove()
       )
       .attr('class', 'guide')
-      .attr('cx', d => d.cx)
-      .attr('cy', d => d.cy)
-      .attr('r', d => d.r);
+      .attr('cx', (d) => d.cx)
+      .attr('cy', (d) => d.cy)
+      .attr('r', (d) => d.r);
 
     //
     // Links
     //
 
-    root.selectAll('g.links')
+    root
+      .selectAll('g.links')
       .data([{ id: 'links' }])
       .join('g')
       .attr('class', 'links')
       .selectAll<SVGPathElement, GraphLayoutLink<N>>('g')
-      .data(layout.graph?.links ?? [], d => d.id)
-      .join(
-        enter => enter.append('g').call(createLink, this.options)
-      )
+      .data(layout.graph?.links ?? [], (d) => d.id)
+      .join((enter) => enter.append('g').call(createLink, this.options))
       .call(updateLink, this.options, layout.graph.nodes);
 
     //
     // Nodes
     //
 
-    root.selectAll('g.nodes')
+    root
+      .selectAll('g.nodes')
       .data([{ id: 'nodes' }])
       .join('g')
       .attr('class', 'nodes')
       .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g')
-      .data(layout.graph?.nodes ?? [], d => d.id)
-      .join(
-        enter => enter.append('g').call(createNode, this.options)
-      )
+      .data(layout.graph?.nodes ?? [], (d) => d.id)
+      .join((enter) => enter.append('g').call(createNode, this.options))
       .call(updateNode, this.options);
     // .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
   }
@@ -255,7 +272,7 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
    * Trigger path bullets.
    * @param node
    */
-  fireBullet (node: GraphLayoutNode<N>) {
+  fireBullet(node: GraphLayoutNode<N>) {
     d3.select(this.root)
       .selectAll('g.links')
       .selectAll('path')

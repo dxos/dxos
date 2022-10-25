@@ -5,7 +5,11 @@
 import React, { useEffect, useState } from 'react';
 
 import { ConfigProto } from '@dxos/config';
-import { MemoryRegistryClientBackend, RegistryClient, RegistryType } from '@dxos/registry-client';
+import {
+  MemoryRegistryClientBackend,
+  RegistryClient,
+  RegistryType
+} from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';
 
@@ -27,14 +31,11 @@ const TestApp = () => {
   return (
     <div style={{ padding: 16 }}>
       <div style={{ marginBottom: 8 }}>Domains</div>
-      {types.length > 0 && types.map(({ type: { messageName } }) => (
-        <div key={messageName}>
-          {messageName}
-        </div>
-      ))}
-      {types.length === 0 && (
-        <div>Loading...</div>
-      )}
+      {types.length > 0 &&
+        types.map(({ type: { messageName } }) => (
+          <div key={messageName}>{messageName}</div>
+        ))}
+      {types.length === 0 && <div>Loading...</div>}
     </div>
   );
 };

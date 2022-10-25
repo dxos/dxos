@@ -27,7 +27,10 @@ const generators = {
     name: faker.company.companyName(),
     description: faker.lorem.sentence(),
     // TODO(burdon): Converted to object.
-    labels: faker.random.arrayElements(labels, faker.datatype.number({ min: 0, max: 3 }))
+    labels: faker.random.arrayElements(
+      labels,
+      faker.datatype.number({ min: 0, max: 3 })
+    )
   }),
 
   [OBJECT_PERSON]: () => ({
@@ -52,21 +55,21 @@ const createProps = (type: keyof typeof generators) => {
 };
 
 interface GeneratorOptions {
-  seed?: number
+  seed?: number;
 }
 
 interface GenerateConfig {
-  numOrgs?: number
-  numPeople?: number
-  numProjects?: number
-  numTasks?: number
+  numOrgs?: number;
+  numPeople?: number;
+  numProjects?: number;
+  numTasks?: number;
 }
 
 /**
  * Data generator.
  */
 export class Generator {
-  constructor (
+  constructor(
     private readonly _database: Database,
     private readonly _options?: GeneratorOptions | undefined
   ) {
@@ -77,26 +80,30 @@ export class Generator {
     }
   }
 
-  get database () {
+  get database() {
     return this._database;
   }
 
-  get labels () {
+  get labels() {
     return labels;
   }
 
   // TODO(burdon): Parameterize.
-  async createItem (sourceId: ItemID) {
+  async createItem(sourceId: ItemID) {
     const source = this._database.getItem(sourceId);
     if (source?.type === OBJECT_ORG) {
       const props = createProps(OBJECT_PERSON);
-      const target = await this._database.createItem({ model: ObjectModel, type: OBJECT_PERSON, props });
+      const target = await this._database.createItem({
+        model: ObjectModel,
+        type: OBJECT_PERSON,
+        props
+      });
       await this._database.createLink({ type: LINK_EMPLOYEE, source, target });
     }
   }
 
   // TODO(burdon): Parameterize.
-  async linkItem (sourceId: ItemID, targetId: ItemID) {
+  async linkItem(sourceId: ItemID, targetId: ItemID) {
     const source = this._database.getItem(sourceId);
     const target = this._database.getItem(targetId);
     if (source?.type === OBJECT_ORG && target?.type === OBJECT_PERSON) {
@@ -104,38 +111,68 @@ export class Generator {
     }
   }
 
-  async generate (config: GenerateConfig) {
+  async generate(config: GenerateConfig) {
     // Orgs.
-    const organizations = await Promise.all(times(config.numOrgs || 0).map(() => this._database.createItem({
-      model: ObjectModel, type: OBJECT_ORG, props: createProps(OBJECT_ORG)
-    })));
+    const organizations = await Promise.all(
+      times(config.numOrgs || 0).map(() =>
+        this._database.createItem({
+          model: ObjectModel,
+          type: OBJECT_ORG,
+          props: createProps(OBJECT_ORG)
+        })
+      )
+    );
 
     // People.
-    await Promise.all(times(config.numPeople || 0).map(async () => {
-      const person = await this._database.createItem({
-        model: ObjectModel, type: OBJECT_PERSON, props: createProps(OBJECT_PERSON)
-      });
-      const count = faker.datatype.number({ min: 0, max: 2 });
-      const orgs = faker.random.arrayElements(organizations, count);
-      return orgs.map((org: Item<any>) => this._database.createLink({
-        type: LINK_EMPLOYEE, source: org, target: person
-      }));
-    }));
+    await Promise.all(
+      times(config.numPeople || 0).map(async () => {
+        const person = await this._database.createItem({
+          model: ObjectModel,
+          type: OBJECT_PERSON,
+          props: createProps(OBJECT_PERSON)
+        });
+        const count = faker.datatype.number({ min: 0, max: 2 });
+        const orgs = faker.random.arrayElements(organizations, count);
+        return orgs.map((org: Item<any>) =>
+          this._database.createLink({
+            type: LINK_EMPLOYEE,
+            source: org,
+            target: person
+          })
+        );
+      })
+    );
 
     // Projects.
-    await Promise.all(times(config.numProjects || 0).map(async () => {
-      const project = await this._database
-        .createItem({ model: ObjectModel, type: OBJECT_PROJECT, props: createProps(OBJECT_PROJECT) });
-      const org = faker.random.arrayElement(organizations);
-      await this._database.createLink({ type: LINK_PROJECT, source: org, target: project });
-
-      // Task child nodes.
-      // TODO(burdon): Assign to people (query people from org).
-      await Promise.all(times(faker.datatype.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
-        await this._database.createItem({
-          model: ObjectModel, type: OBJECT_TASK, props: createProps(OBJECT_TASK), parent: project.id
+    await Promise.all(
+      times(config.numProjects || 0).map(async () => {
+        const project = await this._database.createItem({
+          model: ObjectModel,
+          type: OBJECT_PROJECT,
+          props: createProps(OBJECT_PROJECT)
         });
-      }));
-    }));
+        const org = faker.random.arrayElement(organizations);
+        await this._database.createLink({
+          type: LINK_PROJECT,
+          source: org,
+          target: project
+        });
+
+        // Task child nodes.
+        // TODO(burdon): Assign to people (query people from org).
+        await Promise.all(
+          times(
+            faker.datatype.number({ min: 0, max: config.numTasks || 3 })
+          ).map(async () => {
+            await this._database.createItem({
+              model: ObjectModel,
+              type: OBJECT_TASK,
+              props: createProps(OBJECT_TASK),
+              parent: project.id
+            });
+          })
+        );
+      })
+    );
   }
 }

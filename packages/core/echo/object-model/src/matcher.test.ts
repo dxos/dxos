@@ -204,7 +204,7 @@ describe('Matcher', function () {
     ];
 
     const matcher = new Matcher({ getter });
-    const results = queries.map(query => matcher.matchItems(query, items));
+    const results = queries.map((query) => matcher.matchItems(query, items));
 
     results.forEach((result, i) => {
       expect(result).toEqual(expected[i]);

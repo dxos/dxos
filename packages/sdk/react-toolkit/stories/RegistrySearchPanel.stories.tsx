@@ -34,12 +34,10 @@ export const Primary = () => {
         <RegistrySearchPanel
           model={model}
           types={types} // TODO(burdon): Factor out type selector.
-          onSelect={resource => setSelected(resource)}
+          onSelect={(resource) => setSelected(resource)}
         />
 
-        <Box sx={{ marginTop: 2 }}>
-          {selected?.name.toString()}
-        </Box>
+        <Box sx={{ marginTop: 2 }}>{selected?.name.toString()}</Box>
       </Box>
     </RegistryProvider>
   );
@@ -60,12 +58,12 @@ export const WithVersions = () => {
         <RegistrySearchPanel
           model={model}
           versions
-          onSelect={(resource, version) => setSelected(`${resource.name.toString()}@${version}`)}
+          onSelect={(resource, version) =>
+            setSelected(`${resource.name.toString()}@${version}`)
+          }
         />
 
-        <Box sx={{ marginTop: 2 }}>
-          {selected}
-        </Box>
+        <Box sx={{ marginTop: 2 }}>{selected}</Box>
       </Box>
     </RegistryProvider>
   );

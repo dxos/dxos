@@ -7,10 +7,5 @@ import React from 'react';
 import { Table } from '../util';
 
 export const Devices = () => {
-  return (
-    <Table
-      rows={[]}
-      columns={[]}
-    />
-  );
+  return <Table rows={[]} columns={[]} />;
 };

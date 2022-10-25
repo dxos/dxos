@@ -8,7 +8,7 @@ const Test = () => {
   const [value, setValue] = useState<number | null>(null);
 
   return (
-    <button onClick={() => setValue(value => value ? value + 1 : 1)}>
+    <button onClick={() => setValue((value) => (value ? value + 1 : 1))}>
       {value ?? 0}
     </button>
   );

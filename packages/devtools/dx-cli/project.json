@@ -2,6 +2,17 @@
   "sourceRoot": "packages/devtools/dx-cli/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/devtools/dx-cli/dist",
+        "tsConfig": "packages/devtools/dx-cli/tsconfig.json",
+        "main": "packages/devtools/dx-cli/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

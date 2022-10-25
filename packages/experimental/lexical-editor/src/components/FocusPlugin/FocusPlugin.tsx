@@ -9,10 +9,8 @@ import { Event } from '@dxos/async';
 
 // TODO(burdon): Too narrow/specialized.
 export const FocusPlugin: FC<{
-  eventHandler: Event
-}> = ({
-  eventHandler
-}) => {
+  eventHandler: Event;
+}> = ({ eventHandler }) => {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     editor.focus();

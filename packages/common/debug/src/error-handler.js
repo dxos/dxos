@@ -8,7 +8,7 @@ import { EventEmitter } from 'events';
  * Listens for global errors.
  */
 export class ErrorHandler extends EventEmitter {
-  constructor () {
+  constructor() {
     super();
 
     this._listener = (event) => {
@@ -27,7 +27,7 @@ export class ErrorHandler extends EventEmitter {
     window.addEventListener('unhandledrejection', this._listener);
   }
 
-  reset () {
+  reset() {
     window.removeEventListener('error', this._listener);
     window.removeEventListener('unhandledrejection', this._listener);
   }

@@ -15,13 +15,17 @@ it('SHA1', function () {
 
 it('SHA256', function () {
   const hashed = sha256('Test message');
-  expect(hashed).to.equal('c0719e9a8d5d838d861dc6f675c899d2b309a3a65bb9fe6b11e5afcbf9a2c0b1');
+  expect(hashed).to.equal(
+    'c0719e9a8d5d838d861dc6f675c899d2b309a3a65bb9fe6b11e5afcbf9a2c0b1'
+  );
 });
 
 it('SHA512', function () {
   const hashed = sha512('Test message');
-  expect(hashed).to.equal('48418241a4d779508a6b98e623328a68f7f0bf27fd101bb2c89384827bfc0740' +
-    '3fefd5855576f1824fcd7acd233541514240c2bcf0fa9732ebb8f166a7c38bdf');
+  expect(hashed).to.equal(
+    '48418241a4d779508a6b98e623328a68f7f0bf27fd101bb2c89384827bfc0740' +
+      '3fefd5855576f1824fcd7acd233541514240c2bcf0fa9732ebb8f166a7c38bdf'
+  );
 });
 
 it('RIPEMD160', function () {

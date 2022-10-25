@@ -29,24 +29,27 @@ export const definitions = ({
     __CONFIG_DYNAMICS__: devPath ?? resolve(CWD, 'dx-dev.yml')
   };
 
-  return Object.entries(KEYS_TO_FILE).reduce((prev, [key, value]) => {
-    let content = {};
+  return Object.entries(KEYS_TO_FILE).reduce(
+    (prev, [key, value]) => {
+      let content = {};
 
-    try {
-      content = yaml.load(readFileSync(value, 'utf-8')) as any;
+      try {
+        content = yaml.load(readFileSync(value, 'utf-8')) as any;
 
-      if (key === '__CONFIG_ENVS__') {
-        content = mapFromKeyValues(content, process.env);
+        if (key === '__CONFIG_ENVS__') {
+          content = mapFromKeyValues(content, process.env);
+        }
+      } catch (err: any) {
+        log(`Failed to load file ${value}:`, err);
       }
-    } catch (err: any) {
-      log(`Failed to load file ${value}:`, err);
-    }
 
-    return {
-      ...prev,
-      [key]: content
-    };
-  }, {
-    __DXOS_CONFIG__: { dynamic, publicUrl }
-  });
+      return {
+        ...prev,
+        [key]: content
+      };
+    },
+    {
+      __DXOS_CONFIG__: { dynamic, publicUrl }
+    }
+  );
 };

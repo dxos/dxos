@@ -5,9 +5,9 @@
 import assert from 'assert';
 
 // TODO(burdon): Protobuf mapping?
-export type Fraction = [num: number, denum: number]
+export type Fraction = [num: number, denum: number];
 
-export type Num = number | Fraction
+export type Num = number | Fraction;
 
 export class FractionUtil {
   /**
@@ -45,7 +45,9 @@ export class FractionUtil {
    */
   static round = ([n, d]: Fraction, p = 1): Fraction => {
     FractionUtil.validate([n, d]);
-    const v = Math.round(FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p])));
+    const v = Math.round(
+      FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p]))
+    );
     return FractionUtil.simplify([v, p]);
   };
 
@@ -59,7 +61,7 @@ export class FractionUtil {
    * @param n2
    */
   static equals = (n1: Fraction, n2: Fraction) => {
-    return (n1[0] * n2[1]) === (n1[1] * n2[0]);
+    return n1[0] * n2[1] === n1[1] * n2[0];
   };
 
   /**
@@ -95,7 +97,7 @@ export class FractionUtil {
 
     let c;
     for (let i = 0; i < fn.length; i++) {
-      c = fd.find(n => n === fn[i]);
+      c = fd.find((n) => n === fn[i]);
       if (c) {
         return [n / c, d / c];
       }
@@ -119,7 +121,7 @@ export class FractionUtil {
         if (n % ++f === 0) {
           factors.push(f);
         }
-      } while ((n / f) > 1 && f < 100);
+      } while (n / f > 1 && f < 100);
     }
 
     return factors;
@@ -136,7 +138,7 @@ export class FractionUtil {
   static add = (n1: Fraction, n2: Fraction): Fraction => {
     FractionUtil.validate(n1, n2);
     const d = n1[1] * n2[1]; // Same denom.
-    const n = (n1[0] * n2[1]) + (n2[0] * n1[1]);
+    const n = n1[0] * n2[1] + n2[0] * n1[1];
     return FractionUtil.simplify([n, d]);
   };
 
@@ -147,7 +149,7 @@ export class FractionUtil {
   static subtract = (n1: Fraction, n2: Fraction): Fraction => {
     FractionUtil.validate(n1, n2);
     const d = n1[1] * n2[1]; // Same denom.
-    const n = (n1[0] * n2[1]) - (n2[0] * n1[1]);
+    const n = n1[0] * n2[1] - n2[0] * n1[1];
     return FractionUtil.simplify([n, d]);
   };
 

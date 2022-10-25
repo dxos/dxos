@@ -27,14 +27,17 @@ export const useSearchSelection = (party: Party, search: any) => {
     return text.toLowerCase().indexOf(pattern) !== -1;
   };
 
-  return useSelection(party.select().filter(item => {
-    // TODO(burdon): Filter types.
-    if (item.type?.indexOf('example') === -1) {
-      return false;
-    }
+  return useSelection(
+    party.select().filter((item) => {
+      // TODO(burdon): Filter types.
+      if (item.type?.indexOf('example') === -1) {
+        return false;
+      }
 
-    // TODO(burdon): Generalize.
-    const text = item.model.get('name');
-    return match(search, text);
-  }), [search]);
+      // TODO(burdon): Generalize.
+      const text = item.model.get('name');
+      return match(search, text);
+    }),
+    [search]
+  );
 };

@@ -17,7 +17,7 @@ import { useClient } from '@dxos/react-client';
 import { ProviderFallback } from '../components';
 
 export interface ProfileContextValue {
-  profile?: Profile
+  profile?: Profile;
 }
 
 export const ProfileContext = createContext<ProfileContextValue>({});
@@ -41,7 +41,11 @@ export const ProfileProvider = (props: PropsWithChildren<{}>) => {
 
   return (
     <ProfileContext.Provider value={profileContextValue}>
-      {profile ? props.children : <ProviderFallback message='Setting profile…' />}
+      {profile ? (
+        props.children
+      ) : (
+        <ProviderFallback message='Setting profile…' />
+      )}
     </ProfileContext.Provider>
   );
 };

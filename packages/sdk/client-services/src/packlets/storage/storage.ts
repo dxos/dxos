@@ -25,21 +25,43 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError(
+      'RAM storage cannot be used in persistent mode.'
+    );
   }
-  if (!persistent && (storageType !== undefined && storageType !== StorageDriver.RAM)) {
-    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
+  if (
+    !persistent &&
+    storageType !== undefined &&
+    storageType !== StorageDriver.RAM
+  ) {
+    throw new InvalidConfigurationError(
+      'Cannot use a persistent storage in not persistent mode.'
+    );
   }
   if (persistent && keyStorage === StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
+    throw new InvalidConfigurationError(
+      'RAM key storage cannot be used in persistent mode.'
+    );
   }
-  if (!persistent && (keyStorage !== StorageDriver.RAM && keyStorage !== undefined)) {
-    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
+  if (
+    !persistent &&
+    keyStorage !== StorageDriver.RAM &&
+    keyStorage !== undefined
+  ) {
+    throw new InvalidConfigurationError(
+      'Cannot use a persistent key storage in not persistent mode.'
+    );
   }
 
   return {
-    storage: createStorage({ type: persistent ? toStorageType(storageType) : StorageType.RAM, root: `${path}/` }),
-    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
+    storage: createStorage({
+      type: persistent ? toStorageType(storageType) : StorageType.RAM,
+      root: `${path}/`
+    }),
+    keyStorage: createKeyStorage(
+      `${path}/keystore`,
+      persistent ? toKeyStorageType(keyStorage) : 'ram'
+    )
   };
 };
 
@@ -55,28 +77,46 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
     case 'ram':
       return memdown();
     default:
-      throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
+      throw new InvalidConfigurationError(
+        `Invalid key storage type: ${defaultedType}`
+      );
   }
 };
 
-const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
+const toStorageType = (
+  type: StorageDriver | undefined
+): StorageType | undefined => {
   switch (type) {
-    case undefined: return undefined;
-    case StorageDriver.RAM: return StorageType.RAM;
-    case StorageDriver.CHROME: return StorageType.CHROME;
-    case StorageDriver.FIREFOX: return StorageType.FIREFOX;
-    case StorageDriver.IDB: return StorageType.IDB;
-    case StorageDriver.NODE: return StorageType.NODE;
-    default: throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
+    case undefined:
+      return undefined;
+    case StorageDriver.RAM:
+      return StorageType.RAM;
+    case StorageDriver.CHROME:
+      return StorageType.CHROME;
+    case StorageDriver.FIREFOX:
+      return StorageType.FIREFOX;
+    case StorageDriver.IDB:
+      return StorageType.IDB;
+    case StorageDriver.NODE:
+      return StorageType.NODE;
+    default:
+      throw new Error(`Invalid storage type: ${StorageDriver[type]}`);
   }
 };
 
-const toKeyStorageType = (type: StorageDriver | undefined): KeyStorageType | undefined => {
+const toKeyStorageType = (
+  type: StorageDriver | undefined
+): KeyStorageType | undefined => {
   switch (type) {
-    case undefined: return undefined;
-    case StorageDriver.RAM: return 'ram';
-    case StorageDriver.LEVELJS: return 'leveljs';
-    case StorageDriver.JSONDOWN: return 'jsondown';
-    default: throw new Error(`Invalid key storage type: ${StorageDriver[type]}`);
+    case undefined:
+      return undefined;
+    case StorageDriver.RAM:
+      return 'ram';
+    case StorageDriver.LEVELJS:
+      return 'leveljs';
+    case StorageDriver.JSONDOWN:
+      return 'jsondown';
+    default:
+      throw new Error(`Invalid key storage type: ${StorageDriver[type]}`);
   }
 };

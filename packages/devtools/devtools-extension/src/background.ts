@@ -11,7 +11,7 @@ const error = log.extend('error');
 const panelPorts = new Map<number, Runtime.Port>();
 const contentPorts = new Map<number, Runtime.Port>();
 
-browser.runtime.onConnect.addListener(port => {
+browser.runtime.onConnect.addListener((port) => {
   log(`Connected to port: ${port.name}`);
 
   // Forward messages from devtools panel to content script.
@@ -22,7 +22,10 @@ browser.runtime.onConnect.addListener(port => {
     const messageListener = (message: any) => {
       const port = contentPorts.get(tabId);
       if (port) {
-        log(`Forwarding message from panel to content on tab ${tabId}:`, message);
+        log(
+          `Forwarding message from panel to content on tab ${tabId}:`,
+          message
+        );
         port.postMessage(message);
       } else {
         error(`Missing content port for tab ${tabId}`);
@@ -34,7 +37,7 @@ browser.runtime.onConnect.addListener(port => {
       port.onMessage.removeListener(messageListener);
       panelPorts.delete(tabId);
     });
-  // Forward messages from content script to devtools panel.
+    // Forward messages from content script to devtools panel.
   } else if (port.name === 'content' && port.sender?.tab?.id) {
     const tabId = port.sender.tab.id;
     contentPorts.set(tabId, port);
@@ -42,7 +45,10 @@ browser.runtime.onConnect.addListener(port => {
     const messageListener = (message: any) => {
       const port = panelPorts.get(tabId);
       if (port) {
-        log(`Forwarding message from content to panel on tab ${tabId}:`, message);
+        log(
+          `Forwarding message from content to panel on tab ${tabId}:`,
+          message
+        );
         port.postMessage(message);
       } else {
         error(`Missing panel port for tab ${tabId}`);

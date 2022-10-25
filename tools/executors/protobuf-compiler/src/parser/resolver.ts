@@ -11,7 +11,7 @@ export type ProtoResolver = (origin: string, target: string) => string | null;
 /**
  * Custom proto file resolver.
  */
-export function createProtoResolver (
+export function createProtoResolver(
   original: ProtoResolver,
   baseDir?: string
 ): ProtoResolver {
@@ -50,5 +50,8 @@ export function createProtoResolver (
 }
 
 export const registerResolver = (baseDir?: string) => {
-  pb.Root.prototype.resolvePath = createProtoResolver(pb.Root.prototype.resolvePath, baseDir);
+  pb.Root.prototype.resolvePath = createProtoResolver(
+    pb.Root.prototype.resolvePath,
+    baseDir
+  );
 };

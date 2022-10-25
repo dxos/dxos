@@ -9,14 +9,14 @@ export const createLinkedPorts = (): [RpcPort, RpcPort] => {
   let bobReceive: RpcPort['send'] | undefined;
 
   const alice: RpcPort = {
-    send: msg => bobReceive?.(msg),
-    subscribe: cb => {
+    send: (msg) => bobReceive?.(msg),
+    subscribe: (cb) => {
       aliceReceive = cb;
     }
   };
   const bob: RpcPort = {
-    send: msg => aliceReceive?.(msg),
-    subscribe: cb => {
+    send: (msg) => aliceReceive?.(msg),
+    subscribe: (cb) => {
       bobReceive = cb;
     }
   };
