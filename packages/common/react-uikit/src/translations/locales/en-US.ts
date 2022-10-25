@@ -14,6 +14,7 @@ export const uikit = {
   'invite device description':
     'Add this device to an identity you’re already logged into on another device.',
   'join space label': 'Join a space',
+  'create space label': 'Create a space',
   'username label': 'Username',
   'username placeholder': 'Enter your preferred username here',
   'space invitation label': 'Invitation code or URL',

@@ -9,7 +9,7 @@ import { Main, Heading, useTranslation } from '@dxos/react-uikit';
 export const ContactsPage = () => {
   const { t } = useTranslation('halo');
   return (
-    <Main className='max-w-lg mx-auto'>
+    <Main>
       <Heading>{t('contacts label')}</Heading>
     </Main>
   );
