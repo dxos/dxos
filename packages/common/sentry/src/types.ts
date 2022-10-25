@@ -11,6 +11,7 @@ export type InitOptions = {
   environment?: string;
   sampleRate?: number;
   scrubFilenames?: boolean;
+  properties?: object;
   transport?: () => Transport;
   onError?: (event: Event) => void;
 };

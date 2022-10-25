@@ -12,7 +12,7 @@ type CommonOptions = {
   installationId: string;
   identityId: string;
   name: string;
-  properties?: Record<string, string>;
+  properties?: object;
   timestamp?: Date;
 };
 
