@@ -16,6 +16,7 @@ export const useTelemetry = (disabled: boolean) => {
         machineId: 'default',
         destination: process.env.SENTRY_DESTINATION,
         environment: process.env.DX_ENVIRONMENT,
+        release: process.env.DX_RELEASE,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
         properties: {
@@ -32,6 +33,6 @@ export const useTelemetry = (disabled: boolean) => {
   }, [disabled]);
 };
 
-const isInternalUser = () => {
+export const isInternalUser = () => {
   return Boolean(localStorage.get('isInternalUser'));
 };

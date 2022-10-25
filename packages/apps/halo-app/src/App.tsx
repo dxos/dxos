@@ -2,16 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useRef } from 'react';
-import { HashRouter, useRoutes } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useRoutes, HashRouter, useLocation } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
+import * as Telemetry from '@dxos/telemetry';
 import { TextModel } from '@dxos/text-model';
 
-import { useTelemetry } from './hooks';
+// TODO(wittjosiah): Shouldn't import non-hooks from hooks.
+import { isInternalUser, useTelemetry } from './hooks';
 import {
   AppLayout,
   AppsPage,
@@ -31,8 +33,23 @@ import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
-const Routes = () =>
-  useRoutes([
+const Routes = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    Telemetry.page({
+      machineId: 'default',
+      identityId: 'default',
+      name: location.pathname,
+      properties: {
+        environment: process.env.DX_ENVIRONMENT,
+        release: process.env.DX_RELEASE,
+        isInternalUser: isInternalUser()
+      }
+    });
+  }, [location]);
+
+  return useRoutes([
     {
       path: '/',
       element: <LockPage />
@@ -78,6 +95,7 @@ const Routes = () =>
       ]
     }
   ]);
+};
 
 export const App = () => {
   const clientRef = useRef<Client>();
