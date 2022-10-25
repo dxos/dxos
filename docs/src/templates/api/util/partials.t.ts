@@ -10,8 +10,8 @@ import {
 } from "typedoc";
 import { text, ts } from "@dxos/plate";
 import { camelCase } from "change-case";
-import { reflectionsOfKind } from "./util/utils.t";
-import { stringifyCallSignature, stringifyType } from ".";
+import { reflectionsOfKind } from "./utils.t";
+import { stringifyCallSignature, stringifyType } from "./stringifiers.t";
 
 export const children = (ref: S.ContainerReflection, kind?: ReflectionKind) => {
   return kind ? reflectionsOfKind(ref, kind) : ref.children ?? [];

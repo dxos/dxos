@@ -4,6 +4,7 @@
 import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
+import minimatch from 'minimatch';
 
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
@@ -14,14 +15,18 @@ export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string;
   outputDirectory: string;
   input?: Partial<TInput>;
+  filterGlob?: string;
 };
 
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateDirectory, outputDirectory, input } = options;
+  const { templateDirectory, outputDirectory, input, filterGlob } = options;
   const allFiles = (await readDir(templateDirectory)).filter(
-    (file) => !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(path.relative(templateDirectory, file)))
+    (file) =>
+      !TEMPLATE_DIRECTORY_IGNORE.some((pattern) =>
+        pattern.test(path.relative(templateDirectory, file))
+      ) && (!!filterGlob ? minimatch(file, filterGlob) : true)
   );
   const templateFiles = allFiles.filter(isTemplateFile);
   const regularFiles = allFiles.filter((file) => !isTemplateFile(file));

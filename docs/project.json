@@ -19,7 +19,10 @@
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
         ]
-      },
+      }
+    },
+    "plate": {
+      "executor": "nx:run-script",
       "outputs": [
         "{options.outputFile}"
       ]
@@ -43,7 +46,7 @@
         "default"
       ],
       "options": {
-        "script": "prerelease"
+        "script": "plate"
       },
       "outputs": [
         "docs/docs/.vuepress/dist",

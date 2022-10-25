@@ -4,7 +4,7 @@ label: The DXOS Platform
 ---
 # The DXOS Platform
 
-> DXOS is designed for building and operating privacy preserving decentralized applications. <br/> Read more [motivation](why.md).
+> DXOS enables the development and operation of internet scale, privacy preserving applications. <br/> Read more [motivation](why.md).
 
 ## [Quick Start](quick-start.md)
 - Create an [ECHO database](quick-start#using-an-echo-database-for-state-consensus)

@@ -30,6 +30,11 @@ const main = async () => {
       requiresArg: true,
       type: 'string'
     })
+    .option('filter', {
+      description: 'Filter the input files by glob',
+      requiresArg: false,
+      type: 'string'
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -37,12 +42,14 @@ const main = async () => {
         _,
         dry,
         input,
-        output = process.cwd()
+        output = process.cwd(),
+        filter
       }: {
         _: string[];
         dry: boolean;
         input: string;
         output: string;
+        filter: string;
       }) => {
         const tstart = Date.now();
         const [template] = _;
@@ -50,11 +57,15 @@ const main = async () => {
           throw new Error('no template specified');
         }
         console.log('working directory', process.cwd());
-        console.log(`executing template '${template}'...`);
+        console.log(
+          `executing template '${template}'...`,
+          filter ? `filter: '${filter}'` : ''
+        );
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {}
+          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {},
+          filterGlob: filter
         });
         if (!dry) {
           console.log(`output folder: ${output}`);
@@ -69,9 +80,10 @@ const main = async () => {
               }
             })
           );
+          console.log(`wrote ${files.length} files.`);
         }
         const now = Date.now();
-        console.log(`wrote ${files.length} files [${fmtDuration(now - tstart)}]`);
+        console.log(`done [${fmtDuration(now - tstart)}]`);
       }
     })
     .help().argv;

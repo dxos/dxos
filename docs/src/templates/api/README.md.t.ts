@@ -1,11 +1,19 @@
-import { Input, TemplateFunction, text, packagesInProject } from ".";
+import { Input, TemplateFunction, text, packagesInProject } from '.';
+import { href } from './util/links.t';
 
 const template: TemplateFunction<Input> = ({ input }) => {
   const modules = packagesInProject(input);
   return text`
-  # DXOS
+  # DXOS API Documentation
+
+  > Version hash <Badge type="tip" text="cafebabe" vertical="middle" />
+
+  This is reference documentation that was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
+
+  To get started with DXOS components and learn how to use them, check out the [guide](/guide).
+
   ## Packages:
-  ${modules.map((m) => `- ${m.name}`)}
+  ${modules.map((m) => `- [${m.name}](${href.package(m.name)})`)}
   `;
 };
 
