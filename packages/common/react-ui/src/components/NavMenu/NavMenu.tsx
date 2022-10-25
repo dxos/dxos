@@ -90,9 +90,11 @@ const NavMenuLinkItem = forwardRef(({
   <NavigationMenuPrimitive.Item asChild ref={ref}>
     <NavigationMenuPrimitive.Link
       {...triggerLinkProps}
+      active={active}
       className={cx(
-        'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
+        'px-3 py-2 text-sm rounded-md transition-color',
         active ? primaryButtonColors : defaultButtonColors,
+        active ? 'font-medium' : 'font-normal',
         defaultFocus,
         defaultHover({}),
         triggerLinkProps.className
@@ -110,12 +112,15 @@ const NavMenuTooltipLinkItem = forwardRef(({
   children
 }: NavMenuTooltipLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
   <Tooltip {...tooltip}>
+    {/* todo: why does the Tooltip not show if you use <NavMenuLinkItem {…}/> here? */}
     <NavigationMenuPrimitive.Item asChild ref={ref}>
       <NavigationMenuPrimitive.Link
         {...triggerLinkProps}
+        active={active}
         className={cx(
-          'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
+          'px-3 py-2 text-sm rounded-md transition-color',
           active ? primaryButtonColors : defaultButtonColors,
+          active ? 'font-medium' : 'font-normal',
           defaultFocus,
           defaultHover({}),
           triggerLinkProps.className
