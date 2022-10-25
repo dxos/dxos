@@ -4,7 +4,7 @@
   "private": "true",
   "main": "dist/src/index.js",
   "bin": {
-    "plate": "dist/src/bin/plate.js"
+    "plate": "bin/plate.js"
   },
   "scripts": {
     "dev": "plate"
