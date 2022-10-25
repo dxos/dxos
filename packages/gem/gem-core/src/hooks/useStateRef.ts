@@ -2,7 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from 'react';
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 
 /**
  * Extension of useState to return an up-to-date reference.
@@ -47,11 +54,17 @@ export const useDynamicRef = <V>(
  * @param deps
  */
 export const useTimestamp = (deps?): [number, () => void, number] => {
-  const [{ timestamp, previous }, setTimestamp] =
-    useState<{ timestamp: number, previous?: number }>({ timestamp: Date.now() });
+  const [{ timestamp, previous }, setTimestamp] = useState<{
+    timestamp: number;
+    previous?: number;
+  }>({ timestamp: Date.now() });
   useEffect(() => {
     setTimestamp({ timestamp: Date.now(), previous: timestamp });
   }, deps ?? []);
 
-  return [timestamp, () => setTimestamp({ timestamp: Date.now(), previous: timestamp }), previous];
+  return [
+    timestamp,
+    () => setTimestamp({ timestamp: Date.now(), previous: timestamp }),
+    previous
+  ];
 };

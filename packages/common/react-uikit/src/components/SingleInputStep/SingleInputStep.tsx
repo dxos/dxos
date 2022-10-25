@@ -10,16 +10,16 @@ import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {
-  inputLabel: string
-  onChange: (value: string) => void
-  pending?: boolean
-  onBack?: () => void
-  backLabel?: string
-  onNext: () => void
-  nextLabel?: string
-  loadingLabel?: string
-  inputPlaceholder?: string
-  inputProps?: Omit<InputProps, 'label' | 'placeholder'>
+  inputLabel: string;
+  onChange: (value: string) => void;
+  pending?: boolean;
+  onBack?: () => void;
+  backLabel?: string;
+  onNext: () => void;
+  nextLabel?: string;
+  loadingLabel?: string;
+  inputPlaceholder?: string;
+  inputProps?: Omit<InputProps, 'label' | 'placeholder'>;
 }
 
 export const SingleInputStep = ({

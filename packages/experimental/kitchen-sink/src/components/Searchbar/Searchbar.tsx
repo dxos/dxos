@@ -4,15 +4,12 @@
 
 import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import {
-  Clear as ClearIcon,
-  Search as SearchIcon
-} from '@mui/icons-material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 
 interface SearchBarProps {
-  onChange?: (value: string) => void
-  delay?: number
+  onChange?: (value: string) => void;
+  delay?: number;
 }
 
 /**
@@ -73,7 +70,7 @@ export const Searchbar = ({
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       InputProps={{
-        startAdornment:
+        startAdornment: (
           <InputAdornment position='end'>
             <IconButton
               sx={{ marginRight: 1 }}
@@ -83,8 +80,9 @@ export const Searchbar = ({
             >
               <SearchIcon />
             </IconButton>
-          </InputAdornment>,
-        endAdornment:
+          </InputAdornment>
+        ),
+        endAdornment: (
           <InputAdornment position='end'>
             <IconButton
               size='small'
@@ -94,6 +92,7 @@ export const Searchbar = ({
               <ClearIcon />
             </IconButton>
           </InputAdornment>
+        )
       }}
       sx={{
         backgroundColor: 'white'

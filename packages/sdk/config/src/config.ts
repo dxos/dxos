@@ -12,7 +12,7 @@ import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { sanitizeConfig } from './sanitizer';
 import { ConfigKey, DeepIndex, ParseKey } from './types';
 
-type MappingSpec = Record<string, { path: string, type?: string }>;
+type MappingSpec = Record<string, { path: string; type?: string }>;
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
@@ -28,7 +28,10 @@ type MappingSpec = Record<string, { path: string, type?: string }>;
  * @param {object} values
  * @return {object}
  */
-export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>) => {
+export const mapFromKeyValues = (
+  spec: MappingSpec,
+  values: Record<string, any>
+) => {
   const config = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
@@ -105,14 +108,14 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [ConfigProto, ...ConfigProto[]]) {
+  constructor(...objects: [ConfigProto, ...ConfigProto[]]) {
     this._config = sanitizeConfig(defaultsDeep(...objects, { version: 1 }));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigProto {
+  get values(): ConfigProto {
     return this._config;
   }
 
@@ -123,7 +126,10 @@ export class Config {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>): DeepIndex<ConfigProto, ParseKey<K>> {
+  get<K extends ConfigKey>(
+    key: K,
+    defaultValue?: DeepIndex<ConfigProto, ParseKey<K>>
+  ): DeepIndex<ConfigProto, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -132,7 +138,7 @@ export class Config {
    *
    * @deprecated Use the type-checked version.
    */
-  getUnchecked<T> (key: string, defaultValue?: T): T {
+  getUnchecked<T>(key: string, defaultValue?: T): T {
     return get(this._config, key, defaultValue);
   }
 
@@ -141,7 +147,9 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
+  getOrThrow<K extends ConfigKey>(
+    key: K
+  ): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
     const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);

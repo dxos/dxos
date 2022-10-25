@@ -7,8 +7,8 @@ import { DependencyList, useEffect, useState } from 'react';
 import { MaybePromise } from '@dxos/util';
 
 interface Result<T> {
-  data: T
-  error?: unknown
+  data: T;
+  error?: unknown;
 }
 
 /**
@@ -18,7 +18,11 @@ interface Result<T> {
  * @param deps
  */
 // TODO(burdon): Rename.
-export const useAsync = <T>(getData: () => MaybePromise<T> | undefined, initalValue: T, deps: DependencyList = []): Result<T> => {
+export const useAsync = <T>(
+  getData: () => MaybePromise<T> | undefined,
+  initalValue: T,
+  deps: DependencyList = []
+): Result<T> => {
   const [error, setError] = useState<any>(undefined);
   const [data, setData] = useState<T>(initalValue);
 

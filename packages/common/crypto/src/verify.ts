@@ -17,16 +17,27 @@ export const verifySignature = async (
   let publicKey!: CryptoKey;
 
   try {
-    publicKey = await subtleCrypto.importKey('raw', key.asUint8Array(), {
-      name: 'ECDSA',
-      namedCurve: 'P-256'
-    }, true, ['verify']);
+    publicKey = await subtleCrypto.importKey(
+      'raw',
+      key.asUint8Array(),
+      {
+        name: 'ECDSA',
+        namedCurve: 'P-256'
+      },
+      true,
+      ['verify']
+    );
   } catch {
     return false;
   }
 
-  return subtleCrypto.verify({
-    name: 'ECDSA',
-    hash: 'SHA-256'
-  }, publicKey, signature, message);
+  return subtleCrypto.verify(
+    {
+      name: 'ECDSA',
+      hash: 'SHA-256'
+    },
+    publicKey,
+    signature,
+    message
+  );
 };

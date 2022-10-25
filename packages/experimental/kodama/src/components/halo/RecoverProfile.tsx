@@ -38,10 +38,7 @@ export const RecoverProfile = () => {
         placeholder='Enter recovery phrase.'
       />
 
-      <ActionStatus
-        status={status}
-        marginTop={1}
-      />
+      <ActionStatus status={status} marginTop={1} />
     </Panel>
   );
 };

@@ -5,12 +5,12 @@
 import type { Event, Transport } from '@sentry/types';
 
 export type InitOptions = {
-  destination?: string
-  machineId?: string
-  release?: string
-  environment?: string
-  sampleRate?: number
-  scrubFilenames?: boolean
-  transport?: () => Transport
-  onError?: (event: Event) => void
+  destination?: string;
+  machineId?: string;
+  release?: string;
+  environment?: string;
+  sampleRate?: number;
+  scrubFilenames?: boolean;
+  transport?: () => Transport;
+  onError?: (event: Event) => void;
 };

@@ -13,7 +13,7 @@ const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
     appOrigin: origin
   });
   window.addEventListener('beforeunload', () => {
-    iframeRuntime.close().catch(err => console.error(err));
+    iframeRuntime.close().catch((err) => console.error(err));
   });
 
   await iframeRuntime.open();
@@ -30,15 +30,15 @@ if (typeof SharedWorker !== 'undefined') {
     const workerAppPort = muxer.createWorkerPort({ channel: 'dxos:app' });
     const windowAppPort = createIFramePort({
       channel: 'dxos:app',
-      onOrigin: origin => {
+      onOrigin: (origin) => {
         setTimeout(async () => {
           await createRuntime(origin, wrtcPort);
         });
       }
     });
 
-    workerAppPort.subscribe(msg => windowAppPort.send(msg));
-    windowAppPort.subscribe(msg => workerAppPort.send(msg));
+    workerAppPort.subscribe((msg) => windowAppPort.send(msg));
+    windowAppPort.subscribe((msg) => workerAppPort.send(msg));
 
     const wrtcPort = muxer.createWorkerPort({ channel: 'dxos:wrtc' });
   })();

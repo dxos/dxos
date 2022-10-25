@@ -9,9 +9,9 @@ import { useTranslation } from 'react-i18next';
 import { CompoundButton } from '@dxos/react-ui';
 
 export interface AuthChoicesProps {
-  onCreate?: () => void
-  onInviteDevice?: () => void
-  onRecover?: () => void
+  onCreate?: () => void;
+  onInviteDevice?: () => void;
+  onRecover?: () => void;
 }
 
 export const AuthChoices = ({
@@ -30,7 +30,9 @@ export const AuthChoices = ({
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onCreate}
-        >{t('create profile label')}</CompoundButton>
+        >
+          {t('create profile label')}
+        </CompoundButton>
       )}
       {onInviteDevice && (
         <CompoundButton
@@ -39,7 +41,9 @@ export const AuthChoices = ({
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onInviteDevice}
-        >{t('invite device label')}</CompoundButton>
+        >
+          {t('invite device label')}
+        </CompoundButton>
       )}
       {onRecover && (
         <CompoundButton
@@ -48,7 +52,9 @@ export const AuthChoices = ({
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onRecover}
-        >{t('recover profile label')}</CompoundButton>
+        >
+          {t('recover profile label')}
+        </CompoundButton>
       )}
     </div>
   );

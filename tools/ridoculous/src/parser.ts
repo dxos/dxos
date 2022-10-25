@@ -14,10 +14,10 @@ import { remarkLinker } from './remark-linker.js';
 import { remarkSnippets } from './remark-snippets.js';
 
 interface Options {
-  autoNumber?: boolean
-  baseDir?: string
-  html?: boolean
-  verbose?: boolean
+  autoNumber?: boolean;
+  baseDir?: string;
+  html?: boolean;
+  verbose?: boolean;
 }
 
 /**
@@ -52,12 +52,12 @@ export const createParser = ({
     .use(remarkHeadings, { autoNumber });
 
   if (html) {
-    unified
-      .use(remarkRehype as any)
-      .use(rehypeStringify as any);
+    unified.use(remarkRehype as any).use(rehypeStringify as any);
   }
 
-  return unified
-    // Custom options available to plugins.
-    .data('config', { baseDir, verbose });
+  return (
+    unified
+      // Custom options available to plugins.
+      .data('config', { baseDir, verbose })
+  );
 };

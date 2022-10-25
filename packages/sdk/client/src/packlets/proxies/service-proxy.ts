@@ -3,7 +3,12 @@
 //
 
 import { promiseTimeout } from '@dxos/async';
-import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '@dxos/client-services';
+import {
+  clientServiceBundle,
+  ClientServiceProvider,
+  ClientServices,
+  RemoteServiceConnectionTimeout
+} from '@dxos/client-services';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 /**
@@ -13,10 +18,7 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 export class ClientServiceProxy implements ClientServiceProvider {
   private readonly _client: ProtoRpcPeer<ClientServices>;
 
-  constructor (
-    port: RpcPort,
-    private readonly _timeout = 300
-  ) {
+  constructor(port: RpcPort, private readonly _timeout = 300) {
     this._client = createProtoRpcPeer({
       exposed: {},
       requested: clientServiceBundle,
@@ -29,11 +31,15 @@ export class ClientServiceProxy implements ClientServiceProvider {
 
   readonly services: ClientServices;
 
-  async open (onProgressCallback?: ((progress: any) => void) | undefined) {
-    await promiseTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
+  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
+    await promiseTimeout(
+      this._client.open(),
+      this._timeout,
+      new RemoteServiceConnectionTimeout()
+    );
   }
 
-  async close () {
+  async close() {
     this._client.close();
   }
 }

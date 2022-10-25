@@ -35,11 +35,18 @@ describe('Code analysis', function () {
     const processor = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
 
-    const process = (flowchart: Flowchart, root: ClassDeclaration, depth: number) => {
+    const process = (
+      flowchart: Flowchart,
+      root: ClassDeclaration,
+      depth: number
+    ) => {
       const struct = root.getStructure();
       const info = {
         ...pick(struct, ['name', 'isExported']),
-        properties: struct.properties?.map(p => p.type && pick(p, ['name', 'type', 'scope', 'isReadonly']))
+        properties: struct.properties
+          ?.map(
+            (p) => p.type && pick(p, ['name', 'type', 'scope', 'isReadonly'])
+          )
           .filter(Boolean)
       };
 
@@ -76,8 +83,12 @@ describe('Code analysis', function () {
         // TODO(burdon): Look at ts-morph tests.
         process(flowchart, root, 2);
         const file = root.getSourceFile();
-        const imports = file.getImportDeclarations().map(i => i.getStructure());
-        const i = imports.find(i => i.moduleSpecifier.startsWith('@dxos/config'));
+        const imports = file
+          .getImportDeclarations()
+          .map((i) => i.getStructure());
+        const i = imports.find((i) =>
+          i.moduleSpecifier.startsWith('@dxos/config')
+        );
         console.log(i);
         const dir = file.getDirectoryPath();
         console.log(dir);

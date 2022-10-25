@@ -49,8 +49,8 @@ const loadTemplate = async <I = any>(
     return typeof fn === 'function'
       ? fn
       : typeof fn === 'string'
-        ? () => fn
-        : null;
+      ? () => fn
+      : null;
   } catch (err) {
     console.error(`problem while loading template ${p}`);
     console.error(err);
@@ -59,16 +59,16 @@ const loadTemplate = async <I = any>(
 };
 
 export type ExecuteFileTemplateOptions<TInput = {}> = {
-  templateFile: string
-  templateRelativeTo?: string
-  outputDirectory: string
-  input?: TInput
+  templateFile: string;
+  templateRelativeTo?: string;
+  outputDirectory: string;
+  input?: TInput;
 };
 
 export type TemplateContext<TInput = {}> =
   ExecuteFileTemplateOptions<TInput> & {
-    input: TInput
-    defaultOutputFile: string
+    input: TInput;
+    defaultOutputFile: string;
   };
 
 export type TemplatingResult<R = any> = File<R>[];

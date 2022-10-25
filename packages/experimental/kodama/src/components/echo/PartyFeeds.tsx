@@ -10,10 +10,8 @@ import { PublicKey } from '@dxos/keys';
 import { Table } from '../util';
 
 export const PartyFeeds: FC<{
-  partyKey: PublicKey
-}> = ({
-  partyKey
-}) => {
+  partyKey: PublicKey;
+}> = ({ partyKey }) => {
   return null;
   // TODO(dmaretskyi): Not working currently.
   // const devtoolsHost = useDevtools();
@@ -25,7 +23,7 @@ export const PartyFeeds: FC<{
       columns={[
         {
           key: 'feedKey',
-          value: key => truncateKey(key, 4),
+          value: (key) => truncateKey(key, 4),
           width: 20,
           color: 'green',
           label: 'feed'

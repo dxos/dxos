@@ -2,7 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  horizontalListSortingStrategy,
+  SortableContext,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable';
 import {
   ColumnOrderState,
   createTable,
@@ -16,25 +20,29 @@ import { DroppableContainer } from '../DroppableContainer';
 import { Row } from './Row';
 
 type RowProps = {
-  id: string
-}
+  id: string;
+};
 
 const table = createTable().setRowType<RowProps>();
 
-const getColumns = (cols: any[]) => cols.map(col => table.createDataColumn(col.accessor, {
-  header: () => <span>{col.title}</span>,
-  cell: (info: any) => info.getValue()
-}));
+const getColumns = (cols: any[]) =>
+  cols.map((col) =>
+    table.createDataColumn(col.accessor, {
+      header: () => <span>{col.title}</span>,
+      cell: (info: any) => info.getValue()
+    })
+  );
 
 const DEFAULT_COLUMN_WIDTH = '300px';
-const getGridCellSize = (columns: any[]) => columns.map(column => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
+const getGridCellSize = (columns: any[]) =>
+  columns.map((column) => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
 
 export interface DroppableTableProps {
-  id: string
-  rows: any[]
-  columns: any[]
-  columnOrder?: string[]
-  title?: string
+  id: string;
+  rows: any[];
+  columns: any[];
+  columnOrder?: string[];
+  title?: string;
 }
 
 export const DroppableTable = ({
@@ -64,11 +72,13 @@ export const DroppableTable = ({
   }, [order]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      overflowY: 'scroll'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'scroll'
+      }}
+    >
       {title && <h5>{title}</h5>}
       <DroppableContainer
         id='columns'
@@ -84,8 +94,8 @@ export const DroppableTable = ({
           items={columnOrder}
           strategy={horizontalListSortingStrategy}
         >
-          {instance.getHeaderGroups().map(headerGroup =>
-            headerGroup.headers.map(header => (
+          {instance.getHeaderGroups().map((headerGroup) =>
+            headerGroup.headers.map((header) => (
               <DraggableContainer
                 key={header.id}
                 id={header.id}
@@ -109,10 +119,10 @@ export const DroppableTable = ({
       >
         <SortableContext
           id={id}
-          items={instance.getRowModel().rows.map(row => row.original!.id)}
+          items={instance.getRowModel().rows.map((row) => row.original!.id)}
           strategy={verticalListSortingStrategy}
         >
-          {instance.getRowModel().rows.map(row => (
+          {instance.getRowModel().rows.map((row) => (
             <DraggableContainer
               key={row.original!.id}
               id={row.original!.id}

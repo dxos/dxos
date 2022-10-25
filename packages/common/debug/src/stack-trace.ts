@@ -13,7 +13,7 @@
 export class StackTrace {
   private _stack: Error;
 
-  constructor () {
+  constructor() {
     this._stack = new Error();
   }
 
@@ -23,7 +23,7 @@ export class StackTrace {
    * @param skipFrames Number of frames to skip. By default the first frame would be the invocation of the StackTrace constructor.
    * @returns
    */
-  getStack (skipFrames = 0) {
+  getStack(skipFrames = 0) {
     const stack = this._stack.stack!.split('\n');
     return stack.slice(skipFrames + 2).join('\n');
   }

@@ -14,13 +14,18 @@ import { useEffect, useState } from 'react';
  *   return (
  *     <div>{ts}</div>
  *   );
-*  };
+ *  };
  * ```
  *
  * @param deps
  */
-export const useTimestamp = (deps?: any[]): [number, () => void, number | undefined] => {
-  const [{ timestamp, previous }, setTimestamp] = useState<{ timestamp: number, previous?: number }>({
+export const useTimestamp = (
+  deps?: any[]
+): [number, () => void, number | undefined] => {
+  const [{ timestamp, previous }, setTimestamp] = useState<{
+    timestamp: number;
+    previous?: number;
+  }>({
     timestamp: Date.now()
   });
 
@@ -28,5 +33,9 @@ export const useTimestamp = (deps?: any[]): [number, () => void, number | undefi
     setTimestamp({ timestamp: Date.now(), previous: timestamp });
   }, deps || []);
 
-  return [timestamp, () => setTimestamp({ timestamp: Date.now(), previous: timestamp }), previous];
+  return [
+    timestamp,
+    () => setTimestamp({ timestamp: Date.now(), previous: timestamp }),
+    previous
+  ];
 };

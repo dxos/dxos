@@ -17,18 +17,15 @@ import { Item } from '../hooks';
 
 const styles = css`
   &.MuiCard-root {
-    margin: 16px
+    margin: 16px;
   }
 `;
 
 export const ItemCard: FC<{
-  item: Item
+  item: Item;
 }> = ({ item }) => {
   return (
-    <Card
-      className={styles}
-      variant='outlined'
-    >
+    <Card className={styles} variant='outlined'>
       <CardContent>
         <Typography sx={{ fontSize: 14 }} color='text.secondary' gutterBottom>
           {item.id}
@@ -39,9 +36,7 @@ export const ItemCard: FC<{
         <Typography sx={{ mb: 1.5 }} color='text.secondary'>
           {item.type}
         </Typography>
-        <Typography variant='body2'>
-          {item.description}
-        </Typography>
+        <Typography variant='body2'>{item.description}</Typography>
       </CardContent>
       <CardActions>
         <Button size='small'>Learn More</Button>

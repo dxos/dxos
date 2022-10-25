@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
+import {
+  ChevronRight as ExpandIcon,
+  ExpandMore as CollapseIcon
+} from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 
 import { Item, ObjectModel } from '@dxos/client';
@@ -17,7 +20,7 @@ export default {
 };
 
 // TODO(kaplanski): Factor out this component from devtools.
-const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
+const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
   const children = item.select().children().exec().entities;
 
   return (
@@ -31,7 +34,11 @@ const ItemNode = ({ item }: {item: Item<ObjectModel> }) => {
 
 const Story = () => {
   const party = useTestParty();
-  const items = useSelection(party?.select().filter(item => !item.parent), []) ?? [];
+  const items =
+    useSelection(
+      party?.select().filter((item) => !item.parent),
+      []
+    ) ?? [];
 
   return (
     <TreeView
@@ -43,11 +50,8 @@ const Story = () => {
         overflowY: 'auto'
       }}
     >
-      {items?.map(item => (
-        <ItemNode
-          key={item.id}
-          item={item}
-        />
+      {items?.map((item) => (
+        <ItemNode key={item.id} item={item} />
       ))}
     </TreeView>
   );

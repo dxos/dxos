@@ -15,31 +15,31 @@ import { BrowserType } from './browser';
 import { TestResult } from './reporter';
 
 export type RunTestsOptions = {
-  debug: boolean
-}
+  debug: boolean;
+};
 
 export type Suites = {
   suites?: {
-    [key: string]: Suites
-  }
-  tests: TestResult[]
-}
+    [key: string]: Suites;
+  };
+  tests: TestResult[];
+};
 
 export type TestError = {
-  suite: string[]
-  test: string
-  message: string
-  stack: string
-}
+  suite: string[];
+  test: string;
+  message: string;
+  stack: string;
+};
 
 export type SuitesWithErrors = Suites & {
-  errors: TestError[]
-}
+  errors: TestError[];
+};
 
 export type RunTestsResults = {
-  suites: SuitesWithErrors
-  stats: Stats
-}
+  suites: SuitesWithErrors;
+  stats: Stats;
+};
 
 /**
  * Timeout for testing framework to initialize and to load tests.
@@ -77,7 +77,7 @@ export const runTests = async (
   const handleResult = (result: TestResult | TestError | Stats) => {
     if ('title' in result) {
       const suiteSelector = result.suite
-        .map(suite => ['suites', suite])
+        .map((suite) => ['suites', suite])
         .flat();
       suiteSelector.push('tests');
       const tests: TestResult[] = get(suites, suiteSelector) ?? [];
@@ -95,8 +95,8 @@ export const runTests = async (
     });
   });
 
-  page.on('console', async msg => {
-    const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
+  page.on('console', async (msg) => {
+    const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
     await lock.executeSynchronized(async () => {
       const args = await argsPromise;
 
@@ -114,16 +114,19 @@ export const runTests = async (
     });
   });
 
-  const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string);
+  const packageDir = dirname((await pkgUp({ cwd: __dirname })) as string);
   assert(packageDir);
   await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
   const [getPromise, resolve] = trigger<RunTestsResults>();
-  await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
-    await lock.executeSynchronized(async () => {
-      resolve({ suites, stats });
-    });
-  });
+  await page.exposeFunction(
+    'browserMocha__testsDone',
+    async (exitCode: number) => {
+      await lock.executeSynchronized(async () => {
+        resolve({ suites, stats });
+      });
+    }
+  );
 
   const exitTimeout = setTimeout(() => {
     if (options.debug) {

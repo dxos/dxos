@@ -21,20 +21,32 @@ const createTestComponents = async () => {
   await client.halo.createProfile();
 
   const party = await client.echo.createParty();
-  const items = await Promise.all(Array.from({ length: count }).map(async () => await party.database.createItem({ type: TYPE_EXAMPLE })));
+  const items = await Promise.all(
+    Array.from({ length: count }).map(
+      async () => await party.database.createItem({ type: TYPE_EXAMPLE })
+    )
+  );
   expect(items.length).toBe(count);
 
   return { client, party };
 };
 
-const UseSelectionTestComponent = ({ party }: { party: Party}) => {
-  const items = useSelection(party?.select().filter({ type: TYPE_EXAMPLE }), []);
+const UseSelectionTestComponent = ({ party }: { party: Party }) => {
+  const items = useSelection(
+    party?.select().filter({ type: TYPE_EXAMPLE }),
+    []
+  );
 
-  const addItem = async () => await party.database.createItem({ type: TYPE_EXAMPLE });
+  const addItem = async () =>
+    await party.database.createItem({ type: TYPE_EXAMPLE });
 
   return (
     <ul data-testid='add' onClick={addItem}>
-      {items?.map(item => <li key={item.id} data-testid='item'>{item.id}</li>)}
+      {items?.map((item) => (
+        <li key={item.id} data-testid='item'>
+          {item.id}
+        </li>
+      ))}
     </ul>
   );
 };

@@ -6,9 +6,13 @@ import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { SearchModel, SearchResult } from '@dxos/react-components';
-import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client';
+import {
+  RegistryClient,
+  RegistryType,
+  ResourceSet
+} from '@dxos/registry-client';
 
-export type SearchFilter = (resource: ResourceSet) => boolean
+export type SearchFilter = (resource: ResourceSet) => boolean;
 
 // TODO(wittjosiah): Move to hooks.
 export const useRegistrySearchModel = (
@@ -16,7 +20,10 @@ export const useRegistrySearchModel = (
   filters: SearchFilter[] = [],
   deps: any[] = []
 ) => {
-  const searchModel = useMemo(() => new RegistrySearchModel(registry, filters), deps);
+  const searchModel = useMemo(
+    () => new RegistrySearchModel(registry, filters),
+    deps
+  );
   return searchModel;
 };
 
@@ -30,7 +37,10 @@ export const getTypeName = ({ type }: RegistryType) => {
 //   return types.some(type => resource.type && type.equals(resource.type));
 // };
 
-export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) => domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
+export const createResourceFilter =
+  (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) =>
+    domainExp.exec(resource.name.authority.toString()) &&
+    resourceExp.exec(resource.name.path);
 
 /**
  * Filterable resource search model.
@@ -43,46 +53,46 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
   private _text?: string = undefined;
   private _types: RegistryType[] = [];
 
-  constructor (
+  constructor(
     private readonly _registry: RegistryClient,
     private _filters: SearchFilter[] = []
   ) {}
 
-  get types () {
+  get types() {
     return this._types;
   }
 
-  get results () {
+  get results() {
     return this._results;
   }
 
-  subscribe (callback: (results: SearchResult<ResourceSet>[]) => void) {
+  subscribe(callback: (results: SearchResult<ResourceSet>[]) => void) {
     return this._update.on(callback);
   }
 
-  async initialize () {
+  async initialize() {
     this._types = await this._registry.listTypeRecords();
     this.doUpdate();
   }
 
-  setText (text?: string) {
+  setText(text?: string) {
     this._text = text;
     this.doUpdate();
   }
 
-  setFilters (filters: SearchFilter[]) {
+  setFilters(filters: SearchFilter[]) {
     this._filters = filters;
     this.doUpdate();
   }
 
-  doUpdate () {
+  doUpdate() {
     setTimeout(async () => {
       // TODO(burdon): Push predicates (e.g., type).
       let resources = await this._registry.listResources({ text: this._text });
       if (this._filters.length) {
-        resources = resources.filter(resource => {
+        resources = resources.filter((resource) => {
           // Exclude if any filter fails.
-          return !this._filters.some(filter => !filter(resource));
+          return !this._filters.some((filter) => !filter(resource));
         });
       }
 

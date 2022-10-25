@@ -14,11 +14,11 @@ import { Party, Client } from '@dxos/client';
 export class TestBuilder {
   _client?: Client;
 
-  get client () {
+  get client() {
     return this._client!;
   }
 
-  async initialize () {
+  async initialize() {
     const client = new Client();
     await client.initialize();
     expect(client.initialized).toBeTruthy();
@@ -30,7 +30,7 @@ export class TestBuilder {
     this._client = client;
   }
 
-  async createParty () {
+  async createParty() {
     assert(this._client);
 
     const party = await this._client.echo.createParty();
@@ -39,7 +39,7 @@ export class TestBuilder {
     return party;
   }
 
-  async destroyParty (party: Party) {
+  async destroyParty(party: Party) {
     assert(this._client);
 
     await party.destroy();
@@ -53,7 +53,7 @@ export class TestBuilder {
   }
 }
 
-type Callback = (client: Client, Party: Party) => Promise<void>
+type Callback = (client: Client, Party: Party) => Promise<void>;
 
 export const testCallback = async (callback: Callback) => {
   const builder = new TestBuilder();

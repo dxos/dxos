@@ -19,9 +19,9 @@ import { Tooltip, valenceColorText, defaultFocus } from '@dxos/react-ui';
 import { FatalErrorBoundary } from './FatalErrorBoundary';
 
 export interface ErrorsContextState {
-  errors: Error[]
-  addError: (error: Error) => void
-  resetErrors: () => void
+  errors: Error[];
+  addError: (error: Error) => void;
+  resetErrors: () => void;
 }
 
 export const ErrorsContext = createContext<ErrorsContextState>({
@@ -76,14 +76,15 @@ export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
       <FatalErrorBoundary>{children}</FatalErrorBoundary>
       <div
         role='none'
-        className={cx(
-          'fixed bottom-4 right-4',
-          valenceColorText('warning')
-        )}
+        className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}
       >
         {!!errors.length && (
           <Tooltip content={t('caught error message')}>
-            <Warning tabIndex={0} weight='duotone' className={cx('w-6 h-6 rounded-md', defaultFocus)} />
+            <Warning
+              tabIndex={0}
+              weight='duotone'
+              className={cx('w-6 h-6 rounded-md', defaultFocus)}
+            />
           </Tooltip>
         )}
       </div>

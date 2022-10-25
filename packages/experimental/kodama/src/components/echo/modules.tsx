@@ -18,18 +18,13 @@ import { PartyMembers } from './PartyMembers';
 import { PartyView } from './PartyView';
 
 const PartyPanel: FC<{
-  children: ReactNode
-  party: Party
-}> = ({
-  children,
-  party
-}) => {
+  children: ReactNode;
+  party: Party;
+}> = ({ children, party }) => {
   return (
     <Panel>
       <Box flexDirection='column' marginBottom={1}>
-        <PartyInfo
-          party={party}
-        />
+        <PartyInfo party={party} />
       </Box>
 
       {children}
@@ -44,43 +39,45 @@ export const createEchoMenu = (): MenuItem | undefined => {
     component: ({ parent }) => {
       const [{ partyKey }] = useAppState();
       const party = useParty(partyKey);
-      const partyItems = useMemo(() => party ? [
-        {
-          id: 'members',
-          label: 'Members',
-          component: () => (
-            <PartyPanel party={party}>
-              <PartyMembers
-                partyKey={party.key}
-              />
-            </PartyPanel>
-          )
-        },
-        {
-          id: 'feeds',
-          label: 'Feeds',
-          component: () => (
-            <PartyPanel party={party}>
-              <PartyFeeds
-                partyKey={party.key}
-              />
-            </PartyPanel>
-          )
-        },
-        {
-          id: 'share',
-          label: 'Share Space',
-          component: () => (
-            <PartyPanel party={party}>
-              <Share
-                onCreate={() => {
-                  return party.createInvitation();
-                }}
-              />
-            </PartyPanel>
-          )
-        }
-      ] : [], [party]);
+      const partyItems = useMemo(
+        () =>
+          party
+            ? [
+                {
+                  id: 'members',
+                  label: 'Members',
+                  component: () => (
+                    <PartyPanel party={party}>
+                      <PartyMembers partyKey={party.key} />
+                    </PartyPanel>
+                  )
+                },
+                {
+                  id: 'feeds',
+                  label: 'Feeds',
+                  component: () => (
+                    <PartyPanel party={party}>
+                      <PartyFeeds partyKey={party.key} />
+                    </PartyPanel>
+                  )
+                },
+                {
+                  id: 'share',
+                  label: 'Share Space',
+                  component: () => (
+                    <PartyPanel party={party}>
+                      <Share
+                        onCreate={() => {
+                          return party.createInvitation();
+                        }}
+                      />
+                    </PartyPanel>
+                  )
+                }
+              ]
+            : [],
+        [party]
+      );
 
       return (
         <Module
@@ -90,9 +87,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
             {
               id: 'parties',
               label: 'Spaces',
-              component: () => (
-                <PartyView />
-              )
+              component: () => <PartyView />
             },
             ...partyItems,
             {
@@ -103,7 +98,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                 const { focusPrevious } = useFocusManager();
                 return (
                   <Join
-                    onJoin={partyKey => {
+                    onJoin={(partyKey) => {
                       setPartyKey(partyKey);
                       focusPrevious();
                     }}
@@ -119,7 +114,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                 const { focusPrevious } = useFocusManager();
                 return (
                   <CreateParty
-                    onCreate={partyKey => {
+                    onCreate={(partyKey) => {
                       setPartyKey(partyKey);
                       focusPrevious();
                     }}

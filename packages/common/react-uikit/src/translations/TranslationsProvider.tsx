@@ -31,9 +31,9 @@ void i18Next.use(initReactI18next).init({
 });
 
 export interface TranslationsProviderProps {
-  children?: ReactNode
-  fallback?: ReactNode
-  resourceExtensions?: Resource
+  children?: ReactNode;
+  fallback?: ReactNode;
+  resourceExtensions?: Resource;
 }
 
 const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
@@ -50,7 +50,11 @@ export const TranslationsProvider = ({
     if (resourceExtensions) {
       Object.keys(resourceExtensions).forEach((language) => {
         Object.keys(resourceExtensions[language]).forEach((ns) => {
-          i18Next.addResourceBundle(language, ns, resourceExtensions[language][ns]);
+          i18Next.addResourceBundle(
+            language,
+            ns,
+            resourceExtensions[language][ns]
+          );
         });
       });
     }
@@ -58,9 +62,7 @@ export const TranslationsProvider = ({
   return (
     <Suspense
       fallback={
-        fallback ?? (
-          <Loading label={enUS[basicNS]['loading translations']} />
-        )
+        fallback ?? <Loading label={enUS[basicNS]['loading translations']} />
       }
     >
       <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>

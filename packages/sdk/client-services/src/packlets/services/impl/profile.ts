@@ -22,7 +22,11 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
+import {
+  InvitationDescriptor,
+  InviteeInvitation,
+  InviteeInvitations
+} from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -31,29 +35,30 @@ import { ServiceContext } from '../service-context';
 export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  constructor (
-    private readonly context: ServiceContext
-  ) {}
+  constructor(private readonly context: ServiceContext) {}
 
-  subscribeProfile (): Stream<SubscribeProfileResponse> {
+  subscribeProfile(): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
-      const emitNext = () => next({
-        profile: this.context.identityManager.identity ? {
-          publicKey: this.context.identityManager.identity.identityKey
-        } : undefined
-      });
+      const emitNext = () =>
+        next({
+          profile: this.context.identityManager.identity
+            ? {
+                publicKey: this.context.identityManager.identity.identityKey
+              }
+            : undefined
+        });
 
       emitNext();
       return this.context.identityManager.stateUpdate.on(emitNext);
     });
   }
 
-  async createProfile (request: CreateProfileRequest): Promise<Profile> {
+  async createProfile(request: CreateProfileRequest): Promise<Profile> {
     await this.context.createIdentity();
     return { publicKey: this.context.identityManager.identity!.identityKey };
   }
 
-  async recoverProfile (request: RecoverProfileRequest): Promise<Profile> {
+  async recoverProfile(request: RecoverProfileRequest): Promise<Profile> {
     return todo();
     if (!request.seedPhrase) {
       throw new Error('Recovery SeedPhrase not provided.');
@@ -65,7 +70,7 @@ export class ProfileService implements ProfileServiceRpc {
     // return profile;
   }
 
-  createInvitation (): Stream<InvitationRequest> {
+  createInvitation(): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         const secret = Buffer.from(generatePasscode());
@@ -83,12 +88,17 @@ export class ProfileService implements ProfileServiceRpc {
         });
         invitation.secret = secret;
 
-        next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
+        next({
+          descriptor: invitation.toProto(),
+          state: InvitationState.WAITING_FOR_CONNECTION
+        });
       });
     });
   }
 
-  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation(
+    request: InvitationDescriptorProto
+  ): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -106,19 +116,27 @@ export class ProfileService implements ProfileServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(InvitationDescriptor.fromProto(request));
+      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(
+        InvitationDescriptor.fromProto(request)
+      );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      haloPartyPromise.then(identity => {
-        next({ id, state: InvitationState.SUCCESS, partyKey: identity.identityKey });
-      }).catch(err => {
-        next({ id, state: InvitationState.ERROR, error: String(err) });
-      });
+      haloPartyPromise
+        .then((identity) => {
+          next({
+            id,
+            state: InvitationState.SUCCESS,
+            partyKey: identity.identityKey
+          });
+        })
+        .catch((err) => {
+          next({ id, state: InvitationState.ERROR, error: String(err) });
+        });
     });
   }
 
-  async authenticateInvitation (request: AuthenticateInvitationRequest) {
+  async authenticateInvitation(request: AuthenticateInvitationRequest) {
     assert(request.processId, 'Process ID is missing.');
     const invitation = this.inviteeInvitations.get(request.processId);
     assert(invitation, 'Invitation not found.');

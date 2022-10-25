@@ -15,7 +15,7 @@ export const init = (options: InitOptions) => {
     environment: options.environment,
     tracesSampleRate: options.sampleRate,
     transport: options.transport,
-    beforeSend: event => {
+    beforeSend: (event) => {
       options.onError?.(event);
 
       return event;

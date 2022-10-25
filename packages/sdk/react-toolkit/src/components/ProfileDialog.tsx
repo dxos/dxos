@@ -11,16 +11,21 @@ import { Dialog } from '@dxos/react-components';
 import { handleKey } from '../helpers';
 
 export interface ProfileDialogProps {
-  open: boolean
-  onCreate: ({ username }: { username: string }) => void
-  onCancel?: () => void
-  onJoinHalo?: () => void
+  open: boolean;
+  onCreate: ({ username }: { username: string }) => void;
+  onCancel?: () => void;
+  onJoinHalo?: () => void;
 }
 
 /**
  * @deprecated Replace with RegistrationDialog.
  */
-export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileDialogProps) => {
+export const ProfileDialog = ({
+  open,
+  onCreate,
+  onCancel,
+  onJoinHalo
+}: ProfileDialogProps) => {
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {
@@ -35,48 +40,38 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
     <Dialog
       open={open}
       title='Create Profile'
-      content={(
+      content={
         <Box sx={{ paddingTop: 1 }}>
           <TextField
             autoFocus
             fullWidth
             required
             value={username}
-            onChange={event => setUsername(event.target.value)}
+            onChange={(event) => setUsername(event.target.value)}
             onKeyPress={handleKey('Enter', handleUpdate)}
             label='Username'
             variant='outlined'
             spellCheck={false}
           />
         </Box>
-      )}
-      actions={(
+      }
+      actions={
         <>
           {onCancel && (
-            <Button
-              onClick={handleCancel}
-              color='secondary'
-            >
+            <Button onClick={handleCancel} color='secondary'>
               Cancel
             </Button>
           )}
           {onJoinHalo && (
-            <Button
-              onClick={onJoinHalo}
-              color='secondary'
-            >
+            <Button onClick={onJoinHalo} color='secondary'>
               Join HALO
             </Button>
           )}
-          <Button
-            color='primary'
-            disabled={!username}
-            onClick={handleUpdate}
-          >
+          <Button color='primary' disabled={!username} onClick={handleUpdate}>
             Create
           </Button>
         </>
-      )}
+      }
     />
   );
 };

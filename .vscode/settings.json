@@ -30,6 +30,7 @@
   "typescript.preferences.importModuleSpecifier": "relative",
   "search.followSymlinks": false,
   "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "hediet.vscode-drawio.theme": "Kennedy",
   "eslint.workingDirectories": [
     { "mode": "auto" }

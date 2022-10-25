@@ -7,45 +7,49 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
 import { TYPES } from './proto';
-import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
+import {
+  EchoEnvelope,
+  FeedMessage,
+  CredentialsMessage
+} from './proto/gen/dxos/echo/feed';
 
 // TODO(burdon): Rename ProtocolMessage.
-export type TypedMessage = TypedProtoMessage<TYPES>
+export type TypedMessage = TypedProtoMessage<TYPES>;
 
 // TODO(burdon): Replace with proto definition.
 export type FeedMeta = {
-  feedKey: PublicKey
-  seq: number
-}
+  feedKey: PublicKey;
+  seq: number;
+};
 
 export type FeedBlock<T> = {
-  feedKey: PublicKey
-  seq: number
-  data: T
-}
+  feedKey: PublicKey;
+  seq: number;
+  data: T;
+};
 
-export type FeedMessageBlock = FeedBlock<FeedMessage>
+export type FeedMessageBlock = FeedBlock<FeedMessage>;
 
 export interface MutationMeta extends FeedMeta {
-  memberKey: PublicKey
+  memberKey: PublicKey;
 }
 
 export interface MutationMetaWithTimeframe extends MutationMeta {
-  timeframe: Timeframe
+  timeframe: Timeframe;
 }
 
 // TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {
-  meta: FeedMeta
-  data: CredentialsMessage
+  meta: FeedMeta;
+  data: CredentialsMessage;
 }
 
 // TODO(burdon): EchoMessageWrapper.
 export interface IEchoStream {
-  meta: MutationMetaWithTimeframe
-  data: EchoEnvelope
+  meta: MutationMetaWithTimeframe;
+  data: EchoEnvelope;
 }
 
 // TODO(burdon): Change to Buffer (same as key).
-export type ItemID = string
-export type ItemType = string
+export type ItemID = string;
+export type ItemType = string;

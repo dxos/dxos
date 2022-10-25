@@ -21,21 +21,24 @@ export class NodeContainer implements BotContainer {
   readonly error = new Event<[string, Error]>();
   readonly exited = new Event<[string, BotExitStatus]>();
 
-  constructor (
+  constructor(
     /**
      * Passed through '-r' to the node runtime to be loaded on stratup.
      */
     private readonly _additionalRequireModules: string[] = []
   ) {}
 
-  async spawn ({ localPath, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
-    assert(localPath, 'Node container only supports "localPath" package specifiers.');
+  async spawn({ localPath, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
+    assert(
+      localPath,
+      'Node container only supports "localPath" package specifiers.'
+    );
     if (this._processes.has(id)) {
       throw new Error(`Bot ${id} already exists.`);
     }
     log(`[${id}] Spawning ${localPath}`);
     const child = fork(localPath, [], {
-      execArgv: this._additionalRequireModules.flatMap(mod => ['-r', mod]),
+      execArgv: this._additionalRequireModules.flatMap((mod) => ['-r', mod]),
       serialization: 'advanced',
       stdio: logFilePath ? 'pipe' : 'inherit',
       env: {
@@ -60,7 +63,10 @@ export class NodeContainer implements BotContainer {
 
     child.on('disconnect', () => {
       log(`[${id}] IPC stream disconnected`);
-      this.error.emit([id, new Error('Bot child process disconnected from IPC stream.')]);
+      this.error.emit([
+        id,
+        new Error('Bot child process disconnected from IPC stream.')
+      ]);
     });
 
     if (logFilePath) {
@@ -72,13 +78,14 @@ export class NodeContainer implements BotContainer {
     return port;
   }
 
-  async kill (id: string) {
-    const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
+  async kill(id: string) {
+    const child =
+      this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
 
     child.kill();
   }
 
-  killAll () {
+  killAll() {
     for (const [id, botProcess] of Array.from(this._processes.entries())) {
       botProcess.kill();
       this._processes.delete(id);
@@ -87,30 +94,36 @@ export class NodeContainer implements BotContainer {
 }
 
 export interface IpcProcessLike {
-  on(event: 'message', listener: (message: Serializable) => void): void
-  off(event: 'message', listener: (message: Serializable) => void): void
+  on(event: 'message', listener: (message: Serializable) => void): void;
+  off(event: 'message', listener: (message: Serializable) => void): void;
 
-  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean
+  send?(
+    message: Serializable,
+    callback?: ((error: Error | null) => void) | undefined
+  ): boolean;
 }
 
 export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({
-  send: (msg) => new Promise<void>((resolve, reject) => {
-    if (!proc.send) {
-      reject(new Error('Given port is not able to send messages'));
-      return;
-    }
-    proc.send(msg, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
+  send: (msg) =>
+    new Promise<void>((resolve, reject) => {
+      if (!proc.send) {
+        reject(new Error('Given port is not able to send messages'));
+        return;
       }
-    });
-  }),
-  subscribe: cb => {
+      proc.send(msg, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    }),
+  subscribe: (cb) => {
     const ipcCallback = (msg: Serializable): void => {
       if (!(msg instanceof Uint8Array)) {
-        log(`Invalid message type received from on IPC socket: type=${typeof msg}`);
+        log(
+          `Invalid message type received from on IPC socket: type=${typeof msg}`
+        );
         return;
       }
       cb(msg);

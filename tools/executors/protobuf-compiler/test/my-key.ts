@@ -3,7 +3,5 @@
 //
 
 export class MyKey {
-  constructor (
-    public data: Uint8Array
-  ) {}
+  constructor(public data: Uint8Array) {}
 }

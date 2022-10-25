@@ -9,7 +9,12 @@ import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
-import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
+import {
+  createBundledRpcServer,
+  RpcPort,
+  RpcPeer,
+  PortTracer
+} from '@dxos/rpc';
 
 import { config } from './config';
 
@@ -20,12 +25,14 @@ export class BackgroundServer {
   // Active and potentially closed connections.
   private readonly _connections = new Set<RpcPeer>();
 
-  public async open () {
+  public async open() {
     await this._client.initialize();
   }
 
-  public async close () {
-    await Promise.all(Array.from(this._connections).map(peer => peer.close()));
+  public async close() {
+    await Promise.all(
+      Array.from(this._connections).map((peer) => peer.close())
+    );
     await this._client.destroy();
   }
 
@@ -34,7 +41,7 @@ export class BackgroundServer {
    *
    * Will block until connection handshake is completed.
    */
-  public async handlePort (port: RpcPort) {
+  public async handlePort(port: RpcPort) {
     const tracer = new PortTracer(port);
     const collector = new TraceCollector(tracer);
 
@@ -77,32 +84,34 @@ export class TraceCollector {
 
   private readonly _message = new Event<RpcMessage>();
 
-  constructor (
-    private readonly _tracer: PortTracer
-  ) {}
+  constructor(private readonly _tracer: PortTracer) {}
 
-  setEnabled (enabled: boolean) {
+  setEnabled(enabled: boolean) {
     if (enabled) {
-      this._subscriptions.add(this._tracer.message.on(msg => {
-        assert(msg.data);
-        const inner = schema.getCodecForType('dxos.rpc.RpcMessage').decode(msg.data);
-        if (inner.request) {
-          if (inner.request.method?.startsWith('TracingService.')) {
-            return;
+      this._subscriptions.add(
+        this._tracer.message.on((msg) => {
+          assert(msg.data);
+          const inner = schema
+            .getCodecForType('dxos.rpc.RpcMessage')
+            .decode(msg.data);
+          if (inner.request) {
+            if (inner.request.method?.startsWith('TracingService.')) {
+              return;
+            }
+
+            assert(inner.request.id);
+            this._ids.add(inner.request.id);
+          } else if (inner.response) {
+            assert(inner.response.id);
+            if (!this._ids.has(inner.response.id)) {
+              return;
+            }
           }
 
-          assert(inner.request.id);
-          this._ids.add(inner.request.id);
-        } else if (inner.response) {
-          assert(inner.response.id);
-          if (!this._ids.has(inner.response.id)) {
-            return;
-          }
-        }
-
-        this._messages.push(inner);
-        this._message.emit(inner);
-      }));
+          this._messages.push(inner);
+          this._message.emit(inner);
+        })
+      );
     } else {
       this._subscriptions.clear();
       this._messages = [];
@@ -110,7 +119,7 @@ export class TraceCollector {
     }
   }
 
-  getMessageStream (): Stream<RpcMessage> {
+  getMessageStream(): Stream<RpcMessage> {
     return new Stream(({ next }) => {
       for (const msg of this._messages) {
         next(msg);

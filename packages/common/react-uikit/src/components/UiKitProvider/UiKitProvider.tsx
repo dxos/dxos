@@ -15,7 +15,7 @@ import { ErrorsBoundaryProvider } from '../ErrorBoundary';
 interface UiKitProviderProps
   extends Omit<UiProviderProps, 'children'>,
     Omit<TranslationsProviderProps, 'children'> {
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 export const UiKitProvider = ({
@@ -32,9 +32,7 @@ export const UiKitProvider = ({
           resourceExtensions
         }}
       >
-        <ErrorsBoundaryProvider>
-          {children}
-        </ErrorsBoundaryProvider>
+        <ErrorsBoundaryProvider>{children}</ErrorsBoundaryProvider>
       </TranslationsProvider>
     </UiProvider>
   );

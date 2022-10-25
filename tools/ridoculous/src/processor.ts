@@ -12,13 +12,13 @@ import { read } from 'to-vfile';
 import { createParser } from './parser.js';
 
 interface Options {
-  autoNumber?: boolean
-  baseDir?: string
-  dryRun?: boolean
-  files?: string
-  html?: boolean
-  outDir?: string
-  verbose?: boolean
+  autoNumber?: boolean;
+  baseDir?: string;
+  dryRun?: boolean;
+  files?: string;
+  html?: boolean;
+  outDir?: string;
+  verbose?: boolean;
 }
 
 export const processFiles = async ({
@@ -48,7 +48,11 @@ export const processFiles = async ({
     const count = diffLines(o, xx.toString() + '\n').length;
     if (count > 1) {
       const parts = path.parse(filename);
-      const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
+      const f = path.format({
+        ...parts,
+        base: undefined,
+        ext: html ? '.html' : '.md'
+      });
       const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
       console.log(`Updating: ${chalk.green(outFilename)}`);
 

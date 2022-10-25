@@ -11,11 +11,16 @@ import { StackTrace } from './stack-trace';
  * @param context Context description that would be included in the printed message.
  * @param body Action which is timed.
  */
-export const warnAfterTimeout = async <T>(timeout: number, context: string, body: () => Promise<T>): Promise<T> => {
+export const warnAfterTimeout = async <T>(
+  timeout: number,
+  context: string,
+  body: () => Promise<T>
+): Promise<T> => {
   const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
     console.warn(
-      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stack.getStack()}`);
+      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stack.getStack()}`
+    );
   }, timeout);
   try {
     return await body();
@@ -40,7 +45,7 @@ export const warnAfterTimeout = async <T>(timeout: number, context: string, body
  *
  * @param timeout Timeout in milliseconds after which the warning is printed.
  */
-export function timed (timeout: number) {
+export function timed(timeout: number) {
   return (
     target: any,
     propertyName: string,
@@ -48,7 +53,11 @@ export function timed (timeout: number) {
   ) => {
     const method = descriptor.value!;
     descriptor.value = function (this: any, ...args: any) {
-      return warnAfterTimeout(timeout, `${target.constructor.name}.${propertyName}`, () => method.apply(this, args));
+      return warnAfterTimeout(
+        timeout,
+        `${target.constructor.name}.${propertyName}`,
+        () => method.apply(this, args)
+      );
     };
   };
 }

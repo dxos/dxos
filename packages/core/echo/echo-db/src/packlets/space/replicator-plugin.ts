@@ -16,29 +16,37 @@ export class ReplicatorPlugin extends AbstractReplicatorPlugin {
   private readonly _feedAdded = new Event<FeedWrapper<FeedMessage>>();
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
 
-  addFeed (feed: FeedWrapper<FeedMessage>) {
+  addFeed(feed: FeedWrapper<FeedMessage>) {
     log('adding feed', { feedKey: feed.key });
 
     this._feeds.add(feed);
     this._feedAdded.emit(feed);
   }
 
-  constructor () {
+  constructor() {
     super({
       load: async () => {
         const feeds = Array.from(this._feeds);
-        log('loading feeds', { feeds: feeds.map(feed => feed.key) });
-        return feeds.map((feed) => ({ discoveryKey: feed.properties.discoveryKey }));
+        log('loading feeds', { feeds: feeds.map((feed) => feed.key) });
+        return feeds.map((feed) => ({
+          discoveryKey: feed.properties.discoveryKey
+        }));
       },
 
-      subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._feedAdded.on(async (feed) => {
-        log('adding feed', { feedKey: feed.key });
-        addFeedToReplicatedSet({ discoveryKey: feed.properties.discoveryKey });
-      }),
+      subscribe: (addFeedToReplicatedSet: (feed: any) => void) =>
+        this._feedAdded.on(async (feed) => {
+          log('adding feed', { feedKey: feed.key });
+          addFeedToReplicatedSet({
+            discoveryKey: feed.properties.discoveryKey
+          });
+        }),
 
       replicate: async (remoteFeeds, info) => {
         const feeds = Array.from(this._feeds);
-        log('replicating', { peerId: info.session, feeds: feeds.map(feed => feed.key) });
+        log('replicating', {
+          peerId: info.session,
+          feeds: feeds.map((feed) => feed.key)
+        });
         return feeds;
       }
     });

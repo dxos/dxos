@@ -14,23 +14,15 @@ import { remarkHeadings } from './remark-headings.js';
 
 test('remarkHeadings', () => {
   const tree = u('root', [
-    u('heading', { depth: 1 }, [
-      u('text', { value: 'Test' })
-    ]),
+    u('heading', { depth: 1 }, [u('text', { value: 'Test' })]),
     u('heading', { depth: 2 }, [
       u('text', { value: 'TOC' }),
       u('html', { value: '<!-- @toc-ignore -->' })
     ]),
     u('html', { value: '<!-- @toc -->' }),
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'HALO' })
-    ]),
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'ECHO' })
-    ]),
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'MESH' })
-    ])
+    u('heading', { depth: 2 }, [u('text', { value: 'HALO' })]),
+    u('heading', { depth: 2 }, [u('text', { value: 'ECHO' })]),
+    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })])
   ]);
 
   // Process content.
@@ -56,15 +48,9 @@ test('remarkHeadings', () => {
 
 test('remarkHeadings with remark', () => {
   const tree = u('root', [
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'HALO' })
-    ]),
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'ECHO' })
-    ]),
-    u('heading', { depth: 2 }, [
-      u('text', { value: 'MESH' })
-    ])
+    u('heading', { depth: 2 }, [u('text', { value: 'HALO' })]),
+    u('heading', { depth: 2 }, [u('text', { value: 'ECHO' })]),
+    u('heading', { depth: 2 }, [u('text', { value: 'MESH' })])
   ]);
 
   // Process content.

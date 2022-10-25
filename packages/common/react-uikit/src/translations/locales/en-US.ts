@@ -26,8 +26,10 @@ export const uikit = {
   'cancel label': 'Cancel',
   'validate seed phrase label': 'Validate seed phrase',
   'fatal error label': 'Runtime error',
-  'fatal error message': 'Something went wrong that requires the app to be reloaded.',
-  'caught error message': 'Something went wrong; check the console for details.',
+  'fatal error message':
+    'Something went wrong that requires the app to be reloaded.',
+  'caught error message':
+    'Something went wrong; check the console for details.',
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',
   'generic copy label': 'Copy',

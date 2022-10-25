@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Button, Dialog, Tooltip } from '@dxos/react-ui';
 
 export interface FatalErrorProps {
-  error: Error
+  error: Error;
 }
 
 export const FatalError = ({ error }: FatalErrorProps) => {

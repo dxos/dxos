@@ -4,7 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
+import {
+  createSvgContext,
+  FullScreen,
+  Grid,
+  SVG,
+  SVGContextProvider,
+  Zoom
+} from '@dxos/gem-core';
 
 import {
   convertTreeToGraph,
@@ -26,7 +33,10 @@ export default {
 seed(1);
 
 export const Primary = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+  const model = useMemo(
+    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
+    []
+  );
 
   return (
     <FullScreen>
@@ -35,11 +45,7 @@ export const Primary = () => {
           <Markers />
           <Grid axis />
           <Zoom extent={[1 / 2, 2]}>
-            <Graph
-              model={model}
-              drag
-              arrows
-            />
+            <Graph model={model} drag arrows />
           </Zoom>
         </SVG>
       </SVGContextProvider>
@@ -48,27 +54,34 @@ export const Primary = () => {
 };
 
 export const Secondary = () => {
-  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
+  const model = useMemo(
+    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
+    []
+  );
   const context = createSvgContext();
-  const projector = useMemo(() => new GraphForceProjector(context, {
-    guides: true,
-    forces: {
-      manyBody: {
-        strength: -80
-      },
-      link: {
-        distance: 40,
-        iterations: 5
-      },
-      radial: {
-        radius: 100,
-        strength: 0.02
-      }
-    },
-    attributes: {
-      radius: (node, count) => 6 + Math.log(count + 1) * 4
-    }
-  }), []);
+  const projector = useMemo(
+    () =>
+      new GraphForceProjector(context, {
+        guides: true,
+        forces: {
+          manyBody: {
+            strength: -80
+          },
+          link: {
+            distance: 40,
+            iterations: 5
+          },
+          radial: {
+            radius: 100,
+            strength: 0.02
+          }
+        },
+        attributes: {
+          radius: (node, count) => 6 + Math.log(count + 1) * 4
+        }
+      }),
+    []
+  );
 
   return (
     <FullScreen>
@@ -77,12 +90,7 @@ export const Secondary = () => {
           <Markers />
           <Grid axis />
           <Zoom extent={[1 / 2, 2]}>
-            <Graph
-              model={model}
-              drag
-              arrows
-              projector={projector}
-            />
+            <Graph model={model} drag arrows projector={projector} />
           </Zoom>
         </SVG>
       </SVGContextProvider>
@@ -111,7 +119,9 @@ export const Tertiary = ({ graph = true }) => {
               arrows
               labels={{
                 text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                  return highlight || selected.has(node.id) ? node.data.label : undefined;
+                  return highlight || selected.has(node.id)
+                    ? node.data.label
+                    : undefined;
                 }
               }}
               attributes={{

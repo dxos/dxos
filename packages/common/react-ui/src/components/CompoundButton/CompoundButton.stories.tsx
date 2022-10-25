@@ -25,7 +25,7 @@ const Template = ({ ...args }: Omit<CompoundButtonProps, 'ref'>) => (
   </Container>
 );
 
-export const Default = templateForComponent(Template)({ });
+export const Default = templateForComponent(Template)({});
 Default.args = {
   children: 'Hello',
   description: 'This is a compound button',

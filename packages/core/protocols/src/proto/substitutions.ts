@@ -15,19 +15,26 @@ export const substitutions = {
   // TODO(dmaretskyi): Shouldn't be substituted to PublicKey.
   'dxos.keys.PrivateKey': {
     encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
-    decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
+    decode: (value: any) =>
+      PublicKey.from(new Uint8Array(value.data)).asBuffer()
   },
 
   'dxos.echo.timeframe.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
-      frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
+      frames: timeframe
+        .frames()
+        .map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
     }),
 
-    decode: (vector: any) => new Timeframe(
-      (vector.frames ?? [])
-        .filter((frame: any) => frame.feedKey != null && frame.seq != null)
-        .map((frame: any) => [PublicKey.from(new Uint8Array(frame.feedKey)), frame.seq])
-    )
+    decode: (vector: any) =>
+      new Timeframe(
+        (vector.frames ?? [])
+          .filter((frame: any) => frame.feedKey != null && frame.seq != null)
+          .map((frame: any) => [
+            PublicKey.from(new Uint8Array(frame.feedKey)),
+            frame.seq
+          ])
+      )
   }
 };
 

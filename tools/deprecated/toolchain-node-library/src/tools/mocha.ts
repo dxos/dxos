@@ -6,10 +6,10 @@ import { Config } from '../config';
 import { execTool } from './common';
 
 export interface ExecMochaOpts {
-  config: Config
-  forceClose?: boolean
-  userArgs?: string[]
-  jsdom?: boolean
+  config: Config;
+  forceClose?: boolean;
+  userArgs?: string[];
+  jsdom?: boolean;
 }
 
 /**
@@ -29,10 +29,7 @@ export const execMocha = async ({
   jsdom = false
 }: ExecMochaOpts) => {
   const {
-    tests: {
-      src: defaultSources,
-      spec: defaultSpec
-    }
+    tests: { src: defaultSources, spec: defaultSpec }
   } = config;
 
   //
@@ -65,7 +62,8 @@ export const execMocha = async ({
   const options = [
     ...sources,
     forceClose ? '--exit' : '--no-exit',
-    '-t', '15000',
+    '-t',
+    '15000',
     ...userArgs
   ];
 
@@ -90,14 +88,20 @@ export const execMocha = async ({
   // console.log('Options:', JSON.stringify(options, undefined, 2));
 
   const requires = jsdom ? ['-r', 'jsdom-global/register'] : [];
-  await execTool('mocha', [
-    ...requires,
-    '-r', '@swc-node/register',
-    // Causes performance issues when loaded. Enable manually when needed.
-    // '-r', require.resolve('./util/wtfnode.js'),
-    '-r', require.resolve('./util/catch-unhandled-rejections.js'),
-    ...options
-  ], {
-    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
-  });
+  await execTool(
+    'mocha',
+    [
+      ...requires,
+      '-r',
+      '@swc-node/register',
+      // Causes performance issues when loaded. Enable manually when needed.
+      // '-r', require.resolve('./util/wtfnode.js'),
+      '-r',
+      require.resolve('./util/catch-unhandled-rejections.js'),
+      ...options
+    ],
+    {
+      stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
+    }
+  );
 };

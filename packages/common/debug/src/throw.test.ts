@@ -5,9 +5,12 @@
 import { expectToThrow } from './throw';
 
 it('expectToThrow', async function () {
-  await expectToThrow(() => new Promise((resolve, reject) => {
-    setTimeout(() => {
-      reject(new Error());
-    }, 100);
-  }));
+  await expectToThrow(
+    () =>
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject(new Error());
+        }, 100);
+      })
+  );
 });

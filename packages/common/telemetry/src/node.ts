@@ -27,7 +27,11 @@ export const init = (options: InitOptions) => {
 /**
  *
  */
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({
+  machineId,
+  identityId: anonymousId,
+  ...options
+}: PageOptions) => {
   assert(analytics, 'Analytics not initialized');
 
   analytics.page({
@@ -68,7 +72,7 @@ export const event = ({
 export const flush = async () => {
   assert(analytics, 'Analytics not initialized');
 
-  await analytics.flush(err => {
+  await analytics.flush((err) => {
     captureException(err);
   });
 };

@@ -19,7 +19,7 @@ import {
 
 // TODO(zarco): Add mobile adjustments so the drawer goes on top of the content.
 
-type Direction = 'left' | 'right'
+type Direction = 'left' | 'right';
 
 // ----------------------------------------------------------------------------.
 // Drawer.
@@ -27,27 +27,29 @@ type Direction = 'left' | 'right'
 // ----------------------------------------------------------------------------.
 
 interface SlidingDrawerProps extends MuiDrawerProps {
-  direction?: Direction
-  drawerWidth: number
+  direction?: Direction;
+  drawerWidth: number;
 }
 
 const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerWidth'
 })<SlidingDrawerProps>(({ theme, direction, drawerWidth, open }) => ({
-  'width': drawerWidth,
-  'flexShrink': 0,
-  'position': 'absolute',
-  'top': 0,
-  'bottom': 0,
-  'overflow': 'hidden',
-  'pointerEvents': open ? 'auto' : 'none',
+  width: drawerWidth,
+  flexShrink: 0,
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  overflow: 'hidden',
+  pointerEvents: open ? 'auto' : 'none',
   '& .MuiDrawer-paper': {
     width: drawerWidth,
     boxSizing: 'content-box',
     overflow: 'hidden',
     border: 'none',
-    borderRight: (direction === 'left') ? `1px solid ${theme.palette.divider}` : undefined,
-    borderLeft: (direction === 'right') ? `1px solid ${theme.palette.divider}` : undefined
+    borderRight:
+      direction === 'left' ? `1px solid ${theme.palette.divider}` : undefined,
+    borderLeft:
+      direction === 'right' ? `1px solid ${theme.palette.divider}` : undefined
   }
 }));
 
@@ -59,13 +61,14 @@ export const SlidingDrawer: FunctionComponent<SlidingDrawerProps> = Drawer;
 // ----------------------------------------------------------------------------.
 
 export interface AppBarProps extends MuiAppBarProps {
-  direction?: Direction
-  drawerOpen: boolean
-  drawerWidth: number
+  direction?: Direction;
+  drawerOpen: boolean;
+  drawerWidth: number;
 }
 
 const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) =>
+    prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<AppBarProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
@@ -75,8 +78,8 @@ const AppBar = styled(MuiAppBar, {
   marginRight: 0,
   ...(drawerOpen && {
     width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-    marginRight: (direction === 'right') ? drawerWidth : undefined,
+    marginLeft: direction === 'left' ? `${drawerWidth}px` : undefined,
+    marginRight: direction === 'right' ? drawerWidth : undefined,
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen
@@ -92,13 +95,14 @@ export const SlidingAppBar: FunctionComponent<AppBarProps> = AppBar;
 // ----------------------------------------------------------------------------.
 
 interface ContentProps {
-  direction?: Direction
-  drawerOpen: boolean
-  drawerWidth: number
+  direction?: Direction;
+  drawerOpen: boolean;
+  drawerWidth: number;
 }
 
 const Content = styled('main', {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) =>
+    prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   display: 'flex',
   overflow: 'hidden',
@@ -111,8 +115,8 @@ const Content = styled('main', {
   marginLeft: 0,
   marginRight: 0,
   ...(drawerOpen && {
-    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-    marginRight: (direction === 'right') ? `${drawerWidth}px` : undefined,
+    marginLeft: direction === 'left' ? `${drawerWidth}px` : undefined,
+    marginRight: direction === 'right' ? `${drawerWidth}px` : undefined,
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen
@@ -120,15 +124,17 @@ const Content = styled('main', {
   })
 }));
 
-export const SlidingContent: FunctionComponent<PropsWithChildren<ContentProps>> = Content;
+export const SlidingContent: FunctionComponent<
+  PropsWithChildren<ContentProps>
+> = Content;
 
 // ----------------------------------------------------------------------------.
 // Helpers.
 // ----------------------------------------------------------------------------.
 
 interface CloseButtonProps {
-  direction?: Direction
-  onClose: () => void
+  direction?: Direction;
+  onClose: () => void;
 }
 
 export const CloseButton = ({
@@ -147,9 +153,9 @@ export const CloseButton = ({
 );
 
 export interface OpenButtonProps {
-  direction?: Direction
-  onOpen: () => void
-  sx?: any
+  direction?: Direction;
+  onOpen: () => void;
+  sx?: any;
 }
 
 export const OpenButton = ({

@@ -43,7 +43,7 @@ const main = async () => {
       type: 'string'
     })
     .option('skip-version-check', {
-      description: 'Don\'t check for new NPM version',
+      description: "Don't check for new NPM version",
       type: 'boolean',
       default: false
     })
@@ -55,10 +55,10 @@ const main = async () => {
         debug,
         skipVersionCheck
       }: {
-        config: string
-        username: string
-        debug: boolean
-        skipVersionCheck: boolean
+        config: string;
+        username: string;
+        debug: boolean;
+        skipVersionCheck: boolean;
       }) => {
         if (!skipVersionCheck) {
           console.log('Checking version...');
@@ -70,7 +70,9 @@ const main = async () => {
         }
 
         // Create client.
-        const config: ConfigProto = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigProto;
+        const config: ConfigProto = yaml.load(
+          fs.readFileSync(configFile, { encoding: 'utf8' })
+        ) as ConfigProto;
         const client = new Client(config);
         await client.initialize();
 
@@ -83,8 +85,7 @@ const main = async () => {
         process.exit();
       }
     })
-    .help()
-    .argv;
+    .help().argv;
 };
 
 void main();

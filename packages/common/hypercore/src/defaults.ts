@@ -3,7 +3,10 @@
 //
 
 import type {
-  HypercoreOptions, ReadStreamOptions, ReplicationOptions, WriteStreamOptions
+  HypercoreOptions,
+  ReadStreamOptions,
+  ReplicationOptions,
+  WriteStreamOptions
 } from 'hypercore';
 
 /**

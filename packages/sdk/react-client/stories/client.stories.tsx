@@ -20,9 +20,7 @@ const TestApp = () => {
     });
   }, []);
 
-  return (
-    <ClientPanel client={client} />
-  );
+  return <ClientPanel client={client} />;
 };
 
 export const Primary = () => (

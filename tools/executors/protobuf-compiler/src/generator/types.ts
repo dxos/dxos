@@ -17,16 +17,16 @@ import { SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
-const createSubstitutionsReference = (type: string): ts.TypeNode => f.createTypeReferenceNode(
-  f.createIdentifier('ReturnType'),
-  [f.createIndexedAccessTypeNode(
+const createSubstitutionsReference = (type: string): ts.TypeNode =>
+  f.createTypeReferenceNode(f.createIdentifier('ReturnType'), [
     f.createIndexedAccessTypeNode(
-      f.createTypeQueryNode(f.createIdentifier('substitutions')),
-      f.createLiteralTypeNode(f.createStringLiteral(type))
-    ),
-    f.createLiteralTypeNode(f.createStringLiteral('decode'))
-  )]
-);
+      f.createIndexedAccessTypeNode(
+        f.createTypeQueryNode(f.createIdentifier('substitutions')),
+        f.createLiteralTypeNode(f.createStringLiteral(type))
+      ),
+      f.createLiteralTypeNode(f.createStringLiteral('decode'))
+    )
+  ]);
 
 const getPrimitiveType = (type: string): ts.TypeNode => {
   switch (type) {
@@ -65,9 +65,13 @@ const getPrimitiveType = (type: string): ts.TypeNode => {
   }
 };
 
-type PbType = protobufjs.Enum | protobufjs.Type | string
+type PbType = protobufjs.Enum | protobufjs.Type | string;
 
-export const types = (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) => {
+export const types = (
+  type: PbType,
+  containingObject: protobufjs.ReflectionObject,
+  subs: SubstitutionsMap
+) => {
   if (typeof type === 'string') {
     return getPrimitiveType(type);
   } else if (type.fullName === '.google.protobuf.Empty') {
@@ -79,15 +83,24 @@ export const types = (type: PbType, containingObject: protobufjs.ReflectionObjec
   }
 };
 
-export const getTypeReference = (to: protobufjs.ReflectionObject, from?: protobufjs.ReflectionObject) => {
+export const getTypeReference = (
+  to: protobufjs.ReflectionObject,
+  from?: protobufjs.ReflectionObject
+) => {
   const toNamespace = getNamespaceName(to);
   const fromNamespace = from && getNamespaceName(from);
 
   if (fromNamespace && namesEqual(toNamespace, fromNamespace)) {
-    const relativeName = getRelativeName(getFullNestedTypeName(to), toNamespace);
+    const relativeName = getRelativeName(
+      getFullNestedTypeName(to),
+      toNamespace
+    );
     return f.createTypeReferenceNode(convertNameToIdentifier(relativeName));
   } else {
-    const name = [getSafeNamespaceIdentifier(toNamespace), ...getFullNestedTypeName(to)];
+    const name = [
+      getSafeNamespaceIdentifier(toNamespace),
+      ...getFullNestedTypeName(to)
+    ];
     return f.createTypeReferenceNode(convertNameToIdentifier(name));
   }
 };

@@ -31,29 +31,19 @@ export const Left = () => {
   return (
     <FullScreen sx={{ flexDirection: 'row' }}>
       {/* AppBar. */}
-      <SlidingAppBar
-        direction='left'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+      <SlidingAppBar direction='left' drawerOpen={open} drawerWidth={width}>
         <Toolbar
           disableGutters
           variant='dense'
           sx={{ marginLeft: 1, marginRight: 1 }}
         >
-          {!open && (
-            <OpenButton onOpen={() => setOpen(true)} />
-          )}
+          {!open && <OpenButton onOpen={() => setOpen(true)} />}
           <Typography sx={{ marginLeft: 1 }}>APPBAR</Typography>
         </Toolbar>
       </SlidingAppBar>
 
       {/* Main content. */}
-      <SlidingContent
-        direction='left'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+      <SlidingContent direction='left' drawerOpen={open} drawerWidth={width}>
         <Toolbar variant='dense' />
         <Typography sx={{ padding: 2 }}>{text}</Typography>
       </SlidingContent>
@@ -73,10 +63,7 @@ export const Left = () => {
         >
           <Typography>HEADER</Typography>
           <Box sx={{ flex: 1 }} />
-          <CloseButton
-            direction='left'
-            onClose={() => setOpen(false)}
-          />
+          <CloseButton direction='left' onClose={() => setOpen(false)} />
         </Toolbar>
         <Divider />
         <Typography sx={{ padding: 2 }}>SIDEBAR</Typography>
@@ -91,11 +78,7 @@ export const Right = () => {
   return (
     <FullScreen sx={{ flexDirection: 'row' }}>
       {/* AppBar. */}
-      <SlidingAppBar
-        direction='right'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+      <SlidingAppBar direction='right' drawerOpen={open} drawerWidth={width}>
         <Toolbar
           disableGutters
           variant='dense'
@@ -104,20 +87,13 @@ export const Right = () => {
           <Typography>APPBAR</Typography>
           <Box sx={{ flex: 1 }} />
           {!open && (
-            <OpenButton
-              direction='right'
-              onOpen={() => setOpen(true)}
-            />
+            <OpenButton direction='right' onOpen={() => setOpen(true)} />
           )}
         </Toolbar>
       </SlidingAppBar>
 
       {/* Main content. */}
-      <SlidingContent
-        direction='right'
-        drawerOpen={open}
-        drawerWidth={width}
-      >
+      <SlidingContent direction='right' drawerOpen={open} drawerWidth={width}>
         <Toolbar variant='dense' />
         <Typography sx={{ padding: 2 }}>{text}</Typography>
       </SlidingContent>
@@ -135,10 +111,7 @@ export const Right = () => {
           variant='dense'
           sx={{ marginLeft: 1, marginRight: 1 }}
         >
-          <CloseButton
-            direction='right'
-            onClose={() => setOpen(false)}
-          />
+          <CloseButton direction='right' onClose={() => setOpen(false)} />
           <Typography sx={{ marginLeft: 1 }}>HEADER</Typography>
         </Toolbar>
         <Divider />

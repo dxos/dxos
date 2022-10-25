@@ -8,17 +8,15 @@ import { Box, Button, TextField, Toolbar } from '@mui/material';
 
 import { JsonPanel } from './JsonPanel';
 
-export const PartyJoinPanel = (
-  {
-    status,
-    onSubmit,
-    onAuthenticate
-  }: {
-    status: any // TODO(burdon): Define.
-    onSubmit: (invitationCode: string) => void
-    onAuthenticate: (pin: string) => void
-  }
-) => {
+export const PartyJoinPanel = ({
+  status,
+  onSubmit,
+  onAuthenticate
+}: {
+  status: any; // TODO(burdon): Define.
+  onSubmit: (invitationCode: string) => void;
+  onAuthenticate: (pin: string) => void;
+}) => {
   const [invitationCode, setInvitationCode] = useState<string>('');
   const [pin, setPin] = useState<string>('');
 
@@ -60,14 +58,13 @@ export const PartyJoinPanel = (
               <TextField
                 disabled={!invitationCode}
                 value={pin}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setPin(event.target.value)
+                }
                 size='small'
                 label='PIN'
               />
-              <Button
-                disabled={!pin}
-                onClick={() => onAuthenticate(pin)}
-              >
+              <Button disabled={!pin} onClick={() => onAuthenticate(pin)}>
                 Submit
               </Button>
             </Box>
@@ -75,7 +72,7 @@ export const PartyJoinPanel = (
         </Box>
       </Box>
 
-      {(Object.keys(status).length > 0) && (
+      {Object.keys(status).length > 0 && (
         <Box sx={{ marginTop: 1 }}>
           <JsonPanel value={status} />
         </Box>

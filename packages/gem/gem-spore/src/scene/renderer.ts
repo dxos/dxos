@@ -10,23 +10,23 @@ import { SVGContext } from '@dxos/gem-core';
  * Base class for renderes that draw layouts.
  */
 export abstract class Renderer<LAYOUT, OPTIONS> {
-  constructor (
+  constructor(
     protected readonly _context: SVGContext,
     protected readonly _ref: RefObject<SVGGElement>,
     protected readonly _options?: OPTIONS
   ) {}
 
-  get context (): SVGContext {
+  get context(): SVGContext {
     return this._context;
   }
 
-  get root (): SVGGElement {
+  get root(): SVGGElement {
     return this._ref.current;
   }
 
-  get options () {
-    return this._options || {} as OPTIONS;
+  get options() {
+    return this._options || ({} as OPTIONS);
   }
 
-  abstract update (layout: LAYOUT);
+  abstract update(layout: LAYOUT);
 }

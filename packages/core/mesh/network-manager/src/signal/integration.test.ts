@@ -25,7 +25,9 @@ describe('Signal Integration Test', function () {
     broker.stop();
   });
 
-  const setupPeer = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
+  const setupPeer = ({
+    topic = PublicKey.random()
+  }: { topic?: PublicKey } = {}) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
     signalManager.onMessage.on((message) =>
       messageRouter.receiveMessage(message)

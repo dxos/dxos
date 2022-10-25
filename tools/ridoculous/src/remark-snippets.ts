@@ -11,9 +11,9 @@ import { u } from 'unist-builder';
 import { removeTrailing, visitDirectives } from './util.js';
 
 type Type = {
-  lang: string
-  parser?: (content: string, options: { hash?: string }) => string
-}
+  lang: string;
+  parser?: (content: string, options: { hash?: string }) => string;
+};
 
 const langType: { [key: string]: Type } = {
   '.sh': {
@@ -45,7 +45,9 @@ const langType: { [key: string]: Type } = {
       if (message) {
         // https://www.npmjs.com/package/protocol-buffers-schema
         const schema = protobuf.parse(content);
-        schema.messages = schema.messages.filter(({ name }) => name === message);
+        schema.messages = schema.messages.filter(
+          ({ name }) => name === message
+        );
         schema.imports = [];
         schema.package = '';
 
@@ -101,9 +103,11 @@ export function remarkSnippets () {
 
               // Check if the link node already exists.
               const linkNode = parent.children[i! + 1];
-              if (linkNode?.type === 'paragraph' &&
+              if (
+                linkNode?.type === 'paragraph' &&
                 linkNode.children[0]?.type === 'html' &&
-                linkNode.children[0]?.value === '<sub>') {
+                linkNode.children[0]?.value === '<sub>'
+              ) {
                 existing++;
               }
 
@@ -123,11 +127,10 @@ export function remarkSnippets () {
                     // E.g., ../../packages/halo/halo-protocol/src/proto/defs/credentials.proto
                     const match = filePath.match(/(.+)\/(src\/.+\/.+)/);
                     const [, pkgDir, relPath] = match ?? [];
-                    const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf8'));
-                    return [
-                      name,
-                      relPath
-                    ];
+                    const { name } = JSON.parse(
+                      fs.readFileSync(`${pkgDir}/package.json`, 'utf8')
+                    );
+                    return [name, relPath];
                   } catch (err) {
                     return [];
                   }
@@ -136,14 +139,22 @@ export function remarkSnippets () {
                 // Get package name.
                 const [pkgName, relPath] = getNodePackage();
 
-                nodes.push(u('paragraph', {}, [
-                  u('html', { value: '<sub>' }),
-                  pkgName ? u('inlineCode', { value: pkgName }) : null,
-                  u('link', { url: path.relative(rootDir, filePath) }, [
-                    u('inlineCode', { value: `[${relPath ?? path.basename(filePath)}]` })
-                  ]),
-                  u('html', { value: '</sub>' })
-                ].filter(Boolean)));
+                nodes.push(
+                  u(
+                    'paragraph',
+                    {},
+                    [
+                      u('html', { value: '<sub>' }),
+                      pkgName ? u('inlineCode', { value: pkgName }) : null,
+                      u('link', { url: path.relative(rootDir, filePath) }, [
+                        u('inlineCode', {
+                          value: `[${relPath ?? path.basename(filePath)}]`
+                        })
+                      ]),
+                      u('html', { value: '</sub>' })
+                    ].filter(Boolean)
+                  )
+                );
               }
 
               nodes.push(u('code', { lang, value: content }));

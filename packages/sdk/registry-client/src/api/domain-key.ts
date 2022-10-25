@@ -13,25 +13,23 @@ export const DOMAIN_KEY_LENGTH = 32;
  * Domains must conform to regex: /^[a-z0-9_]+$/.
  */
 export class DomainKey {
-  static fromHex (hexString: string): DomainKey {
+  static fromHex(hexString: string): DomainKey {
     return new DomainKey(new Uint8Array(Buffer.from(hexString, 'hex')));
   }
 
-  static random (): DomainKey {
+  static random(): DomainKey {
     return new DomainKey(new Uint8Array(randomBytes(DOMAIN_KEY_LENGTH)));
   }
 
-  constructor (
-    public readonly value: Uint8Array
-  ) {
+  constructor(public readonly value: Uint8Array) {
     assert(value.length === DOMAIN_KEY_LENGTH, 'Invalid domain key length.');
   }
 
-  toHex () {
+  toHex() {
     return Buffer.from(this.value).toString('hex');
   }
 
-  toString () {
+  toString() {
     return this.toHex();
   }
 }

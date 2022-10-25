@@ -20,23 +20,21 @@ import { getFullPath } from './utils';
 export abstract class AbstractStorage implements Storage {
   protected readonly _files = new Map<string, File>();
 
-  public readonly abstract type: StorageType
+  public abstract readonly type: StorageType;
 
   // TODO(burdon): Make required.
-  constructor (
-    protected readonly path: string
-  ) {}
+  constructor(protected readonly path: string) {}
 
-  toString () {
+  toString() {
     return `Storage(${JSON.stringify({ type: this.type, path: this.path })})`;
   }
 
-  public get size () {
+  public get size() {
     return this._files.size;
   }
 
   // TODO(burdon): Make required.
-  public createDirectory (sub = ''): Directory {
+  public createDirectory(sub = ''): Directory {
     // assert(sub.length);
     return new Directory(
       this.type,
@@ -47,7 +45,7 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  async destroy () {
+  async destroy() {
     try {
       await this._closeFilesInPath('');
       await this._delete('');
@@ -57,7 +55,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected getOrCreateFile (path: string, filename: string, opts?: any): File {
+  protected getOrCreateFile(path: string, filename: string, opts?: any): File {
     const fullPath = join(path, filename);
 
     let native;
@@ -79,20 +77,26 @@ export abstract class AbstractStorage implements Storage {
     return file;
   }
 
-  protected _destroy (): Promise<void> | undefined {
+  protected _destroy(): Promise<void> | undefined {
     return undefined;
   }
 
   /**
    * Attempt to reopen file.
    */
-  protected _openFile (file: RandomAccessStorage): RandomAccessStorage | undefined {
+  protected _openFile(
+    file: RandomAccessStorage
+  ): RandomAccessStorage | undefined {
     return undefined;
   }
 
-  protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessStorage;
+  protected abstract _createFile(
+    path: string,
+    filename: string,
+    opts?: any
+  ): RandomAccessStorage;
 
-  private _getFileIfExists (filename: string): File | undefined {
+  private _getFileIfExists(filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
       if (file && !file.destroyed) {
@@ -101,7 +105,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  private _getFiles (path: string): Map<string, File> {
+  private _getFiles(path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
       Array.from(this._files.entries()).filter(([path]) => {
@@ -110,18 +114,23 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  private async _closeFilesInPath (path: string): Promise<void> {
-    await Promise.all(Array.from(this._getFiles(path).values()).map(
-      file => file.close().catch((err: any) => log.catch(err))
-    ));
+  private async _closeFilesInPath(path: string): Promise<void> {
+    await Promise.all(
+      Array.from(this._getFiles(path).values()).map((file) =>
+        file.close().catch((err: any) => log.catch(err))
+      )
+    );
   }
 
   // TODO(burdon): Delete directory (not just listed files).
-  protected async _delete (path: string): Promise<void> {
-    await Promise.all(Array.from(this._getFiles(path)).map(([path, file]) => {
-      return file.destroy()
-        .then(() => this._files.delete(path))
-        .catch((err: any) => log.error(err.message));
-    }));
+  protected async _delete(path: string): Promise<void> {
+    await Promise.all(
+      Array.from(this._getFiles(path)).map(([path, file]) => {
+        return file
+          .destroy()
+          .then(() => this._files.delete(path))
+          .catch((err: any) => log.error(err.message));
+      })
+    );
   }
 }

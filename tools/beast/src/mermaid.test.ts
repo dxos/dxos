@@ -9,17 +9,17 @@ import { Flowchart } from './mermaid';
 describe('Mermaid builder', function () {
   it('Flowchart', function () {
     const flowchart = new Flowchart({
-      linkStyle: { 'stroke': 'green' }
+      linkStyle: { stroke: 'green' }
     });
 
-    flowchart
-      .addClassDef('test', { 'fill': 'red' });
+    flowchart.addClassDef('test', { fill: 'red' });
 
     flowchart
       .addSubgraph({
         id: 'G1',
         style: {
-          'fill': '#EEE', 'stroke-width': 'none'
+          fill: '#EEE',
+          'stroke-width': 'none'
         }
       })
       .addNode({
@@ -30,16 +30,14 @@ describe('Mermaid builder', function () {
       })
       .addNode({
         id: 'B',
-        style: { 'fill': 'blue', 'stroke-width': '4px' }
+        style: { fill: 'blue', 'stroke-width': '4px' }
       })
       .addSubgraph({ id: 'G2', label: ' ' })
       .addNode({ id: 'C' });
 
-    flowchart
-      .addSubgraph({ id: 'G3' });
+    flowchart.addSubgraph({ id: 'G3' });
 
-    flowchart
-      .addNode({ id: 'D' });
+    flowchart.addNode({ id: 'D' });
 
     flowchart
       .addLink({ source: 'A', target: 'B' })
@@ -48,7 +46,7 @@ describe('Mermaid builder', function () {
         source: 'B',
         target: 'D',
         style: {
-          'stroke': 'red'
+          stroke: 'red'
         }
       });
 

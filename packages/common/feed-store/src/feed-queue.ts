@@ -18,7 +18,7 @@ export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
 };
 
-export type FeedQueueOptions = {}
+export type FeedQueueOptions = {};
 
 /**
  * Async queue using an AsyncIterator created from a hypercore.
@@ -26,23 +26,25 @@ export type FeedQueueOptions = {}
 export class FeedQueue<T extends {}> {
   public updated = new Event<FeedQueue<T>>();
 
-  private readonly _messageTrigger = new Trigger<FeedBlock<T>>({ autoReset: true });
+  private readonly _messageTrigger = new Trigger<FeedBlock<T>>({
+    autoReset: true
+  });
 
   private _feedConsumer?: Writable;
   private _next?: () => void;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
 
-  constructor (
+  constructor(
     private readonly _feed: FeedWrapper<T>,
     private readonly _options: FeedQueueOptions = {}
   ) {}
 
-  [inspect.custom] () {
+  [inspect.custom]() {
     return inspectObject(this);
   }
 
-  toJSON () {
+  toJSON() {
     return {
       feedKey: this._feed.key,
       index: this.index,
@@ -51,30 +53,31 @@ export class FeedQueue<T extends {}> {
     };
   }
 
-  get feed () {
+  get feed() {
     return this._feed;
   }
 
-  get isOpen (): boolean {
+  get isOpen(): boolean {
     return Boolean(this._feedConsumer);
   }
 
-  get length (): number {
+  get length(): number {
     return this._feed.properties.length;
   }
 
   /**
    * Index (seq) of the NEXT block to be read, or -1 if not open.
    */
-  get index () {
+  get index() {
     return this._index;
   }
 
   /**
    * Opens (or reopens) the queue.
    */
-  async open (options: ReadStreamOptions = {}) {
-    if (this.isOpen) { // TODO(burdon): Warn if re-opening (e.g., with different starting point).
+  async open(options: ReadStreamOptions = {}) {
+    if (this.isOpen) {
+      // TODO(burdon): Warn if re-opening (e.g., with different starting point).
       return;
     }
 
@@ -141,7 +144,7 @@ export class FeedQueue<T extends {}> {
   /**
    * Closes the queue.
    */
-  async close () {
+  async close() {
     if (this.isOpen) {
       assert(this._feedConsumer);
       assert(!this._feed.properties.closed);
@@ -159,14 +162,14 @@ export class FeedQueue<T extends {}> {
   /**
    * Get the block at the head of the queue without removing it.
    */
-  peek (): FeedBlock<T> | undefined {
+  peek(): FeedBlock<T> | undefined {
     return this._currentBlock;
   }
 
   /**
    * Pop block at the head of the queue.
    */
-  async pop (): Promise<FeedBlock<T>> {
+  async pop(): Promise<FeedBlock<T>> {
     if (!this.isOpen) {
       throw new Error(`Queue closed: ${this.feed.key.truncate()}`);
     }
