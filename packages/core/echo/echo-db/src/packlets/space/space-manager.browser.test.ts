@@ -31,9 +31,10 @@ describe('space-manager', function () {
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const identityKey = await keyring.createKey();
 
-    return new SpaceManager(
-      new MetadataStore(storage.createDirectory('metadata')),
-      new FeedStore<FeedMessage>({
+    // TODO(burdon): Use builders.
+    return new SpaceManager({
+      metadataStore: new MetadataStore(storage.createDirectory('metadata')),
+      feedStore: new FeedStore<FeedMessage>({
         factory: new FeedFactory<FeedMessage>({
           root: storage.createDirectory('feeds'),
           signer: keyring,
@@ -42,22 +43,21 @@ describe('space-manager', function () {
           }
         })
       }),
-      new NetworkManager({
-        // TODO(burdon): Config.
+      networkManager: new NetworkManager({
         signalManager: new WebsocketSignalManager([SIGNAL_URL]),
         transportFactory: createWebRTCTransportFactory()
       }),
       keyring,
-      new DataService(),
-      new ModelFactory().registerModel(ObjectModel),
-      {
+      dataService: new DataService(),
+      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      signingContext: {
         identityKey,
         deviceKey: await keyring.createKey(),
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialSigner: createCredentialSignerWithKey(keyring, identityKey)
       }
-    );
+    });
   };
 
   it.skip('invitations', async function () {

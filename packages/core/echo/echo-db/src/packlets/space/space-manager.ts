@@ -22,6 +22,12 @@ import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
 import { SpaceProtocol } from './space-protocol';
 
+// TODO(burdon): ???
+export interface AcceptSpaceOptions {
+  spaceKey: PublicKey;
+  genesisFeedKey: PublicKey;
+}
+
 // TODO(burdon): Factor out to CredentialGenerator?
 export interface SigningContext {
   identityKey: PublicKey;
@@ -31,11 +37,15 @@ export interface SigningContext {
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
 }
 
-// TODO(burdon): ???
-export interface AcceptSpaceOptions {
-  spaceKey: PublicKey;
-  genesisFeedKey: PublicKey;
-}
+export type SpaceManagerParams = {
+  metadataStore: MetadataStore;
+  feedStore: FeedStore<FeedMessage>;
+  networkManager: NetworkManager;
+  keyring: Keyring;
+  dataService: DataService;
+  modelFactory: ModelFactory;
+  signingContext: SigningContext;
+};
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
@@ -44,16 +54,32 @@ export class SpaceManager {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   public readonly update = new Event();
 
-  // TODO(burdon): Convert to object.
-  constructor(
-    private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _networkManager: NetworkManager,
-    private readonly _keyring: Keyring,
-    private readonly _dataService: DataService,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _signingContext: SigningContext // TODO(burdon): Contains keyring.
-  ) {}
+  private readonly _metadataStore: MetadataStore;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _networkManager: NetworkManager;
+  private readonly _keyring: Keyring;
+  private readonly _dataService: DataService;
+  private readonly _modelFactory: ModelFactory;
+  private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
+
+  constructor({
+    metadataStore,
+    feedStore,
+    networkManager,
+    keyring,
+    dataService,
+    modelFactory,
+    signingContext
+  }: SpaceManagerParams) {
+    // TODO(burdon): Assert.
+    this._metadataStore = metadataStore;
+    this._feedStore = feedStore;
+    this._networkManager = networkManager;
+    this._keyring = keyring;
+    this._dataService = dataService;
+    this._modelFactory = modelFactory;
+    this._signingContext = signingContext;
+  }
 
   async open() {
     await this._metadataStore.load();
