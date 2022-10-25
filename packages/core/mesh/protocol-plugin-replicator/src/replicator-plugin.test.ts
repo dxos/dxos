@@ -17,7 +17,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
+import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
@@ -69,14 +69,16 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const keyring = new Keyring();
-  const feedFactory = new FeedFactory<FeedMessage>({
-    root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
-    signer: keyring,
-    hypercore: {
-      valueEncoding: 'utf-8'
-    }
+  const feedStore = new FeedStore<FeedMessage>({
+    factory: new FeedFactory<FeedMessage>({
+      root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      signer: keyring,
+      hypercore: {
+        valueEncoding: 'utf-8'
+      }
+    })
   });
-  const feedStore = new FeedStore<FeedMessage>({ factory: feedFactory });
+
   const feed = await feedStore.openFeed(await keyring.createKey());
 
   let closed = false;

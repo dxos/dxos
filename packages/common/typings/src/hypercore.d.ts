@@ -204,7 +204,7 @@ declare module 'hypercore' {
 
   export type HypercoreConstructor = (
     storage: string | RandomAccessStorageConstructor,
-    key?: Buffer | string,
+    key?: Buffer,
     options?: HypercoreOptions
   ) => Hypercore
 
@@ -212,7 +212,7 @@ declare module 'hypercore' {
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
   export function hypercore <T> (
     storage: string | RandomAccessStorageConstructor,
-    key?: Buffer | string,
+    key?: Buffer,
     options?: HypercoreOptions
   ): Hypercore<T>
 
