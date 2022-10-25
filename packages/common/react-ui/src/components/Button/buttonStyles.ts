@@ -4,7 +4,12 @@
 
 import cx from 'classnames';
 
-import { defaultDisabled, defaultFocus, defaultHover } from '../../styles';
+import {
+  defaultDisabled,
+  defaultFocus,
+  defaultHover,
+  defaultActive
+} from '../../styles';
 import { ButtonProps } from './ButtonProps';
 
 export const primaryButtonColors =
@@ -16,6 +21,7 @@ export const buttonStyles = (props: ButtonProps) => {
   const resolvedVariant = props.variant || 'default';
   return cx(
     'inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
+    'transition-color duration-100',
     defaultHover(props),
     resolvedVariant === 'default' &&
       'border border-neutral-100 dark:border-neutral-650 hover:focus:border-neutral-100 hover:border-transparent',
@@ -31,8 +37,6 @@ export const buttonStyles = (props: ButtonProps) => {
       : resolvedVariant !== 'outline' && 'button-elevation',
     // Register all radix states
     'group',
-    'radix-state-open:bg-neutral-50 dark:radix-state-open:bg-neutral-900',
-    'radix-state-on:bg-neutral-50 dark:radix-state-on:bg-neutral-900',
-    'radix-state-instant-open:bg-neutral-50 radix-state-delayed-open:bg-neutral-50'
+    defaultActive
   );
 };

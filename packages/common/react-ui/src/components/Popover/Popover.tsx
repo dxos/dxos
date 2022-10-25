@@ -5,7 +5,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import cx from 'classnames';
 import { X } from 'phosphor-react';
-import React, { ReactNode, useState } from 'react';
+import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
 import { defaultFocus, defaultHover } from '../../styles';
 
@@ -16,6 +16,10 @@ export interface PopoverProps {
   initiallyOpen?: boolean;
 }
 
+type KeyUpEvent = Parameters<
+  Exclude<ComponentProps<typeof PopoverPrimitive.Trigger>['onKeyUp'], undefined>
+>[0];
+
 export const Popover = ({
   openTrigger,
   children,
@@ -23,12 +27,25 @@ export const Popover = ({
   initiallyOpen
 }: PopoverProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
+  const onKeyUp = useCallback((e: KeyUpEvent) => {
+    if (
+      (e.currentTarget as HTMLElement).dataset.keyupid === 'trigger' &&
+      e.key === ' '
+    ) {
+      setIsOpen(true);
+    }
+  }, []);
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverPrimitive.Trigger asChild>{openTrigger}</PopoverPrimitive.Trigger>
+      <PopoverPrimitive.Trigger
+        asChild
+        onKeyUp={onKeyUp}
+        data-keyupid='trigger'
+      >
+        {openTrigger}
+      </PopoverPrimitive.Trigger>
       <PopoverPrimitive.Content
         align='center'
-        sideOffset={4}
         className={cx(
           'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
           'w-48 rounded-lg p-4 shadow-md md:w-56',
