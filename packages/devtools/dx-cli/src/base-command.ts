@@ -15,13 +15,11 @@ import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { getTelemetryApiKey, getTelemetryContext, PublisherRpcPeer } from './util';
+import { DX_ENVIRONMENT, getTelemetryContext, PublisherRpcPeer, SENTRY_DESTINATION, TELEMETRY_KEY } from './util';
 
 const log = debug('dxos:cli:main');
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
-const SENTRY_DESTINATION =
-  'https://2647916221e643869965e78469479aa4@o4504012000067584.ingest.sentry.io/4504012027265029';
 
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
@@ -62,10 +60,11 @@ export abstract class BaseCommand extends Command {
       this.config.configDir
     );
 
-    if (!disableTelemetry) {
+    if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
         machineId,
-        destination: process.env.SENTRY_DSN ?? SENTRY_DESTINATION,
+        destination: SENTRY_DESTINATION,
+        environment: DX_ENVIRONMENT,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
         scrubFilenames: !fullCrashReports
@@ -73,15 +72,18 @@ export abstract class BaseCommand extends Command {
     }
 
     Telemetry.init({
-      apiKey: getTelemetryApiKey(),
+      apiKey: TELEMETRY_KEY,
       batchSize: 20,
-      enable: !disableTelemetry
+      enable: Boolean(TELEMETRY_KEY) && !disableTelemetry
     });
 
     Telemetry.event({
       machineId,
       identityId,
-      name: this.id ?? 'unknown'
+      name: this.id ?? 'unknown',
+      properties: {
+        environment: DX_ENVIRONMENT
+      }
     });
 
     // Load user config file.

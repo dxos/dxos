@@ -9,12 +9,9 @@ import { v4 as uuid, validate as validateUuid } from 'uuid';
 
 import { captureException } from '@dxos/sentry';
 
-export const getTelemetryApiKey = () => {
-  switch (process.env.DX_ENVIRONMENT) {
-    default:
-      return 'B00QG6PtJJrJ0VVFe0H5a6bcUUShKyZM';
-  }
-};
+export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development';
+export const TELEMETRY_KEY = process.env.SEGMENT_API_KEY;
+export const SENTRY_DESTINATION = process.env.SENTRY_DSN;
 
 export type TelemetryContext = {
   machineId: string;

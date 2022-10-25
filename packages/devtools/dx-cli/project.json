@@ -22,6 +22,25 @@
         ]
       }
     },
+    "prerelease": {
+      "executor": "nx:run-script",
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "SENTRY_DSN"
+        },
+        {
+          "env": "SEGMENT_API_KEY"
+        }
+      ],
+      "outputs": [
+        "packages/devtools/dx-cli/dist/src/util/telemetry.js"
+      ],
+      "options": {
+        "script": "api-keys"
+      }
+    },
     "test": {
       "executor": "@dxos/mocha:mocha",
       "outputs": [
