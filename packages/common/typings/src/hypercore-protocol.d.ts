@@ -10,36 +10,11 @@
  * https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js
  */
 declare module 'hypercore-protocol' {
-  import ValueEncoding from 'hypercore';
+  import type { ValueEncoding } from 'hypercore';
   import type { Duplex } from 'streamx';
 
-  interface StreamExtensionHandlers<T> {
-    onmessage?: (message: Buffer) => any
-    onerror?: (error: any) => any
-    encoding?: ValueEncoding<T>
-  }
-
-  export interface StreamExtension {
-    send: (message: Buffer) => void
-    destroy: () => void
-  }
-
-  interface ChannelHandlers {
-    onoptions?: (message: Buffer) => void
-    onstatus?: (message: Buffer) => void
-    onhave?: (message: Buffer) => void
-    onunhave?: (message: Buffer) => void
-    onwant?: (message: Buffer) => void
-    onunwant?: (message: Buffer) => void
-    onrequest?: (message: Buffer) => void
-    oncancel?: (message: Buffer) => void
-    ondata?: (message: Buffer) => void
-
-    onextension?: (id: number, buffer: Buffer) => void
-    onclose?: () => void
-  }
-
   /**
+   * A multiplexed message channel associated with a feed.
    * https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js#L236
    */
   export interface Channel {
@@ -52,21 +27,55 @@ declare module 'hypercore-protocol' {
     // https://github.com/mafintosh/simple-hypercore-protocol/blob/master/schema.proto#L13
     // https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js#L22
 
-    options: (message: Buffer) => boolean
-    status: (message: Buffer) => boolean
-    have: (message: Buffer) => boolean
-    unhave: (message: Buffer) => boolean
-    want: (message: Buffer) => boolean
-    unwant: (message: Buffer) => boolean
-    request: (message: Buffer) => boolean
-    cancel: (message: Buffer) => boolean
-    data: (message: Buffer) => boolean
+    options: (message: any) => boolean
+    status: (message: any) => boolean
+    have: (message: any) => boolean
+    unhave: (message: any) => boolean
+    want: (message: any) => boolean
+    unwant: (message: any) => boolean
+    request: (message: any) => boolean
+    cancel: (message: any) => boolean
+    data: (message: any) => boolean
 
     // Send extension message; `id` is the index of the options extension.
     extension: (id: number, message: Buffer) => any
 
     // Close channel (e.g., to garbage collect feeds).
     close: () => void
+  }
+
+  interface ChannelHandlers {
+    onoptions?: (message: any) => void
+    onstatus?: (message: any) => void
+    onhave?: (message: any) => void
+    onunhave?: (message: any) => void
+    onwant?: (message: any) => void
+    onunwant?: (message: any) => void
+    onrequest?: (message: any) => void
+    oncancel?: (message: any) => void
+    ondata?: (message: any) => void
+
+    onextension?: (id: number, buffer: Buffer) => void
+    onclose?: () => void
+  }
+
+  /**
+   * Bi-directional custom message path for non-feed data exchange.
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#ext--feedregisterextensionname-handlers
+   * https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
+   */
+  export interface StreamExtension {
+    // Send message to extension handler on other side.
+    send: (message: Buffer) => void
+
+    // Destroy and unregister from stream.
+    destroy: () => void
+  }
+
+  interface StreamExtensionHandlers<T> {
+    encoding?: ValueEncoding<T>
+    onmessage?: (message: Buffer) => any
+    onerror?: (error: any) => any
   }
 
   /**
@@ -100,6 +109,10 @@ declare module 'hypercore-protocol' {
   }
 
   /**
+   * Streams support the replication of feeds via multiplexed channels and custom extensions.
+   * Before messages are exchanged there is a handshake phase using the Noise protocol.
+   *
+   * https://github.com/hypercore-protocol/hypercore-protocol#wire-protocol
    * https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js#L332
    */
   export class ProtocolStream<T> extends Duplex {
@@ -111,20 +124,20 @@ declare module 'hypercore-protocol' {
 
     constructor (initiator?: boolean, opts?: ProtocolStreamOptions);
 
-    // Signal intent to share hypercore feed.
+    // Signal intent to share hypercore feed (includes proof that sender possesses the feed).
     // https://github.com/hypercore-protocol/hypercore-protocol#const-channel--streamopenkey-handlers
     open (key: Buffer, handlers?: ChannelHandlers): Channel
 
     // Signal rejection (i.e., do not have feed).
     close (discoveryKey: Buffer): void
 
-    // Destroy and close all feeds.
+    // Destroy stream.
     destroy (error?: Error): void
 
     // Gracefully end stream.
     finalize (): void
 
-    // Define custom messages unrelated to hypercore exchange.
+    // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
     registerExtension (name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension
   }

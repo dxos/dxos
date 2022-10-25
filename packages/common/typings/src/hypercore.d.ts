@@ -10,9 +10,6 @@
  * https://www.npmjs.com/package/hypercore/v/9.12.0
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
- *
- * Events
- * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
 declare module 'hypercore' {
   import type { ProtocolStream } from 'hypercore-protocol';
@@ -112,6 +109,27 @@ declare module 'hypercore' {
   }
 
   /**
+   * Bi-directional custom message path for non-feed data exchange.
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#ext--feedregisterextensionname-handlers
+   */
+  export interface StreamExtension {
+    // Send message to extension handler on other side.
+    send: (message: Buffer, peer: Buffer) => void
+
+    // Send message to every peer.
+    broadcast: (message: Buffer) => void
+
+    // Destroy and unregister from stream.
+    destroy: () => void
+  }
+
+  interface StreamExtensionHandlers<T> {
+    encoding?: ValueEncoding<T>
+    onmessage?: (message: Buffer, peer: Buffer) => any
+    onerror?: (error: any) => any
+  }
+
+  /**
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
    */
   export type HypercoreOptions = {
@@ -149,7 +167,9 @@ declare module 'hypercore' {
     readonly byteLength: number
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedpeers
-    readonly peers: Buffer[]
+    readonly peers: {
+      publicKey: Buffer
+    }
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
     readonly stats: Stats
@@ -158,6 +178,9 @@ declare module 'hypercore' {
   /**
    * Raw hypercore feed.
    * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
+   *
+   * Events: [`ready`, `error`, `download`, `upload`, `append`, `sync`, `close`]
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
    */
   export interface Hypercore<T> extends Nanoresource, HypercoreProperties {
 
@@ -175,6 +198,12 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
+
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feeddestroystoragecallback
+    destroyStorage (cb: Callback<{ valid: number, invalid: number }>): void
+
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedauditcallback
+    audit (cb: Callback<{ valid: number, invalid: number }>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
     has (start: number, end?: number): boolean
@@ -200,6 +229,10 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedundownloaddownloadid
     undownload (id: number): void
+
+    // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
+    // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
+    registerExtension (name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension
   }
 
   export type HypercoreConstructor = (
