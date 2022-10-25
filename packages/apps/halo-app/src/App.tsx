@@ -79,8 +79,6 @@ const Routes = () => useRoutes([
 export const App = () => {
   const clientRef = useRef<Client>();
 
-  console.log('[resources]', translationResources);
-
   return (
     <UiKitProvider resourceExtensions={translationResources}>
         <ClientProvider

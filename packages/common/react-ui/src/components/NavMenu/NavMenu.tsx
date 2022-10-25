@@ -54,9 +54,9 @@ const NavMenuInvokerItem = forwardRef(({
   content,
   children,
   active
-}: NavMenuInvokerItemProps) => {
+}: NavMenuInvokerItemProps, ref: ForwardedRef<HTMLLIElement>) => {
   return (
-    <NavigationMenuPrimitive.Item>
+    <NavigationMenuPrimitive.Item ref={ref}>
       <NavigationMenuPrimitive.Trigger
         className={cx(
           'px-3 py-2 text-sm rounded-md text-sm font-medium transition-color',
@@ -151,12 +151,12 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
         {items.map((item: NavMenuItem, i) => {
           return (
             isTooltipLinkItem(item)
-              ? <NavMenuTooltipLinkItem {...item} />
+              ? <NavMenuTooltipLinkItem key={i} {...item} />
               : isLinkItem(item)
-                ? <NavMenuLinkItem {...item} />
+                ? <NavMenuLinkItem key={i} {...item} />
                 : isSeparator(item)
-                  ? <NavMenuSeparatorItem {...item} />
-                  : <NavMenuInvokerItem {...item} />
+                  ? <NavMenuSeparatorItem key={i} {...item} />
+                  : <NavMenuInvokerItem key={i} {...item} />
           );
         })}
 
