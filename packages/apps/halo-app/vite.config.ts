@@ -10,6 +10,12 @@ import { defineConfig } from 'vite';
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+import packageJson from './package.json';
+
+const DX_RELEASE = process.env.NODE_ENV === 'production'
+  ? `halo-app@${packageJson.version}`
+  : 'development';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
@@ -19,6 +25,7 @@ export default defineConfig({
   },
   define: {
     'process.env.DX_ENVIRONMENT': process.env.DX_ENVIRONMENT,
+    'process.env.DX_RELEASE': DX_RELEASE,
     'process.env.SENTRY_DSN': process.env.SENTRY_DSN,
     'process.env.SEGMENT_API_KEY': process.env.SEGMENT_API_KEY
   },
