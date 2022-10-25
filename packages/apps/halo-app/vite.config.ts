@@ -17,6 +17,11 @@ export default defineConfig({
     host: true,
     port: 3967
   },
+  define: {
+    'process.env.DX_ENVIRONMENT': process.env.DX_ENVIRONMENT,
+    'process.env.SENTRY_DSN': process.env.SENTRY_DSN,
+    'process.env.SEGMENT_API_KEY': process.env.SEGMENT_API_KEY
+  },
   optimizeDeps: {
     force: true,
     include: [

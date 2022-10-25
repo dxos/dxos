@@ -11,6 +11,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
+import { useTelemetry } from './hooks';
 import {
   AppLayout,
   AppsPage,
@@ -80,6 +81,10 @@ const Routes = () =>
 
 export const App = () => {
   const clientRef = useRef<Client>();
+
+  // TODO(wittjosiah): Factor out to persisant settings.
+  const [disableTelemetry] = useState(false);
+  useTelemetry(disableTelemetry);
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
