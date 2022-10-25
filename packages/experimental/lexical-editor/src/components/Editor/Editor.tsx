@@ -87,10 +87,7 @@ export const Editor: FC<{
           }
         }}
       >
-        <LexicalPlainTextPlugin
-          placeholder=''
-          contentEditable={<LexicalContentEditable spellCheck={false} />}
-        />
+        <LexicalPlainTextPlugin placeholder='' contentEditable={<LexicalContentEditable spellCheck={false} />} />
 
         <FocusPlugin eventHandler={eventHandler} />
 

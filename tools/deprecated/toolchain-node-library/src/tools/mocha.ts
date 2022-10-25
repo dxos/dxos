@@ -22,12 +22,7 @@ export interface ExecMochaOpts {
  * @param forceClose
  * @param jsdom
  */
-export const execMocha = async ({
-  config,
-  userArgs = [],
-  forceClose,
-  jsdom = false
-}: ExecMochaOpts) => {
+export const execMocha = async ({ config, userArgs = [], forceClose, jsdom = false }: ExecMochaOpts) => {
   const {
     tests: { src: defaultSources, spec: defaultSpec }
   } = config;
@@ -59,13 +54,7 @@ export const execMocha = async ({
   // NOTE: --no-diff is ignored since the `expect` package generates the output.
   //
 
-  const options = [
-    ...sources,
-    forceClose ? '--exit' : '--no-exit',
-    '-t',
-    '15000',
-    ...userArgs
-  ];
+  const options = [...sources, forceClose ? '--exit' : '--no-exit', '-t', '15000', ...userArgs];
 
   // Set defaults.
   {

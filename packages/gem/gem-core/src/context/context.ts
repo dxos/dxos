@@ -18,10 +18,7 @@ export class SVGContext {
   private _size: Size;
   private _center: Point;
 
-  constructor(
-    private readonly _scale: Scale = new Scale(),
-    private readonly _centered: boolean = true
-  ) {}
+  constructor(private readonly _scale: Scale = new Scale(), private readonly _centered: boolean = true) {}
 
   get ref(): RefObject<SVGSVGElement> {
     return this._ref;

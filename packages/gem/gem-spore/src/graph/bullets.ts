@@ -20,19 +20,9 @@ interface BulletOptions {
  * @param nodeId
  * @param options
  */
-export const createBullets = (
-  group: SVGGElement,
-  nodeId: string,
-  options: BulletOptions = {}
-): D3Callable => {
+export const createBullets = (group: SVGGElement, nodeId: string, options: BulletOptions = {}): D3Callable => {
   return (selection: D3Selection) => {
-    const {
-      max = 32,
-      radius = 3,
-      delay = 50,
-      minDuration = 100,
-      maxDuration = 500
-    } = options;
+    const { max = 32, radius = 3, delay = 50, minDuration = 100, maxDuration = 500 } = options;
 
     // Link selection.
     selection.each(function (d, i, links) {

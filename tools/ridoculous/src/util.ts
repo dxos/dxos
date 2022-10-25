@@ -57,13 +57,7 @@ export const isDirective = (node) => {
   }
 };
 
-export type VisitorCallback = (
-  directive: string,
-  args: string[],
-  node: any,
-  index: number | null,
-  parent: any
-) => void;
+export type VisitorCallback = (directive: string, args: string[], node: any, index: number | null, parent: any) => void;
 
 /**
  * Visit directives.
@@ -83,11 +77,7 @@ type ReplaceResult = [
   skip: number // Number of nodes to skip over (including current).
 ];
 
-type ReplaceCallback = (
-  node: any,
-  index: number,
-  parents: any
-) => ReplaceResult | undefined;
+type ReplaceCallback = (node: any, index: number, parents: any) => ReplaceResult | undefined;
 
 /**
  * Visit nodes and allow callback to replace nodes.

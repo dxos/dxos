@@ -18,10 +18,7 @@ import { RefObject, useEffect, useRef, useState } from 'react';
  * @param initialValue
  * @param deps
  */
-export const useDynamicRef = <V>(
-  initialValue: () => V,
-  deps: any[]
-): RefObject<V> => {
+export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<V> => {
   const [, setValue] = useState<V>(initialValue);
   const ref = useRef<V>(initialValue());
   useEffect(() => {

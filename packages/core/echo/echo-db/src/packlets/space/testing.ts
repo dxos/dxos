@@ -5,11 +5,7 @@
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  SignalManager
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -55,19 +51,13 @@ export class TestAgent {
     });
   }
 
-  async createSpace(
-    identityKey: PublicKey,
-    spaceKey?: PublicKey,
-    genesisKey?: PublicKey
-  ): Promise<TestSpaceContext> {
+  async createSpace(identityKey: PublicKey, spaceKey?: PublicKey, genesisKey?: PublicKey): Promise<TestSpaceContext> {
     if (!spaceKey) {
       spaceKey = await this.keyring.createKey();
     }
 
     const controlFeed = await this.openWritableFeed();
-    const genesisFeed = genesisKey
-      ? await this.feedStore.openFeed(genesisKey)
-      : controlFeed;
+    const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
     const dataFeed = await this.openWritableFeed();
 
     const space = new Space({
@@ -88,11 +78,7 @@ export class TestAgent {
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       databaseFactory: async ({ databaseBackend }) =>
-        new Database(
-          new ModelFactory().registerModel(ObjectModel),
-          databaseBackend,
-          identityKey
-        )
+        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
     });
 
     return {
@@ -113,20 +99,13 @@ export class TestAgent {
  * Creates test agents with common signaling.
  */
 export class TestAgentFactory {
-  constructor(
-    private readonly _signalContext: MemorySignalManagerContext = new MemorySignalManagerContext()
-  ) {}
+  constructor(private readonly _signalContext: MemorySignalManagerContext = new MemorySignalManagerContext()) {}
 
   async createAgent(): Promise<TestAgent> {
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    return new TestAgent(
-      keyring,
-      identityKey,
-      deviceKey,
-      new MemorySignalManager(this._signalContext)
-    );
+    return new TestAgent(keyring, identityKey, deviceKey, new MemorySignalManager(this._signalContext));
   }
 }

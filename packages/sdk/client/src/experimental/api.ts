@@ -195,10 +195,7 @@ export interface Item {
 // Generic
 //
 
-export type ResultCallback<Element, Query> = (
-  elements: Element[],
-  subscription: Subscription<Element, Query>
-) => void;
+export type ResultCallback<Element, Query> = (elements: Element[], subscription: Subscription<Element, Query>) => void;
 
 /**
  * Generic async query and response.

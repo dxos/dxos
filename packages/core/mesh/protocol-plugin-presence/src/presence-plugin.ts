@@ -135,9 +135,7 @@ export class PresencePlugin {
 
     return new Extension(PresencePlugin.EXTENSION)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
-      .setMessageHandler(async (protocol, chunk) =>
-        this._peerMessageHandler(protocol, chunk)
-      )
+      .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
       .setCloseHandler(async (protocol) => {
         await this._removePeer(protocol);
         if (--this._extensionsCreated === 0) {
@@ -271,9 +269,7 @@ export class PresencePlugin {
       // Filter out "stream closed" errors.
       // TODO(dmaretskyi): Define error classes for these and use instanceof.
       if (
-        !['ERR_PROTOCOL_STREAM_CLOSED', 'NMSG_ERR_CLOSE'].includes(
-          (err as any).code
-        ) &&
+        !['ERR_PROTOCOL_STREAM_CLOSED', 'NMSG_ERR_CLOSE'].includes((err as any).code) &&
         err.message !== 'Resource is closed'
       ) {
         console.warn(err);
@@ -388,10 +384,7 @@ export class PresencePlugin {
     this._graph.forEachLinkedNode(
       fromHex,
       (_, link) => {
-        const toDelete = !connections.find(
-          (conn: any) =>
-            conn.source === link.fromId && conn.target === link.toId
-        );
+        const toDelete = !connections.find((conn: any) => conn.source === link.fromId && conn.target === link.toId);
 
         if (!toDelete) {
           return;

@@ -85,16 +85,7 @@ const sizes = {
 /**
  * A stable generic icon based on a hash.
  */
-export const HashIcon = ({
-  value,
-  sx,
-  size = 'medium',
-  ...props
-}: {
-  value: string;
-  sx?: any;
-  size?: Size;
-}) => {
+export const HashIcon = ({ value, sx, size = 'medium', ...props }: { value: string; sx?: any; size?: Size }) => {
   const icon = hashIcons[hash(value) % hashIcons.length];
   const color = hashColors[hash(value) % hashColors.length];
 
@@ -103,10 +94,7 @@ export const HashIcon = ({
 
   return (
     <div style={{ display: 'flex' }} title={title}>
-      <Icon
-        sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }}
-        {...props}
-      />
+      <Icon sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }} {...props} />
     </div>
   );
 };

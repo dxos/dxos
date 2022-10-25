@@ -19,17 +19,10 @@ const levelClassNameMap = new Map<number, string>([
   [6, 'text-lg']
 ]);
 
-export const Heading = ({
-  level,
-  ...props
-}: PropsWithChildren<HeadingProps>) => {
+export const Heading = ({ level, ...props }: PropsWithChildren<HeadingProps>) => {
   const resolvedLevel = level || 1;
   return createElement(`h${resolvedLevel}`, {
     ...props,
-    className: cx(
-      'font-bold font-display',
-      levelClassNameMap.get(resolvedLevel),
-      props.className
-    )
+    className: cx('font-bold font-display', levelClassNameMap.get(resolvedLevel), props.className)
   });
 };

@@ -14,9 +14,7 @@ import { remarkSnippets } from './remark-snippets.js';
 import { removeTrailing } from './util.js';
 
 test('remarkSnippets with remark', async () => {
-  const tree = u('root', [
-    u('html', { value: '<!-- @code(../src/test.proto) -->' })
-  ]);
+  const tree = u('root', [u('html', { value: '<!-- @code(../src/test.proto) -->' })]);
 
   // Process content.
   const original = toMarkdown(tree as any);
@@ -33,9 +31,7 @@ test('remarkSnippets with remark', async () => {
   const [snippet] = processed.match(/```([\s\S]*?)```/gm);
 
   // Test inserted file.
-  const text = removeTrailing(
-    fs.readFileSync('./testing/src/test.proto').toString()
-  );
+  const text = removeTrailing(fs.readFileSync('./testing/src/test.proto').toString());
   const test = `\`\`\`protobuf\n${text}\n\`\`\``;
   expect(snippet).toBe(test);
 });

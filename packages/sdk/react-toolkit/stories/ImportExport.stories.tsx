@@ -20,12 +20,7 @@ export const Export = () => {
 
   return (
     <Container>
-      <ExportDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        filename={'test.txt'}
-        encrypter={encrypter}
-      />
+      <ExportDialog open={open} onClose={() => setOpen(false)} filename={'test.txt'} encrypter={encrypter} />
     </Container>
   );
 };

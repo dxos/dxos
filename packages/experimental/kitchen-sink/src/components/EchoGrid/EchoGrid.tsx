@@ -7,13 +7,7 @@ import clsx from 'clsx';
 import React, { useMemo, useState } from 'react';
 
 import { Box } from '@mui/material';
-import {
-  DataGrid,
-  GridCellParams,
-  GridColDef,
-  GridSelectionModel,
-  GridValueGetterParams
-} from '@mui/x-data-grid';
+import { DataGrid, GridCellParams, GridColDef, GridSelectionModel, GridValueGetterParams } from '@mui/x-data-grid';
 
 import { truncateKey } from '@dxos/debug';
 import { Item } from '@dxos/echo-db';
@@ -33,23 +27,20 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] =>
         field: 'id',
         headerName: 'ID',
         width: 120,
-        valueGetter: (params: GridValueGetterParams) =>
-          truncateKey(params.row.id, 4),
+        valueGetter: (params: GridValueGetterParams) => truncateKey(params.row.id, 4),
         cellClassName: () => 'monospace'
       },
       {
         field: 'type',
         headerName: 'Type',
         width: 160,
-        cellClassName: (params: GridCellParams<string>) =>
-          params.row.type.replace(/\W/g, '_')
+        cellClassName: (params: GridCellParams<string>) => params.row.type.replace(/\W/g, '_')
       },
       {
         field: 'name',
         headerName: 'Name',
         flex: 1,
-        valueGetter: (params: GridValueGetterParams) =>
-          itemAdapter.title(params.row as any) // TODO(dmaretskyi): Not sure whats going on here (cc TODO(richburdon)).
+        valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row as any) // TODO(dmaretskyi): Not sure whats going on here (cc TODO(richburdon)).
       }
     ],
     []
@@ -61,11 +52,7 @@ export interface EchoGridProps {
   styles?: any;
 }
 
-export const EchoGrid = ({
-  items = [],
-  itemAdapter,
-  styles
-}: EchoGridProps) => {
+export const EchoGrid = ({ items = [], itemAdapter, styles }: EchoGridProps) => {
   const columns = useColumns(itemAdapter);
   const [selectionModel, setSelectionModel] = useState<GridSelectionModel>([]);
 

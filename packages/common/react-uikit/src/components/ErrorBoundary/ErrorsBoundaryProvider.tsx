@@ -4,14 +4,7 @@
 import cx from 'classnames';
 import debug from 'debug';
 import { Warning } from 'phosphor-react';
-import React, {
-  createContext,
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useEffect,
-  useState
-} from 'react';
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Tooltip, valenceColorText, defaultFocus } from '@dxos/react-ui';
@@ -33,16 +26,12 @@ export const ErrorsContext = createContext<ErrorsContextState>({
 const error = debug('dxos:react-toolkit:error');
 
 // TODO(burdon): Override if dev-only?
-const logError = (f: string, ...args: any[]) =>
-  error.enabled ? error(f, ...args) : console.error(f, ...args);
+const logError = (f: string, ...args: any[]) => (error.enabled ? error(f, ...args) : console.error(f, ...args));
 
 export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Error[]>([]);
-  const addError = useCallback(
-    (error: Error) => setErrors([error, ...errors]),
-    []
-  );
+  const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
   const resetErrors = useCallback(() => setErrors([]), []);
 
   const onUnhandledRejection = useCallback((event: PromiseRejectionEvent) => {
@@ -74,17 +63,10 @@ export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ErrorsContext.Provider value={{ errors, addError, resetErrors }}>
       <FatalErrorBoundary>{children}</FatalErrorBoundary>
-      <div
-        role='none'
-        className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}
-      >
+      <div role='none' className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}>
         {!!errors.length && (
           <Tooltip content={t('caught error message')}>
-            <Warning
-              tabIndex={0}
-              weight='duotone'
-              className={cx('w-6 h-6 rounded-md', defaultFocus)}
-            />
+            <Warning tabIndex={0} weight='duotone' className={cx('w-6 h-6 rounded-md', defaultFocus)} />
           </Tooltip>
         )}
       </div>

@@ -23,9 +23,7 @@ type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`;
 type DotNestedKeys<T> = (
   T extends object
     ? {
-        [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<
-          DotNestedKeys<T[K]>
-        >}`;
+        [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<DotNestedKeys<T[K]>>}`;
       }[Exclude<keyof T, symbol>]
     : ''
 ) extends infer D
@@ -37,9 +35,7 @@ type DotNestedKeys<T> = (
  *
  * Example: 'services.signal.server' -> ['services', 'signal', 'server'].
  */
-export type ParseKey<K extends string> = K extends `${infer L}.${infer Rest}`
-  ? [L, ...ParseKey<Rest>]
-  : [K];
+export type ParseKey<K extends string> = K extends `${infer L}.${infer Rest}` ? [L, ...ParseKey<Rest>] : [K];
 
 /**
  * Array of types that can act as an object key.
@@ -51,10 +47,7 @@ type Keys = (keyof any)[];
  *
  * Read more: https://stackoverflow.com/a/61648690.
  */
-export type DeepIndex<T, KS extends Keys, Fail = undefined> = KS extends [
-  infer F,
-  ...infer R
-]
+export type DeepIndex<T, KS extends Keys, Fail = undefined> = KS extends [infer F, ...infer R]
   ? F extends keyof Exclude<T, undefined>
     ? R extends Keys
       ? DeepIndex<Exclude<T, undefined>[F], R, Fail>

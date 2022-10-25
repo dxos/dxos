@@ -28,9 +28,7 @@ export const usePartyBootstrap = (peerCount = 2) => {
         await joiner.initialize();
         await joiner.halo.createProfile({ username: `peer-${i}` });
         const invitation = await inviterParty.createInvitation();
-        const joinerParty = await joiner.echo
-          .acceptInvitation(invitation.descriptor)
-          .getParty();
+        const joinerParty = await joiner.echo.acceptInvitation(invitation.descriptor).getParty();
         peers.push({ client: joiner, party: joinerParty });
       }
 

@@ -6,11 +6,7 @@ import assert from 'assert';
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
 
-import {
-  createStorage,
-  Directory,
-  StorageType
-} from '@dxos/random-access-storage';
+import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
 /**
  * Creates feeds with default properties.
@@ -33,12 +29,7 @@ export class HypercoreFactory<T> {
    */
   createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
     const directory = this._root.createDirectory(publicKey.toString());
-    const storage = (filename: string) =>
-      directory.getOrCreateFile(filename).native;
-    return hypercore(
-      storage,
-      publicKey,
-      Object.assign({}, this._options, options)
-    );
+    const storage = (filename: string) => directory.getOrCreateFile(filename).native;
+    return hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }
 }

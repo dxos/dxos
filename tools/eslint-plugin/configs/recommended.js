@@ -4,12 +4,7 @@
 
 module.exports = {
   extends: ['semistandard'],
-  plugins: [
-    'prettier',
-    'unused-imports',
-    '@stayradiated/prefer-arrow-functions',
-    '@dxos/rules'
-  ],
+  plugins: ['prettier', 'unused-imports', '@stayradiated/prefer-arrow-functions', '@dxos/rules'],
   rules: {
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
@@ -52,10 +47,7 @@ module.exports = {
             position: 'before'
           }
         ],
-        pathGroupsExcludedImportTypes: [
-          '@{dxos,braneframe}/**',
-          '@{mui,material-ui}/**'
-        ],
+        pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**', '@{mui,material-ui}/**'],
         'newlines-between': 'always',
         groups: [['builtin', 'external'], 'internal'],
         alphabetize: {

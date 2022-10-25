@@ -12,17 +12,12 @@ export class ModuleSpecifier {
   static resolveFromFilePath(path: string, context: string) {
     // Normalize path.
     const relativePath = relative(context, resolve(context, path));
-    const pathWithDot = relativePath.startsWith('.')
-      ? relativePath
-      : `./${relativePath}`;
+    const pathWithDot = relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 
     return new ModuleSpecifier(pathWithDot, context);
   }
 
-  constructor(
-    public readonly name: string,
-    public readonly contextPath: string
-  ) {
+  constructor(public readonly name: string, public readonly contextPath: string) {
     assert(isAbsolute(contextPath));
   }
 
@@ -34,9 +29,7 @@ export class ModuleSpecifier {
     if (this.isAbsolute()) {
       return this.name;
     } else {
-      const relativePath = normalizeRelativePath(
-        relative(importContext, resolve(this.contextPath, this.name))
-      );
+      const relativePath = normalizeRelativePath(relative(importContext, resolve(this.contextPath, this.name)));
       for (const ext of ['.js', '.ts']) {
         if (relativePath.endsWith(ext)) {
           return removeExtension(relativePath, ext);
@@ -51,10 +44,7 @@ export class ModuleSpecifier {
   }
 }
 
-export const CODEC_MODULE = new ModuleSpecifier(
-  '@dxos/codec-protobuf',
-  __dirname
-);
+export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', __dirname);
 
 const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {

@@ -14,11 +14,7 @@ export const createDataItem = (n: number): TestDataItem => ({
   text: faker.lorem.sentence()
 });
 
-type BatchCallback = (
-  next: (num: number) => void,
-  index: number,
-  remaining: number
-) => void;
+type BatchCallback = (next: (num: number) => void, index: number, remaining: number) => void;
 
 // TODO(burdon): Factor out.
 export const batch = (cb: BatchCallback, total: number) => {

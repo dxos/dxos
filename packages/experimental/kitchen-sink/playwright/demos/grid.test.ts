@@ -32,14 +32,9 @@ describe('Grid demo', function () {
   let [columns, rows] = [0, 0];
   if (process.env.GRID) {
     // Example: `GRID=2,1 rushx demo:grid`
-    [columns = 2, rows = 1] = process.env
-      .GRID!.split(',')
-      .map((i) => parseInt(i));
+    [columns = 2, rows = 1] = process.env.GRID!.split(',').map((i) => parseInt(i));
   } else {
-    [columns, rows] = [
-      Math.floor(width / minSize.width),
-      Math.floor(height / minSize.height)
-    ];
+    [columns, rows] = [Math.floor(width / minSize.width), Math.floor(height / minSize.height)];
   }
 
   /**
@@ -53,10 +48,7 @@ describe('Grid demo', function () {
     const launcher = new Launcher(baseUrl, chromium, {
       headless: false,
       // https://peter.sh/experiments/chromium-command-line-switches
-      args: [
-        `--window-position=${position.x},${position.y}`,
-        `--window-size=${size.width},${size.height}`
-      ]
+      args: [`--window-position=${position.x},${position.y}`, `--window-size=${size.width},${size.height}`]
     });
 
     await launcher.open();
@@ -69,9 +61,7 @@ describe('Grid demo', function () {
    */
   const invite = async (inviter: Launcher, invited: Launcher) => {
     await inviter.page.click('button[data-id=test-button-share-party]');
-    const invitation: string = await inviter.page.evaluate(() =>
-      navigator.clipboard.readText()
-    );
+    const invitation: string = await inviter.page.evaluate(() => navigator.clipboard.readText());
 
     await invited.page.fill('input[data-id=test-input-join-party]', invitation);
     await invited.page.click('button[data-id=test-button-join-party]');
@@ -81,10 +71,7 @@ describe('Grid demo', function () {
    * Generates iterator of browser launcher promises.
    * NOTE: Synchronous generator of promises vs async generator (async function* {})
    */
-  function* createGrid(
-    url: string,
-    [rows, columns]: [number, number]
-  ): Generator<Promise<Launcher>> {
+  function* createGrid(url: string, [rows, columns]: [number, number]): Generator<Promise<Launcher>> {
     const size = {
       width: Math.round((width - (columns - 1) * spacing) / columns),
       height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
@@ -119,10 +106,7 @@ describe('Grid demo', function () {
         if (invitation) {
           // Join existing party.
           console.log('Joining existing party...');
-          await launcher.page.fill(
-            'input[data-id=test-input-join-party]',
-            invitation
-          );
+          await launcher.page.fill('input[data-id=test-input-join-party]', invitation);
           await launcher.page.click('button[data-id=test-button-join-party]');
         } else {
           // First launcher creates the party.
@@ -169,11 +153,7 @@ describe('Grid demo', function () {
 
           // NOTE: May lose focus when other window opens.
           const text = lines[i++];
-          await graph!.page.type(
-            'textarea[data-id=test-input-selection]',
-            text + '\n',
-            { delay: 10 }
-          );
+          await graph!.page.type('textarea[data-id=test-input-selection]', text + '\n', { delay: 10 });
         }
       }, 5000);
     }

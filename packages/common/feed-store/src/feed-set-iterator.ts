@@ -19,9 +19,7 @@ import { FeedBlock } from './types';
 /**
  * Select next block.
  */
-export type FeedBlockSelector<T> = (
-  blocks: FeedBlock<T>[]
-) => number | undefined;
+export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined;
 
 export type FeedIndex = {
   feedKey: PublicKey;
@@ -42,9 +40,7 @@ export const defaultFeedSetIteratorOptions = {
  * Iterator that reads blocks from multiple feeds, ordering them based on a traversal callback.
  */
 export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
-  private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(
-    PublicKey.hash
-  );
+  private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
   private readonly _trigger = new Trigger({ autoReset: true });
   private readonly _subscriptions = new EventSubscriptions();
@@ -77,9 +73,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   }
 
   get feeds(): FeedWrapper<T>[] {
-    return Array.from(this._feedQueues.values()).map(
-      (feedQueue) => feedQueue.feed
-    );
+    return Array.from(this._feedQueues.values()).map((feedQueue) => feedQueue.feed);
   }
 
   get indexes(): FeedIndex[] {
@@ -118,9 +112,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
   override async _onClose(): Promise<void> {
     this._subscriptions.clear();
-    await Promise.all(
-      Array.from(this._feedQueues.values()).map((queue) => queue.close())
-    );
+    await Promise.all(Array.from(this._feedQueues.values()).map((queue) => queue.close()));
 
     // Wake when feed added or queue updated.
     this._trigger.wake();
@@ -135,9 +127,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     while (this._running) {
       // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
-      const blocks = queues
-        .map((queue) => queue.peek())
-        .filter(isNotNullOrUndefined);
+      const blocks = queues.map((queue) => queue.peek()).filter(isNotNullOrUndefined);
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);

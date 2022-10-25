@@ -10,12 +10,7 @@ import { raise } from '@dxos/debug';
 import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import {
-  RecordExtension,
-  decodeExtensionPayload,
-  encodeExtensionPayload,
-  sanitizeExtensionData
-} from '../encoding';
+import { RecordExtension, decodeExtensionPayload, encodeExtensionPayload, sanitizeExtensionData } from '../encoding';
 import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';
@@ -66,15 +61,9 @@ export interface TypeRecordMetadata extends RecordMetadata {
  * Main API for DXNS registry.
  */
 export class RegistryClient {
-  private readonly _recordCache = new ComplexMap<
-    CID,
-    Promise<RegistryRecord | undefined>
-  >((cid) => cid.toB58String());
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>((cid) => cid.toB58String());
 
-  private readonly _typeCache = new ComplexMap<
-    CID,
-    Promise<RegistryType | undefined>
-  >((cid) => cid.toB58String());
+  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>((cid) => cid.toB58String());
 
   constructor(private readonly _backend: RegistryClientBackend) {}
 
@@ -132,10 +121,7 @@ export class RegistryClient {
           return result;
         }
 
-        const index = result.findIndex(
-          (set) =>
-            set.name.authority === name.authority && set.name.path === name.path
-        );
+        const index = result.findIndex((set) => set.name.authority === name.authority && set.name.path === name.path);
         const set = result[index] ?? {
           name: name.with({ tag: null }),
           tags: {}
@@ -160,11 +146,7 @@ export class RegistryClient {
    * @param cid CID of the record to be referenced with the given name.
    * @param owner DXNS account that will own the resource.
    */
-  async registerResource(
-    name: DXN,
-    cid: CID | undefined,
-    owner: AccountKey
-  ): Promise<void> {
+  async registerResource(name: DXN, cid: CID | undefined, owner: AccountKey): Promise<void> {
     return this._backend.registerResource(name, cid, owner);
   }
 
@@ -207,13 +189,9 @@ export class RegistryClient {
    */
   async listRecords(filter?: Filter): Promise<RegistryRecord[]> {
     const rawRecords = await this._backend.listRecords();
-    const records = await Promise.all(
-      rawRecords.map(({ cid, ...record }) => this._decodeRecord(cid, record))
-    );
+    const records = await Promise.all(rawRecords.map(({ cid, ...record }) => this._decodeRecord(cid, record)));
 
-    return records
-      .filter(isNotNullOrUndefined)
-      .filter((record) => Filtering.matchRecord(record, filter));
+    return records.filter(isNotNullOrUndefined).filter((record) => Filtering.matchRecord(record, filter));
   }
 
   /**
@@ -222,11 +200,7 @@ export class RegistryClient {
    * @param typeId CID of the type record that holds the schema of the data.
    * @param meta Record metadata information.
    */
-  async registerRecord(
-    data: unknown,
-    typeId: CID,
-    meta: RecordMetadata = {}
-  ): Promise<CID> {
+  async registerRecord(data: unknown, typeId: CID, meta: RecordMetadata = {}): Promise<CID> {
     const type = await this.getTypeRecord(typeId);
     assert(type);
 
@@ -235,9 +209,7 @@ export class RegistryClient {
       created: new Date(),
       payload: await encodeExtensionPayload(
         sanitizeExtensionData(data, CID.from(typeId)),
-        async (cid) =>
-          (await this.getTypeRecord(cid)) ??
-          raise(new Error(`Type not found: ${cid}`))
+        async (cid) => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`))
       )
     };
 
@@ -266,9 +238,7 @@ export class RegistryClient {
   async listTypeRecords(filter?: Filter): Promise<RegistryType[]> {
     const records = await this._backend.listRecords();
 
-    const types = records
-      .filter((record) => !!record.type)
-      .map(({ cid, ...record }) => this._decodeType(cid, record));
+    const types = records.filter((record) => !!record.type).map(({ cid, ...record }) => this._decodeType(cid, record));
 
     return types;
   }
@@ -279,11 +249,7 @@ export class RegistryClient {
    * @param messageFqn Fully qualified name of the message. It must reside in the schema definition.
    * @param meta Record metadata information.
    */
-  async registerTypeRecord(
-    messageName: string,
-    schema: protobuf.Root,
-    meta: TypeRecordMetadata = {}
-  ) {
+  async registerTypeRecord(messageName: string, schema: protobuf.Root, meta: TypeRecordMetadata = {}) {
     // Make sure message type exists.
     schema.lookupType(messageName);
 
@@ -306,19 +272,14 @@ export class RegistryClient {
     return record;
   }
 
-  private async _decodeRecord(
-    cid: CID,
-    rawRecord: RawRecord
-  ): Promise<RegistryRecord | undefined> {
+  private async _decodeRecord(cid: CID, rawRecord: RawRecord): Promise<RegistryRecord | undefined> {
     if (!rawRecord.payload) {
       return undefined;
     }
 
     const payload = await decodeExtensionPayload(
       rawRecord.payload,
-      async (cid: CID) =>
-        (await this.getTypeRecord(cid)) ??
-        raise(new Error(`Type not found: ${cid}`))
+      async (cid: CID) => (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`))
     );
 
     return {

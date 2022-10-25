@@ -40,15 +40,7 @@ enum Type {
   OBJECT = 'object'
 }
 
-const SCALAR_TYPES = [
-  Type.BOOLEAN,
-  Type.INTEGER,
-  Type.FLOAT,
-  Type.STRING,
-  Type.BYTES,
-  Type.TIMESTAMP,
-  Type.DATETIME
-];
+const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
 
 // TODO(burdon): Reorganize functions.
 
@@ -83,9 +75,7 @@ export class ValueUtil {
     } else if (typeof value === 'boolean') {
       return ValueUtil.bool(value);
     } else if (typeof value === 'number') {
-      return value % 1 === 0
-        ? ValueUtil.integer(value)
-        : ValueUtil.float(value);
+      return value % 1 === 0 ? ValueUtil.integer(value) : ValueUtil.float(value);
     } else if (typeof value === 'string') {
       return ValueUtil.string(value);
     } else if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
@@ -145,9 +135,7 @@ export class ValueUtil {
   static object(value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
-        properties: Object.keys(value).map((key) =>
-          KeyValueUtil.createMessage(key, value[key])
-        )
+        properties: Object.keys(value).map((key) => KeyValueUtil.createMessage(key, value[key]))
       }
     };
   }
@@ -156,9 +144,7 @@ export class ValueUtil {
   static getObjectValue(value: KeyValueObject) {
     const nestedObject = {};
     const { properties } = value!;
-    (properties ?? []).forEach(({ key, value }) =>
-      ValueUtil.applyValue(nestedObject, key!, value!)
-    );
+    (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
     return nestedObject;
   }
 
@@ -220,9 +206,7 @@ export class MutationUtil {
   static applyMutationSet(object: any, message: ObjectMutationSet) {
     assert(message);
     const { mutations } = message;
-    mutations?.forEach((mutation) =>
-      MutationUtil.applyMutation(object, mutation)
-    );
+    mutations?.forEach((mutation) => MutationUtil.applyMutation(object, mutation));
     return object;
   }
 
@@ -291,8 +275,6 @@ export class MutationUtil {
    * Create field mutations.
    */
   static createMultiFieldMutation(object: any): ObjectMutation[] {
-    return Object.entries(object).map(([key, value]) =>
-      MutationUtil.createFieldMutation(key, value)
-    );
+    return Object.entries(object).map(([key, value]) => MutationUtil.createFieldMutation(key, value));
   }
 }

@@ -11,7 +11,4 @@ import { SchemaBuilder } from '@dxos/client-testing';
  * @param party
  */
 export const useSchemaBuilder = (party?: Party) =>
-  useMemo(
-    () => (party ? new SchemaBuilder(party.database) : undefined),
-    [party?.key.toHex()]
-  );
+  useMemo(() => (party ? new SchemaBuilder(party.database) : undefined), [party?.key.toHex()]);

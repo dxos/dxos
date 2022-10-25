@@ -102,11 +102,7 @@ export class Protocol {
   private _context: Record<string, any> = {};
 
   constructor(options: ProtocolOptions = { initiator: false }) {
-    const {
-      discoveryToPublicKey = (key) => key,
-      streamOptions,
-      initTimeout = 5 * 1000
-    } = options;
+    const { discoveryToPublicKey = (key) => key, streamOptions, initTimeout = 5 * 1000 } = options;
 
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;
@@ -288,9 +284,7 @@ export class Protocol {
 
     this._connected = false;
     this._stream.finalize();
-    await this._extensionInit
-      .close()
-      .catch((err: any) => this._handleError(err));
+    await this._extensionInit.close().catch((err: any) => this._handleError(err));
     for (const [name, extension] of this._extensionMap) {
       log(`close extension "${name}"`);
       await extension.close().catch((err: any) => this._handleError(err));
@@ -300,22 +294,14 @@ export class Protocol {
   }
 
   async waitForHandshake(): Promise<void> {
-    await Promise.race([
-      this.handshake.waitForCount(1),
-      this.error.waitForCount(1).then((err) => Promise.reject(err))
-    ]);
+    await Promise.race([this.handshake.waitForCount(1), this.error.waitForCount(1).then((err) => Promise.reject(err))]);
   }
 
   private async _openExtensions() {
     await this._extensionInit.openWithProtocol(this);
 
     for (const [name, extension] of this._extensionMap) {
-      log(
-        `open extension "${name}": ${keyToHuman(
-          this._stream.publicKey,
-          'node'
-        )}`
-      );
+      log(`open extension "${name}": ${keyToHuman(this._stream.publicKey, 'node')}`);
       await extension.openWithProtocol(this);
     }
   }
@@ -327,9 +313,9 @@ export class Protocol {
 
       for (const [name, extension] of this._extensionMap) {
         log(
-          `init extension "${name}": ${keyToHuman(
-            this._stream.publicKey
-          )} <=> ${keyToHuman(this._stream.remotePublicKey)}`
+          `init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+            this._stream.remotePublicKey
+          )}`
         );
         await extension.onInit();
       }
@@ -348,18 +334,14 @@ export class Protocol {
 
     for (const [name, extension] of this._extensionMap) {
       log(
-        `handshake extension "${name}": ${keyToHuman(
-          this._stream.publicKey
-        )} <=> ${keyToHuman(this._stream.remotePublicKey)}`
+        `handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+          this._stream.remotePublicKey
+        )}`
       );
       await extension.onHandshake();
     }
 
-    log(
-      `handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
-        this._stream.remotePublicKey
-      )}`
-    );
+    log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
     this.handshake.emit(this);
     this._connected = true;
 
@@ -368,9 +350,9 @@ export class Protocol {
       try {
         for (const [name, extension] of this._extensionMap) {
           log(
-            `feed extension "${name}": ${keyToHuman(
-              this._stream.publicKey
-            )} <=> ${keyToHuman(this._stream.remotePublicKey)}`
+            `feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+              this._stream.remotePublicKey
+            )}`
           );
           await extension.onFeed(discoveryKey);
         }
@@ -439,9 +421,6 @@ export class Protocol {
 }
 
 export const getProtocolFromStream = (stream: any): Protocol => {
-  assert(
-    typeof stream === 'object' && typeof stream.pipe === 'function',
-    'stream is required'
-  );
+  assert(typeof stream === 'object' && typeof stream.pipe === 'function', 'stream is required');
   return stream[kProtocol];
 };

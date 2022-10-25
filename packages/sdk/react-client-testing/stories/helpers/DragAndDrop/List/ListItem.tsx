@@ -14,6 +14,4 @@ interface ListItemProps {
   style?: CSSProperties;
 }
 
-export const ListItem = ({ item, style = {} }: ListItemProps) => (
-  <div style={style}>{item.title}</div>
-);
+export const ListItem = ({ item, style = {} }: ListItemProps) => <div style={style}>{item.title}</div>;

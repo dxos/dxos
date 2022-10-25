@@ -22,11 +22,7 @@ export const QrCode = ({ value, label, ...buttonProps }: QrCodeProps) => {
   }, [value]);
   return (
     <Tooltip content={label}>
-      <Button
-        {...buttonProps}
-        className={cx('py-0 px-0 overflow-hidden', buttonProps.className)}
-        onClick={copyValue}
-      >
+      <Button {...buttonProps} className={cx('py-0 px-0 overflow-hidden', buttonProps.className)} onClick={copyValue}>
         <QRCodeSVG value={value} includeMargin role='none' />
         <span id={labelId} className='sr-only'>
           {label}

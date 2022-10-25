@@ -86,16 +86,8 @@ describe('Messenger', function () {
   });
 
   it('Message 3 peers', async function () {
-    const {
-      messenger: messenger1,
-      received: received1,
-      peerId: peerId1
-    } = await setupPeer();
-    const {
-      messenger: messenger2,
-      received: received2,
-      peerId: peerId2
-    } = await setupPeer();
+    const { messenger: messenger1, received: received1, peerId: peerId1 } = await setupPeer();
+    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
     const { received: received3, peerId: peerId3 } = await setupPeer();
 
     {
@@ -137,15 +129,10 @@ describe('Messenger', function () {
 
   it('Message routing', async function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
-    const {
-      messenger: messenger2,
-      received: received2,
-      peerId: peerId2
-    } = await setupPeer();
+    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
 
     // Subscribe first listener for second messenger.
-    const onMessage1 =
-      mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       peerId: peerId2,
       payloadType: PAYLOAD_1.type_url,
@@ -153,8 +140,7 @@ describe('Messenger', function () {
     });
 
     // Subscribe first listener for second messenger.
-    const onMessage2 =
-      mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage2 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       peerId: peerId2,
       payloadType: PAYLOAD_1.type_url,
@@ -162,8 +148,7 @@ describe('Messenger', function () {
     });
 
     // Subscribe third listener for second messenger.
-    const onMessage3 =
-      mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage3 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       peerId: peerId2,
       payloadType: PAYLOAD_2.type_url,
@@ -293,9 +278,7 @@ describe('Messenger', function () {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
-      const unreliableConnection = (
-        data: SendMessageArgs
-      ): SendMessageArgs[] => {
+      const unreliableConnection = (data: SendMessageArgs): SendMessageArgs[] => {
         i++;
         if (i % 3 !== 0) {
           return [data];

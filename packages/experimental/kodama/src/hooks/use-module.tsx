@@ -3,15 +3,7 @@
 //
 
 import { useFocus } from 'ink';
-import React, {
-  FC,
-  ReactNode,
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  useEffect
-} from 'react';
+import React, { FC, ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 // Currently active path.
 type ModuleState = string;
@@ -36,11 +28,7 @@ export const ModuleProvider: FC<{
     focus(path ?? root);
   }, [path]);
 
-  return (
-    <ModuleContext.Provider value={[path ?? root, setPath, modules]}>
-      {children}
-    </ModuleContext.Provider>
-  );
+  return <ModuleContext.Provider value={[path ?? root, setPath, modules]}>{children}</ModuleContext.Provider>;
 };
 
 export const useModule = (): Context => {

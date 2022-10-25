@@ -6,12 +6,7 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { AccountKey, CID, DXN, RegistryClient } from '../api';
-import {
-  createDXN,
-  registerMockRecord,
-  registerMockResource,
-  registerMockTypes
-} from './fake-data-generator';
+import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator';
 import { MemoryRegistryClientBackend } from './memory-registry-client';
 
 describe('Registry API mock', function () {
@@ -23,11 +18,7 @@ describe('Registry API mock', function () {
     mock = new MemoryRegistryClientBackend();
     const registry = new RegistryClient(mock);
     const owner = AccountKey.random();
-    await Promise.all(
-      faker.datatype
-        .array(5)
-        .map(() => mock.registerDomainName('example', owner))
-    );
+    await Promise.all(faker.datatype.array(5).map(() => mock.registerDomainName('example', owner)));
 
     const types = await registerMockTypes(registry);
 

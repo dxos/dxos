@@ -13,11 +13,7 @@ import { ProjectMap } from './types';
 export class ProjectProcessor {
   private readonly _project: Project;
 
-  constructor(
-    private readonly _baseDir: string,
-    private readonly _projectMap: ProjectMap,
-    packageName: string
-  ) {
+  constructor(private readonly _baseDir: string, private readonly _projectMap: ProjectMap, packageName: string) {
     const subDir = this._projectMap.getProjectByPackage(packageName)?.subdir;
     const projectDir = path.join(this._baseDir, subDir!);
 

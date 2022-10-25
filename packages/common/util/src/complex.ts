@@ -19,10 +19,7 @@ export type PrimitiveProjection<T> = (value: T) => Primitive;
 export class ComplexSet<T> implements Set<T> {
   private readonly _values = new Map<Primitive, T>();
 
-  constructor(
-    private readonly _projection: PrimitiveProjection<T>,
-    values?: Iterable<T> | null
-  ) {
+  constructor(private readonly _projection: PrimitiveProjection<T>, values?: Iterable<T> | null) {
     if (values) {
       for (const value of values) {
         this.add(value);
@@ -43,10 +40,7 @@ export class ComplexSet<T> implements Set<T> {
     return this._values.delete(this._projection(value));
   }
 
-  forEach(
-    callbackfn: (value: T, value2: T, set: Set<T>) => void,
-    thisArg?: any
-  ): void {
+  forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void {
     if (thisArg) {
       callbackfn = callbackfn.bind(thisArg);
     }
@@ -84,16 +78,12 @@ export class ComplexSet<T> implements Set<T> {
   }
 }
 
-export type ComplexSetConstructor<T> = new (
-  values?: Iterable<T> | null
-) => ComplexSet<T>;
+export type ComplexSetConstructor<T> = new (values?: Iterable<T> | null) => ComplexSet<T>;
 
 /**
  * Create a subclass of ComplexSet with predefined projection function.
  */
-export const makeSet = <T>(
-  projection: PrimitiveProjection<T>
-): ComplexSetConstructor<T> =>
+export const makeSet = <T>(projection: PrimitiveProjection<T>): ComplexSetConstructor<T> =>
   class BoundComplexSet extends ComplexSet<T> {
     constructor(values?: Iterable<T> | null) {
       super(projection, values);
@@ -110,10 +100,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
   private readonly _keys = new Map<Primitive, K>();
   private readonly _values = new Map<Primitive, V>();
 
-  constructor(
-    private readonly _keyProjection: PrimitiveProjection<K>,
-    entries?: readonly (readonly [K, V])[] | null
-  ) {
+  constructor(private readonly _keyProjection: PrimitiveProjection<K>, entries?: readonly (readonly [K, V])[] | null) {
     if (entries) {
       for (const [key, value] of entries) {
         this.set(key, value);
@@ -132,20 +119,13 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return keyDeleted || valueDeleted;
   }
 
-  forEach(
-    callbackfn: (value: V, key: K, map: Map<K, V>) => void,
-    thisArg?: any
-  ): void {
+  forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
     if (thisArg) {
       callbackfn = callbackfn.bind(thisArg);
     }
 
     this._keys.forEach((key, primitive) =>
-      callbackfn(
-        this._values.get(primitive) ?? raise(new Error('Map corrupted.')),
-        key,
-        this
-      )
+      callbackfn(this._values.get(primitive) ?? raise(new Error('Map corrupted.')), key, this)
     );
   }
 
@@ -170,8 +150,7 @@ export class ComplexMap<K, V> implements Map<K, V> {
 
   *[Symbol.iterator](): IterableIterator<[K, V]> {
     for (const [primitive, key] of this._keys) {
-      const value =
-        this._values.get(primitive) ?? raise(new Error('Map corrupted.'));
+      const value = this._values.get(primitive) ?? raise(new Error('Map corrupted.'));
       yield [key, value];
     }
   }
@@ -193,16 +172,12 @@ export class ComplexMap<K, V> implements Map<K, V> {
   }
 }
 
-export type ComplexMapConstructor<K> = new <V>(
-  entries?: readonly (readonly [K, V])[] | null
-) => ComplexMap<K, V>;
+export type ComplexMapConstructor<K> = new <V>(entries?: readonly (readonly [K, V])[] | null) => ComplexMap<K, V>;
 
 /**
  * Create a subclass of ComplexMap with predefined key projection function.
  */
-export const makeMap = <K>(
-  keyProjection: PrimitiveProjection<K>
-): ComplexMapConstructor<K> =>
+export const makeMap = <K>(keyProjection: PrimitiveProjection<K>): ComplexMapConstructor<K> =>
   class BoundComplexMap<V> extends ComplexMap<K, V> {
     constructor(entries?: readonly (readonly [K, V])[] | null) {
       super(keyProjection, entries);

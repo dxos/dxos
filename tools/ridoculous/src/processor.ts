@@ -21,15 +21,7 @@ interface Options {
   verbose?: boolean;
 }
 
-export const processFiles = async ({
-  autoNumber,
-  baseDir,
-  dryRun,
-  files,
-  html,
-  outDir,
-  verbose
-}: Options = {}) => {
+export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, outDir, verbose }: Options = {}) => {
   const parser = createParser({ autoNumber, baseDir, html, verbose });
 
   const globFiles = glob.sync(path.join(baseDir ?? '', files));

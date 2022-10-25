@@ -11,14 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { TypedMessage } from '@dxos/protocols';
-import {
-  EchoEnvelope,
-  FeedMessage
-} from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  AdmittedFeed,
-  Credential
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
@@ -57,9 +51,7 @@ export class Space {
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _feedProvider: (
-    feedKey: PublicKey
-  ) => Promise<FeedWrapper<FeedMessage>>;
+  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
@@ -123,12 +115,7 @@ export class Space {
     this._replicator.addFeed(genesisFeed);
 
     // Create the network protocol.
-    this._protocol = new SpaceProtocol(
-      networkManager,
-      spaceKey,
-      swarmIdentity,
-      [this._replicator, ...networkPlugins]
-    );
+    this._protocol = new SpaceProtocol(networkManager, spaceKey, swarmIdentity, [this._replicator, ...networkPlugins]);
   }
 
   get isOpen() {
@@ -246,8 +233,7 @@ export class Space {
         try {
           const payload = data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
-            const feedInfo =
-              this._controlPipeline.partyState.feeds.get(feedKey);
+            const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
             if (!feedInfo) {
               log.error('Could not find feed.', { feedKey });
               continue;

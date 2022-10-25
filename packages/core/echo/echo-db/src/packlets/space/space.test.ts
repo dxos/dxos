@@ -25,18 +25,10 @@ describe('space/space', function () {
 
     {
       // Genesis
-      const generator = new CredentialGenerator(
-        agent.keyring,
-        agent.identityKey,
-        agent.deviceKey
-      );
+      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
         ...(await generator.createSpaceGenesis(space.key, controlKey)),
-        await generator.createFeedAdmission(
-          spaceContext.space.key,
-          spaceContext.dataKey,
-          AdmittedFeed.Designation.DATA
-        )
+        await generator.createFeedAdmission(spaceContext.space.key, spaceContext.dataKey, AdmittedFeed.Designation.DATA)
       ];
 
       for (const credential of credentials) {
@@ -47,9 +39,7 @@ describe('space/space', function () {
       }
 
       // TODO(burdon): Debugging only.
-      await space.controlPipeline.state!.waitUntilTimeframe(
-        space.controlPipeline.state!.endTimeframe
-      );
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
     {
@@ -67,9 +57,7 @@ describe('space/space', function () {
       expect(item1.model.get('key_1')).toEqual('value_1');
       expect(item2.model.get('key_2')).toEqual('value_2');
 
-      expect(
-        space.database.select({ type: 'dxos.example' }).exec().entities
-      ).toHaveLength(2);
+      expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
     }
   });
 
@@ -93,11 +81,7 @@ describe('space/space', function () {
 
       {
         // Genesis
-        const generator = new CredentialGenerator(
-          agent.keyring,
-          agent.identityKey,
-          agent.deviceKey
-        );
+        const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
           ...(await generator.createSpaceGenesis(space.key, controlKey)),
           await generator.createFeedAdmission(
@@ -114,9 +98,7 @@ describe('space/space', function () {
           });
         }
 
-        await space.controlPipeline.state!.waitUntilTimeframe(
-          space.controlPipeline.state!.endTimeframe
-        );
+        await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       }
 
       return [agent, spaceContext];
@@ -147,11 +129,7 @@ describe('space/space', function () {
 
     {
       // Write invitation from agent 1.
-      const generator = new CredentialGenerator(
-        agent1.keyring,
-        agent1.identityKey,
-        agent1.deviceKey
-      );
+      const generator = new CredentialGenerator(agent1.keyring, agent1.identityKey, agent1.deviceKey);
       const credentials = await generator.createMemberInvitation(
         spaceContext1.space.key,
         agent2.identityKey,

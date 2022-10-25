@@ -17,20 +17,14 @@ export interface ImportDescriptor {
  */
 export type SubstitutionsMap = Partial<Record<string, string>>;
 
-const getSubstitutionType = (
-  substitutionProperty: Symbol,
-  typeChecker: TypeChecker
-) => {
+const getSubstitutionType = (substitutionProperty: Symbol, typeChecker: TypeChecker) => {
   const substitutionType = typeChecker.getTypeOfSymbolAtLocation(
     substitutionProperty,
     substitutionProperty.getValueDeclarationOrThrow()
   );
 
   const decode = substitutionType.getPropertyOrThrow('decode');
-  const decodeType = typeChecker.getTypeOfSymbolAtLocation(
-    decode,
-    decode.getValueDeclarationOrThrow()
-  );
+  const decodeType = typeChecker.getTypeOfSymbolAtLocation(decode, decode.getValueDeclarationOrThrow());
   return decodeType.getCallSignatures()[0].getReturnType();
 };
 
@@ -48,10 +42,7 @@ export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
 
   const exportSymbol = sourceFile.getDefaultExportSymbolOrThrow();
   const declarations = exportSymbol.getDeclarations();
-  const exportType = typeChecker.getTypeOfSymbolAtLocation(
-    exportSymbol,
-    declarations[0]
-  );
+  const exportType = typeChecker.getTypeOfSymbolAtLocation(exportSymbol, declarations[0]);
 
   const substitutions: Record<string, string> = {};
   for (const substitution of exportType.getProperties()) {

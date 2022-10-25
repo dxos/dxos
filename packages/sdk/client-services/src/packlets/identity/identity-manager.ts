@@ -6,14 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
-import {
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
-  MetadataStore,
-  Space,
-  SwarmIdentity,
-  Database
-} from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity, Database } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -21,11 +14,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  AdmittedFeed,
-  IdentityRecord,
-  SpaceRecord
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Identity } from '../identity';
@@ -99,25 +88,13 @@ export class IdentityManager {
     });
   }
 
-  private async _constructSpace({
-    spaceRecord,
-    swarmIdentity,
-    networkPlugins
-  }: ConstructSpaceParams) {
-    const controlFeed = await this._feedStore.openFeed(
-      spaceRecord.writeControlFeedKey,
-      { writable: true }
-    );
-    const dataFeed = await this._feedStore.openFeed(
-      spaceRecord.writeDataFeedKey,
-      { writable: true }
-    );
+  private async _constructSpace({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
+    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
 
     // Might be the same feed as the control feed on the top.
     // It's important to initialize it after writable feeds so that the feed is in the writable state.
-    const genesisFeed = await this._feedStore.openFeed(
-      spaceRecord.genesisFeedKey
-    );
+    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
 
     return new Space({
       spaceKey: spaceRecord.spaceKey,
@@ -155,11 +132,7 @@ export class IdentityManager {
     await identity.open();
 
     {
-      const generator = new CredentialGenerator(
-        this._keyring,
-        identityRecord.identityKey,
-        identityRecord.deviceKey
-      );
+      const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
       const credentials = [
         // Space genesis.
         ...(await generator.createSpaceGenesis(

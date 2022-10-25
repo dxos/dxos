@@ -20,9 +20,7 @@ const FatalErrorThrower = () => {
   if (throwError) {
     throw new Error('A wild MISSING№ appeared!');
   }
-  return (
-    <Button onClick={() => setThrowError(true)}>Throw a fatal error</Button>
-  );
+  return <Button onClick={() => setThrowError(true)}>Throw a fatal error</Button>;
 };
 
 const UnhandledRejectionThrower = () => {

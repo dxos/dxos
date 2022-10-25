@@ -13,11 +13,7 @@ export interface DragOptions<N extends GraphNode> {
   dragMod?: string;
   linkMod?: string;
   freezeMod?: string;
-  onDrag?: (
-    source?: GraphLayoutNode<N>,
-    target?: GraphLayoutNode<N>,
-    point?: Point
-  ) => void;
+  onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void;
   onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void;
 }
 

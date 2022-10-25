@@ -26,11 +26,7 @@ const windowPort = (): RpcPort => ({
   subscribe: (callback) => {
     const handler = (event: MessageEvent<any>) => {
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'panel'
-      ) {
+      if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
 
@@ -47,11 +43,7 @@ const waitForRpc = async () =>
   new Promise<void>((resolve) => {
     const handler = (event: MessageEvent) => {
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'panel'
-      ) {
+      if (typeof message !== 'object' || message === null || message.source !== 'panel') {
         return;
       }
 

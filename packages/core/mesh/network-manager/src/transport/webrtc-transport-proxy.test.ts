@@ -122,11 +122,7 @@ describe('WebRTCTransportProxy', function () {
     const sessionId = PublicKey.random();
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-    const protocolProvider1 = testProtocolProvider(
-      topic.asBuffer(),
-      peer1Id.asBuffer(),
-      plugin1
-    );
+    const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
     const { webRTCTransportProxy: connection1 } = await setupProxy({
       initiator: true,
       stream: protocolProvider1({
@@ -145,11 +141,7 @@ describe('WebRTCTransportProxy', function () {
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-    const protocolProvider2 = testProtocolProvider(
-      topic.asBuffer(),
-      peer2Id.asBuffer(),
-      plugin2
-    );
+    const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
     const { webRTCTransportProxy: connection2 } = await setupProxy({
       initiator: false,
       stream: protocolProvider2({
@@ -194,8 +186,7 @@ describe('WebRTCTransportProxy', function () {
     before(async function () {
       const [port1, port2] = createLinkedPorts();
 
-      const webRTCTransportService: BridgeService =
-        new WebRTCTransportService();
+      const webRTCTransportService: BridgeService = new WebRTCTransportService();
       service = createProtoRpcPeer({
         requested: {},
         exposed: {
@@ -237,11 +228,7 @@ describe('WebRTCTransportProxy', function () {
       const sessionId = PublicKey.random();
 
       const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-      const protocolProvider1 = testProtocolProvider(
-        topic.asBuffer(),
-        peer1Id.asBuffer(),
-        plugin1
-      );
+      const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
       const proxy1 = new WebRTCTransportProxy({
         initiator: true,
         stream: protocolProvider1({
@@ -261,11 +248,7 @@ describe('WebRTCTransportProxy', function () {
       afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
       const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-      const protocolProvider2 = testProtocolProvider(
-        topic.asBuffer(),
-        peer2Id.asBuffer(),
-        plugin2
-      );
+      const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
       const proxy2 = new WebRTCTransportProxy({
         initiator: false,
         stream: protocolProvider2({

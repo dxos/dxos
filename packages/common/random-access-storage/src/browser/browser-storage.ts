@@ -11,10 +11,7 @@ import { AbstractStorage } from '../common';
  * Base class for random access files based on IDB.
  */
 export abstract class BrowserStorage extends AbstractStorage {
-  private readonly _fileStorage: (
-    filename: string,
-    opts?: {}
-  ) => RandomAccessStorage;
+  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessStorage;
 
   constructor(path: string) {
     super(path);
@@ -26,9 +23,7 @@ export abstract class BrowserStorage extends AbstractStorage {
     return this._fileStorage(fullPath);
   }
 
-  protected abstract _createFileStorage(
-    path: string
-  ): (filename: string, opts?: {}) => RandomAccessStorage;
+  protected abstract _createFileStorage(path: string): (filename: string, opts?: {}) => RandomAccessStorage;
 
   protected override async _destroy() {
     // eslint-disable-next-line no-undef

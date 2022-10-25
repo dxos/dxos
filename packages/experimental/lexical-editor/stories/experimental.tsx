@@ -193,10 +193,7 @@ const _Editor: FC<{
       }}
     >
       <div className={editorStyles}>
-        <LexicalRichTextPlugin
-          contentEditable={<LexicalContentEditable spellCheck={false} />}
-          placeholder=''
-        />
+        <LexicalRichTextPlugin contentEditable={<LexicalContentEditable spellCheck={false} />} placeholder='' />
         {/*
         <LexicalRichTextPlugin
           contentEditable={<LexicalContentEditable spellcheck={false}/>}

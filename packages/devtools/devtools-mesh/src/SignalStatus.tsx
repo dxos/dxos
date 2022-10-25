@@ -47,19 +47,11 @@ export const SignalStatusComp = ({ status }: SignalStatusProps) => {
           {status.error && <div>{status.error}</div>}
           {status.state === SignalState.DISCONNECTED && (
             <div>
-              Will reconnect in{' '}
-              {format(
-                Math.floor(
-                  (status.lastStateChange + status.reconnectIn - time) / 1000
-                )
-              )}
+              Will reconnect in {format(Math.floor((status.lastStateChange + status.reconnectIn - time) / 1000))}
             </div>
           )}
           {status.state === SignalState.CONNECTED && (
-            <div>
-              Connected for{' '}
-              {format(Math.floor((time - status.connectionStarted) / 1000))}
-            </div>
+            <div>Connected for {format(Math.floor((time - status.connectionStarted) / 1000))}</div>
           )}
         </div>
       ))}

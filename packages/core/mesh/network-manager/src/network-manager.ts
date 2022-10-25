@@ -17,10 +17,7 @@ import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { TransportFactory } from './transport';
 
-export type ProtocolProvider = (opts: {
-  channel: Buffer;
-  initiator: boolean;
-}) => Protocol;
+export type ProtocolProvider = (opts: { channel: Buffer; initiator: boolean }) => Protocol;
 
 export interface NetworkManagerOptions {
   transportFactory: TransportFactory;
@@ -38,9 +35,7 @@ export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(
-    PublicKey.hash
-  );
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
@@ -55,9 +50,7 @@ export class NetworkManager {
     // Listen for signal manager events.
     {
       this._signalManager = signalManager;
-      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
-        this._swarms.get(topic)?.onSwarmEvent(event)
-      );
+      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     }
     this._messenger = new Messenger({ signalManager: this._signalManager });
 
@@ -111,24 +104,14 @@ export class NetworkManager {
       throw new Error(`Already connected to swarm ${topic}`);
     }
 
-    const swarm = new Swarm(
-      topic,
-      peerId,
-      topology,
-      protocol,
-      this._messenger,
-      this._transportFactory,
-      options.label
-    );
+    const swarm = new Swarm(topic, peerId, topology, protocol, this._messenger, this._transportFactory, options.label);
 
     swarm.errors.handle((error) => {
       log(`Swarm error: ${error}`);
     });
 
     this._swarms.set(topic, swarm);
-    this._signalConnection
-      .join({ topic, peerId })
-      .catch((error) => log(`Error: ${error}`));
+    this._signalConnection.join({ topic, peerId }).catch((error) => log(`Error: ${error}`));
     this._maps.set(topic, new SwarmMapper(swarm, presence));
 
     this.topicsUpdated.emit();

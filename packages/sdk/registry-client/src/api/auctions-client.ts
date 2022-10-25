@@ -62,10 +62,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param sudoSignFn A transaction signing function using a sudo/admin account with rights to to execute this high-privilege operation.
    */
-  async forceCloseAuction(
-    name: string,
-    sudoSignFn: SignTxFunction | AddressOrPair
-  ): Promise<void> {
+  async forceCloseAuction(name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void> {
     await this._backend.forceCloseAuction(name, sudoSignFn);
   }
 
@@ -74,10 +71,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param account The DXNS Account that will claim the ownership of the domain.
    */
-  async claimAuction(
-    domainName: string,
-    account: AccountKey
-  ): Promise<DomainKey> {
+  async claimAuction(domainName: string, account: AccountKey): Promise<DomainKey> {
     return this._backend.claimAuction(domainName, account);
   }
 }

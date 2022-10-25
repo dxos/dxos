@@ -81,21 +81,14 @@ export const NonEchoList = () => {
         <DroppableList
           id='test-list'
           items={
-            order
-              .map((id) => items.find((item) => item.id === id))
-              .filter(Boolean) as { id: string; title: string }[]
+            order.map((id) => items.find((item) => item.id === id)).filter(Boolean) as { id: string; title: string }[]
           }
           style={{ width: 'calc(100% - 16px)' }}
         />
       </DndContext>
       <div>
         <ResetButton onReset={() => setOrder(initialOrder)} />
-        <DragAndDropDebugPanel
-          order={Object.assign(
-            {},
-            ...order.map((id, i) => ({ [id]: order[i + 1] ?? '' }))
-          )}
-        />
+        <DragAndDropDebugPanel order={Object.assign({}, ...order.map((id, i) => ({ [id]: order[i + 1] ?? '' })))} />
       </div>
     </StorybookContainer>
   );
@@ -108,9 +101,7 @@ const ListStory = () => {
   const [orderedList, setOrderedList] = useState<OrderedList>();
   const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const [currentOrder, setCurrentOrder] = useState<string[]>([]);
-  const items =
-    useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), [list]) ??
-    [];
+  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), [list]) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
@@ -167,11 +158,7 @@ const ListStory = () => {
       const overIndex = orderedList.values.indexOf(over.id as string);
       const activeIndex = orderedList.values.indexOf(activeId);
       if (activeIndex !== overIndex) {
-        const newOrder = moveItemInArray(
-          orderedList.values,
-          activeId,
-          overIndex
-        );
+        const newOrder = moveItemInArray(orderedList.values, activeId, overIndex);
         setCurrentOrder(newOrder);
         await orderedList.init(newOrder);
       }
@@ -209,11 +196,7 @@ const ListStory = () => {
         }}
         onDragEnd={handleDragEnd}
       >
-        <DroppableList
-          id='test-list'
-          items={getListItems()}
-          style={{ width: 'calc(100% - 16px)' }}
-        />
+        <DroppableList id='test-list' items={getListItems()} style={{ width: 'calc(100% - 16px)' }} />
       </DndContext>
       <div>
         <ResetButton onReset={handleReset} />
@@ -236,14 +219,9 @@ const MultipleListStory = () => {
   const [party, setParty] = useState<Party>();
   const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
-  const [initialOrders, setInitialOrders] = useState<
-    { id: string; values: string[] }[]
-  >([]);
-  const [currentOrders, setCurrentOrders] = useState<
-    { id: string; values: string[] }[]
-  >([]);
-  const items =
-    useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
+  const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
+  const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
+  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
@@ -326,12 +304,8 @@ const MultipleListStory = () => {
       return;
     }
 
-    const sourceOrderedList = orderedLists.find((list) =>
-      list.values.includes(activeId)
-    );
-    const targetOrderedList = orderedLists.find(
-      (list) => list.id === over.data.current!.sortable.containerId
-    );
+    const sourceOrderedList = orderedLists.find((list) => list.values.includes(activeId));
+    const targetOrderedList = orderedLists.find((list) => list.id === over.data.current!.sortable.containerId);
     if (!sourceOrderedList || !targetOrderedList) {
       return;
     }
@@ -339,9 +313,7 @@ const MultipleListStory = () => {
     let newSourceOrder: string[] | undefined;
     if (sourceOrderedList.id !== targetOrderedList.id) {
       // Remove item from source
-      const sourceOrderWithoutId = sourceOrderedList.values.filter(
-        (value) => value !== activeId
-      );
+      const sourceOrderWithoutId = sourceOrderedList.values.filter((value) => value !== activeId);
       await sourceOrderedList.init(sourceOrderWithoutId);
       newSourceOrder = sourceOrderWithoutId;
     }
@@ -352,24 +324,10 @@ const MultipleListStory = () => {
       return;
     }
 
-    const newOrder = moveItemInArray(
-      targetOrderedList.values,
-      activeId,
-      overIndex
-    );
+    const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
     targetOrderedList.id !== sourceOrderedList.id
-      ? updateSourceAndTargetState(
-          setCurrentOrders,
-          targetOrderedList,
-          newOrder,
-          sourceOrderedList,
-          newSourceOrder
-        )
-      : updateSourceAndTargetState(
-          setCurrentOrders,
-          targetOrderedList,
-          newOrder
-        );
+      ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
+      : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
     await targetOrderedList.init(newOrder);
 
     setActiveId(undefined);
@@ -383,9 +341,7 @@ const MultipleListStory = () => {
     // Update state to trigger rerender
     setCurrentOrders(
       orderedLists.map((orderedList) => {
-        const initialOrder = initialOrders.find(
-          (order) => order.id === orderedList.id
-        );
+        const initialOrder = initialOrders.find((order) => order.id === orderedList.id);
         if (!initialOrder) {
           return orderedList;
         }
@@ -395,9 +351,7 @@ const MultipleListStory = () => {
 
     await Promise.all(
       orderedLists.map(async (orderedList) => {
-        const initialOrder = initialOrders.find(
-          (order) => order.id === orderedList.id
-        );
+        const initialOrder = initialOrders.find((order) => order.id === orderedList.id);
         initialOrder && (await orderedList?.init(initialOrder.values));
       })
     );
@@ -452,9 +406,7 @@ const MultipleListStory = () => {
             return;
           }
 
-          const overContainer = currentOrders.find((currentOrder) =>
-            currentOrder.values.includes(overId as string)
-          );
+          const overContainer = currentOrders.find((currentOrder) => currentOrder.values.includes(overId as string));
           const activeContainer = currentOrders.find((currentOrder) =>
             currentOrder.values.includes(active.id as string)
           );
@@ -468,16 +420,13 @@ const MultipleListStory = () => {
               const overItems = overContainer.values;
               const overIndex = overItems.indexOf(overId as string);
 
-              const newIndex =
-                overIndex >= 0 ? overIndex : overItems.length + 1;
+              const newIndex = overIndex >= 0 ? overIndex : overItems.length + 1;
 
               return prev.map((currentOrder) => {
                 if (currentOrder.id === activeContainer.id) {
                   return {
                     id: currentOrder.id,
-                    values: currentOrder.values.filter(
-                      (itemId) => itemId !== active.id
-                    )
+                    values: currentOrder.values.filter((itemId) => itemId !== active.id)
                   };
                 }
                 if (currentOrder.id === overContainer.id) {
@@ -486,10 +435,7 @@ const MultipleListStory = () => {
                     values: [
                       ...currentOrder.values.slice(0, newIndex),
                       active.id as string,
-                      ...currentOrder.values.slice(
-                        newIndex,
-                        currentOrder.values.length
-                      )
+                      ...currentOrder.values.slice(newIndex, currentOrder.values.length)
                     ]
                   };
                 }
@@ -503,16 +449,9 @@ const MultipleListStory = () => {
           <ColumnContainer
             key={list.id}
             topComponent={
-              <DroppableList
-                id={list.id}
-                items={getListItems(list.id)}
-                activeId={activeId}
-                style={{ width: '100%' }}
-              />
+              <DroppableList id={list.id} items={getListItems(list.id)} activeId={activeId} style={{ width: '100%' }} />
             }
-            bottomComponent={
-              <DragAndDropDebugPanel order={list.model.get('order')} />
-            }
+            bottomComponent={<DragAndDropDebugPanel order={list.model.get('order')} />}
             config={{
               fixedComponent: 'bottom',
               height: '300px'
@@ -570,8 +509,7 @@ const TableStory = () => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string>();
 
-  const items =
-    useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
 
   useAsyncEffect(async () => {
     const newParty = await client.echo.createParty();
@@ -596,10 +534,7 @@ const TableStory = () => {
     );
     const newRowOrderedList = new OrderedList(tableItem.model, 'rowOrder');
     await newRowOrderedList.init(createdItems.map((item) => item.id));
-    const newColumnOrderedList = new OrderedList(
-      tableItem.model,
-      'columnOrder'
-    );
+    const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
     await newColumnOrderedList.init(columns.map((column) => column.accessor));
 
     setParty(newParty);
@@ -628,11 +563,7 @@ const TableStory = () => {
           const overIndex = columnOrderedList.values.indexOf(over.id as string);
           const activeIndex = columnOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
-            const newOrder = moveItemInArray(
-              columnOrderedList.values,
-              activeId,
-              overIndex
-            );
+            const newOrder = moveItemInArray(columnOrderedList.values, activeId, overIndex);
             setColumnOrder(newOrder);
             await columnOrderedList.init(newOrder);
           }
@@ -642,11 +573,7 @@ const TableStory = () => {
           const overIndex = rowOrderedList.values.indexOf(over.id as string);
           const activeIndex = rowOrderedList.values.indexOf(activeId);
           if (activeIndex !== overIndex) {
-            const newOrder = moveItemInArray(
-              rowOrderedList.values,
-              activeId,
-              overIndex
-            );
+            const newOrder = moveItemInArray(rowOrderedList.values, activeId, overIndex);
             setRowOrder(newOrder);
             await rowOrderedList.init(newOrder);
           }
@@ -696,12 +623,7 @@ const TableStory = () => {
         }}
         onDragEnd={handleDragEnd}
       >
-        <DroppableTable
-          id={table.id}
-          columns={columns}
-          columnOrder={columnOrder}
-          rows={getRows()}
-        />
+        <DroppableTable id={table.id} columns={columns} columnOrder={columnOrder} rows={getRows()} />
       </DndContext>
       <ResetButton onReset={handleReset} />
     </StorybookContainer>
@@ -721,17 +643,12 @@ const MultipleContainersStory = () => {
   const [party, setParty] = useState<Party>();
   const [containers, setContainers] = useState<Item<ObjectModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
-  const [initialOrders, setInitialOrders] = useState<
-    { id: string; values: string[] }[]
-  >([]);
-  const [currentOrders, setCurrentOrders] = useState<
-    { id: string; values: string[] }[]
-  >([]);
+  const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
+  const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
   const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
   const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const items =
-    useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
@@ -775,10 +692,7 @@ const MultipleContainersStory = () => {
       })
     );
 
-    const newColumnOrderedList = new OrderedList(
-      tableItem.model,
-      'columnOrder'
-    );
+    const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
     await newColumnOrderedList.init(columns.map((column) => column.accessor));
 
     setParty(newParty);
@@ -807,9 +721,7 @@ const MultipleContainersStory = () => {
 
   const getContainerItems = (containerId: string) => {
     // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
-    const currentOrder = currentOrders?.find(
-      (currentOrder) => currentOrder.id === containerId
-    );
+    const currentOrder = currentOrders?.find((currentOrder) => currentOrder.id === containerId);
     if (!currentOrder) {
       return [];
     }
@@ -829,11 +741,7 @@ const MultipleContainersStory = () => {
     const overIndex = columnOrderedList!.values.indexOf(overId);
     const activeIndex = columnOrderedList!.values.indexOf(activeId);
     if (activeIndex !== overIndex) {
-      const newOrder = moveItemInArray(
-        columnOrderedList!.values,
-        activeId,
-        overIndex
-      );
+      const newOrder = moveItemInArray(columnOrderedList!.values, activeId, overIndex);
       setColumnOrder(newOrder);
       await columnOrderedList!.init(newOrder);
     }
@@ -844,20 +752,13 @@ const MultipleContainersStory = () => {
       return;
     }
 
-    if (
-      over.data.current?.sortable.containerId.split('-')[0] === 'columns' &&
-      columnOrderedList
-    ) {
+    if (over.data.current?.sortable.containerId.split('-')[0] === 'columns' && columnOrderedList) {
       await handleColumnDrag(over.id as string, activeId);
       return;
     }
 
-    const sourceOrderedList = orderedLists.find((list) =>
-      list.values.includes(activeId)
-    );
-    const targetOrderedList = orderedLists.find(
-      (list) => list.id === over.data.current!.sortable.containerId
-    );
+    const sourceOrderedList = orderedLists.find((list) => list.values.includes(activeId));
+    const targetOrderedList = orderedLists.find((list) => list.id === over.data.current!.sortable.containerId);
     if (!sourceOrderedList || !targetOrderedList) {
       return;
     }
@@ -866,9 +767,7 @@ const MultipleContainersStory = () => {
     // Check if dragging to a different list.
     if (sourceOrderedList.id !== targetOrderedList.id) {
       // Remove item from source list.
-      const sourceOrderWithoutId = sourceOrderedList.values.filter(
-        (value) => value !== activeId
-      );
+      const sourceOrderWithoutId = sourceOrderedList.values.filter((value) => value !== activeId);
       await sourceOrderedList.init(sourceOrderWithoutId);
       newSourceOrder = sourceOrderWithoutId;
     }
@@ -879,24 +778,10 @@ const MultipleContainersStory = () => {
       return;
     }
 
-    const newOrder = moveItemInArray(
-      targetOrderedList.values,
-      activeId,
-      overIndex
-    );
+    const newOrder = moveItemInArray(targetOrderedList.values, activeId, overIndex);
     targetOrderedList.id !== sourceOrderedList.id
-      ? updateSourceAndTargetState(
-          setCurrentOrders,
-          targetOrderedList,
-          newOrder,
-          sourceOrderedList,
-          newSourceOrder
-        )
-      : updateSourceAndTargetState(
-          setCurrentOrders,
-          targetOrderedList,
-          newOrder
-        );
+      ? updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder, sourceOrderedList, newSourceOrder)
+      : updateSourceAndTargetState(setCurrentOrders, targetOrderedList, newOrder);
     await targetOrderedList.init(newOrder);
 
     setActiveId(undefined);
@@ -934,9 +819,7 @@ const MultipleContainersStory = () => {
     // Update state to trigger rerender
     setCurrentOrders(
       orderedLists.map((orderedList) => {
-        const initialOrder = initialOrders.find(
-          (order) => order.id === orderedList.id
-        );
+        const initialOrder = initialOrders.find((order) => order.id === orderedList.id);
         if (!initialOrder) {
           return orderedList;
         }
@@ -947,9 +830,7 @@ const MultipleContainersStory = () => {
 
     await Promise.all(
       orderedLists.map(async (orderedList) => {
-        const initialOrder = initialOrders.find(
-          (order) => order.id === orderedList.id
-        );
+        const initialOrder = initialOrders.find((order) => order.id === orderedList.id);
         initialOrder && (await orderedList?.init(initialOrder.values));
       })
     );
@@ -981,9 +862,7 @@ const MultipleContainersStory = () => {
             return;
           }
 
-          const overContainer = currentOrders.find((currentOrder) =>
-            currentOrder.values.includes(overId as string)
-          );
+          const overContainer = currentOrders.find((currentOrder) => currentOrder.values.includes(overId as string));
           const activeContainer = currentOrders.find((currentOrder) =>
             currentOrder.values.includes(active.id as string)
           );
@@ -997,16 +876,13 @@ const MultipleContainersStory = () => {
               const overItems = overContainer.values;
               const overIndex = overItems.indexOf(overId as string);
 
-              const newIndex =
-                overIndex >= 0 ? overIndex : overItems.length + 1;
+              const newIndex = overIndex >= 0 ? overIndex : overItems.length + 1;
 
               return prev.map((currentOrder) => {
                 if (currentOrder.id === activeContainer.id) {
                   return {
                     id: currentOrder.id,
-                    values: currentOrder.values.filter(
-                      (itemId) => itemId !== active.id
-                    )
+                    values: currentOrder.values.filter((itemId) => itemId !== active.id)
                   };
                 }
                 if (currentOrder.id === overContainer.id) {
@@ -1015,10 +891,7 @@ const MultipleContainersStory = () => {
                     values: [
                       ...currentOrder.values.slice(0, newIndex),
                       active.id as string,
-                      ...currentOrder.values.slice(
-                        newIndex,
-                        currentOrder.values.length
-                      )
+                      ...currentOrder.values.slice(newIndex, currentOrder.values.length)
                     ]
                   };
                 }

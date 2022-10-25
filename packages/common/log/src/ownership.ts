@@ -55,9 +55,7 @@ function decorateMethodWeakReturnOwnership(prototype: any, key: string) {
   };
 }
 
-export function ownershipClass<T extends { new (...args: any[]): {} }>(
-  constr: T
-) {
+export function ownershipClass<T extends { new (...args: any[]): {} }>(constr: T) {
   for (const key of Object.getOwnPropertyNames(constr.prototype)) {
     if (key !== 'constructor' && typeof constr.prototype[key] === 'function') {
       decorateMethodWeakReturnOwnership(constr.prototype, key);
@@ -67,25 +65,16 @@ export function ownershipClass<T extends { new (...args: any[]): {} }>(
   return class extends constr {
     constructor(...args: any[]) {
       const currentCausality = (globalThis as any)[kCurrentOwnershipScope];
-      (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(
-        constr,
-        currentCausality
-      );
+      (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(constr, currentCausality);
       super(...args);
-      (this as any)[kOwnershipScope] = (globalThis as any)[
-        kCurrentOwnershipScope
-      ];
+      (this as any)[kOwnershipScope] = (globalThis as any)[kCurrentOwnershipScope];
       (this as any)[kOwnershipScope].instance = this;
       (globalThis as any)[kCurrentOwnershipScope] = currentCausality;
     }
   };
 }
 
-export const debugInfo = (
-  target: any,
-  propertyKey: string,
-  descriptor: PropertyDescriptor
-) => {
+export const debugInfo = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
   // console.log(target, propertyKey, descriptor);
   (target[kDebugInfoProperties] ??= []).push(propertyKey);
 };

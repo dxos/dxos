@@ -6,15 +6,7 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import {
-  Item,
-  ObjectModel,
-  Party,
-  Schema,
-  SchemaField,
-  TYPE_SCHEMA,
-  Client
-} from '@dxos/client';
+import { Item, ObjectModel, Party, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
 import { log, SchemaBuilder, TestType } from './builders';
@@ -75,11 +67,7 @@ describe('Schemas', function () {
 
     const items = await party.database
       .select()
-      .filter(
-        (item) =>
-          Boolean(item.type) &&
-          [orgSchema.name, personSchema.name].includes(item.type as string)
-      )
+      .filter((item) => Boolean(item.type) && [orgSchema.name, personSchema.name].includes(item.type as string))
       .exec().entities;
 
     [orgSchema, personSchema].forEach((schema) => {
@@ -96,22 +84,14 @@ describe('Schemas', function () {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const { entities: schemas } = party.database
-      .select({ type: TYPE_SCHEMA })
-      .exec();
+    const { entities: schemas } = party.database.select({ type: TYPE_SCHEMA }).exec();
 
-    const { entities: orgs } = party.database
-      .select({ type: builder.defaultSchemas[TestType.Org].schema })
-      .exec();
+    const { entities: orgs } = party.database.select({ type: builder.defaultSchemas[TestType.Org].schema }).exec();
 
-    const { entities: people } = party.database
-      .select({ type: builder.defaultSchemas[TestType.Person].schema })
-      .exec();
+    const { entities: people } = party.database.select({ type: builder.defaultSchemas[TestType.Person].schema }).exec();
 
     [...orgs, ...people].forEach((item) => {
-      const schemaItem = schemas.find(
-        (schema) => schema.model.get('schema') === item.type
-      );
+      const schemaItem = schemas.find((schema) => schema.model.get('schema') === item.type);
       const schema = new Schema(schemaItem!.model);
       expect(schema.validate(item.model)).toBeTruthy();
     });
@@ -131,11 +111,7 @@ describe('Schemas', function () {
  * @param items
  * @param [party]
  */
-const renderSchemaItemsTable = (
-  schema: Item<ObjectModel>,
-  items: Item<ObjectModel>[],
-  party?: Party
-) => {
+const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 

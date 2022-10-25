@@ -10,11 +10,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import {
-  IframeServiceBundle,
-  iframeServiceBundle,
-  workerServiceBundle
-} from './services';
+import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
   services: ClientServices;

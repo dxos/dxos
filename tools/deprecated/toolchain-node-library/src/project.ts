@@ -25,9 +25,7 @@ export class Project {
     }
 
     // Package config.
-    const packageJson = JSON.parse(
-      fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8')
-    );
+    const packageJson = JSON.parse(fs.readFileSync(join(packageRoot, 'package.json')).toString('utf-8'));
 
     // ESBuild config.
     let esbuildConfig;
@@ -48,9 +46,7 @@ export class Project {
   get entryPoint() {
     const { entryPoints } = this.esbuildConfig;
     if (entryPoints.length !== 1) {
-      throw new Error(
-        'One entrypoint must be specified in the esbuild-server config.'
-      );
+      throw new Error('One entrypoint must be specified in the esbuild-server config.');
     }
 
     return entryPoints[0];

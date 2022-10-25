@@ -34,9 +34,7 @@ const main = async () => {
 
   const { proto, substitutions, baseDir, outDir } = parser.parse_args();
 
-  const protoFilePaths = proto.map((file: string) =>
-    resolve(process.cwd(), file)
-  );
+  const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
@@ -47,18 +45,8 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(
-    substitutionsModule,
-    protoFilePaths,
-    baseDirPath,
-    outDirPath
-  );
-  await parseAndGenerateSchema(
-    substitutionsModule,
-    protoFilePaths,
-    baseDirPath,
-    outDirPath
-  );
+  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
 };
 
 void main();

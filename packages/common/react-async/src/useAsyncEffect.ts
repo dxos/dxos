@@ -37,9 +37,7 @@ export const useAsyncEffect = <T>(
   deps?: any[]
 ) => {
   const [effectDestructor, effectDeps] =
-    typeof destructor === 'function'
-      ? [destructor, deps]
-      : [undefined, destructor];
+    typeof destructor === 'function' ? [destructor, deps] : [undefined, destructor];
 
   useEffect(() => {
     let mounted = true;

@@ -4,15 +4,7 @@
 
 import React, { ReactNode, useState } from 'react';
 
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography } from '@mui/material';
 
 import { ItemAdapter } from '@dxos/react-client-testing';
 
@@ -25,17 +17,9 @@ interface CreateItemDialogProps {
   children?: ReactNode;
 }
 
-export const CreateItemDialog = ({
-  open,
-  type,
-  itemAdapter,
-  onCreate,
-  onCancel,
-  children
-}: CreateItemDialogProps) => {
+export const CreateItemDialog = ({ open, type, itemAdapter, onCreate, onCancel, children }: CreateItemDialogProps) => {
   const [title, setTitle] = useState<string>('');
-  const { label = 'Item', icon: Icon } =
-    (type ? itemAdapter.meta?.(type) : undefined) ?? {};
+  const { label = 'Item', icon: Icon } = (type ? itemAdapter.meta?.(type) : undefined) ?? {};
 
   const handleSubmit = () => {
     const value = title.trim();

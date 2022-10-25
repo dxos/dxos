@@ -24,12 +24,7 @@ export const SwarmDetails = ({ swarms }: SwarmDetailsProps) => {
       .find((swarm) => swarm.id.equals(swarmId))
       ?.connections?.find((conn) => conn.sessionId.equals(sessionId));
     if (connectionInfo) {
-      return (
-        <ConnectionInfoView
-          connectionInfo={connectionInfo}
-          onReturn={() => setSessionId(undefined)}
-        />
-      );
+      return <ConnectionInfoView connectionInfo={connectionInfo} onReturn={() => setSessionId(undefined)} />;
     } else {
       return <div>Connection not found.</div>;
     }

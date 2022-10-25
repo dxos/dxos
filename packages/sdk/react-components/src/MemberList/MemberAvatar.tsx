@@ -11,18 +11,7 @@ import { PartyMember } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
-const {
-  red,
-  pink,
-  deepPurple,
-  deepOrange,
-  indigo,
-  blue,
-  cyan,
-  teal,
-  green,
-  amber
-} = colors;
+const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;
 
 const COLORS = [
@@ -68,11 +57,7 @@ export const ShareButton = ({ onClick }: { onClick: () => void }) => {
 };
 
 // TODO(burdon): Remove PartyMember dep and create type here.
-export const MemberAvatar = ({
-  member
-}: {
-  member?: PartyMember;
-}): ReactElement => {
+export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => {
   const theme = useTheme();
 
   if (!member) {

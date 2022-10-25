@@ -7,36 +7,20 @@ import faker from 'faker';
 import { decodeProtobuf } from '@dxos/codec-protobuf';
 import { schemaJson } from '@dxos/protocols';
 
-import {
-  AccountKey,
-  CID,
-  DXN,
-  RecordMetadata,
-  RegistryClient,
-  RegistryType,
-  TypeRecordMetadata
-} from '../api';
+import { AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata } from '../api';
 
 /**
  * Generates a random CID.
  */
 export const createCID = (): CID =>
-  CID.from(
-    Uint8Array.from(
-      Array.from({ length: 34 }).map(() => Math.floor(Math.random() * 255))
-    )
-  );
+  CID.from(Uint8Array.from(Array.from({ length: 34 }).map(() => Math.floor(Math.random() * 255))));
 
 /**
  * Generates a random DXN.
  * Accepts a custom domain, uses 'example' by default.
  */
 export const createDXN = (domain = 'example'): DXN =>
-  DXN.fromDomainName(
-    domain,
-    faker.lorem.words(3).split(' ').join('-'),
-    'latest'
-  );
+  DXN.fromDomainName(domain, faker.lorem.words(3).split(' ').join('-'), 'latest');
 
 /**
  * Generates a single resource, optionally generating a random name and type if none are provided.
@@ -66,8 +50,7 @@ export const registerMockRecord = async (
     meta?: RecordMetadata;
   }
 ): Promise<CID> => {
-  const typeRecord =
-    params.typeRecord ?? (await getRandomTypeRecord(registry)).cid;
+  const typeRecord = params.typeRecord ?? (await getRandomTypeRecord(registry)).cid;
   return registry.registerRecord(params.data ?? {}, typeRecord, {
     displayName: params.meta?.displayName ?? faker.lorem.words(3),
     description: params.meta?.description ?? faker.lorem.sentence(),
@@ -115,11 +98,7 @@ export const registerMockTypeRecord = (
  * Generates a static list of predefined type records.
  */
 export const registerMockTypes = async (registry: RegistryClient) =>
-  Promise.all(
-    mockTypeMessageNames.map((messageName) =>
-      registerMockTypeRecord(registry, { messageName })
-    )
-  );
+  Promise.all(mockTypeMessageNames.map((messageName) => registerMockTypeRecord(registry, { messageName })));
 
 export const createMockTypes = (): RegistryType[] =>
   mockTypeMessageNames.map((messageName) => ({

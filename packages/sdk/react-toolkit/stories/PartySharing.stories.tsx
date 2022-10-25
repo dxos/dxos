@@ -60,12 +60,7 @@ const Sender = () => {
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
 
-      <PartySharingDialog
-        open={open}
-        partyKey={partyKey}
-        onClose={() => setOpen(false)}
-        modal={false}
-      />
+      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={false} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
@@ -146,11 +141,7 @@ export const Primary = () => {
 /**
  * Headless sender.
  */
-const AutoInvitationGenerator = ({
-  onInvite
-}: {
-  onInvite: (invitationCode: string) => void;
-}) => {
+const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: string) => void }) => {
   const client = useClient();
   const [pin, setPin] = useState('');
 
@@ -183,20 +174,14 @@ export const Secondary = () => {
           <ClientProvider>
             <ProfileInitializer>
               <Column>
-                <AutoInvitationGenerator
-                  onInvite={(invitationCode) =>
-                    setInvitationCode(invitationCode)
-                  }
-                />
+                <AutoInvitationGenerator onInvite={(invitationCode) => setInvitationCode(invitationCode)} />
               </Column>
             </ProfileInitializer>
           </ClientProvider>
 
           <ClientProvider>
             <ProfileInitializer>
-              <Column>
-                {invitationCode && <Receiver invitationCode={invitationCode} />}
-              </Column>
+              <Column>{invitationCode && <Receiver invitationCode={invitationCode} />}</Column>
             </ProfileInitializer>
           </ClientProvider>
         </Box>

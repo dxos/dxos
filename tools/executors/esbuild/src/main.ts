@@ -16,19 +16,13 @@ export interface EsbuildExecutorOptions {
   bundlePackages?: string[];
 }
 
-export default async (
-  options: EsbuildExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }> => {
+export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing esbuild...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
-  const packagePath = join(
-    context.workspace.projects[context.projectName!].root,
-    'package.json'
-  );
+  const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
 
   const result = await build({
     entryPoints: options.entryPoints,

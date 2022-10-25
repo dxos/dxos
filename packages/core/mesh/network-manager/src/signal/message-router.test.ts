@@ -77,12 +77,11 @@ describe('MessageRouter', function () {
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
     };
-    const { signalManager: signalManager1, peerId: peer1 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: signalMock1,
-        topic
-      });
+    const { signalManager: signalManager1, peerId: peer1 } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: signalMock1,
+      topic
+    });
     const {
       signalManager: signalManager2,
       router: router2,
@@ -120,13 +119,12 @@ describe('MessageRouter', function () {
       onOffer: async () => ({ accept: true }),
       topic
     });
-    const { signalManager: signalManager2, peerId: peer2 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: (async () => {}) as any,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
 
     await signalManager1.join({ topic, peerId: peer1 });
     await signalManager2.join({ topic, peerId: peer2 });

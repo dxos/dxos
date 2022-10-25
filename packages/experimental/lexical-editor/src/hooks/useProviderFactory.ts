@@ -48,10 +48,7 @@ export interface Provider {
   off(type: 'reload', cb: (doc: Doc) => void): void;
 }
 
-export type ProviderFactory = (
-  id: string,
-  yjsDocMap: Map<string, Doc>
-) => Provider;
+export type ProviderFactory = (id: string, yjsDocMap: Map<string, Doc>) => Provider;
 
 /**
  * User presence.

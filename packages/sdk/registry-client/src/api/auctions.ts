@@ -49,9 +49,6 @@ export interface AuctionsClientBackend {
   bidAuction(name: string, amount: number): Promise<void>;
   closeAuction(name: string): Promise<void>;
   // TODO(wittjosiah): Generisize the signature function to not be tied to the Polkadot API.
-  forceCloseAuction(
-    name: string,
-    sudoSignFn: SignTxFunction | AddressOrPair
-  ): Promise<void>;
+  forceCloseAuction(name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void>;
   claimAuction(name: string, account: AccountKey): Promise<DomainKey>;
 }

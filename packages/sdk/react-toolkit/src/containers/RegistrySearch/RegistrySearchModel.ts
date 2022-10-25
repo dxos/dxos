@@ -6,24 +6,13 @@ import { useMemo } from 'react';
 
 import { Event } from '@dxos/async';
 import { SearchModel, SearchResult } from '@dxos/react-components';
-import {
-  RegistryClient,
-  RegistryType,
-  ResourceSet
-} from '@dxos/registry-client';
+import { RegistryClient, RegistryType, ResourceSet } from '@dxos/registry-client';
 
 export type SearchFilter = (resource: ResourceSet) => boolean;
 
 // TODO(wittjosiah): Move to hooks.
-export const useRegistrySearchModel = (
-  registry: RegistryClient,
-  filters: SearchFilter[] = [],
-  deps: any[] = []
-) => {
-  const searchModel = useMemo(
-    () => new RegistrySearchModel(registry, filters),
-    deps
-  );
+export const useRegistrySearchModel = (registry: RegistryClient, filters: SearchFilter[] = [], deps: any[] = []) => {
+  const searchModel = useMemo(() => new RegistrySearchModel(registry, filters), deps);
   return searchModel;
 };
 
@@ -37,10 +26,8 @@ export const getTypeName = ({ type }: RegistryType) => {
 //   return types.some(type => resource.type && type.equals(resource.type));
 // };
 
-export const createResourceFilter =
-  (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) =>
-    domainExp.exec(resource.name.authority.toString()) &&
-    resourceExp.exec(resource.name.path);
+export const createResourceFilter = (domainExp: RegExp, resourceExp: RegExp) => (resource: ResourceSet) =>
+  domainExp.exec(resource.name.authority.toString()) && resourceExp.exec(resource.name.path);
 
 /**
  * Filterable resource search model.
@@ -53,10 +40,7 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
   private _text?: string = undefined;
   private _types: RegistryType[] = [];
 
-  constructor(
-    private readonly _registry: RegistryClient,
-    private _filters: SearchFilter[] = []
-  ) {}
+  constructor(private readonly _registry: RegistryClient, private _filters: SearchFilter[] = []) {}
 
   get types() {
     return this._types;

@@ -4,25 +4,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  TextField
-} from '@mui/material';
+import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
 import { Item, ObjectModel, Party } from '@dxos/client';
 import { useClient, useProfile, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
-import {
-  JoinPartyDialog,
-  PartySharingDialog,
-  usePartySerializer
-} from '@dxos/react-toolkit';
+import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-toolkit';
 
 const Main = () => {
   const client = useClient();
@@ -125,38 +112,22 @@ const Main = () => {
       </List>
 
       <Box>
-        <Button
-          sx={{ mr: 1 }}
-          variant='outlined'
-          onClick={() => setAction('share')}
-        >
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('share')}>
           Share
         </Button>
-        <Button
-          sx={{ mr: 1 }}
-          variant='outlined'
-          onClick={() => setAction('join')}
-        >
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('join')}>
           Join
         </Button>
         <Button sx={{ mr: 1 }} variant='outlined' onClick={handleExport}>
           Export
         </Button>
-        <Button
-          sx={{ mr: 1 }}
-          variant='outlined'
-          onClick={() => setAction('import')}
-        >
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('import')}>
           Import
         </Button>
       </Box>
 
       {/* 4. Sharing. */}
-      <PartySharingDialog
-        open={action === 'share'}
-        onClose={() => setAction(undefined)}
-        partyKey={party.key}
-      />
+      <PartySharingDialog open={action === 'share'} onClose={() => setAction(undefined)} partyKey={party.key} />
 
       {/* 5. Joining. */}
       <JoinPartyDialog
@@ -167,11 +138,7 @@ const Main = () => {
       />
 
       {/* 6. Import. */}
-      <FileUploadDialog
-        open={action === 'import'}
-        onClose={() => setAction(undefined)}
-        onUpload={handleImport}
-      />
+      <FileUploadDialog open={action === 'import'} onClose={() => setAction(undefined)} onUpload={handleImport} />
     </Box>
   );
 };
@@ -190,10 +157,7 @@ export const App = () => {
           justifyContent: 'center'
         }}
       >
-        <Button
-          variant='contained'
-          onClick={() => window.open('https://halo.dxos.org', '_blank')}
-        >
+        <Button variant='contained' onClick={() => window.open('https://halo.dxos.org', '_blank')}>
           Create a HALO identity
         </Button>
       </Box>

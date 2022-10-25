@@ -43,10 +43,7 @@ export const CreateItemButton = ({ onCreate }: CreateItemButtonProps) => {
         onCancel={() => setOpen(false)}
       >
         <Box sx={{ marginBottom: 1 }}>
-          <TypeSelector
-            value={type}
-            onChange={(type: string) => setType(type)}
-          />
+          <TypeSelector value={type} onChange={(type: string) => setType(type)} />
         </Box>
       </CreateItemDialog>
 

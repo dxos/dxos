@@ -54,10 +54,7 @@ export class BotFactory implements BotFactoryService {
     this._contentResolver = options.contentResolver;
     this._botSnapshotStorage = options.botSnapshotStorage;
 
-    this._persistent = this._config.get(
-      'runtime.services.bot.persistent',
-      BOT_FACTORY_DEFAULT_PERSISTENT
-    );
+    this._persistent = this._config.get('runtime.services.bot.persistent', BOT_FACTORY_DEFAULT_PERSISTENT);
 
     this._botContainer.exited.on(([id, status]) => {
       const bot = this._bots.get(id);
@@ -95,18 +92,12 @@ export class BotFactory implements BotFactoryService {
           if (restoreInfo) {
             const { bot, localPath } = restoreInfo;
             log(`Restoring bot: ${botId}`);
-            const handle = new BotHandle(
-              botId,
-              join(BOT_OUT_DIR, botId),
-              this._botContainer,
-              {
-                config: this._config,
-                packageSpecifier: bot.packageSpecifier,
-                // TODO(egorgripasov): Restore properly from snapshot storage.
-                partyKey:
-                  bot.partyKey && PublicKey.from(bot.partyKey.toString())
-              }
-            );
+            const handle = new BotHandle(botId, join(BOT_OUT_DIR, botId), this._botContainer, {
+              config: this._config,
+              packageSpecifier: bot.packageSpecifier,
+              // TODO(egorgripasov): Restore properly from snapshot storage.
+              partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
+            });
             handle.startTimestamp = new Date();
             handle.localPath = localPath;
             await handle.initializeDirectories();
@@ -138,25 +129,17 @@ export class BotFactory implements BotFactoryService {
         request.package = await this._contentResolver.resolve({ name });
       }
 
-      const handle = new BotHandle(
-        id,
-        join(BOT_OUT_DIR, id),
-        this._botContainer,
-        {
-          config: this._config,
-          packageSpecifier,
-          partyKey: request.partyKey
-        }
-      );
+      const handle = new BotHandle(id, join(BOT_OUT_DIR, id), this._botContainer, {
+        config: this._config,
+        packageSpecifier,
+        partyKey: request.partyKey
+      });
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const contentDirectory = handle.getContentPath();
 
       if (this._contentLoader && request.package?.ipfsCid) {
-        request.package.localPath = await this._contentLoader.download(
-          request.package.ipfsCid,
-          contentDirectory
-        );
+        request.package.localPath = await this._contentLoader.download(request.package.ipfsCid, contentDirectory);
       }
 
       const localPath = request.package?.localPath;
@@ -227,9 +210,7 @@ export class BotFactory implements BotFactoryService {
   }
 
   async removeAll() {
-    await Promise.all(
-      Array.from(this._bots.values()).map((bot) => this.remove(bot.bot))
-    );
+    await Promise.all(Array.from(this._bots.values()).map((bot) => this.remove(bot.bot)));
   }
 
   getLogs(request: GetLogsRequest) {
