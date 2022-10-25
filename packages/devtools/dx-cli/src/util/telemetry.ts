@@ -10,6 +10,7 @@ import { v4 as uuid, validate as validateUuid } from 'uuid';
 import { captureException } from '@dxos/sentry';
 
 export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development';
+export const DX_RELEASE = process.env.DX_RELEASE ?? 'development';
 export const TELEMETRY_KEY = process.env.SEGMENT_API_KEY;
 export const SENTRY_DESTINATION = process.env.SENTRY_DSN;
 

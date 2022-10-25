@@ -15,7 +15,14 @@ import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { DX_ENVIRONMENT, getTelemetryContext, PublisherRpcPeer, SENTRY_DESTINATION, TELEMETRY_KEY } from './util';
+import {
+  DX_ENVIRONMENT,
+  DX_RELEASE,
+  getTelemetryContext,
+  PublisherRpcPeer,
+  SENTRY_DESTINATION,
+  TELEMETRY_KEY
+} from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -65,6 +72,7 @@ export abstract class BaseCommand extends Command {
         machineId,
         destination: SENTRY_DESTINATION,
         environment: DX_ENVIRONMENT,
+        release: DX_RELEASE,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
         scrubFilenames: !fullCrashReports
@@ -84,7 +92,8 @@ export abstract class BaseCommand extends Command {
       identityId,
       name: this.id ?? 'unknown',
       properties: {
-        environment: DX_ENVIRONMENT
+        environment: DX_ENVIRONMENT,
+        release: DX_RELEASE
       }
     });
 
