@@ -4,7 +4,6 @@
 
 import snippet from '@segment/snippet';
 import type Analytics from 'analytics-node';
-import assert from 'node:assert';
 
 import { captureException } from '@dxos/sentry';
 
@@ -16,10 +15,10 @@ declare global {
 
 export const init = (options: InitOptions) => {
   const apiKey = options.apiKey ?? process.env.DXOS_TELEMETRY_KEY;
-  assert(apiKey, 'Key required to send telemetry');
 
   const contents = snippet.min({
-    apiKey
+    apiKey,
+    page: false
   });
 
   const script = document.createElement('script');
