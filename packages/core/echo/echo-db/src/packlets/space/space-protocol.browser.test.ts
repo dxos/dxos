@@ -257,6 +257,7 @@ describe('space/space-protocol', function () {
     await feed1.append({
       timeframe: new Timeframe()
     });
+
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(2);
     });

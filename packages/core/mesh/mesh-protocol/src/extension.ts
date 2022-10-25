@@ -366,6 +366,7 @@ export class Extension extends Nanomessage {
         err.code || 'Error',
         err.message
       );
+
       return {
         '@type': 'dxos.mesh.protocol.Error',
         code: responseError.responseCode,

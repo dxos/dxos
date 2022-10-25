@@ -64,8 +64,9 @@ export class Space {
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;
-
   private readonly _controlPipeline: ControlPipeline;
+
+  // TODO(burdon): Pass in.
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
@@ -81,9 +82,11 @@ export class Space {
     dataFeed,
     feedProvider,
     initialTimeframe,
+
     networkManager,
     networkPlugins,
     swarmIdentity,
+
     databaseFactory
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
@@ -122,6 +125,9 @@ export class Space {
     // Start replicating the genesis feed.
     this._replicator.addFeed(genesisFeed);
 
+    // TODO(burdon): Pass-in SpaceProtocol.
+    // TODO(burdon): Move replicator into SpaceProtocol.
+    // TODO(burdon): Factor out all network (Peer contains space -- space doesn't know about the network).
     // Create the network protocol.
     this._protocol = new SpaceProtocol(
       networkManager,
