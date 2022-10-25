@@ -26,10 +26,7 @@ type Producer<T> = (callbacks: {
   close: (error?: Error) => void;
 }) => (() => void) | void;
 
-export type StreamItem<T> =
-  | { ready: true }
-  | { data: T }
-  | { closed: true; error?: Error };
+export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
 
 /**
  * Represents a typed stream of data.
@@ -191,10 +188,7 @@ export class Stream<T> {
    * Registers a callback to be called when stream is ready.
    */
   onReady(onReady: () => void): void {
-    assert(
-      !this._readyHandler,
-      'Stream already has a handler for the ready event.'
-    );
+    assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
 
     if (this._isReady) {

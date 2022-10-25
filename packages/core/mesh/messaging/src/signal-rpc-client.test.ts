@@ -6,10 +6,7 @@ import { expect } from 'earljs';
 
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import {
-  Message as SignalMessage,
-  SwarmEvent
-} from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { SignalRPCClient } from './signal-rpc-client';

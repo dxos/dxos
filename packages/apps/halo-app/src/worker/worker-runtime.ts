@@ -81,9 +81,7 @@ export class WorkerRuntime {
 
     // Select existing session.
     if (!this._sessionForNetworking) {
-      const selected = Array.from(this.sessions).find(
-        (session) => session.bridgeService
-      );
+      const selected = Array.from(this.sessions).find((session) => session.bridgeService);
       if (selected) {
         this._sessionForNetworking = selected;
         this._transportFactory.setBridgeService(selected.bridgeService);

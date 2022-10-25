@@ -7,11 +7,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 
-import {
-  ID_BUGCHECK_STRING,
-  ID_GET_CURRENT_OWNERSHIP_SCOPE,
-  preprocess
-} from './preprocessor';
+import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
 import { combineSourceMaps } from './source-map';
 
 // TODO(dmaretskyi): Move to separate package in tools.
@@ -41,17 +37,11 @@ export const register = () => {
           const path = join('/tmp/dx-log', 'trace-compiled', filename);
           mkdirSync(dirname(path), { recursive: true });
           writeFileSync(path, output.code, { encoding: 'utf-8' });
-          writeFileSync(
-            `${dirname(path)}/${parse(path).name}.orig${extname(path)}`,
-            code,
-            { encoding: 'utf-8' }
-          );
+          writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
           if (sourceMap) {
-            writeFileSync(
-              `${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`,
-              sourceMap!,
-              { encoding: 'utf-8' }
-            );
+            writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap!, {
+              encoding: 'utf-8'
+            });
           }
         }
 
@@ -72,9 +62,7 @@ export const register = () => {
       const { retrieveSourceMap } = require('source-map-support');
       const sourceMap = retrieveSourceMap(filename);
       if (sourceMap) {
-        return typeof sourceMap.map === 'string'
-          ? sourceMap.map
-          : JSON.stringify(sourceMap.map);
+        return typeof sourceMap.map === 'string' ? sourceMap.map : JSON.stringify(sourceMap.map);
       }
     } catch (err) {}
 
@@ -117,17 +105,9 @@ const registerGlobals = () => {
  */
 function patchSourceMaps() {
   const orig = SourcemapMap.set;
-  SourcemapMap.set = function (
-    this: typeof SourcemapMap,
-    key: string,
-    value: string
-  ) {
+  SourcemapMap.set = function (this: typeof SourcemapMap, key: string, value: string) {
     if (SourcemapMap.get(key)) {
-      return orig.call(
-        this,
-        key,
-        combineSourceMaps(SourcemapMap.get(key), value)
-      );
+      return orig.call(this, key, combineSourceMaps(SourcemapMap.get(key), value));
     } else {
       return orig.call(this, key, value);
     }

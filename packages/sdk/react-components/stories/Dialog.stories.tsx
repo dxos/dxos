@@ -31,9 +31,7 @@ interface TestDialogState {
   dialogProps: DialogProps;
 }
 
-const useTestDialogState = (
-  initialState = TestState.INIT
-): [TestDialogState, () => void] => {
+const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, () => void] => {
   const [state, setState] = useState<TestState>(initialState);
   const [error, setError] = useState<string | undefined>();
   const [processing, setProcessing] = useState(false);
@@ -114,10 +112,7 @@ const useTestDialogState = (
     }
   };
 
-  return [
-    { state, value, dialogProps: getDialogProps(state) },
-    () => setState(TestState.INIT)
-  ];
+  return [{ state, value, dialogProps: getDialogProps(state) }, () => setState(TestState.INIT)];
 };
 
 export const Primary = () => {

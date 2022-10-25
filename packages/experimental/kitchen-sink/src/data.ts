@@ -32,10 +32,7 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
 /**
  * Filter items.
  */
-export const useQuery = (
-  party?: Party,
-  query?: string
-): Item<ObjectModel>[] => {
+export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => {
   const text = query?.toLowerCase();
   const items =
     useSelection(

@@ -2,23 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import {
-  Dispatch,
-  RefObject,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from 'react';
 
 /**
  * Extension of useState to return an up-to-date reference.
  * E.g., to use in callbacks where the state value is stale.
  * @param initialValue
  */
-export const useStateRef = <V>(
-  initialValue?: V | (() => V)
-): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
+export const useStateRef = <V>(initialValue?: V | (() => V)): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
   const [value, setValue] = useState<V>(initialValue);
   const ref = useRef<V>();
   useEffect(() => {
@@ -34,10 +25,7 @@ export const useStateRef = <V>(
  * @param initialValue
  * @param deps
  */
-export const useDynamicRef = <V>(
-  initialValue: () => V,
-  deps: any[]
-): RefObject<V> => {
+export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<V> => {
   const [, setValue] = useState<V>(initialValue);
   const ref = useRef<V>(initialValue());
   useEffect(() => {
@@ -62,9 +50,5 @@ export const useTimestamp = (deps?): [number, () => void, number] => {
     setTimestamp({ timestamp: Date.now(), previous: timestamp });
   }, deps ?? []);
 
-  return [
-    timestamp,
-    () => setTimestamp({ timestamp: Date.now(), previous: timestamp }),
-    previous
-  ];
+  return [timestamp, () => setTimestamp({ timestamp: Date.now(), previous: timestamp }), previous];
 };

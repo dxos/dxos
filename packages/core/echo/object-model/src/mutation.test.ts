@@ -70,67 +70,39 @@ describe('Mutations', function () {
   });
 
   it('ValueUtil.applyValue null', function () {
-    const object = ValueUtil.applyValue(
-      { title: 'DXOS' },
-      'title',
-      ValueUtil.createMessage(null)
-    );
+    const object = ValueUtil.applyValue({ title: 'DXOS' }, 'title', ValueUtil.createMessage(null));
     expect(object.title).toBe(null);
   });
 
   it('ValueUtil.applyValue integer', function () {
-    const object = ValueUtil.applyValue(
-      {},
-      'number',
-      ValueUtil.createMessage(2 ** 33)
-    );
+    const object = ValueUtil.applyValue({}, 'number', ValueUtil.createMessage(2 ** 33));
     expect(object.number).toBe(2 ** 33);
   });
 
   // TODO(burdon): Test other scalars.
   it('ValueUtil.applyValue scalars', function () {
-    const object = ValueUtil.applyValue(
-      {},
-      'title',
-      ValueUtil.createMessage('DXOS')
-    );
+    const object = ValueUtil.applyValue({}, 'title', ValueUtil.createMessage('DXOS'));
     expect(object.title).toBe('DXOS');
   });
 
   it('ValueUtil.applyValue nested keys', function () {
     {
-      const object = ValueUtil.applyValue(
-        {},
-        'foo.bar',
-        ValueUtil.createMessage(100)
-      );
+      const object = ValueUtil.applyValue({}, 'foo.bar', ValueUtil.createMessage(100));
       expect(object).toEqual({ foo: { bar: 100 } });
     }
 
     {
-      const object = ValueUtil.applyValue(
-        { user: { name: 'test' } },
-        'user.online',
-        ValueUtil.createMessage(false)
-      );
+      const object = ValueUtil.applyValue({ user: { name: 'test' } }, 'user.online', ValueUtil.createMessage(false));
       expect(object).toEqual({ user: { name: 'test', online: false } });
     }
 
     {
-      const object = ValueUtil.applyValue(
-        { user: { name: 'test', online: true } },
-        'user.online',
-        undefined
-      );
+      const object = ValueUtil.applyValue({ user: { name: 'test', online: true } }, 'user.online', undefined);
       expect(object).toEqual({ user: { name: 'test' } });
     }
 
     {
-      const object = ValueUtil.applyValue(
-        { a: { b: { c: { d: 100 } } } },
-        'a.b.c.d',
-        undefined
-      );
+      const object = ValueUtil.applyValue({ a: { b: { c: { d: 100 } } } }, 'a.b.c.d', undefined);
       expect(object).toEqual({ a: { b: { c: {} } } });
     }
   });
@@ -144,11 +116,7 @@ describe('Mutations', function () {
       }
     };
 
-    const { module } = ValueUtil.applyValue(
-      {},
-      'module',
-      ValueUtil.createMessage(object)
-    );
+    const { module } = ValueUtil.applyValue({}, 'module', ValueUtil.createMessage(object));
     expect(module).toStrictEqual(object);
   });
 
@@ -181,11 +149,7 @@ describe('Mutations', function () {
     }
 
     {
-      const object = ValueUtil.applyValue(
-        {},
-        'data',
-        ValueUtil.createMessage(Buffer.from('World'))
-      );
+      const object = ValueUtil.applyValue({}, 'data', ValueUtil.createMessage(Buffer.from('World')));
       expect(object.data).toEqual(Buffer.from('World'));
     }
   });

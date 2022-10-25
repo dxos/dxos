@@ -8,20 +8,8 @@ import React, { useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { Item, ItemID, ObjectModel } from '@dxos/client';
-import {
-  Grid,
-  SVG,
-  SVGContextProvider,
-  Zoom,
-  useSvgContext
-} from '@dxos/gem-core';
-import {
-  defaultGraphStyles,
-  Graph,
-  GraphLayoutNode,
-  GraphForceProjector,
-  Markers
-} from '@dxos/gem-spore';
+import { Grid, SVG, SVGContextProvider, Zoom, useSvgContext } from '@dxos/gem-core';
+import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Markers } from '@dxos/gem-spore';
 import { useDynamicRef } from '@dxos/react-async';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
@@ -37,13 +25,7 @@ export interface EchoGraphProps {
   };
 }
 
-export const EchoGraph = ({
-  model,
-  selected,
-  itemAdapter,
-  styles,
-  options = {}
-}: EchoGraphProps) => {
+export const EchoGraph = ({ model, selected, itemAdapter, styles, options = {} }: EchoGraphProps) => {
   const context = useSvgContext();
   const projector = useMemo(
     () =>
@@ -58,10 +40,7 @@ export const EchoGraph = ({
   );
 
   // TODO(burdon): Hack for stale callback.
-  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(
-    () => selected,
-    [selected]
-  );
+  const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
   const getAttributes = (node: GraphLayoutNode<Item<ObjectModel>>) => {
     const selected = selectedRef.current;
     return {
@@ -95,8 +74,7 @@ export const EchoGraph = ({
               model={model}
               projector={projector}
               attributes={{
-                node: (node: GraphLayoutNode<Item<ObjectModel>>) =>
-                  getAttributes(node)
+                node: (node: GraphLayoutNode<Item<ObjectModel>>) => getAttributes(node)
               }}
               labels={{
                 text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>

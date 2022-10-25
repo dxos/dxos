@@ -8,10 +8,7 @@ import { Event, EventSubscriptions, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  Message as SignalMessage,
-  SwarmEvent
-} from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
 import { Message, SignalMethods } from './signal-methods';
@@ -92,15 +89,9 @@ export class SignalClient implements SignalMethods {
     swarmEvent: SwarmEvent;
   }>();
 
-  private readonly _swarmStreams = new ComplexMap<
-    PublicKey,
-    Stream<SwarmEvent>
-  >((key) => key.toHex());
+  private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>((key) => key.toHex());
 
-  private readonly _messageStreams = new ComplexMap<
-    PublicKey,
-    Stream<SignalMessage>
-  >((key) => key.toHex());
+  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
 
   /**
    * @param _host Signal server websocket URL.
@@ -172,10 +163,7 @@ export class SignalClient implements SignalMethods {
       this._client.disconnected.on(() => {
         log('Socket disconnected');
         // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-        if (
-          this._state !== SignalState.CONNECTING &&
-          this._state !== SignalState.RE_CONNECTING
-        ) {
+        if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
           return;
         }
 
@@ -235,26 +223,14 @@ export class SignalClient implements SignalMethods {
     };
   }
 
-  async join({
-    topic,
-    peerId
-  }: {
-    topic: PublicKey;
-    peerId: PublicKey;
-  }): Promise<void> {
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('joining', { topic, peerId });
 
     await this.subscribeMessages(peerId);
     await this._subscribeSwarmEvents(topic, peerId);
   }
 
-  async leave({
-    topic,
-    peerId
-  }: {
-    topic: PublicKey;
-    peerId: PublicKey;
-  }): Promise<void> {
+  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     log('leaving', { topic, peerId });
 
     this._swarmStreams.get(topic)?.close();
@@ -269,14 +245,8 @@ export class SignalClient implements SignalMethods {
   }
 
   @synchronized
-  private async _subscribeSwarmEvents(
-    topic: PublicKey,
-    peerId: PublicKey
-  ): Promise<void> {
-    assert(
-      !this._swarmStreams.has(topic),
-      'Already subscribed to swarm events.'
-    );
+  private async _subscribeSwarmEvents(topic: PublicKey, peerId: PublicKey): Promise<void> {
+    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
     const swarmStream = await this._client.join({ topic, peerId });
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?

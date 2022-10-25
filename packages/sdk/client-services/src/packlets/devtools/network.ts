@@ -85,9 +85,7 @@ export const getNetworkPeers = (
   return {
     peers: map?.peers.map((peer) => ({
       ...peer,
-      connections: peer.connections.map((connection) =>
-        connection.asUint8Array()
-      )
+      connections: peer.connections.map((connection) => connection.asUint8Array())
     }))
   };
 };

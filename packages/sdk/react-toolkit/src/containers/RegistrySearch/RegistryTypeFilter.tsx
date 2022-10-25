@@ -39,10 +39,7 @@ export const RegistryTypeFilter = ({
   selected: controlledSelected = [],
   onSelectedChange
 }: RegistryTypeFilterProps) => {
-  const [selected, setSelected] = useControlledState<CID[]>(
-    controlledSelected,
-    onSelectedChange
-  );
+  const [selected, setSelected] = useControlledState<CID[]>(controlledSelected, onSelectedChange);
 
   return (
     <List>
@@ -54,11 +51,7 @@ export const RegistryTypeFilter = ({
             color={selected?.includes(type.cid) ? 'primary' : undefined}
             onClick={() => {
               const on = selected?.includes(type.cid);
-              setSelected(
-                on
-                  ? selected?.filter((t: CID) => t !== type.cid)
-                  : [...selected, type.cid]
-              );
+              setSelected(on ? selected?.filter((t: CID) => t !== type.cid) : [...selected, type.cid]);
             }}
           />
         </ListItem>

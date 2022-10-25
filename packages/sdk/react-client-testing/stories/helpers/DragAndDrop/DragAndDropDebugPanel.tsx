@@ -15,18 +15,13 @@ interface DragAndDropDebugPanelProps {
   width?: number | string;
 }
 
-export const DragAndDropDebugPanel = ({
-  order,
-  party
-}: DragAndDropDebugPanelProps) => {
+export const DragAndDropDebugPanel = ({ order, party }: DragAndDropDebugPanelProps) => {
   const getStringToDisplay = (key: string) => {
     if (!party) {
       return truncateKey(key, 5);
     }
     const [item] = party?.select({ id: key }).exec().entities ?? [];
-    return (
-      truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5)
-    );
+    return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
   };
 
   const reduceKeyLength = (order: { [key: string]: string }) =>
@@ -37,9 +32,5 @@ export const DragAndDropDebugPanel = ({
       }))
     );
 
-  return (
-    <pre style={{ margin: 0 }}>
-      {JSON.stringify(reduceKeyLength(order), undefined, 2)}
-    </pre>
-  );
+  return <pre style={{ margin: 0 }}>{JSON.stringify(reduceKeyLength(order), undefined, 2)}</pre>;
 };

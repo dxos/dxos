@@ -47,10 +47,7 @@ it.skip('filter', async function () {
   const matcher = new Matcher({
     getter: (item: any, key: string) => item.model.get(key)
   });
-  const queryResult = party.database
-    .select({ type: OBJECT_PERSON })
-    .filter(matcher.getFilter(query))
-    .exec();
+  const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).exec();
   expect(queryResult.entities).toHaveLength(1);
 
   await echo.close();

@@ -14,13 +14,7 @@ const log = debug('dxos:config:plugin');
 
 const CWD = process.cwd();
 
-export const definitions = ({
-  configPath,
-  envPath,
-  devPath,
-  dynamic,
-  publicUrl = ''
-}: ConfigPluginOpts) => {
+export const definitions = ({ configPath, envPath, devPath, dynamic, publicUrl = '' }: ConfigPluginOpts) => {
   const KEYS_TO_FILE = {
     __CONFIG_DEFAULTS__: configPath ?? resolve(CWD, 'dx.yml'),
     __CONFIG_ENVS__: envPath ?? resolve(CWD, 'dx-env.yml'),

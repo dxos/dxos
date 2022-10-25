@@ -2,14 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
+import React, { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 
 import type { Profile } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
@@ -26,10 +19,7 @@ export const ProfileProvider = (props: PropsWithChildren<{}>) => {
   const client = useClient();
   const [profile, setProfile] = useState(() => client.halo.profile);
 
-  useEffect(
-    () => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)),
-    [client]
-  );
+  useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
 
   const profileContextValue = useMemo(() => ({ profile }), [profile]);
 
@@ -41,11 +31,7 @@ export const ProfileProvider = (props: PropsWithChildren<{}>) => {
 
   return (
     <ProfileContext.Provider value={profileContextValue}>
-      {profile ? (
-        props.children
-      ) : (
-        <ProviderFallback message='Setting profile…' />
-      )}
+      {profile ? props.children : <ProviderFallback message='Setting profile…' />}
     </ProfileContext.Provider>
   );
 };

@@ -51,8 +51,7 @@ export const LabelVisuallyHidden = () => (
     {...{
       label: 'The label is for screen readers',
       labelVisuallyHidden: true,
-      placeholder:
-        'The label for this input exists but is only read by screen readers'
+      placeholder: 'The label for this input exists but is only read by screen readers'
     }}
   />
 );
@@ -71,10 +70,8 @@ export const InputWithErrorAndDescription = () => (
   <Template
     {...{
       label: 'Described invalid input',
-      placeholder:
-        'This input has both an accessible description and a validation error',
-      description:
-        'This description is identified separately in the accessibility tree.',
+      placeholder: 'This input has both an accessible description and a validation error',
+      description: 'This description is identified separately in the accessibility tree.',
       validationValence: 'error',
       validationMessage: 'The input has an error.'
     }}
@@ -88,8 +85,7 @@ export const InputWithValidationAndDescription = () => (
       placeholder: 'This input is styled to express a validation valence',
       description: 'This description is extra.',
       validationValence: 'success',
-      validationMessage:
-        'This validation message is really part of the description.'
+      validationMessage: 'This validation message is really part of the description.'
     }}
   />
 );

@@ -45,9 +45,7 @@ const langType: { [key: string]: Type } = {
       if (message) {
         // https://www.npmjs.com/package/protocol-buffers-schema
         const schema = protobuf.parse(content);
-        schema.messages = schema.messages.filter(
-          ({ name }) => name === message
-        );
+        schema.messages = schema.messages.filter(({ name }) => name === message);
         schema.imports = [];
         schema.package = '';
 
@@ -127,9 +125,7 @@ export function remarkSnippets () {
                     // E.g., ../../packages/halo/halo-protocol/src/proto/defs/credentials.proto
                     const match = filePath.match(/(.+)\/(src\/.+\/.+)/);
                     const [, pkgDir, relPath] = match ?? [];
-                    const { name } = JSON.parse(
-                      fs.readFileSync(`${pkgDir}/package.json`, 'utf8')
-                    );
+                    const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf8'));
                     return [name, relPath];
                   } catch (err) {
                     return [];

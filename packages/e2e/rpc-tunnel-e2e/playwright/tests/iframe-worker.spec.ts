@@ -22,10 +22,7 @@ test.describe('iframe-worker', () => {
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("value")');
       expect(isVisible).toBeTruthy();
-      const isClosed = await page
-        .frameLocator('#test-iframe')
-        .locator('p:right-of(:text("closed"), 10)')
-        .textContent();
+      const isClosed = await page.frameLocator('#test-iframe').locator('p:right-of(:text("closed"), 10)').textContent();
       expect(isClosed).toEqual('false');
     });
   });

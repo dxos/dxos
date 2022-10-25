@@ -14,11 +14,7 @@ interface UploadOptions {
   pin?: boolean;
 }
 
-export const uploadToIPFS = async (
-  path: string,
-  config?: ConfigProto,
-  options?: UploadOptions
-): Promise<CID> => {
+export const uploadToIPFS = async (path: string, config?: ConfigProto, options?: UploadOptions): Promise<CID> => {
   const { timeout, pin = true, progress } = options || {};
 
   const ipfsServer = config?.runtime?.services?.ipfs?.server;
@@ -30,9 +26,7 @@ export const uploadToIPFS = async (
   });
 
   if (!fs.existsSync(path)) {
-    throw new Error(
-      'Incorrect path to definitons. File or directory does not exist'
-    );
+    throw new Error('Incorrect path to definitons. File or directory does not exist');
   }
   if (fs.lstatSync(path).isDirectory()) {
     const files = [];

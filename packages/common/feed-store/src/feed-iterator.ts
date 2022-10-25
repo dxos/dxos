@@ -14,9 +14,7 @@ import { FeedBlock } from './types';
 /**
  * Base class for an async iterable feed.
  */
-export abstract class AbstractFeedIterator<T>
-  implements AsyncIterable<FeedBlock<T>>
-{
+export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
   private readonly _stopTrigger = new Trigger();
 
   protected _open = false;
@@ -85,10 +83,7 @@ export abstract class AbstractFeedIterator<T>
   async *_generator() {
     log('started');
     while (this._running) {
-      const block = await Promise.race([
-        this._stopTrigger.wait(),
-        this._nextBlock()
-      ]);
+      const block = await Promise.race([this._stopTrigger.wait(), this._nextBlock()]);
 
       if (block === undefined) {
         break;

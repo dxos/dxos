@@ -11,15 +11,12 @@ const force = (a: Function | any) => (typeof a === 'function' ? a() : a);
 const join = (a: any[] | any) => (Array.isArray(a) ? a.join(os.EOL) : a);
 const squelch = (a: any) => (!a ? '' : a);
 const trim = (a: string) => a.trim();
-const terminalNewline = (a: string) =>
-  a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL;
+const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
 
 const removeLeadingTabs = (literal: string, n?: number) => {
   const chars = n ?? detectParasiticTabs(literal);
   const lines = literal.split(os.EOL);
-  return lines
-    .map((l) => l.replace(new RegExp(`^\\s{${chars},${chars}}`), ''))
-    .join(os.EOL);
+  return lines.map((l) => l.replace(new RegExp(`^\\s{${chars},${chars}}`), '')).join(os.EOL);
 };
 
 const detectParasiticTabs = (literal: string): number => {
@@ -30,10 +27,7 @@ const detectParasiticTabs = (literal: string): number => {
   return chars;
 };
 
-export const textUntrimmed = (
-  literals: TemplateStringsArray,
-  ...args: any[]
-) => {
+export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) => {
   const tabs = detectParasiticTabs(literals[0]);
   const cleanArgs = args.map((a) => squelch(join(squelch(force(a)))));
   return terminalNewline(

@@ -82,11 +82,7 @@ export const ErrorView = ({
     <Dialog open fullWidth maxWidth='sm'>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
-        {!isDev && (
-          <Typography>
-            Something went wrong that requires the app to be reloaded.
-          </Typography>
-        )}
+        {!isDev && <Typography>Something went wrong that requires the app to be reloaded.</Typography>}
         {isDev && (
           <>
             <Alert severity='error'>{message}</Alert>

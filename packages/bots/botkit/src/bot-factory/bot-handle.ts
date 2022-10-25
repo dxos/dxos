@@ -13,13 +13,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
-import {
-  Bot,
-  BotPackageSpecifier,
-  BotReport,
-  BotService,
-  GetLogsResponse
-} from '@dxos/protocols/proto/dxos/bot';
+import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
@@ -57,11 +51,7 @@ export class BotHandle {
     private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
-    const {
-      config = new Config({ version: 1 }),
-      packageSpecifier,
-      partyKey
-    } = options;
+    const { config = new Config({ version: 1 }), packageSpecifier, partyKey } = options;
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
@@ -72,8 +62,7 @@ export class BotHandle {
     };
     this._config = new Config(config.values);
 
-    this._retryAttempts =
-      this._config.get('runtime.services.bot.retryAttempts') ?? MAX_ATTEMPTS;
+    this._retryAttempts = this._config.get('runtime.services.bot.retryAttempts') ?? MAX_ATTEMPTS;
 
     this._botContainer.exited.on(([id, status]) => {
       if (id !== this.id) {
@@ -165,9 +154,7 @@ export class BotHandle {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.RUNNING;
       this.update.emit();
-      await this.update.waitForCondition(
-        () => this.bot.status === Bot.Status.RUNNING
-      );
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.RUNNING);
     } else {
       this._log(`Can not start bot in ${this.bot.status} state.`);
     }
@@ -179,9 +166,7 @@ export class BotHandle {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.STOPPED;
       this.update.emit();
-      await this.update.waitForCondition(
-        () => this.bot.status === Bot.Status.STOPPED
-      );
+      await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     } else {
       this._log(`Can not stop bot in ${this.bot.status} state.`);
     }
@@ -213,19 +198,13 @@ export class BotHandle {
 
     this._reportingStream = undefined;
     try {
-      await promiseTimeout(
-        this.rpc.stop(),
-        3000,
-        new Error('Stopping bot timed out')
-      );
+      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (err: any) {
       this._log(`Failed to stop bot: ${err}`);
     }
 
     await this._botContainer.kill(this.id);
-    await this.update.waitForCondition(
-      () => this.bot.status === Bot.Status.STOPPED
-    );
+    await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     this._log('Bot stopped');
     return this.bot;
   }
@@ -241,22 +220,12 @@ export class BotHandle {
     }
 
     if (this.bot.attemptsToAchieveDesiredState! < this._retryAttempts) {
-      if (
-        this.bot.status === Bot.Status.RUNNING &&
-        this.bot.desiredState === Bot.Status.STOPPED
-      ) {
-        this._log(
-          `Desired state for bot ${this.bot.id} is STOPPED, stopping the bot.`
-        );
+      if (this.bot.status === Bot.Status.RUNNING && this.bot.desiredState === Bot.Status.STOPPED) {
+        this._log(`Desired state for bot ${this.bot.id} is STOPPED, stopping the bot.`);
         await this._waitForNextAttemp();
         await this.forceStop();
-      } else if (
-        this.bot.status === Bot.Status.STOPPED &&
-        this.bot.desiredState === Bot.Status.RUNNING
-      ) {
-        this._log(
-          `Desired state for bot ${this.bot.id} is RUNNING, starting the bot.`
-        );
+      } else if (this.bot.status === Bot.Status.STOPPED && this.bot.desiredState === Bot.Status.RUNNING) {
+        this._log(`Desired state for bot ${this.bot.id} is RUNNING, starting the bot.`);
         await this._waitForNextAttemp();
         await this.forceStart();
       }

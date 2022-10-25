@@ -29,31 +29,22 @@ export default {
 
 const graphStyles = css`
   ${Object.keys(typeMeta).map(
-    (type) =>
-      `g.${type.replace(/\W/g, '_')} { circle { fill: ${
-        typeMeta[type].color[100]
-      }; } }`
+    (type) => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[100]}; } }`
   )}
 `;
 
 const App = () => {
   const party = useTestParty();
   const model = useGraphModel(party, [
-    (item) =>
-      Boolean(item.type?.startsWith('example:')) ||
-      item.type === PARTY_ITEM_TYPE
+    (item) => Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE
   ]);
 
-  return (
-    <EchoGraph model={model} itemAdapter={itemAdapter} styles={graphStyles} />
-  );
+  return <EchoGraph model={model} itemAdapter={itemAdapter} styles={graphStyles} />;
 };
 
 const AppWithEditor = () => {
   const party = useTestParty();
-  const model = useGraphModel(party, [
-    (item) => Boolean(item.type?.startsWith('example:'))
-  ]);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
   const builder = usePartyBuilder(party);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
   if (!party) {
@@ -76,23 +67,14 @@ const AppWithEditor = () => {
   return (
     <BoxContainer expand column>
       <Box sx={{ display: 'flex' }}>
-        <SelectionEditor
-          initialValue={defaultSelectionText}
-          onChange={handleSelection}
-          delay={100}
-        />
+        <SelectionEditor initialValue={defaultSelectionText} onChange={handleSelection} delay={100} />
         <Box>
           <Button onClick={handleGenerate}>Generate</Button>
         </Box>
       </Box>
 
       <BoxContainer expand>
-        <EchoGraph
-          model={model}
-          selected={selected}
-          itemAdapter={itemAdapter}
-          styles={graphStyles}
-        />
+        <EchoGraph model={model} selected={selected} itemAdapter={itemAdapter} styles={graphStyles} />
       </BoxContainer>
     </BoxContainer>
   );

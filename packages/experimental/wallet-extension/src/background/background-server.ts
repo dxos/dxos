@@ -9,12 +9,7 @@ import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
-import {
-  createBundledRpcServer,
-  RpcPort,
-  RpcPeer,
-  PortTracer
-} from '@dxos/rpc';
+import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 
 import { config } from './config';
 
@@ -30,9 +25,7 @@ export class BackgroundServer {
   }
 
   public async close() {
-    await Promise.all(
-      Array.from(this._connections).map((peer) => peer.close())
-    );
+    await Promise.all(Array.from(this._connections).map((peer) => peer.close()));
     await this._client.destroy();
   }
 
@@ -91,9 +84,7 @@ export class TraceCollector {
       this._subscriptions.add(
         this._tracer.message.on((msg) => {
           assert(msg.data);
-          const inner = schema
-            .getCodecForType('dxos.rpc.RpcMessage')
-            .decode(msg.data);
+          const inner = schema.getCodecForType('dxos.rpc.RpcMessage').decode(msg.data);
           if (inner.request) {
             if (inner.request.method?.startsWith('TracingService.')) {
               return;

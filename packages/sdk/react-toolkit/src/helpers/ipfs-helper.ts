@@ -13,9 +13,7 @@ export class IpfsHelper {
 
   constructor(ipfsGateway: string | any) {
     console.assert(ipfsGateway);
-    this._ipfsGateway = ipfsGateway.endsWith('/')
-      ? ipfsGateway
-      : `${ipfsGateway}/`;
+    this._ipfsGateway = ipfsGateway.endsWith('/') ? ipfsGateway : `${ipfsGateway}/`;
   }
 
   url(cid: string) {

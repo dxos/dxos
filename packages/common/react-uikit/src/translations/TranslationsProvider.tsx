@@ -3,12 +3,7 @@
 //
 
 import i18Next, { Resource } from 'i18next';
-import React, {
-  PropsWithChildren,
-  ReactNode,
-  Suspense,
-  useEffect
-} from 'react';
+import React, { PropsWithChildren, ReactNode, Suspense, useEffect } from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
 import { Loading } from '@dxos/react-ui';
@@ -41,30 +36,18 @@ const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
   return <>{children}</>;
 };
 
-export const TranslationsProvider = ({
-  fallback,
-  resourceExtensions,
-  children
-}: TranslationsProviderProps) => {
+export const TranslationsProvider = ({ fallback, resourceExtensions, children }: TranslationsProviderProps) => {
   useEffect(() => {
     if (resourceExtensions) {
       Object.keys(resourceExtensions).forEach((language) => {
         Object.keys(resourceExtensions[language]).forEach((ns) => {
-          i18Next.addResourceBundle(
-            language,
-            ns,
-            resourceExtensions[language][ns]
-          );
+          i18Next.addResourceBundle(language, ns, resourceExtensions[language][ns]);
         });
       });
     }
   }, [resourceExtensions]);
   return (
-    <Suspense
-      fallback={
-        fallback ?? <Loading label={enUS[basicNS]['loading translations']} />
-      }
-    >
+    <Suspense fallback={fallback ?? <Loading label={enUS[basicNS]['loading translations']} />}>
       <TranslationsProviderLoaded>{children}</TranslationsProviderLoaded>
     </Suspense>
   );

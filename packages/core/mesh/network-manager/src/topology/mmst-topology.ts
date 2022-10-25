@@ -36,11 +36,7 @@ export class MMSTTopology implements Topology {
 
   private _sampleCollected = false;
 
-  constructor({
-    originateConnections = 2,
-    maxPeers = 4,
-    sampleSize = 10
-  }: MMSTTopologyOptions = {}) {
+  constructor({ originateConnections = 2, maxPeers = 4, sampleSize = 10 }: MMSTTopologyOptions = {}) {
     this._originateConnections = originateConnections;
     this._maxPeers = maxPeers;
     this._sampleSize = sampleSize;
@@ -55,11 +51,7 @@ export class MMSTTopology implements Topology {
     assert(this._controller, 'Not initialized');
     const { connected, candidates } = this._controller.getState();
     // Run the algorithms if we have first candidates, ran it before, or have more connections than needed.
-    if (
-      this._sampleCollected ||
-      connected.length > this._maxPeers ||
-      candidates.length > 0
-    ) {
+    if (this._sampleCollected || connected.length > this._maxPeers || candidates.length > 0) {
       log('Running the algorithm.');
       this._sampleCollected = true;
       this._runAlgorithm();
@@ -93,13 +85,8 @@ export class MMSTTopology implements Topology {
       }
     } else if (connected.length < this._originateConnections) {
       // Connect new peers to reach desired quota.
-      const sample = candidates
-        .sort(() => Math.random() - 0.5)
-        .slice(0, this._sampleSize);
-      const sorted = sortByXorDistance(sample, ownPeerId).slice(
-        0,
-        this._originateConnections - connected.length
-      );
+      const sample = candidates.sort(() => Math.random() - 0.5).slice(0, this._sampleSize);
+      const sorted = sortByXorDistance(sample, ownPeerId).slice(0, this._originateConnections - connected.length);
       for (const peer of sorted) {
         log(`Connect ${peer}.`);
         this._controller.connect(peer);
@@ -112,13 +99,7 @@ export class MMSTTopology implements Topology {
   }
 }
 
-const sortByXorDistance = (
-  keys: PublicKey[],
-  reference: PublicKey
-): PublicKey[] =>
+const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] =>
   keys.sort((a, b) =>
-    distance.gt(
-      distance(a.asBuffer(), reference.asBuffer()),
-      distance(b.asBuffer(), reference.asBuffer())
-    )
+    distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer()))
   );

@@ -22,10 +22,7 @@ export default class Create extends BaseCommand {
     let { name } = args;
     if (!name) {
       // TODO(burdon): Move to v7: https://v6.fakerjs.dev/migration-guide-v5
-      name = `${faker.commerce
-        .productName()
-        .toLowerCase()
-        .replace(/\s/g, '-')}`;
+      name = `${faker.commerce.productName().toLowerCase().replace(/\s/g, '-')}`;
     }
 
     return await this.execWithClient(async (client: Client) => {

@@ -39,17 +39,13 @@ export class SpaceProtocol {
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this.authenticationFailed = this._authenticator.authenticationFailed;
     this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
-    this._peerId = PublicKey.from(
-      discoveryKey(sha256(this._swarmIdentity.peerKey.toHex()))
-    );
+    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
   }
 
   async start() {
     log('starting...');
     // TODO(burdon): Document why empty buffer.
-    const credentials = await this._swarmIdentity.credentialProvider(
-      Buffer.from('')
-    );
+    const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
     // TODO(burdon): Move to config (with sensible defaults).
     const topologyConfig = {
@@ -59,8 +55,7 @@ export class SpaceProtocol {
     };
 
     await this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel, initiator }) =>
-        this._createProtocol(credentials, { channel, initiator }),
+      protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presence,
@@ -80,11 +75,7 @@ export class SpaceProtocol {
     credentials: Uint8Array | undefined,
     { initiator, channel }: { initiator: boolean; channel: Buffer }
   ) {
-    const plugins: Plugin[] = [
-      this._presence,
-      this._authenticator,
-      ...this._plugins
-    ];
+    const plugins: Plugin[] = [this._presence, this._authenticator, ...this._plugins];
 
     const protocol = new Protocol({
       streamOptions: {
@@ -108,17 +99,13 @@ export class SpaceProtocol {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
         peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: credentials
-          ? Buffer.from(credentials).toString('base64')
-          : undefined
+        credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
       },
 
       initiator
     });
 
-    protocol
-      .setExtensions(plugins.map((plugin) => plugin.createExtension()))
-      .init();
+    protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     return protocol;
   }

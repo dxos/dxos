@@ -6,12 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
 import { ItemID } from '@dxos/protocols';
-import {
-  ExportAction,
-  execSelection,
-  itemAdapter,
-  usePartyBuilder
-} from '@dxos/react-client-testing';
+import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-echo-graph';
 
@@ -38,9 +33,7 @@ export const App = ({ party, onInvite, onExport }: AppProps) => {
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
-  const model = useGraphModel(party, [
-    (item) => Boolean(item.type?.startsWith('example:'))
-  ]);
+  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
   const items = useQuery(party, search);
   const builder = usePartyBuilder(party);
 
@@ -60,11 +53,7 @@ export const App = ({ party, onInvite, onExport }: AppProps) => {
     return null;
   }
 
-  const handleCreateItem = (
-    type?: string,
-    title?: string,
-    parentId?: ItemID
-  ) => {
+  const handleCreateItem = (type?: string, title?: string, parentId?: ItemID) => {
     if (!type) {
       void builder?.createRandomItem();
       return;

@@ -4,10 +4,7 @@
 
 import expect from 'expect';
 
-import {
-  createInMemoryDatabase,
-  createRemoteDatabaseFromDataServiceHost
-} from '@dxos/echo-db';
+import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -17,10 +14,7 @@ describe('With remote database', function () {
   it('create and write text', async function () {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const backend = await createInMemoryDatabase(modelFactory);
-    const frontend = await createRemoteDatabaseFromDataServiceHost(
-      modelFactory,
-      backend.createDataServiceHost()
-    );
+    const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
     const text = await frontend.createItem({
       model: TextModel,
@@ -32,14 +26,9 @@ describe('With remote database', function () {
   });
 
   it('create with parent', async function () {
-    const modelFactory = new ModelFactory()
-      .registerModel(TextModel)
-      .registerModel(ObjectModel);
+    const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(ObjectModel);
     const backend = await createInMemoryDatabase(modelFactory);
-    const frontend = await createRemoteDatabaseFromDataServiceHost(
-      modelFactory,
-      backend.createDataServiceHost()
-    );
+    const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
     const parent = await frontend.createItem({
       model: ObjectModel

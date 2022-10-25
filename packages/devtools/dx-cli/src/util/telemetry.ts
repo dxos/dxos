@@ -30,9 +30,7 @@ const DEFAULTS = {
   disableTelemetry: false
 };
 
-export const getTelemetryContext = async (
-  configDir: string
-): Promise<TelemetryContext> => {
+export const getTelemetryContext = async (configDir: string): Promise<TelemetryContext> => {
   const configDirExists = await exists(configDir);
   if (!configDirExists) {
     await mkdir(configDir, { recursive: true });

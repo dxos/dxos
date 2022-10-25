@@ -9,10 +9,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  NetworkManager,
-  createWebRTCTransportFactory
-} from '@dxos/network-manager';
+import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';

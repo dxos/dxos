@@ -9,11 +9,7 @@ import { subtleCrypto } from './subtle';
 /**
  * Verify a signature with the given key.
  */
-export const verifySignature = async (
-  key: PublicKey,
-  message: Uint8Array,
-  signature: Uint8Array
-): Promise<boolean> => {
+export const verifySignature = async (key: PublicKey, message: Uint8Array, signature: Uint8Array): Promise<boolean> => {
   let publicKey!: CryptoKey;
 
   try {

@@ -2,20 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  PartyStateMachine,
-  PartyState,
-  MemberInfo,
-  FeedInfo
-} from '@dxos/credentials';
+import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  AdmittedFeed,
-  Credential
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
@@ -39,12 +31,7 @@ export class ControlPipeline {
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
-  constructor({
-    spaceKey,
-    genesisFeed,
-    feedProvider,
-    initialTimeframe
-  }: ControlPipelineParams) {
+  constructor({ spaceKey, genesisFeed, feedProvider, initialTimeframe }: ControlPipelineParams) {
     this._pipeline = new Pipeline(initialTimeframe);
     void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
@@ -53,10 +40,7 @@ export class ControlPipeline {
       log('feed admitted', { info });
 
       // TODO(burdon): Check not stopping.
-      if (
-        info.assertion.designation === AdmittedFeed.Designation.CONTROL &&
-        !info.key.equals(genesisFeed.key)
-      ) {
+      if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
           const feed = await feedProvider(info.key);
           await this._pipeline.addFeed(feed);
@@ -90,9 +74,7 @@ export class ControlPipeline {
       for await (const msg of this._pipeline.consume()) {
         try {
           log('processing', { msg });
-          if (
-            msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage'
-          ) {
+          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
             const result = await this._partyStateMachine.process(
               msg.data.payload.credential,
               PublicKey.from(msg.feedKey)

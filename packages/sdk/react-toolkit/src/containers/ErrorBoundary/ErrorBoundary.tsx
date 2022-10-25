@@ -4,12 +4,7 @@
 
 import React, { Component, FunctionComponent, PropsWithChildren } from 'react';
 
-import {
-  ErrorIndicator,
-  ErrorIndicatorProps,
-  ErrorView,
-  ErrorViewProps
-} from '../../components';
+import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../../components';
 import { ErrorContext } from '../../hooks';
 import { GlobalErrorWrapper } from './GlobalErrorWrapper';
 
@@ -35,10 +30,7 @@ interface ErrorBoundaryState {
  * https://reactjs.org/docs/error-boundaries.html
  * https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
  */
-export class ErrorBoundary extends Component<
-  PropsWithChildren<ErrorBoundaryProps>,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProps>, ErrorBoundaryState> {
   static defaultProps = {
     indicator: ErrorIndicator, // TODO(burdon): Debug only.
     view: ErrorView,
@@ -80,9 +72,7 @@ export class ErrorBoundary extends Component<
 
     return (
       <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
-        <GlobalErrorWrapper indicator={indicator}>
-          {children}
-        </GlobalErrorWrapper>
+        <GlobalErrorWrapper indicator={indicator}>{children}</GlobalErrorWrapper>
       </ErrorContext.Provider>
     );
   }

@@ -9,14 +9,7 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
-import {
-  FullScreen,
-  SVGContextProvider,
-  defaultGridStyles,
-  useGrid,
-  useSvgContext,
-  useZoom
-} from '@dxos/gem-core';
+import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
 import {
   GraphForceProjector,
@@ -75,12 +68,8 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   );
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on((graph) =>
-      projector.update(graph)
-    );
-    const unsubscribeProjector = projector.updated.on(({ layout }) =>
-      renderer.update(layout)
-    );
+    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
+    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
     model.update();
 
@@ -187,12 +176,8 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on((graph) =>
-      projector.update(graph)
-    );
-    const unsubscribeProjector = projector.updated.on(({ layout }) =>
-      renderer.update(layout)
-    );
+    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
+    const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
     model.update();
 
@@ -219,10 +204,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
 };
 
 export const Primary = () => {
-  const model = useMemo(
-    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))),
-    []
-  );
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
     <FullScreen>
@@ -248,10 +230,7 @@ const Info = () => (
 );
 
 export const Secondary = () => {
-  const model = useMemo(
-    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))),
-    []
-  );
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))), []);
 
   return (
     <FullScreen>

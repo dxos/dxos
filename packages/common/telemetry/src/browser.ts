@@ -27,11 +27,7 @@ export const init = (options: InitOptions) => {
   document.body.append(script);
 };
 
-export const page = ({
-  machineId,
-  identityId: anonymousId,
-  ...options
-}: PageOptions) => {
+export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
   analytics?.page({
     ...options,
     anonymousId,
@@ -42,12 +38,7 @@ export const page = ({
   });
 };
 
-export const event = ({
-  machineId,
-  identityId: anonymousId,
-  name: event,
-  ...options
-}: EventOptions) => {
+export const event = ({ machineId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
   analytics?.track({
     ...options,
     anonymousId,

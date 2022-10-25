@@ -10,10 +10,7 @@ export interface ErrorBoundaryState {
   fatalError: Error | null;
 }
 
-export class FatalErrorBoundary extends Component<
-  PropsWithChildren<{}>,
-  ErrorBoundaryState
-> {
+export class FatalErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundaryState> {
   override state = { fatalError: null };
 
   // Note: Render errors also trigger global onerror before componentDidCatch.

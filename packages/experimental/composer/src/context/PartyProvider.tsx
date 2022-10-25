@@ -2,25 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, {
-  createContext,
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { InvitationDescriptor } from '@dxos/client';
 import type { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import {
-  useClient,
-  useParties,
-  usePartyInvitations,
-  useSecretProvider
-} from '@dxos/react-client';
+import { useClient, useParties, usePartyInvitations, useSecretProvider } from '@dxos/react-client';
 import { Button, Group, Input } from '@dxos/react-ui';
 
 export interface PartyContextValue {
@@ -38,8 +25,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [invitationCodeValue, setInvitationCodeValue] = useState('');
   const partyInvitations = usePartyInvitations(party?.key);
-  const [secretProvider, secretResolver, _resetSecret] =
-    useSecretProvider<Uint8Array>();
+  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
 
   useEffect(() => {
     if (party) {
@@ -49,10 +35,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
     }
   }, [client, party]);
 
-  const partyContextValue = useMemo<PartyContextValue>(
-    () => ({ party }),
-    [party]
-  );
+  const partyContextValue = useMemo<PartyContextValue>(() => ({ party }), [party]);
 
   const onCreate = useCallback(() => {
     setLoading(true);
@@ -96,13 +79,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
           {props.children}
           <div className='fixed bottom-2 right-2 flex gap-4'>
             {partyInvitations && (
-              <Button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    partyInvitations[0].descriptor.encode().toString()
-                  )
-                }
-              >
+              <Button onClick={() => navigator.clipboard.writeText(partyInvitations[0].descriptor.encode().toString())}>
                 Copy invite code
               </Button>
             )}
@@ -119,22 +96,13 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
               children: 'Create or join a space'
             }}
           >
-            <Button
-              variant='primary'
-              className='w-full'
-              onClick={onCreate}
-              {...(loading && { disabled: true })}
-            >
+            <Button variant='primary' className='w-full' onClick={onCreate} {...(loading && { disabled: true })}>
               Create
             </Button>
             <p className='text-center'>or</p>
             <div role='none' className='flex items-center gap-2'>
               <Input {...inviteCodeInputProps} />
-              <Button
-                variant='primary'
-                onClick={onJoin}
-                {...(loading && { disabled: true })}
-              >
+              <Button variant='primary' onClick={onJoin} {...(loading && { disabled: true })}>
                 Join
               </Button>
             </div>
@@ -149,11 +117,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
               }}
             >
               {parties.map((party) => (
-                <Button
-                  key={party.key.toHex()}
-                  className='width-full truncate'
-                  onClick={() => setParty(party)}
-                >
+                <Button key={party.key.toHex()} className='width-full truncate' onClick={() => setParty(party)}>
                   {truncateKey(party.key)}
                 </Button>
               ))}

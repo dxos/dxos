@@ -3,18 +3,13 @@
 //
 
 // Copied from @dxos/async.
-export const trigger = <T = void>(
-  timeout?: number
-): [() => Promise<T>, (arg: T) => void] => {
+export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T) => void] => {
   // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
   let callback: (arg: T) => void;
 
   const promise = new Promise<T>((resolve, reject) => {
     if (timeout) {
-      setTimeout(
-        () => reject(new Error(`Timed out after ${timeout}ms`)),
-        timeout
-      );
+      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
     }
     callback = resolve;
   });

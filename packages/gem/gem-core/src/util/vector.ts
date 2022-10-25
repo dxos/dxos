@@ -28,17 +28,7 @@ export class Vector {
    * Convert to Bounds.
    * @param bounds
    */
-  static toBounds = ({
-    x,
-    y,
-    width,
-    height
-  }: {
-    x: Num;
-    y: Num;
-    width: Num;
-    height: Num;
-  }): Bounds => ({
+  static toBounds = ({ x, y, width, height }: { x: Num; y: Num; width: Num; height: Num }): Bounds => ({
     x: FractionUtil.toFraction(x),
     y: FractionUtil.toFraction(y),
     width: FractionUtil.toFraction(width),

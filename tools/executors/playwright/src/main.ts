@@ -12,10 +12,7 @@ export interface MochaExecutorOptions {
   config: string;
 }
 
-export default async (
-  options: MochaExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }> => {
+export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing playwright...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
@@ -33,9 +30,7 @@ export default async (
 
       // TODO(wittjosiah): Run playwright programatically.
       //   https://github.com/microsoft/playwright/issues/7275
-      const { stdout, stderr } = await promisify(exec)(
-        `playwright test ${args.join(' ')}`
-      );
+      const { stdout, stderr } = await promisify(exec)(`playwright test ${args.join(' ')}`);
 
       console.info(`Playwright output ${stdout}`);
       if (stderr) {

@@ -37,9 +37,7 @@ export const protocolFactory = ({
     const protocol = new Protocol({
       streamOptions: { live: true },
       discoveryToPublicKey: (dk) => {
-        const publicKey = getTopics().find((topic) =>
-          discoveryKey(topic).equals(dk)
-        );
+        const publicKey = getTopics().find((topic) => discoveryKey(topic).equals(dk));
         if (publicKey) {
           protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
@@ -51,9 +49,7 @@ export const protocolFactory = ({
       discoveryKey: channel
     });
 
-    protocol
-      .setExtensions(plugins.map((plugin) => plugin.createExtension()))
-      .init();
+    protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     log('Created protocol');
     return protocol;
@@ -64,11 +60,7 @@ export interface Plugin {
   createExtension: () => Extension;
 }
 
-export const createProtocolFactory = (
-  topic: PublicKey,
-  peerId: PublicKey,
-  plugins: Plugin[]
-) =>
+export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) =>
   protocolFactory({
     getTopics: () => [topic.asBuffer()],
     session: { peerId: PublicKey.stringify(peerId.asBuffer()) },

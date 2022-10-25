@@ -34,9 +34,7 @@ export class EmptyBot implements BotService {
   }
 
   protected async onInit(request: InitializeRequest) {}
-  protected async onCommand(
-    request: SendCommandRequest
-  ): Promise<SendCommandResponse> {
+  protected async onCommand(request: SendCommandRequest): Promise<SendCommandResponse> {
     return { response: request.command };
   }
 

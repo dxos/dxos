@@ -4,14 +4,9 @@
 
 import assert from 'node:assert';
 
-import {
-  MemoryRegistryClientBackend,
-  registerMockTypes,
-  RegistryClient
-} from '@dxos/registry-client';
+import { MemoryRegistryClientBackend, registerMockTypes, RegistryClient } from '@dxos/registry-client';
 
-export const createMockRegistry = () =>
-  new RegistryClient(new MemoryRegistryClientBackend());
+export const createMockRegistry = () => new RegistryClient(new MemoryRegistryClientBackend());
 
 // TODO(burdon): Move to registry-client testing package.
 export const createMockRegistryWithBot = async () => {
@@ -20,9 +15,7 @@ export const createMockRegistryWithBot = async () => {
   await registerMockTypes(registry);
   const types = await registry.listTypeRecords();
 
-  const botType = types.find(
-    ({ type }) => type?.messageName === '.dxos.type.Bot'
-  );
+  const botType = types.find(({ type }) => type?.messageName === '.dxos.type.Bot');
   assert(botType, 'Bot type not found.');
 
   return registry;

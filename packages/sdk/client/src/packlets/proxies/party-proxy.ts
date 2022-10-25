@@ -4,19 +4,11 @@
 
 import { ClientServiceProvider } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import {
-  Database,
-  Item,
-  RemoteDatabaseBackend,
-  streamToResultSet
-} from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import {
-  Party as PartyProto,
-  PartyDetails
-} from '@dxos/protocols/proto/dxos/client';
+import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
@@ -58,10 +50,7 @@ export class PartyProxy implements Party {
     // if (true) { // TODO: Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(
-        this._serviceProvider.services.DataService,
-        this._key
-      ),
+      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
@@ -226,12 +215,8 @@ export class PartyProxy implements Party {
    * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
    *   but only the specified recipient can accept the invitation.
    */
-  async createInvitation({
-    inviteeKey
-  }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.createInvitation(
-      { partyKey: this.key, inviteeKey }
-    );
+  async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
+    const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 

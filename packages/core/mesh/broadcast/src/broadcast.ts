@@ -14,11 +14,7 @@ import { Packet } from '@dxos/protocols/proto/dxos/mesh/broadcast';
 debug.formatters.h = (v) => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
 
-export type SendFn<P> = (
-  message: Uint8Array,
-  peer: P,
-  options: unknown
-) => Promise<void>;
+export type SendFn<P> = (message: Uint8Array, peer: P, options: unknown) => Promise<void>;
 
 type Unsubscribe = () => void;
 
@@ -75,9 +71,7 @@ type FixedLru = Lru<any> & { ttl: number; max: number; items: any[] }; // The or
  */
 export class Broadcast<P extends Peer = Peer> {
   private readonly _id: Buffer;
-  private readonly _codec = schema.getCodecForType(
-    'dxos.mesh.broadcast.Packet'
-  );
+  private readonly _codec = schema.getCodecForType('dxos.mesh.broadcast.Packet');
 
   private readonly _send: SendFn<P>;
   private readonly _subscribe: SubscribeFn<P>;
@@ -98,11 +92,7 @@ export class Broadcast<P extends Peer = Peer> {
     assert(middleware.send);
     assert(middleware.subscribe);
 
-    const {
-      id = randomBytes(32),
-      maxAge = 10 * 1000,
-      maxSize = 1000
-    } = options;
+    const { id = randomBytes(32), maxAge = 10 * 1000, maxSize = 1000 } = options;
 
     this._id = id;
 
@@ -119,10 +109,7 @@ export class Broadcast<P extends Peer = Peer> {
   /**
    * Broadcast a flooding message to the peers neighbors.
    */
-  async publish(
-    data: Uint8Array,
-    options: PublishOptions = {}
-  ): Promise<Packet | undefined> {
+  async publish(data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
     const { seq = randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
@@ -177,9 +164,7 @@ export class Broadcast<P extends Peer = Peer> {
     }
     this._isOpen = true;
 
-    this._unsubscribe =
-      this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) ||
-      (() => {});
+    this._unsubscribe = this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) || (() => {});
 
     log('running %h', this._id);
   }
@@ -202,17 +187,13 @@ export class Broadcast<P extends Peer = Peer> {
    * @param {Packet} packet
    * @param {Object} options
    */
-  private async _publish(
-    packet: Packet,
-    options = {}
-  ): Promise<Packet | undefined> {
+  private async _publish(packet: Packet, options = {}): Promise<Packet | undefined> {
     /** @deprecated */
     this._lookup && this.updatePeers(await this._lookup());
 
     const peers = this._peers.filter(
       (peer) =>
-        !Buffer.from(packet.origin!).equals(peer.id) &&
-        (!packet.from || !Buffer.from(packet.from).equals(peer.id))
+        !Buffer.from(packet.origin!).equals(peer.id) && (!packet.from || !Buffer.from(packet.from).equals(peer.id))
     );
     if (peers.length === 0) {
       return;
@@ -263,10 +244,7 @@ export class Broadcast<P extends Peer = Peer> {
         return;
       }
 
-      const packetId =
-        Buffer.from(packet.origin).toString('hex') +
-        ':' +
-        Buffer.from(packet.seq).toString('hex');
+      const packetId = Buffer.from(packet.origin).toString('hex') + ':' + Buffer.from(packet.seq).toString('hex');
 
       // Check if I already see this packet.
       if (this._seenSeqs.get(packetId)) {

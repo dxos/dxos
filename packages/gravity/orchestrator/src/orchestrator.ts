@@ -5,19 +5,11 @@
 import assert from 'node:assert';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
-import {
-  BotContainer,
-  BotController,
-  BotFactory,
-  BotPackageSpecifier
-} from '@dxos/botkit';
+import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
 import { Party, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import {
-  MemorySignalManagerContext,
-  MemorySignalManager
-} from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';

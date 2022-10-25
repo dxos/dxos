@@ -13,8 +13,7 @@ const fetchBound = fetch;
 
 const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
-export const LocalStorage = (item = 'options') =>
-  JSON.parse(window.localStorage.getItem(item) || '{}');
+export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage.getItem(item) || '{}');
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;

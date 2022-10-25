@@ -29,11 +29,7 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import {
-  InvitationDescriptor,
-  InviteeInvitation,
-  InviteeInvitations
-} from '../../invitations';
+import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -44,9 +40,7 @@ export class PartyService implements PartyServiceRpc {
 
   constructor(private readonly serviceContext: ServiceContext) {}
 
-  subscribeToParty(
-    request: SubscribePartyRequest
-  ): Stream<SubscribePartyResponse> {
+  subscribeToParty(request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
     return new Stream(({ next }) => {
       next({
         party: {
@@ -104,9 +98,7 @@ export class PartyService implements PartyServiceRpc {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
       const update = () => {
         next({
-          parties: Array.from(
-            this.serviceContext.spaceManager!.spaces.values()
-          ).map((space) => ({
+          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
             publicKey: space.key,
             isOpen: true,
             isActive: true
@@ -127,9 +119,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  async getPartyDetails(
-    request: GetPartyDetailsRequest
-  ): Promise<PartyDetails> {
+  async getPartyDetails(request: GetPartyDetailsRequest): Promise<PartyDetails> {
     return todo();
     // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
     // return {
@@ -188,9 +178,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  createInvitation(
-    request: CreateInvitationRequest
-  ): Stream<InvitationRequest> {
+  createInvitation(request: CreateInvitationRequest): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         try {
@@ -201,17 +189,12 @@ export class PartyService implements PartyServiceRpc {
             //   next({ state: InvitationState.CONNECTED });
             //   return Buffer.from(secret);
             // };
-            invitation = await this.serviceContext.createInvitation(
-              request.partyKey,
-              () => {
-                next({ state: InvitationState.SUCCESS });
-                close();
-              }
-            );
+            invitation = await this.serviceContext.createInvitation(request.partyKey, () => {
+              next({ state: InvitationState.SUCCESS });
+              close();
+            });
 
-            assert(
-              invitation.type === InvitationDescriptorProto.Type.INTERACTIVE
-            );
+            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
             // invitation.secret = Buffer.from(secret);
           } else {
             todo();
@@ -234,9 +217,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation(
-    request: InvitationDescriptorProto
-  ): Stream<RedeemedInvitation> {
+  acceptInvitation(request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -255,9 +236,7 @@ export class PartyService implements PartyServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.joinSpace(
-        InvitationDescriptor.fromProto(request)
-      );
+      const partyPromise = this.serviceContext.joinSpace(InvitationDescriptor.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
@@ -286,9 +265,7 @@ export class PartyService implements PartyServiceRpc {
     invitation.secretTrigger?.();
   }
 
-  subscribeMembers(
-    request: SubscribeMembersRequest
-  ): Stream<SubscribeMembersResponse> {
+  subscribeMembers(request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
     return new Stream(({ next }) => {
       next({
         members: []

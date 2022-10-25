@@ -25,13 +25,9 @@ describe('Signal Integration Test', function () {
     broker.stop();
   });
 
-  const setupPeer = ({
-    topic = PublicKey.random()
-  }: { topic?: PublicKey } = {}) => {
+  const setupPeer = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
-    signalManager.onMessage.on((message) =>
-      messageRouter.receiveMessage(message)
-    );
+    signalManager.onMessage.on((message) => messageRouter.receiveMessage(message));
 
     const receivedSignals: SignalMessage[] = [];
     const signalMock = async (msg: SignalMessage) => {
@@ -60,14 +56,10 @@ describe('Signal Integration Test', function () {
     const peerNetworking2 = setupPeer({ topic });
 
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ swarmEvent }) =>
-        !!swarmEvent.peerAvailable &&
-        peer2.equals(swarmEvent.peerAvailable.peer)
+      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer)
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ swarmEvent }) =>
-        !!swarmEvent.peerAvailable &&
-        peer1.equals(swarmEvent.peerAvailable.peer)
+      ({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer)
     );
 
     await peerNetworking1.signalManager.join({ topic, peerId: peer1 });

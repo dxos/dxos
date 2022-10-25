@@ -67,23 +67,14 @@ export const Searchbar: FC<{
       InputProps={{
         startAdornment: (
           <InputAdornment position='end'>
-            <IconButton
-              sx={{ marginRight: 1 }}
-              size='small'
-              onClick={handleSearch}
-              onMouseDown={handleSearch}
-            >
+            <IconButton sx={{ marginRight: 1 }} size='small' onClick={handleSearch} onMouseDown={handleSearch}>
               <SearchIcon />
             </IconButton>
           </InputAdornment>
         ),
         endAdornment: (
           <InputAdornment position='end'>
-            <IconButton
-              size='small'
-              onClick={handleCancel}
-              onMouseDown={handleCancel}
-            >
+            <IconButton size='small' onClick={handleCancel} onMouseDown={handleCancel}>
               <ClearIcon />
             </IconButton>
           </InputAdornment>

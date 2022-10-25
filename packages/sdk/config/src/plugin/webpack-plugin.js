@@ -65,9 +65,6 @@ export class ConfigPlugin {
     );
 
     new DefinePlugin(definitions).apply(compiler);
-    new NormalModuleReplacementPlugin(
-      /[/\\]loaders[/\\]index.js/,
-      './browser.js'
-    ).apply(compiler);
+    new NormalModuleReplacementPlugin(/[/\\]loaders[/\\]index.js/, './browser.js').apply(compiler);
   }
 }

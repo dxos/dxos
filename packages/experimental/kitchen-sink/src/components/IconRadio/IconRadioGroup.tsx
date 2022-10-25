@@ -11,9 +11,7 @@ interface IconRadioGroupContextProps {
   onChange: (value: string) => void;
 }
 
-export const IconRadioGroupContext = createContext<
-  IconRadioGroupContextProps | undefined
->(undefined);
+export const IconRadioGroupContext = createContext<IconRadioGroupContextProps | undefined>(undefined);
 
 interface IconRadioGroupProps {
   children: ReactNode;
@@ -21,14 +19,8 @@ interface IconRadioGroupProps {
   onChange: (value: string) => void;
 }
 
-export const IconRadioGroup = ({
-  children,
-  value,
-  onChange
-}: IconRadioGroupProps) => (
+export const IconRadioGroup = ({ children, value, onChange }: IconRadioGroupProps) => (
   <Box>
-    <IconRadioGroupContext.Provider value={{ value, onChange }}>
-      {children}
-    </IconRadioGroupContext.Provider>
+    <IconRadioGroupContext.Provider value={{ value, onChange }}>{children}</IconRadioGroupContext.Provider>
   </Box>
 );

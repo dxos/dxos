@@ -66,9 +66,7 @@ describe('hypercore-protocol', function () {
     const bobExt = bob.registerExtension('ext-on-stream', {});
     bobExt.send(Buffer.from([4, 5, 6]));
 
-    await createPromiseFromCallback((cb) =>
-      pump(alice as any, bob as any, alice as any, cb)
-    );
+    await createPromiseFromCallback((cb) => pump(alice as any, bob as any, alice as any, cb));
 
     // code aliceChannel.data({ index: 1, value: '{ block: 42 }'})
 

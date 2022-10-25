@@ -13,9 +13,7 @@ import { PublicKey } from '@dxos/keys';
 /**
  * Create encoding (e.g., from protobuf codec).
  */
-export const createCodecEncoding = <T>(
-  codec: Codec<T>
-): AbstractValueEncoding<T> => ({
+export const createCodecEncoding = <T>(codec: Codec<T>): AbstractValueEncoding<T> => ({
   encode: (obj: T) => Buffer.from(codec.encode(obj)),
   decode: (buffer: Buffer) => codec.decode(buffer)
 });
@@ -30,18 +28,14 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
 
   return {
     sign: (message, secretKey, cb) => {
-      callbackify(signer.sign.bind(signer!))(
-        publicKey,
-        message,
-        (err, result) => {
-          if (err) {
-            cb(err, null);
-            return;
-          }
-
-          cb(null, Buffer.from(result));
+      callbackify(signer.sign.bind(signer!))(publicKey, message, (err, result) => {
+        if (err) {
+          cb(err, null);
+          return;
         }
-      );
+
+        cb(null, Buffer.from(result));
+      });
     },
 
     verify: async (message, signature, key, cb) => {

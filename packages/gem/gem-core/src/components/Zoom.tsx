@@ -17,11 +17,7 @@ export interface ZoomProps {
  * SVG zoomable component wrapper.
  * @constructor
  */
-export const Zoom = ({
-  extent,
-  className = defaultGridStyles,
-  children
-}: ZoomProps) => {
+export const Zoom = ({ extent, className = defaultGridStyles, children }: ZoomProps) => {
   const zoom = useZoom({ extent });
 
   return (

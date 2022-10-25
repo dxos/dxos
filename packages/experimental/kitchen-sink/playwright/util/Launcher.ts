@@ -2,13 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Browser,
-  BrowserContext,
-  BrowserType,
-  Page,
-  chromium
-} from 'playwright';
+import { Browser, BrowserContext, BrowserType, Page, chromium } from 'playwright';
 import urljoin from 'url-join';
 
 /**

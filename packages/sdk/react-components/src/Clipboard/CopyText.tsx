@@ -17,15 +17,7 @@ export interface CopyTextProps extends TypographyProps {
   onCopyToClipboard?: (text: string) => void; // TODO(burdon): onCopy.
 }
 
-export const CopyText = ({
-  value,
-  length,
-  monospace,
-  onCopyToClipboard,
-  sx,
-  variant,
-  ...rest
-}: CopyTextProps) => {
+export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, variant, ...rest }: CopyTextProps) => {
   if (!value) {
     return null;
   }

@@ -12,9 +12,7 @@ import { SerializedRpcError } from './errors';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
 
-const createPayload = (
-  value = ''
-): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
   value: Buffer.from(value)
@@ -197,9 +195,7 @@ describe('RpcPeer', function () {
 
       await Promise.all([alice.open(), bob.open()]);
 
-      expect(
-        (await bob.call('method', createPayload('request'))).value
-      ).toEqual(Buffer.from('request'));
+      expect((await bob.call('method', createPayload('request'))).value).toEqual(Buffer.from('request'));
 
       const parallel1 = bob.call('method', createPayload('p1'));
       const parallel2 = bob.call('method', createPayload('p2'));
@@ -444,10 +440,7 @@ describe('RpcPeer', function () {
 
       await stream.waitUntilReady();
 
-      expect(await Stream.consume(stream)).toEqual([
-        { ready: true },
-        { closed: true }
-      ]);
+      expect(await Stream.consume(stream)).toEqual([{ ready: true }, { closed: true }]);
     });
   });
 

@@ -22,10 +22,7 @@ const createValues = (n = 100) =>
 
 export const Primary = () => {
   const [value, setValue] = useState<SearchResult<string>>();
-  const model = useMemo(
-    () => new TextSearchModel<string>(createValues(100)),
-    []
-  );
+  const model = useMemo(() => new TextSearchModel<string>(createValues(100)), []);
 
   return (
     <Box sx={{ margin: 2 }}>

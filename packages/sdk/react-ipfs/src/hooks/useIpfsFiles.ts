@@ -39,11 +39,7 @@ export const useIpfsFiles = (party: Party | undefined, type: string) => {
 };
 
 // TODO(wittjosiah): This is not returning IPFSFiles.
-export const uploadFilesToIpfs = async (
-  ipfsClient: IPFSHTTPClient,
-  files: File[],
-  onError?: (error: Error) => void
-) =>
+export const uploadFilesToIpfs = async (ipfsClient: IPFSHTTPClient, files: File[], onError?: (error: Error) => void) =>
   await Promise.all(
     files.map(async (file) => {
       // https://docs.ipfs.io/reference/js/api

@@ -23,9 +23,7 @@ export const createSerializerDefinition = (
     f.createImportClause(
       false,
       undefined,
-      f.createNamedImports([
-        f.createImportSpecifier(false, undefined, schemaIdentifier)
-      ])
+      f.createNamedImports([f.createImportSpecifier(false, undefined, schemaIdentifier)])
     ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir))
   );
@@ -41,14 +39,9 @@ export const createSerializerDefinition = (
           schemaJsonIdentifier,
           undefined,
           undefined,
-          f.createCallExpression(
-            f.createPropertyAccessExpression(
-              f.createIdentifier('JSON'),
-              'parse'
-            ),
-            undefined,
-            [f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))]
-          )
+          f.createCallExpression(f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'), undefined, [
+            f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))
+          ])
         )
       ],
       ts.NodeFlags.Const
@@ -65,13 +58,8 @@ export const createSerializerDefinition = (
           undefined,
           f.createCallExpression(
             f.createPropertyAccessExpression(schemaIdentifier, 'fromJson'),
-            [
-              f.createTypeReferenceNode('TYPES'),
-              f.createTypeReferenceNode('SERVICES')
-            ],
-            substitutionsModule
-              ? [schemaJsonIdentifier, substitutionsIdentifier]
-              : [schemaJsonIdentifier]
+            [f.createTypeReferenceNode('TYPES'), f.createTypeReferenceNode('SERVICES')],
+            substitutionsModule ? [schemaJsonIdentifier, substitutionsIdentifier] : [schemaJsonIdentifier]
           )
         )
       ],

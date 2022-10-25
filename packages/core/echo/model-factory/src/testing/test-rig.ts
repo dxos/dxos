@@ -29,18 +29,13 @@ class MockFeedWriter<T extends {}> implements FeedWriter<T> {
 // TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(
-    PublicKey.hash
-  );
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
 
   private readonly _replicationFinished = new Trigger();
 
   private _replicating = true;
 
-  constructor(
-    private readonly _modelFactory: ModelFactory,
-    private readonly _modelConstructor: ModelConstructor<M>
-  ) {
+  constructor(private readonly _modelFactory: ModelFactory, private readonly _modelConstructor: ModelConstructor<M>) {
     this._replicationFinished.wake();
   }
 
@@ -66,13 +61,7 @@ export class TestRig<M extends Model<any>> {
     });
 
     const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(
-      this._modelConstructor.meta.type,
-      id,
-      {},
-      key,
-      writer
-    );
+    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
 
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
@@ -123,9 +112,7 @@ export class TestRig<M extends Model<any>> {
 
         const timeframeSeq = peer.timeframe.get(feed);
         const startingIndex = timeframeSeq === undefined ? 0 : timeframeSeq + 1;
-        log(
-          `Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`
-        );
+        log(`Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`);
 
         for (let i = startingIndex; i < mutations.length; i++) {
           log(`Process ${feed}:${i} -> ${peer.key}`);
@@ -144,10 +131,7 @@ export class TestPeer<M extends Model> {
 
   public mutations: ModelMessage<Uint8Array>[] = [];
 
-  constructor(
-    public readonly stateManager: StateManager<M>,
-    public readonly key: PublicKey
-  ) {}
+  constructor(public readonly stateManager: StateManager<M>, public readonly key: PublicKey) {}
 
   get model(): M {
     return this.stateManager.model;

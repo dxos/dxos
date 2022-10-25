@@ -10,13 +10,7 @@ import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import {
-  Model,
-  ModelFactory,
-  ModelMessage,
-  ModelType,
-  StateManager
-} from '@dxos/model-factory';
+import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -61,9 +55,7 @@ export class ItemManager {
    * Update event.
    * Contains a list of all entities changed from the last update.
    */
-  readonly debouncedUpdate: Event<Entity[]> = debounceEntityUpdateEvent(
-    this.update
-  );
+  readonly debouncedUpdate: Event<Entity[]> = debounceEntityUpdateEvent(this.update);
 
   /**
    * Map of active items.
@@ -75,10 +67,7 @@ export class ItemManager {
    * Map of item promises (waiting for item construction after genesis message has been written).
    * @private
    */
-  private readonly _pendingItems = new Map<
-    ItemID,
-    (item: Entity<Model>) => void
-  >();
+  private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
    * @param _writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
@@ -94,15 +83,11 @@ export class ItemManager {
   }
 
   get items(): Item<any>[] {
-    return Array.from(this._entities.values()).filter(
-      (entity): entity is Item<Model> => entity instanceof Item
-    );
+    return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
   }
 
   get links(): Link<any>[] {
-    return Array.from(this._entities.values()).filter(
-      (entity): entity is Link<Model> => entity instanceof Link
-    );
+    return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
   /**
@@ -132,9 +117,7 @@ export class ItemManager {
       if (!meta.getInitMutation) {
         throw new Error('Model does not support initializer.');
       }
-      mutation = meta.mutationCodec.encode(
-        await meta.getInitMutation(initProps)
-      );
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -181,13 +164,9 @@ export class ItemManager {
     if (initProps) {
       const meta = this._modelFactory.getModelMeta(modelType);
       if (!meta.getInitMutation) {
-        throw new Error(
-          'Tried to provide initialization params to a model with no initializer.'
-        );
+        throw new Error('Tried to provide initialization params to a model with no initializer.');
       }
-      mutation = meta.mutationCodec.encode(
-        await meta.getInitMutation(initProps)
-      );
+      mutation = meta.mutationCodec.encode(await meta.getInitMutation(initProps));
     }
 
     // Pending until constructed (after genesis block is read from stream).
@@ -223,19 +202,10 @@ export class ItemManager {
     // Convert model-specific outbound mutation to outbound envelope message.
     const outboundTransform =
       this._writeStream &&
-      createMappedFeedWriter<Uint8Array, EchoEnvelope>(
-        (mutation) => ({ itemId, mutation }),
-        this._writeStream
-      );
+      createMappedFeedWriter<Uint8Array, EchoEnvelope>((mutation) => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
-    return this._modelFactory.createModel<Model>(
-      modelType,
-      itemId,
-      snapshot,
-      this._memberKey,
-      outboundTransform
-    );
+    return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
   }
 
   /**
@@ -286,14 +256,7 @@ export class ItemManager {
       snapshot
     });
 
-    const item = new Item(
-      this,
-      itemId,
-      itemType,
-      modelStateManager,
-      this._writeStream,
-      parent
-    );
+    const item = new Item(this, itemId, itemType, modelStateManager, this._writeStream, parent);
     if (parent) {
       this.update.emit(parent);
     }
@@ -373,9 +336,7 @@ export class ItemManager {
   }
 
   getUninitializedEntities(): Entity<Model>[] {
-    return Array.from(this._entities.values()).filter(
-      (entity) => !entity._stateManager.initialized
-    );
+    return Array.from(this._entities.values()).filter((entity) => !entity._stateManager.initialized);
   }
 
   /**
@@ -427,9 +388,7 @@ export class ItemManager {
 /**
  * Returns a new event that groups all of the updates emitted during single tick into a single event emission.
  */
-const debounceEntityUpdateEvent = (
-  event: Event<Entity<any>>
-): Event<Entity<any>[]> => {
+const debounceEntityUpdateEvent = (event: Event<Entity<any>>): Event<Entity<any>[]> => {
   const debouncedEvent = new Event<Entity<any>[]>();
 
   let firing = false;

@@ -2,18 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import {
-  ModelMeta,
-  Model,
-  StateMachine,
-  MutationProcessMeta
-} from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
 import { Message } from '@dxos/protocols/proto/dxos/echo/model/messenger';
 
-class MessengerModelStateMachine
-  implements StateMachine<Message[], Message, {}>
-{
+class MessengerModelStateMachine implements StateMachine<Message[], Message, {}> {
   private readonly _messages: Message[] = [];
 
   getState(): Message[] {
@@ -22,9 +15,7 @@ class MessengerModelStateMachine
 
   process(mutation: Message, meta: MutationProcessMeta): void {
     this._messages.push(mutation);
-    this._messages.sort(
-      (msgA, msgB) => parseInt(msgA.timestamp) - parseInt(msgB.timestamp)
-    );
+    this._messages.sort((msgA, msgB) => parseInt(msgA.timestamp) - parseInt(msgB.timestamp));
   }
 
   snapshot(): {} {
