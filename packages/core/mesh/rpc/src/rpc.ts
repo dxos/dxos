@@ -9,12 +9,7 @@ import { synchronized, Trigger } from '@dxos/async';
 import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
-import {
-  Request,
-  Response,
-  Error as ErrorResponse,
-  RpcMessage
-} from '@dxos/protocols/proto/dxos/rpc';
+import { Request, Response, Error as ErrorResponse, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
@@ -113,9 +108,7 @@ export class RpcPeer {
     await this._sendMessage({ open: true });
 
     this._clearOpenInterval = exponentialBackoffInterval(() => {
-      void this._sendMessage({ open: true }).catch((error) =>
-        log(`Error: ${error}`)
-      );
+      void this._sendMessage({ open: true }).catch((error) => log(`Error: ${error}`));
     }, 50);
 
     await this._remoteOpenTrigger.wait();
@@ -163,9 +156,9 @@ export class RpcPeer {
         log(`Request (stream): ${req.method}`);
         this._callStreamHandler(req, (response) => {
           log(
-            `Send response (stream): ${req.method} response=${
-              response.payload?.type_url
-            } error=${JSON.stringify(response.error)} close=${response.close}`
+            `Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(
+              response.error
+            )} close=${response.close}`
           );
           void this._sendMessage({ response }).catch((error) => {
             log(`Unhandled error during stream close: ${error}`);
@@ -176,9 +169,9 @@ export class RpcPeer {
         const response = await this._callHandler(req);
 
         log(
-          `Send response (stream): ${req.method} response=${
-            response.payload?.type_url
-          } error=${JSON.stringify(response.error)}`
+          `Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(
+            response.error
+          )}`
         );
         await this._sendMessage({ response });
       }
@@ -274,10 +267,7 @@ export class RpcPeer {
     try {
       response = await Promise.race([
         promise,
-        createTimeoutPromise(
-          this._options.timeout ?? DEFAULT_TIMEOUT,
-          new Error(`RPC call timed out: ${method}`)
-        )
+        createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
       ]);
     } catch (err) {
       if (err instanceof RpcClosedError) {
@@ -327,14 +317,7 @@ export class RpcPeer {
           assert(response.error.message);
           assert(response.error.stack);
           // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(
-            new SerializedRpcError(
-              response.error.name,
-              response.error.message,
-              response.error.stack,
-              method
-            )
-          );
+          close(new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method));
         } else if (response.payload) {
           next(response.payload);
         } else {
@@ -353,10 +336,7 @@ export class RpcPeer {
         }
       };
 
-      this._outgoingRequests.set(
-        id,
-        new RequestItem(onResponse, closeStream, true)
-      );
+      this._outgoingRequests.set(id, new RequestItem(onResponse, closeStream, true));
 
       this._sendMessage({
         request: {
@@ -384,10 +364,7 @@ export class RpcPeer {
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
-      const response = await this._options.messageHandler(
-        req.method,
-        req.payload
-      );
+      const response = await this._options.messageHandler(req.method, req.payload);
       return {
         id: req.id,
         payload: response
@@ -400,22 +377,13 @@ export class RpcPeer {
     }
   }
 
-  private _callStreamHandler(
-    req: Request,
-    callback: (response: Response) => void
-  ) {
+  private _callStreamHandler(req: Request, callback: (response: Response) => void) {
     try {
-      assert(
-        this._options.streamHandler,
-        'Requests with streaming responses are not supported.'
-      );
+      assert(this._options.streamHandler, 'Requests with streaming responses are not supported.');
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
-      const responseStream = this._options.streamHandler(
-        req.method,
-        req.payload
-      );
+      const responseStream = this._options.streamHandler(req.method, req.payload);
       responseStream.onReady(() => {
         callback({
           id: req.id,

@@ -52,9 +52,7 @@ export const FileUploadDialog: FC<{
 
   // https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
   // https://developer.mozilla.org/en-US/docs/Web/API/FileList
-  const handleUpload: (this: HTMLInputElement, event: Event) => any = (
-    event
-  ) => {
+  const handleUpload: (this: HTMLInputElement, event: Event) => any = (event) => {
     const { files: fileList } = event.target as HTMLInputElement;
     if (!fileList) {
       return;

@@ -4,13 +4,7 @@
 
 import { expect } from 'chai';
 
-import {
-  latch,
-  promiseTimeout,
-  sleep,
-  untilError,
-  untilPromise
-} from '@dxos/async';
+import { latch, promiseTimeout, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
@@ -112,10 +106,7 @@ describe('FeedQueue', function () {
 
   it('responds immediately when feed is appended', async function () {
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(
-      factory.createFeed(key, { writable: true }),
-      key
-    );
+    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
     const queue = new FeedQueue<any>(feed);
@@ -166,10 +157,7 @@ describe('FeedQueue', function () {
 
   it('peeks ahead', async function () {
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(
-      factory.createFeed(key, { writable: true }),
-      key
-    );
+    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
     const queue = new FeedQueue<any>(feed);

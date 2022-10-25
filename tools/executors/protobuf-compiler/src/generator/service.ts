@@ -27,39 +27,21 @@ const getRpcTypes = (
   ];
 };
 
-const createRpcMethodType = (
-  method: protobufjs.Method,
-  service: protobufjs.Service,
-  subs: SubstitutionsMap
-) => {
+const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) => {
   assert(!method.requestStream, 'Streaming RPC requests are not supported.');
 
   const [requestType, responseType] = getRpcTypes(method, service, subs);
 
-  const outputTypeMonad = method.responseStream
-    ? f.createIdentifier('Stream')
-    : f.createIdentifier('Promise');
+  const outputTypeMonad = method.responseStream ? f.createIdentifier('Stream') : f.createIdentifier('Promise');
 
   return f.createFunctionTypeNode(
     undefined,
-    [
-      f.createParameterDeclaration(
-        undefined,
-        undefined,
-        undefined,
-        'request',
-        undefined,
-        requestType
-      )
-    ],
+    [f.createParameterDeclaration(undefined, undefined, undefined, 'request', undefined, requestType)],
     f.createTypeReferenceNode(outputTypeMonad, [responseType])
   );
 };
 
-export const createServiceDeclaration = (
-  type: protobufjs.Service,
-  ctx: GeneratorContext
-): ts.InterfaceDeclaration => {
+export const createServiceDeclaration = (type: protobufjs.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
     undefined,
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
@@ -82,12 +64,7 @@ export const createServiceDeclaration = (
 
   const commentSections = type.comment ? [type.comment] : [];
   if (type.filename) {
-    commentSections.push(
-      `Defined in:\n  {@link file://./${relative(
-        dirname(ctx.outputFilename),
-        type.filename
-      )}}`
-    );
+    commentSections.push(`Defined in:\n  {@link file://./${relative(dirname(ctx.outputFilename), type.filename)}}`);
   }
 
   if (commentSections.length === 0) {
@@ -97,9 +74,7 @@ export const createServiceDeclaration = (
   return attachDocComment(declaration, commentSections.join('\n\n'));
 };
 
-function* getServices(
-  root: protobufjs.NamespaceBase
-): Generator<protobufjs.Service> {
+function* getServices(root: protobufjs.NamespaceBase): Generator<protobufjs.Service> {
   for (const obj of root.nestedArray) {
     if (obj instanceof protobufjs.Service) {
       yield obj;
@@ -129,5 +104,4 @@ export const createServicesDictionary = (root: protobufjs.NamespaceBase) =>
       )
   );
 
-const mapRpcMethodName = (name: string) =>
-  name[0].toLocaleLowerCase() + name.substring(1);
+const mapRpcMethodName = (name: string) => name[0].toLocaleLowerCase() + name.substring(1);

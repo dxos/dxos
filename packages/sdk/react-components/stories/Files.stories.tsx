@@ -35,11 +35,7 @@ export const Primary = () => {
 
   return (
     <Box>
-      <FileUploadDialog
-        open={showUpload}
-        onClose={handleClose}
-        onUpload={handleUpload}
-      />
+      <FileUploadDialog open={showUpload} onClose={handleClose} onUpload={handleUpload} />
 
       <Box sx={{ margin: 2 }}>
         <Button onClick={() => setShowUpload(true)}>Upload</Button>
@@ -47,12 +43,7 @@ export const Primary = () => {
       </Box>
 
       <Box sx={{ margin: 2 }}>
-        <TextField
-          autoFocus
-          fullWidth
-          value={data}
-          onChange={(event) => setData(event.target.value)}
-        />
+        <TextField autoFocus fullWidth value={data} onChange={(event) => setData(event.target.value)} />
       </Box>
     </Box>
   );

@@ -27,11 +27,7 @@ export const init = (options: InitOptions) => {
 /**
  *
  */
-export const page = ({
-  machineId,
-  identityId: anonymousId,
-  ...options
-}: PageOptions) => {
+export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
   assert(analytics, 'Analytics not initialized');
 
   analytics.page({
@@ -47,12 +43,7 @@ export const page = ({
 /**
  *
  */
-export const event = ({
-  machineId,
-  identityId: anonymousId,
-  name: event,
-  ...options
-}: EventOptions) => {
+export const event = ({ machineId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
   assert(analytics, 'Analytics not initialized');
 
   analytics.track({

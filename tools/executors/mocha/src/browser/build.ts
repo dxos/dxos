@@ -43,9 +43,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
       mocha.timeout(${opts.timeout})
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
-      ${files
-        .map((file) => `require("${relative(opts.outDir, resolve(file))}");`)
-        .join('\n')}
+      ${files.map((file) => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
 
       window.browserMocha__initFinished()
       
@@ -65,11 +63,6 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     format: 'iife',
     sourcemap: 'inline',
     outfile: join(opts.outDir, 'bundle.js'),
-    plugins: [
-      FixGracefulFsPlugin(),
-      FixMemdownPlugin(),
-      NodeGlobalsPolyfillPlugin(),
-      NodeModulesPlugin()
-    ]
+    plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()]
   });
 };

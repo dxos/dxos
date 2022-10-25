@@ -9,10 +9,7 @@ import pump from 'pump';
 
 import { sleep } from '@dxos/async';
 
-import {
-  ERR_EXTENSION_RESPONSE_FAILED,
-  ERR_EXTENSION_RESPONSE_TIMEOUT
-} from './errors';
+import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
 import { pipeProtocols } from './testing';
@@ -28,9 +25,7 @@ describe('Protocol', function () {
       initiator: true,
       streamOptions: {
         onhandshake: async (protocol) => {
-          expect((protocol as any as Protocol).getSession()?.peerId).toEqual(
-            'user2'
-          );
+          expect((protocol as any as Protocol).getSession()?.peerId).toEqual('user2');
         }
       },
       userSession: { peerId: 'user1' }
@@ -41,9 +36,7 @@ describe('Protocol', function () {
       initiator: false,
       streamOptions: {
         onhandshake: async (protocol) => {
-          expect((protocol as any as Protocol).getSession()?.peerId).toEqual(
-            'user1'
-          );
+          expect((protocol as any as Protocol).getSession()?.peerId).toEqual('user1');
         }
       },
       userSession: { peerId: 'user2' }
@@ -52,11 +45,7 @@ describe('Protocol', function () {
     protocol1.error.on((err) => console.log('protocol1', err));
     protocol2.error.on((err) => console.log('protocol2', err));
 
-    pump(
-      protocol1.stream as any,
-      protocol2.stream as any,
-      protocol1.stream as any
-    );
+    pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
   }).timeout(1 * 1000);
 
   it('basic without extensions', async function () {
@@ -111,11 +100,7 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user1' }
     })
-      .setExtension(
-        new Extension(bufferExtension, { timeout }).setInitHandler(
-          async () => {}
-        )
-      )
+      .setExtension(new Extension(bufferExtension, { timeout }).setInitHandler(async () => {}))
       .init();
 
     const protocol2 = new Protocol({
@@ -176,9 +161,7 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user1' }
     })
-      .setExtension(
-        new Extension(extension, { timeout }).setInitHandler(async () => {})
-      )
+      .setExtension(new Extension(extension, { timeout }).setInitHandler(async () => {}))
       .init();
 
     const protocol2 = new Protocol({

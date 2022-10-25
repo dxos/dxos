@@ -4,25 +4,12 @@
 
 import expect from 'expect';
 
-import {
-  CredentialGenerator,
-  verifyCredential,
-  createCredentialSignerWithKey
-} from '@dxos/credentials';
-import {
-  valueEncoding,
-  Database,
-  MOCK_AUTH_PROVIDER,
-  MOCK_AUTH_VERIFIER,
-  Space
-} from '@dxos/echo-db';
+import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
+import { valueEncoding, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -32,10 +19,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
-import {
-  createHaloAuthProvider,
-  createHaloAuthVerifier
-} from './authenticator';
+import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
@@ -73,23 +57,16 @@ describe('halo/identity', function () {
       initialTimeframe: new Timeframe(),
       feedProvider: (key) => feedStore.openFeed(key),
       networkManager: new NetworkManager({
-        signalManager: new MemorySignalManager(
-          new MemorySignalManagerContext()
-        ),
+        signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory
       }),
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
-        credentialProvider: createHaloAuthProvider(
-          createCredentialSignerWithKey(keyring, deviceKey)
-        ),
-        credentialAuthenticator: createHaloAuthVerifier(
-          () => identity.authorizedDeviceKeys
-        )
+        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
+        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
       },
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(modelFactory, databaseBackend, deviceKey)
+      databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
     });
 
     const identity = new Identity({
@@ -106,19 +83,11 @@ describe('halo/identity', function () {
     // Identity genesis
     //
     {
-      const generator = new CredentialGenerator(
-        keyring,
-        identityKey,
-        deviceKey
-      );
+      const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
       const credentials = [
         ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
         await generator.createDeviceAuthorization(deviceKey),
-        await generator.createFeedAdmission(
-          spaceKey,
-          dataFeed.key,
-          AdmittedFeed.Designation.DATA
-        )
+        await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
       ];
 
       for (const credential of credentials) {
@@ -200,8 +169,7 @@ describe('halo/identity', function () {
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
-        databaseFactory: async ({ databaseBackend }) =>
-          new Database(modelFactory, databaseBackend, deviceKey)
+        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
       });
 
       const identity = (identity1 = new Identity({
@@ -218,19 +186,11 @@ describe('halo/identity', function () {
       // Identity genesis
       //
       {
-        const generator = new CredentialGenerator(
-          keyring,
-          identityKey,
-          deviceKey
-        );
+        const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
         const credentials = [
           ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
           await generator.createDeviceAuthorization(deviceKey),
-          await generator.createFeedAdmission(
-            spaceKey,
-            dataFeed.key,
-            AdmittedFeed.Designation.DATA
-          )
+          await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
         ];
 
         for (const credential of credentials) {
@@ -287,8 +247,7 @@ describe('halo/identity', function () {
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
-        databaseFactory: async ({ databaseBackend }) =>
-          new Database(modelFactory, databaseBackend, deviceKey)
+        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
       });
 
       const identity = (identity2 = new Identity({
@@ -322,13 +281,7 @@ describe('halo/identity', function () {
       await identity2.ready();
     }
 
-    expect(Array.from(identity1.authorizedDeviceKeys.values())).toEqual([
-      identity1.deviceKey,
-      identity2.deviceKey
-    ]);
-    expect(Array.from(identity2.authorizedDeviceKeys.values())).toEqual([
-      identity1.deviceKey,
-      identity2.deviceKey
-    ]);
+    expect(Array.from(identity1.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
+    expect(Array.from(identity2.authorizedDeviceKeys.values())).toEqual([identity1.deviceKey, identity2.deviceKey]);
   });
 });

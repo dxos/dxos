@@ -12,14 +12,9 @@ import { PolkadotClient } from './polkadot-client';
 /**
  * Polkadot DXNS auctions client backend.
  */
-export class PolkadotAuctions
-  extends PolkadotClient
-  implements AuctionsClientBackend
-{
+export class PolkadotAuctions extends PolkadotClient implements AuctionsClientBackend {
   async getAuction(name: string): Promise<Auction | undefined> {
-    const auction = (await this.api.query.registry.auctions(name)).unwrapOr(
-      undefined
-    );
+    const auction = (await this.api.query.registry.auctions(name)).unwrapOr(undefined);
     if (!auction) {
       return undefined;
     }
@@ -36,44 +31,25 @@ export class PolkadotAuctions
   }
 
   async createAuction(name: string, startAmount: number): Promise<void> {
-    await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.createAuction(name, startAmount)
-    );
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.createAuction(name, startAmount));
   }
 
   async bidAuction(name: string, amount: number): Promise<void> {
-    await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.bidAuction(name, amount)
-    );
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.bidAuction(name, amount));
   }
 
   async closeAuction(name: string): Promise<void> {
-    await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.closeAuction(name)
-    );
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.closeAuction(name));
   }
 
-  async forceCloseAuction(
-    name: string,
-    sudoSignFn: SignTxFunction | AddressOrPair
-  ): Promise<void> {
-    await this.transactionsHandler.sendSudoTransaction(
-      this.api.tx.registry.forceCloseAuction(name),
-      sudoSignFn
-    );
+  async forceCloseAuction(name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void> {
+    await this.transactionsHandler.sendSudoTransaction(this.api.tx.registry.forceCloseAuction(name), sudoSignFn);
   }
 
-  async claimAuction(
-    domainName: string,
-    account: AccountKey
-  ): Promise<DomainKey> {
+  async claimAuction(domainName: string, account: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
     await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.claimAuction(
-        domainKey.value,
-        domainName,
-        account.value
-      )
+      this.api.tx.registry.claimAuction(domainKey.value, domainName, account.value)
     );
     return domainKey;
   }

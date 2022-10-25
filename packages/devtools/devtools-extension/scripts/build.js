@@ -10,11 +10,7 @@ const { join } = require('path');
 const rmdir = require('rmdir');
 const { promisify } = require('util');
 
-const {
-  NodeGlobalsPolyfillPlugin,
-  FixMemdownPlugin,
-  NodeModulesPlugin
-} = require('@dxos/esbuild-plugins');
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
 
 const distDir = join(__dirname, '../dist');
 const srcDir = join(__dirname, '../src');
@@ -46,21 +42,13 @@ void (async () => {
   try {
     await build({
       ...config,
-      entryPoints: ['background.ts', 'content.ts'].map((entryPoint) =>
-        join(srcDir, entryPoint)
-      )
+      entryPoints: ['background.ts', 'content.ts'].map((entryPoint) => join(srcDir, entryPoint))
     });
 
     await build({
       ...config,
-      entryPoints: ['devtools.ts', 'panel.ts', 'sandbox.ts'].map((entryPoint) =>
-        join(srcDir, entryPoint)
-      ),
-      plugins: [
-        ...config.plugins,
-        NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin()
-      ]
+      entryPoints: ['devtools.ts', 'panel.ts', 'sandbox.ts'].map((entryPoint) => join(srcDir, entryPoint)),
+      plugins: [...config.plugins, NodeGlobalsPolyfillPlugin(), FixMemdownPlugin()]
     });
   } catch (err) {
     console.error(err);

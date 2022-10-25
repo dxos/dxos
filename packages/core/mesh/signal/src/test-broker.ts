@@ -20,10 +20,7 @@ interface TestBrokerOptions {
 }
 
 export class TestBroker {
-  private readonly _binPath = path.join(
-    dirname(pkgUp.sync({ cwd: __dirname })!),
-    'bin'
-  );
+  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
 
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
@@ -53,11 +50,9 @@ export class TestBroker {
     }
 
     log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
-    const server = spawn(
-      `./signal-test-${os}-${arch}`,
-      ['-port', this._port.toString(), 'server'],
-      { cwd: this._binPath }
-    );
+    const server = spawn(`./signal-test-${os}-${arch}`, ['-port', this._port.toString(), 'server'], {
+      cwd: this._binPath
+    });
 
     server.stdout.on('data', (data) => {
       log(`TestServer stdout: ${data}`);
@@ -83,9 +78,7 @@ export class TestBroker {
     const waitInc = 20;
     while (waited < this._timeout) {
       try {
-        const response = await fetch(
-          `http://localhost:${this._port}/.well-known/dx/signal`
-        );
+        const response = await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
         log(`Fetching broker. Response=${JSON.stringify(response)}`);
         return;
       } catch (err) {

@@ -19,10 +19,7 @@ export class OrderedList {
 
   private _unsubscribe: () => void;
 
-  constructor(
-    private readonly _model: ObjectModel,
-    private readonly _property = 'order'
-  ) {
+  constructor(private readonly _model: ObjectModel, private readonly _property = 'order') {
     this.refresh();
     this._unsubscribe = this._model.update.on(() => this.refresh());
   }
@@ -55,12 +52,7 @@ export class OrderedList {
       if (i === -1 && j === -1) {
         // Append.
         // [a, b, c] + [x, y] => [a, b, c, x, y]
-        this._values.splice(
-          this._values.length,
-          0,
-          left as ItemID,
-          right as ItemID
-        );
+        this._values.splice(this._values.length, 0, left as ItemID, right as ItemID);
       } else if (i === -1) {
         // Merge to the left.
         // [a, b, c] + [x, b] => [a, x, b, c] (i === -1; j ===  1)

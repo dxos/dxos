@@ -45,28 +45,16 @@ export class Matcher {
       //
 
       case Predicate.Operation.OR: {
-        return (
-          predicate.predicates!.findIndex((predicate: Predicate) =>
-            this._matchItem(item, predicate)
-          ) !== -1
-        );
+        return predicate.predicates!.findIndex((predicate: Predicate) => this._matchItem(item, predicate)) !== -1;
       }
 
       case Predicate.Operation.AND: {
-        return (
-          predicate.predicates!.findIndex(
-            (predicate: Predicate) => !this._matchItem(item, predicate)
-          ) === -1
-        );
+        return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) === -1;
       }
 
       case Predicate.Operation.NOT: {
         // NAND.
-        return (
-          predicate.predicates!.findIndex(
-            (predicate: Predicate) => !this._matchItem(item, predicate)
-          ) !== -1
-        );
+        return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) !== -1;
       }
 
       //

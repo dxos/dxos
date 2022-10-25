@@ -19,14 +19,7 @@ export const DraggableContainer = ({
   style: customStyles = {},
   placeholderStyles = {}
 }: DraggableContainerProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   // TODO(kaplanski): Better way to handle styles? (i.e., Emotion, etc.).
   return (

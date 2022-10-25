@@ -6,29 +6,16 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
-import {
-  Extension,
-  ERR_EXTENSION_RESPONSE_FAILED,
-  Protocol
-} from '@dxos/mesh-protocol';
+import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 
 import { SwarmIdentity } from './space-protocol';
 
-export type AuthProvider = (
-  nonce: Uint8Array
-) => Promise<Uint8Array | undefined>;
+export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 
-export type AuthVerifier = (
-  nonce: Uint8Array,
-  credential: Uint8Array
-) => Promise<boolean>;
+export type AuthVerifier = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
 
-export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) =>
-  Buffer.from('mock');
-export const MOCK_AUTH_VERIFIER: AuthVerifier = async (
-  nonce: Uint8Array,
-  credential: Uint8Array
-) => true;
+export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
+export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
 const EXTENSION_NAME = 'dxos.credentials.auth';
 
@@ -54,9 +41,7 @@ export class AuthPlugin {
    * @return {Extension}
    */
   createExtension() {
-    return new Extension(EXTENSION_NAME, { binary: true }).setHandshakeHandler(
-      this._onHandshake.bind(this)
-    );
+    return new Extension(EXTENSION_NAME, { binary: true }).setHandshakeHandler(this._onHandshake.bind(this));
   }
 
   /**
@@ -79,8 +64,7 @@ export class AuthPlugin {
       // Obtain the credentials from the session.
       // At this point credentials is protobuf encoded and base64-encoded.
       // Note `protocol.session.credentials` is our data.
-      const { credentials, peerId: sessionPeerId } =
-        protocol?.getSession() ?? {};
+      const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
 
       log('Handshake', { credentials, sessionPeerId });
 
@@ -122,10 +106,7 @@ export class AuthPlugin {
 
       const credentialsBuf = Buffer.from(credentials, 'base64');
 
-      const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(
-        nonce,
-        credentialsBuf
-      );
+      const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(nonce, credentialsBuf);
 
       // Ask the Authenticator if this checks out.
       if (!isAuthenticated) {

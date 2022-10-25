@@ -12,7 +12,6 @@ export const timestampSubstitutions = {
       };
     },
 
-    decode: (value: any): Date =>
-      new Date(parseInt(value.seconds ?? '0') * 1000 + (value.nanos ?? 0) / 1e6)
+    decode: (value: any): Date => new Date(parseInt(value.seconds ?? '0') * 1000 + (value.nanos ?? 0) / 1e6)
   }
 };

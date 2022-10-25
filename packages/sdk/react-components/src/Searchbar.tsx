@@ -13,11 +13,7 @@ export interface SearchBarProps {
   delay?: number;
 }
 
-export const Searchbar = ({
-  placeholder,
-  onSearch,
-  delay = 0
-}: SearchBarProps) => {
+export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) => {
   const [text, setText] = useState<string | undefined>();
   const timeout = useRef<ReturnType<typeof setTimeout>>();
 

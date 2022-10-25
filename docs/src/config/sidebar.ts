@@ -11,9 +11,7 @@ import { DOCS_PATH } from '../constants';
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(path, 'utf-8');
-  const { attributes } = frontMatter<{ position: number; label: string }>(
-    content
-  );
+  const { attributes } = frontMatter<{ position: number; label: string }>(content);
   const link = path.slice(DOCS_PATH.length);
   const item = attributes.label
     ? {
@@ -41,9 +39,7 @@ export const sidebarSection = (path: string) =>
       }
 
       const infoPath = join(path, file, '_category_.json');
-      const sectionInfo = existsSync(infoPath)
-        ? JSON.parse(readFileSync(infoPath, 'utf-8'))
-        : {};
+      const sectionInfo = existsSync(infoPath) ? JSON.parse(readFileSync(infoPath, 'utf-8')) : {};
       const children = sidebarSection(filePath);
 
       return [

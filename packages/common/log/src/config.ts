@@ -47,8 +47,7 @@ export const shortLevelName = {
   [LogLevel.ERROR]: 'E'
 };
 
-export const parseLogLevel = (level: string, defValue = LogLevel.WARN) =>
-  levels[level.toLowerCase()] ?? defValue;
+export const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
 
 export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
@@ -82,21 +81,12 @@ export interface LogConfig {
 }
 
 export const defaultConfig: LogConfig = {
-  processor:
-    ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ??
-    LogProcessorType.CONSOLE,
-  filter:
-    ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ??
-    LogLevel[LogLevel.INFO],
-  config:
-    'process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined
+  processor: ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ?? LogProcessorType.CONSOLE,
+  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO],
+  config: 'process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined
 };
 
-export const shouldLog = (
-  config: LogConfig,
-  level: LogLevel,
-  path: string
-): boolean => {
+export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {
   if (config.filter === undefined) {
     return true;
   }
@@ -117,9 +107,5 @@ export const shouldLog = (
               };
         });
 
-  return filters.some(
-    (filter) =>
-      level >= filter.level &&
-      (!filter.pattern || path.includes(filter.pattern))
-  );
+  return filters.some((filter) => level >= filter.level && (!filter.pattern || path.includes(filter.pattern)));
 };

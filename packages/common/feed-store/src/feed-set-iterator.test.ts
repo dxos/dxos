@@ -13,9 +13,8 @@ import { TestItemBuilder } from './testing';
 import { FeedBlock } from './types';
 
 // Random selector.
-const randomFeedBlockSelector: FeedBlockSelector<any> = (
-  blocks: FeedBlock<any>[]
-) => faker.datatype.number({ min: 0, max: blocks.length - 1 });
+const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
+  faker.datatype.number({ min: 0, max: blocks.length - 1 });
 
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
@@ -150,10 +149,7 @@ describe('FeedSetIterator', function () {
     expect(count).to.eq(numBlocks);
 
     // Written blocks.
-    const written = feedStore.feeds.reduce(
-      (count, feed) => count + feed.properties.length,
-      0
-    );
+    const written = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
     const feeds = feedStore.feeds.map((feed) => ({
       feedKey: feed.key,
       length: feed.properties.length

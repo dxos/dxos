@@ -55,13 +55,7 @@ const HaloInvitationContainer = () => {
 
       {invitationCode && (
         <Box sx={{ marginTop: 1 }}>
-          <TextField
-            disabled
-            multiline
-            fullWidth
-            value={invitationCode}
-            maxRows={3}
-          />
+          <TextField disabled multiline fullWidth value={invitationCode} maxRows={3} />
         </Box>
       )}
 
@@ -90,9 +84,7 @@ const HaloAuthenticationContainer = () => {
   const handleSubmit = async (invitationCode: string) => {
     try {
       const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
-      const invitation = await client.halo.acceptInvitation(
-        invitationDescriptor
-      );
+      const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({
         identity: invitationDescriptor.identityKey?.toString(),
         invitation
@@ -107,13 +99,7 @@ const HaloAuthenticationContainer = () => {
     await status.invitation?.authenticate(Buffer.from(pin));
   };
 
-  return (
-    <PartyJoinPanel
-      status={status}
-      onSubmit={handleSubmit}
-      onAuthenticate={handleAuthenticate}
-    />
-  );
+  return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
 };
 
 const TestApp = () => {

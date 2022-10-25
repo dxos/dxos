@@ -39,10 +39,7 @@ export class TextSearchModel<T> implements SearchModel<T> {
   _results: SearchResult<T>[] = [];
   _timeout?: ReturnType<typeof setTimeout>;
 
-  constructor(
-    private readonly _values: SearchResult<T>[],
-    private readonly _delay = 500
-  ) {}
+  constructor(private readonly _values: SearchResult<T>[], private readonly _delay = 500) {}
 
   get results() {
     return this._results;
@@ -67,9 +64,7 @@ export class TextSearchModel<T> implements SearchModel<T> {
           }
         });
 
-        this._results.sort(({ text: a }, { text: b }) =>
-          a < b ? -1 : a > b ? 1 : 0
-        );
+        this._results.sort(({ text: a }, { text: b }) => (a < b ? -1 : a > b ? 1 : 0));
       }
 
       this._update.emit(this._results);

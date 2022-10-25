@@ -15,10 +15,7 @@ interface Messages {
 export const useUIError = () => {
   const setSnackbar = useSnackbar();
 
-  return async <T>(
-    tryBlock: () => Promise<T> | T,
-    messages: Messages | undefined = undefined
-  ) => {
+  return async <T>(tryBlock: () => Promise<T> | T, messages: Messages | undefined = undefined) => {
     try {
       const result = await tryBlock();
       if (setSnackbar && messages?.onSuccessMessage) {

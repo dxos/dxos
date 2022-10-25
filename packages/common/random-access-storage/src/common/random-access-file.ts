@@ -28,7 +28,4 @@ export interface RandomAccessFile {
   destroyed: boolean;
 }
 
-export type RandomAccessFileConstructor = (
-  filename: string,
-  opts?: {}
-) => RandomAccessFile;
+export type RandomAccessFileConstructor = (filename: string, opts?: {}) => RandomAccessFile;

@@ -17,9 +17,7 @@ const log = debug('dxos.replicator.peer');
 
 export class Peer {
   // Active reeds being replicated.
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(
-    PublicKey.hash
-  );
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
   readonly closed = new Event();
 

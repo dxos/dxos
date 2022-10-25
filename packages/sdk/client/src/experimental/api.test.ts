@@ -31,12 +31,7 @@ describe.skip('Experimental API', function () {
         const client2 = createClient();
         expect(client2.halo.profile).not.toBeDefined();
         const profile = await client2.halo.recoverProfile(privateKey);
-        expect(
-          PublicKey.equals(
-            profile.identityKey,
-            client2.halo.profile.identityKey
-          )
-        ).toBeTruthy();
+        expect(PublicKey.equals(profile.identityKey, client2.halo.profile.identityKey)).toBeTruthy();
       }
     }
 
@@ -62,14 +57,10 @@ describe.skip('Experimental API', function () {
         const request = client2.halo.createDeviceAdmissionRequest();
 
         // Accept new device.
-        const challenge = client1.halo.createDeviceAdmissionChallenge(
-          request.requestKey
-        );
+        const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
         setTimeout(async () => {
           const deviceKey = await challenge.wait();
-          expect(
-            PublicKey.equals(deviceKey, client2.halo.device.deviceKey)
-          ).toBeTruthy();
+          expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
         });
 
         // Authenticate.
@@ -125,14 +116,8 @@ describe.skip('Experimental API', function () {
     {
       const space = await client1.brane.createSpace();
       const contacts = client1.circle.queryContacts({ name: 'alice' });
-      const invitation = space.createInvitation(
-        Role.ADMIN,
-        contacts.elements[0].identityKey
-      );
-      await client1.messenger.send(
-        contacts.elements[0].identityKey,
-        invitation
-      );
+      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].identityKey);
+      await client1.messenger.send(contacts.elements[0].identityKey, invitation);
       await invitation.wait();
 
       const members = space.queryMembers({ role: Role.ADMIN });
@@ -144,15 +129,13 @@ describe.skip('Experimental API', function () {
     //
     {
       const invitations = client1.circle.queryInvitations();
-      const subscription = invitations.onUpdate(
-        async (invitations: InvitationOffer[]) => {
-          if (invitations.length) {
-            const spaceKey = await invitations[0].accept();
-            expect(spaceKey).toBeDefined();
-            subscription.cancel();
-          }
+      const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
+        if (invitations.length) {
+          const spaceKey = await invitations[0].accept();
+          expect(spaceKey).toBeDefined();
+          subscription.cancel();
         }
-      );
+      });
     }
 
     //

@@ -69,22 +69,11 @@ const User = ({ sharing, joining, remote }: UserProps) => {
         )}
       </Toolbar>
 
-      <HaloSharingDialog
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        modal={false}
-      />
+      <HaloSharingDialog open={shareOpen} onClose={() => setShareOpen(false)} modal={false} />
 
-      <JoinHaloDialog
-        open={joinOpen}
-        onClose={() => setJoinOpen(false)}
-        modal={false}
-        closeOnSuccess={true}
-      />
+      <JoinHaloDialog open={joinOpen} onClose={() => setJoinOpen(false)} modal={false} closeOnSuccess={true} />
 
-      <Box sx={{ marginTop: 2, padding: 1 }}>
-        {remote ? <RemoteParties /> : <Parties />}
-      </Box>
+      <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteParties /> : <Parties />}</Box>
 
       <Box sx={{ padding: 1 }}>
         <p>{profile?.username ?? 'Profile not created.'}</p>
@@ -133,8 +122,8 @@ export const Remote = () => {
   return (
     <FullScreen>
       <p>
-        Caution: This story works with Wallet extension. It does not work when
-        embedded in an iframe. Use story directly with /#/__story/ prefix.
+        Caution: This story works with Wallet extension. It does not work when embedded in an iframe. Use story directly
+        with /#/__story/ prefix.
       </p>
       <ErrorBoundary>
         <Box

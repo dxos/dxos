@@ -104,9 +104,7 @@ const EditorContainer: FC<{
     if (invitation) {
       setTimeout(async () => {
         client.echo.registerModel(TextModel);
-        const accept = await client.echo.acceptInvitation(
-          invitation.descriptor
-        );
+        const accept = await client.echo.acceptInvitation(invitation.descriptor);
         accept.authenticate(Buffer.from(invitation.secret));
         const party = await accept.getParty();
         log(`Joined: ${party.key.toHex()}`);
@@ -159,9 +157,7 @@ const EditorContainer: FC<{
               <tbody>
                 <tr>
                   <td style={{ width: 60 }}>Profile</td>
-                  <td>
-                    {truncateKey(client.halo.profile!.publicKey.toHex(), 8)}
-                  </td>
+                  <td>{truncateKey(client.halo.profile!.publicKey.toHex(), 8)}</td>
                 </tr>
                 <tr>
                   <td>Party</td>

@@ -26,10 +26,7 @@ export class IPFSContentLoader implements ContentLoader {
   async download(ipfsCid: string, dir: string): Promise<string> {
     const url = `${this._ipfsEndpoint}/${ipfsCid}/`;
     const files = await (
-      await fetch(
-        `${new URL(this._ipfsEndpoint).origin}/api/v0/ls?arg=${ipfsCid}`,
-        { method: 'POST' }
-      )
+      await fetch(`${new URL(this._ipfsEndpoint).origin}/api/v0/ls?arg=${ipfsCid}`, { method: 'POST' })
     ).json();
     for await (const file of files.Objects[0].Links) {
       const path = url + file.Name;

@@ -12,11 +12,7 @@ const { join } = require('path');
 const rmdir = require('rmdir');
 const { promisify } = require('util');
 
-const {
-  NodeGlobalsPolyfillPlugin,
-  FixMemdownPlugin,
-  NodeModulesPlugin
-} = require('@dxos/esbuild-plugins');
+const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
 
 const distDir = join(__dirname, '../dist');
 const srcDir = join(__dirname, '../src');
@@ -38,11 +34,7 @@ void (async () => {
       outdir: distDir,
       write: true,
       bundle: true,
-      plugins: [
-        NodeModulesPlugin(),
-        NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin()
-      ],
+      plugins: [NodeModulesPlugin(), NodeGlobalsPolyfillPlugin(), FixMemdownPlugin()],
       watch: process.argv.includes('--watch')
         ? {
             onRebuild: (error) => {

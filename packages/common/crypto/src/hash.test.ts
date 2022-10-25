@@ -15,9 +15,7 @@ it('SHA1', function () {
 
 it('SHA256', function () {
   const hashed = sha256('Test message');
-  expect(hashed).to.equal(
-    'c0719e9a8d5d838d861dc6f675c899d2b309a3a65bb9fe6b11e5afcbf9a2c0b1'
-  );
+  expect(hashed).to.equal('c0719e9a8d5d838d861dc6f675c899d2b309a3a65bb9fe6b11e5afcbf9a2c0b1');
 });
 
 it('SHA512', function () {

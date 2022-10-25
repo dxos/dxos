@@ -49,10 +49,7 @@ export class SelectionResult<T extends Entity, R = any> {
 
         // Filters mutation events only if selection (since we can't reason about deps of call methods).
         const set = new Set([...previousEntities, ...this._lastResult![0]]);
-        if (
-          this._reducer ||
-          currentEntities.some((entity) => set.has(entity as any))
-        ) {
+        if (this._reducer || currentEntities.some((entity) => set.has(entity as any))) {
           this.update.emit(this);
         }
       })
@@ -111,10 +108,7 @@ export class SelectionResult<T extends Entity, R = any> {
    */
   expectOne(): T {
     const entities = this.entities;
-    assert(
-      entities.length === 1,
-      `Expected one result; got ${entities.length}`
-    );
+    assert(entities.length === 1, `Expected one result; got ${entities.length}`);
     return entities[0];
   }
 }

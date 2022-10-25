@@ -15,12 +15,7 @@ export interface SanitizeContext {
  * @param path
  * @param context
  */
-export const sanitize = (
-  type: Type,
-  value: any,
-  path: string,
-  context: SanitizeContext
-) => {
+export const sanitize = (type: Type, value: any, path: string, context: SanitizeContext) => {
   for (const key of Object.keys(value)) {
     if (!type.fields[key]) {
       context.errors.push(`Unexpected key: ${path}.${key}`);
@@ -39,22 +34,12 @@ export const sanitize = (
     if (field.resolvedType instanceof Type) {
       sanitize(field.resolvedType, value[key], `${path}.${key}`, context);
     } else if (field.resolvedType instanceof Enum) {
-      value[key] = sanitizeEnum(
-        field.resolvedType,
-        value[key],
-        `${path}.${key}`,
-        context
-      );
+      value[key] = sanitizeEnum(field.resolvedType, value[key], `${path}.${key}`, context);
     }
   }
 };
 
-const sanitizeEnum = (
-  type: Enum,
-  value: any,
-  path: string,
-  context: SanitizeContext
-): any => {
+const sanitizeEnum = (type: Enum, value: any, path: string, context: SanitizeContext): any => {
   if (type.valuesById[value]) {
     return value;
   }
@@ -68,11 +53,7 @@ const sanitizeEnum = (
     }
   }
 
-  context.errors.push(
-    `Invalid enum value: value=${JSON.stringify(value)} enum=${
-      type.fullName
-    } path=${path}`
-  );
+  context.errors.push(`Invalid enum value: value=${JSON.stringify(value)} enum=${type.fullName} path=${path}`);
 
   return value;
 };

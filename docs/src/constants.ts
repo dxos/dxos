@@ -8,14 +8,7 @@ export const DOCS_PATH = resolve(__dirname, '../docs');
 
 export const PINNED_PACKAGES = ['@dxos/client', '@dxos/react-client'];
 
-export const API_SECTIONS = [
-  'values',
-  'enums',
-  'types',
-  'interfaces',
-  'classes',
-  'functions'
-];
+export const API_SECTIONS = ['values', 'enums', 'types', 'interfaces', 'classes', 'functions'];
 
 // [
 // ['interfaces', 'Interfaces'],

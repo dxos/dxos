@@ -14,11 +14,7 @@ interface RowContainerProps {
     width: string;
   };
 }
-export const RowContainer = ({
-  leftComponent,
-  rightComponent,
-  config
-}: RowContainerProps) => {
+export const RowContainer = ({ leftComponent, rightComponent, config }: RowContainerProps) => {
   const getFixedStyle = (margin = false): CSSProperties => ({
     width: config.width,
     overflowY: 'scroll',
@@ -38,24 +34,8 @@ export const RowContainer = ({
         gap: '8px'
       }}
     >
-      <div
-        style={
-          config.fixedComponent === 'left'
-            ? getFixedStyle()
-            : getFlexibleStyle(true)
-        }
-      >
-        {leftComponent}
-      </div>
-      <div
-        style={
-          config.fixedComponent === 'right'
-            ? getFixedStyle(true)
-            : getFlexibleStyle()
-        }
-      >
-        {rightComponent}
-      </div>
+      <div style={config.fixedComponent === 'left' ? getFixedStyle() : getFlexibleStyle(true)}>{leftComponent}</div>
+      <div style={config.fixedComponent === 'right' ? getFixedStyle(true) : getFlexibleStyle()}>{rightComponent}</div>
     </div>
   );
 };

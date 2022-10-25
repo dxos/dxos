@@ -22,10 +22,7 @@ export class InvalidInvitationError extends DXOSError {
 
 export class InvalidStorageVersionError extends DXOSError {
   constructor(expected: number, actual: number) {
-    super(
-      'INVALID_STORAGE_VERSION',
-      `Invalid storage version: Expected ${expected}, actual ${actual}.`
-    );
+    super('INVALID_STORAGE_VERSION', `Invalid storage version: Expected ${expected}, actual ${actual}.`);
   }
 }
 

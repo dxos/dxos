@@ -7,11 +7,7 @@ import React from 'react';
 
 import { ItemID } from '@dxos/protocols';
 import { ClientProvider, useSelection } from '@dxos/react-client';
-import {
-  ProfileInitializer,
-  itemAdapter,
-  useTestParty
-} from '@dxos/react-client-testing';
+import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoBoard } from '../src';
@@ -38,11 +34,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoBoard
-        itemAdapter={itemAdapter}
-        items={items}
-        onCreateItem={handleCreateItem}
-      />
+      <EchoBoard itemAdapter={itemAdapter} items={items} onCreateItem={handleCreateItem} />
     </FullScreen>
   );
 };

@@ -20,17 +20,10 @@ export type WorkerPortOptions = {
  * @param options.subscribe
  * @returns RPC port for messaging.
  */
-export const createWorkerPort = ({
-  port,
-  channel,
-  subscribe
-}: WorkerPortOptions): RpcPort => ({
+export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions): RpcPort => ({
   send: async (message) => {
     // Based on https://stackoverflow.com/a/54646864/2804332.
-    const payload = message.buffer.slice(
-      message.byteOffset,
-      message.byteOffset + message.byteLength
-    );
+    const payload = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
     port.postMessage(
       {
         channel,

@@ -33,9 +33,7 @@ describe('HypercoreFactory', function () {
 
     // Write data.
     {
-      const data = Array.from({ length: numBlocks }).map((_, i) =>
-        createDataItem(i)
-      );
+      const data = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
       for await (const datum of data) {
         const feed = faker.random.arrayElement(feeds);
         await py(feed, feed.append)(Buffer.from(JSON.stringify(datum)));

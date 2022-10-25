@@ -30,11 +30,7 @@ export interface RegistryClientBackend {
   registerAuthority(owner: AccountKey): Promise<DomainKey>;
   getResource(name: DXN): Promise<CID | undefined>;
   listResources(): Promise<[DXN, CID][]>;
-  registerResource(
-    name: DXN,
-    cid: CID | undefined,
-    owner: AccountKey
-  ): Promise<void>;
+  registerResource(name: DXN, cid: CID | undefined, owner: AccountKey): Promise<void>;
   getRecord(cid: CID): Promise<RecordWithCid | undefined>;
   listRecords(): Promise<RecordWithCid[]>;
   registerRecord(record: RawRecord): Promise<CID>;

@@ -89,8 +89,6 @@ export class InvitationRequest {
   }
 
   toString() {
-    return `InvitationRequest(${JSON.stringify(
-      this._descriptor.toQueryParameters()
-    )})`;
+    return `InvitationRequest(${JSON.stringify(this._descriptor.toQueryParameters())})`;
   }
 }

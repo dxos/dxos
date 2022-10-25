@@ -15,10 +15,7 @@ interface TypeSelectorProps {
   onChange: (value: string) => void;
 }
 
-export const TypeSelector = ({
-  value: controlledValue,
-  onChange
-}: TypeSelectorProps) => {
+export const TypeSelector = ({ value: controlledValue, onChange }: TypeSelectorProps) => {
   const [value, setValue] = useState(controlledValue);
   useEffect(() => {
     setValue(controlledValue);

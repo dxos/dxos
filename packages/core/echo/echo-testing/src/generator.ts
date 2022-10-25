@@ -27,10 +27,7 @@ const generators = {
     name: faker.company.companyName(),
     description: faker.lorem.sentence(),
     // TODO(burdon): Converted to object.
-    labels: faker.random.arrayElements(
-      labels,
-      faker.datatype.number({ min: 0, max: 3 })
-    )
+    labels: faker.random.arrayElements(labels, faker.datatype.number({ min: 0, max: 3 }))
   }),
 
   [OBJECT_PERSON]: () => ({
@@ -69,10 +66,7 @@ interface GenerateConfig {
  * Data generator.
  */
 export class Generator {
-  constructor(
-    private readonly _database: Database,
-    private readonly _options?: GeneratorOptions | undefined
-  ) {
+  constructor(private readonly _database: Database, private readonly _options?: GeneratorOptions | undefined) {
     const { seed } = this._options || {};
     if (seed) {
       // TODO(burdon): Side effects on other objects?
@@ -161,9 +155,7 @@ export class Generator {
         // Task child nodes.
         // TODO(burdon): Assign to people (query people from org).
         await Promise.all(
-          times(
-            faker.datatype.number({ min: 0, max: config.numTasks || 3 })
-          ).map(async () => {
+          times(faker.datatype.number({ min: 0, max: config.numTasks || 3 })).map(async () => {
             await this._database.createItem({
               model: ObjectModel,
               type: OBJECT_TASK,

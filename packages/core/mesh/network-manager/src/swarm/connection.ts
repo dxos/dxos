@@ -99,9 +99,7 @@ export class Connection {
       })
       .then((answer) => {
         log(
-          `Received answer: ${JSON.stringify(answer)} topic=${
-            this.topic
-          } ownId=${this.ownId} remoteId=${this.remoteId}`
+          `Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`
         );
         if (this.state !== ConnectionState.INITIAL) {
           log('Ignoring answer.');
@@ -127,11 +125,7 @@ export class Connection {
 
   connect() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
-    this._changeState(
-      this.initiator
-        ? ConnectionState.INITIATING_CONNECTION
-        : ConnectionState.WAITING_FOR_CONNECTION
-    );
+    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);
     this._transport = this._transportFactory.create({

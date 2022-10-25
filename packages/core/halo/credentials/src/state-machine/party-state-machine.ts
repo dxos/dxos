@@ -4,10 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  Credential,
-  PartyMember
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
@@ -82,30 +79,22 @@ export class PartyStateMachine implements PartyState {
         break;
       case 'dxos.halo.credentials.PartyMember':
         if (!this._genesisCredential) {
-          log.warn(
-            'Party must have a genesis credential before adding members.'
-          );
+          log.warn('Party must have a genesis credential before adding members.');
           return false;
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(
-            `Party member ${credential.issuer} is not authorized to invite new members.`
-          );
+          log.warn(`Party member ${credential.issuer} is not authorized to invite new members.`);
           return false;
         }
         await this._members.process(credential);
         break;
       case 'dxos.halo.credentials.AdmittedFeed':
         if (!this._genesisCredential) {
-          log.warn(
-            'Party must have a genesis credential before admitting feeds.'
-          );
+          log.warn('Party must have a genesis credential before admitting feeds.');
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(
-            `Party member ${credential.issuer} is not authorized to admit feeds.`
-          );
+          log.warn(`Party member ${credential.issuer} is not authorized to admit feeds.`);
           return false;
         }
         // TODO(dmaretskyi): Check that the feed owner is a member of the party.
@@ -120,10 +109,7 @@ export class PartyStateMachine implements PartyState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
-    return (
-      key.equals(this._partyKey) ||
-      this._members.getRole(key) === PartyMember.Role.ADMIN
-    );
+    return key.equals(this._partyKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
   }
 
   private _canAdmitFeeds(key: PublicKey): boolean {

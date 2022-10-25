@@ -67,11 +67,7 @@ const getPrimitiveType = (type: string): ts.TypeNode => {
 
 type PbType = protobufjs.Enum | protobufjs.Type | string;
 
-export const types = (
-  type: PbType,
-  containingObject: protobufjs.ReflectionObject,
-  subs: SubstitutionsMap
-) => {
+export const types = (type: PbType, containingObject: protobufjs.ReflectionObject, subs: SubstitutionsMap) => {
   if (typeof type === 'string') {
     return getPrimitiveType(type);
   } else if (type.fullName === '.google.protobuf.Empty') {
@@ -83,24 +79,15 @@ export const types = (
   }
 };
 
-export const getTypeReference = (
-  to: protobufjs.ReflectionObject,
-  from?: protobufjs.ReflectionObject
-) => {
+export const getTypeReference = (to: protobufjs.ReflectionObject, from?: protobufjs.ReflectionObject) => {
   const toNamespace = getNamespaceName(to);
   const fromNamespace = from && getNamespaceName(from);
 
   if (fromNamespace && namesEqual(toNamespace, fromNamespace)) {
-    const relativeName = getRelativeName(
-      getFullNestedTypeName(to),
-      toNamespace
-    );
+    const relativeName = getRelativeName(getFullNestedTypeName(to), toNamespace);
     return f.createTypeReferenceNode(convertNameToIdentifier(relativeName));
   } else {
-    const name = [
-      getSafeNamespaceIdentifier(toNamespace),
-      ...getFullNestedTypeName(to)
-    ];
+    const name = [getSafeNamespaceIdentifier(toNamespace), ...getFullNestedTypeName(to)];
     return f.createTypeReferenceNode(convertNameToIdentifier(name));
   }
 };

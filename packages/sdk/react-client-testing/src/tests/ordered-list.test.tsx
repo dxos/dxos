@@ -9,13 +9,7 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
-import {
-  defaultTestingConfig,
-  Item,
-  ObjectModel,
-  OrderedList,
-  Client
-} from '@dxos/client';
+import { defaultTestingConfig, Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 
 const createTestComponents = async () => {
   const client = new Client(defaultTestingConfig);
@@ -39,21 +33,13 @@ const createTestComponents = async () => {
   return { client, party, items };
 };
 
-const Test = ({
-  items,
-  orderedList
-}: {
-  items: Item<ObjectModel>[];
-  orderedList: OrderedList;
-}) => {
+const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList: OrderedList }) => {
   const subscriptions = useMemo(() => new EventSubscriptions(), []);
   const [order, setOrder] = useState(orderedList.values);
 
   useEffect(() => {
     setOrder(() => orderedList.values);
-    const unsuscribeOrderedListListener = orderedList.update.on(() =>
-      setOrder(orderedList.values)
-    );
+    const unsuscribeOrderedListListener = orderedList.update.on(() => setOrder(orderedList.values));
     subscriptions.add(unsuscribeOrderedListListener);
     return () => subscriptions.clear();
   }, [orderedList]);

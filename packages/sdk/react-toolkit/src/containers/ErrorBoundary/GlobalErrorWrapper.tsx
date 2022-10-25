@@ -3,12 +3,7 @@
 //
 
 import debug from 'debug';
-import React, {
-  FunctionComponent,
-  ReactNode,
-  useContext,
-  useEffect
-} from 'react';
+import React, { FunctionComponent, ReactNode, useContext, useEffect } from 'react';
 
 import { ErrorIndicatorProps } from '../../components';
 import { ErrorContext } from '../../hooks';
@@ -16,8 +11,7 @@ import { ErrorContext } from '../../hooks';
 const error = debug('dxos:react-toolkit:error');
 
 // TODO(burdon): Override if dev-only?
-const logError = (f: string, ...args: any[]) =>
-  error.enabled ? error(f, ...args) : console.error(f, ...args);
+const logError = (f: string, ...args: any[]) => (error.enabled ? error(f, ...args) : console.error(f, ...args));
 
 /**
  * Wrapper for global error handling.
@@ -56,9 +50,7 @@ export const GlobalErrorWrapper = ({
   return (
     <>
       {children}
-      {ErrorIndicator && (
-        <ErrorIndicator errors={errors} onReset={resetErrors} />
-      )}
+      {ErrorIndicator && <ErrorIndicator errors={errors} onReset={resetErrors} />}
     </>
   );
 };

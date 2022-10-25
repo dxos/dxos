@@ -22,8 +22,7 @@ const codec: Codec<TestItem> = {
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
 };
 
-const valueEncoding: AbstractValueEncoding<TestItem> =
-  createCodecEncoding(codec);
+const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
 describe('Hypercore', function () {
   it('create, append, and close a feed', async function () {

@@ -80,11 +80,7 @@ export class BrowserReporter {
       suite: this._currentSuite,
       title: test.title,
       fullTitle,
-      status: test.isPassed()
-        ? 'passed'
-        : test.isFailed()
-        ? 'failed'
-        : 'pending',
+      status: test.isPassed() ? 'passed' : test.isFailed() ? 'failed' : 'pending',
       duration: test.duration,
       speed: test.speed,
       currentRetry: this.getRetry(fullTitle)

@@ -28,9 +28,7 @@ describe('DXN', function () {
       'dxos-',
       'foo--bar',
       'c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
-    ].forEach((domainName) =>
-      expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw()
-    );
+    ].forEach((domainName) => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw());
   });
 
   it('validates path', function () {
@@ -41,9 +39,7 @@ describe('DXN', function () {
       'foo/bar',
       'a/b/c/d',
       'A23456789-A23456789-A23456789-A23456789-A23456789-A23456789-A123' // Max length.
-    ].forEach((path) =>
-      expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.not.throw()
-    );
+    ].forEach((path) => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.not.throw());
 
     // Invalid.
     [
@@ -62,9 +58,7 @@ describe('DXN', function () {
       'foo//bar',
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234', // Max length.
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5' // TODO(burdon): ???
-    ].forEach((path) =>
-      expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw()
-    );
+    ].forEach((path) => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw());
   });
 
   it('fromDomainKey', function () {
@@ -94,10 +88,6 @@ describe('DXN', function () {
       '0xc54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
     ]
       .map(DXN.parse)
-      .forEach((name) =>
-        expect(DXN.urldecode(DXN.urlencode(name)).toString()).to.equal(
-          name.toString()
-        )
-      );
+      .forEach((name) => expect(DXN.urldecode(DXN.urlencode(name)).toString()).to.equal(name.toString()));
   });
 });

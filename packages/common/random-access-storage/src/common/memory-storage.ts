@@ -15,10 +15,7 @@ import { StorageType } from './storage';
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  protected override _createFile(
-    path: string,
-    filename: string
-  ): RandomAccessStorage {
+  protected override _createFile(path: string, filename: string): RandomAccessStorage {
     return this._patchFile(ram());
   }
 

@@ -9,11 +9,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 import { Party } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
-import {
-  FileUploadDialog,
-  FullScreen,
-  useFileDownload
-} from '@dxos/react-components';
+import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 
 import { usePartySerializer } from '../src';
 
@@ -42,11 +38,7 @@ const ImportStory = () => {
         onUpload={handleImportParty}
       />
       <Toolbar>
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => setUploadDialogOpen(true)}
-        >
+        <Button variant='contained' color='primary' onClick={() => setUploadDialogOpen(true)}>
           Import
         </Button>
       </Toolbar>
@@ -76,12 +68,7 @@ const ExportStory = () => {
   return (
     <FullScreen>
       <Toolbar>
-        <Button
-          variant='contained'
-          color='primary'
-          disabled={!party}
-          onClick={handleExportParty}
-        >
+        <Button variant='contained' color='primary' disabled={!party} onClick={handleExportParty}>
           Export
         </Button>
       </Toolbar>

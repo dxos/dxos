@@ -219,10 +219,7 @@ const Component = () => {
         switch (type) {
           case 'circle': {
             const { style, pos, text } = data;
-            el.selectAll('circle')
-              .data([0])
-              .join('circle')
-              .call(updateCircle, scale, data);
+            el.selectAll('circle').data([0]).join('circle').call(updateCircle, scale, data);
             el.selectAll('text')
               .data(text ? [1] : [])
               .join('text')
@@ -233,10 +230,7 @@ const Component = () => {
           case 'rect': {
             const { style, bounds, text } = data;
             const pos = Vector.center(bounds as Bounds);
-            el.selectAll('rect')
-              .data([0])
-              .join('rect')
-              .call(updateRect, scale, data);
+            el.selectAll('rect').data([0]).join('rect').call(updateRect, scale, data);
             el.selectAll('text')
               .data(text ? [1] : [])
               .join('text')
@@ -255,10 +249,7 @@ const Component = () => {
 
           case 'path': {
             const { points } = data;
-            el.selectAll('path')
-              .data([0])
-              .join('path')
-              .call(updatePath, scale, data);
+            el.selectAll('path').data([0]).join('path').call(updatePath, scale, data);
             el.selectAll('circle')
               .data(points)
               .join('circle')
@@ -277,11 +268,7 @@ const Component = () => {
   }, [zoom]);
 
   return (
-    <svg
-      xmlns='http://www.w3.org/2000/svg'
-      ref={context.ref}
-      className={styles}
-    >
+    <svg xmlns='http://www.w3.org/2000/svg' ref={context.ref} className={styles}>
       <g ref={grid?.ref} className={defaultGridStyles} />
       <g ref={zoom?.ref} />
     </svg>

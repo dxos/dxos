@@ -6,11 +6,7 @@ import debug from 'debug';
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import {
-  createProtocolFactory,
-  NetworkManager,
-  StarTopology
-} from '@dxos/network-manager';
+import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
@@ -22,15 +18,11 @@ const log = debug('dxos:botkit:bot-controller');
  * Exposes BotFactoryService for external agents.
  */
 export class BotController {
-  private readonly _service: ServiceDescriptor<BotFactoryService> =
-    schema.getService('dxos.bot.BotFactoryService');
+  private readonly _service: ServiceDescriptor<BotFactoryService> = schema.getService('dxos.bot.BotFactoryService');
 
   private readonly _peers: Map<string, RpcPeer> = new Map();
 
-  constructor(
-    private _botFactory: BotFactoryService,
-    private _networkManager: NetworkManager
-  ) {}
+  constructor(private _botFactory: BotFactoryService, private _networkManager: NetworkManager) {}
 
   async start(topic: PublicKey): Promise<void> {
     const plugin = new RpcPlugin(this._onPeerConnect.bind(this));

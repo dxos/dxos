@@ -6,11 +6,7 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, useSelection } from '@dxos/react-client';
-import {
-  ProfileInitializer,
-  itemAdapter,
-  useTestParty
-} from '@dxos/react-client-testing';
+import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoList } from '../src';
@@ -29,10 +25,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoList
-        items={items.filter((item) => item.type !== '')}
-        itemAdapter={itemAdapter}
-      />
+      <EchoList items={items.filter((item) => item.type !== '')} itemAdapter={itemAdapter} />
     </FullScreen>
   );
 };

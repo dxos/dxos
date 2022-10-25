@@ -36,8 +36,7 @@ export const Filtering = {
       return true;
     }
 
-    const textMatches =
-      filter.text === undefined || matchesDxn(name, filter.text);
+    const textMatches = filter.text === undefined || matchesDxn(name, filter.text);
 
     return textMatches;
   },
@@ -53,10 +52,8 @@ export const Filtering = {
       return true;
     }
 
-    const textMatches =
-      filter.text === undefined || matchesText(record, filter.text);
-    const typeMatches =
-      filter.type === undefined || matchesRecordType(record, filter.type);
+    const textMatches = filter.text === undefined || matchesText(record, filter.text);
+    const typeMatches = filter.type === undefined || matchesRecordType(record, filter.type);
 
     return textMatches && typeMatches;
   }
@@ -71,15 +68,8 @@ const matchesRecordType = (record: RegistryRecord, type: CID) => {
 };
 
 const matchesText = (record: RegistryRecord, text: string) => {
-  const places = [
-    record.displayName ?? '',
-    record.description ?? '',
-    ...(record.tags ?? [])
-  ];
-  return places.some((place) =>
-    place.toLowerCase().includes(text.toLowerCase())
-  );
+  const places = [record.displayName ?? '', record.description ?? '', ...(record.tags ?? [])];
+  return places.some((place) => place.toLowerCase().includes(text.toLowerCase()));
 };
 
-const matchesDxn = (dxn: DXN, text: string): boolean =>
-  dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
+const matchesDxn = (dxn: DXN, text: string): boolean => dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;

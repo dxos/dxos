@@ -24,19 +24,12 @@ export type NodeOptions = {
   reporter?: string;
 };
 
-export const runNode = async (
-  context: ExecutorContext,
-  options: NodeOptions
-) => {
+export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
   const setupArgs = getSetupArgs(context.root, options.domRequired);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
-  const coverageArgs = getCoverageArgs(
-    options.coverage,
-    options.coveragePath,
-    options.xmlReport
-  );
+  const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
   const args = [
     ...coverageArgs,
@@ -71,10 +64,7 @@ export const runNode = async (
   return !exitCode;
 };
 
-const setupReporter = async (
-  context: ExecutorContext,
-  options: NodeOptions
-) => {
+const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
   // NOTE: A custom reporter may be provided by the IDE.
   if (options.reporter) {
     return ['--reporter', options.reporter];
@@ -118,17 +108,10 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
 };
 
 const getSetupArgs = (root: string, domRequired: boolean) => {
-  const scripts = [
-    'colors',
-    'mocha-env',
-    'catch-unhandled-rejections',
-    ...(domRequired ? ['react-setup'] : [])
-  ];
+  const scripts = ['colors', 'mocha-env', 'catch-unhandled-rejections', ...(domRequired ? ['react-setup'] : [])];
 
   return scripts
-    .map((script) =>
-      join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`)
-    )
+    .map((script) => join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`))
     .map((script) => ['-r', script])
     .flat();
 };
@@ -138,26 +121,13 @@ const getWatchArgs = (watch: boolean, patterns: string[]) => {
     return [];
   }
 
-  return [
-    '--watch',
-    ...patterns.map((pattern) => ['--watch-files', pattern]).flat()
-  ];
+  return ['--watch', ...patterns.map((pattern) => ['--watch-files', pattern]).flat()];
 };
 
-const getCoverageArgs = (
-  coverage: boolean,
-  outputPath: string,
-  xmlReport: boolean
-) => {
+const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {
   if (!coverage) {
     return [];
   }
 
-  return [
-    '--reporter',
-    xmlReport ? 'clover' : 'lcov',
-    '--report-dir',
-    outputPath,
-    'mocha'
-  ];
+  return ['--reporter', xmlReport ? 'clover' : 'lcov', '--report-dir', outputPath, 'mocha'];
 };

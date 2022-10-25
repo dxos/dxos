@@ -105,21 +105,15 @@ export class DataServiceHost {
    * First message is a snapshot of the entity.
    * Subsequent messages are updates.
    */
-  subscribeEntityStream(
-    request: SubscribeEntityStreamRequest
-  ): Stream<SubscribeEntityStreamResponse> {
+  subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
-      const entityItem = this._itemManager.items.find(
-        (item) => item.id === request.itemId
-      );
+      const entityItem = this._itemManager.items.find((item) => item.id === request.itemId);
       let snapshot;
       if (entityItem) {
         snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
       } else {
-        const entityLink = this._itemManager.links.find(
-          (link) => link.id === request.itemId
-        );
+        const entityLink = this._itemManager.links.find((link) => link.id === request.itemId);
         if (entityLink) {
           snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
         } else {

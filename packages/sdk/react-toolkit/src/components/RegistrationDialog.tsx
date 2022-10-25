@@ -4,22 +4,8 @@
 
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 
-import {
-  AddCircleOutline as CreateIcon,
-  Restore as RestoreIcon
-} from '@mui/icons-material';
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Grid,
-  Paper,
-  TextField,
-  Typography,
-  styled,
-  useTheme
-} from '@mui/material';
+import { AddCircleOutline as CreateIcon, Restore as RestoreIcon } from '@mui/icons-material';
+import { Avatar, Box, Button, Chip, Grid, Paper, TextField, Typography, styled, useTheme } from '@mui/material';
 
 import { generateSeedPhrase } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
@@ -45,8 +31,7 @@ const useSeedWords = (seedPhrase: string, n: number): [string[], number[]] => {
   return [words, indexes];
 };
 
-const isSeedPhraseValid = (value: string) =>
-  value.trim().toLowerCase().split(/\s+/g).length === 12;
+const isSeedPhraseValid = (value: string) => value.trim().toLowerCase().split(/\s+/g).length === 12;
 
 const seedPhraseFile = 'dxos-recovery-seedphrase.txt';
 
@@ -81,13 +66,8 @@ export const RegistrationDialog = ({
   const [username, setUsername] = useState('');
   const usernameRef = useRef<HTMLInputElement>();
   const seedphraseRef = useRef<HTMLInputElement>();
-  const seedRefs = [...new Array(numSeedWordTests)].map(() =>
-    useRef<HTMLInputElement>()
-  );
-  const [seedWords, seedWordTestIndexes] = useMemo(
-    () => useSeedWords(seedPhrase, numSeedWordTests),
-    [seedPhrase]
-  );
+  const seedRefs = [...new Array(numSeedWordTests)].map(() => useRef<HTMLInputElement>());
+  const [seedWords, seedWordTestIndexes] = useMemo(() => useSeedWords(seedPhrase, numSeedWordTests), [seedPhrase]);
 
   const setStage = (stage: RegistrationStage) => {
     setError(undefined);
@@ -110,9 +90,7 @@ export const RegistrationDialog = ({
     element.click();
   };
 
-  const handleNext = async (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ): Promise<void> => {
+  const handleNext = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> => {
     setError(undefined);
     setProcessing(false);
 
@@ -141,10 +119,7 @@ export const RegistrationDialog = ({
         const testWords = seedRefs.map((seedRef) => seedRef.current!.value);
         // Find first word that doesn't match.
         const match =
-          undefined ===
-          testWords.find((word, i) =>
-            word !== seedWords[seedWordTestIndexes[i]] ? true : undefined
-          );
+          undefined === testWords.find((word, i) => (word !== seedWords[seedWordTestIndexes[i]] ? true : undefined));
 
         const skipMatch = debug || event.shiftKey || !!isMobile;
         if (match || skipMatch) {
@@ -158,9 +133,7 @@ export const RegistrationDialog = ({
       }
 
       case RegistrationStage.RESTORE: {
-        const restoreSeedPhrase = seedphraseRef
-          .current!.value.trim()
-          .toLowerCase();
+        const restoreSeedPhrase = seedphraseRef.current!.value.trim().toLowerCase();
         if (!isSeedPhraseValid(restoreSeedPhrase)) {
           setError('Invalid seed phrase.');
         } else {
@@ -184,9 +157,7 @@ export const RegistrationDialog = ({
 
   const handleKeyDown = async (event: React.SyntheticEvent) => {
     if ((event as React.KeyboardEvent).key === 'Enter') {
-      await handleNext(
-        event as React.MouseEvent<HTMLButtonElement, MouseEvent>
-      );
+      await handleNext(event as React.MouseEvent<HTMLButtonElement, MouseEvent>);
     }
   };
 
@@ -286,11 +257,7 @@ export const RegistrationDialog = ({
                     <br />
                     to recover your profile.
                   </Typography>
-                  <Button
-                    variant='contained'
-                    color='primary'
-                    onClick={() => setStage(RegistrationStage.RESTORE)}
-                  >
+                  <Button variant='contained' color='primary' onClick={() => setStage(RegistrationStage.RESTORE)}>
                     Recover Profile
                   </Button>
                 </Option>
@@ -327,10 +294,7 @@ export const RegistrationDialog = ({
               {/* TODO(burdon): Import. */}
               <Button disabled>Import Keyring</Button>
               <Box sx={{ flex: 1 }} />
-              <Button
-                color='primary'
-                onClick={() => setStage(RegistrationStage.START)}
-              >
+              <Button color='primary' onClick={() => setStage(RegistrationStage.START)}>
                 Back
               </Button>
               <Button color='primary' variant='contained' onClick={handleNext}>
@@ -358,10 +322,7 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <>
-              <Button
-                color='primary'
-                onClick={() => setStage(RegistrationStage.START)}
-              >
+              <Button color='primary' onClick={() => setStage(RegistrationStage.START)}>
                 Back
               </Button>
               <Button variant='contained' color='primary' onClick={handleNext}>
@@ -381,8 +342,7 @@ export const RegistrationDialog = ({
                 Your recovery seed phrase consists of the twelve words below.
               </Typography>
               <Typography sx={{ marginBottom: 3 }}>
-                You will need to enter the seed phrase if you ever need to
-                recover your profile.
+                You will need to enter the seed phrase if you ever need to recover your profile.
               </Typography>
               <SeedPhrasePanel value={seedPhrase} />
               <Typography sx={{ marginTop: 3 }}>
@@ -392,14 +352,9 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <Box sx={{ display: 'flex', flex: 1 }}>
-              <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>
-                Download
-              </Button>
+              <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
               <Box sx={{ flex: 1 }} />
-              <Button
-                color='primary'
-                onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}
-              >
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>
                 Back
               </Button>
               <Button variant='contained' color='primary' onClick={handleNext}>
@@ -416,12 +371,9 @@ export const RegistrationDialog = ({
           content: (
             <>
               <Typography sx={{ marginBottom: 2 }}>
-                You will need to enter the entire seed phrase if you ever need
-                to recover your profile.
+                You will need to enter the entire seed phrase if you ever need to recover your profile.
               </Typography>
-              <Typography sx={{ marginBottom: 3 }}>
-                Confirm the following words from your seed phrase.
-              </Typography>
+              <Typography sx={{ marginBottom: 3 }}>Confirm the following words from your seed phrase.</Typography>
               <Box sx={{}}>
                 {seedRefs.map((seedRef, i) => (
                   <TextField
@@ -429,9 +381,7 @@ export const RegistrationDialog = ({
                     autoFocus={i === 0}
                     inputRef={seedRef}
                     placeholder={`${ordinal(seedWordTestIndexes[i] + 1)} word`}
-                    onKeyDown={
-                      i === seedRefs.length - 1 ? handleKeyDown : undefined
-                    }
+                    onKeyDown={i === seedRefs.length - 1 ? handleKeyDown : undefined}
                     sx={{ width: 120, marginRight: 1 }}
                   />
                 ))}
@@ -440,10 +390,7 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <>
-              <Button
-                color='primary'
-                onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}
-              >
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>
                 Back
               </Button>
               <Button variant='contained' color='primary' onClick={handleNext}>
@@ -461,14 +408,5 @@ export const RegistrationDialog = ({
   };
 
   const props = getStage(stage);
-  return (
-    <Dialog
-      open={open}
-      modal={modal}
-      maxWidth='sm'
-      error={error}
-      processing={processing}
-      {...props}
-    />
-  );
+  return <Dialog open={open} modal={modal} maxWidth='sm' error={error} processing={processing} {...props} />;
 };

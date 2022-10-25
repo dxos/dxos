@@ -23,12 +23,7 @@ interface Options {
 /**
  * Create remark parser with plugins.
  */
-export const createParser = ({
-  autoNumber,
-  baseDir,
-  html,
-  verbose
-}: Options): any => {
+export const createParser = ({ autoNumber, baseDir, html, verbose }: Options): any => {
   // https://github.com/remarkjs/awesome-remark
   const unified = remark()
     // https://github.com/remarkjs/remark-gfm

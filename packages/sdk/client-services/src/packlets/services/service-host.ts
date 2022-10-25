@@ -4,11 +4,7 @@
 
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  WebsocketSignalManager
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import {
   createWebRTCTransportFactory,
@@ -61,19 +57,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage } = createStorageObjects(
-      this._config.get('runtime.client.storage', {})!
-    );
+    const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
 
-    const networkingEnabled = this._config.get(
-      'runtime.services.signal.server'
-    );
+    const networkingEnabled = this._config.get('runtime.services.signal.server');
 
     const networkManager = new NetworkManager({
       signalManager: networkingEnabled
-        ? new WebsocketSignalManager([
-            this._config.get('runtime.services.signal.server')!
-          ])
+        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
       transportFactory:
         transportFactory ??

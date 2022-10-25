@@ -22,10 +22,7 @@ export default {
   }
 };
 
-const Template = ({
-  rootLabel,
-  ...args
-}: SingleInputStepProps & { rootLabel: string }) => {
+const Template = ({ rootLabel, ...args }: SingleInputStepProps & { rootLabel: string }) => {
   const { t } = useTranslation();
   return (
     <Group

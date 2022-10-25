@@ -7,22 +7,11 @@ import type { ValueEncoding } from 'hypercore';
 import { Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
-import {
-  createStorage,
-  Directory,
-  Storage,
-  StorageType
-} from '@dxos/random-access-storage';
+import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import {
-  defaultCodec,
-  defaultTestGenerator,
-  defaultValueEncoding,
-  TestGenerator,
-  TestItem
-} from './test-generator';
+import { defaultCodec, defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
   codec?: Codec<T>;
@@ -55,9 +44,7 @@ export class TestBuilder<T extends {}> {
   }
 
   get directory(): Directory {
-    return (this._properties.directory ??= this.storage.createDirectory(
-      TestBuilder.ROOT_DIR
-    ));
+    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring(): Keyring {
@@ -78,9 +65,7 @@ export class TestBuilder<T extends {}> {
   createFeedFactory() {
     const codec = this._properties.codec;
     const valueEncoding =
-      this._properties.valueEncoding ?? codec !== undefined
-        ? createCodecEncoding(codec!)
-        : undefined;
+      this._properties.valueEncoding ?? codec !== undefined ? createCodecEncoding(codec!) : undefined;
 
     return new FeedFactory<T>({
       root: this.directory,

@@ -4,13 +4,10 @@
 
 import { MessageValence } from '../props';
 
-export const successText =
-  'text-xs font-medium text-success-700 dark:text-success-300';
+export const successText = 'text-xs font-medium text-success-700 dark:text-success-300';
 export const infoText = 'text-xs font-medium text-info-700 dark:text-info-300';
-export const warningText =
-  'text-xs font-medium text-warning-700 dark:text-warning-300';
-export const errorText =
-  'text-xs font-medium text-error-700 dark:text-error-300';
+export const warningText = 'text-xs font-medium text-warning-700 dark:text-warning-300';
+export const errorText = 'text-xs font-medium text-error-700 dark:text-error-300';
 
 export const valenceColorText = (valence?: MessageValence) => {
   switch (valence) {

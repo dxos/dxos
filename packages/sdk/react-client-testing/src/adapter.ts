@@ -78,8 +78,7 @@ export const itemAdapter: ItemAdapter = {
     return Array.from(types);
   },
 
-  linkedItems: (item: Item<ObjectModel>, kind: string) =>
-    item.children.filter((item) => item.type === kind),
+  linkedItems: (item: Item<ObjectModel>, kind: string) => item.children.filter((item) => item.type === kind),
 
   meta: (type: string) => typeMeta[type]
 };

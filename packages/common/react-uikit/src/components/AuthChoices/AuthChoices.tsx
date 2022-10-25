@@ -14,11 +14,7 @@ export interface AuthChoicesProps {
   onRecover?: () => void;
 }
 
-export const AuthChoices = ({
-  onCreate,
-  onInviteDevice,
-  onRecover
-}: AuthChoicesProps) => {
+export const AuthChoices = ({ onCreate, onInviteDevice, onRecover }: AuthChoicesProps) => {
   const { t } = useTranslation();
 
   return (

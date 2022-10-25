@@ -4,14 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import {
-  createSvgContext,
-  FullScreen,
-  Grid,
-  SVG,
-  SVGContextProvider,
-  Zoom
-} from '@dxos/gem-core';
+import { createSvgContext, FullScreen, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 
 import {
   convertTreeToGraph,
@@ -33,10 +26,7 @@ export default {
 seed(1);
 
 export const Primary = () => {
-  const model = useMemo(
-    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
-    []
-  );
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
 
   return (
     <FullScreen>
@@ -54,10 +44,7 @@ export const Primary = () => {
 };
 
 export const Secondary = () => {
-  const model = useMemo(
-    () => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
-    []
-  );
+  const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
   const context = createSvgContext();
   const projector = useMemo(
     () =>
@@ -119,9 +106,7 @@ export const Tertiary = ({ graph = true }) => {
               arrows
               labels={{
                 text: (node: GraphLayoutNode<TestNode>, highlight: boolean) => {
-                  return highlight || selected.has(node.id)
-                    ? node.data.label
-                    : undefined;
+                  return highlight || selected.has(node.id) ? node.data.label : undefined;
                 }
               }}
               attributes={{

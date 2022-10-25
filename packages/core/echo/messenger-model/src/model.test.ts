@@ -10,10 +10,7 @@ import { MessengerModel } from './model';
 
 describe('MessengerModel', function () {
   it('send message', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(MessengerModel),
-      MessengerModel
-    );
+    const rig = new TestRig(new ModelFactory().registerModel(MessengerModel), MessengerModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 

@@ -10,10 +10,7 @@ import { EventEmitter, SVGContext } from '@dxos/gem-core';
 export abstract class Projector<DATA, LAYOUT, OPTIONS> {
   public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
 
-  constructor(
-    private readonly _context: SVGContext,
-    private readonly _options?: OPTIONS
-  ) {}
+  constructor(private readonly _context: SVGContext, private readonly _options?: OPTIONS) {}
 
   get context(): SVGContext {
     return this._context;

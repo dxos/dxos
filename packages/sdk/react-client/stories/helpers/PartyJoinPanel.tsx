@@ -32,11 +32,7 @@ export const PartyJoinPanel = ({
     <Box sx={{ padding: 1 }}>
       <Box>
         <Toolbar>
-          <Button
-            onClick={() => onSubmit(invitationCode)}
-            disabled={!invitationCode}
-            variant='outlined'
-          >
+          <Button onClick={() => onSubmit(invitationCode)} disabled={!invitationCode} variant='outlined'>
             Join Party
           </Button>
         </Toolbar>
@@ -58,9 +54,7 @@ export const PartyJoinPanel = ({
               <TextField
                 disabled={!invitationCode}
                 value={pin}
-                onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                  setPin(event.target.value)
-                }
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setPin(event.target.value)}
                 size='small'
                 label='PIN'
               />

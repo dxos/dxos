@@ -4,13 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  Box,
-  Button,
-  LinearProgress,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Box, Button, LinearProgress, TextField, Typography } from '@mui/material';
 
 import { useMounted } from '@dxos/react-async';
 import { Dialog } from '@dxos/react-components';
@@ -70,9 +64,7 @@ export const CreatePartyDialog = ({
           'data-id': 'test-input-join-party'
         }}
       />
-      <div style={{ height: 8, marginTop: 16 }}>
-        {inProgress && <LinearProgress />}
-      </div>
+      <div style={{ height: 8, marginTop: 16 }}>{inProgress && <LinearProgress />}</div>
       {error && <Typography>{String(error.stack)}</Typography>}
     </>
   );
@@ -126,15 +118,5 @@ export const CreatePartyDialog = ({
     </>
   );
 
-  return (
-    <Dialog
-      open={open}
-      modal={modal}
-      maxWidth='sm'
-      fullWidth
-      title={title}
-      content={content}
-      actions={actions}
-    />
-  );
+  return <Dialog open={open} modal={modal} maxWidth='sm' fullWidth title={title} content={content} actions={actions} />;
 };

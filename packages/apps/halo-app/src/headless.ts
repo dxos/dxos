@@ -21,10 +21,7 @@ const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
-    const worker = new SharedWorker(
-      new URL('./shared-worker', import.meta.url),
-      { type: 'module' }
-    );
+    const worker = new SharedWorker(new URL('./shared-worker', import.meta.url), { type: 'module' });
     const muxer = new PortMuxer(worker.port);
 
     const workerAppPort = muxer.createWorkerPort({ channel: 'dxos:app' });

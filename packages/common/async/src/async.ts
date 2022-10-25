@@ -30,11 +30,7 @@ export const sleep = (ms: number) =>
  * @param [timeout] How long to wait, in milliseconds.
  * @param [error]
  */
-export const promiseTimeout = <T>(
-  promise: Promise<T>,
-  timeout: number,
-  error?: Error | string
-): Promise<T> => {
+export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: Error | string): Promise<T> => {
   let cancelTimeout: any;
 
   const timeoutPromise = new Promise<T>((resolve, reject) => {
@@ -59,11 +55,7 @@ export const promiseTimeout = <T>(
  * @param [timeout] How long to wait, in milliseconds (0 = no timeout).
  * @param [interval=10] How frequently to check, in milliseconds.
  */
-export const waitForCondition = (
-  condition: Function,
-  timeout = 0,
-  interval = 10
-) => {
+export const waitForCondition = (condition: Function, timeout = 0, interval = 10) => {
   const stopTime = timeout ? Date.now() + timeout : 0;
   const [provider, resolver] = trigger<any>();
   const waiter = async () => {
@@ -86,7 +78,5 @@ export const waitForCondition = (
 
   setTimeout(waiter, 0);
 
-  return timeout
-    ? promiseTimeout(provider(), timeout, new Error('Timeout'))
-    : provider();
+  return timeout ? promiseTimeout(provider(), timeout, new Error('Timeout')) : provider();
 };

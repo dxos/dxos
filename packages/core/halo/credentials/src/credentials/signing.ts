@@ -47,10 +47,7 @@ export const canonicalStringify = (obj: any) =>
         if (Buffer.isBuffer(value)) {
           return value.toString('hex');
         }
-        if (
-          value instanceof Uint8Array ||
-          (value.data && value.type === 'Buffer')
-        ) {
+        if (value instanceof Uint8Array || (value.data && value.type === 'Buffer')) {
           return Buffer.from(value).toString('hex');
         }
       }

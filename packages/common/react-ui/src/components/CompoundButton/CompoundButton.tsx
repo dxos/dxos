@@ -16,24 +16,14 @@ export interface CompoundButtonProps extends ButtonProps {
   after?: ReactNode;
 }
 
-export const CompoundButton = ({
-  children,
-  description,
-  before,
-  after,
-  ...buttonProps
-}: CompoundButtonProps) => {
+export const CompoundButton = ({ children, description, before, after, ...buttonProps }: CompoundButtonProps) => {
   const variant = buttonProps.variant || 'default';
   const labelId = useId('compoundButton-label');
   const descriptionId = useId('compoundButton-description');
   return (
     <button
       {...buttonProps}
-      className={cx(
-        buttonStyles(buttonProps),
-        'flex items-center gap-4 py-2.5',
-        buttonProps.className
-      )}
+      className={cx(buttonStyles(buttonProps), 'flex items-center gap-4 py-2.5', buttonProps.className)}
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -47,10 +37,7 @@ export const CompoundButton = ({
         {description && (
           <p
             id={descriptionId}
-            className={cx(
-              'text-xs font-normal mb-1',
-              variant === 'primary' ? primaryDescription : defaultDescription
-            )}
+            className={cx('text-xs font-normal mb-1', variant === 'primary' ? primaryDescription : defaultDescription)}
           >
             {description}
           </p>

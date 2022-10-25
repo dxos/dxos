@@ -27,10 +27,7 @@ export interface Any {
 // eslint-disable-next-line camelcase
 export type WithTypeUrl<T extends {}> = T & { '@type': string };
 
-export type TaggedType<
-  TYPES extends {},
-  Name extends keyof TYPES
-> = TYPES[Name] & { '@type': Name };
+export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name] & { '@type': Name };
 
 /**
  * Returns a discriminated union of all protobuf types with the '@type' field included.
