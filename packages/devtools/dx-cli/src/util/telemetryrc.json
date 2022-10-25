@@ -1,0 +1,6 @@
+{
+  "DX_ENVIRONMENT": "development",
+  "DX_RELEASE": "development",
+  "TELEMETRY_KEY": null,
+  "SENTRY_DESTINATION": null
+}

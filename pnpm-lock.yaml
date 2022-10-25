@@ -904,11 +904,13 @@ importers:
 
   packages/common/telemetry:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/sentry': workspace:*
       '@segment/snippet': ^4.15.3
       '@types/analytics-node': ^3.1.9
       analytics-node: ^6.2.0
     dependencies:
+      '@dxos/log': link:../log
       '@dxos/sentry': link:../sentry
       '@segment/snippet': 4.15.3
       analytics-node: 6.2.0
