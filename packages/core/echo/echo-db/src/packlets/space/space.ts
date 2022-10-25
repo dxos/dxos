@@ -9,9 +9,8 @@ import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { TypedMessage } from '@dxos/protocols';
-import {
+import type {
   EchoEnvelope,
   FeedMessage
 } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -26,26 +25,25 @@ import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { SpaceProtocol } from './space-protocol';
 
+// TODO(burdon): Factor out types.
 export type DatabaseFactoryParams = {
   databaseBackend: DatabaseBackend;
 };
 
 type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
+type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
   spaceKey: PublicKey;
+  protocol: SpaceProtocol;
+  feedProvider: FeedProvider;
+  databaseFactory: DatabaseFactory;
+  initialTimeframe: Timeframe;
   genesisFeed: FeedWrapper<FeedMessage>;
   controlFeed: FeedWrapper<FeedMessage>;
   dataFeed: FeedWrapper<FeedMessage>;
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
-  initialTimeframe: Timeframe;
-  networkManager: NetworkManager;
-  networkPlugins: Plugin[];
-  swarmIdentity: SwarmIdentity;
-  databaseFactory: DatabaseFactory;
 };
 
 /**
@@ -65,9 +63,6 @@ export class Space {
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;
   private readonly _controlPipeline: ControlPipeline;
-
-  // TODO(burdon): Pass in.
-  private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
   private _isOpen = false;
@@ -82,11 +77,7 @@ export class Space {
     dataFeed,
     feedProvider,
     initialTimeframe,
-
-    networkManager,
-    networkPlugins,
-    swarmIdentity,
-
+    protocol,
     databaseFactory
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
@@ -116,25 +107,15 @@ export class Space {
       }
 
       if (!info.key.equals(genesisFeed.key)) {
-        this._replicator.addFeed(await feedProvider(info.key));
+        this._protocol.addFeed(await feedProvider(info.key));
       }
     });
 
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
 
     // Start replicating the genesis feed.
-    this._replicator.addFeed(genesisFeed);
-
-    // TODO(burdon): Pass-in SpaceProtocol.
-    // TODO(burdon): Move replicator into SpaceProtocol.
-    // TODO(burdon): Factor out all network (Peer contains space -- space doesn't know about the network).
-    // Create the network protocol.
-    this._protocol = new SpaceProtocol(
-      networkManager,
-      spaceKey,
-      swarmIdentity,
-      [this._replicator, ...networkPlugins]
-    );
+    this._protocol = protocol;
+    this._protocol.addFeed(genesisFeed);
   }
 
   get isOpen() {

@@ -21,6 +21,7 @@ import { valueEncoding } from '../common';
 import { Database } from '../database';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
+import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out and share across tests?
 
@@ -70,23 +71,27 @@ export class TestAgent {
       : controlFeed;
     const dataFeed = await this.openWritableFeed();
 
-    const space = new Space({
-      spaceKey,
-      genesisFeed,
-      controlFeed,
-      dataFeed,
-      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
-      initialTimeframe: new Timeframe(),
-      networkManager: new NetworkManager({
+    const protocol = new SpaceProtocol(
+      new NetworkManager({
         signalManager: this._signalManager,
         transportFactory: MemoryTransportFactory
       }),
-      networkPlugins: [],
-      swarmIdentity: {
+      spaceKey,
+      {
         peerKey: identityKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
+      }
+    );
+
+    const space = new Space({
+      spaceKey,
+      protocol,
+      genesisFeed,
+      controlFeed,
+      dataFeed,
+      initialTimeframe: new Timeframe(),
+      feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(
           new ModelFactory().registerModel(ObjectModel),

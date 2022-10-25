@@ -20,14 +20,15 @@ import { Database, DataService } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
+import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Factor out to CredentialGenerator?
 export interface SigningContext {
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
   credentialProvider: AuthProvider;
   credentialAuthenticator: AuthVerifier;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
-  identityKey: PublicKey;
-  deviceKey: PublicKey;
 }
 
 // TODO(burdon): ???
@@ -163,21 +164,22 @@ export class SpaceManager {
       metadata.genesisFeedKey ?? failUndefined()
     );
 
+    const spaceKey = metadata.key;
+
+    const protocol = new SpaceProtocol(this._networkManager, spaceKey, {
+      peerKey: this._signingContext.deviceKey,
+      credentialProvider: this._signingContext.credentialProvider,
+      credentialAuthenticator: this._signingContext.credentialAuthenticator
+    });
+
     return new Space({
+      spaceKey,
+      protocol,
       controlFeed,
       dataFeed,
       genesisFeed,
-      feedProvider: (key) => this._feedStore.openFeed(key),
-      spaceKey: metadata.key,
-      networkManager: this._networkManager,
       initialTimeframe: new Timeframe(),
-      networkPlugins: [],
-      swarmIdentity: {
-        // TODO(burdon): Related to context object?
-        peerKey: this._signingContext.deviceKey,
-        credentialProvider: this._signingContext.credentialProvider,
-        credentialAuthenticator: this._signingContext.credentialAuthenticator
-      },
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(
           this._modelFactory,

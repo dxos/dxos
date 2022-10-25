@@ -4,14 +4,18 @@
 
 import { Event } from '@dxos/async';
 import { discoveryKey, sha256 } from '@dxos/crypto';
+import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
+import { ReplicatorPlugin } from './replicator-plugin';
 
+// TODO(burdon): Reconcile with SigningContext (define types together).
 export interface SwarmIdentity {
   peerKey: PublicKey;
   credentialProvider: AuthProvider;
@@ -26,6 +30,8 @@ export class SpaceProtocol {
   private readonly _authenticator: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
+  private readonly _replicator = new ReplicatorPlugin();
+  private readonly _plugins: Plugin[] = [this._replicator];
 
   readonly authenticationFailed: Event;
 
@@ -33,7 +39,7 @@ export class SpaceProtocol {
     private readonly _networkManager: NetworkManager,
     topic: PublicKey,
     private readonly _swarmIdentity: SwarmIdentity,
-    private readonly _plugins: Plugin[] = []
+    plugins: Plugin[] = []
   ) {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
@@ -42,6 +48,12 @@ export class SpaceProtocol {
     this._peerId = PublicKey.from(
       discoveryKey(sha256(this._swarmIdentity.peerKey.toHex()))
     );
+    plugins?.forEach((plugin) => this._plugins.push(plugin));
+  }
+
+  // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
+  addFeed(feed: FeedWrapper<FeedMessage>) {
+    this._replicator.addFeed(feed);
   }
 
   async start() {
