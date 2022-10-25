@@ -6,7 +6,7 @@ import type { Event, Transport } from '@sentry/types';
 
 export type InitOptions = {
   destination?: string;
-  machineId?: string;
+  installationId?: string;
   release?: string;
   environment?: string;
   sampleRate?: number;

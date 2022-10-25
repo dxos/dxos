@@ -26,25 +26,25 @@ export const init = (options: InitOptions) => {
   document.body.append(script);
 };
 
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({ installationId, identityId: anonymousId, ...options }: PageOptions) => {
   analytics?.page({
     ...options,
     anonymousId,
     properties: {
       ...options.properties,
-      machineId
+      installationId
     }
   });
 };
 
-export const event = ({ machineId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
+export const event = ({ installationId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
   analytics?.track({
     ...options,
     anonymousId,
     event,
     properties: {
       ...options.properties,
-      machineId
+      installationId
     }
   });
 };

@@ -28,7 +28,7 @@ export const init = (options: InitOptions) => {
 /**
  *
  */
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({ installationId, identityId: anonymousId, ...options }: PageOptions) => {
   if (!analytics) {
     log.debug('Analytics not inialized', { action: 'page' });
   }
@@ -38,7 +38,7 @@ export const page = ({ machineId, identityId: anonymousId, ...options }: PageOpt
     anonymousId,
     properties: {
       ...options.properties,
-      machineId
+      installationId
     }
   });
 };
@@ -46,7 +46,7 @@ export const page = ({ machineId, identityId: anonymousId, ...options }: PageOpt
 /**
  *
  */
-export const event = ({ machineId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
+export const event = ({ installationId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
   if (!analytics) {
     log.debug('Analytics not inialized', { action: 'event' });
   }
@@ -57,7 +57,7 @@ export const event = ({ machineId, identityId: anonymousId, name: event, ...opti
     event,
     properties: {
       ...options.properties,
-      machineId
+      installationId
     }
   });
 };
