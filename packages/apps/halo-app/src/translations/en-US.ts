@@ -11,6 +11,7 @@ export const halo = {
   'lock label': 'Lock',
   'spaces label': 'Spaces',
   'devices label': 'Your devices',
+  'add device label': 'Invite another device',
   'identity label': 'You',
   'apps label': 'Apps',
   'contacts label': 'Contacts'
