@@ -7,7 +7,7 @@ package:
       display_name: DXOS Docs
       build:
         command: pnpm -w nx prerelease docs
-        out: ./docs/.vuepress/dist
+        outdir: ./docs/.vuepress/dist
 
 runtime:
   client:
