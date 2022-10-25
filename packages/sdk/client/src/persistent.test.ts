@@ -48,7 +48,9 @@ describe('Client - persistent', function () {
       });
       expect(client2.echo.queryParties().value.length).toBe(0);
     }
-  }).timeout(10_000).retries(10);
+  })
+    .timeout(10_000)
+    .retries(10);
 
   /*
   it('MetadataStore save/load', async () => {

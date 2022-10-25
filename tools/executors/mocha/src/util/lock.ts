@@ -8,7 +8,7 @@ import { trigger } from './trigger';
 export class Lock {
   private _lastPromise = Promise.resolve();
 
-  async executeSynchronized<T> (fun: () => Promise<T>): Promise<T> {
+  async executeSynchronized<T>(fun: () => Promise<T>): Promise<T> {
     const prevPromise = this._lastPromise;
     const [getPromise, resolve] = trigger();
     this._lastPromise = getPromise();

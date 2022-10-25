@@ -25,7 +25,7 @@ describe('YJS sync', function () {
       // https://docs.yjs.dev/api/document-updates
       doc.on('update', (update: Uint8Array, origin: any, doc: Doc) => {
         const clientId = doc.clientID;
-        docs.forEach(doc => {
+        docs.forEach((doc) => {
           if (doc.clientID !== clientId) {
             applyUpdate(doc, update);
             count++;
@@ -43,7 +43,7 @@ describe('YJS sync', function () {
 
     const expected = 'Hello World!';
     await waitForExpect(() => {
-      const match = docs.every(doc => doc.getText().toString() === expected);
+      const match = docs.every((doc) => doc.getText().toString() === expected);
       expect(match).toBeTruthy();
     });
 
@@ -65,7 +65,9 @@ describe('YJS sync', function () {
       return client;
     };
 
-    const [inviter, invitee] = await Promise.all(Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`)));
+    const [inviter, invitee] = await Promise.all(
+      Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`))
+    );
 
     const TEST_TYPE = 'example:type/test';
 
@@ -76,7 +78,9 @@ describe('YJS sync', function () {
       expect(party.key).toBeDefined();
       const { username } = client.halo.profile!;
       ({ descriptor } = await party.createInvitation());
-      log(`Created invitation: ${JSON.stringify({ username, party: party.key })}`);
+      log(
+        `Created invitation: ${JSON.stringify({ username, party: party.key })}`
+      );
       expect(descriptor).toBeDefined();
     }
 
@@ -86,7 +90,9 @@ describe('YJS sync', function () {
       const invitation = await client.echo.acceptInvitation(descriptor);
       const party = await invitation.getParty();
       expect(party).toBeDefined();
-      log(`Accepted invitation: ${JSON.stringify({ username, party: party.key })}`);
+      log(
+        `Accepted invitation: ${JSON.stringify({ username, party: party.key })}`
+      );
     }
 
     // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.
@@ -94,7 +100,10 @@ describe('YJS sync', function () {
       const client = inviter;
       const { value: parties } = client.echo.queryParties();
       const [party] = parties;
-      const item = await party.database.createItem({ model: TextModel, type: TEST_TYPE });
+      const item = await party.database.createItem({
+        model: TextModel,
+        type: TEST_TYPE
+      });
       log(`Created item: ${item.id}`);
 
       const text = item.model.doc.getText();

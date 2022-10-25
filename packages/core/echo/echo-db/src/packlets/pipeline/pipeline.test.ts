@@ -20,7 +20,8 @@ describe('pipeline/Pipeline', function () {
     const feedStore = builder.createFeedStore();
 
     // Remote feeds from other peers.
-    const numFeeds = 5; const messagesPerFeed = 10;
+    const numFeeds = 5;
+    const messagesPerFeed = 10;
     for (const feedIdx in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });

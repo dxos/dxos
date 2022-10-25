@@ -18,40 +18,40 @@ export class SVGContext {
   private _size: Size;
   private _center: Point;
 
-  constructor (
+  constructor(
     private readonly _scale: Scale = new Scale(),
     private readonly _centered: boolean = true
   ) {}
 
-  get ref (): RefObject<SVGSVGElement> {
+  get ref(): RefObject<SVGSVGElement> {
     return this._ref;
   }
 
-  get svg (): SVGSVGElement {
+  get svg(): SVGSVGElement {
     return this._ref.current;
   }
 
-  get scale (): Scale {
+  get scale(): Scale {
     return this._scale;
   }
 
-  get center (): Point {
+  get center(): Point {
     return this._center;
   }
 
-  get size (): Size {
+  get size(): Size {
     return this._size;
   }
 
   /**
    * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/viewBox
    */
-  get viewBox () {
+  get viewBox() {
     const [x, y] = this.center;
     return `${x},${y},${this._size.width},${this._size.height}`;
   }
 
-  setSize (size: Size) {
+  setSize(size: Size) {
     const cx = -Math.floor(size.width / 2);
     const cy = -Math.floor(size.height / 2);
     this._size = size;
@@ -59,7 +59,7 @@ export class SVGContext {
     this.resized.emit(this);
   }
 
-  setTransform (transform: ZoomTransform) {
+  setTransform(transform: ZoomTransform) {
     this._scale.setTransform(transform);
     this.resized.emit(this);
   }
@@ -68,7 +68,7 @@ export class SVGContext {
    * https://developer.mozilla.org/en-US/docs/Web/API/Document/elementFromPoint
    * @param point
    */
-  elementFromPoint (point: Point): Element {
+  elementFromPoint(point: Point): Element {
     const [x, y] = point;
     const [cx, cy] = this._center;
     return document.elementFromPoint(cx + x, cy + y); // TODO(burdon): Scale?

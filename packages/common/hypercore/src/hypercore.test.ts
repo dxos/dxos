@@ -13,16 +13,17 @@ import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';
 
 type TestItem = {
-  key: string
-  value: string
-}
+  key: string;
+  value: string;
+};
 
 const codec: Codec<TestItem> = {
   encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
 };
 
-const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
+const valueEncoding: AbstractValueEncoding<TestItem> =
+  createCodecEncoding(codec);
 
 describe('Hypercore', function () {
   it('create, append, and close a feed', async function () {

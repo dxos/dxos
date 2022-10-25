@@ -3,6 +3,6 @@
 //
 
 export type MessageData = {
-  channel: string
-  payload: ArrayBufferLike
-}
+  channel: string;
+  payload: ArrayBufferLike;
+};

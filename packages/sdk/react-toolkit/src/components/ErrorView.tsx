@@ -34,12 +34,12 @@ const Code = styled('div')(({ theme }) => ({
 }));
 
 export interface ErrorViewProps {
-  onReload?: () => void
-  onReset?: () => void
-  error: Error | null
-  title?: string
-  context?: any
-  issueLink?: string
+  onReload?: () => void;
+  onReset?: () => void;
+  error: Error | null;
+  title?: string;
+  context?: any;
+  issueLink?: string;
 }
 
 const reload = () => {
@@ -73,34 +73,29 @@ export const ErrorView = ({
   }
 
   // Remove indents.
-  stack = stack.split('\n').map(text => text.trim()).join('\n');
+  stack = stack
+    .split('\n')
+    .map((text) => text.trim())
+    .join('\n');
 
   return (
     <Dialog open fullWidth maxWidth='sm'>
-      <DialogTitle>
-        {title}
-      </DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {!isDev && (
-          <Typography>Something went wrong that requires the app to be reloaded.</Typography>
+          <Typography>
+            Something went wrong that requires the app to be reloaded.
+          </Typography>
         )}
         {isDev && (
           <>
-            <Alert severity='error'>
-              {message}
-            </Alert>
-            {stack && (
-              <Code>
-                {stack}
-              </Code>
-            )}
+            <Alert severity='error'>{message}</Alert>
+            {stack && <Code>{stack}</Code>}
           </>
         )}
-        {(isDev && context) && (
+        {isDev && context && (
           <>
-            <Code>
-              {JSON.stringify({ context }, undefined, 2)}
-            </Code>
+            <Code>{JSON.stringify({ context }, undefined, 2)}</Code>
           </>
         )}
       </DialogContent>
@@ -112,16 +107,13 @@ export const ErrorView = ({
         <div style={{ display: 'flex', flex: 1 }} />
 
         {isDev && (
-          <Button
-            variant='text'
-            onClick={() => {}}
-          >
+          <Button variant='text' onClick={() => {}}>
             <Link href={issueLink} underline='none' target='_blank'>
               Github Issue
             </Link>
           </Button>
         )}
-        {(isDev && onReset) && (
+        {isDev && onReset && (
           <Button
             variant='text'
             onClick={async () => {
@@ -133,11 +125,7 @@ export const ErrorView = ({
           </Button>
         )}
         {onReload && (
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={onReload}
-          >
+          <Button variant='contained' color='primary' onClick={onReload}>
             Reload
           </Button>
         )}

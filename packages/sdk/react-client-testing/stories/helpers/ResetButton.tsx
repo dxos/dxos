@@ -5,18 +5,18 @@
 import React from 'react';
 
 interface ResetButtonProps {
-  onReset: () => void
+  onReset: () => void;
 }
 
-export const ResetButton = ({
-  onReset
-}: ResetButtonProps) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    height: 'fit-content'
-  }}>
+export const ResetButton = ({ onReset }: ResetButtonProps) => (
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      height: 'fit-content'
+    }}
+  >
     <button
       onClick={onReset}
       style={{

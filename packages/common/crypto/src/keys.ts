@@ -5,7 +5,13 @@
 import crypto from 'hypercore-crypto';
 import assert from 'node:assert';
 
-import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
+import {
+  KeyPair,
+  PublicKey,
+  PublicKeyLike,
+  PUBLIC_KEY_LENGTH,
+  SECRET_KEY_LENGTH
+} from '@dxos/keys';
 
 /**
  * @deprecated
@@ -32,7 +38,8 @@ export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) =>
   crypto.validateKeyPair({ publicKey: publicKey.asBuffer(), secretKey });
 
 // TODO(dmaretskyi): Slicing because webcrypto keys are too long.
-export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
+export const discoveryKey = (key: PublicKeyLike): Buffer =>
+  crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
 
 /**
  * Return random bytes of length.
@@ -61,7 +68,11 @@ export const sign = (message: Buffer, secretKey: Buffer): Buffer => {
  * @param {Buffer} signature
  * @return {boolean}
  */
-export const verify = (message: Buffer, signature: Buffer, publicKey: Buffer): boolean => {
+export const verify = (
+  message: Buffer,
+  signature: Buffer,
+  publicKey: Buffer
+): boolean => {
   assert(Buffer.isBuffer(message));
   assert(Buffer.isBuffer(signature) && signature.length === SIGNATURE_LENGTH);
   assert(Buffer.isBuffer(publicKey) && publicKey.length === PUBLIC_KEY_LENGTH);

@@ -11,7 +11,7 @@ const { spawnSync } = require('child_process');
 //
 
 const getArg = (flag) => {
-  const idx = process.argv.findIndex(arg => arg.startsWith(flag));
+  const idx = process.argv.findIndex((arg) => arg.startsWith(flag));
   if (idx === -1) {
     return undefined;
   }
@@ -27,10 +27,14 @@ const getArg = (flag) => {
 const project = getArg('--project');
 const reporter = getArg('--reporter');
 
-spawnSync('pnpm', ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`], {
-  shell: true,
-  stdio: 'inherit',
-  env: {
-    ...process.env
+spawnSync(
+  'pnpm',
+  ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`],
+  {
+    shell: true,
+    stdio: 'inherit',
+    env: {
+      ...process.env
+    }
   }
-});
+);

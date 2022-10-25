@@ -10,15 +10,23 @@ import { serializeSchemaToJson } from '../protobuf-json';
 
 const f = ts.factory;
 
-export const createSerializerDefinition = (substitutionsModule: ModuleSpecifier | undefined, root: protobufjs.Root, outFileDir: string): { imports: ts.Statement[], exports: ts.Statement[] } => {
+export const createSerializerDefinition = (
+  substitutionsModule: ModuleSpecifier | undefined,
+  root: protobufjs.Root,
+  outFileDir: string
+): { imports: ts.Statement[]; exports: ts.Statement[] } => {
   const schemaIdentifier = f.createIdentifier('Schema');
 
   const schemaImport = f.createImportDeclaration(
     [],
     [],
-    f.createImportClause(false, undefined, f.createNamedImports([
-      f.createImportSpecifier(false, undefined, schemaIdentifier)
-    ])),
+    f.createImportClause(
+      false,
+      undefined,
+      f.createNamedImports([
+        f.createImportSpecifier(false, undefined, schemaIdentifier)
+      ])
+    ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(outFileDir))
   );
 
@@ -27,34 +35,48 @@ export const createSerializerDefinition = (substitutionsModule: ModuleSpecifier 
   const schemaJsonIdentifier = f.createIdentifier('schemaJson');
   const schemaJsonExport = f.createVariableStatement(
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
-    f.createVariableDeclarationList([
-      f.createVariableDeclaration(
-        schemaJsonIdentifier,
-        undefined,
-        undefined,
-        f.createCallExpression(
-          f.createPropertyAccessExpression(f.createIdentifier('JSON'), 'parse'),
+    f.createVariableDeclarationList(
+      [
+        f.createVariableDeclaration(
+          schemaJsonIdentifier,
           undefined,
-          [f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))]
+          undefined,
+          f.createCallExpression(
+            f.createPropertyAccessExpression(
+              f.createIdentifier('JSON'),
+              'parse'
+            ),
+            undefined,
+            [f.createStringLiteral(JSON.stringify(serializeSchemaToJson(root)))]
+          )
         )
-      )
-    ], ts.NodeFlags.Const)
+      ],
+      ts.NodeFlags.Const
+    )
   );
 
   const schemaExport = f.createVariableStatement(
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
-    f.createVariableDeclarationList([
-      f.createVariableDeclaration(
-        f.createIdentifier('schema'),
-        undefined,
-        undefined,
-        f.createCallExpression(
-          f.createPropertyAccessExpression(schemaIdentifier, 'fromJson'),
-          [f.createTypeReferenceNode('TYPES'), f.createTypeReferenceNode('SERVICES')],
-          substitutionsModule ? [schemaJsonIdentifier, substitutionsIdentifier] : [schemaJsonIdentifier]
+    f.createVariableDeclarationList(
+      [
+        f.createVariableDeclaration(
+          f.createIdentifier('schema'),
+          undefined,
+          undefined,
+          f.createCallExpression(
+            f.createPropertyAccessExpression(schemaIdentifier, 'fromJson'),
+            [
+              f.createTypeReferenceNode('TYPES'),
+              f.createTypeReferenceNode('SERVICES')
+            ],
+            substitutionsModule
+              ? [schemaJsonIdentifier, substitutionsIdentifier]
+              : [schemaJsonIdentifier]
+          )
         )
-      )
-    ], ts.NodeFlags.Const)
+      ],
+      ts.NodeFlags.Const
+    )
   );
 
   return {

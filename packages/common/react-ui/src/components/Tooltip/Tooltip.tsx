@@ -9,17 +9,15 @@ import React, { ReactNode, useState } from 'react';
 import { defaultTooltip } from '../../styles';
 
 export interface TooltipProps {
-  content: ReactNode
-  children: ReactNode
+  content: ReactNode;
+  children: ReactNode;
 }
 
 export const Tooltip = ({ content, children }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipPrimitive.Trigger asChild>
-        {children}
-      </TooltipPrimitive.Trigger>
+      <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
       <TooltipPrimitive.Content
         className={cx(
           'radix-side-top:animate-slide-down-fade',
@@ -33,9 +31,7 @@ export const Tooltip = ({ content, children }: TooltipProps) => {
         )}
         forceMount
       >
-        <TooltipPrimitive.Arrow
-          className='fill-current text-white dark:text-neutral-800'
-        />
+        <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
         {content}
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Root>

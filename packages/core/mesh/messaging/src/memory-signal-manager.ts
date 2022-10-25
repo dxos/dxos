@@ -19,13 +19,20 @@ import { SignalManager } from './signal-manager';
  */
 export class MemorySignalManagerContext {
   // Swarm messages.
-  readonly swarmEvent = new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>();
+  readonly swarmEvent = new Event<{
+    topic: PublicKey;
+    swarmEvent: SwarmEvent;
+  }>();
 
   // Mapping from topic to set of peers.
-  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
+  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(
+    PublicKey.hash
+  );
 
   // Map of connections for each peer for signaling.
-  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(PublicKey.hash);
+  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(
+    PublicKey.hash
+  );
 }
 
 /**
@@ -35,27 +42,25 @@ export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
-    topic: PublicKey
-    swarmEvent: SwarmEvent
+    topic: PublicKey;
+    swarmEvent: SwarmEvent;
   }>();
 
   readonly onMessage = new Event<{
-    author: PublicKey
-    recipient: PublicKey
-    payload: Any
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
   }>();
 
-  constructor (
-    private readonly _context: MemorySignalManagerContext
-  ) {
+  constructor(private readonly _context: MemorySignalManagerContext) {
     this._context.swarmEvent.on((data) => this.swarmEvent.emit(data));
   }
 
-  getStatus (): SignalStatus[] {
+  getStatus(): SignalStatus[] {
     return [];
   }
 
-  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
@@ -87,7 +92,7 @@ export class MemorySignalManager implements SignalManager {
     }
   }
 
-  async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
+  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(PublicKey.hash));
     }
@@ -103,10 +108,21 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
+  async sendMessage({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }) {
     assert(recipient);
     if (!this._context.connections.has(recipient)) {
-      log.warn('recipient is not subscribed for messages', { author, recipient });
+      log.warn('recipient is not subscribed for messages', {
+        author,
+        recipient
+      });
       return;
     }
 
@@ -115,10 +131,10 @@ export class MemorySignalManager implements SignalManager {
       .onMessage.emit({ author, recipient, payload });
   }
 
-  async subscribeMessages (peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerId: PublicKey): Promise<void> {
     log('subscribing', { peerId });
     this._context.connections.set(peerId, this);
   }
 
-  async destroy () {}
+  async destroy() {}
 }

@@ -7,49 +7,64 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 
-import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import {
+  ID_BUGCHECK_STRING,
+  ID_GET_CURRENT_OWNERSHIP_SCOPE,
+  preprocess
+} from './preprocessor';
 import { combineSourceMaps } from './source-map';
 
 // TODO(dmaretskyi): Move to separate package in tools.
 
 // Here be dragons.
 export const register = () => {
-  addHook((code, filename) => {
-    try {
-      const output = preprocess(code, filename);
+  addHook(
+    (code, filename) => {
+      try {
+        const output = preprocess(code, filename);
 
-      // Clear the source map in case we are running the tests in watch mode.
-      // Otherwise, it will compose new source maps on top of the ones from the previous compilation round.
-      //
-      // NOTE: We are assuming that this is the first compilation step.
-      SourcemapMap.delete(filename);
+        // Clear the source map in case we are running the tests in watch mode.
+        // Otherwise, it will compose new source maps on top of the ones from the previous compilation round.
+        //
+        // NOTE: We are assuming that this is the first compilation step.
+        SourcemapMap.delete(filename);
 
-      if (output.map) {
-        SourcemapMap.set(filename, output.map);
-      }
-
-      // Dump code for debugging
-      const DUMP = false;
-      if (DUMP) {
-        // TODO(burdon): Decide on better place to put debug files.
-        const sourceMap = getSourceMap(filename);
-        const path = join('/tmp/dx-log', 'trace-compiled', filename);
-        mkdirSync(dirname(path), { recursive: true });
-        writeFileSync(path, output.code, { encoding: 'utf-8' });
-        writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
-        if (sourceMap) {
-          writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap!, { encoding: 'utf-8' });
+        if (output.map) {
+          SourcemapMap.set(filename, output.map);
         }
-      }
 
-      return output.code;
-    } catch (err) {
-      console.error(err);
-      throw err;
+        // Dump code for debugging
+        const DUMP = false;
+        if (DUMP) {
+          // TODO(burdon): Decide on better place to put debug files.
+          const sourceMap = getSourceMap(filename);
+          const path = join('/tmp/dx-log', 'trace-compiled', filename);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, output.code, { encoding: 'utf-8' });
+          writeFileSync(
+            `${dirname(path)}/${parse(path).name}.orig${extname(path)}`,
+            code,
+            { encoding: 'utf-8' }
+          );
+          if (sourceMap) {
+            writeFileSync(
+              `${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`,
+              sourceMap!,
+              { encoding: 'utf-8' }
+            );
+          }
+        }
+
+        return output.code;
+      } catch (err) {
+        console.error(err);
+        throw err;
+      }
+    },
+    {
+      extensions: ['.ts', '.js']
     }
-  }, {
-    extensions: ['.ts', '.js']
-  });
+  );
 
   const getSourceMap = (filename: string): string | undefined => {
     try {
@@ -57,7 +72,9 @@ export const register = () => {
       const { retrieveSourceMap } = require('source-map-support');
       const sourceMap = retrieveSourceMap(filename);
       if (sourceMap) {
-        return typeof sourceMap.map === 'string' ? sourceMap.map : JSON.stringify(sourceMap.map);
+        return typeof sourceMap.map === 'string'
+          ? sourceMap.map
+          : JSON.stringify(sourceMap.map);
       }
     } catch (err) {}
 
@@ -78,11 +95,12 @@ export const register = () => {
   patchSourceMaps();
 };
 
-const BUGCHECK_STRING = 'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
-' It probably has misinterpreted an unrelated call for a logger invocation.';
+const BUGCHECK_STRING =
+  'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
+  ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
 const registerGlobals = () => {
-  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = () => null;// getCurrentOwnershipScope;
+  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = () => null; // getCurrentOwnershipScope;
   (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
 };
 
@@ -97,11 +115,19 @@ const registerGlobals = () => {
  * We patch the set method to check if there's already a source map from the previous compilation step,
  * and combine then together.
  */
-function patchSourceMaps () {
+function patchSourceMaps() {
   const orig = SourcemapMap.set;
-  SourcemapMap.set = function (this: typeof SourcemapMap, key: string, value: string) {
+  SourcemapMap.set = function (
+    this: typeof SourcemapMap,
+    key: string,
+    value: string
+  ) {
     if (SourcemapMap.get(key)) {
-      return orig.call(this, key, combineSourceMaps(SourcemapMap.get(key), value));
+      return orig.call(
+        this,
+        key,
+        combineSourceMaps(SourcemapMap.get(key), value)
+      );
     } else {
       return orig.call(this, key, value);
     }

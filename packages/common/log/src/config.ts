@@ -7,23 +7,23 @@ import fs from 'fs';
 import type { OwnershipScope } from './ownership';
 
 export interface LogMetadata {
-  file: string
-  line: number
-  ownershipScope: OwnershipScope | undefined
+  file: string;
+  line: number;
+  ownershipScope: OwnershipScope | undefined;
   /**
    * Just to help the developer to easily debug preprocessor hook bugs.
    */
-  bugcheck?: string
+  bugcheck?: string;
 }
 
-export type LogContext = Record<string, any>
+export type LogContext = Record<string, any>;
 
 export interface LogEntry {
-  level: LogLevel
-  message: string
-  ctx?: LogContext
-  meta?: LogMetadata
-  error?: Error
+  level: LogLevel;
+  message: string;
+  ctx?: LogContext;
+  meta?: LogMetadata;
+  error?: Error;
 }
 
 export enum LogLevel {
@@ -33,7 +33,7 @@ export enum LogLevel {
   ERROR = 3
 }
 
-const levels: {[index: string]: LogLevel} = {
+const levels: { [index: string]: LogLevel } = {
   debug: LogLevel.DEBUG,
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
@@ -47,9 +47,10 @@ export const shortLevelName = {
   [LogLevel.ERROR]: 'E'
 };
 
-export const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
+export const parseLogLevel = (level: string, defValue = LogLevel.WARN) =>
+  levels[level.toLowerCase()] ?? defValue;
 
-export type LogProcessor = (config: LogConfig, entry: LogEntry) => void
+export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
 
 export enum LogProcessorType {
   CONSOLE = 'console',
@@ -61,8 +62,8 @@ export enum LogProcessorType {
 //
 
 export type ConfigOptions = {
-  column?: number
-}
+  column?: number;
+};
 
 // TODO(burdon): YML.
 const loadConfig = (filepath?: string): ConfigOptions | undefined => {
@@ -75,36 +76,50 @@ const loadConfig = (filepath?: string): ConfigOptions | undefined => {
 };
 
 export interface LogConfig {
-  processor?: string
-  filter?: string | LogLevel
-  config?: any
+  processor?: string;
+  filter?: string | LogLevel;
+  config?: any;
 }
 
 export const defaultConfig: LogConfig = {
-  processor: ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ?? LogProcessorType.CONSOLE,
-  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO],
-  config: ('process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined)
+  processor:
+    ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ??
+    LogProcessorType.CONSOLE,
+  filter:
+    ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ??
+    LogLevel[LogLevel.INFO],
+  config:
+    'process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined
 };
 
-export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {
+export const shouldLog = (
+  config: LogConfig,
+  level: LogLevel,
+  path: string
+): boolean => {
   if (config.filter === undefined) {
     return true;
   }
 
   // TODO(burdon): Cache as part of config object.
-  const filters = (typeof config.filter === 'number')
-    ? [{ level: config.filter }]
-    : config.filter
-      .split(/,\s*/)
-      .map(filter => {
-        const [pattern, level] = filter.split(':');
-        return level ? {
-          level: parseLogLevel(level),
-          pattern
-        } : {
-          level: parseLogLevel(pattern)
-        };
-      });
+  const filters =
+    typeof config.filter === 'number'
+      ? [{ level: config.filter }]
+      : config.filter.split(/,\s*/).map((filter) => {
+          const [pattern, level] = filter.split(':');
+          return level
+            ? {
+                level: parseLogLevel(level),
+                pattern
+              }
+            : {
+                level: parseLogLevel(pattern)
+              };
+        });
 
-  return filters.some(filter => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
+  return filters.some(
+    (filter) =>
+      level >= filter.level &&
+      (!filter.pattern || path.includes(filter.pattern))
+  );
 };

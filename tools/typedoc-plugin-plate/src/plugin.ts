@@ -9,7 +9,7 @@ import { Theme } from './theme';
 export class ForceThemeOptionsReader implements OptionsReader {
   priority = 1000;
   name = 'plate-force-theme-options-reader';
-  read (container: Options) {
+  read(container: Options) {
     if (container.getValue('theme') === 'default') {
       container.setValue('theme', 'plate');
     }

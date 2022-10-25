@@ -34,7 +34,5 @@ const theme = createTheme({
 
 // TODO(burdon): Add theme as decorator.
 export const ThemeProvider = ({ children }: { children: ReactNode }) => (
-  <MuiThemeProvider theme={theme}>
-    {children}
-  </MuiThemeProvider>
+  <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
 );

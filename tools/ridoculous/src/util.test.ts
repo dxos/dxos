@@ -54,9 +54,7 @@ test('visitAndReplace', () => {
     const [directive, args] = isDirective(node) ?? [];
     if (directive === 'replace') {
       const skip = args[0] ? parseInt(args[0]) : 1;
-      const nodes = [
-        u('text', { value: `replace ${skip} items` })
-      ];
+      const nodes = [u('text', { value: `replace ${skip} items` })];
 
       return [nodes, skip];
     }

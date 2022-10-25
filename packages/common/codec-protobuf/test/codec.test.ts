@@ -10,8 +10,12 @@ import { Schema, anySubstitutions } from '../src';
 
 describe('extending protobuf', function () {
   it('extends proto with another file', async function () {
-    const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
-    const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another.proto'));
+    const anyProto = await pb.load(
+      join(__dirname, './proto/example/testing/any.proto')
+    );
+    const anotherProto = await pb.load(
+      join(__dirname, './proto/example/testing/another.proto')
+    );
 
     const schema = new Schema(anyProto, anySubstitutions);
     const codec = schema.tryGetCodecForType('example.testing.any.Wrapper');
@@ -30,8 +34,12 @@ describe('extending protobuf', function () {
   });
 
   it('Extends proto with duplicate keys', async function () {
-    const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
-    const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another-with-any.proto'));
+    const anyProto = await pb.load(
+      join(__dirname, './proto/example/testing/any.proto')
+    );
+    const anotherProto = await pb.load(
+      join(__dirname, './proto/example/testing/another-with-any.proto')
+    );
 
     const schema = new Schema(anyProto, anySubstitutions);
     const codec = schema.tryGetCodecForType('example.testing.any.Wrapper');

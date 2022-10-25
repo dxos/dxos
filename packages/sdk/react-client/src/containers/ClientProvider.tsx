@@ -15,10 +15,10 @@ import { ClientContext } from '../hooks';
 
 const log = debug('dxos:react-client');
 
-export type ClientProvider = MaybeFunction<MaybePromise<Client>>
+export type ClientProvider = MaybeFunction<MaybePromise<Client>>;
 
 export interface ClientProviderProps {
-  children?: ReactNode
+  children?: ReactNode;
 
   /**
    * Forward reference to provide client object to outercontainer since it won't have access to the context.
@@ -26,33 +26,33 @@ export interface ClientProviderProps {
    */
   // TODO(burdon): Currently required by ErrorBoundary provider to reset client on fatal error.
   //  - The boundary must be outside of the provider. Replace with global action handler?
-  clientRef?: MutableRefObject<Client | undefined>
+  clientRef?: MutableRefObject<Client | undefined>;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
    */
-  client?: ClientProvider
+  client?: ClientProvider;
 
   /**
    * ReactNode to display until the client is available.
    */
-  fallback?: ReactNode
+  fallback?: ReactNode;
 
   /**
    * Config object or async provider.
    */
-  config?: ConfigProvider
+  config?: ConfigProvider;
 
   /**
    * Runtime objects.
    */
-  options?: ClientOptions
+  options?: ClientOptions;
 
   /**
    * Post initialization hook.
    * @param Client
    */
-  onInitialize?: (client: Client) => Promise<void>
+  onInitialize?: (client: Client) => Promise<void>;
 }
 
 /**
@@ -68,7 +68,9 @@ export const ClientProvider = ({
   onInitialize,
   fallback = null
 }: ClientProviderProps) => {
-  const [client, setClient] = useState<Client | undefined>(clientProvider instanceof Client ? clientProvider : undefined);
+  const [client, setClient] = useState<Client | undefined>(
+    clientProvider instanceof Client ? clientProvider : undefined
+  );
 
   useAsyncEffect(async () => {
     if (!client) {

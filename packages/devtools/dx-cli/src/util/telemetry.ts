@@ -17,11 +17,11 @@ export const getTelemetryApiKey = () => {
 };
 
 export type TelemetryContext = {
-  machineId: string
-  identityId: string
-  fullCrashReports: boolean
-  disableTelemetry: boolean
-}
+  machineId: string;
+  identityId: string;
+  fullCrashReports: boolean;
+  disableTelemetry: boolean;
+};
 
 const DEFAULTS = {
   // TODO(wittjosiah): Create second identifier per HALO identity.
@@ -30,7 +30,9 @@ const DEFAULTS = {
   disableTelemetry: false
 };
 
-export const getTelemetryContext = async (configDir: string): Promise<TelemetryContext> => {
+export const getTelemetryContext = async (
+  configDir: string
+): Promise<TelemetryContext> => {
   const configDirExists = await exists(configDir);
   if (!configDirExists) {
     await mkdir(configDir, { recursive: true });

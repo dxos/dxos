@@ -3,6 +3,6 @@
 //
 
 declare module '@lexical/yjs' {
-  type Provider = any
-  type ProviderAwareness = any
+  type Provider = any;
+  type ProviderAwareness = any;
 }

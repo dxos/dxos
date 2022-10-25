@@ -26,35 +26,36 @@ export const App = () => {
 
   // TODO(burdon): Allow selection of menu item within menu.
   // TODO(burdon): Change focus when profile created (and menu changes).
-  const items = useMemo<MenuItem[]>(() => [
-    createHaloMenu(client),
-    profile && createEchoMenu(),
-    createMeshMenu(),
-    createKubeMenu(),
-    {
-      id: 'config',
-      label: 'Config',
-      component: () => (
-        <Panel>
-          <Config />
-        </Panel>
-      )
-    },
-    {
-      id: 'quit',
-      label: 'Quit',
-      exec: () => {
-        process.exit();
-      }
-    }
-  ].filter(Boolean) as MenuItem[], [profile]);
+  const items = useMemo<MenuItem[]>(
+    () =>
+      [
+        createHaloMenu(client),
+        profile && createEchoMenu(),
+        createMeshMenu(),
+        createKubeMenu(),
+        {
+          id: 'config',
+          label: 'Config',
+          component: () => (
+            <Panel>
+              <Config />
+            </Panel>
+          )
+        },
+        {
+          id: 'quit',
+          label: 'Quit',
+          exec: () => {
+            process.exit();
+          }
+        }
+      ].filter(Boolean) as MenuItem[],
+    [profile]
+  );
 
   return (
     <ModuleProvider root='root'>
-      <Module
-        id='root'
-        items={items}
-      />
+      <Module id='root' items={items} />
 
       {error && (
         <Box borderStyle='single' borderColor='red'>

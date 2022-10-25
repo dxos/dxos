@@ -68,9 +68,7 @@ const Menu = () => {
     });
   }, []);
 
-  return (
-    <div ref={divRef}>MENU</div>
-  );
+  return <div ref={divRef}>MENU</div>;
 };
 
 /**

@@ -9,7 +9,7 @@ import { File, Storage, StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
-export function storageTests (
+export function storageTests(
   testGroupName: StorageType,
   createStorage: () => Storage
 ) {

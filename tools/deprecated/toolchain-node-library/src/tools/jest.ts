@@ -9,9 +9,9 @@ import { Project } from '../project';
 import { execTool } from './common';
 
 export interface ExecJestOpts {
-  project: Project
-  forceClose?: boolean
-  userArgs?: string[]
+  project: Project;
+  forceClose?: boolean;
+  userArgs?: string[];
 }
 
 /**
@@ -20,18 +20,28 @@ export interface ExecJestOpts {
  * @param userArgs
  * @param forceClose
  */
-export const execJest = async ({ project, userArgs = [], forceClose }: ExecJestOpts) => {
+export const execJest = async ({
+  project,
+  userArgs = [],
+  forceClose
+}: ExecJestOpts) => {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
     : join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.json');
 
-  await execTool('jest', [
-    '--config', config,
-    '--passWithNoTests',
-    '--rootDir', project.packageRoot,
-    forceClose ? '--forceExit' : '',
-    ...userArgs
-  ], {
-    stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
-  });
+  await execTool(
+    'jest',
+    [
+      '--config',
+      config,
+      '--passWithNoTests',
+      '--rootDir',
+      project.packageRoot,
+      forceClose ? '--forceExit' : '',
+      ...userArgs
+    ],
+    {
+      stdio: ['inherit', 'inherit', process.stdout] // Redirect stderr > stdout.
+    }
+  );
 };

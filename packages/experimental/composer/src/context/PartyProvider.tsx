@@ -24,7 +24,7 @@ import {
 import { Button, Group, Input } from '@dxos/react-ui';
 
 export interface PartyContextValue {
-  party?: Party
+  party?: Party;
 }
 
 const textEncoder = new TextEncoder();
@@ -38,7 +38,8 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [invitationCodeValue, setInvitationCodeValue] = useState('');
   const partyInvitations = usePartyInvitations(party?.key);
-  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
+  const [secretProvider, secretResolver, _resetSecret] =
+    useSecretProvider<Uint8Array>();
 
   useEffect(() => {
     if (party) {
@@ -147,7 +148,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
                 children: 'Your Spaces'
               }}
             >
-              {parties.map(party => (
+              {parties.map((party) => (
                 <Button
                   key={party.key.toHex()}
                   className='width-full truncate'

@@ -4,7 +4,13 @@
 
 import React, { useState } from 'react';
 
-import { Box, Button, LinearProgress, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  LinearProgress,
+  TextField,
+  Typography
+} from '@mui/material';
 
 import { useMounted } from '@dxos/react-async';
 import { Dialog } from '@dxos/react-components';
@@ -12,12 +18,12 @@ import { Dialog } from '@dxos/react-components';
 import { ImportMenu } from './ImportMenu';
 
 export interface CreatePartyDialogProps {
-  open: boolean
-  title?: string
-  modal?: boolean
-  onCreate?: () => void
-  onJoin?: (invitationCode: string) => void
-  onImport?: (file: File | string) => void
+  open: boolean;
+  title?: string;
+  modal?: boolean;
+  onCreate?: () => void;
+  onJoin?: (invitationCode: string) => void;
+  onImport?: (file: File | string) => void;
 }
 
 /**
@@ -55,7 +61,7 @@ export const CreatePartyDialog = ({
       <TextField
         fullWidth
         value={invitationCodeOrIpfsCid}
-        onChange={event => setInvitationCodeOrIpfsCid(event.target.value)}
+        onChange={(event) => setInvitationCodeOrIpfsCid(event.target.value)}
         variant='outlined'
         label='Invitation code'
         autoComplete='off'
@@ -75,9 +81,7 @@ export const CreatePartyDialog = ({
     <>
       {onImport && (
         <>
-          <ImportMenu
-            onImport={handleImport}
-          />
+          <ImportMenu onImport={handleImport} />
 
           <Box sx={{ flex: 1 }} />
         </>

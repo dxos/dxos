@@ -27,7 +27,11 @@ export const init = (options: InitOptions) => {
   document.body.append(script);
 };
 
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({
+  machineId,
+  identityId: anonymousId,
+  ...options
+}: PageOptions) => {
   analytics?.page({
     ...options,
     anonymousId,
@@ -56,7 +60,7 @@ export const event = ({
 };
 
 export const flush = async () => {
-  await analytics?.flush(err => {
+  await analytics?.flush((err) => {
     captureException(err);
   });
 };

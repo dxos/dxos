@@ -11,15 +11,11 @@ import { Button, ButtonProps } from '../Button';
 import { Tooltip } from '../Tooltip';
 
 export interface QrCodeProps extends Omit<ButtonProps, 'onClick' | 'ref'> {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
-export const QrCode = ({
-  value,
-  label,
-  ...buttonProps
-}: QrCodeProps) => {
+export const QrCode = ({ value, label, ...buttonProps }: QrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
@@ -32,7 +28,9 @@ export const QrCode = ({
         onClick={copyValue}
       >
         <QRCodeSVG value={value} includeMargin role='none' />
-        <span id={labelId} className='sr-only'>{label}</span>
+        <span id={labelId} className='sr-only'>
+          {label}
+        </span>
       </Button>
     </Tooltip>
   );

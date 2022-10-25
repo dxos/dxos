@@ -68,15 +68,15 @@ const colorDepth = 500;
 type Size = 'small' | 'medium' | 'large';
 
 const sizes = {
-  'small': {
+  small: {
     width: 16,
     height: 16
   },
-  'medium': {
+  medium: {
     width: 24,
     height: 24
   },
-  'large': {
+  large: {
     width: 32,
     height: 32
   }
@@ -91,9 +91,9 @@ export const HashIcon = ({
   size = 'medium',
   ...props
 }: {
-  value: string
-  sx?: any
-  size?: Size
+  value: string;
+  sx?: any;
+  size?: Size;
 }) => {
   const icon = hashIcons[hash(value) % hashIcons.length];
   const color = hashColors[hash(value) % hashColors.length];
@@ -103,7 +103,10 @@ export const HashIcon = ({
 
   return (
     <div style={{ display: 'flex' }} title={title}>
-      <Icon sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }} {...props} />
+      <Icon
+        sx={{ color: color[0][colorDepth], ...sizes[size], ...sx }}
+        {...props}
+      />
     </div>
   );
 };

@@ -6,11 +6,18 @@ import { Trigger } from '@dxos/async';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import {
+  createProtocolFactory,
+  NetworkManager,
+  StarTopology
+} from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
-import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  AdmittedFeed,
+  PartyMember
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { InvitationDescriptor } from './invitation-descriptor';
@@ -21,7 +28,7 @@ import { InvitationDescriptor } from './invitation-descriptor';
  * Create and manage data invitations for Data spaces.
  */
 export class DataInvitations {
-  constructor (
+  constructor(
     private readonly _networkManager: NetworkManager,
     private readonly _signingContext: SigningContext,
     private readonly _spaceManager: SpaceManager
@@ -30,7 +37,10 @@ export class DataInvitations {
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation (space: Space, { onFinish }: { onFinish?: () => void} = {}): Promise<InvitationDescriptor> {
+  async createInvitation(
+    space: Space,
+    { onFinish }: { onFinish?: () => void } = {}
+  ): Promise<InvitationDescriptor> {
     log('Create invitation');
 
     const swarmKey = PublicKey.random();
@@ -43,52 +53,70 @@ export class DataInvitations {
           log('Inviter connected');
           const peer = createProtoRpcPeer({
             requested: {
-              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+              InviteeInvitationService: schema.getService(
+                'dxos.echo.invitation_protocol.InviteeInvitationService'
+              )
             },
             exposed: {
-              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+              InviterInvitationService: schema.getService(
+                'dxos.echo.invitation_protocol.InviterInvitationService'
+              )
             },
             handlers: {
               InviterInvitationService: {
-                admit: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
+                admit: async ({
+                  identityKey,
+                  deviceKey,
+                  controlFeedKey,
+                  dataFeedKey
+                }) => {
                   await space.controlPipeline.writer.write({
                     '@type': 'dxos.echo.feed.CredentialsMessage',
-                    credential: await this._signingContext.credentialSigner.createCredential({
-                      subject: identityKey,
-                      assertion: {
-                        '@type': 'dxos.halo.credentials.PartyMember',
-                        partyKey: space.key,
-                        role: PartyMember.Role.ADMIN
-                      }
-                    })
+                    credential:
+                      await this._signingContext.credentialSigner.createCredential(
+                        {
+                          subject: identityKey,
+                          assertion: {
+                            '@type': 'dxos.halo.credentials.PartyMember',
+                            partyKey: space.key,
+                            role: PartyMember.Role.ADMIN
+                          }
+                        }
+                      )
                   });
 
                   await space.controlPipeline.writer.write({
                     '@type': 'dxos.echo.feed.CredentialsMessage',
-                    credential: await this._signingContext.credentialSigner.createCredential({
-                      subject: controlFeedKey,
-                      assertion: {
-                        '@type': 'dxos.halo.credentials.AdmittedFeed',
-                        partyKey: space.key,
-                        deviceKey,
-                        identityKey,
-                        designation: AdmittedFeed.Designation.CONTROL
-                      }
-                    })
+                    credential:
+                      await this._signingContext.credentialSigner.createCredential(
+                        {
+                          subject: controlFeedKey,
+                          assertion: {
+                            '@type': 'dxos.halo.credentials.AdmittedFeed',
+                            partyKey: space.key,
+                            deviceKey,
+                            identityKey,
+                            designation: AdmittedFeed.Designation.CONTROL
+                          }
+                        }
+                      )
                   });
 
                   await space.controlPipeline.writer.write({
                     '@type': 'dxos.echo.feed.CredentialsMessage',
-                    credential: await this._signingContext.credentialSigner.createCredential({
-                      subject: dataFeedKey,
-                      assertion: {
-                        '@type': 'dxos.halo.credentials.AdmittedFeed',
-                        partyKey: space.key,
-                        deviceKey,
-                        identityKey,
-                        designation: AdmittedFeed.Designation.DATA
-                      }
-                    })
+                    credential:
+                      await this._signingContext.credentialSigner.createCredential(
+                        {
+                          subject: dataFeedKey,
+                          assertion: {
+                            '@type': 'dxos.halo.credentials.AdmittedFeed',
+                            partyKey: space.key,
+                            deviceKey,
+                            identityKey,
+                            designation: AdmittedFeed.Designation.DATA
+                          }
+                        }
+                      )
                   });
                 }
               }
@@ -109,13 +137,19 @@ export class DataInvitations {
       ])
     });
 
-    return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
+    return new InvitationDescriptor(
+      InvitationDescriptorProto.Type.INTERACTIVE,
+      swarmKey,
+      new Uint8Array()
+    );
   }
 
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor): Promise<Space> {
+  async acceptInvitation(
+    invitationDescriptor: InvitationDescriptor
+  ): Promise<Space> {
     log('Accept invitation');
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
@@ -140,10 +174,14 @@ export class DataInvitations {
           connected = true;
           const peer = createProtoRpcPeer({
             requested: {
-              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+              InviterInvitationService: schema.getService(
+                'dxos.echo.invitation_protocol.InviterInvitationService'
+              )
             },
             exposed: {
-              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+              InviteeInvitationService: schema.getService(
+                'dxos.echo.invitation_protocol.InviteeInvitationService'
+              )
             },
             handlers: {
               InviteeInvitationService: {

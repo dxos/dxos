@@ -10,10 +10,8 @@ import { truncateKey } from '@dxos/debug';
 import { Table } from '../util';
 
 export const PartyInfo: FC<{
-  party: Party
-}> = ({
-  party
-}) => {
+  party: Party;
+}> = ({ party }) => {
   return (
     <Table
       columns={[

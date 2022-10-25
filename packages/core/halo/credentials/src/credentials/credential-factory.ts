@@ -13,23 +13,23 @@ import { getSignaturePayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {
-  subject: PublicKey
-  assertion: TypedMessage
-  nonce?: Uint8Array
-}
+  subject: PublicKey;
+  assertion: TypedMessage;
+  nonce?: Uint8Array;
+};
 
 export type CreateCredentialParams = {
-  signer: Signer
-  issuer: PublicKey
-  signingKey?: PublicKey
+  signer: Signer;
+  issuer: PublicKey;
+  signingKey?: PublicKey;
 
   // Provided only if signer is different from issuer.
-  chain?: Chain
+  chain?: Chain;
 
-  subject: PublicKey
-  assertion: TypedMessage
-  nonce?: Uint8Array
-}
+  subject: PublicKey;
+  assertion: TypedMessage;
+  nonce?: Uint8Array;
+};
 
 /**
  * Construct a signed credential message.
@@ -44,7 +44,10 @@ export const createCredential = async ({
   nonce
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
-  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+  assert(
+    !!signingKey === !!chain,
+    'Chain must be provided if and only if the signing key differs from the issuer.'
+  );
   if (chain) {
     const result = await verifyChain(chain, issuer, signingKey!);
     assert(result.kind === 'pass', 'Invalid chain.');
@@ -69,7 +72,10 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getSignaturePayload(credential);
-  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
+  credential.proof.value = await signer.sign(
+    signingKey ?? issuer,
+    signedPayload
+  );
   if (chain) {
     credential.proof.chain = chain;
   }
@@ -86,8 +92,10 @@ export const createCredentialMessage = (credential: Credential) => {
 };
 
 export interface CredentialSigner {
-  getIssuer(): PublicKey
-  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>
+  getIssuer(): PublicKey;
+  createCredential: (
+    params: CreateCredentialSignerParams
+  ) => Promise<Credential>;
 }
 
 /**
@@ -98,13 +106,14 @@ export const createCredentialSignerWithKey = (
   issuer: PublicKey
 ): CredentialSigner => ({
   getIssuer: () => issuer,
-  createCredential: ({ subject, assertion, nonce }) => createCredential({
-    signer,
-    issuer,
-    subject,
-    assertion,
-    nonce
-  })
+  createCredential: ({ subject, assertion, nonce }) =>
+    createCredential({
+      signer,
+      issuer,
+      subject,
+      assertion,
+      nonce
+    })
 });
 
 /**
@@ -116,13 +125,14 @@ export const createCredentialSignerWithChain = (
   signingKey: PublicKey
 ): CredentialSigner => ({
   getIssuer: () => chain.credential.issuer,
-  createCredential: ({ subject, assertion, nonce }) => createCredential({
-    signer,
-    issuer: chain.credential.issuer,
-    signingKey,
-    chain,
-    subject,
-    assertion,
-    nonce
-  })
+  createCredential: ({ subject, assertion, nonce }) =>
+    createCredential({
+      signer,
+      issuer: chain.credential.issuer,
+      signingKey,
+      chain,
+      subject,
+      assertion,
+      nonce
+    })
 });

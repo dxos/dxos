@@ -48,19 +48,19 @@ export const typeMeta: { [i: string]: ItemMeta } = {
 };
 
 export type ItemMeta = {
-  icon: FC
-  label: string
-  plural: string
-  color: any
-  childTypes?: string[]
-}
+  icon: FC;
+  label: string;
+  plural: string;
+  color: any;
+  childTypes?: string[];
+};
 
 export interface ItemAdapter {
-  title: (item: Item<ObjectModel>) => string | undefined
-  description: (item: Item<ObjectModel>) => string | undefined
-  linkedTypes?: (item: Item<ObjectModel>) => string[]
-  linkedItems?: (item: Item<ObjectModel>, kind: string) => Item<ObjectModel>[]
-  meta?: (type: string) => ItemMeta | undefined
+  title: (item: Item<ObjectModel>) => string | undefined;
+  description: (item: Item<ObjectModel>) => string | undefined;
+  linkedTypes?: (item: Item<ObjectModel>) => string[];
+  linkedItems?: (item: Item<ObjectModel>, kind: string) => Item<ObjectModel>[];
+  meta?: (type: string) => ItemMeta | undefined;
 }
 
 /**
@@ -74,11 +74,12 @@ export const itemAdapter: ItemAdapter = {
 
   linkedTypes: (item: Item<ObjectModel>) => {
     const types = new Set<string>();
-    item.children.forEach(item => item.type && types.add(item.type));
+    item.children.forEach((item) => item.type && types.add(item.type));
     return Array.from(types);
   },
 
-  linkedItems: (item: Item<ObjectModel>, kind: string) => item.children.filter(item => item.type === kind),
+  linkedItems: (item: Item<ObjectModel>, kind: string) =>
+    item.children.filter((item) => item.type === kind),
 
   meta: (type: string) => typeMeta[type]
 };

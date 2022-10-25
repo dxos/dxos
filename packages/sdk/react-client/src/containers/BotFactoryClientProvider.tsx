@@ -9,10 +9,14 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';
+import {
+  BotFactoryClientContext,
+  createBotFactoryClient,
+  useConfig
+} from '../hooks';
 
 export interface BotFactoryClientProviderProps {
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 /**
@@ -29,7 +33,9 @@ export const BotFactoryClientProvider = ({
     setBotFactoryClient(botFactoryClient);
 
     // TODO(burdon): Rename property: 'runtime.services.bot-factory.topic'
-    const topic = config.get('runtime.services.bot.topic') ?? raise(new Error('Missing Bot factory topic.'));
+    const topic =
+      config.get('runtime.services.bot.topic') ??
+      raise(new Error('Missing Bot factory topic.'));
     await botFactoryClient.start(PublicKey.from(topic));
 
     return () => {

@@ -17,14 +17,13 @@ const log = debug('dxos.replicator.peer');
 
 export class Peer {
   // Active reeds being replicated.
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(
+    PublicKey.hash
+  );
 
   readonly closed = new Event();
 
-  constructor (
-    private _protocol: Protocol,
-    private _extension: Extension
-  ) {}
+  constructor(private _protocol: Protocol, private _extension: Extension) {}
 
   // TODO(burdon): Return array not map.
   // get feeds () {
@@ -34,7 +33,7 @@ export class Peer {
   /**
    * Share feeds to the remote peer.
    */
-  async share (feeds: FeedData | FeedData[] = []): Promise<void> {
+  async share(feeds: FeedData | FeedData[] = []): Promise<void> {
     log('share', feeds);
 
     if (!Array.isArray(feeds)) {
@@ -61,14 +60,14 @@ export class Peer {
   /**
    * Replicate multiple feeds.
    */
-  replicate (feeds: FeedWrapper<FeedMessage>[] = []) {
-    feeds.forEach(feed => this._replicate(feed));
+  replicate(feeds: FeedWrapper<FeedMessage>[] = []) {
+    feeds.forEach((feed) => this._replicate(feed));
   }
 
   /**
    * Close the peer.
    */
-  close () {
+  close() {
     const { stream } = this._protocol;
     if (!stream.destroyed) {
       stream.destroy();
@@ -80,7 +79,7 @@ export class Peer {
   /**
    * Replicate a feed.
    */
-  _replicate (feed: FeedWrapper<FeedMessage>): boolean {
+  _replicate(feed: FeedWrapper<FeedMessage>): boolean {
     assert(feed && feed.core.replicate); // TODO(burdon): Remove.
     // if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
     //   return false;

@@ -23,7 +23,7 @@ export default class Join extends BaseCommand {
     })
   };
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { flags } = await this.parse(Join);
     let { invitation: encoded, secret, json } = flags;
     if (!encoded) {
@@ -34,7 +34,9 @@ export default class Join extends BaseCommand {
     }
 
     return await this.execWithClient(async (client: Client) => {
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encoded!));
+      const invitation = client.echo.acceptInvitation(
+        InvitationDescriptor.decode(encoded!)
+      );
       await invitation.authenticate(Buffer.from(secret!));
 
       // TODO(burdon): Change blocking call in API.

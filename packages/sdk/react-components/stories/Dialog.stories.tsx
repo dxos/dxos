@@ -6,12 +6,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import {
-  Box,
-  Button,
-  TextField,
-  Typography
-} from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { Dialog, DialogProps } from '../src';
 
@@ -31,12 +26,14 @@ enum TestState {
 }
 
 interface TestDialogState {
-  state: TestState
-  value: string | undefined
-  dialogProps: DialogProps
+  state: TestState;
+  value: string | undefined;
+  dialogProps: DialogProps;
 }
 
-const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, () => void] => {
+const useTestDialogState = (
+  initialState = TestState.INIT
+): [TestDialogState, () => void] => {
   const [state, setState] = useState<TestState>(initialState);
   const [error, setError] = useState<string | undefined>();
   const [processing, setProcessing] = useState(false);
@@ -65,10 +62,10 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
 
   const handleProcessing = () => {
     setProcessing(true);
-    setTimeout((() => {
+    setTimeout(() => {
       setProcessing(false);
       setState(TestState.DONE);
-    }), 1000);
+    }, 1000);
   };
 
   const getDialogProps = (state: TestState) => {
@@ -83,7 +80,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
               autoFocus
               label='Name'
               value={value}
-              onChange={event => setValue(event.target.value)}
+              onChange={(event) => setValue(event.target.value)}
             />
           ),
           actions: (
@@ -99,9 +96,7 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
         return {
           ...props,
           title: 'Check Name',
-          content: (
-            <Typography>Value: {value}</Typography>
-          ),
+          content: <Typography>Value: {value}</Typography>,
           actions: (
             <>
               <Button onClick={() => setState(TestState.INIT)}>BACK</Button>
@@ -119,7 +114,10 @@ const useTestDialogState = (initialState = TestState.INIT): [TestDialogState, ()
     }
   };
 
-  return [{ state, value, dialogProps: getDialogProps(state) }, () => setState(TestState.INIT)];
+  return [
+    { state, value, dialogProps: getDialogProps(state) },
+    () => setState(TestState.INIT)
+  ];
 };
 
 export const Primary = () => {
@@ -149,14 +147,13 @@ export const Secondary = () => {
     <Box>
       <Button onClick={reset}>Reset</Button>
 
-      <Box sx={{
-        padding: 2,
-        width: 444
-      }}>
-        <Dialog
-          modal={false}
-          {...dialogProps}
-        />
+      <Box
+        sx={{
+          padding: 2,
+          width: 444
+        }}
+      >
+        <Dialog modal={false} {...dialogProps} />
       </Box>
     </Box>
   );

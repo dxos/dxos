@@ -22,8 +22,8 @@ import {
 } from '@mui/material';
 
 const Alert = styled(MuiAlert)({
-  'marginTop': 4,
-  'marginBottom': 4,
+  marginTop: 4,
+  marginBottom: 4,
   '.MuiAlert-Message': {
     paddingRight: 8,
     wordBreak: 'break-word'
@@ -31,13 +31,13 @@ const Alert = styled(MuiAlert)({
 });
 
 export interface DialogProps extends MuiDialogProps {
-  modal?: boolean
-  title?: string
-  dividers?: boolean
-  error?: string
-  processing?: boolean
-  content?: JSX.Element
-  actions?: JSX.Element
+  modal?: boolean;
+  title?: string;
+  dividers?: boolean;
+  error?: string;
+  processing?: boolean;
+  content?: JSX.Element;
+  actions?: JSX.Element;
 }
 
 export const ModalDialog = ({
@@ -75,17 +75,9 @@ export const ModalDialog = ({
       >
         {content}
       </DialogContent>
-      <Box sx={{ height: 8 }}>
-        {processing && (
-          <LinearProgress />
-        )}
-      </Box>
-      {error && (
-        <Alert severity='error'>{error}</Alert>
-      )}
-      <DialogActions>
-        {actions}
-      </DialogActions>
+      <Box sx={{ height: 8 }}>{processing && <LinearProgress />}</Box>
+      {error && <Alert severity='error'>{error}</Alert>}
+      <DialogActions>{actions}</DialogActions>
     </MuiDialog>
   );
 };
@@ -109,23 +101,16 @@ export const NonModalDialog = ({
   }
 
   return (
-    <Card
-      raised
-      sx={{ minWidth: 444 }}
-    >
+    <Card raised sx={{ minWidth: 444 }}>
       <CardHeader title={title} />
-      <CardContent>
-        {content}
-      </CardContent>
-      {processing && (
-        <LinearProgress />
-      )}
-      {error && (
-        <Alert severity='error'>{error}</Alert>
-      )}
-      <CardActions sx={{
-        justifyContent: 'flex-end'
-      }}>
+      <CardContent>{content}</CardContent>
+      {processing && <LinearProgress />}
+      {error && <Alert severity='error'>{error}</Alert>}
+      <CardActions
+        sx={{
+          justifyContent: 'flex-end'
+        }}
+      >
         {actions}
       </CardActions>
     </Card>
@@ -136,10 +121,7 @@ export const NonModalDialog = ({
  * A standard dialog component that implements a non-modal implementation for testing.
  * @constructor
  */
-export const Dialog = ({
-  modal = true,
-  ...rest
-}: DialogProps) => {
+export const Dialog = ({ modal = true, ...rest }: DialogProps) => {
   if (modal) {
     return <ModalDialog {...rest} />;
   } else {

@@ -11,7 +11,7 @@ export type DXNString = string;
  * Example: dxn://example:foo/bar
  */
 export class DXN {
-  static parse (name: string) {
+  static parse(name: string) {
     const match = name.match(/^(0x)?([^:]+):([^:@]+)(@?)([^:]+)?/);
     if (!match) {
       throw new Error(`Invalid DXN: ${name}`);
@@ -29,32 +29,32 @@ export class DXN {
     }
   }
 
-  static fromDomainKey (domainKey: DomainKey, path: string, tag?: string) {
+  static fromDomainKey(domainKey: DomainKey, path: string, tag?: string) {
     path = DXN.validatePath(DXN.normalize(path));
     tag = tag && DXN.validateTag(DXN.normalize(tag));
     return new DXN(domainKey, path, tag);
   }
 
-  static fromDomainName (domainName: string, path: string, tag?: string) {
+  static fromDomainName(domainName: string, path: string, tag?: string) {
     domainName = DXN.validateDomainName(DXN.normalize(domainName));
     path = DXN.validatePath(DXN.normalize(path));
     tag = tag && DXN.validateTag(DXN.normalize(tag));
     return new DXN(domainName, path, tag);
   }
 
-  static urlencode (dxn: DXN) {
+  static urlencode(dxn: DXN) {
     const [authorityPath, maybeTag] = dxn.toString().split('@');
     const tag = maybeTag ? `@${maybeTag}` : '';
     return `${authorityPath.replace(/\//g, '.')}${tag}`;
   }
 
-  static urldecode (encodedDxn: string) {
+  static urldecode(encodedDxn: string) {
     const [authorityPath, maybeTag] = encodedDxn.split('@');
     const tag = maybeTag ? `@${maybeTag}` : '';
     return DXN.parse(`${authorityPath.replace(/\./g, '/')}${tag}`);
   }
 
-  private constructor (
+  private constructor(
     public readonly authority: DomainKey | string,
     public readonly path: string,
     public readonly tag?: string
@@ -63,7 +63,15 @@ export class DXN {
   /**
    * Create new DXN overriding specified fields.
    */
-  with ({ authority, path, tag }: { authority?: DomainKey | string, path?: string, tag?: string | null }) {
+  with({
+    authority,
+    path,
+    tag
+  }: {
+    authority?: DomainKey | string;
+    path?: string;
+    tag?: string | null;
+  }) {
     authority = authority ?? this.authority;
     path = path ?? this.path;
     tag = tag === null ? undefined : tag ?? this.tag;
@@ -75,7 +83,7 @@ export class DXN {
     }
   }
 
-  toString () {
+  toString() {
     const tag = this.tag ? `@${this.tag}` : '';
 
     if (typeof this.authority === 'string') {
@@ -85,7 +93,7 @@ export class DXN {
     }
   }
 
-  private static normalize (part: string) {
+  private static normalize(part: string) {
     return part.trim().toLowerCase();
   }
 
@@ -96,12 +104,12 @@ export class DXN {
    * Must not have multiple hyphens in a row or end with a hyphen.
    * @param domain
    */
-  private static validateDomainName (domain: string) {
+  private static validateDomainName(domain: string) {
     if (!domain.match(/^[a-z][a-z0-9-]{2,31}$/)) {
       throw new Error(`Invalid domain: ${domain}`);
     }
 
-    domain.split('-').forEach(word => {
+    domain.split('-').forEach((word) => {
       if (word.length === 0 || word.endsWith('-')) {
         throw new Error(`Invalid domain: ${domain}`);
       }
@@ -120,14 +128,19 @@ export class DXN {
    */
   // TODO(burdon): Separate function to normalize (e.g., change to lowercase, replaces dots).
   // TODO(burdon): Separate function to encode (e.g., change / to .).
-  private static validatePath (path: string) {
+  private static validatePath(path: string) {
     if (!path.match(/^[a-z][a-z\d-/]{0,63}$/)) {
       throw new Error(`Invalid path: ${path}`);
     }
 
     // Prohibit repeated or trailing delimiters.
-    path.split(/[./-]/).forEach(word => {
-      if (word.length === 0 || word.endsWith('-') || word.endsWith('.') || word.endsWith('/')) {
+    path.split(/[./-]/).forEach((word) => {
+      if (
+        word.length === 0 ||
+        word.endsWith('-') ||
+        word.endsWith('.') ||
+        word.endsWith('/')
+      ) {
         throw new Error(`Invalid path: ${path}`);
       }
     });
@@ -139,13 +152,13 @@ export class DXN {
    * Validates DXN tag.
    * @param tag
    */
-  private static validateTag (tag: string) {
+  private static validateTag(tag: string) {
     if (!tag.match(/^[a-z0-9-.]{0,32}$/)) {
       throw new Error(`Invalid tag: ${tag}`);
     }
 
     // Prohibit repeated or trailing delimiters.
-    tag.split(/[.-]/).forEach(word => {
+    tag.split(/[.-]/).forEach((word) => {
       if (word.length === 0 || word.endsWith('-') || word.endsWith('.')) {
         throw new Error(`Invalid tag: ${tag}`);
       }

@@ -12,13 +12,15 @@ export class ErrorStream {
 
   private _unhandledErrors = 0;
 
-  assertNoUnhandledErrors () {
+  assertNoUnhandledErrors() {
     if (this._unhandledErrors > 0) {
-      throw new Error(`Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.`);
+      throw new Error(
+        `Assertion failed: expected no unhandled errors to be thrown, but ${this._unhandledErrors} were thrown.`
+      );
     }
   }
 
-  raise (error: Error) {
+  raise(error: Error) {
     if (this._handler) {
       this._handler(error);
     } else {
@@ -26,15 +28,15 @@ export class ErrorStream {
     }
   }
 
-  handle (handler: ErrorHandlerCallback) {
+  handle(handler: ErrorHandlerCallback) {
     this._handler = handler;
   }
 
-  pipeTo (receiver: ErrorStream) {
-    this.handle(error => receiver.raise(error));
+  pipeTo(receiver: ErrorStream) {
+    this.handle((error) => receiver.raise(error));
   }
 
-  private _unhandledError (error: Error) {
+  private _unhandledError(error: Error) {
     this._unhandledErrors++;
 
     setTimeout(() => {

@@ -9,18 +9,15 @@ import {
 import React, { PropsWithChildren } from 'react';
 
 export type UiProviderProps = PropsWithChildren<{
-  tooltipProviderProps?: TooltipProviderProps
-}>
+  tooltipProviderProps?: TooltipProviderProps;
+}>;
 
 export const UiProvider = ({
   children,
   tooltipProviderProps
 }: UiProviderProps) => {
   return (
-    <TooltipProvider
-      delayDuration={0}
-      {...tooltipProviderProps}
-    >
+    <TooltipProvider delayDuration={0} {...tooltipProviderProps}>
       {children}
     </TooltipProvider>
   );

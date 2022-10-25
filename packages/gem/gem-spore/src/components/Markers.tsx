@@ -9,22 +9,18 @@ import { createMarkers } from '../graph';
 import { defaultMarkerStyles } from './styles';
 
 export interface MarkersProps {
-  className?: string
+  className?: string;
 }
 
 /**
  * SVG markers wrapper.
  * @constructor
  */
-export const Markers = ({
-  className = defaultMarkerStyles
-}: MarkersProps) => {
+export const Markers = ({ className = defaultMarkerStyles }: MarkersProps) => {
   const ref = useRef();
   useEffect(() => {
     d3.select(ref.current).call(createMarkers());
   }, [ref]);
 
-  return (
-    <defs ref={ref} className={className} />
-  );
+  return <defs ref={ref} className={className} />;
 };

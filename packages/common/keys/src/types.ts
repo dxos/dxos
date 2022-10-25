@@ -4,6 +4,6 @@
 
 // TODO(burdon): Replace with hypercore-crypto type.
 export type KeyPair = {
-  publicKey: Buffer
-  secretKey: Buffer
-}
+  publicKey: Buffer;
+  secretKey: Buffer;
+};

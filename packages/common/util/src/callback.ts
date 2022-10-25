@@ -16,22 +16,22 @@ import assert from 'assert';
 export class Callback<T extends (...args: any[]) => any> {
   private _callback: T | undefined;
 
-  public call (...args: Parameters<T>): ReturnType<T> {
+  public call(...args: Parameters<T>): ReturnType<T> {
     assert(this._callback, 'Callback not set');
 
     return this._callback(...args);
   }
 
-  public callIfSet (...args: Parameters<T>): ReturnType<T> | undefined {
+  public callIfSet(...args: Parameters<T>): ReturnType<T> | undefined {
     return this._callback?.(...args);
   }
 
-  public set (callback: T) {
+  public set(callback: T) {
     assert(!this._callback, 'Callback already set');
     this._callback = callback;
   }
 
-  public isSet () {
+  public isSet() {
     return !!this._callback;
   }
 }

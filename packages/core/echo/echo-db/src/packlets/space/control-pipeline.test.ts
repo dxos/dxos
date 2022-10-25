@@ -46,11 +46,11 @@ describe('space/control-pipeline', function () {
       spaceKey,
       genesisFeed,
       initialTimeframe: new Timeframe(),
-      feedProvider: key => feedStore.openFeed(key)
+      feedProvider: (key) => feedStore.openFeed(key)
     });
 
     const admittedFeeds: PublicKey[] = [];
-    controlPipeline.onFeedAdmitted.set(async info => {
+    controlPipeline.onFeedAdmitted.set(async (info) => {
       log.debug('feed admitted');
       admittedFeeds.push(info.key);
     });
@@ -65,8 +65,15 @@ describe('space/control-pipeline', function () {
     // Genesis
     //
     {
-      const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
-      const credentials = await generator.createSpaceGenesis(spaceKey, genesisFeed.key);
+      const generator = new CredentialGenerator(
+        keyring,
+        identityKey,
+        deviceKey
+      );
+      const credentials = await generator.createSpaceGenesis(
+        spaceKey,
+        genesisFeed.key
+      );
       expect(credentials).toHaveLength(3);
 
       for (const credential of credentials) {
@@ -76,7 +83,9 @@ describe('space/control-pipeline', function () {
         });
       }
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(
+        controlPipeline.pipeline.state.endTimeframe
+      );
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
@@ -99,7 +108,9 @@ describe('space/control-pipeline', function () {
         })
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(
+        controlPipeline.pipeline.state.endTimeframe
+      );
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
     }
 
@@ -125,7 +136,11 @@ describe('space/control-pipeline', function () {
       const end = controlPipeline.pipeline.state.endTimeframe;
       console.log({ end });
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
+      expect(admittedFeeds).toEqual([
+        genesisFeed.key,
+        controlFeed2.key,
+        dataFeed1.key
+      ]);
     }
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
@@ -150,8 +165,14 @@ describe('space/control-pipeline', function () {
         timeframe: new Timeframe()
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(
+        controlPipeline.pipeline.state.endTimeframe
+      );
+      expect(admittedFeeds).toEqual([
+        genesisFeed.key,
+        controlFeed2.key,
+        dataFeed1.key
+      ]);
     }
   });
 });

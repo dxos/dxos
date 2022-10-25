@@ -21,23 +21,25 @@ export class ResultSet<T> {
    */
   readonly update: ReadOnlyEvent<T[]> = this._resultsUpdate;
 
-  constructor (itemUpdate: ReadOnlyEvent, getter: () => T[]) {
+  constructor(itemUpdate: ReadOnlyEvent, getter: () => T[]) {
     assert(itemUpdate);
     assert(getter);
     this._itemUpdate = itemUpdate;
     this._getter = getter;
 
-    this._resultsUpdate.addEffect(() => this._itemUpdate.on(() => {
-      this._resultsUpdate.emit(this._getter());
-    }));
+    this._resultsUpdate.addEffect(() =>
+      this._itemUpdate.on(() => {
+        this._resultsUpdate.emit(this._getter());
+      })
+    );
   }
 
-  get value (): T[] {
+  get value(): T[] {
     // TODO(dmaretskyi): Discuss whether this needs optimization.
     return this._getter();
   }
 
-  get first (): T {
+  get first(): T {
     const value = this._getter();
     assert(value.length);
     return value[0];
@@ -47,7 +49,7 @@ export class ResultSet<T> {
    * Subscribe for updates.
    * @param listener
    */
-  subscribe (listener: (result: T[]) => void) {
+  subscribe(listener: (result: T[]) => void) {
     return this._resultsUpdate.on(listener);
   }
 
@@ -56,7 +58,7 @@ export class ResultSet<T> {
    *
    * Current value is also checked.
    */
-  waitFor (condition: (data: T[]) => boolean): Promise<T[]> {
+  waitFor(condition: (data: T[]) => boolean): Promise<T[]> {
     if (condition(this.value)) {
       return Promise.resolve(this.value);
     }

@@ -3,11 +3,11 @@
 //
 
 export interface FileStat {
-  size: number
+  size: number;
 }
 
 export interface Callback<DataType> {
-  (err: Error | null, data?: DataType): void
+  (err: Error | null, data?: DataType): void;
 }
 
 /**
@@ -16,16 +16,19 @@ export interface Callback<DataType> {
  */
 // TODO(burdon): Reconcile with HypercoreFile.
 export interface RandomAccessFile {
-  read (offset: number, size: number, cb?: Callback<Buffer>): void
-  write (offset: number, data: Buffer, cb?: Callback<void>): void
-  del (offset: number, size: number, cb?: Callback<void>): void
-  stat (cb: Callback<FileStat>): void
-  close (cb?: Callback<void>): void
-  destroy (cb?: Callback<void>): void
+  read(offset: number, size: number, cb?: Callback<Buffer>): void;
+  write(offset: number, data: Buffer, cb?: Callback<void>): void;
+  del(offset: number, size: number, cb?: Callback<void>): void;
+  stat(cb: Callback<FileStat>): void;
+  close(cb?: Callback<void>): void;
+  destroy(cb?: Callback<void>): void;
 
-  filename: string
-  closed: boolean
-  destroyed: boolean
+  filename: string;
+  closed: boolean;
+  destroyed: boolean;
 }
 
-export type RandomAccessFileConstructor = (filename: string, opts?: {}) => RandomAccessFile
+export type RandomAccessFileConstructor = (
+  filename: string,
+  opts?: {}
+) => RandomAccessFile;

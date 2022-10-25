@@ -7,9 +7,9 @@ import { Config } from '@dxos/config';
 import * as proto from '@dxos/protocols/proto/dxos/echo/invitation';
 
 export interface ClientSetup {
-  client: Client
-  party: Party
-  invitation: proto.InvitationDescriptor
+  client: Client;
+  party: Party;
+  invitation: proto.InvitationDescriptor;
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {
