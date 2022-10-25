@@ -338,20 +338,20 @@ export class Extension extends Nanomessage {
   /**
    * @overrides _send in Nanomessage
    */
-  private _send(chunk: Uint8Array) {
+  private _send(msg: Buffer) {
     assert(this._protocol);
     assert(this._protocolExtension);
     if (this._protocol.stream.destroyed) {
       return;
     }
 
-    this._protocolExtension.send(chunk);
+    this._protocolExtension.send(msg);
   }
 
   /**
    * @override _onMessage from Nanomessagerpc
    */
-  private async _onMessage(msg: any) {
+  private async _onMessage(msg: Buffer) {
     try {
       await this.open();
       if (this._messageHandler) {

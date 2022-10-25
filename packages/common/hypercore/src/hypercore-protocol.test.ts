@@ -13,6 +13,9 @@ import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
 
+// TODO(burdon): Test encoding.
+// TODO(burdon): Simulate multiple peers and broadcast.
+
 describe('ProtocolStream', function () {
   it('protocol stream handshake completes', async function () {
     const [handshake, setHandshake] = latch({ count: 2 });
@@ -72,7 +75,6 @@ describe('ProtocolStream', function () {
     // https://github.com/hypercore-protocol/hypercore-protocol#const-channel--streamopenkey-handlers
     //
 
-    // TODO(burdon): Add encoding.
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core1 = factory.createFeed(publicKey, { secretKey });
@@ -176,13 +178,10 @@ describe('ProtocolStream', function () {
     // Feeds.
     //
 
-    // TODO(burdon): Test encoding.
     const factory = new HypercoreFactory<string>();
 
     const numFeeds = 5;
     const [feedsClosed, setFeedClosed] = latch({ count: 2 * numFeeds });
-
-    // TODO(burdon): Test multiple hypercore peers and broadcasting to peers.
 
     // Create set of feed pairs.
     const feeds = Array.from(Array(numFeeds)).map(() => {
