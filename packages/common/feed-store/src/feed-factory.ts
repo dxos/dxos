@@ -27,9 +27,7 @@ export type FeedOptions = HypercoreOptions & {
  * Hypercore factory.
  */
 export class FeedFactory<T extends {}> {
-  private readonly _storage: (
-    publicKey: PublicKey
-  ) => RandomAccessStorageConstructor;
+  private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
 
   private readonly _root: Directory;
   private readonly _signer?: Signer;
@@ -69,8 +67,7 @@ export class FeedFactory<T extends {}> {
       {},
       this._hypercoreOptions,
       {
-        secretKey:
-          this._signer && options?.writable ? Buffer.from('secret') : undefined,
+        secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
         crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
       },
       options

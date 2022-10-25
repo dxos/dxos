@@ -2,12 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import {
-  defaultSecretProvider,
-  defaultSecretValidator,
-  SecretProvider,
-  SecretValidator
-} from '@dxos/credentials';
+import { defaultSecretProvider, defaultSecretValidator, SecretProvider, SecretValidator } from '@dxos/credentials';
 
 /**
  * Defines a way for peers to authenticate each other through a side channel.
@@ -17,11 +12,10 @@ export interface InvitationAuthenticator {
   secretValidator: SecretValidator;
 }
 
-export const defaultInvitationAuthenticator: Required<InvitationAuthenticator> =
-  {
-    secretProvider: defaultSecretProvider,
-    secretValidator: defaultSecretValidator
-  };
+export const defaultInvitationAuthenticator: Required<InvitationAuthenticator> = {
+  secretProvider: defaultSecretProvider,
+  secretValidator: defaultSecretValidator
+};
 
 /**
  * Additional set of callbacks and options used in the invitation process.

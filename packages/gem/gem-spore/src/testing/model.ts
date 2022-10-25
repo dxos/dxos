@@ -56,9 +56,7 @@ export class TestGraphModel implements GraphModel<TestNode> {
 
   deleteNode(node: string, update = true) {
     this._graph.nodes = this._graph.nodes.filter(({ id }) => id !== node);
-    this._graph.links = this._graph.links.filter(
-      ({ source, target }) => source !== node && target !== node
-    );
+    this._graph.links = this._graph.links.filter(({ source, target }) => source !== node && target !== node);
 
     update && this.update();
   }

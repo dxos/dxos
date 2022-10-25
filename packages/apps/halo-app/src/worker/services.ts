@@ -3,10 +3,7 @@
 //
 
 import { schema } from '@dxos/protocols';
-import type {
-  IframeService,
-  WorkerService
-} from '@dxos/protocols/proto/dxos/iframe';
+import type { IframeService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ServiceBundle } from '@dxos/rpc';
 

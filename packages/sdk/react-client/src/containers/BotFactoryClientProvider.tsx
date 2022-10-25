@@ -9,11 +9,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import {
-  BotFactoryClientContext,
-  createBotFactoryClient,
-  useConfig
-} from '../hooks';
+import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';
 
 export interface BotFactoryClientProviderProps {
   children?: ReactNode;
@@ -22,9 +18,7 @@ export interface BotFactoryClientProviderProps {
 /**
  * BotFactoryClientProvider
  */
-export const BotFactoryClientProvider = ({
-  children
-}: BotFactoryClientProviderProps) => {
+export const BotFactoryClientProvider = ({ children }: BotFactoryClientProviderProps) => {
   const config = useConfig();
   const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
 
@@ -33,9 +27,7 @@ export const BotFactoryClientProvider = ({
     setBotFactoryClient(botFactoryClient);
 
     // TODO(burdon): Rename property: 'runtime.services.bot-factory.topic'
-    const topic =
-      config.get('runtime.services.bot.topic') ??
-      raise(new Error('Missing Bot factory topic.'));
+    const topic = config.get('runtime.services.bot.topic') ?? raise(new Error('Missing Bot factory topic.'));
     await botFactoryClient.start(PublicKey.from(topic));
 
     return () => {
@@ -47,9 +39,5 @@ export const BotFactoryClientProvider = ({
     return null;
   }
 
-  return (
-    <BotFactoryClientContext.Provider value={botFactoryClient}>
-      {children}
-    </BotFactoryClientContext.Provider>
-  );
+  return <BotFactoryClientContext.Provider value={botFactoryClient}>{children}</BotFactoryClientContext.Provider>;
 };

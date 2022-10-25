@@ -6,12 +6,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import {
-  Model,
-  ModelConstructor,
-  ModelFactory,
-  validateModelClass
-} from '@dxos/model-factory';
+import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -31,11 +26,7 @@ export interface CreateItemOption<M extends Model> {
   props?: any; // TODO(dmaretskyi): Type this better. Rename properties?
 }
 
-export interface CreateLinkOptions<
-  M extends Model,
-  L extends Model,
-  R extends Model
-> {
+export interface CreateLinkOptions<M extends Model, L extends Model, R extends Model> {
   model?: ModelConstructor<M>;
   type?: ItemType;
   source: Item<L>;
@@ -65,11 +56,7 @@ export class Database {
     private readonly _backend: DatabaseBackend,
     memberKey: PublicKey
   ) {
-    this._itemManager = new ItemManager(
-      this._modelFactory,
-      memberKey,
-      this._backend.getWriteStream()
-    );
+    this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
   }
 
   get state() {
@@ -120,9 +107,7 @@ export class Database {
   /**
    * Creates a new item with the given queryable type and model.
    */
-  async createItem<M extends Model<any>>(
-    options: CreateItemOption<M> = {}
-  ): Promise<Item<M>> {
+  async createItem<M extends Model<any>>(options: CreateItemOption<M> = {}): Promise<Item<M>> {
     this._assertInitialized();
     if (!options.model) {
       options.model = ObjectModel as any as ModelConstructor<M>;
@@ -135,9 +120,7 @@ export class Database {
     }
 
     if (options.parent && typeof options.parent !== ('string' as ItemID)) {
-      throw new TypeError(
-        'Optional parent item id must be a string id of an existing item.'
-      );
+      throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
     // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
@@ -149,11 +132,9 @@ export class Database {
     )) as any;
   }
 
-  async createLink<
-    M extends Model<any>,
-    S extends Model<any>,
-    T extends Model<any>
-  >(options: CreateLinkOptions<M, S, T>): Promise<Link<M, S, T>> {
+  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>>(
+    options: CreateLinkOptions<M, S, T>
+  ): Promise<Link<M, S, T>> {
     this._assertInitialized();
 
     const model = options.model ?? ObjectModel;
@@ -189,9 +170,7 @@ export class Database {
    * Waits for item matching the filter to be present and returns it.
    */
   // TODO(burdon): Generalize waitForCondition.
-  async waitForItem<T extends Model<any>>(
-    filter: RootFilter
-  ): Promise<Item<T>> {
+  async waitForItem<T extends Model<any>>(filter: RootFilter): Promise<Item<T>> {
     const result = this.select(filter).exec();
     await result.update.waitForCondition(() => result.entities.length > 0);
     const item = result.expectOne();

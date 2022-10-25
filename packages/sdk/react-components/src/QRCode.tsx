@@ -5,6 +5,4 @@
 import QRCodeReact from 'qrcode.react';
 import React from 'react';
 
-export const QRCode = ({ value = '' }: { value: string }) => (
-  <QRCodeReact value={value} size={256} />
-);
+export const QRCode = ({ value = '' }: { value: string }) => <QRCodeReact value={value} size={256} />;

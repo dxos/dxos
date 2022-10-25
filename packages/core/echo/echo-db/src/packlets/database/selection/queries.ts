@@ -66,9 +66,7 @@ export type QueryOptions = {
 // Filters
 //
 
-export const filterToPredicate = (
-  filter: ItemFilter | ItemIdFilter | Predicate<any>
-): Predicate<any> => {
+export const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<any>): Predicate<any> => {
   if (typeof filter === 'function') {
     return filter;
   }
@@ -76,9 +74,7 @@ export const filterToPredicate = (
   return itemFilterToPredicate(filter);
 };
 
-export const itemFilterToPredicate = (
-  filter: ItemFilter | ItemIdFilter
-): Predicate<Item> => {
+export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item> => {
   if ('id' in filter) {
     return (item) => item.id === filter.id;
   } else {
@@ -94,9 +90,7 @@ export const linkFilterToPredicate =
     !filter.type || testOneOrMultiple(filter.type, link.type);
 
 export const createQueryOptionsFilter =
-  ({
-    deleted = ItemFilterDeleted.HIDE_DELETED
-  }: QueryOptions): Predicate<Entity> =>
+  ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity> =>
   (entity) => {
     if (entity.model === null) {
       return false;

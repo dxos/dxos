@@ -9,10 +9,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  NetworkManager,
-  createWebRTCTransportFactory
-} from '@dxos/network-manager';
+import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
@@ -21,9 +18,10 @@ import { afterTest } from '@dxos/testutils';
 import { valueEncoding } from '../common';
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from '../testing';
 import { SpaceManager } from './space-manager';
 
+// TODO(burdon): Config.
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 

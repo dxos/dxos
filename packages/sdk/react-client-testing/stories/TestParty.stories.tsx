@@ -4,10 +4,7 @@
 
 import React from 'react';
 
-import {
-  ChevronRight as ExpandIcon,
-  ExpandMore as CollapseIcon
-} from '@mui/icons-material';
+import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 
 import { Item, ObjectModel } from '@dxos/client';

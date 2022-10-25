@@ -25,14 +25,7 @@ const elevationClassNameMap = new Map<number, string>([
   [6, 'shadow-2xl']
 ]);
 
-export const Group = ({
-  elevation,
-  children,
-  label,
-  labelVisuallyHidden,
-  className,
-  ...props
-}: GroupProps) => {
+export const Group = ({ elevation, children, label, labelVisuallyHidden, className, ...props }: GroupProps) => {
   const labelId = useId('groupLabel');
   return (
     <div
@@ -43,22 +36,12 @@ export const Group = ({
         elevation === 0
           ? 'bg-transparent border border-neutral-200 dark:border-neutral-700'
           : 'bg-white dark:bg-neutral-800 elevated-buttons',
-        elevationClassNameMap.get(
-          typeof elevation === 'undefined' ? 3 : elevation
-        ),
+        elevationClassNameMap.get(typeof elevation === 'undefined' ? 3 : elevation),
         className
       )}
       {...props}
     >
-      <Heading
-        {...label}
-        id={labelId}
-        className={cx(
-          labelVisuallyHidden && 'sr-only',
-          'mb-2',
-          label?.className
-        )}
-      />
+      <Heading {...label} id={labelId} className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)} />
       {children}
     </div>
   );

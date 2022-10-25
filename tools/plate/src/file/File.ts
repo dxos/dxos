@@ -12,12 +12,10 @@ export type Path = string | string[];
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export const promise = <T>(o: MaybePromise<T>): Promise<T> =>
-  isPromise(o) ? o : Promise.resolve(o);
+export const promise = <T>(o: MaybePromise<T>): Promise<T> => (isPromise(o) ? o : Promise.resolve(o));
 
 // TODO(burdon): import { isPromise } from "util/types"?
-export const isPromise = <T>(p: any): p is Promise<T> =>
-  typeof p?.then === 'function';
+export const isPromise = <T>(p: any): p is Promise<T> => typeof p?.then === 'function';
 
 export type AsyncFunctor<T> = (o: T) => MaybePromise<T>;
 
@@ -41,21 +39,13 @@ export class File<D = string> {
   public allowOverwrite: boolean;
   public copyFrom: string | undefined;
   constructor(options: FileOptions<D>) {
-    const {
-      path: p,
-      content,
-      transform,
-      copyFrom,
-      overwrite
-    } = { overwrite: true, ...options };
+    const { path: p, content, transform, copyFrom, overwrite } = { overwrite: true, ...options };
     this.path = Array.isArray(p) ? path.join(...p) : p;
     if (!this.path) {
       throw new Error('File must have an output path');
     }
     if (copyFrom) {
-      this.copyFrom = Array.isArray(copyFrom)
-        ? path.join(...copyFrom)
-        : copyFrom ?? '';
+      this.copyFrom = Array.isArray(copyFrom) ? path.join(...copyFrom) : copyFrom ?? '';
     }
     if (typeof content !== 'undefined') {
       this.content = content;
@@ -70,15 +60,9 @@ export class File<D = string> {
 
   shortDescription(cwd?: string) {
     const formattedDir = cwd ? path.relative(cwd, this.dir) : this.dir;
-    const formattedFrom = this.isCopy()
-      ? cwd
-        ? path.relative(cwd, this.copyFrom!)
-        : this.copyFrom
-      : '';
+    const formattedFrom = this.isCopy() ? (cwd ? path.relative(cwd, this.copyFrom!) : this.copyFrom) : '';
     return `${path.join(ellipsis(formattedDir), `${this.name}${this.ext}`)}${
-      typeof this.content === 'string'
-        ? ' [' + kib(this.content?.length ?? 0) + ']'
-        : ''
+      typeof this.content === 'string' ? ' [' + kib(this.content?.length ?? 0) + ']' : ''
     }${this.isCopy() ? ` copy from ${formattedFrom}` : ''}`;
   }
 
@@ -109,9 +93,7 @@ export class File<D = string> {
       // faild to read / maybe no file at all
     }
     const parsed = content ? await this.parse(content!, loadOptions) : null;
-    const transformed = this.transform
-      ? await promise(this.transform(parsed))
-      : parsed;
+    const transformed = this.transform ? await promise(this.transform(parsed)) : parsed;
     this.content = transformed ?? undefined;
     return this;
   }

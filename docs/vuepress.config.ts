@@ -7,14 +7,7 @@ import { searchPlugin } from '@vuepress/plugin-search';
 import { join, resolve } from 'node:path';
 import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
-import {
-  apiSidebar,
-  DOCS_PATH,
-  link,
-  PINNED_PACKAGES,
-  showcasePlugin,
-  sidebarSection
-} from './src';
+import { apiSidebar, DOCS_PATH, link, PINNED_PACKAGES, showcasePlugin, sidebarSection } from './src';
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({

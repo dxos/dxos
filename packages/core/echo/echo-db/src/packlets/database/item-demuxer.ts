@@ -9,11 +9,7 @@ import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import {
-  DatabaseSnapshot,
-  ItemSnapshot,
-  LinkSnapshot
-} from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -100,9 +96,7 @@ export class ItemDemuxer {
         const item = this._itemManager.getItem(itemId);
         assert(item);
 
-        item._processMutation(itemMutation, (itemId: ItemID) =>
-          this._itemManager.getItem(itemId)
-        );
+        item._processMutation(itemMutation, (itemId: ItemID) => this._itemManager.getItem(itemId));
       }
 
       //
@@ -117,8 +111,7 @@ export class ItemDemuxer {
       }
 
       if (snapshot) {
-        const entity =
-          this._itemManager.entities.get(itemId) ?? failUndefined();
+        const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
         entity._stateManager.resetToSnapshot(snapshot);
       }
 
@@ -129,12 +122,8 @@ export class ItemDemuxer {
   createSnapshot(): DatabaseSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map((item) =>
-        this.createItemSnapshot(item)
-      ),
-      links: this._itemManager.links.map((link) =>
-        this.createLinkSnapshot(link)
-      )
+      items: this._itemManager.items.map((item) => this.createItemSnapshot(item)),
+      links: this._itemManager.links.map((link) => this.createLinkSnapshot(link))
     };
   }
 
@@ -203,9 +192,7 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export const sortItemsTopologically = (
-  items: ItemSnapshot[]
-): ItemSnapshot[] => {
+export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();
 
@@ -213,18 +200,13 @@ export const sortItemsTopologically = (
     const prevLength = snapshots.length;
     for (const item of items) {
       assert(item.itemId);
-      if (
-        !seenIds.has(item.itemId) &&
-        (item.parentId == null || seenIds.has(item.parentId))
-      ) {
+      if (!seenIds.has(item.itemId) && (item.parentId == null || seenIds.has(item.parentId))) {
         snapshots.push(item);
         seenIds.add(item.itemId);
       }
     }
     if (prevLength === snapshots.length && snapshots.length !== items.length) {
-      throw new Error(
-        'Cannot topologically sorts items in snapshot: some parents are missing.'
-      );
+      throw new Error('Cannot topologically sorts items in snapshot: some parents are missing.');
     }
   }
 

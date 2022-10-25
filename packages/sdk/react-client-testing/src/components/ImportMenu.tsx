@@ -28,9 +28,7 @@ export interface ImportMenuProps {
 export const ImportMenu = ({ onImport }: ImportMenuProps) => {
   const [inProgress, setInProgress] = useState(false);
   const [showDialog, setShowDialog] = useState<ShowDialog | undefined>();
-  const [importMenuAnchorEl, setImportMenuAnchorEl] = useState<
-    HTMLElement | undefined
-  >();
+  const [importMenuAnchorEl, setImportMenuAnchorEl] = useState<HTMLElement | undefined>();
   const isMounted = useMounted();
 
   const handleImport = async (file: File[] | string) => {

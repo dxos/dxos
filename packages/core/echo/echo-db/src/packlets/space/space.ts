@@ -55,9 +55,7 @@ export class Space {
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _feedProvider: (
-    feedKey: PublicKey
-  ) => Promise<FeedWrapper<FeedMessage>>;
+  private readonly _feedProvider: FeedProvider;
 
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
@@ -118,16 +116,16 @@ export class Space {
     this._protocol.addFeed(genesisFeed);
   }
 
-  get isOpen() {
-    return this._isOpen;
-  }
-
   get key() {
     return this._key;
   }
 
   get database() {
     return this._database;
+  }
+
+  get isOpen() {
+    return this._isOpen;
   }
 
   /**

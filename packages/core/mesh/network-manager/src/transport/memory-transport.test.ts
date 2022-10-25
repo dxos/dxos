@@ -25,11 +25,7 @@ const createPair = () => {
   const sessionId = PublicKey.random();
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-  const protocolProvider1 = testProtocolProvider(
-    topic.asBuffer(),
-    peer1Id.asBuffer(),
-    plugin1
-  );
+  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
   const connection1 = new MemoryTransport(
     peer1Id,
     peer2Id,
@@ -42,11 +38,7 @@ const createPair = () => {
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-  const protocolProvider2 = testProtocolProvider(
-    topic.asBuffer(),
-    peer2Id.asBuffer(),
-    plugin2
-  );
+  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
   const connection2 = new MemoryTransport(
     peer2Id,
     peer1Id,

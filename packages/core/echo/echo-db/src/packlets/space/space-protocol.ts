@@ -22,33 +22,41 @@ export interface SwarmIdentity {
   credentialAuthenticator: AuthVerifier;
 }
 
+export type SpaceProtocolOptions = {
+  topic: PublicKey; // TODO(burdon): Rename?
+  identity: SwarmIdentity;
+  networkManager: NetworkManager;
+  plugins?: Plugin[];
+};
+
 /**
  * Manages hypercore protocol stream creation and joining swarms.
  */
 export class SpaceProtocol {
+  private readonly _replicator = new ReplicatorPlugin();
+  private readonly _customPlugins: Plugin[];
+
+  private readonly _networkManager: NetworkManager;
+  private readonly _swarmIdentity: SwarmIdentity;
+
   private readonly _presence: PresencePlugin;
   private readonly _authenticator: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
-  private readonly _replicator = new ReplicatorPlugin();
-  private readonly _plugins: Plugin[] = [this._replicator];
 
   readonly authenticationFailed: Event;
 
-  constructor(
-    private readonly _networkManager: NetworkManager,
-    topic: PublicKey,
-    private readonly _swarmIdentity: SwarmIdentity,
-    plugins: Plugin[] = []
-  ) {
+  constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
+    this._networkManager = networkManager;
+    this._swarmIdentity = identity;
+    this._customPlugins = plugins;
+
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
-    this.authenticationFailed = this._authenticator.authenticationFailed;
     this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
-    this._peerId = PublicKey.from(
-      discoveryKey(sha256(this._swarmIdentity.peerKey.toHex()))
-    );
-    plugins?.forEach((plugin) => this._plugins.push(plugin));
+    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
+
+    this.authenticationFailed = this._authenticator.authenticationFailed;
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -59,9 +67,7 @@ export class SpaceProtocol {
   async start() {
     log('starting...');
     // TODO(burdon): Document why empty buffer.
-    const credentials = await this._swarmIdentity.credentialProvider(
-      Buffer.from('')
-    );
+    const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
     // TODO(burdon): Move to config (with sensible defaults).
     const topologyConfig = {
@@ -71,8 +77,7 @@ export class SpaceProtocol {
     };
 
     await this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel, initiator }) =>
-        this._createProtocol(credentials, { channel, initiator }),
+      protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presence,
@@ -92,12 +97,6 @@ export class SpaceProtocol {
     credentials: Uint8Array | undefined,
     { initiator, channel }: { initiator: boolean; channel: Buffer }
   ) {
-    const plugins: Plugin[] = [
-      this._presence,
-      this._authenticator,
-      ...this._plugins
-    ];
-
     const protocol = new Protocol({
       streamOptions: {
         live: true
@@ -120,17 +119,14 @@ export class SpaceProtocol {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
         peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: credentials
-          ? Buffer.from(credentials).toString('base64')
-          : undefined
+        credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
       },
 
       initiator
     });
 
-    protocol
-      .setExtensions(plugins.map((plugin) => plugin.createExtension()))
-      .init();
+    const plugins: Plugin[] = [this._presence, this._authenticator, this._replicator, ...this._customPlugins];
+    protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     return protocol;
   }

@@ -19,15 +19,8 @@ export type SecretProvider = (info?: SecretInfo) => Promise<Buffer>;
 /**
  * Validates the shared secret during an invitation process.
  */
-export type SecretValidator = (
-  invitation: never,
-  secret: Buffer
-) => Promise<boolean>;
+export type SecretValidator = (invitation: never, secret: Buffer) => Promise<boolean>;
 
-export const defaultSecretProvider: SecretProvider = async () =>
-  Buffer.from('0000');
+export const defaultSecretProvider: SecretProvider = async () => Buffer.from('0000');
 
-export const defaultSecretValidator: SecretValidator = async (
-  invitation,
-  secret
-) => true;
+export const defaultSecretValidator: SecretValidator = async (invitation, secret) => true;

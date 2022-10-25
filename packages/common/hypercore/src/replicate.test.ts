@@ -225,9 +225,7 @@ describe('Replication', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        for await (const _ of createReadable(
-          core2.createReadStream({ live: true })
-        )) {
+        for await (const _ of createReadable(core2.createReadStream({ live: true }))) {
           inc();
         }
       });

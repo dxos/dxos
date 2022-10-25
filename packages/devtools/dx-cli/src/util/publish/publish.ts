@@ -39,18 +39,12 @@ interface PublishArgs {
   config?: string;
 }
 
-export const publish = async (
-  { verbose, timeout, path, pin }: PublishArgs,
-  { config, module }: PublishParams
-) => {
+export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { config, module }: PublishParams) => {
   assert(module.name, 'Module name is required to publish.');
   verbose && log(`Publishing ${module.name}...`);
 
   const moduleOut = `out/${encodeName(module.name)}`;
-  const outdir =
-    path ??
-    module.build?.outdir ??
-    (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
+  const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
   const publishFolder = join(process.cwd(), outdir);
   const total = await getFolderSize(publishFolder);
 

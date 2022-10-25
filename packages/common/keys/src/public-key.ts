@@ -185,9 +185,9 @@ export class PublicKey {
     const hash = Math.abs(this._value.reduce((acc, val) => (acc ^ val) | 0, 0));
     const color = colors[hash % colors.length];
 
-    return `PublicKey(${printControlCode(
-      inspect.colors[color]![0]
-    )}${this.truncate()}${printControlCode(inspect.colors.reset![0])})`;
+    return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(
+      inspect.colors.reset![0]
+    )})`;
   }
 
   /**

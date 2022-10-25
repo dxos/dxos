@@ -14,9 +14,7 @@ type TestPartyCallback = (builder: PartyBuilder) => Promise<void>;
 /**
  * Generate test party.
  */
-export const useTestParty = (
-  callback: TestPartyCallback = buildTestParty
-): Party | undefined => {
+export const useTestParty = (callback: TestPartyCallback = buildTestParty): Party | undefined => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const builder = usePartyBuilder(party);
@@ -45,7 +43,4 @@ export const useTestParty = (
  * @param party
  */
 export const usePartyBuilder = (party?: Party) =>
-  useMemo(
-    () => (party ? new PartyBuilder(party) : undefined),
-    [party?.key.toHex()]
-  );
+  useMemo(() => (party ? new PartyBuilder(party) : undefined), [party?.key.toHex()]);

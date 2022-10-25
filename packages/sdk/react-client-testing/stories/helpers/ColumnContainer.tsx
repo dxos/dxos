@@ -14,11 +14,7 @@ interface ColumnContainerProps {
     height: string;
   };
 }
-export const ColumnContainer = ({
-  topComponent,
-  bottomComponent,
-  config
-}: ColumnContainerProps) => {
+export const ColumnContainer = ({ topComponent, bottomComponent, config }: ColumnContainerProps) => {
   const getFixedStyle = (margin = false): CSSProperties => ({
     height: config.height,
     overflowY: 'scroll',
@@ -39,24 +35,8 @@ export const ColumnContainer = ({
         gap: '8px'
       }}
     >
-      <div
-        style={
-          config.fixedComponent === 'top'
-            ? getFixedStyle()
-            : getFlexibleStyle(true)
-        }
-      >
-        {topComponent}
-      </div>
-      <div
-        style={
-          config.fixedComponent === 'bottom'
-            ? getFixedStyle(true)
-            : getFlexibleStyle()
-        }
-      >
-        {bottomComponent}
-      </div>
+      <div style={config.fixedComponent === 'top' ? getFixedStyle() : getFlexibleStyle(true)}>{topComponent}</div>
+      <div style={config.fixedComponent === 'bottom' ? getFixedStyle(true) : getFlexibleStyle()}>{bottomComponent}</div>
     </div>
   );
 };

@@ -57,10 +57,7 @@ export class ProjectBuilder {
       Array.from({ length: getNumber(n) }).map(async () => {
         const task = await this._builder.createTask(this._project);
         if (people) {
-          await this._builder.createLink(
-            task,
-            faker.random.arrayElement(people)
-          );
+          await this._builder.createLink(task, faker.random.arrayElement(people));
         }
       })
     );
@@ -71,10 +68,7 @@ export class ProjectBuilder {
  * Org
  */
 export class OrgBuilder {
-  constructor(
-    private readonly _builder: PartyBuilder,
-    private readonly _org: Item<ObjectModel>
-  ) {}
+  constructor(private readonly _builder: PartyBuilder, private readonly _org: Item<ObjectModel>) {}
 
   get org() {
     return this._org;
@@ -88,10 +82,7 @@ export class OrgBuilder {
     );
   }
 
-  async createProjects(
-    n: NumberRange = 1,
-    callback?: (buidler: ProjectBuilder) => Promise<void>
-  ) {
+  async createProjects(n: NumberRange = 1, callback?: (buidler: ProjectBuilder) => Promise<void>) {
     return await Promise.all(
       Array.from({ length: getNumber(n) }).map(async () => {
         const project = await this._builder.createProject(this._org);
@@ -114,10 +105,7 @@ export class PartyBuilder {
     return this._party;
   }
 
-  async createOrgs(
-    n: NumberRange = 1,
-    callback?: (buidler: OrgBuilder) => Promise<void>
-  ) {
+  async createOrgs(n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
     return await Promise.all(
       Array.from({ length: getNumber(n) }).map(async () => {
         const org = await this.createOrg();
@@ -181,10 +169,7 @@ export class PartyBuilder {
     if (parent) {
       switch (parent.type) {
         case TestType.Org: {
-          const type = faker.random.arrayElement([
-            TestType.Project,
-            TestType.Person
-          ]);
+          const type = faker.random.arrayElement([TestType.Project, TestType.Person]);
           switch (type) {
             case TestType.Project: {
               const project = await this.createProject(parent);
@@ -220,9 +205,7 @@ export class PartyBuilder {
       // Random parent.
       const result = this.party
         .select()
-        .filter(
-          (item) => item.type === TestType.Org || item.type === TestType.Project
-        )
+        .filter((item) => item.type === TestType.Org || item.type === TestType.Project)
         .exec();
 
       parent = faker.random.arrayElement(result.entities);
@@ -259,23 +242,13 @@ export const defaultTestOptions: Options = {
  * @param builder
  * @param options
  */
-export const buildTestParty = async (
-  builder: PartyBuilder,
-  options: Options = defaultTestOptions
-) => {
+export const buildTestParty = async (builder: PartyBuilder, options: Options = defaultTestOptions) => {
   await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople(options.numPeople);
-    await orgBuilder.createProjects(
-      options.numProjects,
-      async (projectBuilder: ProjectBuilder) => {
-        const result = await orgBuilder.org
-          .select()
-          .children()
-          .filter({ type: TestType.Person })
-          .exec();
+    await orgBuilder.createProjects(options.numProjects, async (projectBuilder: ProjectBuilder) => {
+      const result = await orgBuilder.org.select().children().filter({ type: TestType.Person }).exec();
 
-        await projectBuilder.createTasks(options.numTasks, result.entities);
-      }
-    );
+      await projectBuilder.createTasks(options.numTasks, result.entities);
+    });
   });
 };

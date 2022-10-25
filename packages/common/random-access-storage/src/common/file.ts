@@ -3,11 +3,7 @@
 //
 
 import pify from 'pify';
-import type {
-  FileStat,
-  RandomAccessStorage,
-  RandomAccessStorageProperties
-} from 'random-access-storage';
+import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
 
 import { StorageType } from './storage';
 
@@ -57,19 +53,8 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
  * Construct async File wrapper.
  * NOTE: This is safe since these are interface methods only (not used internally).
  */
-export const wrapFile = (
-  native: RandomAccessStorage,
-  type: StorageType
-): File => {
-  const file = pifyFields(native, type, [
-    'write',
-    'read',
-    'del',
-    'stat',
-    'close',
-    'destroy',
-    'truncate'
-  ]);
+export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
+  const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
 
   return Object.assign(file, { type, native });
 };

@@ -6,5 +6,4 @@ import { Client, HaloProxy } from '@dxos/client';
 
 import { useInvitations } from './useInvitations';
 
-export const useHaloInvitations = (client: Client) =>
-  useInvitations((client.halo as HaloProxy).invitationProxy);
+export const useHaloInvitations = (client: Client) => useInvitations((client.halo as HaloProxy).invitationProxy);

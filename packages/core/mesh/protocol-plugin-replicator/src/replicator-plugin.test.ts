@@ -43,9 +43,7 @@ const middleware = ({
 
   return {
     subscribe: (next) => {
-      const unsubscribe = feedStore.feedOpened.on((feed) =>
-        next([encodeFeed(feed)])
-      );
+      const unsubscribe = feedStore.feedOpened.on((feed) => next([encodeFeed(feed)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
@@ -125,11 +123,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       const messages: any[] = [];
 
       // Create combined stream.
-      const stream = multi.obj(
-        feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) =>
-          feed.createReadableStream()
-        )
-      );
+      const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) => feed.createReadableStream()));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });
@@ -166,8 +160,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
     await waitForExpect(
       () => {
         const result = network.peers.reduce(
-          (prev: boolean, peer: any) =>
-            prev && peer.getFeedsNum() === network.peers.length,
+          (prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length,
           true
         );
         expect(result).to.be.true;

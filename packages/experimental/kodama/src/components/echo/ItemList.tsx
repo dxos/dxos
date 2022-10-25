@@ -22,8 +22,7 @@ export const ItemList: FC<{
   // TODO(burdon): Select should not return party item by default.
   // TODO(burdon): Clean-up API (e.g., provide default value as empty list).
   // TODO(burdon): Not updated if model properties change.
-  const items =
-    useSelection(party?.select().filter({ type }), [party, type]) ?? [];
+  const items = useSelection(party?.select().filter({ type }), [party, type]) ?? [];
 
   const handleUpdate = (data: { id?: string; text: string }) => {
     if (data.id) {

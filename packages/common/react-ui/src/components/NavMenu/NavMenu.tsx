@@ -15,10 +15,7 @@ interface NavMenuItemSharedProps {
 }
 
 export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
-  triggerLinkProps: Omit<
-    ComponentProps<typeof NavigationMenuPrimitive.Link>,
-    'children'
-  >;
+  triggerLinkProps: Omit<ComponentProps<typeof NavigationMenuPrimitive.Link>, 'children'>;
   children: ReactNode;
 }
 
@@ -33,11 +30,7 @@ export interface NavMenuProps {
   items: NavMenuItem[];
 }
 
-const NavMenuInvokerItem = ({
-  content,
-  children,
-  active
-}: NavMenuInvokerItemProps) => {
+const NavMenuInvokerItem = ({ content, children, active }: NavMenuInvokerItemProps) => {
   return (
     <NavigationMenuPrimitive.Item>
       <NavigationMenuPrimitive.Trigger
@@ -65,11 +58,7 @@ const NavMenuInvokerItem = ({
   );
 };
 
-const NavMenuLinkItem = ({
-  triggerLinkProps,
-  children,
-  active
-}: NavMenuLinkItemProps) => (
+const NavMenuLinkItem = ({ triggerLinkProps, children, active }: NavMenuLinkItemProps) => (
   <NavigationMenuPrimitive.Item asChild>
     <NavigationMenuPrimitive.Link
       {...triggerLinkProps}
@@ -88,19 +77,14 @@ const NavMenuLinkItem = ({
 
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
-const isLinkItem = (o: any): o is NavMenuLinkItemProps =>
-  'triggerLinkProps' in o;
+const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
 
 export const NavMenu = ({ items }: NavMenuProps) => {
   return (
     <NavigationMenuPrimitive.Root className='relative flex justify-center'>
       <NavigationMenuPrimitive.List className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
         {items.map((item: NavMenuItem, i) =>
-          isLinkItem(item) ? (
-            <NavMenuLinkItem {...item} />
-          ) : (
-            <NavMenuInvokerItem {...item} />
-          )
+          isLinkItem(item) ? <NavMenuLinkItem {...item} /> : <NavMenuInvokerItem {...item} />
         )}
 
         <NavigationMenuPrimitive.Indicator
@@ -117,10 +101,7 @@ export const NavMenu = ({ items }: NavMenuProps) => {
       </NavigationMenuPrimitive.List>
 
       <div
-        className={cx(
-          'absolute flex justify-center',
-          'w-[140%] left-[-20%] top-[100%]'
-        )}
+        className={cx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
         style={{
           perspective: '2000px'
         }}

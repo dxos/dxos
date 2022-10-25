@@ -9,12 +9,7 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
-import {
-  SignalManager,
-  CommandTrace,
-  SignalStatus,
-  WebsocketSignalManager
-} from '@dxos/messaging';
+import { SignalManager, CommandTrace, SignalStatus, WebsocketSignalManager } from '@dxos/messaging';
 import {
   FullyConnectedTopology,
   Swarm,
@@ -38,15 +33,9 @@ export default {
   title: 'Devtools/Topology'
 };
 
-const createPeer = async (
-  controlTopic: PublicKey,
-  peerId: PublicKey,
-  topologyFactory: () => Topology
-) => {
+const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
   // TODO(burdon): Remove hard-coded deps.
-  const signalManager = new WebsocketSignalManager([
-    'wss://apollo3.kube.moon.dxos.network/dxos/signal'
-  ]);
+  const signalManager = new WebsocketSignalManager(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
     signalManager,
@@ -59,11 +48,7 @@ const createPeer = async (
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),
-    protocol: transportProtocolProvider(
-      controlTopic.asBuffer(),
-      peerId.asBuffer(),
-      presencePlugin
-    ),
+    protocol: transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin),
     presence: presencePlugin
   });
 
@@ -84,9 +69,7 @@ const topologyMap: Record<string, (topic: PublicKey) => any> = {
 
 const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   const [topologyType, setTopologyType] = useState('Fully-connected');
-  const [topology, setTopology] = useState<() => Topology>(
-    () => () => new FullyConnectedTopology()
-  );
+  const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
 
   const [controlPeer, setControlPeer] = useState<{
     swarm: Swarm;
@@ -100,9 +83,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   }, [topologyType]);
 
   useEffect(() => {
-    void createPeer(topic, topic, topology).then((peer) =>
-      setControlPeer(peer)
-    );
+    void createPeer(topic, topic, topology).then((peer) => setControlPeer(peer));
   }, []);
 
   const [peers, setPeers] = useState<any[]>([]);
@@ -169,12 +150,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     <FullScreen>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         <div>
-          <Select
-            value={topologyType}
-            onChange={(event: SelectChangeEvent) =>
-              setTopologyType(event.target.value)
-            }
-          >
+          <Select value={topologyType} onChange={(event: SelectChangeEvent) => setTopologyType(event.target.value)}>
             {Object.keys(topologyType).map((topologyType) => (
               <MenuItem key={topologyType} value={topologyType}>
                 {topologyType}
@@ -189,11 +165,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
           </div>
 
           {resizeListener}
-          <PeerGraph
-            peers={peerMap}
-            size={{ width: 500, height }}
-            onClick={killPeer}
-          />
+          <PeerGraph peers={peerMap} size={{ width: 500, height }} onClick={killPeer} />
         </div>
 
         <div>

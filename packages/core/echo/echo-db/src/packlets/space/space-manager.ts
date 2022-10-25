@@ -61,10 +61,7 @@ export class SpaceManager {
     for (const spaceMetadata of this._metadataStore.parties) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
-      this._dataService.trackParty(
-        space.key,
-        space.database!.createDataServiceHost()
-      );
+      this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
       this.spaces.set(spaceMetadata.key, space);
     }
   }
@@ -102,11 +99,7 @@ export class SpaceManager {
 
       const credentials = [
         ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey)),
-        await generator.createFeedAdmission(
-          spaceKey,
-          dataFeedKey,
-          AdmittedFeed.Designation.DATA
-        )
+        await generator.createFeedAdmission(spaceKey, dataFeedKey, AdmittedFeed.Designation.DATA)
       ];
 
       for (const credential of credentials) {
@@ -141,35 +134,27 @@ export class SpaceManager {
   }
 
   private _insertSpace(space: Space) {
-    this._dataService.trackParty(
-      space.key,
-      space.database!.createDataServiceHost()
-    );
+    this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
     this.spaces.set(space.key, space);
     this.update.emit();
   }
 
   private async _constructSpace(metadata: PartyMetadata) {
-    const controlFeed = await this._feedStore.openFeed(
-      metadata.controlFeedKey ?? failUndefined(),
-      { writable: true }
-    );
-    const dataFeed = await this._feedStore.openFeed(
-      metadata.dataFeedKey ?? failUndefined(),
-      { writable: true }
-    );
+    const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
+    const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 
     // Might be the same as controlFeed above, in case this space was created by the current agent.
-    const genesisFeed = await this._feedStore.openFeed(
-      metadata.genesisFeedKey ?? failUndefined()
-    );
+    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
-
-    const protocol = new SpaceProtocol(this._networkManager, spaceKey, {
-      peerKey: this._signingContext.deviceKey,
-      credentialProvider: this._signingContext.credentialProvider,
-      credentialAuthenticator: this._signingContext.credentialAuthenticator
+    const protocol = new SpaceProtocol({
+      topic: spaceKey,
+      identity: {
+        peerKey: this._signingContext.deviceKey,
+        credentialProvider: this._signingContext.credentialProvider,
+        credentialAuthenticator: this._signingContext.credentialAuthenticator
+      },
+      networkManager: this._networkManager
     });
 
     return new Space({
@@ -181,11 +166,7 @@ export class SpaceManager {
       initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
-        new Database(
-          this._modelFactory,
-          databaseBackend,
-          this._signingContext.identityKey
-        )
+        new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
     });
   }
 }

@@ -8,11 +8,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import type {
-  MutationMeta,
-  MutationMetaWithTimeframe,
-  ItemID
-} from '@dxos/protocols';
+import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Model } from './model';
@@ -62,11 +58,7 @@ export class StateManager<M extends Model> {
   private readonly _mutationProcessed = new Event<MutationMeta>();
 
   private _modelMeta: ModelMeta | null = null;
-  private _stateMachine: StateMachine<
-    StateOf<M>,
-    MutationOf<Model>,
-    unknown
-  > | null = null;
+  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
 
   private _model: M | null = null;
 
@@ -156,9 +148,7 @@ export class StateManager<M extends Model> {
     // TODO(burdon): Log.
     void processed.then(() => {
       if (!optimisticMutation.receipt) {
-        console.error(
-          `Optimistic mutation was processed without being confirmed: ${this._itemId}/${mutation.type}`
-        );
+        console.error(`Optimistic mutation was processed without being confirmed: ${this._itemId}/${mutation.type}`);
       }
       if (this._optimisticMutations.includes(optimisticMutation)) {
         console.error(
@@ -187,17 +177,13 @@ export class StateManager<M extends Model> {
     // Apply the snapshot.
     if (this._initialState.snapshot) {
       assert(this._modelMeta.snapshotCodec);
-      const decoded = this._modelMeta.snapshotCodec.decode(
-        this._initialState.snapshot
-      );
+      const decoded = this._modelMeta.snapshotCodec.decode(this._initialState.snapshot);
       this._stateMachine.reset(decoded);
     }
 
     // Apply mutations passed with the snapshot.
     for (const mutation of this._initialState.mutations ?? []) {
-      const mutationDecoded = this._modelMeta.mutationCodec.decode(
-        mutation.mutation
-      );
+      const mutationDecoded = this._modelMeta.mutationCodec.decode(mutation.mutation);
       this._stateMachine.process(mutationDecoded, {
         author: PublicKey.from(mutation.meta.memberKey)
       });
@@ -205,20 +191,14 @@ export class StateManager<M extends Model> {
 
     // Apply mutations that were read from the inbound stream.
     for (const mutation of this._mutations) {
-      this._stateMachine.process(
-        this._modelMeta.mutationCodec.decode(mutation.mutation),
-        {
-          author: PublicKey.from(mutation.meta.memberKey)
-        }
-      );
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), {
+        author: PublicKey.from(mutation.meta.memberKey)
+      });
     }
 
     // Apply optimistic mutations.
     for (const mutation of this._optimisticMutations) {
-      this._stateMachine.process(
-        this._modelMeta.mutationCodec.decode(mutation.mutation),
-        mutation.meta
-      );
+      this._stateMachine.process(this._modelMeta.mutationCodec.decode(mutation.mutation), mutation.meta);
     }
   }
 
@@ -250,9 +230,7 @@ export class StateManager<M extends Model> {
     // Remove optimistic mutation from the queue.
     const optimisticIndex = this._optimisticMutations.findIndex(
       (message) =>
-        message.receipt &&
-        PublicKey.equals(message.receipt.feedKey, meta.feedKey) &&
-        message.receipt.seq === meta.seq
+        message.receipt && PublicKey.equals(message.receipt.feedKey, meta.feedKey) && message.receipt.seq === meta.seq
     );
     if (optimisticIndex !== -1) {
       this._optimisticMutations.splice(optimisticIndex, 1);
@@ -304,9 +282,7 @@ export class StateManager<M extends Model> {
     if (this.initialized && this.modelMeta.snapshotCodec) {
       // Returned reduced snapshot if possible.
       return {
-        snapshot: this.modelMeta.snapshotCodec.encode(
-          this._stateMachine!.snapshot()
-        )
+        snapshot: this.modelMeta.snapshotCodec.encode(this._stateMachine!.snapshot())
       };
     }
 

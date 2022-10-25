@@ -4,24 +4,10 @@
 
 import React, { useState } from 'react';
 
-import {
-  ExpandMore as OpenIcon,
-  ExpandLess as CloseIcon,
-  Share as ShareIcon
-} from '@mui/icons-material';
-import {
-  AppBar as MuiAppBar,
-  Box,
-  IconButton,
-  ToggleButton,
-  Toolbar
-} from '@mui/material';
+import { ExpandMore as OpenIcon, ExpandLess as CloseIcon, Share as ShareIcon } from '@mui/icons-material';
+import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
-import {
-  ExportAction,
-  ExportMenu,
-  SelectionEditor
-} from '@dxos/react-client-testing';
+import { ExportAction, ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
 
 import { Searchbar } from '../Searchbar';
 import { ViewSelector } from '../View';
@@ -35,14 +21,7 @@ interface AppBarProps {
   onChangeView: (view: string) => void;
 }
 
-export const AppBar = ({
-  view,
-  onInvite,
-  onExport,
-  onSearch,
-  onSelection,
-  onChangeView
-}: AppBarProps) => {
+export const AppBar = ({ view, onInvite, onExport, onSearch, onSelection, onChangeView }: AppBarProps) => {
   const [advanced, setAdvanced] = useState<boolean>(false);
 
   return (
@@ -85,10 +64,7 @@ export const AppBar = ({
             )}
           </Box>
 
-          <ViewSelector
-            value={view}
-            onChange={(view: string) => onChangeView(view)}
-          />
+          <ViewSelector value={view} onChange={(view: string) => onChangeView(view)} />
 
           <Box
             sx={{
@@ -98,11 +74,7 @@ export const AppBar = ({
             {onExport && <ExportMenu onExport={onExport} />}
 
             {onInvite && (
-              <IconButton
-                data-id='test-button-share-party'
-                size='small'
-                onClick={onInvite}
-              >
+              <IconButton data-id='test-button-share-party' size='small' onClick={onInvite}>
                 <ShareIcon />
               </IconButton>
             )}

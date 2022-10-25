@@ -17,10 +17,7 @@ export interface GenerateExecutorOptions {
   substitutionsPath: string;
 }
 
-export default async (
-  options: GenerateExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }> => {
+export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing generate...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
@@ -37,9 +34,7 @@ export default async (
     err(err.message);
   }
 
-  const substitutions = existsSync(substitutionsPath)
-    ? substitutionsPath
-    : undefined;
+  const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined;
   const proto = glob(src, { cwd: context.cwd });
 
   await build({

@@ -8,8 +8,7 @@ import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
-const maybeTruncateKey = (key: PublicKey, truncate = false) =>
-  truncate ? truncateKey(key.toHex(), 8) : key.toHex();
+const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key.toHex(), 8) : key.toHex());
 
 //
 // Spaces

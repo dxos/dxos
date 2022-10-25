@@ -47,16 +47,12 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
  * Test data set generator and mutator.
  */
 export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
-  const [data, setData, updateData] = useObjectMutator(
-    options.data || { nodes: [], links: [] }
-  );
+  const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], links: [] });
 
   let interval;
 
   const mutator = () => {
-    const parent = data.nodes.length
-      ? faker.random.arrayElement(data.nodes)
-      : undefined;
+    const parent = data.nodes.length ? faker.random.arrayElement(data.nodes) : undefined;
     const item = createNode();
 
     updateData({

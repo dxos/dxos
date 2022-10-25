@@ -17,10 +17,7 @@ export class TestClient {
   private _value: number;
   private _update = new Event();
 
-  constructor({
-    persistant,
-    value
-  }: { persistant?: boolean; value?: number } = {}) {
+  constructor({ persistant, value }: { persistant?: boolean; value?: number } = {}) {
     this._persistent = Boolean(persistant);
 
     if (value) {

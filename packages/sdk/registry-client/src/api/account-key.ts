@@ -15,12 +15,7 @@ export const ACCOUNT_KEY_LENGTH = 32;
 export class AccountKey {
   static fromHex(hexString: string): AccountKey {
     return new AccountKey(
-      new Uint8Array(
-        Buffer.from(
-          hexString.startsWith('0x') ? hexString.slice(2) : hexString,
-          'hex'
-        )
-      )
+      new Uint8Array(Buffer.from(hexString.startsWith('0x') ? hexString.slice(2) : hexString, 'hex'))
     );
   }
 
@@ -30,8 +25,7 @@ export class AccountKey {
 
   static equals(left: AccountKey | string, right: AccountKey | string) {
     const leftKey = typeof left === 'string' ? AccountKey.fromHex(left) : left;
-    const rightKey =
-      typeof right === 'string' ? AccountKey.fromHex(right) : right;
+    const rightKey = typeof right === 'string' ? AccountKey.fromHex(right) : right;
     return leftKey.toString() === rightKey.toString();
   }
 
@@ -48,8 +42,7 @@ export class AccountKey {
   }
 
   equals(other: AccountKey | string) {
-    const otherKey =
-      typeof other === 'string' ? AccountKey.fromHex(other) : other;
+    const otherKey = typeof other === 'string' ? AccountKey.fromHex(other) : other;
     return this.toString() === otherKey.toString();
   }
 }

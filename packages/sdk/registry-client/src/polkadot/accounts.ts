@@ -10,14 +10,9 @@ import { PolkadotClient } from './polkadot-client';
 /**
  * Polkadot DXNS accounts client backend.
  */
-export class PolkadotAccounts
-  extends PolkadotClient
-  implements AccountsClientBackend
-{
+export class PolkadotAccounts extends PolkadotClient implements AccountsClientBackend {
   async getAccount(account: AccountKey): Promise<Account | undefined> {
-    const accountRecord = (
-      await this.api.query.registry.accounts(account.value)
-    ).unwrapOr(undefined);
+    const accountRecord = (await this.api.query.registry.accounts(account.value)).unwrapOr(undefined);
     if (!accountRecord) {
       return undefined;
     }
@@ -44,9 +39,7 @@ export class PolkadotAccounts
     const accountKey = AccountKey.random();
     const tx = this.api.tx.registry.createAccount(accountKey.value);
     const { events } = await this.transactionsHandler.sendTransaction(tx);
-    const event = events
-      .map((e) => e.event)
-      .find(this.api.events.registry.AccountCreated.is);
+    const event = events.map((e) => e.event).find(this.api.events.registry.AccountCreated.is);
     assert(event && this.api.events.registry.AccountCreated.is(event));
 
     return accountKey;
@@ -57,13 +50,8 @@ export class PolkadotAccounts
     await this.transactionsHandler.sendTransaction(tx);
   }
 
-  async belongsToAccount(
-    account: AccountKey,
-    device: string
-  ): Promise<boolean> {
-    const accountRecord = (
-      await this.api.query.registry.accounts(account.value)
-    ).unwrap();
+  async belongsToAccount(account: AccountKey, device: string): Promise<boolean> {
+    const accountRecord = (await this.api.query.registry.accounts(account.value)).unwrap();
 
     return accountRecord.devices.includes(device);
   }

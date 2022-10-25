@@ -44,11 +44,7 @@ const Menu = () => {
         const rootElement = editor.getRootElement();
         const nativeSelection = window.getSelection()!;
 
-        if (
-          selection !== null &&
-          rootElement !== null &&
-          rootElement.contains(nativeSelection.anchorNode)
-        ) {
+        if (selection !== null && rootElement !== null && rootElement.contains(nativeSelection.anchorNode)) {
           // TODO(burdon): Factor out.
           let rect;
           if (nativeSelection.anchorNode === rootElement) {

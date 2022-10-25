@@ -17,11 +17,7 @@ export const IconRadio = ({ children, value, ...rest }: IconRadioProps) => {
   const { value: current, onChange } = useContext(IconRadioGroupContext)!;
 
   return (
-    <IconButton
-      onClick={() => onChange(value)}
-      color={value === current ? 'primary' : undefined}
-      {...rest}
-    >
+    <IconButton onClick={() => onChange(value)} color={value === current ? 'primary' : undefined} {...rest}>
       {children}
     </IconButton>
   );

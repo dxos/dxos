@@ -15,11 +15,7 @@ import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import {
-  getTelemetryApiKey,
-  getTelemetryContext,
-  PublisherRpcPeer
-} from './util';
+import { getTelemetryApiKey, getTelemetryContext, PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -62,8 +58,9 @@ export abstract class BaseCommand extends Command {
   override async init(): Promise<void> {
     await super.init();
 
-    const { machineId, identityId, fullCrashReports, disableTelemetry } =
-      await getTelemetryContext(this.config.configDir);
+    const { machineId, identityId, fullCrashReports, disableTelemetry } = await getTelemetryContext(
+      this.config.configDir
+    );
 
     if (!disableTelemetry) {
       Sentry.init({
@@ -92,9 +89,7 @@ export abstract class BaseCommand extends Command {
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       try {
-        this._clientConfig = yaml.load(
-          String(fs.readFileSync(configFile))
-        ) as ConfigProto;
+        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
       } catch (err) {
         Sentry.captureException(err);
         console.error(`Invalid config file: ${configFile}`);
@@ -103,9 +98,7 @@ export abstract class BaseCommand extends Command {
       if (configFile) {
         console.error(`Config file not found: ${configFile}`);
       } else {
-        console.error(
-          `Set config via ${ENV_DX_CONFIG} env variable or config flag.`
-        );
+        console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
       }
 
       process.exit(1);
@@ -138,9 +131,7 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in client object.
    */
-  async execWithClient<T>(
-    callback: (client: Client) => Promise<T | undefined>
-  ): Promise<T | undefined> {
+  async execWithClient<T>(callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
     try {
       const client = await this.getClient();
       const value = await callback(client);
@@ -161,23 +152,17 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in kube publisher.
    */
-  async execWithPublisher<T>(
-    callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>
-  ): Promise<T | undefined> {
+  async execWithPublisher<T>(callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: PublisherRpcPeer | undefined;
     try {
       assert(this._clientConfig);
 
-      const wsEndpoint =
-        this._clientConfig?.runtime?.services?.publisher?.server;
+      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
       assert(wsEndpoint);
 
       rpc = new PublisherRpcPeer(wsEndpoint);
 
-      await Promise.race([
-        rpc.connected.waitForCount(1),
-        rpc.error.waitForCount(1).then((err) => Promise.reject(err))
-      ]);
+      await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
       const value = await callback(rpc);
 

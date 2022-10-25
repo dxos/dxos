@@ -6,13 +6,7 @@ import React from 'react';
 
 import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import InfoIcon from '@mui/icons-material/Info';
-import {
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText
-} from '@mui/material';
+import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
@@ -26,26 +20,15 @@ export interface SwarmInfoViewProps {
 }
 
 // TODO(burdon): Convert to table.
-export const SwarmInfoView = ({
-  swarmInfo,
-  onConnectionClick,
-  onReturn
-}: SwarmInfoViewProps) => (
+export const SwarmInfoView = ({ swarmInfo, onConnectionClick, onReturn }: SwarmInfoViewProps) => (
   <div>
     <div>
       Topic: <CopyText value={swarmInfo.topic.toHex()} />
     </div>
-    <div>
-      Label:{' '}
-      {swarmInfo.label ? <CopyText value={swarmInfo.label} /> : 'No label'}
-    </div>
+    <div>Label: {swarmInfo.label ? <CopyText value={swarmInfo.label} /> : 'No label'}</div>
     <div>Active: {swarmInfo.isActive ? 'yes' : 'no'}</div>
     <div>
-      Active connection count:{' '}
-      {
-        swarmInfo.connections?.filter((c) => c.state !== ConnectionState.CLOSED)
-          .length
-      }
+      Active connection count: {swarmInfo.connections?.filter((c) => c.state !== ConnectionState.CLOSED).length}
     </div>
     <div>Total connection count: {swarmInfo.connections?.length}</div>
     <hr />
@@ -57,10 +40,7 @@ export const SwarmInfoView = ({
             <CopyText value={connection.remotePeerId.toHex()} />
           </ListItemText>
           <ListItemIcon>
-            <IconButton
-              onClick={() => onConnectionClick?.(connection.sessionId)}
-              title='Details'
-            >
+            <IconButton onClick={() => onConnectionClick?.(connection.sessionId)} title='Details'>
               <InfoIcon />
             </IconButton>
           </ListItemIcon>
@@ -68,12 +48,7 @@ export const SwarmInfoView = ({
       ))}
     </List>
     {onReturn && (
-      <IconButton
-        size='small'
-        onClick={onReturn}
-        title='Back'
-        style={{ borderRadius: 5 }}
-      >
+      <IconButton size='small' onClick={onReturn} title='Back' style={{ borderRadius: 5 }}>
         <ArrowBackIos />
         Back
       </IconButton>

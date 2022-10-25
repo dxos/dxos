@@ -39,10 +39,7 @@ export class StarTopology implements Topology {
 
     for (const peer of candidates) {
       // Connect to central peer.
-      if (
-        peer.equals(this._centralPeer) ||
-        ownPeerId.equals(this._centralPeer)
-      ) {
+      if (peer.equals(this._centralPeer) || ownPeerId.equals(this._centralPeer)) {
         log(`Connecting to peer ${peer}`);
         this._controller.connect(peer);
       }
@@ -53,13 +50,11 @@ export class StarTopology implements Topology {
     assert(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
     log(
-      `Offer from ${peer} isCentral=${peer.equals(
+      `Offer from ${peer} isCentral=${peer.equals(this._centralPeer)} isSelfCentral=${ownPeerId.equals(
         this._centralPeer
-      )} isSelfCentral=${ownPeerId.equals(this._centralPeer)}`
+      )}`
     );
-    return (
-      ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer)
-    );
+    return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
   }
 
   async destroy(): Promise<void> {

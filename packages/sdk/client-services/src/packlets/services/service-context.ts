@@ -25,11 +25,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import {
-  DataInvitations,
-  HaloInvitations,
-  InvitationDescriptor
-} from '../invitations';
+import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
 
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
@@ -74,13 +70,9 @@ export class ServiceContext {
     );
 
     // TODO(burdon): Rename.
-    this.haloInvitations = new HaloInvitations(
-      this.networkManager,
-      this.identityManager,
-      async () => {
-        await this._initialize();
-      }
-    );
+    this.haloInvitations = new HaloInvitations(this.networkManager, this.identityManager, async () => {
+      await this._initialize();
+    });
   }
 
   async open() {
@@ -103,10 +95,7 @@ export class ServiceContext {
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.dataService.trackParty(
-      identity.haloSpaceKey,
-      identity.haloDatabase.createDataServiceHost()
-    );
+    this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -134,11 +123,7 @@ export class ServiceContext {
     await spaceManager.open();
     this.spaceManager = spaceManager;
 
-    this.dataInvitations = new DataInvitations(
-      this.networkManager,
-      signingContext,
-      this.spaceManager
-    );
+    this.dataInvitations = new DataInvitations(this.networkManager, signingContext, this.spaceManager);
 
     this.initialized.wake();
   }
@@ -147,9 +132,7 @@ export class ServiceContext {
     assert(this.spaceManager);
     assert(this.dataInvitations);
 
-    const space =
-      this.spaceManager.spaces.get(spaceKey) ??
-      raise(new Error('Space not found.'));
+    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
     return this.dataInvitations.createInvitation(space, { onFinish });
   }
 

@@ -6,12 +6,7 @@ import { ApiPromise } from '@polkadot/api/promise';
 import Keyring from '@polkadot/keyring';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { TypeRegistry } from '@polkadot/types';
-import {
-  Registry,
-  Signer,
-  SignerPayloadRaw,
-  SignerResult
-} from '@polkadot/types/types';
+import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import chai from 'chai';
@@ -39,18 +34,10 @@ class TxSigner implements Partial<Signer> {
   private id = 0;
   constructor(private keypair: KeyringPair) {}
 
-  public async signRaw({
-    address,
-    data
-  }: SignerPayloadRaw): Promise<SignerResult> {
-    assert(
-      address === this.keypair.address,
-      'Signer does not have the keyringPair'
-    );
+  public async signRaw({ address, data }: SignerPayloadRaw): Promise<SignerResult> {
+    assert(address === this.keypair.address, 'Signer does not have the keyringPair');
 
-    const signature = u8aToHex(
-      this.keypair.sign(hexToU8a(data), { withType: true })
-    );
+    const signature = u8aToHex(this.keypair.sign(hexToU8a(data), { withType: true }));
 
     return {
       id: ++this.id,
@@ -115,9 +102,7 @@ describe('Signatures', function () {
     }
 
     {
-      const auctionsApi = new PolkadotAuctions(apiPromise, (tx) =>
-        tx.signAsync(keypair)
-      );
+      const auctionsApi = new PolkadotAuctions(apiPromise, (tx) => tx.signAsync(keypair));
       await auctionsApi.createAuction(auctionName(), 100000);
     }
   });

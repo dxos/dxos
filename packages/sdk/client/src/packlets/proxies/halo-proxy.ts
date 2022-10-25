@@ -3,10 +3,7 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import {
-  ClientServiceProvider,
-  InvitationDescriptor
-} from '@dxos/client-services';
+import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -74,12 +71,7 @@ export class HaloProxy implements Halo {
    * Seedphrase must not be specified with existing keys.
    * @returns User profile info.
    */
-  async createProfile({
-    publicKey,
-    secretKey,
-    username,
-    seedphrase
-  }: CreateProfileOptions = {}): Promise<Profile> {
+  async createProfile({ publicKey, secretKey, username, seedphrase }: CreateProfileOptions = {}): Promise<Profile> {
     if (seedphrase && (publicKey || secretKey)) {
       throw new Error('Seedphrase must not be specified with existing keys');
     }
@@ -90,12 +82,11 @@ export class HaloProxy implements Halo {
       secretKey = keyPair.secretKey;
     }
 
-    this._profile =
-      await this._serviceProvider.services.ProfileService.createProfile({
-        publicKey,
-        secretKey,
-        username
-      });
+    this._profile = await this._serviceProvider.services.ProfileService.createProfile({
+      publicKey,
+      secretKey,
+      username
+    });
     return this._profile;
   }
 
@@ -103,10 +94,9 @@ export class HaloProxy implements Halo {
    * Joins an existing identity HALO from a recovery seed phrase.
    */
   async recoverProfile(seedPhrase: string) {
-    this._profile =
-      await this._serviceProvider.services.ProfileService.recoverProfile({
-        seedPhrase
-      });
+    this._profile = await this._serviceProvider.services.ProfileService.recoverProfile({
+      seedPhrase
+    });
     return this._profile;
   }
 
@@ -126,8 +116,7 @@ export class HaloProxy implements Halo {
    * To be used with `client.halo.joinHaloInvitation` on the invitee side.
    */
   async createInvitation(): Promise<InvitationRequest> {
-    const stream =
-      await this._serviceProvider.services.ProfileService.createInvitation();
+    const stream = await this._serviceProvider.services.ProfileService.createInvitation();
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 
@@ -140,26 +129,20 @@ export class HaloProxy implements Halo {
    * To be used with `client.halo.createHaloInvitation` on the inviter side.
    */
   acceptInvitation(invitationDescriptor: InvitationDescriptor): Invitation {
-    const invitationProcessStream =
-      this._serviceProvider.services.ProfileService.acceptInvitation(
-        invitationDescriptor.toProto()
-      );
-    const { authenticate, waitForFinish } =
-      InvitationProxy.handleInvitationRedemption({
-        stream: invitationProcessStream,
-        invitationDescriptor,
-        onAuthenticate: async (request) => {
-          await this._serviceProvider.services.ProfileService.authenticateInvitation(
-            request
-          );
-        }
-      });
+    const invitationProcessStream = this._serviceProvider.services.ProfileService.acceptInvitation(
+      invitationDescriptor.toProto()
+    );
+    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
+      stream: invitationProcessStream,
+      invitationDescriptor,
+      onAuthenticate: async (request) => {
+        await this._serviceProvider.services.ProfileService.authenticateInvitation(request);
+      }
+    });
 
     const waitForHalo = async () => {
       await waitForFinish();
-      await this.profileChanged.waitForCondition(
-        () => !!this.profile?.publicKey
-      );
+      await this.profileChanged.waitForCondition(() => !!this.profile?.publicKey);
     };
 
     return new Invitation(invitationDescriptor, waitForHalo(), authenticate);
@@ -219,8 +202,7 @@ export class HaloProxy implements Halo {
     const gotProfile = this.profileChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
-    const profileStream =
-      this._serviceProvider.services.ProfileService.subscribeProfile();
+    const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe((data) => {
       this._profile = data.profile;
       this.profileChanged.emit();

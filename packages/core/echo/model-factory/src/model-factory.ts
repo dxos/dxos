@@ -12,12 +12,7 @@ import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Model } from './model';
 import { StateManager } from './state-manager';
-import {
-  ModelType,
-  ModelMeta,
-  ModelConstructor,
-  validateModelClass
-} from './types';
+import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -25,10 +20,7 @@ import {
 export class ModelFactory {
   readonly registered = new Event<ModelConstructor<any>>();
 
-  private _models = new Map<
-    ModelType,
-    { meta: ModelMeta; constructor: ModelConstructor<any> }
-  >();
+  private _models = new Map<ModelType, { meta: ModelMeta; constructor: ModelConstructor<any> }>();
 
   hasModel(modelType: ModelType) {
     return this.getModel(modelType) !== undefined;
@@ -79,13 +71,6 @@ export class ModelFactory {
   ): StateManager<M> {
     assert(itemId);
     const constructor = this._models.get(modelType)?.constructor;
-    return new StateManager(
-      modelType,
-      constructor,
-      itemId,
-      snapshot,
-      memberKey,
-      writeStream ?? null
-    );
+    return new StateManager(modelType, constructor, itemId, snapshot, memberKey, writeStream ?? null);
   }
 }

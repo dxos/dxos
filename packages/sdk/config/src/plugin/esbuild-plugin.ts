@@ -10,12 +10,8 @@ import { ConfigPluginOpts } from './types';
 
 // TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
-  const dynamic =
-    process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
-  assert(
-    typeof dynamic === 'boolean',
-    `dynamic: Expected boolean, got: ${typeof dynamic}`
-  );
+  const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
+  assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
   return {
     name: 'dxos-config',
@@ -31,17 +27,12 @@ export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
         namespace: 'dxos-config'
       }));
 
-      onLoad(
-        { filter: /^dxos-config-globals$/, namespace: 'dxos-config' },
-        () => ({
-          resolveDir: process.cwd(),
-          contents: Object.entries(definitions({ ...options, dynamic }))
-            .map(
-              ([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`
-            )
-            .join('\n')
-        })
-      );
+      onLoad({ filter: /^dxos-config-globals$/, namespace: 'dxos-config' }, () => ({
+        resolveDir: process.cwd(),
+        contents: Object.entries(definitions({ ...options, dynamic }))
+          .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
+          .join('\n')
+      }));
     }
   };
 };

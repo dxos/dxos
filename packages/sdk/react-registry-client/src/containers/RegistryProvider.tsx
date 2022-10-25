@@ -23,14 +23,8 @@ interface RegistryProviderProps {
  * Initializes and provides a DXNS registry instance given a config object or config generator.
  * To be used with `useRegistry` hook.
  */
-export const RegistryProvider = ({
-  config = {},
-  registry,
-  children
-}: RegistryProviderProps) => {
-  const [context, setContext] = useState<RegistryContext | undefined>(
-    registry && { registry }
-  );
+export const RegistryProvider = ({ config = {}, registry, children }: RegistryProviderProps) => {
+  const [context, setContext] = useState<RegistryContext | undefined>(registry && { registry });
   const [error, setError] = useState<undefined | Error>(undefined);
   if (error) {
     log(error);
@@ -55,19 +49,12 @@ export const RegistryProvider = ({
     return null;
   }
 
-  return (
-    <RegistryContext.Provider value={context}>
-      {children}
-    </RegistryContext.Provider>
-  );
+  return <RegistryContext.Provider value={context}>{children}</RegistryContext.Provider>;
 };
 
 /**
  * @deprecated
  */
-export const RegistryInitializer = ({
-  children,
-  config = {}
-}: RegistryProviderProps) => (
+export const RegistryInitializer = ({ children, config = {} }: RegistryProviderProps) => (
   <RegistryProvider config={config}>{children}</RegistryProvider>
 );

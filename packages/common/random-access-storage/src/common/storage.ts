@@ -21,7 +21,4 @@ export interface Storage {
   destroy: () => Promise<void>;
 }
 
-export type StorageConstructor = (params?: {
-  type?: StorageType;
-  root?: string;
-}) => Storage;
+export type StorageConstructor = (params?: { type?: StorageType; root?: string }) => Storage;

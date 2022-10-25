@@ -11,11 +11,7 @@ import { schema } from '@dxos/protocols';
 import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, MakeOptional } from '@dxos/util';
 
-import {
-  OfferMessage,
-  SignalMessage,
-  SignalMessaging
-} from './signal-messaging';
+import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -23,11 +19,7 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage: (params: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }) => Promise<void>;
+  sendMessage: (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
   onOffer: (message: OfferMessage) => Promise<Answer>;
   onSignal: (message: SignalMessage) => Promise<void>;
   topic: PublicKey;
@@ -38,17 +30,12 @@ interface MessageRouterOptions {
  */
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: (msg: {
-    author: PublicKey;
-    recipient: PublicKey;
-    payload: Any;
-  }) => Promise<void>;
+  private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
   private readonly _topic: PublicKey;
 
-  private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
-    new ComplexMap((key) => key.toHex());
+  private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
 
   constructor({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
@@ -70,20 +57,14 @@ export class MessageRouter implements SignalMessaging {
       // Ignore not swarm messages.
       return;
     }
-    const message: SwarmMessage = schema
-      .getCodecForType('dxos.mesh.swarm.SwarmMessage')
-      .decode(payload.value);
+    const message: SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').decode(payload.value);
 
     if (!this._topic.equals(message.topic)) {
       // Ignore messages from wrong topics.
       return;
     }
 
-    log(
-      `receive message: ${JSON.stringify(
-        message
-      )} from ${author} to ${recipient}`
-    );
+    log(`receive message: ${JSON.stringify(message)} from ${author} to ${recipient}`);
 
     if (message.data?.offer) {
       await this._handleOffer({ author, recipient, message });
@@ -132,11 +113,7 @@ export class MessageRouter implements SignalMessaging {
       // Setting unique message_id if it not specified yet.
       messageId: message.messageId ?? PublicKey.random()
     };
-    log(
-      `sent message: ${JSON.stringify(
-        networkMessage
-      )} from ${author} to ${recipient}`
-    );
+    log(`sent message: ${JSON.stringify(networkMessage)} from ${author} to ${recipient}`);
 
     await this._encodeAndSend({ author, recipient, message: networkMessage });
   }
@@ -155,18 +132,14 @@ export class MessageRouter implements SignalMessaging {
       recipient,
       payload: {
         type_url: 'dxos.mesh.swarm.SwarmMessage',
-        value: schema
-          .getCodecForType('dxos.mesh.swarm.SwarmMessage')
-          .encode(message)
+        value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message)
       }
     });
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {
     assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
-    const offerRecord = this._offerRecords.get(
-      message.data.answer.offerMessageId
-    );
+    const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
       this._offerRecords.delete(message.data.answer.offerMessageId);
       assert(message.data?.answer, 'No Answer');

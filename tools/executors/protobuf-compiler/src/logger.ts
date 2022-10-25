@@ -20,19 +20,14 @@ export class Logger {
     for (const file of protoFilePaths.slice(1)) {
       console.log(chalk`                      {bold ${file}}`);
     }
-    substitutionsModule &&
-      console.log(
-        chalk`Substitution file: {bold ${substitutionsModule.resolve()}}`
-      );
+    substitutionsModule && console.log(chalk`Substitution file: {bold ${substitutionsModule.resolve()}}`);
     console.log(chalk` Output directory: {bold ${outDirPath}}`);
     console.log();
   }
 
   logParsedSubstitutions(substitutions: SubstitutionsMap) {
     if (Object.keys(substitutions).length > 0) {
-      console.log(
-        chalk`Loaded {bold ${Object.keys(substitutions).length}} substitutions:`
-      );
+      console.log(chalk`Loaded {bold ${Object.keys(substitutions).length}} substitutions:`);
       console.log();
       for (const [protoType, tsType] of Object.entries(substitutions)) {
         console.log(chalk`  {bold ${protoType}} -> {bold ${tsType}}`);

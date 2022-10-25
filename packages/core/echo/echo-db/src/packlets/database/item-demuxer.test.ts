@@ -28,11 +28,7 @@ describe('Item demuxer', function () {
     const modelFactory = new ModelFactory().registerModel(TestModel);
 
     const feedWriter = new MockFeedWriter();
-    const itemManager = new ItemManager(
-      modelFactory,
-      PublicKey.random(),
-      feedWriter
-    );
+    const itemManager = new ItemManager(modelFactory, PublicKey.random(), feedWriter);
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
 
     const inboundStream = itemDemuxer.open();
@@ -49,9 +45,7 @@ describe('Item demuxer', function () {
 
     const [updatedItems, onUpdateItem] = latch();
     const unsubscribe = itemManager.update.on(() => {
-      const items = Array.from(itemManager.entities.values()).filter(
-        (entity) => entity instanceof Item
-      );
+      const items = Array.from(itemManager.entities.values()).filter((entity) => entity instanceof Item);
       expect(items).toHaveLength(1);
       onUpdateItem();
     });

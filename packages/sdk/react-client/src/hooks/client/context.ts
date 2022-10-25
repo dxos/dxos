@@ -10,5 +10,6 @@ interface ClientContextProps {
   client: Client;
 }
 
-export const ClientContext: Context<ClientContextProps | undefined> =
-  createContext<ClientContextProps | undefined>(undefined);
+export const ClientContext: Context<ClientContextProps | undefined> = createContext<ClientContextProps | undefined>(
+  undefined
+);
