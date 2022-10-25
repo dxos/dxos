@@ -8,7 +8,7 @@ import cx from 'classnames';
 import { X } from 'phosphor-react';
 import React, { Fragment, ReactNode, useState } from 'react';
 
-import { defaultDescription, defaultFocus } from '../../styles';
+import { defaultDescription, defaultFocus, defaultHover } from '../../styles';
 import { Tooltip } from '../Tooltip';
 
 export interface DialogProps {
@@ -96,11 +96,12 @@ export const Dialog = ({
               <Tooltip content={closeLabel}>
                 <DialogPrimitive.Close
                   className={cx(
-                    'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-md p-1',
-                    defaultFocus
+                    'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
+                    defaultFocus,
+                    defaultHover({})
                   )}
                 >
-                  <X className='h-4 w-4' />
+                  <X className='h-4 w-4 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400' />
                 </DialogPrimitive.Close>
               </Tooltip>
             )}
