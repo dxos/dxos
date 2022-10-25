@@ -61,7 +61,9 @@ describe('ProtocolStream', function () {
     });
 
     const [streamClosed, setStreamClosed] = latch({ count: 2 });
-    const pipeline = stream1.pipe(stream2, setStreamClosed).pipe(stream1, setStreamClosed);
+    const pipeline = stream1
+      .pipe(stream2, setStreamClosed)
+      .pipe(stream1, setStreamClosed);
 
     await handshake();
 
@@ -90,14 +92,20 @@ describe('ProtocolStream', function () {
     const [received, incMessage] = latch({ count: 2 });
     const extension1 = stream1.registerExtension('stream-extension', {
       onmessage: (msg: any) => {
-        log('onmessage', { key: PublicKey.from(stream1.publicKey), msg: msg.toString() });
+        log('onmessage', {
+          key: PublicKey.from(stream1.publicKey),
+          msg: msg.toString()
+        });
         incMessage();
       }
     });
 
     const extension2 = stream2.registerExtension('stream-extension', {
       onmessage: (msg: any) => {
-        log('onmessage', { key: PublicKey.from(stream2.publicKey), msg: msg.toString() });
+        log('onmessage', {
+          key: PublicKey.from(stream2.publicKey),
+          msg: msg.toString()
+        });
         incMessage();
       }
     });
@@ -119,7 +127,9 @@ describe('ProtocolStream', function () {
       });
 
       core2.on('sync', () => {
-        log('sync', { core: { key: PublicKey.from(core2.key), length: core2.length } });
+        log('sync', {
+          core: { key: PublicKey.from(core2.key), length: core2.length }
+        });
         expect(core2.length).to.eq(numBlocks);
         setSynced();
       });
@@ -157,7 +167,9 @@ describe('ProtocolStream', function () {
     const stream2 = new ProtocolStream(false, { onhandshake: setHandshake });
 
     const [streamClosed, setStreamClosed] = latch({ count: 2 });
-    const pipeline = stream1.pipe(stream2, setStreamClosed).pipe(stream1, setStreamClosed);
+    const pipeline = stream1
+      .pipe(stream2, setStreamClosed)
+      .pipe(stream1, setStreamClosed);
     await handshake();
 
     //
