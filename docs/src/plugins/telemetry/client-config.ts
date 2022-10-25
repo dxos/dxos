@@ -21,7 +21,7 @@ export default defineClientConfig({
 
     const route = router.currentRoute.value;
     page({
-      machineId: 'default',
+      installationId: 'default',
       identityId: 'default',
       name: route.name?.toString() ?? route.path
     });
@@ -29,7 +29,7 @@ export default defineClientConfig({
     router.afterEach((to, from, failure) => {
       if (!isNavigationFailure(failure)) {
         page({
-          machineId: 'default',
+          installationId: 'default',
           identityId: 'default',
           name: to.name?.toString() ?? to.path
         });

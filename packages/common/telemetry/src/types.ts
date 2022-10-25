@@ -9,7 +9,7 @@ export type InitOptions = {
 };
 
 type CommonOptions = {
-  machineId: string;
+  installationId: string;
   identityId: string;
   name: string;
   properties?: Record<string, string>;

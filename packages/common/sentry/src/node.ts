@@ -12,7 +12,7 @@ export * from '@sentry/node';
 export const init = (options: InitOptions) => {
   sentryInit({
     dsn: options.destination,
-    serverName: options.machineId,
+    serverName: options.installationId,
     release: options.release,
     environment: options.environment ?? process.env.DX_ENVIRONMENT,
     tracesSampleRate: options.sampleRate,
