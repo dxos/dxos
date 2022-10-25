@@ -21,8 +21,6 @@ const FullScreen = styled('div')({
 
 export const Container = ({ children }: { children: ReactNode }) => (
   <FullScreen>
-    <ThemeProvider>
-      {children}
-    </ThemeProvider>
+    <ThemeProvider>{children}</ThemeProvider>
   </FullScreen>
 );

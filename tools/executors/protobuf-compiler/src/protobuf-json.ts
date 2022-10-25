@@ -5,8 +5,8 @@
 import protobuf from 'protobufjs';
 
 interface ProtobufJson {
-  nested?: Record<string, ProtobufJson>
-  [K: string]: any
+  nested?: Record<string, ProtobufJson>;
+  [K: string]: any;
 }
 
 const postprocessProtobufJson = (protobufJson: ProtobufJson): ProtobufJson => {
@@ -14,9 +14,11 @@ const postprocessProtobufJson = (protobufJson: ProtobufJson): ProtobufJson => {
     return protobufJson;
   }
 
-  const newNested = Object.fromEntries(Object.entries(protobufJson.nested)
-    .sort((b, a) => b[0].localeCompare(a[0]))
-    .map(([key, value]) => [key, postprocessProtobufJson(value)]));
+  const newNested = Object.fromEntries(
+    Object.entries(protobufJson.nested)
+      .sort((b, a) => b[0].localeCompare(a[0]))
+      .map(([key, value]) => [key, postprocessProtobufJson(value)])
+  );
 
   return {
     ...protobufJson,
@@ -24,4 +26,5 @@ const postprocessProtobufJson = (protobufJson: ProtobufJson): ProtobufJson => {
   };
 };
 
-export const serializeSchemaToJson = (root: protobuf.Root): any => postprocessProtobufJson(root.toJSON({ keepComments: true }));
+export const serializeSchemaToJson = (root: protobuf.Root): any =>
+  postprocessProtobufJson(root.toJSON({ keepComments: true }));

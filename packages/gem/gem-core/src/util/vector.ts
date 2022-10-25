@@ -4,9 +4,14 @@
 
 import { Num, Fraction, FractionUtil } from './fraction';
 
-export type Vertex = { x: Fraction, y: Fraction }
+export type Vertex = { x: Fraction; y: Fraction };
 
-export type Bounds = { x: Fraction, y: Fraction, width: Fraction, height: Fraction }
+export type Bounds = {
+  x: Fraction;
+  y: Fraction;
+  width: Fraction;
+  height: Fraction;
+};
 
 export class Vector {
   /**
@@ -14,7 +19,7 @@ export class Vector {
    * @param x
    * @param y
    */
-  static toVertex = ({ x, y }: { x: Num, y: Num }): Vertex => ({
+  static toVertex = ({ x, y }: { x: Num; y: Num }): Vertex => ({
     x: FractionUtil.toFraction(x),
     y: FractionUtil.toFraction(y)
   });
@@ -23,7 +28,17 @@ export class Vector {
    * Convert to Bounds.
    * @param bounds
    */
-  static toBounds = ({ x, y, width, height }: { x: Num, y: Num, width: Num, height: Num }): Bounds => ({
+  static toBounds = ({
+    x,
+    y,
+    width,
+    height
+  }: {
+    x: Num;
+    y: Num;
+    width: Num;
+    height: Num;
+  }): Bounds => ({
     x: FractionUtil.toFraction(x),
     y: FractionUtil.toFraction(y),
     width: FractionUtil.toFraction(width),

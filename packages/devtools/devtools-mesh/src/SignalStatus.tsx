@@ -21,7 +21,7 @@ const getColor = (state: SignalState) => {
 };
 
 export interface SignalStatusProps {
-  status: SignalStatus[]
+  status: SignalStatus[];
 }
 
 export const SignalStatusComp = ({ status }: SignalStatusProps) => {
@@ -36,7 +36,7 @@ export const SignalStatusComp = ({ status }: SignalStatusProps) => {
 
   return (
     <div>
-      {status.map(status => (
+      {status.map((status) => (
         <div
           style={{
             color: getColor(status.state)
@@ -45,10 +45,22 @@ export const SignalStatusComp = ({ status }: SignalStatusProps) => {
         >
           {status.host} {status.state}
           {status.error && <div>{status.error}</div>}
-          {status.state === SignalState.DISCONNECTED &&
-            <div>Will reconnect in {format(Math.floor((status.lastStateChange + status.reconnectIn - time) / 1000))}</div>}
-          {status.state === SignalState.CONNECTED &&
-            <div>Connected for {format(Math.floor((time - status.connectionStarted) / 1000))}</div>}
+          {status.state === SignalState.DISCONNECTED && (
+            <div>
+              Will reconnect in{' '}
+              {format(
+                Math.floor(
+                  (status.lastStateChange + status.reconnectIn - time) / 1000
+                )
+              )}
+            </div>
+          )}
+          {status.state === SignalState.CONNECTED && (
+            <div>
+              Connected for{' '}
+              {format(Math.floor((time - status.connectionStarted) / 1000))}
+            </div>
+          )}
         </div>
       ))}
     </div>

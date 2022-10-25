@@ -16,19 +16,33 @@ export const build = async ({
   baseDir,
   outDir
 }: {
-  proto: string[]
-  substitutions?: string
-  baseDir: string | undefined
-  outDir: string
+  proto: string[];
+  substitutions?: string;
+  baseDir: string | undefined;
+  outDir: string;
 }) => {
-  const substitutionsModule = substitutions ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd()) : undefined;
-  const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
+  const substitutionsModule = substitutions
+    ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
+    : undefined;
+  const protoFilePaths = proto.map((file: string) =>
+    resolve(process.cwd(), file)
+  );
   const outdirPath = resolve(process.cwd(), outDir);
 
   // Initialize.
   registerResolver(baseDir);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDir, outdirPath);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outdirPath);
+  logger.logCompilationOptions(
+    substitutionsModule,
+    protoFilePaths,
+    baseDir,
+    outdirPath
+  );
+  await parseAndGenerateSchema(
+    substitutionsModule,
+    protoFilePaths,
+    baseDir,
+    outdirPath
+  );
 };

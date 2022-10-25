@@ -19,7 +19,7 @@ import { FeedWriter } from './feed-writer';
 export class FeedWrapper<T extends {}> {
   private readonly _binder = createBinder(this._hypercore);
 
-  constructor (
+  constructor(
     private _hypercore: Hypercore<T>,
     private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
   ) {
@@ -27,11 +27,11 @@ export class FeedWrapper<T extends {}> {
     assert(this._key);
   }
 
-  [inspect.custom] () {
+  [inspect.custom]() {
     return inspectObject(this);
   }
 
-  toJSON () {
+  toJSON() {
     return {
       feedKey: this._key,
       length: this.properties.length,
@@ -40,24 +40,24 @@ export class FeedWrapper<T extends {}> {
     };
   }
 
-  get key (): PublicKey {
+  get key(): PublicKey {
     return this._key;
   }
 
-  get core (): Hypercore<T> {
+  get core(): Hypercore<T> {
     return this._hypercore;
   }
 
   // TODO(burdon): Create proxy.
-  get properties (): HypercoreProperties {
+  get properties(): HypercoreProperties {
     return this._hypercore;
   }
 
-  createReadableStream (): Readable {
+  createReadableStream(): Readable {
     return this._hypercore.createReadStream({ live: true });
   }
 
-  createFeedWriter (): FeedWriter<T> {
+  createFeedWriter(): FeedWriter<T> {
     return {
       write: async (data: T) => {
         const seq = await this.append(data);

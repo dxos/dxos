@@ -9,7 +9,11 @@ import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
 import { IEchoStream, ItemID } from '@dxos/protocols';
-import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import {
+  DatabaseSnapshot,
+  ItemSnapshot,
+  LinkSnapshot
+} from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';
 import { Item } from './item';
@@ -19,10 +23,10 @@ import { Link } from './link';
 const log = debug('dxos:echo-db:item-demuxer');
 
 export interface ItemDemuxerOptions {
-  snapshots?: boolean
+  snapshots?: boolean;
 }
 
-export type EchoProcessor = (message: IEchoStream) => Promise<void>
+export type EchoProcessor = (message: IEchoStream) => Promise<void>;
 
 /**
  * Creates a stream that consumes `IEchoStream` messages and routes them to the associated items.
@@ -31,14 +35,14 @@ export type EchoProcessor = (message: IEchoStream) => Promise<void>
 export class ItemDemuxer {
   readonly mutation = new Event<IEchoStream>();
 
-  constructor (
+  constructor(
     private readonly _itemManager: ItemManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _options: ItemDemuxerOptions = {}
   ) {}
 
-  open (): EchoProcessor {
-    this._modelFactory.registered.on(async model => {
+  open(): EchoProcessor {
+    this._modelFactory.registered.on(async (model) => {
       for (const item of this._itemManager.getUninitializedEntities()) {
         if (item._stateManager.modelType === model.meta.type) {
           await this._itemManager.initializeModel(item.id);
@@ -49,7 +53,10 @@ export class ItemDemuxer {
     // TODO(burdon): Factor out.
     // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
     return async (message: IEchoStream) => {
-      const { data: { itemId, genesis, itemMutation, mutation, snapshot }, meta } = message;
+      const {
+        data: { itemId, genesis, itemMutation, mutation, snapshot },
+        meta
+      } = message;
       assert(itemId);
 
       //
@@ -93,7 +100,9 @@ export class ItemDemuxer {
         const item = this._itemManager.getItem(itemId);
         assert(item);
 
-        item._processMutation(itemMutation, (itemId: ItemID) => this._itemManager.getItem(itemId));
+        item._processMutation(itemMutation, (itemId: ItemID) =>
+          this._itemManager.getItem(itemId)
+        );
       }
 
       //
@@ -108,7 +117,8 @@ export class ItemDemuxer {
       }
 
       if (snapshot) {
-        const entity = this._itemManager.entities.get(itemId) ?? failUndefined();
+        const entity =
+          this._itemManager.entities.get(itemId) ?? failUndefined();
         entity._stateManager.resetToSnapshot(snapshot);
       }
 
@@ -116,15 +126,19 @@ export class ItemDemuxer {
     };
   }
 
-  createSnapshot (): DatabaseSnapshot {
+  createSnapshot(): DatabaseSnapshot {
     assert(this._options.snapshots, 'Snapshots are disabled');
     return {
-      items: this._itemManager.items.map(item => this.createItemSnapshot(item)),
-      links: this._itemManager.links.map(link => this.createLinkSnapshot(link))
+      items: this._itemManager.items.map((item) =>
+        this.createItemSnapshot(item)
+      ),
+      links: this._itemManager.links.map((link) =>
+        this.createLinkSnapshot(link)
+      )
     };
   }
 
-  createItemSnapshot (item: Item<Model<any>>): ItemSnapshot {
+  createItemSnapshot(item: Item<Model<any>>): ItemSnapshot {
     const model = item._stateManager.createSnapshot();
 
     return {
@@ -136,7 +150,7 @@ export class ItemDemuxer {
     };
   }
 
-  createLinkSnapshot (link: Link<Model<any>>): LinkSnapshot {
+  createLinkSnapshot(link: Link<Model<any>>): LinkSnapshot {
     const model = link._stateManager.createSnapshot();
 
     return {
@@ -149,7 +163,7 @@ export class ItemDemuxer {
     };
   }
 
-  async restoreFromSnapshot (snapshot: DatabaseSnapshot) {
+  async restoreFromSnapshot(snapshot: DatabaseSnapshot) {
     const { items = [], links = [] } = snapshot;
 
     log(`Restoring ${items.length} items from snapshot.`);
@@ -189,7 +203,9 @@ export class ItemDemuxer {
  * Sort based on parents.
  * @param items
  */
-export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] => {
+export const sortItemsTopologically = (
+  items: ItemSnapshot[]
+): ItemSnapshot[] => {
   const snapshots: ItemSnapshot[] = [];
   const seenIds = new Set<ItemID>();
 
@@ -197,13 +213,18 @@ export const sortItemsTopologically = (items: ItemSnapshot[]): ItemSnapshot[] =>
     const prevLength = snapshots.length;
     for (const item of items) {
       assert(item.itemId);
-      if (!seenIds.has(item.itemId) && (item.parentId == null || seenIds.has(item.parentId))) {
+      if (
+        !seenIds.has(item.itemId) &&
+        (item.parentId == null || seenIds.has(item.parentId))
+      ) {
         snapshots.push(item);
         seenIds.add(item.itemId);
       }
     }
     if (prevLength === snapshots.length && snapshots.length !== items.length) {
-      throw new Error('Cannot topologically sorts items in snapshot: some parents are missing.');
+      throw new Error(
+        'Cannot topologically sorts items in snapshot: some parents are missing.'
+      );
     }
   }
 

@@ -11,12 +11,10 @@ import { ResourceSet } from '@dxos/registry-client';
 import { useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
 
 interface SpawnBotDialogProps {
-  onSelect: (resource: ResourceSet) => void
+  onSelect: (resource: ResourceSet) => void;
 }
 
-export const SpawnBotPanel = ({
-  onSelect
-}: SpawnBotDialogProps) => {
+export const SpawnBotPanel = ({ onSelect }: SpawnBotDialogProps) => {
   const registry = useRegistry();
 
   // TODO(burdon): Create hook to create pre-filtered model.
@@ -30,10 +28,5 @@ export const SpawnBotPanel = ({
     // ]);
   }, []);
 
-  return (
-    <RegistrySearchPanel
-      model={model}
-      onSelect={onSelect}
-    />
-  );
+  return <RegistrySearchPanel model={model} onSelect={onSelect} />;
 };

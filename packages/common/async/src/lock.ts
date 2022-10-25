@@ -29,7 +29,7 @@ export class Lock {
    * Function are executed in the same order as `executeSynchronized` is called.
    * WARNING: Calling `executeSynchronized` inside of `executeSynchronized` on the same lock instance is a deadlock.
    */
-  async executeSynchronized<T> (fun: () => Promise<T>): Promise<T> {
+  async executeSynchronized<T>(fun: () => Promise<T>): Promise<T> {
     const prevPromise = this._lastPromise;
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
@@ -59,7 +59,8 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = function (this: any, ...args: any) {
-    const lock: Lock = this[classLockSymbol] ?? (this[classLockSymbol] = new Lock());
+    const lock: Lock =
+      this[classLockSymbol] ?? (this[classLockSymbol] = new Lock());
     return lock.executeSynchronized(() => method.apply(this, args));
   };
 };

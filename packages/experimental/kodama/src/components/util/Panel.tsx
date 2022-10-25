@@ -9,12 +9,9 @@ import React, { FC, ReactNode } from 'react';
  * Focusable panel.
  */
 export const Panel: FC<{
-  highlight?: boolean
-  children: ReactNode
-}> = ({
-  highlight,
-  children
-}) => {
+  highlight?: boolean;
+  children: ReactNode;
+}> = ({ highlight, children }) => {
   return (
     <Box
       flexDirection='column'

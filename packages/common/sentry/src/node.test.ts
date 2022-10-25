@@ -13,7 +13,8 @@ import * as Sentry from './node';
 
 const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
 
-const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
+const MOCK_DESTINATION =
+  'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
 describe('Node error reporting', function () {
   before(function () {
@@ -36,7 +37,7 @@ describe('Node error reporting', function () {
       expect(testkit.reports()).to.be.lengthOf(1);
     });
     const report = testkit.findReport(err);
-    (report.error?.stacktrace as Stacktrace).frames?.forEach(frame => {
+    (report.error?.stacktrace as Stacktrace).frames?.forEach((frame) => {
       expect(frame.filename?.includes('/')).to.be.false;
     });
   });

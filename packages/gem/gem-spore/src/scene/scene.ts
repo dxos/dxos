@@ -13,16 +13,16 @@ import { Renderer } from './renderer';
 export class Part<MODEL> {
   _updateListener: EventHandle | undefined;
 
-  constructor (
+  constructor(
     private readonly _projector: Projector<MODEL, any, any>,
     private readonly _renderer: Renderer<any, any>
   ) {}
 
-  update (model: MODEL) {
+  update(model: MODEL) {
     this._projector.update(model);
   }
 
-  async start () {
+  async start() {
     // Listen for projector updates.
     this._updateListener = this._projector.updated.on(({ layout }) => {
       this._renderer.update(layout);
@@ -31,7 +31,7 @@ export class Part<MODEL> {
     await this._projector.start();
   }
 
-  async stop () {
+  async stop() {
     await this._projector.stop();
 
     this._updateListener?.();
@@ -43,19 +43,17 @@ export class Part<MODEL> {
  * Manages a collection of parts.
  */
 export class Scene<MODEL> {
-  constructor (
-    private readonly _parts: Part<MODEL>[]
-  ) {}
+  constructor(private readonly _parts: Part<MODEL>[]) {}
 
-  update (model: MODEL) {
-    this._parts.forEach(part => part.update(model));
+  update(model: MODEL) {
+    this._parts.forEach((part) => part.update(model));
   }
 
-  start () {
-    this._parts.forEach(part => part.start());
+  start() {
+    this._parts.forEach((part) => part.start());
   }
 
-  stop () {
-    return Promise.all(this._parts.map(part => part.stop()));
+  stop() {
+    return Promise.all(this._parts.map((part) => part.stop()));
   }
 }

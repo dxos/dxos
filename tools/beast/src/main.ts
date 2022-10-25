@@ -34,17 +34,17 @@ const main = () => {
         verbose,
         baseDir
       }: {
-        json: boolean
-        verbose?: boolean
-        baseDir: string
+        json: boolean;
+        verbose?: boolean;
+        baseDir: string;
       }) => {
         const processor = new WorkspaceProcessor(baseDir, { verbose }).init();
-        const projects = processor.getProjects().map(p => p.package.name);
+        const projects = processor.getProjects().map((p) => p.package.name);
 
         if (json) {
           console.log(JSON.stringify({ projects }, undefined, 2));
         } else {
-          projects.forEach(m => console.log(`- ${m}`));
+          projects.forEach((m) => console.log(`- ${m}`));
         }
       }
     })
@@ -52,8 +52,8 @@ const main = () => {
     .command({
       command: 'deps [project]',
       describe: 'Checks for cycles.',
-      builder: yargs => yargs
-        .option('filter', {
+      builder: (yargs) =>
+        yargs.option('filter', {
           description: 'Dependency filter',
           type: 'string',
           default: '@dxos/*'
@@ -65,11 +65,11 @@ const main = () => {
         project: name,
         filter
       }: {
-        json?: boolean
-        verbose?: boolean
-        baseDir: string
-        project?: string
-        filter?: string
+        json?: boolean;
+        verbose?: boolean;
+        baseDir: string;
+        project?: string;
+        filter?: string;
       }) => {
         if (!name) {
           process.exit(1);
@@ -80,13 +80,19 @@ const main = () => {
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
           if (json) {
-            console.log(JSON.stringify({
-              package: project.package.name,
-              descendents
-            }, undefined, 2));
+            console.log(
+              JSON.stringify(
+                {
+                  package: project.package.name,
+                  descendents
+                },
+                undefined,
+                2
+              )
+            );
           } else {
             console.log(`${project.package.name}`);
-            descendents.forEach(p => console.log(`- ${p}`));
+            descendents.forEach((p) => console.log(`- ${p}`));
           }
         }
       }
@@ -95,36 +101,37 @@ const main = () => {
     .command({
       command: 'docs [pattern]',
       describe: 'Generate docs and dependency diagrams.',
-      builder: yargs => yargs
-        .option('baseUrl', {
-          description: 'Base URL for links',
-          type: 'string',
-          default: 'dxos/dxos/tree/main'
-        })
-        .option('outDir', {
-          description: 'Folder for generated docs',
-          type: 'string',
-          default: './docs'
-        })
-        .option('include', {
-          description: 'Dependency filter',
-          type: 'string',
-          default: '@dxos/*'
-        })
-        .option('exclude', {
-          description: 'Excluded files',
-          type: 'string',
-          // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
-          default: [
-            '@dxos/async',
-            '@dxos/debug',
-            '@dxos/feeds',
-            '@dxos/keys',
-            '@dxos/log',
-            '@dxos/testutils',
-            '@dxos/util'
-          ].join(',')
-        }),
+      builder: (yargs) =>
+        yargs
+          .option('baseUrl', {
+            description: 'Base URL for links',
+            type: 'string',
+            default: 'dxos/dxos/tree/main'
+          })
+          .option('outDir', {
+            description: 'Folder for generated docs',
+            type: 'string',
+            default: './docs'
+          })
+          .option('include', {
+            description: 'Dependency filter',
+            type: 'string',
+            default: '@dxos/*'
+          })
+          .option('exclude', {
+            description: 'Excluded files',
+            type: 'string',
+            // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
+            default: [
+              '@dxos/async',
+              '@dxos/debug',
+              '@dxos/feeds',
+              '@dxos/keys',
+              '@dxos/log',
+              '@dxos/testutils',
+              '@dxos/util'
+            ].join(',')
+          }),
       handler: ({
         verbose,
         baseDir,
@@ -134,27 +141,34 @@ const main = () => {
         include,
         exclude = ''
       }: {
-        verbose?: boolean
-        baseDir: string
-        pattern?: string
-        baseUrl : string
-        outDir: string
-        include: string
-        exclude: string
+        verbose?: boolean;
+        baseDir: string;
+        pattern?: string;
+        baseUrl: string;
+        outDir: string;
+        include: string;
+        exclude: string;
       }) => {
-        const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
-        const builder = new PackageDependencyBuilder(baseDir, processor, { verbose, exclude: exclude?.split(',') });
-        processor.getProjects(pattern).forEach(project => {
+        const processor = new WorkspaceProcessor(baseDir, {
+          verbose,
+          include
+        }).init();
+        const builder = new PackageDependencyBuilder(baseDir, processor, {
+          verbose,
+          exclude: exclude?.split(',')
+        });
+        processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
-            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+            console.log(
+              `Updating: ${project.name.padEnd(32)} ${project.subdir}`
+            );
           }
 
           builder.createDocs(project, outDir, baseUrl);
         });
       }
     })
-    .help()
-    .argv;
+    .help().argv;
 };
 
 void main();

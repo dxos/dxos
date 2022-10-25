@@ -14,8 +14,8 @@ type Tx = SubmittableExtrinsic<'promise', ISubmittableResult>;
 export type SignTxFunction = (tx: Tx) => MaybePromise<Tx>;
 
 interface SendTransactionResult {
-  events: EventRecord[]
-  signer: Address
+  events: EventRecord[];
+  signer: Address;
 }
 
 /**
@@ -24,9 +24,9 @@ interface SendTransactionResult {
 export class ApiTransactionHandler {
   private signFn: SignTxFunction;
 
-  constructor (
+  constructor(
     private api: ApiPromise,
-    _signFn: SignTxFunction | AddressOrPair = tx => tx // By in test environment, no signing is required.
+    _signFn: SignTxFunction | AddressOrPair = (tx) => tx // By in test environment, no signing is required.
   ) {
     if (typeof _signFn === 'function') {
       this.signFn = _signFn;
@@ -35,10 +35,10 @@ export class ApiTransactionHandler {
     }
   }
 
-  async sendTransaction (
+  async sendTransaction(
     transaction: SubmittableExtrinsic<'promise'>,
     signFn: SignTxFunction = this.signFn
-  ) : Promise<SendTransactionResult> {
+  ): Promise<SendTransactionResult> {
     return new Promise((resolve, reject) => {
       if (!signFn) {
         throw new Error('Create or select an account first.');
@@ -46,21 +46,23 @@ export class ApiTransactionHandler {
       setTimeout(async () => {
         try {
           const signedTransaction = await signFn(transaction);
-          signedTransaction.send(({ events = [], status }) => {
-            try {
-              this.ensureExtrinsicNotFailed(events);
-            } catch (err: any) {
-              reject(err);
-            }
-            // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
-            // https://github.com/dxos/dot/issues/167
-            if (status.isFinalized || status.isInBlock) {
-              resolve({
-                events,
-                signer: signedTransaction.signer
-              });
-            }
-          }).catch(reject);
+          signedTransaction
+            .send(({ events = [], status }) => {
+              try {
+                this.ensureExtrinsicNotFailed(events);
+              } catch (err: any) {
+                reject(err);
+              }
+              // TODO(marcin): Provide ensureTransaction which makes sure the given transaction has been finalized.
+              // https://github.com/dxos/dot/issues/167
+              if (status.isFinalized || status.isInBlock) {
+                resolve({
+                  events,
+                  signer: signedTransaction.signer
+                });
+              }
+            })
+            .catch(reject);
         } catch (err) {
           reject(err);
         }
@@ -68,14 +70,19 @@ export class ApiTransactionHandler {
     });
   }
 
-  async sendSudoTransaction (transaction: Tx, sudoSignFn: SignTxFunction | AddressOrPair):
-    Promise<SendTransactionResult> {
+  async sendSudoTransaction(
+    transaction: Tx,
+    sudoSignFn: SignTxFunction | AddressOrPair
+  ): Promise<SendTransactionResult> {
     const sudoTx = this.api.tx.sudo.sudo(transaction);
-    const signFn = typeof sudoSignFn === 'function' ? sudoSignFn : (tx: Tx) => tx.signAsync(sudoSignFn);
+    const signFn =
+      typeof sudoSignFn === 'function'
+        ? sudoSignFn
+        : (tx: Tx) => tx.signAsync(sudoSignFn);
     return this.sendTransaction(sudoTx, signFn);
   }
 
-  getErrorName (rejectionEvent: Event) : string {
+  getErrorName(rejectionEvent: Event): string {
     // Checking if event is fail event.
     if (this.api.events.system.ExtrinsicFailed.is(rejectionEvent)) {
       const rejectionType = rejectionEvent.data[0];
@@ -97,8 +104,10 @@ export class ApiTransactionHandler {
     return 'Unknown error';
   }
 
-  ensureExtrinsicNotFailed (events : EventRecord[]) {
-    const rejectionEvent = events.map(e => e.event).find(this.api.events.system.ExtrinsicFailed.is);
+  ensureExtrinsicNotFailed(events: EventRecord[]) {
+    const rejectionEvent = events
+      .map((e) => e.event)
+      .find(this.api.events.system.ExtrinsicFailed.is);
     if (rejectionEvent) {
       throw new Error(this.getErrorName(rejectionEvent));
     }

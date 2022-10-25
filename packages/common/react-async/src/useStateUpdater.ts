@@ -22,7 +22,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
  *
  * @param initialValue
  */
-export const useStateUpdater = <T> (
+export const useStateUpdater = <T>(
   initialValue: T
 ): [T, Dispatch<SetStateAction<T>>, (spec: any) => T] => {
   const [value, setValue] = useState<T>(initialValue);
@@ -32,9 +32,5 @@ export const useStateUpdater = <T> (
     return newValue;
   };
 
-  return [
-    value,
-    setValue,
-    handleUpdate
-  ];
+  return [value, setValue, handleUpdate];
 };

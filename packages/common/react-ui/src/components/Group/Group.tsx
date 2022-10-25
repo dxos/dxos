@@ -9,10 +9,10 @@ import { useId } from '../../hooks';
 import { Heading, HeadingProps } from '../Heading';
 
 export interface GroupProps extends React.ComponentProps<'div'> {
-  label: HeadingProps
-  labelVisuallyHidden?: boolean
-  elevation?: 0 | 1 | 2 | 3 | 4 | 5 | 6
-  children?: ReactNode
+  label: HeadingProps;
+  labelVisuallyHidden?: boolean;
+  elevation?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  children?: ReactNode;
 }
 
 const elevationClassNameMap = new Map<number, string>([
@@ -40,8 +40,12 @@ export const Group = ({
       aria-labelledby={labelId}
       className={cx(
         'rounded-lg p-4',
-        elevation === 0 ? 'bg-transparent border border-neutral-200 dark:border-neutral-700' : 'bg-white dark:bg-neutral-800 elevated-buttons',
-        elevationClassNameMap.get(typeof elevation === 'undefined' ? 3 : elevation),
+        elevation === 0
+          ? 'bg-transparent border border-neutral-200 dark:border-neutral-700'
+          : 'bg-white dark:bg-neutral-800 elevated-buttons',
+        elevationClassNameMap.get(
+          typeof elevation === 'undefined' ? 3 : elevation
+        ),
         className
       )}
       {...props}
@@ -49,7 +53,11 @@ export const Group = ({
       <Heading
         {...label}
         id={labelId}
-        className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)}
+        className={cx(
+          labelVisuallyHidden && 'sr-only',
+          'mb-2',
+          label?.className
+        )}
       />
       {children}
     </div>

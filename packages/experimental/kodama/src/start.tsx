@@ -12,23 +12,23 @@ import { App } from './components';
 import { AppStateProvider } from './hooks';
 
 export interface Options {
-  debug?: boolean
+  debug?: boolean;
   update?: {
-    name: string
-    version: string
-  }
+    name: string;
+    version: string;
+  };
 }
 
 export const start = async (client: Client, options: Options = {}) => {
   const { debug } = options;
 
-  const { waitUntilExit } = render((
+  const { waitUntilExit } = render(
     <ClientProvider client={client}>
       <AppStateProvider debug={debug}>
         <App />
       </AppStateProvider>
     </ClientProvider>
-  ));
+  );
 
   await waitUntilExit();
 };

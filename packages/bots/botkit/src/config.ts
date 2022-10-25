@@ -22,10 +22,7 @@ export const BOT_FACTORY_DEFAULT_PERSISTENT = false;
  * Get config from default or specified .yml file.
  */
 export const getConfig = () => {
-  const config = new Config(
-    mapFromKeyValues(envmap, process.env),
-    defaults
-  );
+  const config = new Config(mapFromKeyValues(envmap, process.env), defaults);
 
   return config;
 };

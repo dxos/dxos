@@ -19,9 +19,9 @@ export const TEMPLATE_DIRECTORY_IGNORE = [
 ];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
-  templateDirectory: string
-  outputDirectory: string
-  input?: Partial<TInput>
+  templateDirectory: string;
+  outputDirectory: string;
+  input?: Partial<TInput>;
 };
 
 export const executeDirectoryTemplate = async <TInput>(

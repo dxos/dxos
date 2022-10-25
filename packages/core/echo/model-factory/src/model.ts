@@ -20,44 +20,44 @@ export abstract class Model<TState = any, TMutation = any> {
    * @param _getState Retrieves the underlying state object.
    * @param _mutationWriter Output mutation stream (unless read-only).
    */
-  constructor (
+  constructor(
     private readonly _meta: ModelMeta,
     private readonly _itemId: ItemID,
     protected readonly _getState: () => TState,
     private readonly _mutationWriter?: MutationWriter<TMutation>
   ) {}
 
-  toString () {
+  toString() {
     return `Model(${JSON.stringify(this.toJSON())})`;
   }
 
-  toJSON () {
+  toJSON() {
     return {
       id: this.itemId,
       type: this._meta.type
     };
   }
 
-  get modelMeta (): ModelMeta {
+  get modelMeta(): ModelMeta {
     return this._meta;
   }
 
-  get itemId (): ItemID {
+  get itemId(): ItemID {
     return this._itemId;
   }
 
-  get readOnly (): boolean {
+  get readOnly(): boolean {
     return this._mutationWriter === undefined;
   }
 
-  subscribe (listener: (result: this) => void) {
+  subscribe(listener: (result: this) => void) {
     return this.update.on(listener as any);
   }
 
   /**
    * Writes the raw mutation to the output stream.
    */
-  protected async write (mutation: TMutation): Promise<MutationWriteReceipt> {
+  protected async write(mutation: TMutation): Promise<MutationWriteReceipt> {
     if (!this._mutationWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }

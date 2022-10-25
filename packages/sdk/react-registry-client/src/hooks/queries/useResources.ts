@@ -8,8 +8,8 @@ import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  resources: ResourceSet[]
-  error?: unknown
+  resources: ResourceSet[];
+  error?: unknown;
 }
 
 /**

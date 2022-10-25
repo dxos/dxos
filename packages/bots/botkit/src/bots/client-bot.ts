@@ -23,7 +23,7 @@ export class Bot implements BotService {
   protected party: Party | undefined;
   protected id: string | undefined;
 
-  async initialize (request: InitializeRequest) {
+  async initialize(request: InitializeRequest) {
     log('Client bot start initializing');
 
     this.id = request.id;
@@ -37,12 +37,17 @@ export class Bot implements BotService {
     await this.client.halo.createProfile({ username: 'Bot' });
 
     if (request.invitation) {
-      assert(request.invitation.secret, 'Secret must be provided with invitation');
+      assert(
+        request.invitation.secret,
+        'Secret must be provided with invitation'
+      );
       const invitation = InvitationDescriptor.fromProto(request.invitation);
       log('Client bot join party');
       // TODO(yivlad): errors are not handled well in RPC.
       try {
-        this.party = await this.client.echo.acceptInvitation(invitation).getParty();
+        this.party = await this.client.echo
+          .acceptInvitation(invitation)
+          .getParty();
       } catch (e: unknown) {
         throw new Error(`Failed to join party: ${e}`);
       }
@@ -51,7 +56,7 @@ export class Bot implements BotService {
     await this.onStart(request);
   }
 
-  async start (request: StartRequest) {
+  async start(request: StartRequest) {
     log('Client bot start initilizing');
     this.client = new Client(request.config);
 
@@ -68,17 +73,17 @@ export class Bot implements BotService {
     await this.onStart(request);
   }
 
-  async command (request: SendCommandRequest) {
+  async command(request: SendCommandRequest) {
     const response = await this.onCommand(request);
     return response;
   }
 
-  async stop () {
+  async stop() {
     await this.client?.destroy();
     await this.onStop();
   }
 
-  startReporting (): Stream<BotReport> {
+  startReporting(): Stream<BotReport> {
     return new Stream(({ next, close }) => {
       const report = async () => {
         const partyDetails = await this.party?.getDetails();
@@ -90,10 +95,12 @@ export class Bot implements BotService {
     });
   }
 
-  protected async onStart (request: InitializeRequest) {}
-  protected async onCommand (request: SendCommandRequest): Promise<SendCommandResponse> {
+  protected async onStart(request: InitializeRequest) {}
+  protected async onCommand(
+    request: SendCommandRequest
+  ): Promise<SendCommandResponse> {
     return {};
   }
 
-  protected async onStop () {}
+  protected async onStop() {}
 }

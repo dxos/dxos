@@ -42,7 +42,8 @@ const main = () => {
     })
     .command({
       command: '*',
-      describe: 'Markdown processor to enhance Github docs (e.g., table of contents; snippets; links).',
+      describe:
+        'Markdown processor to enhance Github docs (e.g., table of contents; snippets; links).',
       handler: ({
         autoNumber,
         baseDir,
@@ -52,13 +53,13 @@ const main = () => {
         outDir,
         verbose
       }: {
-        autoNumber: boolean
-        baseDir: string
-        dryRun: boolean
-        files: string
-        html: boolean
-        outDir: string
-        verbose: boolean
+        autoNumber: boolean;
+        baseDir: string;
+        dryRun: boolean;
+        files: string;
+        html: boolean;
+        outDir: string;
+        verbose: boolean;
       }) => {
         void processFiles({
           autoNumber,
@@ -71,8 +72,7 @@ const main = () => {
         });
       }
     })
-    .help()
-    .argv;
+    .help().argv;
 };
 
 void main();

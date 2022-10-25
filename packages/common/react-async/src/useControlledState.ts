@@ -18,7 +18,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
  * @param onChange
  * @param deps other deps that may change the state
  */
-export const useControlledState = <T> (
+export const useControlledState = <T>(
   controlledValue: T,
   onChange?: (value: T) => void,
   deps?: any[]
@@ -31,7 +31,10 @@ export const useControlledState = <T> (
   return [
     value,
     (callback: T | ((previous: T) => T)) => {
-      const newValue = (typeof callback === 'function') ? (callback as Function)(value) : callback;
+      const newValue =
+        typeof callback === 'function'
+          ? (callback as Function)(value)
+          : callback;
       setValue(newValue);
       onChange?.(newValue);
     }

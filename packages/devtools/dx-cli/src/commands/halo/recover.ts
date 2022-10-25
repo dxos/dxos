@@ -15,7 +15,7 @@ export default class Recover extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args } = await this.parse(Recover);
     const { seedphrase } = args; // TODO(burdon): Prompt.
 

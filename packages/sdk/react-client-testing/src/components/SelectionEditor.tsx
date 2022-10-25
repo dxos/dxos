@@ -2,15 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import React, {
+  ChangeEvent,
+  KeyboardEvent,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 
 import { TextField } from '@mui/material';
 
 interface SelectionEditorProps {
-  onChange: (selection: string) => void
-  initialValue?: string
-  delay?: number
-  rows?: number
+  onChange: (selection: string) => void;
+  initialValue?: string;
+  delay?: number;
+  rows?: number;
 }
 
 const caretMarker = '$1';

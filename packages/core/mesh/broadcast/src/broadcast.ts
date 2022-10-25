@@ -11,27 +11,31 @@ import { randomBytes } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
 import { Packet } from '@dxos/protocols/proto/dxos/mesh/broadcast';
 
-debug.formatters.h = v => v.toString('hex').slice(0, 6);
+debug.formatters.h = (v) => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
 
-export type SendFn<P> = (message: Uint8Array, peer: P, options: unknown) => Promise<void>;
+export type SendFn<P> = (
+  message: Uint8Array,
+  peer: P,
+  options: unknown
+) => Promise<void>;
 
 type Unsubscribe = () => void;
 
 export type SubscribeFn<P> = (
   onPacket: (packetEncoded: Uint8Array) => Packet | undefined,
-  updatePeers: (peers: P[]) => void,
+  updatePeers: (peers: P[]) => void
 ) => Unsubscribe | void;
 
 export type LookupFn<P> = () => Promise<P[]>;
 
 export interface Middleware<P extends Peer = Peer> {
-  readonly send: SendFn<P>
-  readonly subscribe: SubscribeFn<P>
+  readonly send: SendFn<P>;
+  readonly subscribe: SubscribeFn<P>;
   /**
    * @deprecated
    */
-   readonly lookup?: LookupFn<P>
+  readonly lookup?: LookupFn<P>;
 }
 
 export interface CacheOptions {
@@ -40,38 +44,40 @@ export interface CacheOptions {
    *
    * Default: 10000.
    */
-   maxAge?: number
-   /**
-    * Defines the max size for the cache messages.
-    *
-    * Default: 1000.
-    */
-   maxSize?: number
+  maxAge?: number;
+  /**
+   * Defines the max size for the cache messages.
+   *
+   * Default: 1000.
+   */
+  maxSize?: number;
 }
 
 export interface Options extends CacheOptions {
   /**
    * Defines an id for the current peer.
    */
-  id?: Buffer
+  id?: Buffer;
 }
 
 export interface PublishOptions {
-  seq?: Buffer
+  seq?: Buffer;
 }
 
 export interface Peer {
-  id: Buffer
+  id: Buffer;
 }
 
-type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The original type did not have all of the fields defined.
+type FixedLru = Lru<any> & { ttl: number; max: number; items: any[] }; // The original type did not have all of the fields defined.
 
 /**
  * Abstract module to send broadcast messages.
  */
 export class Broadcast<P extends Peer = Peer> {
   private readonly _id: Buffer;
-  private readonly _codec = schema.getCodecForType('dxos.mesh.broadcast.Packet');
+  private readonly _codec = schema.getCodecForType(
+    'dxos.mesh.broadcast.Packet'
+  );
 
   private readonly _send: SendFn<P>;
   private readonly _subscribe: SubscribeFn<P>;
@@ -87,12 +93,16 @@ export class Broadcast<P extends Peer = Peer> {
   readonly packet = new Event<Packet>();
   readonly subscribeError = new Event<Error>();
 
-  constructor (middleware: Middleware<P>, options: Options = {}) {
+  constructor(middleware: Middleware<P>, options: Options = {}) {
     assert(middleware);
     assert(middleware.send);
     assert(middleware.subscribe);
 
-    const { id = randomBytes(32), maxAge = 10 * 1000, maxSize = 1000 } = options;
+    const {
+      id = randomBytes(32),
+      maxAge = 10 * 1000,
+      maxSize = 1000
+    } = options;
 
     this._id = id;
 
@@ -109,7 +119,10 @@ export class Broadcast<P extends Peer = Peer> {
   /**
    * Broadcast a flooding message to the peers neighbors.
    */
-  async publish (data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
+  async publish(
+    data: Uint8Array,
+    options: PublishOptions = {}
+  ): Promise<Packet | undefined> {
     const { seq = randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
@@ -125,15 +138,18 @@ export class Broadcast<P extends Peer = Peer> {
   /**
    * Update internal list of peers.
    */
-  updatePeers (peers: P[]) {
-    assert(peers.every(peer => Buffer.isBuffer(peer.id)), 'Peer ID is expected to be a buffer.');
+  updatePeers(peers: P[]) {
+    assert(
+      peers.every((peer) => Buffer.isBuffer(peer.id)),
+      'Peer ID is expected to be a buffer.'
+    );
     this._peers = peers;
   }
 
   /**
    * Update internal cache options
    */
-  updateCache (opts: CacheOptions = {}) {
+  updateCache(opts: CacheOptions = {}) {
     if (opts.maxAge) {
       this._seenSeqs.ttl = opts.maxAge;
     }
@@ -146,7 +162,7 @@ export class Broadcast<P extends Peer = Peer> {
   /**
    * Prune the internal cache items in timeout
    */
-  pruneCache () {
+  pruneCache() {
     const time = Date.now();
     for (const item of Object.values(this._seenSeqs.items)) {
       if (this._seenSeqs.ttl > 0 && item.expiry <= time) {
@@ -155,18 +171,20 @@ export class Broadcast<P extends Peer = Peer> {
     }
   }
 
-  open () {
+  open() {
     if (this._isOpen) {
       return;
     }
     this._isOpen = true;
 
-    this._unsubscribe = this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) || (() => {});
+    this._unsubscribe =
+      this._subscribe(this._onPacket.bind(this), this.updatePeers.bind(this)) ||
+      (() => {});
 
     log('running %h', this._id);
   }
 
-  close () {
+  close() {
     if (!this._isOpen) {
       return;
     }
@@ -184,11 +202,18 @@ export class Broadcast<P extends Peer = Peer> {
    * @param {Packet} packet
    * @param {Object} options
    */
-  private async _publish (packet: Packet, options = {}): Promise<Packet | undefined> {
+  private async _publish(
+    packet: Packet,
+    options = {}
+  ): Promise<Packet | undefined> {
     /** @deprecated */
     this._lookup && this.updatePeers(await this._lookup());
 
-    const peers = this._peers.filter(peer => !Buffer.from(packet.origin!).equals(peer.id) && (!packet.from || !Buffer.from(packet.from).equals(peer.id)));
+    const peers = this._peers.filter(
+      (peer) =>
+        !Buffer.from(packet.origin!).equals(peer.id) &&
+        (!packet.from || !Buffer.from(packet.from).equals(peer.id))
+    );
     if (peers.length === 0) {
       return;
     }
@@ -200,15 +225,19 @@ export class Broadcast<P extends Peer = Peer> {
 
     const packetEncoded = this._codec.encode(packet);
 
-    await Promise.all(peers.map((peer) => {
-      log('publish %h -> %h', this._id, peer.id, packet);
+    await Promise.all(
+      peers.map((peer) => {
+        log('publish %h -> %h', this._id, peer.id, packet);
 
-      return this._send(packetEncoded, peer, options).then(() => {
-        this.send.emit([packetEncoded, peer]);
-      }).catch(err => {
-        this.sendError.emit(err);
-      });
-    }));
+        return this._send(packetEncoded, peer, options)
+          .then(() => {
+            this.send.emit([packetEncoded, peer]);
+          })
+          .catch((err) => {
+            this.sendError.emit(err);
+          });
+      })
+    );
 
     return packet;
   }
@@ -218,7 +247,7 @@ export class Broadcast<P extends Peer = Peer> {
    *
    * @returns Returns the packet if the decoding was successful.
    */
-  private _onPacket (packetEncoded: Uint8Array): Packet | undefined {
+  private _onPacket(packetEncoded: Uint8Array): Packet | undefined {
     if (!this._isOpen) {
       return;
     }
@@ -234,7 +263,10 @@ export class Broadcast<P extends Peer = Peer> {
         return;
       }
 
-      const packetId = Buffer.from(packet.origin).toString('hex') + ':' + Buffer.from(packet.seq).toString('hex');
+      const packetId =
+        Buffer.from(packet.origin).toString('hex') +
+        ':' +
+        Buffer.from(packet.seq).toString('hex');
 
       // Check if I already see this packet.
       if (this._seenSeqs.get(packetId)) {

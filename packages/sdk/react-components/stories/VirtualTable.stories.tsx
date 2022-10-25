@@ -5,13 +5,15 @@
 import faker from 'faker';
 import React, { ChangeEvent, useState } from 'react';
 
-import {
-  Check as TrueIcon,
-  Clear as Falseicon
-} from '@mui/icons-material';
+import { Check as TrueIcon, Clear as Falseicon } from '@mui/icons-material';
 import { Box, Checkbox, IconButton } from '@mui/material';
 
-import { GetRowHeightProps, DataCellProps, VirtualTable, FullScreen } from '../src';
+import {
+  GetRowHeightProps,
+  DataCellProps,
+  VirtualTable,
+  FullScreen
+} from '../src';
 
 faker.seed(123);
 
@@ -42,7 +44,12 @@ const columns = [
   }
 ];
 
-const CustomDataCell = ({ key, row, value, rowSelected }: DataCellProps): JSX.Element | undefined => {
+const CustomDataCell = ({
+  key,
+  row,
+  value,
+  rowSelected
+}: DataCellProps): JSX.Element | undefined => {
   switch (key) {
     case 'checked': {
       return (
@@ -58,11 +65,7 @@ const CustomDataCell = ({ key, row, value, rowSelected }: DataCellProps): JSX.El
     }
 
     case 'status': {
-      return (
-        <IconButton>
-          {value ? <TrueIcon /> : <Falseicon />}
-        </IconButton>
-      );
+      return <IconButton>{value ? <TrueIcon /> : <Falseicon />}</IconButton>;
     }
 
     case 'title': {
@@ -80,9 +83,10 @@ const CustomDataCell = ({ key, row, value, rowSelected }: DataCellProps): JSX.El
           >
             {lines[0]}
           </Box>
-          {rowSelected && lines.slice(1).map((line: string, i: number) => (
-            <div key={i}>{line}</div>
-          ))}
+          {rowSelected &&
+            lines
+              .slice(1)
+              .map((line: string, i: number) => <div key={i}>{line}</div>)}
         </>
       );
     }
@@ -116,7 +120,7 @@ const Table = ({ rows }: { rows: any[] }) => {
       <VirtualTable
         rows={rows}
         columns={columns}
-        getRowKey={row => row.id}
+        getRowKey={(row) => row.id}
         getRowHeight={getRowHeight}
         selected={selected}
         onSelect={handleSelect}
@@ -134,7 +138,5 @@ export const Primary = () => {
     status: i % 3 === 0
   }));
 
-  return (
-    <Table rows={rows} />
-  );
+  return <Table rows={rows} />;
 };

@@ -65,7 +65,10 @@ it('ComplexMap', function () {
   expect(map.has(key3)).to.be.false;
   expect(map.get(key1)).to.equal('b');
   expect(map.get(key2)).to.equal('c');
-  expect(Array.from(map.entries())).to.deep.equal([[key1, 'b'], [key2, 'c']]);
+  expect(Array.from(map.entries())).to.deep.equal([
+    [key1, 'b'],
+    [key2, 'c']
+  ]);
   expect(Array.from(map.keys())).to.deep.equal([key1, key2]);
   expect(Array.from(map.values())).to.deep.equal(['b', 'c']);
 

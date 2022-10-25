@@ -16,13 +16,17 @@ test('split namespaces', async () => {
   registerResolver(baseDir);
   preconfigureProtobufjs();
 
-  const root = await pb.load(join(__dirname, '../test/proto/example/testing/types.proto'));
+  const root = await pb.load(
+    join(__dirname, '../test/proto/example/testing/types.proto')
+  );
   const namespaces = splitSchemaIntoNamespaces(root);
 
-  expect(Array.from(namespaces.keys()).sort()).toEqual([
-    'example.testing.any',
-    'example.testing.types',
-    'example.testing.util',
-    'google.protobuf'
-  ].sort());
+  expect(Array.from(namespaces.keys()).sort()).toEqual(
+    [
+      'example.testing.any',
+      'example.testing.types',
+      'example.testing.util',
+      'google.protobuf'
+    ].sort()
+  );
 });

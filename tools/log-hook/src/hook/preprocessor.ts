@@ -2,7 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CallExpression, Expression, Import, ObjectExpression, Program, Span, Super, transformSync, TsType } from '@swc/core';
+import {
+  CallExpression,
+  Expression,
+  Import,
+  ObjectExpression,
+  Program,
+  Span,
+  Super,
+  transformSync,
+  TsType
+} from '@swc/core';
 import Visitor from '@swc/core/Visitor';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -50,7 +60,7 @@ class TraceInjector extends Visitor {
 
   private _sourceMap?: SourceMapConsumer;
 
-  constructor (
+  constructor(
     private readonly filename: string,
     private readonly code: string
   ) {
@@ -64,35 +74,47 @@ class TraceInjector extends Visitor {
     }
 
     try {
-      this._sourceMap = new SourceMapConsumer(JSON.parse(readFileSync(`${filename}.map`, 'utf-8')));
-    } catch { } // Ignore.
+      this._sourceMap = new SourceMapConsumer(
+        JSON.parse(readFileSync(`${filename}.map`, 'utf-8'))
+      );
+    } catch {} // Ignore.
   }
 
-  private _getPosition (span: Span): SourcePosition {
+  private _getPosition(span: Span): SourcePosition {
     // Account for SWC bugs & quirks.
     const position = span.start - this.programSpan.start + this.spanOffset;
 
-    let line = this._linePositions.findIndex((linePosition) => linePosition > position);
+    let line = this._linePositions.findIndex(
+      (linePosition) => linePosition > position
+    );
     if (line === -1) {
       line = this._linePositions.length;
     }
     const column = position - this._linePositions[line - 1];
 
     if (this._sourceMap) {
-      const { line: newLine, column: newColumn, source } = this._sourceMap.originalPositionFor({ line, column });
+      const {
+        line: newLine,
+        column: newColumn,
+        source
+      } = this._sourceMap.originalPositionFor({ line, column });
       if (newLine && newColumn && source) {
-        return { line: newLine, column: newColumn, filename: join(dirname(this.filename), source) };
+        return {
+          line: newLine,
+          column: newColumn,
+          filename: join(dirname(this.filename), source)
+        };
       }
     }
 
     return { line, column, filename: this.filename };
   }
 
-  override visitTsType (n: TsType) {
+  override visitTsType(n: TsType) {
     return n;
   }
 
-  override visitProgram (node: Program) {
+  override visitProgram(node: Program) {
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;
@@ -102,7 +124,7 @@ class TraceInjector extends Visitor {
     return super.visitProgram(node);
   }
 
-  override visitCallExpression (n: CallExpression): Expression {
+  override visitCallExpression(n: CallExpression): Expression {
     if (isLoggerInvocation(n)) {
       if (n.arguments.length === 1) {
         // Add empty context.
@@ -127,7 +149,7 @@ class TraceInjector extends Visitor {
     }
   }
 
-  private _createMetadataExpression (span: Span): Expression {
+  private _createMetadataExpression(span: Span): Expression {
     const position = this._getPosition(span);
     return createObjectExpression({
       file: {
@@ -148,12 +170,14 @@ class TraceInjector extends Visitor {
           optional: false,
           span: ZERO_SPAN
         },
-        arguments: [{
-          expression: {
-            type: 'ThisExpression',
-            span: ZERO_SPAN
+        arguments: [
+          {
+            expression: {
+              type: 'ThisExpression',
+              span: ZERO_SPAN
+            }
           }
-        }],
+        ],
         span: ZERO_SPAN
       },
       bugcheck: {
@@ -175,16 +199,18 @@ class TraceInjector extends Visitor {
  */
 const isLoggerInvocation = (expr: CallExpression) =>
   isLoggerFuncExpression(expr.callee) ||
-  (expr.callee.type === 'MemberExpression' && isLoggerFuncExpression(expr.callee.object));
+  (expr.callee.type === 'MemberExpression' &&
+    isLoggerFuncExpression(expr.callee.object));
 
-const isLoggerFuncExpression =
-  (e: Expression | Super | Import) =>
-    (e.type === 'Identifier' && e.value === 'log') ||
-    isCjsImportedLoggerExpression(e) || (
-      e.type === 'ParenthesisExpression' && e.expression.type === 'SequenceExpression' && e.expression.expressions.length === 2 &&
-      e.expression.expressions[0].type === 'NumericLiteral' && e.expression.expressions[0].value === 0 &&
-      isCjsImportedLoggerExpression(e.expression.expressions[1])
-    );
+const isLoggerFuncExpression = (e: Expression | Super | Import) =>
+  (e.type === 'Identifier' && e.value === 'log') ||
+  isCjsImportedLoggerExpression(e) ||
+  (e.type === 'ParenthesisExpression' &&
+    e.expression.type === 'SequenceExpression' &&
+    e.expression.expressions.length === 2 &&
+    e.expression.expressions[0].type === 'NumericLiteral' &&
+    e.expression.expressions[0].value === 0 &&
+    isCjsImportedLoggerExpression(e.expression.expressions[1]));
 
 /**
  * Matches:
@@ -193,11 +219,14 @@ const isLoggerFuncExpression =
 const isCjsImportedLoggerExpression = (expr: Expression | Super | Import) =>
   expr.type === 'MemberExpression' &&
   expr.object.type === 'Identifier' &&
-  expr.object.value !== 'console' && expr.object.value !== 'debug' &&
+  expr.object.value !== 'console' &&
+  expr.object.value !== 'debug' &&
   expr.property.type === 'Identifier' &&
   expr.property.value === 'log';
 
-const createObjectExpression = (properties: Record<string, Expression>): ObjectExpression => ({
+const createObjectExpression = (
+  properties: Record<string, Expression>
+): ObjectExpression => ({
   type: 'ObjectExpression',
   properties: Object.entries(properties).map(([key, value]) => ({
     type: 'KeyValueProperty',

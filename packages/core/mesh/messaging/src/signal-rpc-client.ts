@@ -9,11 +9,14 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Message as SignalMessage, Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
+import {
+  Message as SignalMessage,
+  Signal
+} from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 interface Services {
-  Signal: Signal
+  Signal: Signal;
 }
 
 export class SignalRPCClient {
@@ -25,9 +28,7 @@ export class SignalRPCClient {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor (
-    private readonly _url: string
-  ) {
+  constructor(private readonly _url: string) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
       try {
@@ -63,10 +64,10 @@ export class SignalRPCClient {
       handlers: {},
       noHandshake: true,
       port: {
-        send: msg => {
+        send: (msg) => {
           this._socket.send(msg);
         },
-        subscribe: cb => {
+        subscribe: (cb) => {
           this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
             if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
               cb(Buffer.from(await msg.data.arrayBuffer()));
@@ -82,7 +83,7 @@ export class SignalRPCClient {
     });
   }
 
-  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId });
     await this._connectTrigger.wait();
     const swarmStream = this._rpc.rpc.Signal.join({
@@ -93,7 +94,7 @@ export class SignalRPCClient {
     return swarmStream;
   }
 
-  async receiveMessages (peerId: PublicKey): Promise<Stream<SignalMessage>> {
+  async receiveMessages(peerId: PublicKey): Promise<Stream<SignalMessage>> {
     await this._connectTrigger.wait();
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array()
@@ -102,7 +103,15 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
+  async sendMessage({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }) {
     log('sendMessage', { author, recipient, payload });
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({
@@ -112,7 +121,7 @@ export class SignalRPCClient {
     });
   }
 
-  async close () {
+  async close() {
     try {
       await this._rpc.close();
     } finally {

@@ -7,25 +7,25 @@
  */
 export interface Config {
   esbuild: {
-    config: string
-    outdir: string
+    config: string;
+    outdir: string;
     book: {
-      outdir: string
-    }
-  }
+      outdir: string;
+    };
+  };
   protobuf: {
-    base: string
-    src: string
-    output: string
-    substitutions: string
-  }
+    base: string;
+    src: string;
+    output: string;
+    substitutions: string;
+  };
   tsc: {
-    output: string
-  }
+    output: string;
+  };
   tests: {
-    src: string
-    spec: string
-  }
+    src: string;
+    spec: string;
+  };
 }
 
 export const defaults: Config = {

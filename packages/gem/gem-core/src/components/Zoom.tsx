@@ -8,9 +8,9 @@ import { useZoom, ZoomExtent } from '../hooks';
 import { defaultGridStyles } from '../styles';
 
 export interface ZoomProps {
-  extent?: ZoomExtent
-  className?: string
-  children?: ReactNode
+  extent?: ZoomExtent;
+  className?: string;
+  children?: ReactNode;
 }
 
 /**

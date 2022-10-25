@@ -13,7 +13,11 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
-import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
+import {
+  mapFeedIndexesToTimeframe,
+  mapTimeframeToFeedIndexes,
+  TimeframeClock
+} from './timeframe-clock';
 
 /**
  * External state accessor.
@@ -21,32 +25,35 @@ import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } 
 export class PipelineState {
   public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
 
-  constructor (
+  constructor(
     private _iterator: FeedSetIterator<any>,
     private _timeframeClock: TimeframeClock
   ) {}
 
   // TODO(burdon): For testing only.
-  get endTimeframe () {
+  get endTimeframe() {
     return mapFeedIndexesToTimeframe(
-      this._iterator.feeds.filter(feed => feed.properties.length > 0).map(feed => ({
-        feedKey: feed.key,
-        index: feed.properties.length - 1
-      })));
+      this._iterator.feeds
+        .filter((feed) => feed.properties.length > 0)
+        .map((feed) => ({
+          feedKey: feed.key,
+          index: feed.properties.length - 1
+        }))
+    );
   }
 
-  get timeframe () {
+  get timeframe() {
     return this._timeframeClock.timeframe;
   }
 
-  async waitUntilTimeframe (target: Timeframe) {
+  async waitUntilTimeframe(target: Timeframe) {
     await this._timeframeClock.waitUntilReached(target);
   }
 }
 
 export interface PipelineAccessor {
-  state: PipelineState
-  writer: FeedWriter<TypedMessage>
+  state: PipelineState;
+  writer: FeedWriter<TypedMessage>;
 }
 
 /**
@@ -85,57 +92,66 @@ export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
   // Inbound feed stream.
-  private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
-    start: mapTimeframeToFeedIndexes(this._initialTimeframe),
-    stallTimeout: 1000
-  });
+  private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(
+    createMessageSelector(this._timeframeClock),
+    {
+      start: mapTimeframeToFeedIndexes(this._initialTimeframe),
+      stallTimeout: 1000
+    }
+  );
 
   // External state accessor.
-  private readonly _state: PipelineState = new PipelineState(this.feedSetIterator, this._timeframeClock);
+  private readonly _state: PipelineState = new PipelineState(
+    this.feedSetIterator,
+    this._timeframeClock
+  );
 
   // Outbound feed writer.
   private _writer: FeedWriter<TypedMessage> | undefined;
 
   private _isOpen = false;
 
-  constructor (
-    private readonly _initialTimeframe: Timeframe
-  ) {
+  constructor(private readonly _initialTimeframe: Timeframe) {
     this.feedSetIterator.stalled.on((iterator) => {
-      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
+      log.warn(
+        `Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`
+      );
     });
   }
 
-  get state () {
+  get state() {
     return this._state;
   }
 
-  get writer (): FeedWriter<TypedMessage> {
+  get writer(): FeedWriter<TypedMessage> {
     assert(this._writer, 'Writer not set.');
     return this._writer;
   }
 
-  async addFeed (feed: FeedWrapper<FeedMessage>) {
+  async addFeed(feed: FeedWrapper<FeedMessage>) {
     await this.feedSetIterator.addFeed(feed);
   }
 
-  setWriteFeed (feed: FeedWrapper<FeedMessage>) {
+  setWriteFeed(feed: FeedWrapper<FeedMessage>) {
     assert(!this._writer, 'Writer already set.');
     assert(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createMappedFeedWriter<TypedMessage, FeedMessage>((data: TypedMessage) => ({
-      timeframe: this._timeframeClock.timeframe,
-      payload: data
-    }), feed.createFeedWriter());
+    this._writer = createMappedFeedWriter<TypedMessage, FeedMessage>(
+      (data: TypedMessage) => ({
+        timeframe: this._timeframeClock.timeframe,
+        payload: data
+      }),
+      feed.createFeedWriter()
+    );
   }
 
-  async start () {
+  async start() {
     log('starting...', {});
     await this.feedSetIterator.open();
     log('started');
   }
 
-  async stop () {
+  async stop() {
     log('stopping...', {});
     await this.feedSetIterator.close();
     log('stopped');
@@ -145,14 +161,17 @@ export class Pipeline implements PipelineAccessor {
    * Starts to iterate over the ordered messages from the added feeds.
    * Updates the timeframe clock after the message has bee processed.
    */
-  async * consume (): AsyncIterable<FeedMessageBlock> {
+  async *consume(): AsyncIterable<FeedMessageBlock> {
     assert(!this._isOpen, 'Pipeline is already being consumed.');
     this._isOpen = true;
 
     for await (const block of this.feedSetIterator) {
       yield block;
 
-      this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
+      this._timeframeClock.updateTimeframe(
+        PublicKey.from(block.feedKey),
+        block.seq
+      );
     }
 
     // TODO(burdon): Test re-entrant?

@@ -10,25 +10,27 @@ import { defaultFocus, defaultHover } from '../../styles';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
 
 interface NavMenuItemSharedProps {
-  children: ReactNode
-  active?: boolean
+  children: ReactNode;
+  active?: boolean;
 }
 
 export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
-  triggerLinkProps: Omit<ComponentProps<typeof NavigationMenuPrimitive.Link>,
-    'children'>
-  children: ReactNode
+  triggerLinkProps: Omit<
+    ComponentProps<typeof NavigationMenuPrimitive.Link>,
+    'children'
+  >;
+  children: ReactNode;
 }
 
 export interface NavMenuInvokerItemProps extends NavMenuItemSharedProps {
-  content: ReactNode
-  children: ReactNode
+  content: ReactNode;
+  children: ReactNode;
 }
 
 export type NavMenuItem = NavMenuLinkItemProps | NavMenuInvokerItemProps;
 
 export interface NavMenuProps {
-  items: NavMenuItem[]
+  items: NavMenuItem[];
 }
 
 const NavMenuInvokerItem = ({
@@ -86,18 +88,20 @@ const NavMenuLinkItem = ({
 
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
-const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
+const isLinkItem = (o: any): o is NavMenuLinkItemProps =>
+  'triggerLinkProps' in o;
 
 export const NavMenu = ({ items }: NavMenuProps) => {
   return (
     <NavigationMenuPrimitive.Root className='relative flex justify-center'>
-      <NavigationMenuPrimitive.List
-        className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
-        {items.map((item: NavMenuItem, i) => (
-          isLinkItem(item)
-            ? <NavMenuLinkItem {...item} />
-            : <NavMenuInvokerItem {...item} />
-        ))}
+      <NavigationMenuPrimitive.List className='relative flex flex-row rounded-lg bg-white dark:bg-neutral-800 p-2 space-x-2 button-elevation'>
+        {items.map((item: NavMenuItem, i) =>
+          isLinkItem(item) ? (
+            <NavMenuLinkItem {...item} />
+          ) : (
+            <NavMenuInvokerItem {...item} />
+          )
+        )}
 
         <NavigationMenuPrimitive.Indicator
           className={cx(
@@ -108,8 +112,7 @@ export const NavMenu = ({ items }: NavMenuProps) => {
             'transition-[width_transform] duration-[250ms] ease-[ease]'
           )}
         >
-          <div
-            className='top-1 relative bg-white dark:bg-neutral-800 w-2 h-2 rotate-45' />
+          <div className='top-1 relative bg-white dark:bg-neutral-800 w-2 h-2 rotate-45' />
         </NavigationMenuPrimitive.Indicator>
       </NavigationMenuPrimitive.List>
 

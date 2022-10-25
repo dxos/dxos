@@ -17,7 +17,7 @@ export default class List extends BaseCommand {
     ...CliUx.ux.table.flags()
   };
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { flags } = await this.parse(List);
 
     return await this.execWithClient(async (client: Client) => {

@@ -11,7 +11,12 @@ import { Snackbar } from '@mui/material';
 import { InvitationDescriptor, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
-import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
+import {
+  CreatePartyDialog,
+  ExportAction,
+  ProfileInitializer,
+  useTestParty
+} from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { usePartySerializer } from '@dxos/react-toolkit';
@@ -36,9 +41,7 @@ export const Primary = () => {
       return null;
     }
 
-    return (
-      <App party={party} />
-    );
+    return <App party={party} />;
   };
 
   return (
@@ -57,9 +60,13 @@ export const Secondary = () => {
   const Story = () => {
     const client = useClient();
     const [party, setParty] = useState<Party | null>();
-    const [snackbarMessage, setSnackbarMessage] = useState<string | undefined>();
+    const [snackbarMessage, setSnackbarMessage] = useState<
+      string | undefined
+    >();
     const partySerializer = usePartySerializer();
-    const ipfsClient = useIpfsClient(client.config.get('runtime.services.ipfs.server'));
+    const ipfsClient = useIpfsClient(
+      client.config.get('runtime.services.ipfs.server')
+    );
     const download = useFileDownload();
 
     const handleCreateParty = async () => {
@@ -71,7 +78,9 @@ export const Secondary = () => {
 
     const handleJoinParty = async (invitationText: string) => {
       const { encodedInvitation, secret } = JSON.parse(invitationText);
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(
+        InvitationDescriptor.decode(encodedInvitation)
+      );
       invitation.authenticate(Buffer.from(secret));
       const party = await invitation.getParty();
       setParty(party);
@@ -112,7 +121,10 @@ export const Secondary = () => {
     const handleInviteParty = async () => {
       const invitation = await party!.createInvitation();
       const encodedInvitation = invitation.descriptor.encode();
-      const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
+      const text = JSON.stringify({
+        encodedInvitation,
+        secret: invitation.secret.toString()
+      });
       await navigator.clipboard.writeText(text);
       console.log(text); // Required for playwright tests.
     };

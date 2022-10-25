@@ -11,11 +11,11 @@ import { Buffer as ProtoBuffer } from '@dxos/protocols/proto/dxos/mesh/protocol'
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
 
-type Command = 'continue' | 'break' | 'session'
+type Command = 'continue' | 'break' | 'session';
 
 export interface ExtensionInitOptions {
-  timeout?: number
-  userSession?: Record<string, any>
+  timeout?: number;
+  userSession?: Record<string, any>;
 }
 
 export class ExtensionInit extends Extension {
@@ -31,7 +31,7 @@ export class ExtensionInit extends Extension {
 
   private readonly _sessionTrigger = new Trigger();
 
-  constructor (options: ExtensionInitOptions = {}) {
+  constructor(options: ExtensionInitOptions = {}) {
     super('dxos.mesh.protocol.init', options);
 
     this._timeout = options.timeout;
@@ -65,23 +65,26 @@ export class ExtensionInit extends Extension {
     });
   }
 
-  async sendCommand (command: Command, data?: Record<string, any>) {
+  async sendCommand(command: Command, data?: Record<string, any>) {
     if (data?.peerId) {
-      assert(['undefined', 'string'].includes(typeof data.peerId), 'PeerId must be a string.');
+      assert(
+        ['undefined', 'string'].includes(typeof data.peerId),
+        'PeerId must be a string.'
+      );
     }
     return this.send(Buffer.from(JSON.stringify({ command, data })));
   }
 
-  async sendSession (userSession?: Record<string, any>) {
+  async sendSession(userSession?: Record<string, any>) {
     // TODO(rzadp): Protobuf.
-    void this.sendCommand('session', userSession).catch(err => {
+    void this.sendCommand('session', userSession).catch((err) => {
       this.emit('error', err);
     });
 
     await this._sessionTrigger.wait();
   }
 
-  async continue () {
+  async continue() {
     try {
       await this.sendCommand('continue');
 
@@ -103,7 +106,7 @@ export class ExtensionInit extends Extension {
     }
   }
 
-  async break () {
+  async break() {
     try {
       if (this._remoteInit === false) {
         return;

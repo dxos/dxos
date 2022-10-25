@@ -9,14 +9,17 @@ import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useParty } from '@dxos/react-client';
 
-import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
+import {
+  ActionStatus,
+  PartyInfo,
+  StatusState,
+  TextInput
+} from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
-  onJoin?: (partyKey: PublicKey) => void
-}> = ({
-  onJoin
-}) => {
+  onJoin?: (partyKey: PublicKey) => void;
+}> = ({ onJoin }) => {
   const client = useClient();
   const [focused, setFocused] = useState(false);
   const [descriptor, setDescriptor] = useState<string>();
@@ -35,13 +38,17 @@ export const Join: FC<{
       // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
       // TODO(burdon): Errors not caught
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(
+        InvitationDescriptor.decode(encodedInvitation)
+      );
       void handleSubmit(invitation, secret);
     } catch (err) {
       try {
         // Decode regular token.
         const stripped = descriptor!.replace(/[\W]/g, '');
-        const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
+        const invitation = client.echo.acceptInvitation(
+          InvitationDescriptor.decode(stripped)
+        );
         setInvitation(invitation);
       } catch (err) {
         setStatus({ error: err as Error });
@@ -67,7 +74,7 @@ export const Join: FC<{
 
   return (
     <Panel highlight={focused}>
-      {(!status?.error && !status?.success) && (
+      {!status?.error && !status?.success && (
         <TextInput
           focus={!invitation}
           placeholder='Enter invitation code.'
@@ -91,16 +98,9 @@ export const Join: FC<{
         </Box>
       )}
 
-      {party && (
-        <PartyInfo
-          party={party}
-        />
-      )}
+      {party && <PartyInfo party={party} />}
 
-      <ActionStatus
-        status={status}
-        marginTop={1}
-      />
+      <ActionStatus status={status} marginTop={1} />
     </Panel>
   );
 };

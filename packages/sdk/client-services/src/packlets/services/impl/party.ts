@@ -29,7 +29,11 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
+import {
+  InvitationDescriptor,
+  InviteeInvitation,
+  InviteeInvitations
+} from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -38,11 +42,11 @@ import { ServiceContext } from '../service-context';
 export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  constructor (
-    private readonly serviceContext: ServiceContext
-  ) { }
+  constructor(private readonly serviceContext: ServiceContext) {}
 
-  subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
+  subscribeToParty(
+    request: SubscribePartyRequest
+  ): Stream<SubscribePartyResponse> {
     return new Stream(({ next }) => {
       next({
         party: {
@@ -96,11 +100,13 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  subscribeParties () {
+  subscribeParties() {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
       const update = () => {
         next({
-          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
+          parties: Array.from(
+            this.serviceContext.spaceManager!.spaces.values()
+          ).map((space) => ({
             publicKey: space.key,
             isOpen: true,
             isActive: true
@@ -121,7 +127,9 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
+  async getPartyDetails(
+    request: GetPartyDetailsRequest
+  ): Promise<PartyDetails> {
     return todo();
     // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
     // return {
@@ -129,7 +137,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  async createParty (): Promise<Party> {
+  async createParty(): Promise<Party> {
     await this.serviceContext.initialized.wait();
     const space = await this.serviceContext.spaceManager!.createSpace();
     return {
@@ -139,7 +147,7 @@ export class PartyService implements PartyServiceRpc {
     };
   }
 
-  async cloneParty (snapshot: PartySnapshot): Promise<Party> {
+  async cloneParty(snapshot: PartySnapshot): Promise<Party> {
     return todo();
     // const party = await this.echo.cloneParty(snapshot);
     // return {
@@ -149,7 +157,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  async setPartyState (request: SetPartyStateRequest) {
+  async setPartyState(request: SetPartyStateRequest) {
     return todo();
     // const party = this.echo.getParty(request.party_key);
     // if (!party) {
@@ -180,7 +188,9 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
+  createInvitation(
+    request: CreateInvitationRequest
+  ): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         try {
@@ -191,19 +201,27 @@ export class PartyService implements PartyServiceRpc {
             //   next({ state: InvitationState.CONNECTED });
             //   return Buffer.from(secret);
             // };
-            invitation = await this.serviceContext.createInvitation(request.partyKey, () => {
-              next({ state: InvitationState.SUCCESS });
-              close();
-            });
+            invitation = await this.serviceContext.createInvitation(
+              request.partyKey,
+              () => {
+                next({ state: InvitationState.SUCCESS });
+                close();
+              }
+            );
 
-            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
+            assert(
+              invitation.type === InvitationDescriptorProto.Type.INTERACTIVE
+            );
             // invitation.secret = Buffer.from(secret);
           } else {
             todo();
             // invitation = await party.invitationManager.createOfflineInvitation(request.invitee_key);
           }
 
-          next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
+          next({
+            state: InvitationState.WAITING_FOR_CONNECTION,
+            descriptor: invitation.toProto()
+          });
 
           // if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
           //   close();
@@ -216,7 +234,9 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation(
+    request: InvitationDescriptorProto
+  ): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -235,22 +255,27 @@ export class PartyService implements PartyServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.joinSpace(InvitationDescriptor.fromProto(request));
+      const partyPromise = this.serviceContext.joinSpace(
+        InvitationDescriptor.fromProto(request)
+      );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      partyPromise.then(party => {
-        next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
-      }).catch(err => {
-        console.error(err);
-        next({ id, state: InvitationState.ERROR, error: String(err) });
-      }).finally(() => {
-        close();
-      });
+      partyPromise
+        .then((party) => {
+          next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+        })
+        .catch((err) => {
+          console.error(err);
+          next({ id, state: InvitationState.ERROR, error: String(err) });
+        })
+        .finally(() => {
+          close();
+        });
     });
   }
 
-  async authenticateInvitation (request: AuthenticateInvitationRequest) {
+  async authenticateInvitation(request: AuthenticateInvitationRequest) {
     assert(request.processId, 'Process ID is missing.');
     const invitation = this.inviteeInvitations.get(request.processId);
     assert(invitation, 'Invitation not found.');
@@ -261,7 +286,9 @@ export class PartyService implements PartyServiceRpc {
     invitation.secretTrigger?.();
   }
 
-  subscribeMembers (request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
+  subscribeMembers(
+    request: SubscribeMembersRequest
+  ): Stream<SubscribeMembersResponse> {
     return new Stream(({ next }) => {
       next({
         members: []
@@ -290,7 +317,7 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async createSnapshot(request: CreateSnaspotRequest): Promise<PartySnapshot> {
     return todo();
     // assert(request.party_key);
     // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));

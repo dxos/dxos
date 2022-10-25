@@ -6,7 +6,7 @@ import { ItemID } from '@dxos/protocols';
 
 import { Item } from '../item';
 
-export type OneOrMultiple<T> = T | T[]
+export type OneOrMultiple<T> = T | T[];
 
 export const dedupe = <T>(values: T[]) => Array.from(new Set(values));
 

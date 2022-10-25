@@ -8,7 +8,13 @@ import { Box } from '@mui/material';
 
 import { ClientProvider } from '@dxos/react-client';
 
-import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestParty } from '../src';
+import {
+  defaultSelectionText,
+  execSelection,
+  ProfileInitializer,
+  SelectionEditor,
+  useTestParty
+} from '../src';
 
 export default {
   title: 'react-client-testing/SelectionEditor'
@@ -41,14 +47,9 @@ const App = () => {
       <br />
       <br />
 
-      <SelectionEditor
-        onChange={handleChange}
-        delay={100}
-      />
+      <SelectionEditor onChange={handleChange} delay={100} />
 
-      <Box sx={{ padding: 1 }}>
-        {result}
-      </Box>
+      <Box sx={{ padding: 1 }}>{result}</Box>
     </Box>
   );
 };

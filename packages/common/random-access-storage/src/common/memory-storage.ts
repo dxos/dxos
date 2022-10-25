@@ -15,20 +15,20 @@ import { StorageType } from './storage';
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  protected override _createFile (
+  protected override _createFile(
     path: string,
     filename: string
   ): RandomAccessStorage {
     return this._patchFile(ram());
   }
 
-  protected override _openFile (file: RandomAccessStorage): RandomAccessStorage {
+  protected override _openFile(file: RandomAccessStorage): RandomAccessStorage {
     const newFile = file.clone!();
     (newFile as any).closed = false;
     return this._patchFile(newFile);
   }
 
-  private _patchFile (file: RandomAccessStorage): RandomAccessStorage {
+  private _patchFile(file: RandomAccessStorage): RandomAccessStorage {
     // Patch required to make consistent across platforms.
     const trueRead = file.read.bind(file);
 

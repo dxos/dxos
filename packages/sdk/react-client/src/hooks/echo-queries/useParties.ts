@@ -15,7 +15,7 @@ import { useClient } from '../client';
  */
 export const useParty = (partyKey?: PublicKeyLike): Party | undefined => {
   const parties = useParties();
-  return parties.find(party => partyKey && party.key.equals(partyKey));
+  return parties.find((party) => partyKey && party.key.equals(partyKey));
 };
 
 /**
