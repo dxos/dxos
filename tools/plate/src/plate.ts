@@ -9,7 +9,7 @@ import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate } from '../executeDirectoryTemplate';
+import { executeDirectoryTemplate } from './executeDirectoryTemplate';
 
 const fmtDuration = (d: number) =>
   `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
