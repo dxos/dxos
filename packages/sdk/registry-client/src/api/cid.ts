@@ -13,12 +13,12 @@ import { Multihash } from '../polkadot/interfaces';
  * https://docs.ipfs.io/concepts/content-addressing
  */
 export class CID {
-  static fromB58String (str: string): CID {
+  static fromB58String(str: string): CID {
     return new CID(fromB58String(str));
   }
 
   // eslint-disable-next-line no-use-before-define
-  static from (value: CIDLike): CID {
+  static from(value: CIDLike): CID {
     if (value instanceof Uint8Array) {
       return new CID(value);
     } else if (typeof value === 'string') {
@@ -30,27 +30,25 @@ export class CID {
     }
   }
 
-  constructor (
-    public readonly value: Uint8Array
-  ) {
+  constructor(public readonly value: Uint8Array) {
     assert(value.length === 34, 'Invalid CID length.');
   }
 
-  equals (other: CIDLike) {
+  equals(other: CIDLike) {
     return Buffer.from(this.value).equals(Buffer.from(CID.from(other).value));
   }
 
-  toB58String () {
+  toB58String() {
     return toB58String(this.value);
   }
 
-  toString () {
+  toString() {
     return this.toB58String();
   }
 
-  [inspect.custom] () {
+  [inspect.custom]() {
     return this.toB58String();
   }
 }
 
-export type CIDLike = CID | Uint8Array | Multihash | string
+export type CIDLike = CID | Uint8Array | Multihash | string;

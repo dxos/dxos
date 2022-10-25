@@ -4,17 +4,25 @@
 
 import React, { ReactElement } from 'react';
 
-import {
-  Face as FaceIcon,
-  Share as ShareIcon
-} from '@mui/icons-material';
+import { Face as FaceIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
 import { PartyMember } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
-const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
+const {
+  red,
+  pink,
+  deepPurple,
+  deepOrange,
+  indigo,
+  blue,
+  cyan,
+  teal,
+  green,
+  amber
+} = colors;
 const depth = 500;
 
 const COLORS = [
@@ -30,7 +38,8 @@ const COLORS = [
   amber[depth]
 ];
 
-const getColor = (publicKey: PublicKeyLike) => COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
+const getColor = (publicKey: PublicKeyLike) =>
+  COLORS[parseInt(publicKey.toString('hex').slice(0, 4), 16) % COLORS.length];
 
 // Same size as medium Icon.
 const avatarStyles = {
@@ -59,7 +68,11 @@ export const ShareButton = ({ onClick }: { onClick: () => void }) => {
 };
 
 // TODO(burdon): Remove PartyMember dep and create type here.
-export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => {
+export const MemberAvatar = ({
+  member
+}: {
+  member?: PartyMember;
+}): ReactElement => {
   const theme = useTheme();
 
   if (!member) {
@@ -75,11 +88,13 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
 
   return (
     <Tooltip title={name} placement='top'>
-      <Avatar sx={{
-        ...avatarStyles,
-        backgroundColor: color,
-        color: theme.palette.getContrastText(color)
-      }}>
+      <Avatar
+        sx={{
+          ...avatarStyles,
+          backgroundColor: color,
+          color: theme.palette.getContrastText(color)
+        }}
+      >
         {name.slice(0, 1).toUpperCase()}
       </Avatar>
     </Tooltip>

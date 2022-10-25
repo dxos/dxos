@@ -19,7 +19,7 @@ export const Contacts = () => {
         {
           key: 'public_key',
           color: 'blue',
-          value: key => truncateKey(key, 4)
+          value: (key) => truncateKey(key, 4)
         },
         {
           key: 'display_name'

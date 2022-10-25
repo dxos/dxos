@@ -5,13 +5,19 @@
 import React, { useState } from 'react';
 
 import {
-  Button, Dialog, DialogTitle, DialogActions, DialogContent, DialogContentText, TextField
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  TextField
 } from '@mui/material';
 
 export interface ImportIpfsDialogProps {
-  open: boolean
-  onImport: (file: string) => void
-  onClose: () => void
+  open: boolean;
+  onImport: (file: string) => void;
+  onClose: () => void;
 }
 
 export const ImportIpfsDialog = ({
@@ -25,12 +31,7 @@ export const ImportIpfsDialog = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth='sm'
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
       <DialogTitle>Import IPFS Resource</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 4 }}>
@@ -44,15 +45,11 @@ export const ImportIpfsDialog = ({
           autoComplete='off'
           spellCheck={false}
           value={cid}
-          onChange={event => setCid(event.target.value)}
+          onChange={(event) => setCid(event.target.value)}
         />
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button
           disabled={cid.length === 0}
           onClick={handleImport}

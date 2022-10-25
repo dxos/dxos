@@ -8,26 +8,38 @@ import { log } from '@dxos/log';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import {
+  getCredentialAssertion,
+  isValidAuthorizedDeviceCredential
+} from '../credentials';
 
 /**
  * Processes device invitation credentials.
  */
 export class DeviceStateMachine {
-  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(key => key.toHex());
+  public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(
+    PublicKey.hash
+  );
+
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 
-  constructor (
+  constructor(
     private readonly _identityKey: PublicKey,
     private readonly _deviceKey: PublicKey
   ) {}
 
-  async process (credential: Credential) {
-    log('Credential processed:', credential);
+  async process(credential: Credential) {
+    log('credential processed:', credential);
 
     // Save device key chain credential when processed by the party state machine.
-    if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
+    if (
+      isValidAuthorizedDeviceCredential(
+        credential,
+        this._identityKey,
+        this._deviceKey
+      )
+    ) {
       this.deviceCredentialChain = { credential };
       this.deviceChainReady.wake();
     }

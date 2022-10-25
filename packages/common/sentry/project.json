@@ -1,0 +1,50 @@
+{
+  "sourceRoot": "packages/common/sentry/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/sentry/dist",
+        "tsConfig": "packages/common/sentry/tsconfig.json",
+        "main": "packages/common/sentry/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/sentry/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/common/sentry/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/sentry/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/sentry",
+        "resultsPath": "test-results/packages/common/sentry",
+        "coveragePath": "coverage/packages/common/sentry"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

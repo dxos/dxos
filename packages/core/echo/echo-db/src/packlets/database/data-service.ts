@@ -29,30 +29,42 @@ const log = debug('dxos:echo-db:data-service-router');
  */
 // TODO(burdon): Move service definition to client-services.
 export class DataService implements DataServiceRpc {
-  private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(key => key.toHex());
+  private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(
+    PublicKey.hash
+  );
 
   // TODO(burdon): Register party.
-  trackParty (key: PublicKey, host: DataServiceHost) {
+  trackParty(key: PublicKey, host: DataServiceHost) {
     log(`Tracking party: ${key}`);
     this._trackedParties.set(key, host);
   }
 
-  subscribeEntitySet (request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
+  subscribeEntitySet(
+    request: SubscribeEntitySetRequest
+  ): Stream<SubscribeEntitySetResponse> {
     assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._trackedParties.get(request.partyKey) ??
+      raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntitySet();
   }
 
-  subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+  subscribeEntityStream(
+    request: SubscribeEntityStreamRequest
+  ): Stream<SubscribeEntityStreamResponse> {
     assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._trackedParties.get(request.partyKey) ??
+      raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntityStream(request);
   }
 
-  write (request: WriteRequest): Promise<MutationReceipt> {
+  write(request: WriteRequest): Promise<MutationReceipt> {
     assert(request.partyKey);
     assert(request.mutation);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._trackedParties.get(request.partyKey) ??
+      raise(new SpaceNotFoundError(request.partyKey));
     return host.write(request.mutation);
   }
 }

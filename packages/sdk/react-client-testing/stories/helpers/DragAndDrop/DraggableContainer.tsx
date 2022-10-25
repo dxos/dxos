@@ -7,10 +7,10 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { CSSProperties, ReactNode } from 'react';
 
 export interface DraggableContainerProps {
-  id: string
-  children: ReactNode
-  style?: CSSProperties
-  placeholderStyles?: CSSProperties
+  id: string;
+  children: ReactNode;
+  style?: CSSProperties;
+  placeholderStyles?: CSSProperties;
 }
 
 export const DraggableContainer = ({

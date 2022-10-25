@@ -18,12 +18,14 @@ import { Falsy } from '@dxos/util';
  * @param selection Selection from which to query data. Can be falsy - in that case the hook will return undefined.
  * @param deps Array of values that trigger the selector when changed.
  */
-export const useSelection = <T extends Entity<any>> (
+export const useSelection = <T extends Entity<any>>(
   selection: Selection<T> | SelectionResult<T> | Falsy,
   deps: readonly any[] = []
 ): T[] | undefined => {
   const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState<T[] | undefined>(() => result ? result.entities : undefined);
+  const [data, setData] = useState<T[] | undefined>(() =>
+    result ? result.entities : undefined
+  );
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
@@ -35,7 +37,7 @@ export const useSelection = <T extends Entity<any>> (
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      return result.update.on(result => {
+      return result.update.on((result) => {
         setData(result.entities);
       });
     }
@@ -51,13 +53,15 @@ export const useSelection = <T extends Entity<any>> (
  * @param value
  * @param deps
  */
-export const useReducer = <T extends Entity<any>, R> (
+export const useReducer = <T extends Entity<any>, R>(
   selection: Selection<T> | SelectionResult<T> | Falsy,
   value: R,
   deps: readonly any[] = []
 ) => {
   const [result, setResult] = useState(() => coerceSelection(selection));
-  const [data, setData] = useState<R | undefined>(() => result ? result.value : undefined);
+  const [data, setData] = useState<R | undefined>(() =>
+    result ? result.value : undefined
+  );
 
   // Update selection when the query or customs deps change.
   useEffect(() => {
@@ -69,7 +73,7 @@ export const useReducer = <T extends Entity<any>, R> (
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      return result.update.on(result => {
+      return result.update.on((result) => {
         setData(result.value);
       });
     }
@@ -81,4 +85,7 @@ export const useReducer = <T extends Entity<any>, R> (
 /**
  * @param value Selection or SelectionResult from hook.
  */
-const coerceSelection = <T extends Entity>(value: Selection<T> | SelectionResult<T> | Falsy): SelectionResult<T> | undefined => !value ? undefined : value instanceof Selection ? value.exec() : value;
+const coerceSelection = <T extends Entity>(
+  value: Selection<T> | SelectionResult<T> | Falsy
+): SelectionResult<T> | undefined =>
+  !value ? undefined : value instanceof Selection ? value.exec() : value;

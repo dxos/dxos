@@ -7,10 +7,10 @@ import debug from 'debug';
 debug.log = console.log.bind(console);
 
 export const log = (...args) => {
-  console.log(args.map(arg => arg.toString()).join(' '));
+  console.log(args.map((arg) => arg.toString()).join(' '));
 };
 
-export const logError = str => {
+export const logError = (str) => {
   if (typeof str.message === 'string') {
     str = `Error: ${str.message.replace('\n', '')}`;
   } else if (str instanceof Error) {

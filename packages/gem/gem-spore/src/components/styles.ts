@@ -23,7 +23,7 @@ export const defaultMarkerStyles = css`
 export const defaultGraphStyles = css`
   g.guides {
     circle {
-      fill: #FAFAFA;
+      fill: #fafafa;
       stroke: coral;
       stroke-width: 4px;
       stroke-dasharray: 15, 5;

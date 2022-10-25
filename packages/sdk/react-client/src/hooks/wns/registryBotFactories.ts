@@ -16,9 +16,9 @@ const log = debug('dxos:react-client');
  * See also: `useRegistryBots` hook.
  */
 interface RegistryBotFactoryRecord {
-  topic: string
-  name?: string
-  names: string[]
+  topic: string;
+  name?: string;
+  names: string[];
 }
 
 export const useRegistryBotFactories = () => {
@@ -33,17 +33,21 @@ export const useRegistryBotFactories = () => {
     const queryRegistry = async () => {
       let factoriesResult: QueryRecord[];
       try {
-        factoriesResult = await registry.queryRecords({ type: WRN_TYPE_BOT_FACTORY });
+        factoriesResult = await registry.queryRecords({
+          type: WRN_TYPE_BOT_FACTORY
+        });
       } catch (e: any) {
         log('Querying bot factories unsuccessful.');
         log(e);
         return;
       }
-      setFactories(factoriesResult.map(({ attributes: { topic, name }, names }) => ({
-        topic,
-        name,
-        names
-      })));
+      setFactories(
+        factoriesResult.map(({ attributes: { topic, name }, names }) => ({
+          topic,
+          name,
+          names
+        }))
+      );
     };
 
     void queryRegistry();

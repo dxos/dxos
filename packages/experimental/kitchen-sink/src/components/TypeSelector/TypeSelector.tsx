@@ -11,8 +11,8 @@ import { IconRadio, IconRadioGroup } from '../IconRadio';
 // TODO(burdon): Use ToggleButtonGroup
 
 interface TypeSelectorProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
 export const TypeSelector = ({

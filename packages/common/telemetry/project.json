@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/common/telemetry/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/telemetry/dist",
+        "tsConfig": "packages/common/telemetry/tsconfig.json",
+        "main": "packages/common/telemetry/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/telemetry/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

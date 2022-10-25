@@ -30,6 +30,10 @@
       "description": "Run tests with a code coverage tool",
       "default": false
     },
+    "reporter": {
+      "type": "string",
+      "description": "Custom reporter (e.g., IDE)"
+    },
     "coveragePath": {
       "type": "string",
       "description": "Where to save coverage outputs"
@@ -68,7 +72,7 @@
     },
     "forceExit": {
       "type": "boolean",
-      "description": "Force Moch to quit after tests complete",
+      "description": "Force Mocha to quit after tests complete",
       "default": false
     },
     "domRequired": {

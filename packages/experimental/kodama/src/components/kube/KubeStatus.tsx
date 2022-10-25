@@ -22,7 +22,8 @@ const useStatus = () => {
       const status = await result.json();
       const { services = [] } = status;
       await sleep(3000);
-      if (!isMounted()) { // TODO(burdon): Partern?
+      if (!isMounted()) {
+        // TODO(burdon): Partern?
         return;
       }
 

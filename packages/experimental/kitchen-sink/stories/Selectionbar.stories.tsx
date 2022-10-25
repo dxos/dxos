@@ -24,14 +24,9 @@ const App = () => {
 
   return (
     <Box sx={{ padding: 1 }}>
-      <Searchbar
-        onChange={handleChange}
-        delay={100}
-      />
+      <Searchbar onChange={handleChange} delay={100} />
 
-      <Box sx={{ padding: 1 }}>
-        {result}
-      </Box>
+      <Box sx={{ padding: 1 }}>{result}</Box>
     </Box>
   );
 };

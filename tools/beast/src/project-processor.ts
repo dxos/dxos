@@ -13,7 +13,7 @@ import { ProjectMap } from './types';
 export class ProjectProcessor {
   private readonly _project: Project;
 
-  constructor (
+  constructor(
     private readonly _baseDir: string,
     private readonly _projectMap: ProjectMap,
     packageName: string
@@ -28,10 +28,10 @@ export class ProjectProcessor {
     });
   }
 
-  getClass (className: string): ClassDeclaration | undefined {
+  getClass(className: string): ClassDeclaration | undefined {
     // https://ts-morph.com/navigation/getting-source-files
     const files = this._project.getSourceFiles();
-    const file = files.find(file => file.getClass(className));
+    const file = files.find((file) => file.getClass(className));
     return file?.getClass(className);
   }
 }

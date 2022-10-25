@@ -2,13 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
+import {
+  MemoryStorage,
+  Storage,
+  StorageConstructor,
+  StorageType
+} from '../common';
 import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
 
-export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
+export const createStorage: StorageConstructor = ({
+  type,
+  root = ''
+} = {}): Storage => {
   if (type === undefined) {
-    return ((globalThis as any).IDBMutableFile) ? new FirefoxStorage(root) : new IDbStorage(root);
+    return (globalThis as any).IDBMutableFile
+      ? new FirefoxStorage(root)
+      : new IDbStorage(root);
   }
 
   switch (type) {

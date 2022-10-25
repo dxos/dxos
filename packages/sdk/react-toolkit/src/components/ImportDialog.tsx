@@ -17,9 +17,9 @@ export const ImportDialog = ({
   onClose,
   decrypter
 }: {
-  open: boolean
-  onClose: (text?: string) => void
-  decrypter: (text: string, passphrase: string) => Promise<string>
+  open: boolean;
+  onClose: (text?: string) => void;
+  decrypter: (text: string, passphrase: string) => Promise<string>;
 }) => {
   const buttonRef = useRef(null);
   const fileRef = useRef(null);
@@ -66,7 +66,7 @@ export const ImportDialog = ({
         open={open}
         title='Import keys'
         error={error}
-        content={(
+        content={
           <TextField
             sx={{ marginTop: 1 }}
             autoFocus
@@ -74,8 +74,8 @@ export const ImportDialog = ({
             label='Passphrase'
             onChange={handlePassChange}
           />
-        )}
-        actions={(
+        }
+        actions={
           <>
             <Button onClick={() => onClose()}>Cancel</Button>
             <Button
@@ -91,7 +91,7 @@ export const ImportDialog = ({
               Choose File
             </Button>
           </>
-        )}
+        }
       />
     </>
   );

@@ -14,9 +14,9 @@ import { createRegistryContext } from './config';
 const log = debug('dxos:react-registry-client:error');
 
 interface RegistryProviderProps {
-  config?: ConfigProvider
-  registry?: RegistryClient
-  children?: ReactNode
+  config?: ConfigProvider;
+  registry?: RegistryClient;
+  children?: ReactNode;
 }
 
 /**
@@ -28,7 +28,9 @@ export const RegistryProvider = ({
   registry,
   children
 }: RegistryProviderProps) => {
-  const [context, setContext] = useState<RegistryContext | undefined>(registry && { registry });
+  const [context, setContext] = useState<RegistryContext | undefined>(
+    registry && { registry }
+  );
   const [error, setError] = useState<undefined | Error>(undefined);
   if (error) {
     log(error);
@@ -63,8 +65,9 @@ export const RegistryProvider = ({
 /**
  * @deprecated
  */
-export const RegistryInitializer = ({ children, config = {} }: RegistryProviderProps) => (
-  <RegistryProvider config={config}>
-    {children}
-  </RegistryProvider>
+export const RegistryInitializer = ({
+  children,
+  config = {}
+}: RegistryProviderProps) => (
+  <RegistryProvider config={config}>{children}</RegistryProvider>
 );

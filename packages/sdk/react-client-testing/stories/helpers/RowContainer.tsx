@@ -7,12 +7,12 @@ import React, { CSSProperties, ReactNode } from 'react';
 const MARGIN_LEFT = 8;
 
 interface RowContainerProps {
-  leftComponent: ReactNode
-  rightComponent: ReactNode
+  leftComponent: ReactNode;
+  rightComponent: ReactNode;
   config: {
-    fixedComponent: 'left' | 'right'
-    width: string
-  }
+    fixedComponent: 'left' | 'right';
+    width: string;
+  };
 }
 export const RowContainer = ({
   leftComponent,
@@ -31,15 +31,29 @@ export const RowContainer = ({
   });
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px'
-    }}>
-      <div style={config.fixedComponent === 'left' ? getFixedStyle() : getFlexibleStyle(true)}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}
+    >
+      <div
+        style={
+          config.fixedComponent === 'left'
+            ? getFixedStyle()
+            : getFlexibleStyle(true)
+        }
+      >
         {leftComponent}
       </div>
-      <div style={config.fixedComponent === 'right' ? getFixedStyle(true) : getFlexibleStyle()}>
+      <div
+        style={
+          config.fixedComponent === 'right'
+            ? getFixedStyle(true)
+            : getFlexibleStyle()
+        }
+      >
         {rightComponent}
       </div>
     </div>

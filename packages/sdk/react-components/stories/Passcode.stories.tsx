@@ -4,9 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  ContentCopy as CopyIcon
-} from '@mui/icons-material';
+import { ContentCopy as CopyIcon } from '@mui/icons-material';
 import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import { Passcode } from '../src';
@@ -35,7 +33,7 @@ export const Primary = () => {
       </Box>
 
       <Box>
-        {['small', 'medium', 'large'].map(size => (
+        {['small', 'medium', 'large'].map((size) => (
           <Box key={size} sx={{ padding: 2 }}>
             <Passcode
               shake

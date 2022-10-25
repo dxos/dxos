@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export const translation = {
+export const uikit = {
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
@@ -24,5 +24,14 @@ export const translation = {
   'next label': 'Next',
   'redeem invitation label': 'Redeem invitation',
   'cancel label': 'Cancel',
-  'validate seed phrase label': 'Validate seed phrase'
+  'validate seed phrase label': 'Validate seed phrase',
+  'fatal error label': 'Runtime error',
+  'fatal error message':
+    'Something went wrong that requires the app to be reloaded.',
+  'caught error message':
+    'Something went wrong; check the console for details.',
+  'copy error label': 'Copy this error',
+  'reload page label': 'Reload',
+  'generic copy label': 'Copy',
+  'generic help label': 'Help'
 };

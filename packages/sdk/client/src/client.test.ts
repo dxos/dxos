@@ -9,18 +9,28 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+import {
+  clientServiceBundle,
+  ClientServiceHost,
+  InvitationDescriptor
+} from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
-import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
+import {
+  WebRTCTransportProxyFactory,
+  WebRTCTransportService
+} from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
-import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
+import {
+  Config as ConfigProto,
+  Runtime
+} from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './packlets/proxies';
 
@@ -56,7 +66,9 @@ describe('Client', function () {
         await client.initialize();
         afterTest(() => client.destroy());
 
-        const profile = await client.halo.createProfile({ username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         // expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -70,7 +82,9 @@ describe('Client', function () {
         await client.halo.createProfile({ username: 'test-user' });
         expect(!!client.halo.profile).toBeTruthy();
 
-        await expect(client.halo.createProfile({ username: 'test-user' })).rejects.toThrow();
+        await expect(
+          client.halo.createProfile({ username: 'test-user' })
+        ).rejects.toThrow();
         expect(!!client.halo.profile).toBeTruthy();
       });
 
@@ -82,7 +96,10 @@ describe('Client', function () {
         const seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
-        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          ...keyPair,
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -95,7 +112,9 @@ describe('Client', function () {
         await waitForCondition(() => !!recoveredClient.halo.profile, 2000);
 
         expect(recoveredClient.halo.profile).toBeDefined();
-        expect(recoveredClient.halo.profile!.publicKey).toEqual(client.halo.profile!.publicKey);
+        expect(recoveredClient.halo.profile!.publicKey).toEqual(
+          client.halo.profile!.publicKey
+        );
         expect(recoveredClient.halo.profile!.username).toEqual('test-user');
       }).timeout(2000);
     });
@@ -122,7 +141,9 @@ describe('Client', function () {
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
         invitation.error.on(throwUnhandledRejection);
-        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+        const inviteeParty = await invitee.echo
+          .acceptInvitation(invitation.descriptor)
+          .getParty();
         expect(inviteeParty.key).toEqual(party.key);
 
         // const members = party.queryMembers().value;
@@ -137,8 +158,11 @@ describe('Client', function () {
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
-        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
-        const acceptedInvitation = invitee.echo.acceptInvitation(reencodedDescriptor);
+        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(
+          invitation.descriptor.toQueryParameters()
+        );
+        const acceptedInvitation =
+          invitee.echo.acceptInvitation(reencodedDescriptor);
         await connectedFired;
 
         const finishedFired = invitation.finished.waitForCount(1);
@@ -149,21 +173,28 @@ describe('Client', function () {
         expect(inviteeParty.key).toEqual(party.key);
       }).timeout(5000);
 
-      it.skip('creates and joins an offline Party invitation', async function () {
-        const { inviter, invitee } = await prepareInvitations();
+      it.skip(
+        'creates and joins an offline Party invitation',
+        async function () {
+          const { inviter, invitee } = await prepareInvitations();
 
-        const party = await inviter.echo.createParty();
-        assert(invitee.halo.profile);
-        const invitation = await party.createInvitation({ inviteeKey: invitee.halo.profile.publicKey });
-        expect(invitation.descriptor.secret).toBeUndefined();
-        invitation.error.on(throwUnhandledRejection);
-        const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+          const party = await inviter.echo.createParty();
+          assert(invitee.halo.profile);
+          const invitation = await party.createInvitation({
+            inviteeKey: invitee.halo.profile.publicKey
+          });
+          expect(invitation.descriptor.secret).toBeUndefined();
+          invitation.error.on(throwUnhandledRejection);
+          const inviteeParty = await invitee.echo
+            .acceptInvitation(invitation.descriptor)
+            .getParty();
 
-        expect(inviteeParty.key).toEqual(party.key);
+          expect(inviteeParty.key).toEqual(party.key);
 
-        const members = party.queryMembers().value;
-        expect(members.length).toEqual(2);
-      }).timeout(5000);
+          const members = party.queryMembers().value;
+          expect(members.length).toEqual(2);
+        }
+      ).timeout(5000);
 
       it.skip('creates and joins more than 1 Party', async function () {
         const { inviter, invitee } = await prepareInvitations();
@@ -172,7 +203,9 @@ describe('Client', function () {
           const party = await inviter.echo.createParty();
           const invitation = await party.createInvitation();
           invitation.error.on(throwUnhandledRejection);
-          const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
+          const inviteeParty = await invitee.echo
+            .acceptInvitation(invitation.descriptor)
+            .getParty();
 
           expect(inviteeParty.key).toEqual(party.key);
         }
@@ -209,21 +242,30 @@ describe('Client', function () {
       it.skip('DXNS Account is synced between devices', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
-        const DXNSAccount = 'd3abd23e3f36a61a9e5d58e4b6286f89649594eedbd096b3a6e256ca1fe4c147';
+        const DXNSAccount =
+          'd3abd23e3f36a61a9e5d58e4b6286f89649594eedbd096b3a6e256ca1fe4c147';
         await inviter.halo.setGlobalPreference('DXNSAccount', DXNSAccount);
 
         const invitation = await inviter.halo.createInvitation();
         await invitee.halo.acceptInvitation(invitation.descriptor).wait();
 
         await waitForExpect(async () => {
-          expect(await invitee.halo.getGlobalPreference('DXNSAccount')).toEqual(DXNSAccount);
+          expect(await invitee.halo.getGlobalPreference('DXNSAccount')).toEqual(
+            DXNSAccount
+          );
         });
 
         // The preference can be changed and synced back.
         await invitee.halo.setGlobalPreference('DXNSAccount', '123');
-        await waitForExpect(async () => {
-          expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
-        }, 10_000, 100);
+        await waitForExpect(
+          async () => {
+            expect(
+              await inviter.halo.getGlobalPreference('DXNSAccount')
+            ).toEqual('123');
+          },
+          10_000,
+          100
+        );
       }).timeout(10_000);
     });
 
@@ -276,9 +318,15 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
@@ -292,14 +340,22 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         const details = await party.getDetails();
         expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
-        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
+        expect(
+          details.processedTimeframe.frames().some(([key, seq]) => seq > 0)
+        ).toBe(true);
       });
 
       it('registering a custom model', async function () {
@@ -319,13 +375,16 @@ describe('Client', function () {
   };
 
   describe('local', function () {
-    testSuite(async () => new Client({
-      runtime: {
-        client: {
-          mode: Runtime.Client.Mode.LOCAL
-        }
-      }
-    }));
+    testSuite(
+      async () =>
+        new Client({
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.LOCAL
+            }
+          }
+        })
+    );
   });
 
   describe('remote', function () {
@@ -345,13 +404,16 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({
-        runtime: {
-          client: {
-            mode: Runtime.Client.Mode.REMOTE
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
           }
-        }
-      }, { rpcPort: proxyPort });
+        },
+        { rpcPort: proxyPort }
+      );
     });
   });
 
@@ -378,13 +440,16 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({
-        runtime: {
-          client: {
-            mode: Runtime.Client.Mode.REMOTE
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
           }
-        }
-      }, { rpcPort: proxyPort });
+        },
+        { rpcPort: proxyPort }
+      );
     });
   });
 
@@ -411,7 +476,10 @@ describe('Client', function () {
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
 
-      const item = await party.database.createItem({ model: TestModel, type: 'test' });
+      const item = await party.database.createItem({
+        model: TestModel,
+        type: 'test'
+      });
       await item.model.set('prop', 'value1');
 
       await client.destroy();

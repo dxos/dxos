@@ -37,7 +37,7 @@ const dirExists = async (path: string) => {
 const fileName = (name: string) => path.parse(name)?.name;
 
 const sidebarItem: {
-  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>
+  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>;
 } = {
   package: async (pkg: string) => ({
     text: pkg,
@@ -87,10 +87,14 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
   );
   return [
     ...(await Promise.all(PINNED_PACKAGES.map(sidebarItem.package))),
-    ...(otherPackages?.length ? [{
-      text: 'Other packages',
-      collapsible: true,
-      children: await Promise.all(otherPackages.map(sidebarItem.package))
-    }] : [])
+    ...(otherPackages?.length
+      ? [
+          {
+            text: 'Other packages',
+            collapsible: true,
+            children: await Promise.all(otherPackages.map(sidebarItem.package))
+          }
+        ]
+      : [])
   ];
 };

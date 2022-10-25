@@ -12,15 +12,18 @@ import { TestResult, TestStatus } from './reporter';
 import { RunTestsResults, Suites, TestError } from './run-tests';
 
 export type OutputResultsOptions = {
-  name: string
-  browserType: BrowserType
-  outDir?: string
+  name: string;
+  browserType: BrowserType;
+  outDir?: string;
 };
 
 /**
  * Attempts to approximate Mocha's spec reported from a results JSON string.
  */
-export const outputResults = async (results: RunTestsResults, options: OutputResultsOptions) => {
+export const outputResults = async (
+  results: RunTestsResults,
+  options: OutputResultsOptions
+) => {
   const { suites, stats } = results;
 
   logSuites(suites);
@@ -45,25 +48,34 @@ export const outputResults = async (results: RunTestsResults, options: OutputRes
   if (options.outDir) {
     const xml = buildXmlReport(results, options);
     await mkdir(options.outDir, { recursive: true });
-    await writeFile(join(options.outDir, `${options.browserType}.xml`), xml, 'utf-8');
+    await writeFile(
+      join(options.outDir, `${options.browserType}.xml`),
+      xml,
+      'utf-8'
+    );
   }
 
   return stats.failures > 0 ? 1 : 0;
 };
 
 // TODO(wittjosiah): Include duration based on speed, also retries.
-const logSuites = ({ suites, tests }: Suites, depth = 1, errors: TestResult[] = []) => {
-  tests?.forEach(test => {
+const logSuites = (
+  { suites, tests }: Suites,
+  depth = 1,
+  errors: TestResult[] = []
+) => {
+  tests?.forEach((test) => {
     if (test.status === 'failed') {
       errors.push(test);
     }
     console.log(indent(depth), status(test.status!, errors.length), test.title);
   });
 
-  suites && Object.entries(suites).forEach(([name, suite]) => {
-    console.log('\n', indent(depth), name);
-    logSuites(suite, depth + 1, errors);
-  });
+  suites &&
+    Object.entries(suites).forEach(([name, suite]) => {
+      console.log('\n', indent(depth), name);
+      logSuites(suite, depth + 1, errors);
+    });
 };
 
 const indent = (count: number) => {
@@ -83,7 +95,10 @@ const status = (value: TestStatus, errorCount: number) => {
   }
 };
 
-const buildXmlReport = ({ suites, stats }: RunTestsResults, options: OutputResultsOptions) => {
+const buildXmlReport = (
+  { suites, stats }: RunTestsResults,
+  options: OutputResultsOptions
+) => {
   const builder = new XMLBuilder({
     ignoreAttributes: false,
     format: true
@@ -107,34 +122,54 @@ const buildXmlReport = ({ suites, stats }: RunTestsResults, options: OutputResul
   return builder.build(output);
 };
 
-const buildXmlTestSuites = (suite: Suites, errors: TestError[], stats: Stats, name = 'Root Suite'): object => {
-  const tests = suite.tests ? suite.tests.filter(test => test.status !== 'pending') : [];
+const buildXmlTestSuites = (
+  suite: Suites,
+  errors: TestError[],
+  stats: Stats,
+  name = 'Root Suite'
+): object => {
+  const tests = suite.tests
+    ? suite.tests.filter((test) => test.status !== 'pending')
+    : [];
 
   return [
     {
       '@_name': name,
       '@_timestamp': stats.start,
       '@_tests': tests.length,
-      '@_time': tests.reduce((time, test) => test.duration ? time + test.duration : time, 0) / 1000,
-      '@_failures': tests.reduce((count, test) => test.status === 'failed' ? count + 1 : count, 0),
-      testcase: tests.map(test => {
-        const error = errors.find(error => [...error.suite, error.test].join(' ') === test.fullTitle);
+      '@_time':
+        tests.reduce(
+          (time, test) => (test.duration ? time + test.duration : time),
+          0
+        ) / 1000,
+      '@_failures': tests.reduce(
+        (count, test) => (test.status === 'failed' ? count + 1 : count),
+        0
+      ),
+      testcase: tests.map((test) => {
+        const error = errors.find(
+          (error) => [...error.suite, error.test].join(' ') === test.fullTitle
+        );
 
         return {
           '@_name': test.fullTitle,
           '@_classname': test.title,
           '@_time': test.duration ? test.duration / 1000 : 0,
-          ...(error ? {
-            failure: {
-              '#text': error.stack,
-              '@_message': error.message
-            }
-          } : {})
+          ...(error
+            ? {
+                failure: {
+                  '#text': error.stack,
+                  '@_message': error.message
+                }
+              }
+            : {})
         };
       })
     },
     ...(suite.suites
-      ? Object.entries(suite.suites).map(([name, suite]) => buildXmlTestSuites(suite, errors, stats, name))
+      ? Object.entries(suite.suites).map(([name, suite]) =>
+          buildXmlTestSuites(suite, errors, stats, name)
+        )
       : [])
   ].flat();
 };

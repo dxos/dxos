@@ -13,24 +13,33 @@ import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';
 
 type TestItem = {
-  key: string
-  value: string
-}
+  key: string;
+  value: string;
+};
 
 const codec: Codec<TestItem> = {
   encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
 };
 
-const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
+const valueEncoding: AbstractValueEncoding<TestItem> =
+  createCodecEncoding(codec);
 
 describe('Hypercore', function () {
-  it('sanity', async function () {
-    const factory = new HypercoreFactory();
+  it('create, append, and close a feed', async function () {
+    const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
 
     {
+      // Check open is idempotent.
+      const open = util.promisify(core.open.bind(core));
+      await open();
+      await open();
+    }
+
+    {
+      // Append block.
       expect(core.length).to.eq(0);
       const append = util.promisify(core.append.bind(core));
       const seq = await append('test');
@@ -39,14 +48,22 @@ describe('Hypercore', function () {
     }
 
     {
+      // Get block.
       const get = util.promisify(core.get.bind(core));
       const block: any = await get(0);
       expect(block.toString()).to.eq('test');
     }
+
+    {
+      // Check open is idempotent.
+      const close = util.promisify(core.close.bind(core));
+      await close();
+      await close();
+    }
   });
 
   it('encoding with typed hypercore', async function () {
-    const factory = new HypercoreFactory();
+    const factory = new HypercoreFactory<TestItem>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
 

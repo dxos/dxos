@@ -4,10 +4,7 @@
 
 import React, { ChangeEvent, FC, KeyboardEvent, useRef, useState } from 'react';
 
-import {
-  Clear as ClearIcon,
-  Search as SearchIcon
-} from '@mui/icons-material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 
 /**
@@ -17,12 +14,9 @@ import { IconButton, InputAdornment, TextField } from '@mui/material';
  * @constructor
  */
 export const Searchbar: FC<{
-  onChange?: (value: string) => void
-  delay?: number
-}> = ({
-  onChange = console.debug,
-  delay = 100
-}) => {
+  onChange?: (value: string) => void;
+  delay?: number;
+}> = ({ onChange = console.debug, delay = 100 }) => {
   const [text, setText] = useState('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -71,7 +65,7 @@ export const Searchbar: FC<{
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       InputProps={{
-        startAdornment:
+        startAdornment: (
           <InputAdornment position='end'>
             <IconButton
               sx={{ marginRight: 1 }}
@@ -81,8 +75,9 @@ export const Searchbar: FC<{
             >
               <SearchIcon />
             </IconButton>
-          </InputAdornment>,
-        endAdornment:
+          </InputAdornment>
+        ),
+        endAdornment: (
           <InputAdornment position='end'>
             <IconButton
               size='small'
@@ -92,6 +87,7 @@ export const Searchbar: FC<{
               <ClearIcon />
             </IconButton>
           </InputAdornment>
+        )
       }}
       sx={{
         backgroundColor: 'white'

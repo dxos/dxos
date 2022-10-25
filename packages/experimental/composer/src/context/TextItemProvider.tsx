@@ -7,13 +7,12 @@ import React, {
   PropsWithChildren,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState
 } from 'react';
 
 import type { Item } from '@dxos/client';
-import { useClient, useSelection } from '@dxos/react-client';
+import { useSelection } from '@dxos/react-client';
 import { Button, Group } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
@@ -22,13 +21,12 @@ import { useParty } from './PartyProvider';
 export const DOCUMENT_TYPE = 'experimental:type/document';
 
 export interface TextItemContextValue {
-  item?: Item<TextModel>
+  item?: Item<TextModel>;
 }
 
 export const TextItemContext = createContext<TextItemContextValue>({});
 
 export const TextItemProvider = (props: PropsWithChildren<{}>) => {
-  const client = useClient();
   const { party } = useParty();
 
   const [item, setItem] = useState<Item<TextModel>>();
@@ -37,10 +35,6 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
   );
 
   const textModelDocumentContextValue = useMemo(() => ({ item }), [item]);
-
-  useEffect(() => {
-    client.echo.registerModel(TextModel);
-  }, [client]);
 
   const onCreate = useCallback(() => {
     void party!.database
@@ -55,8 +49,9 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
       {item ? (
         <>
           {props.children}
-          <Button onClick={onClose} className='fixed bottom-2 left-2'>Close
-            document</Button>
+          <Button onClick={onClose} className='fixed bottom-2 left-2'>
+            Close document
+          </Button>
         </>
       ) : (
         <Group
@@ -79,7 +74,10 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
                 className='width-full truncate'
                 onClick={() => setItem(item)}
               >
-                {`${id.substring(0, 4)}..${id.substring(id.length - 4, id.length)}`}
+                {`${id.substring(0, 4)}..${id.substring(
+                  id.length - 4,
+                  id.length
+                )}`}
               </Button>
             );
           })}

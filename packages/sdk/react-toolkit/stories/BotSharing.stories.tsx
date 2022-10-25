@@ -8,7 +8,12 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { ClientProvider, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
+import {
+  ClientProvider,
+  useClient,
+  useParties,
+  BotFactoryClientProvider
+} from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
@@ -24,7 +29,7 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map(party => (
+      {parties.map((party) => (
         <Box key={party.key.toHex()}>
           <CopyText value={party.key.toHex()} />
         </Box>
@@ -92,7 +97,8 @@ export const Primary = () => {
         },
         // TODO(burdon): In-memory simulator? `dx bot factory start`
         bot: {
-          topic: '3084b2359ef10a8b578706c9748ad41a05ac75ce992ea3b0686448e452749ce3'
+          topic:
+            '3084b2359ef10a8b578706c9748ad41a05ac75ce992ea3b0686448e452749ce3'
         }
       }
     }

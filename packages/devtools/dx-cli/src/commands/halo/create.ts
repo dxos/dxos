@@ -15,7 +15,7 @@ export default class Create extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args } = await this.parse(Create);
     const { username } = args; // TODO(burdon): Prompt.
 
@@ -26,7 +26,9 @@ export default class Create extends BaseCommand {
       } else {
         const seedphrase = generateSeedPhrase();
         profile = await client.halo.createProfile({ seedphrase, username });
-        this.log(`IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`);
+        this.log(
+          `IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`
+        );
         return { seedphrase, username: profile.username };
       }
     });

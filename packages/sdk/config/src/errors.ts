@@ -5,7 +5,7 @@
 import { DXOSError } from '@dxos/debug';
 
 export class InvalidConfigError extends DXOSError {
-  constructor (message: string) {
+  constructor(message: string) {
     super('INVALID_CONFIG', message);
   }
 }

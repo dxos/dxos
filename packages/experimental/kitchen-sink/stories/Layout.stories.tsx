@@ -6,7 +6,11 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider } from '@dxos/react-client';
-import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import {
+  ProfileInitializer,
+  itemAdapter,
+  useTestParty
+} from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
@@ -25,18 +29,20 @@ faker.seed(100);
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const model = useGraphModel(party, [
+    (item) => Boolean(item.type?.startsWith('example:'))
+  ]);
 
   return (
     <FullScreen>
       <Layout
-        sidebar={(
+        sidebar={
           <EchoGrid
             items={model.graph.nodes}
             itemAdapter={itemAdapter}
             styles={tableStyles}
           />
-        )}
+        }
       >
         <EchoGraph
           model={model}

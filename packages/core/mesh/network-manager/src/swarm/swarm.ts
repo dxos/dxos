@@ -35,10 +35,13 @@ export class Swarm {
    */
   readonly id = PublicKey.random();
 
-  private readonly _connections = new ComplexMap<PublicKey, Connection>(key => key.toHex());
-  private readonly _discoveredPeers = new ComplexSet<PublicKey>(key => key.toHex());
+  private readonly _connections = new ComplexMap<PublicKey, Connection>(
+    PublicKey.hash
+  );
 
-  get connections () {
+  private readonly _discoveredPeers = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  get connections() {
     return Array.from(this._connections.values());
   }
 
@@ -62,7 +65,7 @@ export class Swarm {
   private readonly _swarmMessenger: MessageRouter;
 
   // TODO(burdon): Split up properties.
-  constructor (
+  constructor(
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
@@ -71,63 +74,67 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
-    log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
+    log('creating swarm', { topic: _topic, peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new MessageRouter({
-      sendMessage: async msg => await this._messenger.sendMessage(msg),
-      onSignal: async msg => await this.onSignal(msg),
-      onOffer: async msg => await this.onOffer(msg),
+      sendMessage: async (msg) => await this._messenger.sendMessage(msg),
+      onSignal: async (msg) => await this.onSignal(msg),
+      onOffer: async (msg) => await this.onOffer(msg),
       topic: this._topic
     });
 
-    this._messenger.listen({
-      peerId: this._ownPeerId,
-      payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async message => await this._swarmMessenger.receiveMessage(message)
-    }).catch((error) => log.catch(error));
+    this._messenger
+      .listen({
+        peerId: this._ownPeerId,
+        payloadType: 'dxos.mesh.swarm.SwarmMessage',
+        onMessage: async (message) =>
+          await this._swarmMessenger.receiveMessage(message)
+      })
+      .catch((error) => log.catch(error));
   }
 
-  get ownPeerId () {
+  get ownPeerId() {
     return this._ownPeerId;
   }
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.
    */
-  get label (): string | undefined {
+  get label(): string | undefined {
     return this._label;
   }
 
-  get topic (): Topic {
+  get topic(): Topic {
     return this._topic;
   }
 
-  onSwarmEvent (swarmEvent: SwarmEvent) {
-    log(`Swarm event ${JSON.stringify(swarmEvent)}`);
+  onSwarmEvent(swarmEvent: SwarmEvent) {
+    log('swarm event', { swarmEvent });
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log(`New peer for ${this._topic} ${peerId}`);
+      log('new peer', { topic: this._topic, peerId });
       if (!peerId.equals(this._ownPeerId)) {
         this._discoveredPeers.add(peerId);
       }
     } else if (swarmEvent.peerLeft) {
       this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
     }
+
     this._topology.update();
   }
 
-  async onOffer (message: OfferMessage): Promise<Answer> {
-    log(`Offer from ${JSON.stringify(message)}`);
+  async onOffer(message: OfferMessage): Promise<Answer> {
+    log(`offer from ${message}`);
     // Id of the peer offering us the connection.
     assert(message.author);
     const remoteId = message.author;
     if (!message.recipient?.equals(this._ownPeerId)) {
-      log(`Rejecting offer with incorrect peerId: ${message.author}`);
+      log(`rejecting offer with incorrect peerId: ${message.author}`);
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
-      log(`Rejecting offer with incorrect topic: ${message.topic}`);
+      log(`rejecting offer with incorrect topic: ${message.topic}`);
       return { accept: false };
     }
 
@@ -135,9 +142,11 @@ export class Swarm {
     if (this._connections.has(remoteId)) {
       // Peer with the highest Id closes it's connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
-        log(`[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`);
+        log(
+          `[${this._ownPeerId}] Closing local connection and accepting remote peer's offer.`
+        );
         // Close our connection and accept remote peer's connection.
-        await this._closeConnection(remoteId).catch(err => {
+        await this._closeConnection(remoteId).catch((err) => {
           this.errors.raise(err);
         });
       } else {
@@ -148,9 +157,14 @@ export class Swarm {
 
     let accept = false;
     if (await this._topology.onOffer(remoteId)) {
-      if (!this._connections.has(remoteId)) { // Connection might have been already established.
+      if (!this._connections.has(remoteId)) {
+        // Connection might have been already established.
         assert(message.sessionId);
-        const connection = this._createConnection(false, message.author, message.sessionId);
+        const connection = this._createConnection(
+          false,
+          message.author,
+          message.sessionId
+        );
         try {
           connection.connect();
         } catch (err: any) {
@@ -159,26 +173,36 @@ export class Swarm {
         accept = true;
       }
     }
+
     this._topology.update();
     return { accept };
   }
 
-  async onSignal (message: SignalMessage): Promise<void> {
-    log(`Signal ${this._topic} ${JSON.stringify(message)}`);
-    assert(message.recipient?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`);
+  async onSignal(message: SignalMessage): Promise<void> {
+    log(`Signal ${this._topic} ${message}`);
+    assert(
+      message.recipient?.equals(this._ownPeerId),
+      `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
+    );
     assert(message.topic?.equals(this._topic));
     assert(message.author);
     const connection = this._connections.get(message.author);
     if (!connection) {
-      log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.author}`);
+      log(
+        `Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.author}`
+      );
       return;
     }
 
     await connection.signal(message);
   }
 
-  async setTopology (newTopology: Topology) {
-    log(`Set topology for ${this._topic} ${Object.getPrototypeOf(this._topology).constructor.name} ${Object.getPrototypeOf(newTopology).constructor.name}`);
+  async setTopology(newTopology: Topology) {
+    log(
+      `Set topology for ${this._topic} ${
+        Object.getPrototypeOf(this._topology).constructor.name
+      } ${Object.getPrototypeOf(newTopology).constructor.name}`
+    );
     if (newTopology === this._topology) {
       return;
     }
@@ -188,21 +212,27 @@ export class Swarm {
     this._topology.update();
   }
 
-  async destroy () {
-    log(`Destroy swarm ${this._topic}`);
+  async destroy() {
+    log('destroying', { topic: this._topic });
     await this._topology.destroy();
-    await Promise.all(Array.from(this._connections.keys()).map(key => this._closeConnection(key)));
+    await Promise.all(
+      Array.from(this._connections.keys()).map((key) =>
+        this._closeConnection(key)
+      )
+    );
   }
 
-  private _getSwarmController (): SwarmController {
+  private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
         ownPeerId: this._ownPeerId,
         connected: Array.from(this._connections.keys()),
-        candidates: Array.from(this._discoveredPeers.keys()).filter(key => !this._connections.has(key))
+        candidates: Array.from(this._discoveredPeers.keys()).filter(
+          (key) => !this._connections.has(key)
+        )
       }),
-      connect: peer => this._initiateConnection(peer),
-      disconnect: async peer => {
+      connect: (peer) => this._initiateConnection(peer),
+      disconnect: async (peer) => {
         try {
           await this._closeConnection(peer);
         } catch (err: any) {
@@ -213,7 +243,7 @@ export class Swarm {
     };
   }
 
-  private async _initiateConnection (remoteId: PublicKey) {
+  private async _initiateConnection(remoteId: PublicKey) {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
@@ -227,15 +257,23 @@ export class Swarm {
 
     const sessionId = PublicKey.random();
 
-    log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
+    log(
+      `Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`
+    );
     const connection = this._createConnection(true, remoteId, sessionId);
     connection.initiate();
 
     this._topology.update();
   }
 
-  private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
-    log(`Create connection topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId} initiator=${initiator}`);
+  private _createConnection(
+    initiator: boolean,
+    remoteId: PublicKey,
+    sessionId: PublicKey
+  ) {
+    log(
+      `Create connection topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId} initiator=${initiator}`
+    );
     assert(!this._connections.has(remoteId), 'Peer already connected.');
 
     const connection = new Connection(
@@ -252,12 +290,14 @@ export class Swarm {
     this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
 
-    connection.errors.handle(error => {
-      log(`Connection error topic=${this._topic} remoteId=${remoteId} ${error.stack}`);
-      this._closeConnection(remoteId).catch(err => this.errors.raise(err));
+    connection.errors.handle((error) => {
+      log(
+        `Connection error topic=${this._topic} remoteId=${remoteId} ${error.stack}`
+      );
+      this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
     });
 
-    connection.stateChanged.on(state => {
+    connection.stateChanged.on((state) => {
       switch (state) {
         case ConnectionState.CONNECTED:
           this.connected.emit(remoteId);
@@ -273,12 +313,15 @@ export class Swarm {
           break;
 
         case ConnectionState.CLOSED:
-          log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
+          log(
+            `Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`
+          );
           // Connection might have been already closed or replace by a different one.
           // Only remove the connection if it has the same session id.
           if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
             this._connections.delete(remoteId);
             this.connectionRemoved.emit(connection);
+            this._topology.update();
           }
           break;
       }
@@ -287,7 +330,7 @@ export class Swarm {
     return connection;
   }
 
-  private async _closeConnection (peerId: PublicKey) {
+  private async _closeConnection(peerId: PublicKey) {
     log(`Close connection topic=${this._topic} remoteId=${peerId}`);
     const connection = this._connections.get(peerId);
     if (!connection) {

@@ -4,9 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  Box, Button, Divider, Paper, TextField, Toolbar
-} from '@mui/material';
+import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
 import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
@@ -60,9 +58,11 @@ const PartyInvitationContainer = () => {
     setTimeout(async () => {
       resetInvitations();
 
-      const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
-        inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
-      });
+      const invitation = await client.echo
+        .getParty(partyKey!)!
+        .createInvitation({
+          inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
+        });
       invitation.finished.on(() => resetInvitations());
 
       if (!contact) {
@@ -77,16 +77,10 @@ const PartyInvitationContainer = () => {
     <Box>
       <Box sx={{ padding: 1 }}>
         <Toolbar>
-          <Button
-            variant='outlined'
-            onClick={handleCreateParty}
-          >
+          <Button variant='outlined' onClick={handleCreateParty}>
             Create Party
           </Button>
-          <Button
-            disabled={!partyKey}
-            onClick={handleCreateInvitation}
-          >
+          <Button disabled={!partyKey} onClick={handleCreateInvitation}>
             Create Invitation
           </Button>
         </Toolbar>
@@ -115,11 +109,7 @@ const PartyInvitationContainer = () => {
 
         {pin && (
           <Box sx={{ marginTop: 1 }}>
-            <TextField
-              disabled
-              type='text'
-              value={pin}
-            />
+            <TextField disabled type='text' value={pin} />
           </Box>
         )}
       </Box>
@@ -128,9 +118,9 @@ const PartyInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any
-  party?: string
-  invitation?: PartyInvitation
+  error?: any;
+  party?: string;
+  invitation?: PartyInvitation;
 }
 
 /**
@@ -144,7 +134,9 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(InvitationDescriptor.decode(invitationCode));
+      const invitation = await client.echo.acceptInvitation(
+        InvitationDescriptor.decode(invitationCode)
+      );
       setStatus({ invitation });
 
       const party = await invitation.getParty();
@@ -183,14 +175,16 @@ const TestApp = () => {
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      flexShrink: 0,
-      overflow: 'hidden',
-      margin: 1
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        flexShrink: 0,
+        overflow: 'hidden',
+        margin: 1
+      }}
+    >
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
@@ -207,7 +201,14 @@ export const Primary = () => {
 
   return (
     <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          padding: 1,
+          justifyContent: 'space-around'
+        }}
+      >
         {[...new Array(peers)].map((_, i) => (
           <ClientProvider key={i}>
             <TestApp />

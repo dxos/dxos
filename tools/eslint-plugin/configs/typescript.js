@@ -7,27 +7,12 @@ module.exports = {
   parserOptions: {
     project: './tsconfig.json'
   },
-  extends: [
-    'plugin:@typescript-eslint/recommended'
-  ],
-  plugins: [
-    '@typescript-eslint/eslint-plugin'
-  ],
+  extends: ['plugin:@typescript-eslint/recommended'],
+  plugins: ['@typescript-eslint/eslint-plugin'],
   rules: {
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/func-call-spacing': ['error'],
-    '@typescript-eslint/member-delimiter-style': [
-      'error',
-      {
-        multiline: {
-          delimiter: 'none'
-        },
-        singleline: {
-          delimiter: 'comma'
-        }
-      }
-    ],
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-extra-parens': 'off',

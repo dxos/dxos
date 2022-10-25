@@ -14,14 +14,16 @@ const items = [
   {
     id: 'item-0',
     title: 'Richard III',
-    description: 'Richard III is a play by William Shakespeare. It was probably written around 1593.',
+    description:
+      'Richard III is a play by William Shakespeare. It was probably written around 1593.',
     url: 'https://en.wikipedia.org/wiki/Richard_III_(play)',
     category: 'history'
   },
   {
     id: 'item-1',
     title: 'Hamlet',
-    description: 'The Tragedy of Hamlet, Prince of Denmark, often shortened to Hamlet,' +
+    description:
+      'The Tragedy of Hamlet, Prince of Denmark, often shortened to Hamlet,' +
       ' is a tragedy written by William Shakespeare sometime between 1599 and 1601.',
     url: 'https://en.wikipedia.org/wiki/Hamlet',
     category: 'tragedy'
@@ -29,14 +31,16 @@ const items = [
   {
     id: 'item-2',
     title: 'Macbeth',
-    description: 'Macbeth, fully The Tragedy of Macbeth, is a tragedy by William Shakespeare.',
+    description:
+      'Macbeth, fully The Tragedy of Macbeth, is a tragedy by William Shakespeare.',
     url: 'https://en.wikipedia.org/wiki/Macbeth',
     category: 'tragedy'
   },
   {
     id: 'item-3',
     title: 'The Tempest',
-    description: 'The Tempest is a play by English playwright William Shakespeare, probably written in 1610–1611, ' +
+    description:
+      'The Tempest is a play by English playwright William Shakespeare, probably written in 1610–1611, ' +
       'and thought to be one of the last plays that Shakespeare wrote alone.',
     url: 'https://en.wikipedia.org/wiki/The_Tempest',
     category: 'comedy'
@@ -44,7 +48,8 @@ const items = [
   {
     id: 'item-4',
     title: 'The Seagull',
-    description: 'The Seagull is a play by Russian dramatist Anton Chekhov, written in 1895.',
+    description:
+      'The Seagull is a play by Russian dramatist Anton Chekhov, written in 1895.',
     url: 'https://en.wikipedia.org/wiki/The_Seagull',
     category: 'tragedy'
   }
@@ -57,7 +62,12 @@ describe('TextIndex', function () {
 
     indexer.update(items);
     const results = indexer.search('william');
-    expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
+    expect(
+      results.filter(
+        (item) =>
+          ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1
+      )
+    ).toHaveLength(4);
   });
 
   it('indexer query with update cache', async function () {
@@ -67,19 +77,29 @@ describe('TextIndex', function () {
     {
       indexer.update(items);
       const results = indexer.search('william');
-      expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
+      expect(
+        results.filter(
+          (item) =>
+            ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1
+        )
+      ).toHaveLength(4);
     }
 
     {
       indexer.update(items.slice(3, 4));
       const results = indexer.search('william');
-      expect(results.filter(item => ['item-3'].indexOf(item.id) !== -1)).toHaveLength(1);
+      expect(
+        results.filter((item) => ['item-3'].indexOf(item.id) !== -1)
+      ).toHaveLength(1);
     }
   });
 
   it('simple text query', function () {
     const getter = (item: any, key: string) => item[key];
-    const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
+    const textIndex = new TextIndex({
+      fields: ['title', 'description'],
+      getter
+    });
     const matcher = new Matcher({ getter, textIndex });
 
     const query = {
@@ -93,12 +113,20 @@ describe('TextIndex', function () {
 
     textIndex.update(items);
     const results = matcher.matchItems(query, items);
-    expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
+    expect(
+      results.filter(
+        (item) =>
+          ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1
+      )
+    ).toHaveLength(4);
   });
 
   it('complex text query', function () {
     const getter = (item: any, key: string) => item[key];
-    const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
+    const textIndex = new TextIndex({
+      fields: ['title', 'description'],
+      getter
+    });
     const matcher = new Matcher({ getter, textIndex });
 
     const query = {
@@ -138,6 +166,8 @@ describe('TextIndex', function () {
 
     textIndex.update(items);
     const results = matcher.matchItems(query, items);
-    expect(results.filter(item => ['item-1', 'item-2'].indexOf(item.id) !== -1)).toHaveLength(2);
+    expect(
+      results.filter((item) => ['item-1', 'item-2'].indexOf(item.id) !== -1)
+    ).toHaveLength(2);
   });
 });

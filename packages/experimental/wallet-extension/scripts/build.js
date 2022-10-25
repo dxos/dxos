@@ -12,7 +12,11 @@ const { join } = require('path');
 const rmdir = require('rmdir');
 const { promisify } = require('util');
 
-const { NodeGlobalsPolyfillPlugin, FixMemdownPlugin, NodeModulesPlugin } = require('@dxos/esbuild-plugins');
+const {
+  NodeGlobalsPolyfillPlugin,
+  FixMemdownPlugin,
+  NodeModulesPlugin
+} = require('@dxos/esbuild-plugins');
 
 const distDir = join(__dirname, '../dist');
 const srcDir = join(__dirname, '../src');
@@ -39,15 +43,17 @@ void (async () => {
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin()
       ],
-      watch: process.argv.includes('--watch') ? {
-        onRebuild: ((error) => {
-          if (error) {
-            console.error(chalk.red('\nBuild failed.'));
-          } else {
-            console.log(chalk.green('\nRebuild finished.'));
+      watch: process.argv.includes('--watch')
+        ? {
+            onRebuild: (error) => {
+              if (error) {
+                console.error(chalk.red('\nBuild failed.'));
+              } else {
+                console.log(chalk.green('\nRebuild finished.'));
+              }
+            }
           }
-        })
-      } : false
+        : false
     });
   } catch (err) {
     console.error(err); // \/ Turns out, they're not always printed.

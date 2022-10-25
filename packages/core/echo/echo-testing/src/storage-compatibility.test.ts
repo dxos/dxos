@@ -46,7 +46,11 @@ const createData = async (storagePath: string) => {
     props: { name: 'DXOS' }
   });
 
-  await party.database.createLink({ type: 'example:link/employee', source: person, target: company });
+  await party.database.createLink({
+    type: 'example:link/employee',
+    source: person,
+    target: company
+  });
 
   await echo.close();
 };
@@ -60,11 +64,16 @@ it.skip('can load from saved state', async function () {
 
   expect(echo.halo.getProfile()?.username).toEqual('test-user');
 
-  const person: Item<ObjectModel> =
-    echo.queryParties().first.database.select({ type: 'example:item/person' }).exec().entities[0];
+  const person: Item<ObjectModel> = echo
+    .queryParties()
+    .first.database.select({ type: 'example:item/person' })
+    .exec().entities[0];
 
   expect(person.model).toBeInstanceOf(ObjectModel);
-  expect(person.model.toObject()).toEqual({ firstName: 'Edith', lastName: 'Smith' });
+  expect(person.model.toObject()).toEqual({
+    firstName: 'Edith',
+    lastName: 'Smith'
+  });
 
   expect(person.links).toHaveLength(1);
   expect(person.links[0].type).toEqual('example:link/employee');

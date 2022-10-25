@@ -8,4 +8,5 @@
 
 export const inDev = (): boolean => process.env.NODE_ENV === 'development';
 
-export const inFullScreenMode = (): boolean => window.location.href.includes('popup/fullscreen.html');
+export const inFullScreenMode = (): boolean =>
+  window.location.href.includes('popup/fullscreen.html');

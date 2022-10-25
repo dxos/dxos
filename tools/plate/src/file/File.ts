@@ -15,17 +15,18 @@ export type MaybePromise<T> = T | Promise<T>;
 export const promise = <T>(o: MaybePromise<T>): Promise<T> =>
   isPromise(o) ? o : Promise.resolve(o);
 
+// TODO(burdon): import { isPromise } from "util/types"?
 export const isPromise = <T>(p: any): p is Promise<T> =>
   typeof p?.then === 'function';
 
 export type AsyncFunctor<T> = (o: T) => MaybePromise<T>;
 
 export type FileOptions<D> = {
-  path: Path
-  copyFrom?: Path
-  content?: D
-  transform?: AsyncFunctor<D | null>
-  overwrite?: boolean
+  path: Path;
+  copyFrom?: Path;
+  content?: D;
+  transform?: AsyncFunctor<D | null>;
+  overwrite?: boolean;
 };
 
 export class File<D = string> {
@@ -39,7 +40,7 @@ export class File<D = string> {
   public ext = '';
   public allowOverwrite: boolean;
   public copyFrom: string | undefined;
-  constructor (options: FileOptions<D>) {
+  constructor(options: FileOptions<D>) {
     const {
       path: p,
       content,
@@ -67,7 +68,7 @@ export class File<D = string> {
     this.allowOverwrite = overwrite;
   }
 
-  shortDescription (cwd?: string) {
+  shortDescription(cwd?: string) {
     const formattedDir = cwd ? path.relative(cwd, this.dir) : this.dir;
     const formattedFrom = this.isCopy()
       ? cwd
@@ -81,7 +82,7 @@ export class File<D = string> {
     }${this.isCopy() ? ` copy from ${formattedFrom}` : ''}`;
   }
 
-  clone () {
+  clone() {
     const { path, content, transform } = this;
     const Ctor = this.constructor as typeof File;
     const clone = new Ctor({
@@ -92,15 +93,15 @@ export class File<D = string> {
     return clone;
   }
 
-  isLoaded () {
+  isLoaded() {
     return this.content != null;
   }
 
-  isCopy () {
+  isCopy() {
     return !!this.copyFrom && !this.content;
   }
 
-  async load (loadOptions?: any): Promise<File<D>> {
+  async load(loadOptions?: any): Promise<File<D>> {
     let content: Buffer | undefined;
     try {
       content = await fs.readFile(this.copyFrom || this.path);
@@ -115,21 +116,21 @@ export class File<D = string> {
     return this;
   }
 
-  async ensureLoaded () {
+  async ensureLoaded() {
     if (!this.isLoaded()) {
       await this.load();
     }
   }
 
-  protected async parse (content: Buffer, loadOptions?: any): Promise<D> {
+  protected async parse(content: Buffer, loadOptions?: any): Promise<D> {
     return content.toString('utf8') as any;
   }
 
-  protected async serialize (): Promise<string> {
+  protected async serialize(): Promise<string> {
     return '' + this.content;
   }
 
-  async save (): Promise<File<D> | undefined> {
+  async save(): Promise<File<D> | undefined> {
     if (this.isCopy() && !this.transform) {
       await mkdirp(path.dirname(this.path));
       await fs.copyFile(this.copyFrom!, this.path);

@@ -11,7 +11,7 @@ package dxos.echo.timeframe;
  */
 message TimeframeVector {
   message Frame {
-    // TODO(marik-d): Compress using numeric feed indexes.
+    // TODO(dmaretskyi): Compress using numeric feed indexes.
     // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
     bytes feed_key = 1;
     int32 seq = 3;

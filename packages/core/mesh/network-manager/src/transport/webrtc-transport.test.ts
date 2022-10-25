@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
 describe('WebRTCTransport', function () {
@@ -25,7 +25,7 @@ describe('WebRTCTransport', function () {
       PublicKey.random(),
       PublicKey.random(),
       PublicKey.random(),
-      async msg => {}
+      async (msg) => {}
     );
 
     let callsCounter = 0;
@@ -40,7 +40,9 @@ describe('WebRTCTransport', function () {
     await sleep(10); // Process events.
 
     expect(callsCounter).toEqual(1);
-  }).timeout(1_000).retries(3);
+  })
+    .timeout(1_000)
+    .retries(3);
 
   it('establish connection and send data through with protocol', async function () {
     const topic = PublicKey.random();
@@ -49,15 +51,22 @@ describe('WebRTCTransport', function () {
     const sessionId = PublicKey.random();
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-    const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
+    const protocolProvider1 = testProtocolProvider(
+      topic.asBuffer(),
+      peer1Id.asBuffer(),
+      plugin1
+    );
     const connection1 = new WebRTCTransport(
       true,
-      protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+      protocolProvider1({
+        channel: discoveryKey(topic),
+        initiator: true
+      }).stream,
       peer1Id,
       peer2Id,
       sessionId,
       topic,
-      async msg => {
+      async (msg) => {
         await sleep(10);
         await connection2.signal(msg.data.signal);
       }
@@ -66,15 +75,22 @@ describe('WebRTCTransport', function () {
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-    const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
+    const protocolProvider2 = testProtocolProvider(
+      topic.asBuffer(),
+      peer2Id.asBuffer(),
+      plugin2
+    );
     const connection2 = new WebRTCTransport(
       false,
-      protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+      protocolProvider2({
+        channel: discoveryKey(topic),
+        initiator: false
+      }).stream,
       peer2Id,
       peer1Id,
       sessionId,
       topic,
-      async msg => {
+      async (msg) => {
         await sleep(10);
         await connection1.signal(msg.data.signal);
       }
@@ -98,5 +114,7 @@ describe('WebRTCTransport', function () {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('{"message": "Hello"}');
     });
-  }).timeout(2_000).retries(3);
+  })
+    .timeout(2_000)
+    .retries(3);
 });

@@ -11,15 +11,20 @@ import { resolve } from 'path';
 import { build } from './build';
 
 export interface GenerateExecutorOptions {
-  basePath: string
-  srcPath: string
-  outputPath: string
-  substitutionsPath: string
+  basePath: string;
+  srcPath: string;
+  outputPath: string;
+  substitutionsPath: string;
 }
 
-export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing "generate"...');
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+export default async (
+  options: GenerateExecutorOptions,
+  context: ExecutorContext
+): Promise<{ success: boolean }> => {
+  console.info('Executing generate...');
+  if (context.isVerbose) {
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
 
   const src = join(options.basePath, options.srcPath);
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
@@ -32,7 +37,9 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     err(err.message);
   }
 
-  const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined;
+  const substitutions = existsSync(substitutionsPath)
+    ? substitutionsPath
+    : undefined;
   const proto = glob(src, { cwd: context.cwd });
 
   await build({

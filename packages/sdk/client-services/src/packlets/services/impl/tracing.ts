@@ -3,21 +3,19 @@
 //
 
 import { Config } from '@dxos/config';
-import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools';
+import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools/host';
 
 /**
  *
  */
 export class TracingService implements TracingServiceRpc {
-  constructor (
-    private readonly _config: Config
-  ) {}
+  constructor(private readonly _config: Config) {}
 
-  async setTracingOptions () {
+  async setTracingOptions() {
     throw new Error('Tracing not available.');
   }
 
-  subscribeToRpcTrace (): any {
+  subscribeToRpcTrace(): any {
     throw new Error('Tracing not available.');
   }
 }

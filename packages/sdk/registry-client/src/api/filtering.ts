@@ -13,12 +13,12 @@ export interface Filter {
   /**
    * Filter by record type. Will only return data records.
    */
-  type?: CID
+  type?: CID;
 
   /**
    * Filter by specific string appearing in record's text fields.
    */
-  text?: string
+  text?: string;
 }
 
 /**
@@ -36,7 +36,8 @@ export const Filtering = {
       return true;
     }
 
-    const textMatches = filter.text === undefined || matchesDxn(name, filter.text);
+    const textMatches =
+      filter.text === undefined || matchesDxn(name, filter.text);
 
     return textMatches;
   },
@@ -52,8 +53,10 @@ export const Filtering = {
       return true;
     }
 
-    const textMatches = filter.text === undefined || matchesText(record, filter.text);
-    const typeMatches = filter.type === undefined || matchesRecordType(record, filter.type);
+    const textMatches =
+      filter.text === undefined || matchesText(record, filter.text);
+    const typeMatches =
+      filter.type === undefined || matchesRecordType(record, filter.type);
 
     return textMatches && typeMatches;
   }
@@ -73,7 +76,10 @@ const matchesText = (record: RegistryRecord, text: string) => {
     record.description ?? '',
     ...(record.tags ?? [])
   ];
-  return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
+  return places.some((place) =>
+    place.toLowerCase().includes(text.toLowerCase())
+  );
 };
 
-const matchesDxn = (dxn: DXN, text: string): boolean => dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
+const matchesDxn = (dxn: DXN, text: string): boolean =>
+  dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;

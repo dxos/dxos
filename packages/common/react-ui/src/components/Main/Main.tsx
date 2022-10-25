@@ -2,12 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { PropsWithChildren } from 'react';
+import cx from 'classnames';
+import React, { ComponentProps, PropsWithChildren } from 'react';
 
-export const Main = (props: PropsWithChildren<{}>) => {
+export const Main = ({
+  children,
+  className,
+  ...mainProps
+}: PropsWithChildren<ComponentProps<'main'>>) => {
   return (
-    <main className='mt-8 px-8 space-y-4'>
-      { props.children }
+    <main {...mainProps} className={cx('mt-8 px-8 space-y-4', className)}>
+      {children}
     </main>
   );
 };
