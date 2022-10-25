@@ -63,9 +63,8 @@ export abstract class BaseCommand extends Command {
   override async init(): Promise<void> {
     await super.init();
 
-    const { installationId, identityId, fullCrashReports, disableTelemetry } = await getTelemetryContext(
-      this.config.configDir
-    );
+    const { installationId, identityId, isInternalUser, fullCrashReports, disableTelemetry } =
+      await getTelemetryContext(this.config.configDir);
 
     if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
@@ -75,7 +74,10 @@ export abstract class BaseCommand extends Command {
         release: DX_RELEASE,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
-        scrubFilenames: !fullCrashReports
+        scrubFilenames: !fullCrashReports,
+        properties: {
+          isInternalUser
+        }
       });
     }
 
@@ -93,7 +95,8 @@ export abstract class BaseCommand extends Command {
       name: this.id ?? 'unknown',
       properties: {
         environment: DX_ENVIRONMENT,
-        release: DX_RELEASE
+        release: DX_RELEASE,
+        isInternalUser
       }
     });
 
