@@ -18,15 +18,12 @@ export const TELEMETRY_KEY = process.env.SEGMENT_API_KEY ?? telemetryrc.TELEMETR
 
 export type TelemetryContext = {
   installationId: string;
-  identityId: string;
   isInternalUser: boolean;
   fullCrashReports: boolean;
   disableTelemetry: boolean;
 };
 
 const DEFAULTS = {
-  // TODO(wittjosiah): Create second identifier per HALO identity.
-  identityId: 'default',
   isInternalUser: false,
   fullCrashReports: false,
   disableTelemetry: false

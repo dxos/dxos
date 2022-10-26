@@ -3,14 +3,14 @@
 //
 
 import snippet from '@segment/snippet';
-import type Analytics from 'analytics-node';
 
+import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { EventOptions, InitOptions, PageOptions } from './types';
 
 declare global {
-  const analytics: Analytics;
+  const analytics: any;
 }
 
 export const init = (options: InitOptions) => {
@@ -26,31 +26,34 @@ export const init = (options: InitOptions) => {
   document.body.append(script);
 };
 
-export const page = ({ installationId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({ identityId: userId, ...options }: PageOptions = {}) => {
+  if (typeof analytics === 'undefined') {
+    log.debug('Analytics not initialized', { action: 'page' });
+  }
+
   analytics?.page({
     ...options,
-    anonymousId,
-    properties: {
-      ...options.properties,
-      installationId
-    }
+    userId
   });
 };
 
-export const event = ({ installationId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
+export const event = ({ identityId: userId, name: event, ...options }: EventOptions) => {
+  if (typeof analytics === 'undefined') {
+    log.debug('Analytics not initialized', { action: 'page' });
+  }
+
   analytics?.track({
     ...options,
-    anonymousId,
-    event,
-    properties: {
-      ...options.properties,
-      installationId
-    }
+    event
   });
 };
 
 export const flush = async () => {
-  await analytics?.flush((err) => {
+  if (typeof analytics === 'undefined') {
+    log.debug('Analytics not initialized', { action: 'page' });
+  }
+
+  await analytics?.flush((err: any) => {
     captureException(err);
   });
 };

@@ -28,37 +28,31 @@ export const init = (options: InitOptions) => {
 /**
  *
  */
-export const page = ({ installationId, identityId: anonymousId, ...options }: PageOptions) => {
+export const page = ({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) => {
   if (!analytics) {
-    log.debug('Analytics not inialized', { action: 'page' });
+    log.debug('Analytics not initialized', { action: 'page' });
   }
 
   analytics?.page({
     ...options,
-    anonymousId,
-    properties: {
-      ...options.properties,
-      installationId
-    }
+    userId,
+    anonymousId
   });
 };
 
 /**
  *
  */
-export const event = ({ installationId, identityId: anonymousId, name: event, ...options }: EventOptions) => {
+export const event = ({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) => {
   if (!analytics) {
-    log.debug('Analytics not inialized', { action: 'event' });
+    log.debug('Analytics not initialized', { action: 'event' });
   }
 
   analytics?.track({
     ...options,
+    userId,
     anonymousId,
-    event,
-    properties: {
-      ...options.properties,
-      installationId
-    }
+    event
   });
 };
 
@@ -67,7 +61,7 @@ export const event = ({ installationId, identityId: anonymousId, name: event, ..
  */
 export const flush = async () => {
   if (!analytics) {
-    log.debug('Analytics not inialized', { action: 'flush' });
+    log.debug('Analytics not initialized', { action: 'flush' });
   }
 
   await analytics?.flush((err) => {

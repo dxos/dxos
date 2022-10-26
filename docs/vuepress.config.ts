@@ -68,9 +68,14 @@ const config: UserConfig = defineUserConfig({
   ],
   bundler: viteBundler({
     viteOptions: {
+      define: {
+        'process.env.DX_ENVIRONMENT': `'${process.env.DX_ENVIRONMENT}'`,
+        'process.env.DX_RELEASE': `'${process.env.DX_RELEASE}'`,
+        'process.env.SEGMENT_API_KEY': `'${process.env.SEGMENT_API_KEY}'`
+      },
       resolve: {
         alias: {
-          'node:assert': 'assert/'
+          'node:assert': 'assert'
         }
       },
       optimizeDeps: {
