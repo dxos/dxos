@@ -18,8 +18,8 @@ import { afterTest } from '@dxos/testutils';
 import { valueEncoding } from '../common';
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from '../testing';
 import { SpaceManager } from './space-manager';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.

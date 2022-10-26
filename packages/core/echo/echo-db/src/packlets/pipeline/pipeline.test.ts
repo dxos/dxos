@@ -6,7 +6,7 @@ import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestFeedBuilder } from '../testing';
+import { TestFeedBuilder } from '../space';
 import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', function () {
