@@ -6,7 +6,15 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity, Database } from '@dxos/echo-db';
+import {
+  MOCK_AUTH_PROVIDER,
+  MOCK_AUTH_VERIFIER,
+  MetadataStore,
+  Space,
+  SwarmIdentity,
+  Database,
+  SpaceProtocol
+} from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -96,17 +104,21 @@ export class IdentityManager {
     // It's important to initialize it after writable feeds so that the feed is in the writable state.
     const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
 
+    const protocol = new SpaceProtocol({
+      topic: spaceRecord.spaceKey,
+      identity: swarmIdentity,
+      networkManager: this._networkManager
+    });
+
     return new Space({
       spaceKey: spaceRecord.spaceKey,
+      protocol,
       genesisFeed,
       controlFeed,
       dataFeed,
       // TODO(dmaretskyi): This might always be the empty timeframe.
       initialTimeframe: new Timeframe(),
-      feedProvider: (key) => this._feedStore.openFeed(key),
-      networkManager: this._networkManager,
-      networkPlugins,
-      swarmIdentity,
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
     });

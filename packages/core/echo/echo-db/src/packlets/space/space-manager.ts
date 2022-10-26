@@ -169,7 +169,7 @@ export class SpaceManager {
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
     const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 
-    // Might be the same as controlFeed above, in case this space was created by the current agent.
+    // The genesis feed will be the same as the control feed if the space was created by the local agent.
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
@@ -186,9 +186,9 @@ export class SpaceManager {
     return new Space({
       spaceKey,
       protocol,
+      genesisFeed,
       controlFeed,
       dataFeed,
-      genesisFeed,
       initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>

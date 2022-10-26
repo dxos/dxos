@@ -27,6 +27,9 @@ import { Storage } from '@dxos/random-access-storage';
 import { IdentityManager } from '../identity';
 import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -42,8 +45,9 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public dataInvitations?: DataInvitations; // TOOD(burdon): Move.
+  public dataInvitations?: DataInvitations; // TODO(burdon): Move.
 
+  // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,

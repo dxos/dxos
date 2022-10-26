@@ -116,7 +116,6 @@ export class TestPeer {
 
     const controlFeedKey = await this.keyring.createKey();
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
-
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
     return new Space({
