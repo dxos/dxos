@@ -5,26 +5,52 @@
 Link variant of an item. Link two objects together. Can hold a custom model.
 
 ## Constructors
+### constructor
 ```ts
-new Link <M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, link: LinkData) => Link<M, L, R>
+<M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, link: LinkData) => Link<M, L, R>
 ```
 
 ## Properties
-### `_itemManager: ItemManager`
-### `_onUpdate: Event<Entity<any>>`
-### `id:  get string`
-### `isLink:  get "true"`
-### `model:  get M`
-### `modelMeta:  get ModelMeta<any, any, any>`
-### `modelType:  get string`
-### `source:  get Item<L>`
-### `sourceId:  get string`
-### `target:  get Item<R>`
-### `targetId:  get string`
-### `type:  get undefined | string`
+### _itemManager 
+> Type: `ItemManager`
+<br/>
+### _onUpdate 
+> Type: `Event<Entity<any>>`
+<br/>
+### id
+> Type: `string`
+<br/>
+### isLink
+> Type: `"true"`
+<br/>
+### model
+> Type: `M`
+<br/>
+### modelMeta
+> Type: `ModelMeta<any, any, any>`
+<br/>
+### modelType
+> Type: `string`
+<br/>
+### source
+> Type: `Item<L>`
+<br/>
+### sourceId
+> Type: `string`
+<br/>
+### target
+> Type: `Item<R>`
+<br/>
+### targetId
+> Type: `string`
+<br/>
+### type
+> Type: `undefined | string`
+<br/>
 
-## Functions
+## Methods
+### subscribe
 ```ts
-subscribe (listener: function) => function
+(listener: function) => function
 ```
 Subscribe for updates.

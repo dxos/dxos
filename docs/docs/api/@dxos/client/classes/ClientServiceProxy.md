@@ -6,17 +6,22 @@ Implements services that are not local to the app.
 For example, the services can be located in Wallet Extension.
 
 ## Constructors
+### constructor
 ```ts
-new ClientServiceProxy (port: RpcPort, _timeout: number) => ClientServiceProxy
+(port: RpcPort, _timeout: number) => ClientServiceProxy
 ```
 
 ## Properties
-### `services: ClientServices`
+### services 
+> Type: `ClientServices`
+<br/>
 
-## Functions
+## Methods
+### close
 ```ts
-close () => Promise<void>
+() => Promise<void>
 ```
+### open
 ```ts
-open (onProgressCallback: function) => Promise<void>
+(onProgressCallback: function) => Promise<void>
 ```

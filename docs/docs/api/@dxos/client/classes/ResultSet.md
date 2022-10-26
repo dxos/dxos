@@ -5,23 +5,33 @@
 Reactive query results.
 
 ## Constructors
+### constructor
 ```ts
-new ResultSet <T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => ResultSet<T>
+<T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => ResultSet<T>
 ```
 
 ## Properties
-### `update: ReadOnlyEvent<T[]>`
-Triggered when  `value`  updates.
-### `first:  get T`
-### `value:  get T[]`
+### update 
+> Type: `ReadOnlyEvent<T[]>`
+<br/>
 
-## Functions
+Triggered when  `value`  updates.
+### first
+> Type: `T`
+<br/>
+### value
+> Type: `T[]`
+<br/>
+
+## Methods
+### subscribe
 ```ts
-subscribe (listener: function) => function
+(listener: function) => function
 ```
 Subscribe for updates.
+### waitFor
 ```ts
-waitFor (condition: function) => Promise<T[]>
+(condition: function) => Promise<T[]>
 ```
 Waits for condition to be true and then returns the value that passed the condition first.
 

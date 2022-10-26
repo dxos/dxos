@@ -5,40 +5,54 @@
 Client proxy to local/remote ECHO service.
 
 ## Constructors
+### constructor
 ```ts
-new EchoProxy (_serviceProvider: ClientServiceProvider, _modelFactory: ModelFactory, _haloProxy: HaloProxy) => EchoProxy
+(_serviceProvider: ClientServiceProvider, _modelFactory: ModelFactory, _haloProxy: HaloProxy) => EchoProxy
 ```
 
 ## Properties
-### `info:  get object`
-### `modelFactory:  get ModelFactory`
-### `networkManager:  get any`
+### info
+> Type: `object`
+<br/>
+### modelFactory
+> Type: `ModelFactory`
+<br/>
+### networkManager
+> Type: `any`
+<br/>
 
-## Functions
+## Methods
+### acceptInvitation
 ```ts
-acceptInvitation (invitationDescriptor: InvitationDescriptor) => PartyInvitation
+(invitationDescriptor: InvitationDescriptor) => PartyInvitation
 ```
 Joins an existing Party by invitation.
 
 To be used with  `party.createInvitation`  on the inviter side.
+### cloneParty
 ```ts
-cloneParty (snapshot: PartySnapshot) => Promise<Party>
+(snapshot: PartySnapshot) => Promise<Party>
 ```
 Clones the party from a snapshot.
+### createParty
 ```ts
-createParty () => Promise<Party>
+() => Promise<Party>
 ```
 Creates a new party.
+### getParty
 ```ts
-getParty (partyKey: PublicKey) => undefined | Party
+(partyKey: PublicKey) => undefined | Party
 ```
 Returns an individual party by its key.
+### queryParties
 ```ts
-queryParties () => ResultSet<Party>
+() => ResultSet<Party>
 ```
+### registerModel
 ```ts
-registerModel (constructor: ModelConstructor<any>) => EchoProxy
+(constructor: ModelConstructor<any>) => EchoProxy
 ```
+### toString
 ```ts
-toString () => string
+() => string
 ```

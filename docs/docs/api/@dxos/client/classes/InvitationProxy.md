@@ -5,24 +5,33 @@
 
 
 ## Constructors
+### constructor
 ```ts
-new InvitationProxy () => InvitationProxy
+() => InvitationProxy
 ```
 
 ## Properties
-### `activeInvitations: InvitationRequest[]`
-### `invitationsUpdate: Event<void>`
+### activeInvitations 
+> Type: `InvitationRequest[]`
+<br/>
+### invitationsUpdate 
+> Type: `Event<void>`
+<br/>
 
-## Functions
+## Methods
+### _removeInvitation
 ```ts
-_removeInvitation (invitation: InvitationRequest) => void
+(invitation: InvitationRequest) => void
 ```
+### close
 ```ts
-close () => void
+() => void
 ```
+### createInvitationRequest
 ```ts
-createInvitationRequest (__namedParameters: CreateInvitationRequestOpts) => Promise<InvitationRequest>
+(__namedParameters: CreateInvitationRequestOpts) => Promise<InvitationRequest>
 ```
+### handleInvitationRedemption
 ```ts
-handleInvitationRedemption (__namedParameters: HandleInvitationRedemptionOpts) => HandleInvitationRedemptionResult
+(__namedParameters: HandleInvitationRedemptionOpts) => HandleInvitationRedemptionResult
 ```

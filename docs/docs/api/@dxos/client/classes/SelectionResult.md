@@ -6,30 +6,46 @@ Query subscription.
 Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
 
 ## Constructors
+### constructor
 ```ts
-new SelectionResult <T, R> (_execute: function, _update: Event<Entity<Model<any, any>>[]>, _root: SelectionRoot, _reducer: boolean) => SelectionResult<T, R>
+<T, R> (_execute: function, _update: Event<Entity<Model<any, any>>[]>, _root: SelectionRoot, _reducer: boolean) => SelectionResult<T, R>
 ```
 
 ## Properties
-### `update: Event<SelectionResult<T, any>>`
+### update 
+> Type: `Event<SelectionResult<T, any>>`
+<br/>
+
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
-### `entities:  get T[]`
+### entities
+> Type: `T[]`
+<br/>
+
 Get the result of this selection.
-### `root:  get SelectionRoot`
+### root
+> Type: `SelectionRoot`
+<br/>
+
 The root of the selection. Either a database or an item. Must be a stable reference.
-### `value:  get [object Object] extends [object Object] ? [object Object] : [object Object]`
+### value
+> Type: `[object Object] extends [object Object] ? [object Object] : [object Object]`
+<br/>
+
 Returns the selection or reducer result.
 
-## Functions
+## Methods
+### expectOne
 ```ts
-expectOne () => T
+() => T
 ```
 Return the first element if the set has exactly one element.
+### refresh
 ```ts
-refresh () => SelectionResult<T, R>
+() => SelectionResult<T, R>
 ```
 Re-run query.
+### toString
 ```ts
-toString () => string
+() => string
 ```

@@ -6,25 +6,32 @@ Global configuration object.
 NOTE: Config objects are immutable.
 
 ## Constructors
+### constructor
 ```ts
-new Config (...objects: [Config, ...Config[]]) => Config
+(...objects: [Config, ...Config[]]) => Config
 ```
 Creates an immutable instance.
 
 ## Properties
-### `values:  get Config`
+### values
+> Type: `Config`
+<br/>
+
 Returns an immutable config JSON object.
 
-## Functions
+## Methods
+### get
 ```ts
-get <K> (key: K, defaultValue: DeepIndex<Config, ParseKey<K>, undefined>) => DeepIndex<Config, ParseKey<K>, undefined>
+<K> (key: K, defaultValue: DeepIndex<Config, ParseKey<K>, undefined>) => DeepIndex<Config, ParseKey<K>, undefined>
 ```
 Returns the given config property.
+### getOrThrow
 ```ts
-getOrThrow <K> (key: K) => Exclude<DeepIndex<Config, ParseKey<K>, undefined>, undefined>
+<K> (key: K) => Exclude<DeepIndex<Config, ParseKey<K>, undefined>, undefined>
 ```
 Returns the given config property or throw if it doesn't exist.
+### getUnchecked
 ```ts
-getUnchecked <T> (key: string, defaultValue: T) => T
+<T> (key: string, defaultValue: T) => T
 ```
 Returns config key without type checking.

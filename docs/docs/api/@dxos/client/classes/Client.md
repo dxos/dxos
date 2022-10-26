@@ -5,45 +5,69 @@
 
 
 ## Constructors
+### constructor
 ```ts
-new Client (config: Config | Config, options: ClientOptions) => Client
+(config: Config | Config, options: ClientOptions) => Client
 ```
 Creates the client object based on supplied configuration.
 Requires initialization after creating by calling  `.initialize()` .
 
 ## Properties
-### `version: "2.33.8"`
-### `config:  get Config`
-### `echo:  get EchoProxy`
+### version 
+> Type: `"2.33.8"`
+<br/>
+### config
+> Type: `Config`
+<br/>
+### echo
+> Type: `EchoProxy`
+<br/>
+
 ECHO database.
-### `halo:  get HaloProxy`
+### halo
+> Type: `HaloProxy`
+<br/>
+
 HALO credentials.
-### `info:  get ClientInfo`
-### `initialized:  get boolean`
+### info
+> Type: `ClientInfo`
+<br/>
+### initialized
+> Type: `boolean`
+<br/>
+
 Has the Client been initialized?
 Initialize by calling  `.initialize()`
-### `services:  get ClientServices`
+### services
+> Type: `ClientServices`
+<br/>
+
 Client services that can be proxied.
 
-## Functions
+## Methods
+### destroy
 ```ts
-destroy () => Promise<void>
+() => Promise<void>
 ```
 Cleanup, release resources.
+### initialize
 ```ts
-initialize (onProgressCallback: function) => Promise<void>
+(onProgressCallback: function) => Promise<void>
 ```
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
+### registerModel
 ```ts
-registerModel (constructor: ModelConstructor<any>) => Client
+(constructor: ModelConstructor<any>) => Client
 ```
 Registers a new ECHO model.
+### reset
 ```ts
-reset () => Promise<void>
+() => Promise<void>
 ```
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
+### toString
 ```ts
-toString () => string
+() => string
 ```

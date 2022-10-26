@@ -10,6 +10,7 @@ import {
   packagesInProject,
   reflectionsOfKind,
   stringifyType,
+  method
 } from "../..";
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
@@ -32,6 +33,8 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ${sources(afunc)}
 
                 ${comment(afunc.comment)}
+
+                ${method(afunc)}
                 `,
             }),
             // new JSONFile({

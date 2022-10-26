@@ -5,54 +5,75 @@
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
 
 ## Constructors
+### constructor
 ```ts
-new Database (_modelFactory: ModelFactory, _backend: DatabaseBackend, memberKey: PublicKey) => Database
+(_modelFactory: ModelFactory, _backend: DatabaseBackend, memberKey: PublicKey) => Database
 ```
 Creates a new database instance.  `database.initialize()`  must be called afterwards to complete the initialization.
 
 ## Properties
-### `entityUpdate:  get Event<Entity<any>>`
+### entityUpdate
+> Type: `Event<Entity<any>>`
+<br/>
+
 Fired immediately after any update in the entities.
 If the information about which entity got updated is not required prefer using  `update` .
-### `isReadOnly:  get boolean`
-### `state:  get State`
-### `update:  get Event<Entity<any>[]>`
+### isReadOnly
+> Type: `boolean`
+<br/>
+### state
+> Type: `State`
+<br/>
+### update
+> Type: `Event<Entity<any>[]>`
+<br/>
+
 Fired when any item is updated.
 Contains a list of all entities changed from the last update.
 
-## Functions
+## Methods
+### createDataServiceHost
 ```ts
-createDataServiceHost () => DataServiceHost
+() => DataServiceHost
 ```
+### createItem
 ```ts
-createItem <M> (options: CreateItemOption<M>) => Promise<Item<M>>
+<M> (options: CreateItemOption<M>) => Promise<Item<M>>
 ```
 Creates a new item with the given queryable type and model.
+### createLink
 ```ts
-createLink <M, S, T> (options: CreateLinkOptions<M, S, T>) => Promise<Link<M, S, T>>
+<M, S, T> (options: CreateLinkOptions<M, S, T>) => Promise<Link<M, S, T>>
 ```
+### createSnapshot
 ```ts
-createSnapshot () => DatabaseSnapshot
+() => DatabaseSnapshot
 ```
+### destroy
 ```ts
-destroy () => Promise<void>
+() => Promise<void>
 ```
+### getItem
 ```ts
-getItem (itemId: string) => undefined | Item<any>
+(itemId: string) => undefined | Item<any>
 ```
 Retrieves a item from the index.
+### initialize
 ```ts
-initialize () => Promise<void>
+() => Promise<void>
 ```
+### reduce
 ```ts
-reduce <R> (result: R, filter: RootFilter) => Selection<Item<any>, R>
+<R> (result: R, filter: RootFilter) => Selection<Item<any>, R>
 ```
 Returns a reducer selection context.
+### select
 ```ts
-select (filter: RootFilter) => Selection<Item<any>, void>
+(filter: RootFilter) => Selection<Item<any>, void>
 ```
 Returns a selection context, which can be used to traverse the object graph.
+### waitForItem
 ```ts
-waitForItem <T> (filter: RootFilter) => Promise<Item<T>>
+<T> (filter: RootFilter) => Promise<Item<T>>
 ```
 Waits for item matching the filter to be present and returns it.

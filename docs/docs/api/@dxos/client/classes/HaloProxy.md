@@ -5,20 +5,31 @@
 Client proxy to local/remote HALO service.
 
 ## Constructors
+### constructor
 ```ts
-new HaloProxy (_serviceProvider: ClientServiceProvider) => HaloProxy
+(_serviceProvider: ClientServiceProvider) => HaloProxy
 ```
 
 ## Properties
-### `profileChanged: Event<void>`
-### `info:  get HaloInfo`
-### `invitationProxy:  get InvitationProxy`
-### `profile:  get undefined | Profile`
+### profileChanged 
+> Type: `Event<void>`
+<br/>
+### info
+> Type: `HaloInfo`
+<br/>
+### invitationProxy
+> Type: `InvitationProxy`
+<br/>
+### profile
+> Type: `undefined | Profile`
+<br/>
+
 User profile info.
 
-## Functions
+## Methods
+### acceptInvitation
 ```ts
-acceptInvitation (invitationDescriptor: InvitationDescriptor) => Invitation<void>
+(invitationDescriptor: InvitationDescriptor) => Invitation<void>
 ```
 Joins an existing identity HALO by invitation.
 Used to authorize another device of the same user.
@@ -26,11 +37,13 @@ The Invitation flow requires the inviter device and invitee device to be online 
 The invitation flow is protected by a generated pin code.
 
 To be used with  `client.halo.createHaloInvitation`  on the inviter side.
+### addKeyRecord
 ```ts
-addKeyRecord (keyRecord: KeyRecord) => Promise<void>
+(keyRecord: KeyRecord) => Promise<void>
 ```
+### createInvitation
 ```ts
-createInvitation () => Promise<InvitationRequest>
+() => Promise<InvitationRequest>
 ```
 Creates an invitation to an existing HALO party.
 Used to authorize another device of the same user.
@@ -38,43 +51,54 @@ The Invitation flow requires the inviter device and invitee device to be online 
 The invitation flow is protected by a generated pin code.
 
 To be used with  `client.halo.joinHaloInvitation`  on the invitee side.
+### createProfile
 ```ts
-createProfile (__namedParameters: any) => Promise<Profile>
+(__namedParameters: any) => Promise<Profile>
 ```
 Create Profile.
 Add Identity key if public and secret key are provided.
 Then initializes profile with given username.
 If no public and secret key or seedphrase are provided it relies on keyring to contain an identity key.
 Seedphrase must not be specified with existing keys.
+### getDevicePreference
 ```ts
-getDevicePreference (key: string) => Promise<undefined | string>
+(key: string) => Promise<undefined | string>
 ```
+### getGlobalPreference
 ```ts
-getGlobalPreference (key: string) => Promise<undefined | string>
+(key: string) => Promise<undefined | string>
 ```
+### queryContacts
 ```ts
-queryContacts () => ResultSet<any>
+() => ResultSet<any>
 ```
 Query for contacts. Contacts represent member keys across all known Parties.
+### queryDevices
 ```ts
-queryDevices () => Promise<DeviceInfo[]>
+() => Promise<DeviceInfo[]>
 ```
+### recoverProfile
 ```ts
-recoverProfile (seedPhrase: string) => Promise<Profile>
+(seedPhrase: string) => Promise<Profile>
 ```
 Joins an existing identity HALO from a recovery seed phrase.
+### setDevicePreference
 ```ts
-setDevicePreference (key: string, value: string) => Promise<void>
+(key: string, value: string) => Promise<void>
 ```
+### setGlobalPreference
 ```ts
-setGlobalPreference (key: string, value: string) => Promise<void>
+(key: string, value: string) => Promise<void>
 ```
+### sign
 ```ts
-sign (request: SignRequest) => Promise<SignResponse>
+(request: SignRequest) => Promise<SignResponse>
 ```
+### subscribeToProfile
 ```ts
-subscribeToProfile (callback: function) => function
+(callback: function) => function
 ```
+### toString
 ```ts
-toString () => string
+() => string
 ```

@@ -5,32 +5,54 @@
 Invitation created by sender.
 
 ## Constructors
+### constructor
 ```ts
-new InvitationRequest (_descriptor: InvitationDescriptor, connected: Event<void>, finished: Event<void>, error: Event<Error>) => InvitationRequest
+(_descriptor: InvitationDescriptor, connected: Event<void>, finished: Event<void>, error: Event<Error>) => InvitationRequest
 ```
 
 ## Properties
-### `canceled: Event<void>`
-### `connected: Event<void>`
-Fired when the remote peer connects.
-### `error: Event<Error>`
-Fired when there's an error in the invitation process.
-### `finished: Event<void>`
-Fired when the invitation process completes successfully.
-### `descriptor:  get InvitationDescriptor`
-### `hasConnected:  get boolean`
-True if the connected event has been fired.
-### `secret:  get Uint8Array`
+### canceled 
+> Type: `Event<void>`
+<br/>
+### connected 
+> Type: `Event<void>`
+<br/>
 
-## Functions
+Fired when the remote peer connects.
+### error 
+> Type: `Event<Error>`
+<br/>
+
+Fired when there's an error in the invitation process.
+### finished 
+> Type: `Event<void>`
+<br/>
+
+Fired when the invitation process completes successfully.
+### descriptor
+> Type: `InvitationDescriptor`
+<br/>
+### hasConnected
+> Type: `boolean`
+<br/>
+
+True if the connected event has been fired.
+### secret
+> Type: `Uint8Array`
+<br/>
+
+## Methods
+### cancel
 ```ts
-cancel () => void
+() => void
 ```
 Cancel the invitation.
+### toString
 ```ts
-toString () => string
+() => string
 ```
+### wait
 ```ts
-wait (timeout: number) => Promise<void>
+(timeout: number) => Promise<void>
 ```
 Wait until connected.

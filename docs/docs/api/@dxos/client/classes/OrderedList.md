@@ -5,33 +5,46 @@
 Utility class that wraps an  `ObjectModel`  and implements a linked list via key-values on a given property.
 
 ## Constructors
+### constructor
 ```ts
-new OrderedList (_model: ObjectModel, _property: string) => OrderedList
+(_model: ObjectModel, _property: string) => OrderedList
 ```
 
 ## Properties
-### `update: Event<string[]>`
-### `id:  get string`
-### `values:  get string[]`
+### update 
+> Type: `Event<string[]>`
+<br/>
+### id
+> Type: `string`
+<br/>
+### values
+> Type: `string[]`
+<br/>
+
 Get ordered values.
 
-## Functions
+## Methods
+### destroy
 ```ts
-destroy () => void
+() => void
 ```
+### init
 ```ts
-init (values: string[]) => Promise<string[]>
+(values: string[]) => Promise<string[]>
 ```
 Clears the ordered set with the optional values.
+### insert
 ```ts
-insert (left: string, right: string) => Promise<string[]>
+(left: string, right: string) => Promise<string[]>
 ```
 Links the ordered items, possibly linking them to existing items.
+### refresh
 ```ts
-refresh () => OrderedList
+() => OrderedList
 ```
 Refresh list from properties.
+### remove
 ```ts
-remove (values: string[]) => Promise<string[]>
+(values: string[]) => Promise<string[]>
 ```
 Removes the given element, possibly linked currently connected items.

@@ -5,27 +5,37 @@
 Wrapper for ECHO Item that represents an  `ObjectModel`  schema.
 
 ## Constructors
+### constructor
 ```ts
-new Schema (_schema: ObjectModel) => Schema
+(_schema: ObjectModel) => Schema
 ```
 
 ## Properties
-### `fields:  get SchemaField[]`
-### `name:  get string`
+### fields
+> Type: `SchemaField[]`
+<br/>
+### name
+> Type: `string`
+<br/>
 
-## Functions
+## Methods
+### addField
 ```ts
-addField (newField: SchemaField) => Promise<void>
+(newField: SchemaField) => Promise<void>
 ```
+### deleteField
 ```ts
-deleteField (key: string) => Promise<void>
+(key: string) => Promise<void>
 ```
+### editField
 ```ts
-editField (currentKey: string, editedField: SchemaField) => Promise<void>
+(currentKey: string, editedField: SchemaField) => Promise<void>
 ```
+### getField
 ```ts
-getField (key: string) => undefined | SchemaField
+(key: string) => undefined | SchemaField
 ```
+### validate
 ```ts
-validate (model: ObjectModel) => boolean
+(model: ObjectModel) => boolean
 ```

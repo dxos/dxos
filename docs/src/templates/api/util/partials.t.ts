@@ -57,7 +57,7 @@ export const signature = (ref: S.SignatureReflection): string => {
   // )`}
   return text`
   \`\`\`ts
-  ${ref.name} ${stringifyCallSignature(ref)}
+  ${stringifyCallSignature(ref)}
   \`\`\`
   ${comment(ref.comment)}
   `;
@@ -65,6 +65,7 @@ export const signature = (ref: S.SignatureReflection): string => {
 
 export const method = (ref: S.DeclarationReflection): string => {
   return text`
+  ### ${ref.name}
   ${ref.signatures?.map(signature)}
   `;
 };
@@ -72,18 +73,24 @@ export const method = (ref: S.DeclarationReflection): string => {
 export const property = (ref: S.DeclarationReflection): string => {
   const accessor = (ref: S.DeclarationReflection): string => {
     return text`
-    ### \`${ref.name}: ${
-      ref.getSignature ? ` get ` + stringifyType(ref.getSignature.type!) : ""
+    ### ${ref.name}
+    > Type: \`${
+      ref.getSignature ? stringifyType(ref.getSignature.type!) : ""
     }${
-      ref.setSignature ? `, set ${stringifyType(ref.setSignature.type!)}` : ""
+      ref.setSignature ? `, ${stringifyType(ref.setSignature.type!)}` : ""
     }\`
+    <br/>
+    
     ${comment(ref.getSignature?.comment)}
     ${comment(ref.setSignature?.comment)}
     `;
   };
   const field = (ref: S.DeclarationReflection): string => {
     return text`
-    ### \`${ref.name}: ${stringifyType(ref.type!)}\`
+    ### ${ref.name} 
+    > Type: \`${stringifyType(ref.type!)}\`
+    <br/>
+    
     ${comment(ref.comment)}
     `;
   };

@@ -5,32 +5,47 @@
 Manages connection to the swarm.
 
 ## Constructors
+### constructor
 ```ts
-new NetworkManager (__namedParameters: NetworkManagerOptions) => NetworkManager
+(__namedParameters: NetworkManagerOptions) => NetworkManager
 ```
 
 ## Properties
-### `topicsUpdated: Event<void>`
-### `connectionLog:  get undefined | ConnectionLog`
-### `signal:  get SignalManager`
-### `topics:  get PublicKey[]`
+### topicsUpdated 
+> Type: `Event<void>`
+<br/>
+### connectionLog
+> Type: `undefined | ConnectionLog`
+<br/>
+### signal
+> Type: `SignalManager`
+<br/>
+### topics
+> Type: `PublicKey[]`
+<br/>
 
-## Functions
+## Methods
+### destroy
 ```ts
-destroy () => Promise<void>
+() => Promise<void>
 ```
+### getSwarm
 ```ts
-getSwarm (topic: PublicKey) => undefined | Swarm
+(topic: PublicKey) => undefined | Swarm
 ```
+### getSwarmMap
 ```ts
-getSwarmMap (topic: PublicKey) => undefined | SwarmMapper
+(topic: PublicKey) => undefined | SwarmMapper
 ```
+### joinProtocolSwarm
 ```ts
-joinProtocolSwarm (options: SwarmOptions) => Promise<function>
+(options: SwarmOptions) => Promise<function>
 ```
+### leaveProtocolSwarm
 ```ts
-leaveProtocolSwarm (topic: PublicKey) => Promise<void>
+(topic: PublicKey) => Promise<void>
 ```
+### start
 ```ts
-start () => Promise<void>
+() => Promise<void>
 ```

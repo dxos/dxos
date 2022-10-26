@@ -10,35 +10,54 @@ Invitations can be interactive or offline.
 This descriptor might also have a bundled secret for authentication in interactive mode.
 
 ## Constructors
+### constructor
 ```ts
-new InvitationDescriptor (type: Type, swarmKey: PublicKey, invitation: Uint8Array, identityKey: PublicKey, secret: Uint8Array) => InvitationDescriptor
+(type: Type, swarmKey: PublicKey, invitation: Uint8Array, identityKey: PublicKey, secret: Uint8Array) => InvitationDescriptor
 ```
 
 ## Properties
-### `identityKey: PublicKey`
-### `invitation: Uint8Array`
-### `secret: Uint8Array`
-### `swarmKey: PublicKey`
-### `type: Type`
-### `hash:  get string`
+### identityKey 
+> Type: `PublicKey`
+<br/>
+### invitation 
+> Type: `Uint8Array`
+<br/>
+### secret 
+> Type: `Uint8Array`
+<br/>
+### swarmKey 
+> Type: `PublicKey`
+<br/>
+### type 
+> Type: `Type`
+<br/>
+### hash
+> Type: `string`
+<br/>
 
-## Functions
+## Methods
+### encode
 ```ts
-encode () => string
+() => string
 ```
+### toProto
 ```ts
-toProto () => InvitationDescriptor
+() => InvitationDescriptor
 ```
+### toQueryParameters
 ```ts
-toQueryParameters () => InvitationQueryParameters
+() => InvitationQueryParameters
 ```
 Exports an InvitationDescriptor to an object suitable for use as query parameters.
+### decode
 ```ts
-decode (code: string) => InvitationDescriptor
+(code: string) => InvitationDescriptor
 ```
+### fromProto
 ```ts
-fromProto (invitation: InvitationDescriptor) => InvitationDescriptor
+(invitation: InvitationDescriptor) => InvitationDescriptor
 ```
+### fromQueryParameters
 ```ts
-fromQueryParameters (queryParameters: InvitationQueryParameters) => InvitationDescriptor
+(queryParameters: InvitationQueryParameters) => InvitationDescriptor
 ```

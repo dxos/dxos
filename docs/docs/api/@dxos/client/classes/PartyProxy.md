@@ -9,27 +9,49 @@ Proxies requests to local/remove services.
 
 
 ## Properties
-### `database:  get Database`
-### `invitationProxy:  get InvitationProxy`
-### `isActive:  get boolean`
-### `isOpen:  get boolean`
-### `key:  get PublicKey`
-### `properties:  get ObjectProperties`
+### database
+> Type: `Database`
+<br/>
+### invitationProxy
+> Type: `InvitationProxy`
+<br/>
+### isActive
+> Type: `boolean`
+<br/>
+### isOpen
+> Type: `boolean`
+<br/>
+### key
+> Type: `PublicKey`
+<br/>
+### properties
+> Type: `ObjectProperties`
+<br/>
+
 TODO: Currently broken.
-### `reduce:  get function`
+### reduce
+> Type: `function`
+<br/>
+
 Returns a selection context, which can be used to traverse the object graph.
-### `select:  get function`
+### select
+> Type: `function`
+<br/>
+
 Returns a selection context, which can be used to traverse the object graph.
 
-## Functions
+## Methods
+### _setOpen
 ```ts
-_setOpen (open: boolean) => Promise<void>
+(open: boolean) => Promise<void>
 ```
+### close
 ```ts
-close () => Promise<void>
+() => Promise<void>
 ```
+### createInvitation
 ```ts
-createInvitation (inviteeKey: CreationInvitationOptions) => Promise<InvitationRequest>
+(inviteeKey: CreationInvitationOptions) => Promise<InvitationRequest>
 ```
 Creates an invitation to a given party.
 The Invitation flow requires the inviter and invitee to be online at the same time.
@@ -37,40 +59,51 @@ If the invitee is known ahead of time,  `invitee_key`  can be provide to not req
 The invitation flow is protected by a generated pin code.
 
 To be used with  `client.echo.acceptInvitation`  on the invitee side.
+### createSnapshot
 ```ts
-createSnapshot () => Promise<PartySnapshot>
+() => Promise<PartySnapshot>
 ```
 Implementation method.
+### destroy
 ```ts
-destroy () => Promise<void>
+() => Promise<void>
 ```
 Called by EchoProxy close.
+### getDetails
 ```ts
-getDetails () => Promise<PartyDetails>
+() => Promise<PartyDetails>
 ```
+### getProperty
 ```ts
-getProperty (key: string, defaultValue: any) => any
+(key: string, defaultValue: any) => any
 ```
+### getTitle
 ```ts
-getTitle () => never
+() => never
 ```
+### initialize
 ```ts
-initialize () => Promise<void>
+() => Promise<void>
 ```
 Called by EchoProxy open.
+### open
 ```ts
-open () => Promise<void>
+() => Promise<void>
 ```
+### queryMembers
 ```ts
-queryMembers () => ResultSet<PartyMember>
+() => ResultSet<PartyMember>
 ```
 Return set of party members.
+### setActive
 ```ts
-setActive (active: boolean, options: any) => Promise<void>
+(active: boolean, options: any) => Promise<void>
 ```
+### setProperty
 ```ts
-setProperty (key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise<void>
 ```
+### setTitle
 ```ts
-setTitle (title: string) => Promise<void>
+(title: string) => Promise<void>
 ```

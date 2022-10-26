@@ -7,77 +7,95 @@ Keys should be maintained as buffers in objects and proto definitions, and conve
 strings as late as possible (eg, to log/display).
 
 ## Constructors
+### constructor
 ```ts
-new PublicKey (_value: Uint8Array) => PublicKey
+(_value: Uint8Array) => PublicKey
 ```
 
 ## Properties
 
 
-## Functions
+## Methods
+### [custom]
 ```ts
-[custom] (depth: number, options: InspectOptionsStylized) => string
+(depth: number, options: InspectOptionsStylized) => string
 ```
 Used by NodeJS to get textual representation of this object when it's printed with a  `console.log`  statement.
+### asBuffer
 ```ts
-asBuffer () => Buffer
+() => Buffer
 ```
 Covert this key to buffer.
+### asUint8Array
 ```ts
-asUint8Array () => Uint8Array
+() => Uint8Array
 ```
 Return underlying Uint8Array representation.
+### equals
 ```ts
-equals (other: PublicKeyLike) => boolean
+(other: PublicKeyLike) => boolean
 ```
 Test this key for equality with some other key.
+### toHex
 ```ts
-toHex () => string
+() => string
 ```
 Convert this key to hex-encoded string.
+### toJSON
 ```ts
-toJSON () => string
+() => string
 ```
 Same as  `PublicKey.humanize()` .
+### toString
 ```ts
-toString () => string
+() => string
 ```
 Same as  `PublicKey.humanize()` .
+### truncate
 ```ts
-truncate (n: number) => string
+(n: number) => string
 ```
+### assertValidPublicKey
 ```ts
-assertValidPublicKey (value: any) => asserts value is PublicKey
+(value: any) => asserts value is PublicKey
 ```
 Asserts that provided values is an instance of PublicKey.
+### bufferize
 ```ts
-bufferize (str: string) => Buffer
+(str: string) => Buffer
 ```
+### equals
 ```ts
-equals (left: PublicKeyLike, right: PublicKeyLike) => boolean
+(left: PublicKeyLike, right: PublicKeyLike) => boolean
 ```
 Tests two keys for equality.
+### from
 ```ts
-from (source: PublicKeyLike) => PublicKey
+(source: PublicKeyLike) => PublicKey
 ```
 Creates new instance of PublicKey automatically determining the input format.
+### fromHex
 ```ts
-fromHex (hex: string) => PublicKey
+(hex: string) => PublicKey
 ```
 Creates new instance of PublicKey from hex string.
+### hash
 ```ts
-hash (key: PublicKey) => string
+(key: PublicKey) => string
 ```
 To be used with ComplexMap and ComplexSet.
 Returns a scalar representation for this key.
+### isPublicKey
 ```ts
-isPublicKey (value: any) => value is PublicKey
+(value: any) => value is PublicKey
 ```
 Tests if provided values is an instance of PublicKey.
+### random
 ```ts
-random () => PublicKey
+() => PublicKey
 ```
 Creates a new key.
+### stringify
 ```ts
-stringify (key: Buffer | Uint8Array) => string
+(key: Buffer | Uint8Array) => string
 ```

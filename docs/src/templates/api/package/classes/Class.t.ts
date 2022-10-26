@@ -37,7 +37,6 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
             ReflectionKind.Method,
             ReflectionKind.Function
           ).filter((r) => !r.flags.isPrivate);
-          const sourceFileName = aclass.sources?.[0]?.fileName;
           const classesDir = [outputDirectory, pkage.name ?? "", "classes"];
           return [
             new File({
@@ -54,7 +53,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ## Properties
                 ${properties.map(property)}
 
-                ## Functions
+                ## Methods
                 ${functions.map(method)}
                 `,
             }),

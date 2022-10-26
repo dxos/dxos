@@ -5,17 +5,20 @@
 Import/export party.
 
 ## Constructors
+### constructor
 ```ts
-new PartySerializer (_client: Client) => PartySerializer
+(_client: Client) => PartySerializer
 ```
 
 ## Properties
 
 
-## Functions
+## Methods
+### deserializeParty
 ```ts
-deserializeParty (data: Uint8Array) => Promise<Party>
+(data: Uint8Array) => Promise<Party>
 ```
+### serializeParty
 ```ts
-serializeParty (party: Party) => Promise<Blob>
+(party: Party) => Promise<Blob>
 ```

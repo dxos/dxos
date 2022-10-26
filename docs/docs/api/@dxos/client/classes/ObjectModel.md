@@ -5,60 +5,87 @@
 Object mutation model.
 
 ## Constructors
+### constructor
 ```ts
-new ObjectModel (_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => ObjectModel
+(_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => ObjectModel
 ```
 
 ## Properties
-### `_getState: function`
-### `update: Event<Model<ObjectModelState, ObjectMutationSet>>`
-### `meta: ModelMeta<any, any, any>`
-### `itemId:  get string`
-### `modelMeta:  get ModelMeta<any, any, any>`
-### `readOnly:  get boolean`
+### _getState 
+> Type: `function`
+<br/>
+### update 
+> Type: `Event<Model<ObjectModelState, ObjectMutationSet>>`
+<br/>
+### meta 
+> Type: `ModelMeta<any, any, any>`
+<br/>
+### itemId
+> Type: `string`
+<br/>
+### modelMeta
+> Type: `ModelMeta<any, any, any>`
+<br/>
+### readOnly
+> Type: `boolean`
+<br/>
 
-## Functions
+## Methods
+### addToSet
 ```ts
-addToSet (key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise<void>
 ```
+### builder
 ```ts
-builder () => MutationBuilder
+() => MutationBuilder
 ```
+### get
 ```ts
-get (key: string, defaultValue: unknown) => any
+(key: string, defaultValue: unknown) => any
 ```
+### getProperty
 ```ts
-getProperty (key: string, defaultValue: any) => any
+(key: string, defaultValue: any) => any
 ```
+### pushToArray
 ```ts
-pushToArray (key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise<void>
 ```
+### removeFromSet
 ```ts
-removeFromSet (key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise<void>
 ```
+### set
 ```ts
-set (key: string, value: unknown) => Promise<void>
+(key: string, value: unknown) => Promise<void>
 ```
+### setProperties
 ```ts
-setProperties (properties: any) => Promise<void>
+(properties: any) => Promise<void>
 ```
+### setProperty
 ```ts
-setProperty (key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise<void>
 ```
+### subscribe
 ```ts
-subscribe (listener: function) => function
+(listener: function) => function
 ```
+### toJSON
 ```ts
-toJSON () => object
+() => object
 ```
+### toObject
 ```ts
-toObject () => ObjectModelState
+() => ObjectModelState
 ```
 Returns an immutable object.
+### toString
 ```ts
-toString () => string
+() => string
 ```
+### write
 ```ts
-write (mutation: ObjectMutationSet) => Promise<MutationWriteReceipt>
+(mutation: ObjectMutationSet) => Promise<MutationWriteReceipt>
 ```
 Writes the raw mutation to the output stream.

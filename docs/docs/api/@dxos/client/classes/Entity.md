@@ -7,21 +7,37 @@ Base class for all ECHO entitities.
 Subclassed by Item and Link.
 
 ## Constructors
+### constructor
 ```ts
-new Entity <M> (_itemManager: ItemManager, _id: string, _type: undefined | string, stateManager: StateManager<NonNullable<M>>) => Entity<M>
+<M> (_itemManager: ItemManager, _id: string, _type: undefined | string, stateManager: StateManager<NonNullable<M>>) => Entity<M>
 ```
 
 ## Properties
-### `_itemManager: ItemManager`
-### `_onUpdate: Event<Entity<any>>`
-### `id:  get string`
-### `model:  get M`
-### `modelMeta:  get ModelMeta<any, any, any>`
-### `modelType:  get string`
-### `type:  get undefined | string`
+### _itemManager 
+> Type: `ItemManager`
+<br/>
+### _onUpdate 
+> Type: `Event<Entity<any>>`
+<br/>
+### id
+> Type: `string`
+<br/>
+### model
+> Type: `M`
+<br/>
+### modelMeta
+> Type: `ModelMeta<any, any, any>`
+<br/>
+### modelType
+> Type: `string`
+<br/>
+### type
+> Type: `undefined | string`
+<br/>
 
-## Functions
+## Methods
+### subscribe
 ```ts
-subscribe (listener: function) => function
+(listener: function) => function
 ```
 Subscribe for updates.

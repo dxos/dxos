@@ -69,7 +69,7 @@ export const stringifyReference = (node: r.ReferenceType): string => {
     typeArgs += stringifyList(node.typeArguments, ", ");
     typeArgs += ">";
   }
-
+  console.log(name, node.id, node.qualifiedName, node.package);
   return name + typeArgs;
 };
 

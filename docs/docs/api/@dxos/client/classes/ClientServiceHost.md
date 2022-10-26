@@ -5,18 +5,25 @@
 Remote service implementation.
 
 ## Constructors
+### constructor
 ```ts
-new ClientServiceHost (__namedParameters: ClientServiceHostParams) => ClientServiceHost
+(__namedParameters: ClientServiceHostParams) => ClientServiceHost
 ```
 
 ## Properties
-### `echo:  get never`
-### `services:  get ClientServices`
+### echo
+> Type: `never`
+<br/>
+### services
+> Type: `ClientServices`
+<br/>
 
-## Functions
+## Methods
+### close
 ```ts
-close () => Promise<void>
+() => Promise<void>
 ```
+### open
 ```ts
-open (onProgressCallback: function) => Promise<void>
+(onProgressCallback: function) => Promise<void>
 ```

@@ -6,24 +6,36 @@ Invitation that is being redeemed.
 It works in non-interactive mode and requires no authentication.
 
 ## Constructors
+### constructor
 ```ts
-new Invitation <T> (_descriptor: InvitationDescriptor, _invitationPromise: Promise<T>, _onAuthenticate: function) => Invitation<T>
+<T> (_descriptor: InvitationDescriptor, _invitationPromise: Promise<T>, _onAuthenticate: function) => Invitation<T>
 ```
 
 ## Properties
-### `_descriptor: InvitationDescriptor`
-### `_invitationPromise: Promise<T>`
-### `_onAuthenticate: function`
-### `descriptor:  get InvitationDescriptor`
+### _descriptor 
+> Type: `InvitationDescriptor`
+<br/>
+### _invitationPromise 
+> Type: `Promise<T>`
+<br/>
+### _onAuthenticate 
+> Type: `function`
+<br/>
+### descriptor
+> Type: `InvitationDescriptor`
+<br/>
 
-## Functions
+## Methods
+### authenticate
 ```ts
-authenticate (secret: Uint8Array) => void
+(secret: Uint8Array) => void
 ```
+### toJSON
 ```ts
-toJSON () => InvitationDescriptor
+() => InvitationDescriptor
 ```
+### wait
 ```ts
-wait () => Promise<T>
+() => Promise<T>
 ```
 Wait for the invitation flow to complete.
