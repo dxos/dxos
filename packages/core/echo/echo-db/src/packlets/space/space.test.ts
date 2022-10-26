@@ -61,6 +61,9 @@ describe('space/space', function () {
 
       expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
     }
+
+    await builder.close();
+    expect(space.isOpen).toBeFalsy();
   });
 
   it('two spaces replicating', async function () {
@@ -145,7 +148,7 @@ describe('space/space', function () {
       await space2.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
     }
 
-    // TODO(burdon): Write multiple items.
+    // TODO(burdon): Write multiple items (extract for all tests).
 
     {
       // Check item replicated from 1 => 2.
@@ -168,5 +171,9 @@ describe('space/space', function () {
       });
       expect(item1.id).toEqual(item2.id);
     }
+
+    await builder.close();
+    expect(space1.isOpen).toBeFalsy();
+    expect(space2.isOpen).toBeFalsy();
   });
 });

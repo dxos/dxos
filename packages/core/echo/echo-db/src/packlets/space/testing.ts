@@ -49,7 +49,7 @@ export type TestAgentBuilderOptions = {
  * Factory for test agents.
  */
 export class TestAgentBuilder {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
+  private readonly _agents = new ComplexMap<PublicKey, TestAgent>(PublicKey.hash);
   private readonly _storage: Storage;
   private readonly _networkManagerProvider: NetworkManagerProvider;
 
@@ -59,33 +59,38 @@ export class TestAgentBuilder {
       networkManagerProvider ?? MemoryNetworkManagerProvider(new MemorySignalManagerContext());
   }
 
-  get peers() {
-    return Array.from(this._peers.values());
+  async close() {
+    return Promise.all(this.agents.map((agent) => agent.close()));
   }
 
-  getPeer(deviceKey: PublicKey) {
-    return this._peers.get(deviceKey);
+  get agents() {
+    return Array.from(this._agents.values());
   }
 
-  async createPeer(): Promise<TestPeer> {
+  getAgent(deviceKey: PublicKey) {
+    return this._agents.get(deviceKey);
+  }
+
+  async createPeer(): Promise<TestAgent> {
     // prettier-ignore
     const feedBuilder = new TestFeedBuilder()
-      .setStorage(this._storage)
-      .setDirectory(this._storage.createDirectory(`peer-${this._peers.size}`));
+      .setStorage(this._storage, `agent-${this._agents.size}`);
 
     const identityKey = await feedBuilder.keyring.createKey();
     const deviceKey = await feedBuilder.keyring.createKey();
 
-    const peer = new TestPeer(this._networkManagerProvider, feedBuilder, identityKey, deviceKey);
-    this._peers.set(deviceKey, peer);
-    return peer;
+    const agent = new TestAgent(this._networkManagerProvider, feedBuilder, identityKey, deviceKey);
+    this._agents.set(deviceKey, agent);
+    return agent;
   }
 }
 
 /**
- * Test peer able to create and replicate spaces.
+ * Test agent that enables the creation and replication of multiple spaces.
  */
-export class TestPeer {
+export class TestAgent {
+  private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
+
   public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
 
@@ -99,17 +104,16 @@ export class TestPeer {
     this.feedStore = this._feedBuilder.createFeedStore();
   }
 
-  createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {
-    return new SpaceProtocol({
-      topic,
-      identity: {
-        peerKey: this.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      networkManager: this._networkManagerProvider(),
-      plugins
-    });
+  async close() {
+    return Promise.all(this.spaces.map((space) => space.close()));
+  }
+
+  get spaces() {
+    return Array.from(this._spaces.values());
+  }
+
+  getSpace(spaceKey: PublicKey) {
+    return this._spaces.get(spaceKey);
   }
 
   async createSpace(
@@ -128,7 +132,7 @@ export class TestPeer {
     const controlFeed = await this.feedStore.openFeed(controlFeedKey, { writable: true });
     const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
-    return new Space({
+    const space = new Space({
       spaceKey,
       protocol: this.createSpaceProtocol(spaceKey),
       genesisFeed,
@@ -137,6 +141,22 @@ export class TestPeer {
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+    });
+
+    this._spaces.set(spaceKey, space);
+    return space;
+  }
+
+  createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {
+    return new SpaceProtocol({
+      topic,
+      identity: {
+        peerKey: this.deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
+      },
+      networkManager: this._networkManagerProvider(),
+      plugins
     });
   }
 }

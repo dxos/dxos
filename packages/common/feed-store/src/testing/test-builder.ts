@@ -13,7 +13,7 @@ import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } f
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;
-  directory?: Directory;
+  root?: Directory;
   keyring?: Keyring;
   valueEncoding?: ValueEncoding<T>;
   generator?: TestGenerator<T>;
@@ -47,8 +47,8 @@ export class TestBuilder<T extends {}> {
     return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
   }
 
-  get directory(): Directory {
-    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
+  get root(): Directory {
+    return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   setKeyring(keyring: Keyring) {
@@ -56,19 +56,23 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  setStorage(storage: Storage) {
+  setStorage(storage: Storage, root?: string) {
     this._properties.storage = storage;
+    if (this._properties.storage && root) {
+      this._properties.root = this.storage.createDirectory(root);
+    }
+
     return this;
   }
 
-  setDirectory(directory: Directory) {
-    this._properties.directory = directory;
+  setRoot(root: Directory) {
+    this._properties.root = root;
     return this;
   }
 
   createFeedFactory() {
     return new FeedFactory<T>({
-      root: this.directory,
+      root: this.root,
       signer: this.keyring,
       hypercore: {
         valueEncoding: this._properties.valueEncoding
