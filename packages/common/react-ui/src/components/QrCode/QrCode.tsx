@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { QRCodeSVG } from 'qrcode.react';
-import React, { useCallback } from 'react';
+import React, { useCallback, cloneElement, ReactHTMLElement } from 'react';
 
 import { useId } from '../../hooks';
 import { Size } from '../../props';
@@ -16,7 +16,7 @@ export interface QrCodeProps
   extends Omit<ButtonProps, 'onClick' | 'ref'>,
     Pick<TooltipProps, 'side' | 'sideOffset' | 'collisionPadding'> {
   value: string;
-  label: string;
+  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   size?: Size;
 }
 
@@ -50,9 +50,13 @@ export const QrCode = ({
           role='none'
           className='w-full h-auto'
         />
-        <span id={labelId} className='sr-only'>
-          {label}
-        </span>
+        {typeof label === 'string' ? (
+          <span id={labelId} className='sr-only'>
+            {label}
+          </span>
+        ) : (
+          cloneElement(label, { id: labelId })
+        )}
       </Button>
     </Tooltip>
   );

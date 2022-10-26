@@ -15,6 +15,5 @@ export const halo = {
   'identity label': 'You',
   'apps label': 'Apps',
   'contacts label': 'Contacts',
-  'reset device label': 'Reset this device',
-  'copy invite code label': 'Scan to add a device, click to copy'
+  'reset device label': 'Reset this device'
 };

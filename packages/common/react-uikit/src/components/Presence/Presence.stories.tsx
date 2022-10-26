@@ -141,8 +141,17 @@ const WithinSpaceTemplate = () => {
   const [party, setParty] = useState<Party>();
 
   useEffect(() => {
+    console.log('[client change]', party);
     if (client && !party) {
-      void client.echo.createParty().then((party: Party) => setParty(party));
+      console.log('[creating party]', party);
+      void client.echo
+        .createParty()
+        .then((party: Party) => {
+          console.log('[setting party]', party);
+          setParty(party);
+        })
+        .catch((err) => console.log('[error creating party]', err))
+        .finally(() => console.log('[done creating party]'));
     }
   }, [client]);
 
@@ -157,8 +166,9 @@ export const WithinSpace = templateForComponent(WithinSpaceTemplate)({});
 WithinSpace.args = {};
 WithinSpace.decorators = [
   // TODO(wittjosiah): Factor out.
+  // TODO(willshown): This story doesn’t work with the test config. Why?
   (Story) => (
-    <ClientProvider config={defaultTestingConfig}>
+    <ClientProvider>
       <Story />
     </ClientProvider>
   )

@@ -52,8 +52,9 @@ export const PartyInviteSingleton = ({
     <QrCode
       size={40}
       value={invitationUrl}
-      label={t('copy invite code label', { ns: 'halo' })}
+      label={<p className='w-20'>{t('copy party invite code label')}</p>}
       side='left'
+      sideOffset={12}
       className='w-full h-auto'
     />
   ) : (

@@ -70,7 +70,7 @@ const ProfileMenu = (props: PresenceProps) => {
         />
       }
       collisionPadding={collisionPadding ?? 8}
-      sideOffset={sideOffset ?? -8}
+      sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
       <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
@@ -90,24 +90,30 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
     onClickManageProfile: _onClickManageProfile,
     closeLabel: _closeLabel,
     sideOffset,
-    collisionPadding
+    collisionPadding,
+    size
   } = props;
   const { t } = useTranslation();
   return (
     <Popover
       openTrigger={
-        <Button className='rounded-full flex items-center justify-center'>
-          <UserPlus className={getSize(5)} />
+        <Button
+          className={cx(
+            getSize(size ?? 7),
+            'rounded-md px-[0.25rem] py-[0.25rem] flex items-center justify-center'
+          )}
+        >
+          <UserPlus className='w-full h-auto' />
         </Button>
       }
       collisionPadding={collisionPadding ?? 8}
-      sideOffset={sideOffset ?? -8}
+      sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
       <PartyInviteSingleton party={party} />
       <Button className='flex w-full gap-2' onClick={onClickManageParty}>
         <Gear className={getSize(5)} />
-        <span>{t('manage space label')}</span>
+        <span>{t('manage party label')}</span>
       </Button>
     </Popover>
   );
@@ -115,9 +121,9 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
 
 export const Presence = (props: PresenceProps) => {
   return (
-    <>
-      <ProfileMenu {...props} />
+    <div role='none' className='flex gap-1'>
       {props.party && <PartyMenu {...props} party={props.party!} />}
-    </>
+      <ProfileMenu {...props} />
+    </div>
   );
 };

@@ -23,7 +23,7 @@ import { getSize } from '../../styles';
 export interface AvatarProps
   extends ComponentProps<typeof AvatarPrimitive.Root> {
   fallbackValue: string;
-  label: Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   size?: Size;
   variant?: 'square' | 'circle';
   mediaSrc?: string;
@@ -92,7 +92,13 @@ export const Avatar = forwardRef(
             />
           </AvatarPrimitive.Fallback>
         </AvatarPrimitive.Root>
-        {cloneElement(label, { id: labelId })}
+        {typeof label === 'string' ? (
+          <span id={labelId} className='sr-only'>
+            {label}
+          </span>
+        ) : (
+          cloneElement(label, { id: labelId })
+        )}
       </>
     );
   }

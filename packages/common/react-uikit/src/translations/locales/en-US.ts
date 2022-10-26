@@ -37,5 +37,8 @@ export const uikit = {
   'generic copy label': 'Copy',
   'generic help label': 'Help',
   'manage profile label': 'Manage identity',
-  'manage party label': 'Manage space'
+  'manage party label': 'Manage space',
+  'copy halo invite code label':
+    'Scan to authenticate a device, click to copy URL',
+  'copy party invite code label': 'Scan to join, click to copy URL'
 };
