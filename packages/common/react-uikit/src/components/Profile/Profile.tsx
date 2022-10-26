@@ -3,8 +3,9 @@
 //
 
 import { Eraser } from 'phosphor-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import urlJoin from 'url-join';
 
 import type { Profile as NaturalProfile } from '@dxos/client';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
@@ -13,9 +14,25 @@ import { humanize } from '@dxos/util';
 
 export interface ProfileProps {
   profile: NaturalProfile;
+  createInvitationUrl?: (invitationCode: string) => string;
 }
 
-export const Profile = ({ profile }: ProfileProps) => {
+// TODO(wittjosiah): Remove.
+const defaultCreateUrl = (invitationCode: string) => {
+  const invitationPath = '/profile/invite-device'; // App-specific.
+  const { origin, pathname } = window.location;
+  return urlJoin(
+    origin,
+    pathname,
+    `/#${invitationPath}`,
+    `?invitation=${invitationCode}`
+  );
+};
+
+export const Profile = ({
+  profile,
+  createInvitationUrl = defaultCreateUrl
+}: ProfileProps) => {
   const { t } = useTranslation();
   const client = useClient();
   const invitations = useHaloInvitations(client);
@@ -26,6 +43,14 @@ export const Profile = ({ profile }: ProfileProps) => {
     }
   }, [client, invitations]);
 
+  // TODO(wittjosiah): This should re-generate once it is used.
+  const invitationUrl = useMemo(
+    () =>
+      invitations[0] &&
+      createInvitationUrl(invitations[0].descriptor.encode().toString()),
+    [invitations]
+  );
+
   return (
     <div role='none' className='flex flex-col gap-4 items-center'>
       <Input
@@ -34,10 +59,10 @@ export const Profile = ({ profile }: ProfileProps) => {
         placeholder={humanize(profile.publicKey.toHex())}
         className='my-0'
       />
-      {invitations.length ? (
+      {invitationUrl ? (
         <QrCode
           size={40}
-          value={invitations[0]!.descriptor.encode().toString()}
+          value={invitationUrl}
           label={t('copy invite code label', { ns: 'halo' })}
           side='left'
           className='w-full h-auto'

@@ -881,6 +881,7 @@ importers:
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
+      url-join: ^5.0.0
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../sdk/client
@@ -893,6 +894,7 @@ importers:
       debug: 4.3.4
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
+      url-join: 5.0.0
     devDependencies:
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@types/debug': 4.1.7
@@ -2192,7 +2194,6 @@ importers:
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@types/url-join': ~4.0.1
       buffer: ^6.0.3
       clsx: ^1.1.1
       concurrently: ~7.0.0
@@ -2211,7 +2212,7 @@ importers:
       ts-node: 10.9.1
       typescript: ^4.7.2
       uint8arrays: 3.0.0
-      url-join: ^4.0.1
+      url-join: ^5.0.0
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-testing': link:../../sdk/client-testing
@@ -2243,7 +2244,7 @@ importers:
       it-all: 1.0.6
       mobile-detect: 1.4.5
       uint8arrays: 3.0.0
-      url-join: 4.0.1
+      url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/async': link:../../common/async
@@ -2258,7 +2259,6 @@ importers:
       '@types/node': 16.11.66
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      '@types/url-join': 4.0.1
       buffer: 6.0.3
       concurrently: 7.0.0
       dotenv: 8.6.0
@@ -2451,7 +2451,6 @@ importers:
       '@types/faker': ^5.5.9
       '@types/isomorphic-fetch': ^0.0.36
       '@types/node': ^16.11.58
-      '@types/url-join': ~4.0.1
       assert: ^2.0.0
       faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
@@ -2460,7 +2459,7 @@ importers:
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
       typescript: ^4.7.2
-      url-join: ^4.0.1
+      url-join: ^5.0.0
     dependencies:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -2469,13 +2468,12 @@ importers:
       isomorphic-fetch: 3.0.0
       preact: 10.11.2
       preact-render-to-string: 5.2.5_preact@10.11.2
-      url-join: 4.0.1
+      url-join: 5.0.0
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 16.11.66
-      '@types/url-join': 4.0.1
       faker: 5.5.3
       mocha: 8.4.0
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
@@ -3141,7 +3139,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/string-hash': ^1.1.1
-      '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.1
       debug: ^4.3.3
@@ -3153,7 +3150,7 @@ importers:
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       string-hash: ~1.1.3
-      url-join: ^4.0.1
+      url-join: ^5.0.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
@@ -3167,7 +3164,7 @@ importers:
       qrcode.react: 3.1.0_react@18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       string-hash: 1.1.3
-      url-join: 4.0.1
+      url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
       '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
@@ -3188,7 +3185,6 @@ importers:
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/string-hash': 1.1.1
-      '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       clsx: 1.2.1
       faker: 5.5.3
@@ -3336,7 +3332,6 @@ importers:
       '@types/lodash.isplainobject': ^4.0.6
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/url-join': ~4.0.1
       '@types/uuid': ~8.3.3
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
@@ -3347,7 +3342,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      url-join: ^4.0.1
+      url-join: ^5.0.0
       uuid: ^8.3.2
     dependencies:
       '@dxos/debug': link:../../common/debug
@@ -3361,7 +3356,7 @@ importers:
       lodash.isplainobject: 4.0.6
       mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.1.0_react@18.2.0
-      url-join: 4.0.1
+      url-join: 5.0.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
       '@babel/core': 7.19.3
@@ -3389,7 +3384,6 @@ importers:
       '@types/lodash.isplainobject': 4.0.7
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
-      '@types/url-join': 4.0.1
       '@types/uuid': 8.3.4
       babel-plugin-add-module-exports: 1.0.4
       react: 18.2.0
@@ -12520,10 +12514,6 @@ packages:
 
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
-
-  /@types/url-join/4.0.1:
-    resolution: {integrity: sha512-wDXw9LEEUHyV+7UWy7U315nrJGJ7p1BzaCxDpEoLr789Dk1WDVMMlf3iBfbG2F8NdWnYyFbtTxUn2ZNbm1Q4LQ==}
-    dev: true
 
   /@types/use-subscription/1.0.0:
     resolution: {integrity: sha512-0WWZ5GUDKMXUY/1zy4Ur5/zsC0s/B+JjXfHdkvx6JgDNZzZV5eW+KKhDqsTGyqX56uh99gwGwbsKbVwkcVIKQA==}
@@ -31263,8 +31253,9 @@ packages:
     resolution: {integrity: sha512-c2H1fIgpUdwFRIru9HFno5DT73Ok8hg5oOb5AT3ayIgvCRfxgs2jyt5Slw8kEB7j3QUr6yJmMPDT/odjk7jXow==}
     dev: true
 
-  /url-join/4.0.1:
-    resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
+  /url-join/5.0.0:
+    resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
   /url-loader/4.1.1_lit45vopotvaqup7lrvlnvtxwy:

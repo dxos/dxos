@@ -28,12 +28,6 @@ export const InviteDevicePage = () => {
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      navigate(redirect);
-    }
-  }, [profile, redirect]);
-
   const onNext = useCallback(async () => {
     setPending(true);
     let invitation: InvitationDescriptor;
@@ -48,6 +42,18 @@ export const InviteDevicePage = () => {
     }
   }, [invitationCode]);
 
+  useEffect(() => {
+    if (profile) {
+      navigate(redirect);
+    }
+  }, [profile, redirect]);
+
+  useEffect(() => {
+    if (invitationParam) {
+      void onNext();
+    }
+  }, []);
+
   return (
     <Main className='max-w-lg mx-auto'>
       <Heading>{t('invite device label', { ns: 'uikit' })}</Heading>
@@ -57,6 +63,9 @@ export const InviteDevicePage = () => {
           pending,
           inputLabel: t('invitation code label', { ns: 'uikit' }),
           inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
+          inputProps: {
+            initialValue: invitationCode
+          },
           onChange: setInvitationCode,
           onNext,
           onBack: () => history.back()
