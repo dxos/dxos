@@ -3,11 +3,10 @@
 //
 
 import cx from 'classnames';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Party, Profile } from '@dxos/client';
-import { useClient, useHaloInvitations } from '@dxos/react-client';
+import type { Party, Profile as NaturalProfile } from '@dxos/client';
 import {
   Avatar,
   AvatarProps,
@@ -16,43 +15,25 @@ import {
   defaultHover,
   Loading,
   Popover,
-  PopoverProps,
-  QrCode
+  PopoverProps
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
+
+import { Profile } from '../Profile';
 
 export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
     Pick<PopoverProps, 'collisionPadding' | 'sideOffset'> {
-  profile: Profile;
+  profile: NaturalProfile;
   party?: Party;
   closeLabel?: string;
 }
 
-const PresenceContent = (props: PresenceProps) => {
-  const { t } = useTranslation();
-  const client = useClient();
-  const invitations = useHaloInvitations(client);
-
-  useEffect(() => {
-    if (invitations.length < 1) {
-      void client.halo.createInvitation();
-    }
-  }, [invitations]);
-
-  return client ? (
-    <div role='none'>
-      {invitations.length ? (
-        <QrCode
-          value={invitations[0]!.descriptor.encode().toString()}
-          label={t('copy invite code label', { ns: 'halo' })}
-        />
-      ) : (
-        <Loading label={t('generic loading label')} size='md' />
-      )}
-    </div>
-  ) : (
-    <Loading label={t('generic loading label')} size='lg' />
+const PresenceContent = ({ profile }: PresenceProps) => {
+  return (
+    <>
+      <Profile profile={profile} />
+    </>
   );
 };
 

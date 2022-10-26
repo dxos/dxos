@@ -16,6 +16,5 @@ export const halo = {
   'apps label': 'Apps',
   'contacts label': 'Contacts',
   'reset device label': 'Reset this device',
-  'copy invite code label':
-    'Add a device with this QR code – click to copy the code'
+  'copy invite code label': 'Scan to add a device, click to copy'
 };

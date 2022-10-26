@@ -7,27 +7,49 @@ import { QRCodeSVG } from 'qrcode.react';
 import React, { useCallback } from 'react';
 
 import { useId } from '../../hooks';
+import { Size } from '../../props';
+import { getSize } from '../../styles';
 import { Button, ButtonProps } from '../Button';
-import { Tooltip } from '../Tooltip';
+import { Tooltip, TooltipProps } from '../Tooltip';
 
-export interface QrCodeProps extends Omit<ButtonProps, 'onClick' | 'ref'> {
+export interface QrCodeProps
+  extends Omit<ButtonProps, 'onClick' | 'ref'>,
+    Pick<TooltipProps, 'side' | 'sideOffset' | 'collisionPadding'> {
   value: string;
   label: string;
+  size?: Size;
 }
 
-export const QrCode = ({ value, label, ...buttonProps }: QrCodeProps) => {
+export const QrCode = ({
+  value,
+  label,
+  size,
+  side,
+  sideOffset,
+  collisionPadding,
+  ...buttonProps
+}: QrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
   return (
-    <Tooltip content={label}>
+    <Tooltip content={label} {...{ side, sideOffset, collisionPadding }}>
       <Button
         {...buttonProps}
-        className={cx('py-0 px-0 overflow-hidden', buttonProps.className)}
+        className={cx(
+          'py-0 px-0 overflow-hidden',
+          getSize(size ?? 32),
+          buttonProps.className
+        )}
         onClick={copyValue}
       >
-        <QRCodeSVG value={value} includeMargin role='none' />
+        <QRCodeSVG
+          value={value}
+          includeMargin
+          role='none'
+          className='w-full h-auto'
+        />
         <span id={labelId} className='sr-only'>
           {label}
         </span>
