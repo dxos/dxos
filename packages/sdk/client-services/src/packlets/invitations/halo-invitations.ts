@@ -41,13 +41,13 @@ export class HaloInvitations {
           log('Inviter connected');
           const peer = createProtoRpcPeer({
             requested: {
-              InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
+              HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
             },
             exposed: {
-              InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
+              HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
             },
             handlers: {
-              InviterInvitationService: {
+              HaloInvitationsService: {
                 admitDevice: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
                   log('Admit device', { deviceKey });
                   await identity.controlPipeline.writer.write({
@@ -71,7 +71,7 @@ export class HaloInvitations {
           await peer.open();
           log('Inviter RPC open');
 
-          await peer.rpc.InviteeInvitationService.acceptIdentity({
+          await peer.rpc.HaloInvitationsService.acceptIdentity({
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
             genesisFeedKey: identity.haloGenesisFeedKey
@@ -115,13 +115,13 @@ export class HaloInvitations {
           connected = true;
           const peer = createProtoRpcPeer({
             requested: {
-              InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
+              HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
             },
             exposed: {
-              InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
+              HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
             },
             handlers: {
-              InviteeInvitationService: {
+              HaloInvitationsService: {
                 acceptIdentity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
                   try {
                     log('Accept identity', {
@@ -136,7 +136,7 @@ export class HaloInvitations {
                     });
 
                     log('Try to admit device');
-                    await peer.rpc.InviterInvitationService.admitDevice({
+                    await peer.rpc.HaloInvitationsService.admitDevice({
                       deviceKey: identity.deviceKey,
                       controlFeedKey: PublicKey.random(),
                       dataFeedKey: PublicKey.random()
