@@ -15,7 +15,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
 
-export interface WebRTCTransportProxyParams {
+export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   ownId: PublicKey;
@@ -24,7 +24,7 @@ export interface WebRTCTransportProxyParams {
   topic: PublicKey;
   sendSignal: (msg: SignalMessage) => void;
   bridgeService: BridgeService;
-}
+};
 
 export class WebRTCTransportProxy implements Transport {
   readonly closed = new Event();

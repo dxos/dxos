@@ -15,16 +15,16 @@ import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
 import { wrtc } from './webrtc';
 
-interface WebRTCTransportParams {
-  initiator: boolean
-  stream: NodeJS.ReadWriteStream
-  ownId: PublicKey
-  remoteId: PublicKey
-  sessionId: PublicKey
-  topic: PublicKey
-  sendSignal: (msg: SignalMessage) => void
-  webrtcConfig?: any
-}
+export type WebRTCTransportParams = {
+  initiator: boolean;
+  stream: NodeJS.ReadWriteStream;
+  ownId: PublicKey;
+  remoteId: PublicKey;
+  sessionId: PublicKey;
+  topic: PublicKey;
+  sendSignal: (msg: SignalMessage) => void;
+  webrtcConfig?: any;
+};
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -36,23 +36,13 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  constructor (private readonly params: WebRTCTransportParams) {
-    log(
-      `Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`
-    );
+  constructor(private readonly params: WebRTCTransportParams) {
+    log(`Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`);
 
-    log(
-      `Creating WebRTC connection topic=${this.params.topic} ownId=${
-        this.params.ownId
-      } remoteId=${this.params.remoteId} initiator=${
-        this.params.initiator
-      } webrtcConfig=${JSON.stringify(this.params.webrtcConfig)}`
-    );
+    log('Creating WebRTC connection', this.params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
-        ? undefined
-        : wrtc ?? raise(new Error('wrtc not available')),
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
       config: this.params.webrtcConfig
     });
     this._peer.on('signal', async (data) => {
@@ -69,9 +59,7 @@ export class WebRTCTransport implements Transport {
       }
     });
     this._peer.on('connect', () => {
-      log(
-        `Connection established ${this.params.ownId} -> ${this.params.remoteId}`
-      );
+      log(`Connection established ${this.params.ownId} -> ${this.params.remoteId}`);
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });
@@ -86,11 +74,15 @@ export class WebRTCTransport implements Transport {
     });
   }
 
-  get remoteId () {
+  get peer() {
+    return this._peer;
+  }
+
+  get remoteId() {
     return this.params.remoteId;
   }
 
-  get sessionId () {
+  get sessionId() {
     return this.params.sessionId;
   }
 
@@ -112,8 +104,10 @@ export class WebRTCTransport implements Transport {
   }
 }
 
-// TODO(burdon): Pass in opts?
-export const createWebRTCTransportFactory =
-  (webrtcConfig?: any): TransportFactory =>
-    (opts) =>
-      new WebRTCTransport({ ...opts, webrtcConfig });
+export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  create: (params) =>
+    new WebRTCTransport({
+      ...params,
+      webrtcConfig
+    })
+});
