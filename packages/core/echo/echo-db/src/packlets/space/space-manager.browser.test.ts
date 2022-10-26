@@ -42,14 +42,14 @@ describe('space-manager', function () {
         // TODO(burdon): Util to convert to Identity in SpaceProtocol
         identityKey,
         deviceKey,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER,
         credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
         credentialSigner: createCredentialSignerWithKey(builder.keyring, identityKey)
       }
     });
   };
 
-  it('invitations', async function () {
+  it.skip('invitations', async function () {
     const peer1 = await createPeer();
     await peer1.open();
     afterTest(() => peer1.close());
