@@ -1,10 +1,10 @@
-import { JSONOutput as r } from "typedoc";
-import * as t from "typedoc/dist/lib/models/types";
-import { ModelToObject } from "typedoc/dist/lib/serialization/schema";
+import { JSONOutput as r } from 'typedoc';
+import * as t from 'typedoc/dist/lib/models/types';
+import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
 
 type AnyTypeName = keyof r.TypeKindMap;
 
-declare module "typedoc" {
+declare module 'typedoc' {
   export namespace JSONOutput {
     export interface Type {
       type: AnyTypeName;
@@ -19,8 +19,8 @@ const stringifyList = (list: r.Type[], separator: string): string => {
 export const stringifyArray = (node: r.ArrayType): string => {
   const elementTypeStr = stringifyType(node.elementType);
   if (
-    node.elementType.type == "union" ||
-    node.elementType.type == "intersection"
+    node.elementType.type == 'union' ||
+    node.elementType.type == 'intersection'
   ) {
     return `(${elementTypeStr})[]`;
   } else {
@@ -41,7 +41,7 @@ export const stringifyInferred = (node: r.InferredType): string => {
 };
 
 export const stringifyIntersection = (node: r.IntersectionType): string => {
-  return stringifyList(node.types, " & ");
+  return stringifyList(node.types, ' & ');
 };
 
 export const stringifyIntrinsic = (node: r.IntrinsicType): string => {
@@ -49,12 +49,12 @@ export const stringifyIntrinsic = (node: r.IntrinsicType): string => {
 };
 
 export const stringifyPredicate = (node: r.PredicateType): string => {
-  const out = node.asserts ? ["asserts", node.name] : [node.name];
+  const out = node.asserts ? ['asserts', node.name] : [node.name];
   if (node.targetType) {
-    out.push("is", stringifyType(node.targetType));
+    out.push('is', stringifyType(node.targetType));
   }
 
-  return out.join(" ");
+  return out.join(' ');
 };
 
 export const stringifyQuery = (node: r.QueryType): string => {
@@ -63,11 +63,11 @@ export const stringifyQuery = (node: r.QueryType): string => {
 
 export const stringifyReference = (node: r.ReferenceType): string => {
   const name = node.name;
-  let typeArgs = "";
+  let typeArgs = '';
   if (node.typeArguments) {
-    typeArgs += "<";
-    typeArgs += stringifyList(node.typeArguments, ", ");
-    typeArgs += ">";
+    typeArgs += '<';
+    typeArgs += stringifyList(node.typeArguments, ', ');
+    typeArgs += '>';
   }
   console.log(name, node.id, node.qualifiedName, node.package);
   return name + typeArgs;
@@ -75,9 +75,9 @@ export const stringifyReference = (node: r.ReferenceType): string => {
 
 export const stringifyReflection = (node: r.ReflectionType): string => {
   if (!node.declaration?.children && node.declaration?.signatures) {
-    return "function";
+    return 'function';
   } else {
-    return "object";
+    return 'object';
   }
 };
 
@@ -86,7 +86,7 @@ export const stringifyLiteral = (node: r.LiteralType): string => {
 };
 
 export const stringifyTuple = (node: r.TupleType): string => {
-  return node?.elements ? `[${stringifyList(node.elements, ", ")}]` : ``;
+  return node?.elements ? `[${stringifyList(node.elements, ', ')}]` : ``;
 };
 
 export const stringifyTypeOperator = (node: r.TypeOperatorType): string => {
@@ -98,7 +98,7 @@ export const stringifyTypeOperator = (node: r.TypeOperatorType): string => {
 // };
 
 export const stringifyUnion = (node: r.UnionType): string => {
-  return stringifyList(node.types, " | ");
+  return stringifyList(node.types, ' | ');
 };
 
 export const stringifyUnknown = (node: r.UnknownType): string => {
@@ -106,7 +106,7 @@ export const stringifyUnknown = (node: r.UnknownType): string => {
 };
 
 export const stringifyVoid = (): string => {
-  return "void";
+  return 'void';
 };
 
 export const stringifyMapped = (node: r.MappedType): string => {
@@ -126,20 +126,20 @@ export const stringifyTemplateLiteral = (
 ): string => {
   const { head, tail } = node;
   return [
-    "`",
+    '`',
     head,
     ...tail.map(([type, text]) => {
-      return "${" + stringifyType(type) + "}" + text;
+      return '${' + stringifyType(type) + '}' + text;
     }),
-    "`",
-  ].join("");
+    '`'
+  ].join('');
 };
 
 export const stringifyNamedTupleMember = (
   node: r.NamedTupleMemberType
 ): string => {
   const { name, isOptional, element } = node;
-  return `${name}${isOptional ? "?" : ""}: ${stringifyType(element)}`;
+  return `${name}${isOptional ? '?' : ''}: ${stringifyType(element)}`;
 };
 
 const stringifiers = {
@@ -163,14 +163,21 @@ const stringifiers = {
   mapped: stringifyMapped,
   optional: stringifyOptional,
   rest: stringifyRest,
-  "template-literal": stringifyTemplateLiteral,
-  "named-tuple-member": stringifyNamedTupleMember,
+  'template-literal': stringifyTemplateLiteral,
+  'named-tuple-member': stringifyNamedTupleMember
 };
+
+export type ReflectionContext = {
+  root: r.ContainerReflection
+}
 
 /**
  * Return a string representation of the given type.
  */
-export const stringifyType = (node: r.SomeType): string => {
+export const stringifyType = (
+  node: r.SomeType,
+  context?: ReflectionContext
+): string => {
   if (!(node?.type in stringifiers)) {
     throw new TypeError(`Cannot stringify type '${node.type}'`);
   }
@@ -179,23 +186,23 @@ export const stringifyType = (node: r.SomeType): string => {
 
 export const stringifyCallSignature = (
   node: r.SignatureReflection,
-  name = ""
+  name = ''
 ) => {
   const { parameters = [], typeParameter: typeParameters = [], type } = node;
 
-  const types = typeParameters.map((t) => t.name).join(", ");
+  const types = typeParameters.map((t) => t.name).join(', ');
 
   const params = parameters
     .map((p) => {
-      const type = p.type ? ": " + stringifyType(p.type) : "";
-      return `${p.flags.isRest ? "..." : ""}${p.name}${type}`;
+      const type = p.type ? ': ' + stringifyType(p.type) : '';
+      return `${p.flags.isRest ? '...' : ''}${p.name}${type}`;
     })
-    .join(", ");
+    .join(', ');
 
-  const returns = type ? stringifyType(type) : "";
+  const returns = type ? stringifyType(type) : '';
 
-  const returnToken = name === "" ? " => " : ": ";
-  const typeParams = types === "" ? "" : " <" + types + ">";
+  const returnToken = name === '' ? ' => ' : ': ';
+  const typeParams = types === '' ? '' : ' <' + types + '>';
 
   return `
         ${name}${typeParams} (${params})${returnToken}${returns}

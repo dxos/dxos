@@ -1,4 +1,4 @@
-import { JSONOutput as S, ReflectionKind } from "typedoc";
+import { JSONOutput as S, ReflectionKind } from 'typedoc';
 
 export const reflectionById = (
   p: S.ContainerReflection,
@@ -21,14 +21,14 @@ export const reflectionsOfKind = (
     ...((Array.isArray(kind) ? kind : [kind]).indexOf(p.kind) >= 0 ? [p] : []),
     ...(p.children?.length
       ? p.children.map((c) => reflectionsOfKind(c, ...kind)).flat()
-      : []),
+      : [])
   ];
 };
 
 export const packagesInProject = (
   p: S.ContainerReflection
 ): S.ContainerReflection[] => {
-  const modulesGroup = p.groups?.find((g) => g.title == "Modules");
+  const modulesGroup = p.groups?.find((g) => g.title == 'Modules');
   if (modulesGroup) {
     return (
       modulesGroup.children
