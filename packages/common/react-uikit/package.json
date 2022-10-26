@@ -14,8 +14,12 @@
     "access": "public"
   },
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/util": "workspace:*",
     "classnames": "^2.3.2",
     "debug": "^4.3.3",
     "i18next": "^21.10.0",

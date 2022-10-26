@@ -2,26 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
+import cx from 'classnames';
 import {
   AddressBook,
+  Command,
   DeviceMobileCamera,
   Planet,
-  SignOut,
-  UserCircle
+  SignOut
 } from 'phosphor-react';
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
+import { useProfile } from '@dxos/react-client';
 import {
+  Presence,
   NavMenu,
   NavMenuSeparatorProps,
-  useTranslation
+  useTranslation,
+  getSize
 } from '@dxos/react-uikit';
 
 const iconAttributes = { className: 'h-5 w-5' };
 
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
+  const profile = useProfile();
   const location = useLocation();
 
   const centerMenuItems = [
@@ -45,27 +50,24 @@ export const AppLayout = () => {
     },
     {
       label: t('apps label'),
-      icon: <UserCircle {...iconAttributes} />,
+      icon: <Command {...iconAttributes} />,
       pathName: '/apps'
     },
     {
       label: t('devices label'),
       icon: <DeviceMobileCamera {...iconAttributes} />,
       pathName: '/devices'
-    },
-    {
-      separator: true
-    } as NavMenuSeparatorProps,
-    {
-      label: t('identity label'),
-      icon: <UserCircle {...iconAttributes} />,
-      pathName: '/identity'
     }
   ];
 
   return (
     <div role='none' className='mt-24'>
-      <div role='none' className='fixed top-5 left-0 right-0'>
+      <div
+        role='none'
+        className='fixed top-5 left-0 right-0 flex items-center gap-2 px-6'
+      >
+        <div role='none' className={cx(getSize(10), 'flex-none')} />
+        <div role='none' className='grow' />
         <NavMenu
           items={centerMenuItems.map((navMenuItem) =>
             'separator' in navMenuItem
@@ -84,7 +86,7 @@ export const AppLayout = () => {
                     })
                 }
           )}
-          className='hidden md:flex'
+          className='hidden md:flex grow-0 shrink'
         />
 
         <NavMenu
@@ -106,7 +108,16 @@ export const AppLayout = () => {
                     })
                 }
           )}
-          className='flex md:hidden'
+          className='flex md:hidden grow-0 shrink'
+        />
+
+        <div role='none' className='grow' />
+
+        <Presence
+          profile={profile!}
+          className='flex-none'
+          size={10}
+          sideOffset={4}
         />
       </div>
 

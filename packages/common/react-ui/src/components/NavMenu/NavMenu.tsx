@@ -165,7 +165,7 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
       {...rootProps}
       className={cx('flex justify-center', rootProps.className)}
     >
-      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation'>
+      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation overflow-x-auto'>
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
             <NavMenuTooltipLinkItem key={i} {...item} />

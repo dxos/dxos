@@ -45,7 +45,7 @@ export const Popover = ({
         {...contentProps}
         className={cx(
           'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
-          'w-48 rounded-lg p-4 shadow-md md:w-56',
+          'rounded-lg p-4 shadow-lg elevated-buttons',
           'bg-white dark:bg-neutral-800',
           defaultFocus,
           contentProps.className

@@ -863,9 +863,11 @@ importers:
   packages/common/react-uikit:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
@@ -882,9 +884,11 @@ importers:
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../debug
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../react-ui
+      '@dxos/util': link:../util
       classnames: 2.3.2
       debug: 4.3.4
       i18next: 21.10.0

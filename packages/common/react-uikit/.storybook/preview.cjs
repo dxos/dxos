@@ -1,6 +1,7 @@
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
 import { UiKitProvider } from '../src';
+import { ClientProvider } from '../src/testing';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -23,9 +24,11 @@ const ThemeWrapper = ({ children }) => {
 
 export const decorators = [
   (Story) => (
-    createElement(UiKitProvider, {
-      children: createElement(ThemeWrapper, {
-        children: createElement(Story)
+    createElement(ClientProvider, {
+      children: createElement(UiKitProvider, {
+        children: createElement(ThemeWrapper, {
+          children: createElement(Story)
+        })
       })
     })
   )
