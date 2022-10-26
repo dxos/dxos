@@ -24,41 +24,45 @@ export type TestBuilderOptions<T extends {}> = {
  * - Factory methods trigger the automatic generation of unset required properties.
  * - Avoids explosion of overly specific test functions that require and return large bags of properties.
  */
-// TODO(burdon): Apply this pattern elsewhere.
 export class TestBuilder<T extends {}> {
-  static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
+  static readonly ROOT_DIR = 'feeds';
 
   // prettier-ignore
   constructor(
     protected readonly _properties: TestBuilderOptions<T> = {}
   ) {}
 
+  /**
+   * Creates a new builder with the current builder's properties.
+   */
   clone(): TestBuilder<T> {
     return new TestBuilder<T>(Object.assign({}, this._properties));
-  }
-
-  get storage(): Storage {
-    return (this._properties.storage ??= createStorage({
-      type: StorageType.RAM
-    }));
-  }
-
-  get directory(): Directory {
-    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring(): Keyring {
     return (this._properties.keyring ??= new Keyring());
   }
 
-  setStorage(type: StorageType, root = TestBuilder.ROOT_DIR) {
-    this._properties.storage = createStorage({ type, root });
-    this._properties.directory = this.storage.createDirectory('feeds');
-    return this;
+  get storage(): Storage {
+    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
+  }
+
+  get directory(): Directory {
+    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   setKeyring(keyring: Keyring) {
     this._properties.keyring = keyring;
+    return this;
+  }
+
+  setStorage(storage: Storage) {
+    this._properties.storage = storage;
+    return this;
+  }
+
+  setDirectory(directory: Directory) {
+    this._properties.directory = directory;
     return this;
   }
 

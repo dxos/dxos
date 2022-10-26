@@ -10,6 +10,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, Plugin } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
+import { ComplexMap } from '@dxos/util';
 
 import { TestFeedBuilder } from '../common';
 import { Database } from '../database';
@@ -38,24 +40,45 @@ export const WebsocketNetworkManagerProvider =
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
+export type TestAgentBuilderOptions = {
+  storage?: Storage;
+  networkManagerProvider?: NetworkManagerProvider;
+};
+
 /**
  * Factory for test agents.
  */
 export class TestAgentBuilder {
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
+  private readonly _storage: Storage;
   private readonly _networkManagerProvider: NetworkManagerProvider;
 
-  constructor({ networkManagerProvider }: { networkManagerProvider?: NetworkManagerProvider } = {}) {
+  constructor({ storage, networkManagerProvider }: TestAgentBuilderOptions = {}) {
+    this._storage = storage ?? createStorage({ type: StorageType.RAM });
     this._networkManagerProvider =
       networkManagerProvider ?? MemoryNetworkManagerProvider(new MemorySignalManagerContext());
   }
 
+  get peers() {
+    return Array.from(this._peers.values());
+  }
+
+  getPeer(deviceKey: PublicKey) {
+    return this._peers.get(deviceKey);
+  }
+
   async createPeer(): Promise<TestPeer> {
-    const keyring = new Keyring(); // TODO(burdon): Merge with other builder.
+    // prettier-ignore
+    const feedBuilder = new TestFeedBuilder()
+      .setStorage(this._storage)
+      .setDirectory(this._storage.createDirectory(`peer-${this._peers.size}`));
 
-    const identityKey = await keyring.createKey();
-    const deviceKey = await keyring.createKey();
+    const identityKey = await feedBuilder.keyring.createKey();
+    const deviceKey = await feedBuilder.keyring.createKey();
 
-    return new TestPeer(this._networkManagerProvider, keyring, identityKey, deviceKey);
+    const peer = new TestPeer(this._networkManagerProvider, feedBuilder, identityKey, deviceKey);
+    this._peers.set(deviceKey, peer);
+    return peer;
   }
 }
 
@@ -63,17 +86,17 @@ export class TestAgentBuilder {
  * Test peer able to create and replicate spaces.
  */
 export class TestPeer {
-  public readonly builder: TestFeedBuilder;
+  public readonly keyring: Keyring;
   public readonly feedStore: FeedStore<FeedMessage>;
 
   constructor(
-    public readonly _networkManagerProvider: NetworkManagerProvider,
-    public readonly keyring: Keyring,
+    private readonly _networkManagerProvider: NetworkManagerProvider,
+    private readonly _feedBuilder: TestFeedBuilder,
     public readonly identityKey: PublicKey,
     public readonly deviceKey: PublicKey
   ) {
-    this.builder = new TestFeedBuilder().setKeyring(keyring);
-    this.feedStore = this.builder.createFeedStore();
+    this.keyring = this._feedBuilder.keyring;
+    this.feedStore = this._feedBuilder.createFeedStore();
   }
 
   createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {

@@ -7,7 +7,7 @@ import chaiAsPromised from 'chai-as-promised';
 import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
-import { StorageType } from '@dxos/random-access-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { TestItemBuilder } from './testing';
 
@@ -94,9 +94,11 @@ describe('FeedStore', function () {
 
     const numBlocks = 10;
 
+    const storage = createStorage({ type: StorageType.NODE });
+
     // Write.
     {
-      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feedStore = builder.clone().setStorage(storage).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });
 
       for (const i of Array.from(Array(numBlocks)).keys()) {
@@ -111,20 +113,19 @@ describe('FeedStore', function () {
 
     // Read.
     {
-      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feedStore = builder.clone().setStorage(storage).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(numBlocks);
     }
 
     // Delete.
     {
-      const storage = builder.clone().setStorage(StorageType.NODE).storage;
       await storage.destroy();
     }
 
     // Read (should be empty).
     {
-      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feedStore = builder.clone().setStorage(storage).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(0);
     }

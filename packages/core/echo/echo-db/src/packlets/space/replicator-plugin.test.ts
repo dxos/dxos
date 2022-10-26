@@ -9,8 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
+import { TestFeedBuilder } from '../common';
 import { ReplicatorPlugin } from './replicator-plugin';
-import { TestAgentBuilder, TestFeedBuilder } from './testing';
+import { TestAgentBuilder } from './testing';
 
 describe('space/replicator-plugin', function () {
   it('replicates a feed', async function () {

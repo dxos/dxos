@@ -7,17 +7,15 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
-import { valueEncoding } from '../common';
+import { TestFeedBuilder } from '../common';
 import { ReplicatorPlugin } from './replicator-plugin';
-import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from './testing';
+import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
@@ -70,8 +68,10 @@ describe('space/space-protocol', function () {
     const builder2 = new TestFeedBuilder();
     const feedStore2 = builder2.createFeedStore();
 
-    const feed1 = await feedStore1.openFeed(await builder1.keyring.createKey(), { writable: true });
-    const feed2 = await feedStore2.openFeed(feed1.key);
+    const feedKey = await builder1.keyring.createKey();
+
+    const feed1 = await feedStore1.openFeed(feedKey, { writable: true });
+    const feed2 = await feedStore2.openFeed(feedKey);
 
     await replicator1.addFeed(feed1);
     await replicator2.addFeed(feed2);
@@ -94,69 +94,41 @@ describe('space/space-protocol', function () {
     }
 
     const builder = new TestAgentBuilder({
+      storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
     });
-
-    // TODO(burdon): Persistent?
-    const storage = createStorage();
 
     const keyring = new Keyring();
     const topic = await keyring.createKey();
 
     const replicator1 = new ReplicatorPlugin();
-    const protocol1 = (await builder.createPeer()).createSpaceProtocol(topic, [replicator1]);
+    const peer1 = await builder.createPeer();
+    const protocol1 = peer1.createSpaceProtocol(topic, [replicator1]);
 
     const replicator2 = new ReplicatorPlugin();
-    const protocol2 = (await builder.createPeer()).createSpaceProtocol(topic, [replicator2]);
+    const peer2 = await builder.createPeer();
+    const protocol2 = peer2.createSpaceProtocol(topic, [replicator2]);
 
     await protocol1.start();
-    afterTest(() => protocol1.stop());
-
     await protocol2.start();
+
+    afterTest(() => protocol1.stop());
     afterTest(() => protocol2.stop());
 
-    const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore<FeedMessage>({
-      factory: new FeedFactory({
-        root: storage.createDirectory('feeds1'),
-        signer: keyring1,
-        hypercore: {
-          valueEncoding
-        }
-      })
-    });
+    const feedKey = await peer1.keyring.createKey();
 
-    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), {
-      writable: true
-    });
-    await feed1.append({
-      timeframe: new Timeframe()
-    });
-
-    const keyring2 = new Keyring();
-    const feedStore2 = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
-        root: storage.createDirectory('feeds2'),
-        signer: keyring2,
-        hypercore: {
-          valueEncoding
-        }
-      })
-    });
-
-    const feed2 = await feedStore2.openFeed(feed1.key);
+    const feed1 = await peer1.feedStore.openFeed(feedKey, { writable: true });
+    const feed2 = await peer2.feedStore.openFeed(feedKey);
 
     await replicator1.addFeed(feed1);
     await replicator2.addFeed(feed2);
 
+    await feed1.append({ timeframe: new Timeframe() });
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(1);
     });
 
-    await feed1.append({
-      timeframe: new Timeframe()
-    });
-
+    await feed1.append({ timeframe: new Timeframe() });
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(2);
     });
