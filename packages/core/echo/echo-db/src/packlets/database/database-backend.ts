@@ -94,7 +94,11 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
   private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 
-  constructor(private readonly _service: DataService, private readonly _partyKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _service: DataService,
+    private readonly _partyKey: PublicKey
+  ) {}
 
   get isReadOnly(): boolean {
     return false;

@@ -106,7 +106,10 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 export class FeedIterator<T extends {}> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
-  constructor(private readonly _feed: FeedWrapper<T>) {
+  // prettier-ignore
+  constructor(
+    private readonly _feed: FeedWrapper<T>
+  ) {
     super();
     this._queue = new FeedQueue<T>(this._feed);
   }

@@ -38,7 +38,10 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 export class TestGenerator<T extends {}> {
   _count = 0;
 
-  constructor(private readonly _generate: TestBlockGenerator<T>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _generate: TestBlockGenerator<T>
+  ) {}
 
   async writeBlocks(
     writer: FeedWriter<T>,

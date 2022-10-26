@@ -38,12 +38,15 @@ const signalContext = new MemorySignalManagerContext();
 
 interface CreatePeerOptions {
   topic: PublicKey;
-  peerId: PublicKey;
+  peerId: PublicKey; // TODO(burdon): peerKey
   topology?: Topology;
   signalHosts?: string[];
   transportFactory: TransportFactory;
 }
 
+/**
+ * @deprecated
+ */
 const createPeer = async ({
   topic,
   peerId,
@@ -53,21 +56,16 @@ const createPeer = async ({
 }: CreatePeerOptions) => {
   const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
   await signalManager.subscribeMessages(peerId);
-
   const networkManager = new NetworkManager({
     signalManager,
     transportFactory
   });
+
   afterTest(() => networkManager.destroy());
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  await networkManager.joinProtocolSwarm({
-    topic,
-    peerId,
-    protocol: protocolProvider,
-    topology
-  });
+  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -106,6 +104,7 @@ describe('Network manager', function () {
           }
         })
       });
+
       await sleep(3000);
       const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
         topic,

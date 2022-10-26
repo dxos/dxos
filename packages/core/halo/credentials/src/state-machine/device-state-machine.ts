@@ -19,7 +19,11 @@ export class DeviceStateMachine {
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 
-  constructor(private readonly _identityKey: PublicKey, private readonly _deviceKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _identityKey: PublicKey,
+    private readonly _deviceKey: PublicKey
+  ) {}
 
   async process(credential: Credential) {
     log('credential processed:', credential);

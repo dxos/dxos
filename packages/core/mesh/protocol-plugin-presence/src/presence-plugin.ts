@@ -86,7 +86,10 @@ export class PresencePlugin {
 
   private _extensionsCreated = 0; // TODO(burdon): Debug only?
 
-  constructor(private readonly _peerId: Buffer, options: PresenceOptions = {}) {
+  // prettier-ignore
+  constructor(
+    private readonly _peerId: Buffer, options: PresenceOptions = {}
+  ) {
     assert(Buffer.isBuffer(_peerId));
 
     const { peerTimeout = 2 * 60 * 1000, metadata } = options;
