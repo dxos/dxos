@@ -10,14 +10,8 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
-import type {
-  EchoEnvelope,
-  FeedMessage
-} from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  AdmittedFeed,
-  Credential
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
@@ -38,12 +32,12 @@ type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 export type SpaceParams = {
   spaceKey: PublicKey;
   protocol: SpaceProtocol;
-  feedProvider: FeedProvider;
-  databaseFactory: DatabaseFactory;
-  initialTimeframe: Timeframe;
   genesisFeed: FeedWrapper<FeedMessage>;
   controlFeed: FeedWrapper<FeedMessage>;
   dataFeed: FeedWrapper<FeedMessage>;
+  feedProvider: FeedProvider;
+  databaseFactory: DatabaseFactory;
+  initialTimeframe?: Timeframe;
 };
 
 /**
@@ -70,13 +64,13 @@ export class Space {
 
   constructor({
     spaceKey,
+    protocol,
     genesisFeed,
     controlFeed,
     dataFeed,
     feedProvider,
-    initialTimeframe,
-    protocol,
-    databaseFactory
+    databaseFactory,
+    initialTimeframe
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -231,8 +225,7 @@ export class Space {
         try {
           const payload = data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
-            const feedInfo =
-              this._controlPipeline.partyState.feeds.get(feedKey);
+            const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
             if (!feedInfo) {
               log.error('Could not find feed.', { feedKey });
               continue;

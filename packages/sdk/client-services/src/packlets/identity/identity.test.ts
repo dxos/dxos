@@ -17,7 +17,6 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
-import { Timeframe } from '@dxos/timeframe';
 
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
@@ -68,7 +67,6 @@ describe('halo/identity', function () {
       genesisFeed: controlFeed,
       controlFeed,
       dataFeed,
-      initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
     });
@@ -175,7 +173,6 @@ describe('halo/identity', function () {
         genesisFeed: controlFeed,
         controlFeed,
         dataFeed,
-        initialTimeframe: new Timeframe(),
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
       });
@@ -257,7 +254,6 @@ describe('halo/identity', function () {
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
         controlFeed,
         dataFeed,
-        initialTimeframe: new Timeframe(),
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey)
       });

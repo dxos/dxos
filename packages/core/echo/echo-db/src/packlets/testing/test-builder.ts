@@ -10,7 +10,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, Plugin } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 import { Database } from '../database';
@@ -124,7 +123,6 @@ export class TestPeer {
       genesisFeed,
       controlFeed,
       dataFeed,
-      initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => this.feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)

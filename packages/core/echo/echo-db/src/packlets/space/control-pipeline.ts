@@ -17,7 +17,7 @@ export type ControlPipelineParams = {
   spaceKey: PublicKey;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
-  initialTimeframe: Timeframe;
+  initialTimeframe?: Timeframe;
 };
 
 /**

@@ -104,7 +104,7 @@ export class Pipeline implements PipelineAccessor {
 
   // prettier-ignore
   constructor(
-    private readonly _initialTimeframe: Timeframe
+    private readonly _initialTimeframe: Timeframe = new Timeframe()
   ) {
     this.feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);

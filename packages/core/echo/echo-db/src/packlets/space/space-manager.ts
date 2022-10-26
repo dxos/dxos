@@ -13,7 +13,6 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { Database, DataService } from '../database';
@@ -189,7 +188,6 @@ export class SpaceManager {
       genesisFeed,
       controlFeed,
       dataFeed,
-      initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)

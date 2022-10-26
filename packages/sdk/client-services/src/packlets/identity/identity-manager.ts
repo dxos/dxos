@@ -23,7 +23,6 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
 
 import { Identity } from '../identity';
 
@@ -45,6 +44,7 @@ export class IdentityManager {
 
   private _identity?: Identity;
 
+  // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(
     private readonly _metadataStore: MetadataStore,
@@ -96,12 +96,12 @@ export class IdentityManager {
     });
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
     const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
     const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
 
-    // Might be the same feed as the control feed on the top.
-    // It's important to initialize it after writable feeds so that the feed is in the writable state.
+    // The genesis feed will be the same as the control feed if the space was created by the local agent.
+    // NOTE: Must be initialized after writable feeds so that it is in a writable state.
     const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
 
     const protocol = new SpaceProtocol({
@@ -116,8 +116,6 @@ export class IdentityManager {
       genesisFeed,
       controlFeed,
       dataFeed,
-      // TODO(dmaretskyi): This might always be the empty timeframe.
-      initialTimeframe: new Timeframe(),
       feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
