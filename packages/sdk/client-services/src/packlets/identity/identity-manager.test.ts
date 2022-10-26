@@ -4,13 +4,14 @@
 
 import expect from 'expect';
 
-import { codec, MetadataStore } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
+import { valueEncoding, MetadataStore } from '@dxos/echo-db';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -21,17 +22,27 @@ describe('identity-manager', function () {
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
-    signalContext?: MemorySignalManagerContext
-    storage?: Storage
+    signalContext?: MemorySignalManagerContext;
+    storage?: Storage;
   } = {}) => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    const feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
+
     const keyring = new Keyring(storage.createDirectory('keyring'));
+    const feedStore = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
+        root: storage.createDirectory('feeds'),
+        signer: keyring,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    });
+
     afterTest(() => feedStore.close());
 
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
-      transportFactory: inMemoryTransportFactory
+      transportFactory: MemoryTransportFactory
     });
 
     const identityManager = new IdentityManager(
@@ -68,6 +79,7 @@ describe('identity-manager', function () {
 
     const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
+
     expect(peer2.identityManager.identity).toBeDefined();
     expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
     expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey);
@@ -101,8 +113,8 @@ describe('identity-manager', function () {
         }
       })
     });
-    // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
 
+    // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
     // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
     await identity2.ready();
   });

@@ -30,7 +30,7 @@ export const LoggingPanel = () => {
   }, []);
 
   const handleUpdate = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       if (enabled) {
         // Disable first otherwise the new namespaces are added to the existing enabled set.
         await devtoolsHost.disableDebugLogging({});

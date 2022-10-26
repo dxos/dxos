@@ -8,8 +8,8 @@ import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  authorities: Authority[]
-  error?: unknown
+  authorities: Authority[];
+  error?: unknown;
 }
 
 /**

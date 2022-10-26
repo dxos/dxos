@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 import {
   TestProtocolPlugin,
   testProtocolProvider
-} from '../testing/test-protocol';
+} from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
 describe('WebRTCTransport', function () {
@@ -40,7 +40,7 @@ describe('WebRTCTransport', function () {
     await sleep(10); // Let simple-peer process events.
     await connection.close();
 
-    await sleep(1); // Process events.
+    await sleep(10); // Process events.
 
     expect(callsCounter).toEqual(1);
   })

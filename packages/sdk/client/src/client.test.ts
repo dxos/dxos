@@ -9,16 +9,18 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { clientServiceBundle, InvitationDescriptor } from '@dxos/client-services';
+import { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { TestModel } from '@dxos/model-factory';
+import { ModelFactory, TestModel } from '@dxos/model-factory';
+import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
-import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './packlets/proxies';
 
@@ -54,7 +56,9 @@ describe('Client', function () {
         await client.initialize();
         afterTest(() => client.destroy());
 
-        const profile = await client.halo.createProfile({ username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         // expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -80,7 +84,10 @@ describe('Client', function () {
         const seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
-        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          ...keyPair,
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -152,7 +159,9 @@ describe('Client', function () {
 
         const party = await inviter.echo.createParty();
         assert(invitee.halo.profile);
-        const invitation = await party.createInvitation({ inviteeKey: invitee.halo.profile.publicKey });
+        const invitation = await party.createInvitation({
+          inviteeKey: invitee.halo.profile.publicKey
+        });
         expect(invitation.descriptor.secret).toBeUndefined();
         invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
@@ -219,9 +228,13 @@ describe('Client', function () {
 
         // The preference can be changed and synced back.
         await invitee.halo.setGlobalPreference('DXNSAccount', '123');
-        await waitForExpect(async () => {
-          expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
-        }, 10_000, 100);
+        await waitForExpect(
+          async () => {
+            expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
+          },
+          10_000,
+          100
+        );
       }).timeout(10_000);
     });
 
@@ -274,9 +287,15 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
@@ -290,9 +309,15 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         const details = await party.getDetails();
@@ -317,7 +342,16 @@ describe('Client', function () {
   };
 
   describe('local', function () {
-    testSuite(async () => new Client());
+    testSuite(
+      async () =>
+        new Client({
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.LOCAL
+            }
+          }
+        })
+    );
   });
 
   describe('remote', function () {
@@ -337,7 +371,52 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({}, { rpcPort: proxyPort });
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
+          }
+        },
+        { rpcPort: proxyPort }
+      );
+    });
+  });
+
+  describe('remote - wrtc proxy', function () {
+    testSuite(async () => {
+      const transportFactory = new WebRTCTransportProxyFactory();
+      transportFactory.setBridgeService(new WebRTCTransportService());
+
+      const [proxyPort, hostPort] = createLinkedPorts();
+      const hostClient = new ClientServiceHost({
+        config: new Config({}),
+        modelFactory: new ModelFactory().registerModel(ObjectModel),
+        transportFactory
+      });
+      await hostClient.open();
+      afterTest(() => hostClient.close());
+
+      const server = createBundledRpcServer({
+        services: clientServiceBundle,
+        handlers: hostClient.services,
+        port: hostPort
+      });
+
+      void server.open(); // This blocks until the other client connects.
+      afterTest(() => server.close());
+
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
+          }
+        },
+        { rpcPort: proxyPort }
+      );
     });
   });
 
@@ -364,7 +443,10 @@ describe('Client', function () {
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
 
-      const item = await party.database.createItem({ model: TestModel, type: 'test' });
+      const item = await party.database.createItem({
+        model: TestModel,
+        type: 'test'
+      });
       await item.model.set('prop', 'value1');
 
       await client.destroy();

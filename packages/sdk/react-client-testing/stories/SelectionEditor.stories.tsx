@@ -33,22 +33,13 @@ const App = () => {
 
   return (
     <Box sx={{ padding: 1 }}>
-      <SelectionEditor
-        initialValue={defaultSelectionText}
-        onChange={handleChange}
-        delay={100}
-      />
+      <SelectionEditor initialValue={defaultSelectionText} onChange={handleChange} delay={100} />
       <br />
       <br />
 
-      <SelectionEditor
-        onChange={handleChange}
-        delay={100}
-      />
+      <SelectionEditor onChange={handleChange} delay={100} />
 
-      <Box sx={{ padding: 1 }}>
-        {result}
-      </Box>
+      <Box sx={{ padding: 1 }}>{result}</Box>
     </Box>
   );
 };

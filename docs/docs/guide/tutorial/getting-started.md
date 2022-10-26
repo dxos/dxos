@@ -3,7 +3,6 @@ position: 1
 label: Getting Started
 title: Getting Started
 ---
-import 'setimmediate';
 
 This tutorial assumes zero knowledge of DXOS and is intended to serve as a starting point for building applications with DXOS.
 

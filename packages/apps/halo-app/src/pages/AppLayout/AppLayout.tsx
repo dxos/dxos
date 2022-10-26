@@ -29,7 +29,7 @@ const tabs = [
 
 export const AppLayout = () => {
   // DXOS
-  const profile = useProfile(true);
+  const profile = useProfile();
   const location = useLocation();
   const tab = useMemo(() => tabs.findIndex(tab => location.pathname.startsWith(tab.url)), [location]);
 

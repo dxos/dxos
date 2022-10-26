@@ -38,19 +38,11 @@ const ImportStory = () => {
         onUpload={handleImportParty}
       />
       <Toolbar>
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => setUploadDialogOpen(true)}
-        >
+        <Button variant='contained' color='primary' onClick={() => setUploadDialogOpen(true)}>
           Import
         </Button>
       </Toolbar>
-      {party && (
-        <Box sx={{ padding: 2 }}>
-          Party: {party.key.toHex()}
-        </Box>
-      )}
+      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
     </FullScreen>
   );
 };
@@ -76,20 +68,11 @@ const ExportStory = () => {
   return (
     <FullScreen>
       <Toolbar>
-        <Button
-          variant='contained'
-          color='primary'
-          disabled={!party}
-          onClick={handleExportParty}
-        >
+        <Button variant='contained' color='primary' disabled={!party} onClick={handleExportParty}>
           Export
         </Button>
       </Toolbar>
-      {party && (
-        <Box sx={{ padding: 2 }}>
-          Party: {party.key.toHex()}
-        </Box>
-      )}
+      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
     </FullScreen>
   );
 };

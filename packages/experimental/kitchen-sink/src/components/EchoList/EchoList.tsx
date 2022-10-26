@@ -12,14 +12,11 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components';
 
 export interface EchoListProps {
-  items?: Item<ObjectModel>[]
-  itemAdapter: ItemAdapter
+  items?: Item<ObjectModel>[];
+  itemAdapter: ItemAdapter;
 }
 
-export const EchoList = ({
-  items = [],
-  itemAdapter
-}: EchoListProps) => (
+export const EchoList = ({ items = [], itemAdapter }: EchoListProps) => (
   <BoxContainer expand column>
     <BoxContainer expand scrollY>
       <List
@@ -32,19 +29,13 @@ export const EchoList = ({
         {items.map((item) => {
           const { icon: Icon } = itemAdapter.meta?.(item.type!) ?? {};
           return (
-            <ListItemButton
-              key={item.id}
-              dense
-            >
+            <ListItemButton key={item.id} dense>
               {Icon && (
                 <ListItemIcon>
                   <Icon />
                 </ListItemIcon>
               )}
-              <ListItemText
-                primary={itemAdapter.title(item)}
-                secondary={itemAdapter.description(item)}
-              />
+              <ListItemText primary={itemAdapter.title(item)} secondary={itemAdapter.description(item)} />
             </ListItemButton>
           );
         })}
@@ -52,9 +43,7 @@ export const EchoList = ({
     </BoxContainer>
 
     <Toolbar>
-      <Typography>
-        {items?.length} Items.
-      </Typography>
+      <Typography>{items?.length} Items.</Typography>
     </Toolbar>
   </BoxContainer>
 );

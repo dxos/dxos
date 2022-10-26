@@ -8,13 +8,14 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { FeedWriter, mapFeedWriter } from '@dxos/feed-store';
+import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';
 import { Item } from './item';
@@ -23,20 +24,20 @@ import { Link } from './link';
 const log = debug('dxos:echo-db:item-manager');
 
 export interface ModelConstructionOptions {
-  itemId: ItemID
-  modelType: ModelType
-  snapshot: ModelSnapshot
+  itemId: ItemID;
+  modelType: ModelType;
+  snapshot: ModelSnapshot;
 }
 
 export interface ItemConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined
-  parentId?: ItemID
+  itemType: ItemType | undefined;
+  parentId?: ItemID;
 }
 
 export interface LinkConstructionOptions extends ModelConstructionOptions {
-  itemType: ItemType | undefined
-  source: ItemID
-  target: ItemID
+  itemType: ItemType | undefined;
+  source: ItemID;
+  target: ItemID;
 }
 
 /**
@@ -69,24 +70,23 @@ export class ItemManager {
   private readonly _pendingItems = new Map<ItemID, (item: Entity<Model>) => void>();
 
   /**
-   * @param _modelFactory
    * @param _writeStream Outbound `dxos.echo.IEchoEnvelope` mutation stream.
    */
-  constructor (
+  constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _memberKey: PublicKey,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>
   ) {}
 
-  get entities () {
+  get entities() {
     return this._entities;
   }
 
-  get items (): Item<any>[] {
+  get items(): Item<any>[] {
     return Array.from(this._entities.values()).filter((entity): entity is Item<Model> => entity instanceof Item);
   }
 
-  get links (): Link<any>[] {
+  get links(): Link<any>[] {
     return Array.from(this._entities.values()).filter((entity): entity is Link<Model> => entity instanceof Link);
   }
 
@@ -98,7 +98,7 @@ export class ItemManager {
    * @param initProps
    */
   @timed(5_000)
-  async createItem (
+  async createItem(
     modelType: ModelType,
     itemType?: ItemType,
     parentId?: ItemID,
@@ -127,7 +127,7 @@ export class ItemManager {
     this._pendingItems.set(itemId, callback);
 
     // Write Item Genesis block.
-    log('Item Genesis:', itemId);
+    log('Item Genesis', { itemId });
     await this._writeStream.write({
       itemId,
       genesis: {
@@ -146,8 +146,12 @@ export class ItemManager {
   }
 
   @timed(5_000)
-  async createLink (
-    modelType: ModelType, itemType: ItemType | undefined, source: ItemID, target: ItemID, initProps?: any
+  async createLink(
+    modelType: ModelType,
+    itemType: ItemType | undefined,
+    source: ItemID,
+    target: ItemID,
+    initProps?: any
   ): Promise<Link<any, any, any>> {
     assert(this._writeStream);
     assert(modelType);
@@ -190,12 +194,15 @@ export class ItemManager {
     return link;
   }
 
-  private async _constructModel ({
-    modelType, itemId, snapshot
+  private async _constructModel({
+    modelType,
+    itemId,
+    snapshot
   }: ModelConstructionOptions): Promise<StateManager<Model>> {
     // Convert model-specific outbound mutation to outbound envelope message.
-    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(
-      mutation => ({ itemId, mutation }), this._writeStream);
+    const outboundTransform =
+      this._writeStream &&
+      createMappedFeedWriter<Uint8Array, EchoEnvelope>((mutation) => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
     return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
@@ -205,7 +212,7 @@ export class ItemManager {
    * Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
    */
   // TODO(burdon): Parent not used.
-  private _addEntity (entity: Entity<any>, parent?: Item<any> | null) {
+  private _addEntity(entity: Entity<any>, parent?: Item<any> | null) {
     assert(!this._entities.has(entity.id));
     this._entities.set(entity.id, entity);
     log('New entity:', String(entity));
@@ -227,7 +234,7 @@ export class ItemManager {
    * Constructs an item with the appropriate model.
    */
   @timed(5_000)
-  async constructItem ({
+  async constructItem({
     itemId,
     itemType,
     modelType,
@@ -262,7 +269,7 @@ export class ItemManager {
    * Constructs an item with the appropriate model.
    */
   @timed(5_000)
-  async constructLink ({
+  async constructLink({
     itemId, // TODO(burdon): link_id?
     itemType,
     modelType,
@@ -308,7 +315,7 @@ export class ItemManager {
    * @param itemId Id of the item containing the model.
    * @param message Encoded model message
    */
-  async processModelMessage (itemId: ItemID, message: ModelMessage<Uint8Array>) {
+  async processModelMessage(itemId: ItemID, message: ModelMessage<Uint8Array>) {
     const item = this._entities.get(itemId);
     assert(item);
 
@@ -320,7 +327,7 @@ export class ItemManager {
    * Retrieves a item from the index.
    * @param itemId
    */
-  getItem<M extends Model<any> = any> (itemId: ItemID): Item<M> | undefined {
+  getItem<M extends Model<any> = any>(itemId: ItemID): Item<M> | undefined {
     const entity = this._entities.get(itemId);
     if (entity) {
       assert(entity instanceof Item);
@@ -328,15 +335,15 @@ export class ItemManager {
     return entity;
   }
 
-  getUninitializedEntities (): Entity<Model>[] {
-    return Array.from(this._entities.values()).filter(entity => !entity._stateManager.initialized);
+  getUninitializedEntities(): Entity<Model>[] {
+    return Array.from(this._entities.values()).filter((entity) => !entity._stateManager.initialized);
   }
 
   /**
    * Recursive method to unlink and remove items from the active set.
    * @param itemId
    */
-  deconstructItem (itemId: ItemID) {
+  deconstructItem(itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
 
@@ -365,7 +372,7 @@ export class ItemManager {
    * Reconstruct an item with a default model when that model becomes registered.
    * New model instance is created and streams are reconnected.
    */
-  async initializeModel (itemId: ItemID) {
+  async initializeModel(itemId: ItemID) {
     const item = this._entities.get(itemId);
     assert(item);
 
@@ -387,18 +394,20 @@ const debounceEntityUpdateEvent = (event: Event<Entity<any>>): Event<Entity<any>
   let firing = false;
 
   const emittedSinceLastFired = new Set<Entity<any>>();
-  debouncedEvent.addEffect(() => event.on(arg => {
-    emittedSinceLastFired.add(arg);
-    if (!firing) {
-      firing = true;
-      setTimeout(() => {
-        firing = false;
-        const args = Array.from(emittedSinceLastFired);
-        emittedSinceLastFired.clear();
-        debouncedEvent.emit(args);
-      }, 0);
-    }
-  }));
+  debouncedEvent.addEffect(() =>
+    event.on((arg) => {
+      emittedSinceLastFired.add(arg);
+      if (!firing) {
+        firing = true;
+        setTimeout(() => {
+          firing = false;
+          const args = Array.from(emittedSinceLastFired);
+          emittedSinceLastFired.clear();
+          debouncedEvent.emit(args);
+        }, 0);
+      }
+    })
+  );
 
   return debouncedEvent;
 };

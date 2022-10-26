@@ -2,16 +2,43 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CallExpression, Expression, Import, Program, Span, Super, transformSync, TsType } from '@swc/core';
+import {
+  CallExpression,
+  Expression,
+  Import,
+  ObjectExpression,
+  Program,
+  Span,
+  Super,
+  transformSync,
+  TsType
+} from '@swc/core';
 import Visitor from '@swc/core/Visitor';
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { SourceMapConsumer } from 'source-map';
+
+import { SourcePosition } from './source-map';
 
 export const preprocess = (code: string, filename: string) => {
   return transformSync(code, {
+    // will emit the source map as a separate property of the output.
     sourceMaps: true,
+    // ???
     inlineSourcesContent: true,
     sourceFileName: filename,
     plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
     jsc: {
+      // Does not seem to work.
+      preserveAllComments: true,
+      minify: {
+        compress: false,
+        format: {
+          // Does not seem to preserve comments.
+          comments: 'all'
+        },
+        mangle: false
+      },
       target: 'es2022',
       parser: {
         syntax: 'typescript',
@@ -30,10 +57,10 @@ class TraceInjector extends Visitor {
   programSpan!: Span;
   spanOffset = 0;
   private _linePositions: number[] = [];
-  constructor (
-    private readonly filename: string,
-    private readonly code: string
-  ) {
+
+  private _sourceMap?: SourceMapConsumer;
+
+  constructor(private readonly filename: string, private readonly code: string) {
     super();
 
     this._linePositions.push(0);
@@ -42,22 +69,41 @@ class TraceInjector extends Visitor {
         this._linePositions.push(i + 1);
       }
     }
+
+    try {
+      this._sourceMap = new SourceMapConsumer(JSON.parse(readFileSync(`${filename}.map`, 'utf-8')));
+    } catch {} // Ignore.
   }
 
-  private _getLineAndColumn (position: number) {
+  private _getPosition(span: Span): SourcePosition {
+    // Account for SWC bugs & quirks.
+    const position = span.start - this.programSpan.start + this.spanOffset;
+
     let line = this._linePositions.findIndex((linePosition) => linePosition > position);
     if (line === -1) {
       line = this._linePositions.length;
     }
     const column = position - this._linePositions[line - 1];
-    return { line, column };
+
+    if (this._sourceMap) {
+      const { line: newLine, column: newColumn, source } = this._sourceMap.originalPositionFor({ line, column });
+      if (newLine && newColumn && source) {
+        return {
+          line: newLine,
+          column: newColumn,
+          filename: join(dirname(this.filename), source)
+        };
+      }
+    }
+
+    return { line, column, filename: this.filename };
   }
 
-  override visitTsType (n: TsType) {
+  override visitTsType(n: TsType) {
     return n;
   }
 
-  override visitProgram (node: Program) {
+  override visitProgram(node: Program) {
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;
@@ -67,16 +113,10 @@ class TraceInjector extends Visitor {
     return super.visitProgram(node);
   }
 
-  override visitCallExpression (n: CallExpression): Expression {
-    if (
-      isLoggerFuncExpression(n.callee) ||
-      (n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object))
-    ) {
-      // Matches expressions of form:
-      // log(...)
-      // log.<level>(...)
-
+  override visitCallExpression(n: CallExpression): Expression {
+    if (isLoggerInvocation(n)) {
       if (n.arguments.length === 1) {
+        // Add empty context.
         n.arguments.push({
           expression: {
             type: 'ObjectExpression',
@@ -88,82 +128,7 @@ class TraceInjector extends Visitor {
 
       if (n.arguments.length === 2) {
         n.arguments.push({
-          expression: {
-            type: 'ObjectExpression',
-            properties: [
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'file',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'Identifier',
-                  value: '__filename',
-                  optional: false,
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'line',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'NumericLiteral',
-
-                  value: this._getLineAndColumn(n.span.start - this.programSpan.start + this.spanOffset).line,
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'ownershipScope',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'CallExpression',
-                  callee: {
-                    type: 'Identifier',
-                    value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
-                    optional: false,
-                    span: ZERO_SPAN
-                  },
-                  arguments: [{
-                    expression: {
-                      type: 'ThisExpression',
-                      span: ZERO_SPAN
-                    }
-                  }],
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'bugcheck',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'Identifier',
-                  value: ID_BUGCHECK_STRING,
-                  optional: false,
-                  span: ZERO_SPAN
-                }
-              }
-            ],
-            span: ZERO_SPAN
-          }
+          expression: this._createMetadataExpression(n.span)
         });
       }
 
@@ -172,7 +137,92 @@ class TraceInjector extends Visitor {
       return super.visitCallExpression(n);
     }
   }
+
+  private _createMetadataExpression(span: Span): Expression {
+    const position = this._getPosition(span);
+    return createObjectExpression({
+      file: {
+        type: 'StringLiteral',
+        value: position.filename,
+        span: ZERO_SPAN
+      },
+      line: {
+        type: 'NumericLiteral',
+        value: position.line,
+        span: ZERO_SPAN
+      },
+      ownershipScope: {
+        type: 'CallExpression',
+        callee: {
+          type: 'Identifier',
+          value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
+          optional: false,
+          span: ZERO_SPAN
+        },
+        arguments: [
+          {
+            expression: {
+              type: 'ThisExpression',
+              span: ZERO_SPAN
+            }
+          }
+        ],
+        span: ZERO_SPAN
+      },
+      bugcheck: {
+        type: 'Identifier',
+        value: ID_BUGCHECK_STRING,
+        optional: false,
+        span: ZERO_SPAN
+      }
+    });
+  }
 }
 
-const isLoggerFuncExpression =
-  (e: Expression | Super | Import) => e.type === 'Identifier' && e.value === 'log';
+/**
+ * Matches expressions of form:
+ *   log(...)
+ *   log.<level>(...)
+ *   <ident>.log.<level>(...)   // CJS import in compiled JS.
+ *   (0, <ident>.log)(...)      // CJS import in compiled JS.
+ */
+const isLoggerInvocation = (expr: CallExpression) =>
+  isLoggerFuncExpression(expr.callee) ||
+  (expr.callee.type === 'MemberExpression' && isLoggerFuncExpression(expr.callee.object));
+
+const isLoggerFuncExpression = (e: Expression | Super | Import) =>
+  (e.type === 'Identifier' && e.value === 'log') ||
+  isCjsImportedLoggerExpression(e) ||
+  (e.type === 'ParenthesisExpression' &&
+    e.expression.type === 'SequenceExpression' &&
+    e.expression.expressions.length === 2 &&
+    e.expression.expressions[0].type === 'NumericLiteral' &&
+    e.expression.expressions[0].value === 0 &&
+    isCjsImportedLoggerExpression(e.expression.expressions[1]));
+
+/**
+ * Matches:
+ *  <ident>.log
+ */
+const isCjsImportedLoggerExpression = (expr: Expression | Super | Import) =>
+  expr.type === 'MemberExpression' &&
+  expr.object.type === 'Identifier' &&
+  expr.object.value !== 'console' &&
+  expr.object.value !== 'debug' &&
+  expr.property.type === 'Identifier' &&
+  expr.property.value === 'log';
+
+const createObjectExpression = (properties: Record<string, Expression>): ObjectExpression => ({
+  type: 'ObjectExpression',
+  properties: Object.entries(properties).map(([key, value]) => ({
+    type: 'KeyValueProperty',
+    key: {
+      type: 'Identifier',
+      value: key,
+      optional: false,
+      span: ZERO_SPAN
+    },
+    value
+  })),
+  span: ZERO_SPAN
+});

@@ -10,8 +10,8 @@ import { SVGContext } from '../context';
 import { SVGContextDef } from '../hooks';
 
 export interface SVGCOntextProviderProps {
-  context?: SVGContext
-  children?: ReactNode
+  context?: SVGContext;
+  children?: ReactNode;
 }
 
 /**
@@ -34,8 +34,7 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
         .attr('width', width)
         .attr('height', height);
     } else {
-      d3.select(context.svg)
-        .attr('visibility', 'hidden'); // Hide until first resized.
+      d3.select(context.svg).attr('visibility', 'hidden'); // Hide until first resized.
     }
   }, [width, height]);
 

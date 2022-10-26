@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
-import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamOptions } from 'hypercore-protocol';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
@@ -23,39 +23,39 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
-export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
+export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
   /**
-   * You can use this to detect if you connect to yourself.
+   * Used to detect if attempting to connect to self.
    */
-  id?: Buffer
+  id?: Buffer;
+
   /**
-   * Signal to the other peer that you want to keep this stream open forever.
+   * Keep the ProtocolStream open forever.
    */
-  live?: boolean
+  live?: boolean;
+
   /**
    * Match the discovery_key with a public_key to do the handshake.
    */
-  expectedFeeds?: number
+  expectedFeeds?: number;
 }
 
 export interface ProtocolOptions {
-  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
-  streamOptions?: ProtocolStreamOptions
-
-  discoveryKey?: Buffer
-
-  initTimeout?: number
+  streamOptions?: ExtendedProtocolStreamOptions;
 
   /**
    * Define a codec to encode/decode messages from extensions.
    */
-  codec?: Codec<any>
+  codec?: Codec<any>;
 
-  initiator: boolean
-  userSession?: Record<string, any>
+  discoveryKey?: Buffer;
+  discoveryToPublicKey?: (discoveryKey: Buffer) => Buffer | undefined;
+  initTimeout?: number;
+  initiator: boolean;
+  userSession?: Record<string, any>;
 }
 
 /**
@@ -71,25 +71,25 @@ export class Protocol {
   readonly handshake = new Event<this>();
 
   private readonly _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
-  private readonly _streamOptions: ProtocolStreamCtorOpts | undefined;
+  private readonly _streamOptions: ExtendedProtocolStreamOptions | undefined;
   private readonly _initTimeout: number;
   private readonly _initiator!: boolean;
   private readonly _discoveryKey?: Buffer;
 
-  private _extensionInit: ExtensionInit;
-  private _init = false;
-  private _connected = false;
-  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
-
   /**
    * Protocol extensions.
    */
-  private _extensionMap = new Map<string, Extension>();
+  private readonly _extensionMap = new Map<string, Extension>();
 
   /**
    * https://github.com/mafintosh/hypercore-protocol
    */
   private readonly _stream: ProtocolStream;
+
+  private _extensionInit: ExtensionInit;
+  private _init = false;
+  private _connected = false;
+  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
@@ -101,8 +101,9 @@ export class Protocol {
    */
   private _context: Record<string, any> = {};
 
-  constructor (options: ProtocolOptions = { initiator: false }) {
-    const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
+  constructor(options: ProtocolOptions = { initiator: false }) {
+    const { discoveryToPublicKey = (key) => key, streamOptions, initTimeout = 5 * 1000 } = options;
+
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;
     this._initTimeout = initTimeout;
@@ -119,11 +120,12 @@ export class Protocol {
           await this._initExtensions(options.userSession);
           this.extensionsInitialized.emit();
 
-          await this.streamOptions?.onhandshake?.(this);
+          await this.streamOptions?.onhandshake?.(this as any); // TODO(burdon): Cast to this.
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {
-          if (err.message.includes('NMSG_ERR_CLOSE')) { // Connection was closed during handshake.
+          if (err.message.includes('NMSG_ERR_CLOSE')) {
+            // Connection was closed during handshake.
             this._stream.destroy();
             return;
           }
@@ -134,12 +136,12 @@ export class Protocol {
 
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
-    this.error.on(error => log(error));
+    this.error.on((error) => console.error(error));
 
     this._extensionInit = new ExtensionInit({ timeout: this._initTimeout });
   }
 
-  toString () {
+  toString() {
     const meta = {
       id: keyToHuman(this._stream.publicKey),
       extensions: this.extensionNames
@@ -148,42 +150,44 @@ export class Protocol {
     return `Protocol(${JSON.stringify(meta)})`;
   }
 
-  get id () {
+  get id() {
     return this._stream.publicKey;
   }
 
-  get stream () {
+  get stream() {
     return this._stream;
   }
 
-  get channel () {
+  get channel() {
     return this._channel;
   }
 
-  get extensions () {
+  get extensions() {
     return Array.from(this._extensionMap.values());
   }
 
-  get extensionNames (): string[] {
+  get extensionNames(): string[] {
     return Array.from(this._extensionMap.keys());
   }
 
-  get streamOptions () {
-    return Object.assign({}, { id: this._stream!.publicKey }, this._streamOptions);
+  get streamOptions(): ExtendedProtocolStreamOptions {
+    return Object.assign({}, this._streamOptions, {
+      id: this._stream!.publicKey
+    });
   }
 
-  get connected () {
+  get connected() {
     return this._connected;
   }
 
-  get initiator () {
+  get initiator() {
     return this._initiator;
   }
 
   /**
    * Get remote session data.
    */
-  getSession (): Record<string, any> | null {
+  getSession(): Record<string, any> | null {
     try {
       return this._extensionInit.remoteUserSession;
     } catch (err: any) {
@@ -194,7 +198,7 @@ export class Protocol {
   /**
    * Set local context.
    */
-  setContext (context: any) {
+  setContext(context: any) {
     this._context = Object.assign({}, context);
 
     return this;
@@ -203,14 +207,14 @@ export class Protocol {
   /**
    * Get local context.
    */
-  getContext (): any {
+  getContext(): any {
     return this._context;
   }
 
   /**
    * Sets the named extension.
    */
-  setExtension (extension: Extension) {
+  setExtension(extension: Extension) {
     assert(extension);
     this._extensionMap.set(extension.name, extension);
 
@@ -220,8 +224,8 @@ export class Protocol {
   /**
    * Sets the set of extensions.
    */
-  setExtensions (extensions: Extension[]) {
-    extensions.forEach(extension => this.setExtension(extension));
+  setExtensions(extensions: Extension[]) {
+    extensions.forEach((extension) => this.setExtension(extension));
 
     return this;
   }
@@ -229,14 +233,14 @@ export class Protocol {
   /**
    * Returns the extension by name.
    */
-  getExtension (name: string): Extension | undefined {
+  getExtension(name: string): Extension | undefined {
     return this._extensionMap.get(name);
   }
 
   /**
    * Set protocol handshake handler.
    */
-  setHandshakeHandler (handler: (protocol: Protocol) => void): Protocol {
+  setHandshakeHandler(handler: (protocol: Protocol) => void): Protocol {
     this._handshakes.push(async (protocol: Protocol) => {
       try {
         await handler(protocol);
@@ -247,7 +251,7 @@ export class Protocol {
     return this;
   }
 
-  init () {
+  init() {
     assert(!this._init);
 
     this._init = true;
@@ -257,7 +261,7 @@ export class Protocol {
   }
 
   @synchronized
-  async open () {
+  async open() {
     if (this._isOpen) {
       return;
     }
@@ -273,7 +277,7 @@ export class Protocol {
   }
 
   @synchronized
-  async close () {
+  async close() {
     if (!this._isOpen) {
       return;
     }
@@ -289,14 +293,11 @@ export class Protocol {
     this._isOpen = false;
   }
 
-  async waitForHandshake (): Promise<void> {
-    await Promise.race([
-      this.handshake.waitForCount(1),
-      this.error.waitForCount(1).then(err => Promise.reject(err))
-    ]);
+  async waitForHandshake(): Promise<void> {
+    await Promise.race([this.handshake.waitForCount(1), this.error.waitForCount(1).then((err) => Promise.reject(err))]);
   }
 
-  private async _openExtensions () {
+  private async _openExtensions() {
     await this._extensionInit.openWithProtocol(this);
 
     for (const [name, extension] of this._extensionMap) {
@@ -305,13 +306,17 @@ export class Protocol {
     }
   }
 
-  private async _initExtensions (userSession?: Record<string, any>) {
+  private async _initExtensions(userSession?: Record<string, any>) {
     try {
       // Exchanging sessions, because other extensions (like Bot Plugin) might depend on the session being already there.
       await this._extensionInit.sendSession(userSession);
 
       for (const [name, extension] of this._extensionMap) {
-        log(`init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+        log(
+          `init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+            this._stream.remotePublicKey
+          )}`
+        );
         await extension.onInit();
       }
 
@@ -322,13 +327,17 @@ export class Protocol {
     }
   }
 
-  private async _handshakeExtensions () {
+  private async _handshakeExtensions() {
     for (const handshake of this._handshakes) {
       await handshake(this);
     }
 
     for (const [name, extension] of this._extensionMap) {
-      log(`handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+      log(
+        `handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+          this._stream.remotePublicKey
+        )}`
+      );
       await extension.onHandshake();
     }
 
@@ -340,7 +349,11 @@ export class Protocol {
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
-          log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+          log(
+            `feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
+              this._stream.remotePublicKey
+            )}`
+          );
           await extension.onFeed(discoveryKey);
         }
       } catch (err: any) {
@@ -349,7 +362,7 @@ export class Protocol {
     });
   }
 
-  private _openConnection () {
+  private _openConnection() {
     let initialKey = null;
 
     const openChannel = (discoveryKey: Buffer) => {
@@ -362,7 +375,6 @@ export class Protocol {
         // Init stream.
         this._channel = this._stream.open(initialKey, {
           onextension: this._extensionHandler
-
         }); // Needs a list of extension right away.
       } catch (err: any) {
         let newErr = err;
@@ -402,7 +414,7 @@ export class Protocol {
     extension.emit('extension-message', message);
   };
 
-  private _handleError (error: Error) {
+  private _handleError(error: Error) {
     console.error(error);
     process.nextTick(() => this._stream.destroy(error));
   }

@@ -13,12 +13,12 @@ import { Bot } from './client-bot';
 const log = debug('dxos:bot:echo-bot');
 
 export class EchoBot extends Bot {
-  constructor (private readonly _echoType: string) {
+  constructor(private readonly _echoType: string) {
     super();
     log('Constructing echo bot');
   }
 
-  override async onCommand (request: SendCommandRequest) {
+  override async onCommand(request: SendCommandRequest) {
     log('onCommand', request);
     assert(this.party, 'Bot is not initialized');
     assert(request.command, 'Command must be provided');

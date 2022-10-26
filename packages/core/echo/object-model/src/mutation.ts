@@ -9,7 +9,11 @@ import set from 'lodash.set';
 import assert from 'node:assert';
 
 import {
-  KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value
+  KeyValue,
+  ObjectMutation,
+  ObjectMutationSet,
+  KeyValueObject,
+  Value
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { removeKey } from './util';
@@ -36,15 +40,7 @@ enum Type {
   OBJECT = 'object'
 }
 
-const SCALAR_TYPES = [
-  Type.BOOLEAN,
-  Type.INTEGER,
-  Type.FLOAT,
-  Type.STRING,
-  Type.BYTES,
-  Type.TIMESTAMP,
-  Type.DATETIME
-];
+const SCALAR_TYPES = [Type.BOOLEAN, Type.INTEGER, Type.FLOAT, Type.STRING, Type.BYTES, Type.TIMESTAMP, Type.DATETIME];
 
 // TODO(burdon): Reorganize functions.
 
@@ -52,7 +48,7 @@ const SCALAR_TYPES = [
  * Represents a named property value.
  */
 export class KeyValueUtil {
-  static createMessage (key: string, value: any): KeyValue {
+  static createMessage(key: string, value: any): KeyValue {
     assert(key);
 
     return {
@@ -72,7 +68,7 @@ export class ValueUtil {
    * @param {any} value
    * @return {{Value}}
    */
-  static createMessage (value: any): Value {
+  static createMessage(value: any): Value {
     // NOTE: Process `null` different from `undefined`.
     if (value === null) {
       return { [Type.NULL]: true };
@@ -91,20 +87,20 @@ export class ValueUtil {
     }
   }
 
-  static valueOf (value: Value): any {
+  static valueOf(value: Value): any {
     if (value.object !== undefined) {
       return ValueUtil.getObjectValue(value.object);
     }
 
     if (value.array !== undefined) {
-      return value.array.values!.map(value => ValueUtil.valueOf(value));
+      return value.array.values!.map((value) => ValueUtil.valueOf(value));
     }
 
     if (value.int) {
       return parseInt(value.int);
     }
 
-    const type = SCALAR_TYPES.find(type => value[type] !== undefined);
+    const type = SCALAR_TYPES.find((type) => value[type] !== undefined);
     if (type) {
       return value[type];
     }
@@ -112,59 +108,59 @@ export class ValueUtil {
     return undefined;
   }
 
-  static bytes (value: Uint8Array): Value {
+  static bytes(value: Uint8Array): Value {
     return { [Type.BYTES]: value };
   }
 
-  static bool (value: boolean): Value {
+  static bool(value: boolean): Value {
     return { [Type.BOOLEAN]: value };
   }
 
-  static integer (value: number): Value {
+  static integer(value: number): Value {
     return { [Type.INTEGER]: value.toString() };
   }
 
-  static float (value: number): Value {
+  static float(value: number): Value {
     return { [Type.FLOAT]: value };
   }
 
-  static string (value: string): Value {
+  static string(value: string): Value {
     return { [Type.STRING]: value };
   }
 
-  static datetime (value: string): Value {
+  static datetime(value: string): Value {
     return { [Type.DATETIME]: value };
   }
 
-  static object (value: Record<string, any>): Value {
+  static object(value: Record<string, any>): Value {
     return {
       [Type.OBJECT]: {
-        properties: Object.keys(value).map(key => KeyValueUtil.createMessage(key, value[key]))
+        properties: Object.keys(value).map((key) => KeyValueUtil.createMessage(key, value[key]))
       }
     };
   }
 
   // TODO(burdon): Refactor.
-  static getObjectValue (value: KeyValueObject) {
+  static getObjectValue(value: KeyValueObject) {
     const nestedObject = {};
     const { properties } = value!;
     (properties ?? []).forEach(({ key, value }) => ValueUtil.applyValue(nestedObject, key!, value!));
     return nestedObject;
   }
 
-  static getScalarValue (value: Value) {
-    const type = SCALAR_TYPES.find(field => value[field] !== undefined);
+  static getScalarValue(value: Value) {
+    const type = SCALAR_TYPES.find((field) => value[field] !== undefined);
     if (type) {
       return value[type];
     }
   }
 
-  static applyKeyValue (object: any, keyValue: KeyValue) {
+  static applyKeyValue(object: any, keyValue: KeyValue) {
     const { key, value } = keyValue;
     return ValueUtil.applyValue(object, key!, value!);
   }
 
-  static applyValue (object: any, key: string, value?: Value) {
+  static applyValue(object: any, key: string, value?: Value) {
     assert(object);
     assert(key);
 
@@ -207,14 +203,14 @@ export class ValueUtil {
  * Represents mutations on objects.
  */
 export class MutationUtil {
-  static applyMutationSet (object: any, message: ObjectMutationSet) {
+  static applyMutationSet(object: any, message: ObjectMutationSet) {
     assert(message);
     const { mutations } = message;
-    mutations?.forEach(mutation => MutationUtil.applyMutation(object, mutation));
+    mutations?.forEach((mutation) => MutationUtil.applyMutation(object, mutation));
     return object;
   }
 
-  static applyMutation (object: any, mutation: ObjectMutation) {
+  static applyMutation(object: any, mutation: ObjectMutation) {
     assert(object);
     const { operation = ObjectMutation.Operation.SET, key, value } = mutation;
     switch (operation) {
@@ -261,22 +257,24 @@ export class MutationUtil {
   /**
    * Create single field mutation.
    */
-  static createFieldMutation (key: string, value: any): ObjectMutation {
-    return value === undefined ? {
-      // NOTE: `null` is a legitimate value.
-      operation: ObjectMutation.Operation.DELETE,
-      key
-    } : {
-      operation: ObjectMutation.Operation.SET,
-      key,
-      value: ValueUtil.createMessage(value)
-    };
+  static createFieldMutation(key: string, value: any): ObjectMutation {
+    return value === undefined
+      ? {
+          // NOTE: `null` is a legitimate value.
+          operation: ObjectMutation.Operation.DELETE,
+          key
+        }
+      : {
+          operation: ObjectMutation.Operation.SET,
+          key,
+          value: ValueUtil.createMessage(value)
+        };
   }
 
   /**
    * Create field mutations.
    */
-  static createMultiFieldMutation (object: any): ObjectMutation[] {
+  static createMultiFieldMutation(object: any): ObjectMutation[] {
     return Object.entries(object).map(([key, value]) => MutationUtil.createFieldMutation(key, value));
   }
 }

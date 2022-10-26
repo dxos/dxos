@@ -5,8 +5,8 @@
 const Ref = Symbol('Ref');
 
 interface Ref {
-  [Ref]: true
-  value: any
+  [Ref]: true;
+  value: any;
 }
 
 /**
@@ -66,7 +66,12 @@ const isRef = (value: any): value is Ref => value[Ref] === true;
  * @param gen Closure that builds the function source.
  * @param ctx Optional record with context variables that will appear in function's scope.
  */
-export const codegen = (name: string, args: string[], gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void, ctx: Record<string, any> = {}): (...args: any[]) => any => {
+export const codegen = (
+  name: string,
+  args: string[],
+  gen: (c: (parts: TemplateStringsArray, ...args: any[]) => void) => void,
+  ctx: Record<string, any> = {}
+): ((...args: any[]) => any) => {
   const newCtx = { ...ctx };
   let nextAnnon = 1;
 

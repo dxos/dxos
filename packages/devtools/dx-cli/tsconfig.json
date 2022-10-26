@@ -12,7 +12,7 @@
   },
   "include": [
     "src",
-    "test"
+    "src/util/telemetryrc.json"
   ],
   "references": [
     {

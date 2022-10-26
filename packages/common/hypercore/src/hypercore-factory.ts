@@ -5,29 +5,31 @@
 import assert from 'assert';
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
-import type { RandomAccessStorageConstructor } from 'random-access-storage';
 
-// import { sha256 } from '@dxos/crypto';
-
-import { wrapFeed, HypercoreFeed } from './hypercore-feed';
+import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
 /**
- * Hypercore wrapper factory.
+ * Creates feeds with default properties.
  */
-export class HypercoreFactory {
-  constructor (
-    private readonly _storage: RandomAccessStorageConstructor
+export class HypercoreFactory<T> {
+  constructor(
+    private readonly _root: Directory = createStorage({
+      type: StorageType.RAM
+    }).createDirectory(),
+    private readonly _options?: HypercoreOptions
   ) {
-    assert(this._storage);
+    assert(this._root);
   }
 
   /**
-   * Creates a pify wrapped hypercore object.
+   * Creates a feed using a storage factory prefixed with the feed's key.
+   *
+   * NOTE: We have to use our `random-access-storage` implementation since the native ones
+   * do not behave uniformly across platforms.
    */
-  create (publicKey?: Buffer, options?: HypercoreOptions): HypercoreFeed {
-    // TODO(burdon): Make this pluggable.
-    // const key = publicKey ? Buffer.from(sha256(publicKey.toString('hex'))) : undefined;
-    const feed: Hypercore = hypercore(this._storage, publicKey, options);
-    return wrapFeed(feed);
+  createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
+    const directory = this._root.createDirectory(publicKey.toString());
+    const storage = (filename: string) => directory.getOrCreateFile(filename).native;
+    return hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }
 }

@@ -1,0 +1,2 @@
+# Function `BotFactoryClientProvider`
+> Declared in [`packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx:21`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L21)

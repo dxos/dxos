@@ -17,7 +17,14 @@ export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage
 
 export const Dynamics = async () => {
   const { publicUrl = '', dynamic } = __DXOS_CONFIG__;
-  return !dynamic ? __CONFIG_DYNAMICS__ : (await fetchBound(`${publicUrl}${CONFIG_ENDPOINT}`)).json();
+  return dynamic
+    ? await fetchBound(`${publicUrl}${CONFIG_ENDPOINT}`)
+        .then((res) => res.json())
+        .catch((error) => {
+          console.warn('Failed to fetch dynamic config.', error);
+          return __CONFIG_DYNAMICS__;
+        })
+    : __CONFIG_DYNAMICS__;
 };
 
 export const Envs = () => __CONFIG_ENVS__;

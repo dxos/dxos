@@ -29,7 +29,7 @@ export class AuthPlugin {
 
   readonly authenticationFailed = new Event();
 
-  constructor (
+  constructor(
     private readonly _swarmIdentity: SwarmIdentity,
     /** (default is always) */ requireAuthForExtensions: string[] = []
   ) {
@@ -40,7 +40,7 @@ export class AuthPlugin {
    * Create protocol extension.
    * @return {Extension}
    */
-  createExtension () {
+  createExtension() {
     return new Extension(EXTENSION_NAME, { binary: true }).setHandshakeHandler(this._onHandshake.bind(this));
   }
 
@@ -56,7 +56,8 @@ export class AuthPlugin {
    * implementation (Protocol, dependencies) to explicitly send such a response message.
    */
   // TODO(telackey): Supply further background/detail and correct anything incorrect above.
-  private async _onHandshake (protocol: Protocol /* code , context */) { // TODO(burdon): ???
+  private async _onHandshake(protocol: Protocol /* code , context */) {
+    // TODO(burdon): ???
     try {
       assert(protocol);
 
@@ -80,10 +81,12 @@ export class AuthPlugin {
           }
 
           /* We can allow the unauthenticated connection, because none of the extensions which
-          * require authentication to use are active on this connection.
-          */
+           * require authentication to use are active on this connection.
+           */
           if (!authRequired) {
-            log(`Unauthenticated access allowed for ${sessionPeerId}; no extensions which require authentication are active on remote Protocol.`);
+            log(
+              `Unauthenticated access allowed for ${sessionPeerId}; no extensions which require authentication are active on remote Protocol.`
+            );
             return;
           }
         }
@@ -91,7 +94,11 @@ export class AuthPlugin {
         log('No credentials provided; dropping connection', { sessionPeerId });
         this.authenticationFailed.emit();
         protocol.stream.destroy();
-        throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: no credentials.');
+        throw new ERR_EXTENSION_RESPONSE_FAILED(
+          EXTENSION_NAME,
+          'ERR_AUTH_REJECTED',
+          'Authentication rejected: no credentials.'
+        );
       }
 
       // Challenges are not currently supported.
@@ -107,16 +114,19 @@ export class AuthPlugin {
 
         this.authenticationFailed.emit();
         protocol.stream.destroy();
-        throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: bad credentials.');
+        throw new ERR_EXTENSION_RESPONSE_FAILED(
+          EXTENSION_NAME,
+          'ERR_AUTH_REJECTED',
+          'Authentication rejected: bad credentials.'
+        );
       }
 
       log('Authenticated access granted', { sessionPeerId });
 
       // Success!
       // log(`Authenticated peer: ${credsPeerId.toHex()}`);
-      /* TODO(dboreham): Should this be a callback rather than an event, or communicated some other way to
-      *   code that needs to know about auth success events?
-      */
+      // TODO(dboreham): Should this be a callback rather than an event,
+      //  or communicate some other way to code that needs to know about auth success events?
       // this.emit('authenticated', credsPeerId.asBuffer());
     } catch (err: any) {
       log(err);

@@ -11,4 +11,6 @@ const json = JSON.parse(fs.readFileSync(path, { encoding: 'utf-8' }));
 
 json.version = process.argv[2];
 
-fs.writeFileSync(path, JSON.stringify(json, null, 2) + '\n', { encoding: 'utf-8' });
+fs.writeFileSync(path, JSON.stringify(json, null, 2) + '\n', {
+  encoding: 'utf-8'
+});

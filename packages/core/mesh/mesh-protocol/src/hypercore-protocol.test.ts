@@ -54,21 +54,19 @@ describe('hypercore-protocol', function () {
     bobChannel.options({
       extensions: ['ext-foo']
     });
-    aliceChannel.extension(0, Buffer.from([1, 2, 3]));
 
+    aliceChannel.extension(0, Buffer.from([1, 2, 3]));
     alice.registerExtension('ext-on-stream', {
       onmessage: (msg: any) => {
         aliceReceivedMessageInExtension = msg;
         alice.finalize();
       }
     });
-    const bobExt = bob.registerExtension('ext-on-stream', {
 
-    });
-
+    const bobExt = bob.registerExtension('ext-on-stream', {});
     bobExt.send(Buffer.from([4, 5, 6]));
 
-    await createPromiseFromCallback(cb => pump(alice as any, bob as any, alice as any, cb));
+    await createPromiseFromCallback((cb) => pump(alice as any, bob as any, alice as any, cb));
 
     // code aliceChannel.data({ index: 1, value: '{ block: 42 }'})
 

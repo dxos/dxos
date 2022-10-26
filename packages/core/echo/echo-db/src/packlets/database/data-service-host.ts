@@ -33,7 +33,7 @@ const log = debug('dxos:echo-db:data-service-host');
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
-  constructor (
+  constructor(
     private readonly _itemManager: ItemManager,
     private readonly _itemDemuxer: ItemDemuxer,
     private readonly _writeStream?: FeedWriter<EchoEnvelope>
@@ -42,7 +42,7 @@ export class DataServiceHost {
   /**
    * Returns a stream with a list of active entities in the party.
    */
-  subscribeEntitySet (): Stream<SubscribeEntitySetResponse> {
+  subscribeEntitySet(): Stream<SubscribeEntitySetResponse> {
     return new Stream(({ next }) => {
       const trackedSet = new Set<ItemID>();
 
@@ -53,14 +53,20 @@ export class DataServiceHost {
           genesis: {
             itemType: entity.type,
             modelType: entity.modelType,
-            link: entity instanceof Link ? {
-              source: entity.sourceId,
-              target: entity.targetId
-            } : undefined
+            link:
+              entity instanceof Link
+                ? {
+                    source: entity.sourceId,
+                    target: entity.targetId
+                  }
+                : undefined
           },
-          itemMutation: entity instanceof Item ? {
-            parentId: entity.parent?.id
-          } : undefined
+          itemMutation:
+            entity instanceof Item
+              ? {
+                  parentId: entity.parent?.id
+                }
+              : undefined
         };
       };
 
@@ -83,7 +89,7 @@ export class DataServiceHost {
         }
 
         next({
-          added: Array.from(added).map(id => entityInfo(id)),
+          added: Array.from(added).map((id) => entityInfo(id)),
           deleted: Array.from(added).map((id): EchoEnvelope => ({ itemId: id }))
         });
       };
@@ -99,15 +105,15 @@ export class DataServiceHost {
    * First message is a snapshot of the entity.
    * Subsequent messages are updates.
    */
-  subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
+  subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     return new Stream(({ next }) => {
       assert(request.itemId);
-      const entityItem = this._itemManager.items.find(item => item.id === request.itemId);
+      const entityItem = this._itemManager.items.find((item) => item.id === request.itemId);
       let snapshot;
       if (entityItem) {
         snapshot = this._itemDemuxer.createItemSnapshot(entityItem as Item);
       } else {
-        const entityLink = this._itemManager.links.find(link => link.id === request.itemId);
+        const entityLink = this._itemManager.links.find((link) => link.id === request.itemId);
         if (entityLink) {
           snapshot = this._itemDemuxer.createLinkSnapshot(entityLink as Link);
         } else {
@@ -118,7 +124,7 @@ export class DataServiceHost {
       log(`Entity stream ${request.itemId}: ${JSON.stringify({ snapshot })}`);
       next({ snapshot });
 
-      return this._itemDemuxer.mutation.on(mutation => {
+      return this._itemDemuxer.mutation.on((mutation) => {
         if (mutation.data.itemId !== request.itemId) {
           return;
         }
@@ -139,7 +145,7 @@ export class DataServiceHost {
     });
   }
 
-  async write (request: EchoEnvelope): Promise<MutationReceipt> {
+  async write(request: EchoEnvelope): Promise<MutationReceipt> {
     assert(this._writeStream, 'Cannot write mutations in readonly mode');
 
     return this._writeStream.write(request);

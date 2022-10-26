@@ -12,7 +12,9 @@ faker.seed(0xdeadbeef);
 const maxWordLength = 12;
 
 const clean = (array: string[]) => {
-  const unique = uniq(array).filter(word => word.length <= maxWordLength).map(word => word.toLowerCase());
+  const unique = uniq(array)
+    .filter((word) => word.length <= maxWordLength)
+    .map((word) => word.toLowerCase());
   unique.sort();
   return unique;
 };
@@ -37,10 +39,12 @@ const parse = (source: string, target: string) => {
     adjectives: select(cleaned.adjectives, 256)
   };
 
-  console.log(JSON.stringify({
-    animals: selected.animals.length,
-    adjectives: selected.adjectives.length
-  }));
+  console.log(
+    JSON.stringify({
+      animals: selected.animals.length,
+      adjectives: selected.adjectives.length
+    })
+  );
 
   fs.writeFileSync(source, JSON.stringify(cleaned, undefined, 2));
   fs.writeFileSync(target, JSON.stringify(selected, undefined, 2));

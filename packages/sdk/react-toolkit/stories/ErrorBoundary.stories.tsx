@@ -47,12 +47,15 @@ const TestApp = () => {
       case ErrorType.Promise:
       case ErrorType.PromiseFatal: {
         const code = trigger === ErrorType.Promise ? 'NON_FATAL' : 'FATAL';
-        setImmediate(async () => await new Promise((resolve, reject) => {
-          t = setTimeout(() => {
-            setTrigger(undefined);
-            reject(new DXOSError(code, 'Promise rejected.'));
-          }, 1000);
-        }));
+        setTimeout(
+          async () =>
+            await new Promise((resolve, reject) => {
+              t = setTimeout(() => {
+                setTrigger(undefined);
+                reject(new DXOSError(code, 'Promise rejected.'));
+              }, 1000);
+            })
+        );
         break;
       }
     }
@@ -68,21 +71,11 @@ const TestApp = () => {
   const TestComponent = () => (
     <Box>
       <Box>
-        <Button onClick={() => setTrigger(ErrorType.Invalid)}>
-          Render
-        </Button>
-        <Button onClick={() => setTrigger(ErrorType.Async)}>
-          Async
-        </Button>
-        <Button onClick={() => setTrigger(ErrorType.AsyncFatal)}>
-          Async Fatal
-        </Button>
-        <Button onClick={() => setTrigger(ErrorType.Promise)}>
-          Promise
-        </Button>
-        <Button onClick={() => setTrigger(ErrorType.PromiseFatal)}>
-          Promise Fatal
-        </Button>
+        <Button onClick={() => setTrigger(ErrorType.Invalid)}>Render</Button>
+        <Button onClick={() => setTrigger(ErrorType.Async)}>Async</Button>
+        <Button onClick={() => setTrigger(ErrorType.AsyncFatal)}>Async Fatal</Button>
+        <Button onClick={() => setTrigger(ErrorType.Promise)}>Promise</Button>
+        <Button onClick={() => setTrigger(ErrorType.PromiseFatal)}>Promise Fatal</Button>
         <Button onClick={resetError} color='secondary'>
           Reset
         </Button>
@@ -91,7 +84,9 @@ const TestApp = () => {
       {errors.length > 0 && (
         <Box>
           {errors.map((error, i) => (
-            <Alert key={i} severity='error'>{String(error)}</Alert>
+            <Alert key={i} severity='error'>
+              {String(error)}
+            </Alert>
           ))}
         </Box>
       )}

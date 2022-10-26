@@ -10,7 +10,9 @@ export const anySubstitutions = {
     encode: (value: WithTypeUrl<{}>, schema: Schema<any>, options: EncodingOptions): any => {
       if (options.preserveAny) {
         if (value['@type'] && value['@type'] !== 'google.protobuf.Any') {
-          throw new Error('Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.');
+          throw new Error(
+            'Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.'
+          );
         }
         return value;
       }
@@ -35,6 +37,7 @@ export const anySubstitutions = {
         value: data
       };
     },
+
     decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
       if (options.preserveAny) {
         return {

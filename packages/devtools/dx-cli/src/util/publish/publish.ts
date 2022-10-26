@@ -27,16 +27,16 @@ const getFolderSize = promisify(folderSize);
 const encodeName = (name: string) => name.replaceAll(':', '/');
 
 export interface PublishParams {
-  config?: ConfigProto
-  module: PackageModule
+  config?: ConfigProto;
+  module: PackageModule;
 }
 
 interface PublishArgs {
-  verbose?: boolean
-  pin?: boolean
-  timeout?: string | number
-  path?: string
-  config?: string
+  verbose?: boolean;
+  pin?: boolean;
+  timeout?: string | number;
+  path?: string;
+  config?: string;
 }
 
 export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { config, module }: PublishParams) => {

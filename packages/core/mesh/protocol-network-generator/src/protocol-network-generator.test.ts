@@ -12,18 +12,17 @@ import { ProtocolNetworkGenerator } from './protocol-network-generator';
 it('basic generator', async function () {
   const generator = new ProtocolNetworkGenerator(async (topic, id) => ({
     id,
-    createStream: ({ initiator }) => new Protocol({
-      discoveryKey: topic,
-      initiator: !!initiator,
-      streamOptions: {
-        live: true
-      }
-    })
-      .init()
-      .stream
+    createStream: ({ initiator }) =>
+      new Protocol({
+        discoveryKey: topic,
+        initiator: !!initiator,
+        streamOptions: {
+          live: true
+        }
+      }).init().stream
   }));
 
-  generator.on('error', err => console.log(err));
+  generator.on('error', (err) => console.log(err));
 
   const network = await generator.grid({
     topic: crypto.randomBytes(32),

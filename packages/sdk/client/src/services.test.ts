@@ -33,7 +33,9 @@ describe.skip('Client Services', function () {
       const invitee = await setupClient();
       afterTest(() => invitee.client.destroy());
 
-      await inviter.services.ProfileService.createProfile({ username: 'test-user' });
+      await inviter.services.ProfileService.createProfile({
+        username: 'test-user'
+      });
       const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
         inviter.services.ProfileService.createInvitation().subscribe(resolve, reject);
       });
@@ -49,15 +51,18 @@ describe.skip('Client Services', function () {
       });
 
       const [done, invited] = latch();
-      invitee.services.ProfileService.subscribeProfile().subscribe(inviteeProfile => {
-        if (inviteeProfile.profile?.username === 'test-user') {
-          invited();
+      invitee.services.ProfileService.subscribeProfile().subscribe(
+        (inviteeProfile) => {
+          if (inviteeProfile.profile?.username === 'test-user') {
+            invited();
+          }
+        },
+        (err) => {
+          if (!(err instanceof RpcClosedError)) {
+            throw err;
+          }
         }
-      }, err => {
-        if (!(err instanceof RpcClosedError)) {
-          throw err;
-        }
-      });
+      );
 
       await done();
     }).timeout(5000);

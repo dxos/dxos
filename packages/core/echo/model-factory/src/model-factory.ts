@@ -20,23 +20,23 @@ import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './ty
 export class ModelFactory {
   readonly registered = new Event<ModelConstructor<any>>();
 
-  private _models = new Map<ModelType, { meta: ModelMeta, constructor: ModelConstructor<any> }>();
+  private _models = new Map<ModelType, { meta: ModelMeta; constructor: ModelConstructor<any> }>();
 
-  hasModel (modelType: ModelType) {
+  hasModel(modelType: ModelType) {
     return this.getModel(modelType) !== undefined;
   }
 
-  getModels () {
+  getModels() {
     return Array.from(this._models.values());
   }
 
-  getModel (modelType: ModelType) {
+  getModel(modelType: ModelType) {
     assert(modelType);
     return this._models.get(modelType);
   }
 
   // TODO(burdon): Remove?
-  getModelMeta (modelType: ModelType): ModelMeta {
+  getModelMeta(modelType: ModelType): ModelMeta {
     if (!this._models.has(modelType)) {
       throw new Error(`Invalid model type: ${modelType}`);
     }
@@ -46,7 +46,7 @@ export class ModelFactory {
   }
 
   // TODO(burdon): Test if already registered.
-  registerModel (constructor: ModelConstructor<any>): this {
+  registerModel(constructor: ModelConstructor<any>): this {
     validateModelClass(constructor);
     const { meta } = constructor;
     this._models.set(meta.type, { meta, constructor });
@@ -62,7 +62,7 @@ export class ModelFactory {
    * @param memberKey IDENTITY key of the member authoring the model's mutations.
    * @param writeStream Stream for outbound messages.
    */
-  createModel<M extends Model> (
+  createModel<M extends Model>(
     modelType: ModelType,
     itemId: ItemID,
     snapshot: ModelSnapshot,

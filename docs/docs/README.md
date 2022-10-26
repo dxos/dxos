@@ -1,8 +1,8 @@
 ---
 home: true
-title: Home
-heroImage: /images/hero.png
-heroImageDark: /images/hero.png
+title: Documentation
+heroImage: /images/dxos.svg
+heroImageDark: /images/dxos-white.svg
 actions:
   - text: Get Started
     link: /guide/quick-start.html
@@ -11,17 +11,17 @@ actions:
     link: /guide/
     type: secondary
 features:
-  - title: 'Local consensus: ECHO'
-    details: State synchronization under real-time multiple writers and latent offline writers between a group of peers.
-  - title: 'Peer networking: MESH'
+  - title: 'ECHO Database'
+    details: Peer to peer state synchronization for real time collaborative and offline first applications.
+  - title: 'HALO Identity'
+    details: Decentralized, private, secure, convenient identity API.
+  - title: 'KUBE Infrastructure'
+    details: Host your decentralized applications.
+  - title: 'MESH Peer Networking'
     details: Peer discovery, NAT traversal.
-  - title: 'Infrastructure: KUBE'
-    details: Deploy and host your code making it available to the network.
-  - title: 'Identity: HALO'
-    details: Decentralized, private, secure, convenient identity.
+  - title: 'DX CLI'
+    details: Crisp PWA project templates, single-line deployment, peer to peer tooling.
+  - title: 'Component pack'
+    details: React UI components for real-time collaborative data surfaces.
 footer: MIT Licensed | Copyright © DXOS.org
 ---
-
-::: showcase
-Test
-:::

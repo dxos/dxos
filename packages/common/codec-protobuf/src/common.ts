@@ -9,19 +9,19 @@ export interface EncodingOptions {
    * If enabled, google.protobuf.Any will not be recursively decoded.
    * The field type will be `{ '@type': 'google.protobuf.Any' } & Any`.
    */
-  preserveAny?: boolean
+  preserveAny?: boolean;
 }
 
 export interface SubstitutionDescriptor<T> {
-  encode: (value: T, schema: Schema<any>, options: EncodingOptions) => any
-  decode: (value: any, schema: Schema<any>, options: EncodingOptions) => T
+  encode: (value: T, schema: Schema<any>, options: EncodingOptions) => any;
+  decode: (value: any, schema: Schema<any>, options: EncodingOptions) => T;
 }
 
-export type Substitutions = Record<string, SubstitutionDescriptor<any>>
+export type Substitutions = Record<string, SubstitutionDescriptor<any>>;
 
 export interface Any {
-  type_url: string
-  value: Uint8Array
+  type_url: string;
+  value: Uint8Array;
 }
 
 // eslint-disable-next-line camelcase
@@ -34,5 +34,5 @@ export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name]
  * Useful for typing 'google.protobuf.Any' messages.
  */
 export type TypedProtoMessage<TYPES extends {}> = {
-  [K in keyof TYPES]: TYPES[K] & { '@type': K }
+  [K in keyof TYPES]: TYPES[K] & { '@type': K };
 }[keyof TYPES];

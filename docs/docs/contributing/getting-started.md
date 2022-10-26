@@ -1,27 +1,85 @@
-## Nx Monorepos
+# DXOS Monorepo
 
-The project is developed using [Nx](https://nx.dev/) and NodeJS version `16.14.0`.
+## Getting Started
 
-### Toolchain
+To get started you will need:
 
-Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
+- A Linux or Mac workstation with plenty of RAM (min. 16G).
+- Basic developer tools and shell environments (e.g., `zsh`, `git`).
+- Additional tools listed below.
+- An IDE such as Webstorm or VSCode.
+
+The primary developer toolchain consists of the following tools, 
+plus a suite of customs tools and components invoked via Nx.
+
+| Tool    | Description                           | Link                                                    |
+|---------|---------------------------------------|---------------------------------------------------------|
+| `npm`   | NPM package manager                   | https://docs.npmjs.com/cli/v7/configuring-npm/install   |
+| `n`     | NodeJS version manager                | https://www.npmjs.com/package/n                         |
+| `pnpm`  | NPM package manager                   | https://pnpm.io                                         |
+| `nx`    | Nx monorepo tool (invoked via `pnpm`) | https://nx.dev/getting-started/intro                    |
+
+Install `npm` and various other useful tools.
 
 ```bash
-brew upgrade node-build
-brew upgrade nodenv
+# OS/X
+brew install npm
+brew install coreutils
+brew install jq
 
-nodenv install 16.14.0
+# Linux
+sudo apt-get install npm
+sudo apt-get install coreutils 
+sudo apt-get install jq
 ```
 
-Install pnpm and its dependencies:
+Install `n` and `pnpm`:
 
 ```bash
-npm install -g pnpm@7.9.0
-nodenv rehash
+npm i -g n
+npm i -g pnpm@7.9.0
+```
+
+On Ubuntu or other linux systems, the following dependencies may be needed for pnpm install to succeed:
+
+```bash
+# From https://github.com/octalmage/robotjs/#building
+sudo apt-get install libxtst-dev libpng++-dev
+```
+
+To prevent the need for `sudo` when running tools it is recommended to `chown` the relevant bin folders:
+
+```bash
+sudo mkdir -p /usr/local/n
+sudo chown -R $(whoami) /usr/local/n
+
+# Recommended
+sudo mkdir -p /usr/local/bin /usr/local/lib /usr/local/include /usr/local/share
+sudo chown -R $(whoami) /usr/local/bin /usr/local/lib /usr/local/include /usr/local/share
+```
+
+Install the required `node` version (from the `.node-version` file in the root of the repo):
+
+```bash
+n i $(cat .node-version)
+node --version
+```
+
+## Tools aliases
+
+```bash
 alias px="pnpm -w nx"
 ```
 
-### Building
+## Custom aliases
+
+Custom shell aliases can be included in your shell config:
+
+```bash
+source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
+```
+
+## Using NX in the repo
 
 To Install dependencies from the root directory:
 
@@ -38,7 +96,7 @@ pnpm nx run-many --target=build
 To check all tests pass (this is run by CI):
 
 ```bash
-pnpm nx run-many --target=check
+pnpm nx run-many --target=test
 ```
 
 To build an individual package (optionally with the `watch` flag):
@@ -47,19 +105,25 @@ To build an individual package (optionally with the `watch` flag):
 pnpm nx build <target> --watch
 ```
 
-### Adding new dependencies
+To fix all lint errors (whole repo, slow)
+```bash
+pnpm nx run-many --target=lint --fix
+```
+To fix lint errors only within (you can configure HEAD and BASE, by default it's your branch against main)
+```bash
+pnpm nx affected --target=lint --fix 
+```
+For specific packages:
+```bash
+pnpm nx run-many --projects=docs,config --target=lint --fix
+```
+
+## Adding new dependencies
 
 Currently you must manually edit the individual `package.json` files.
 Once the required changes have been made, re-run `pnpm install` from the project root.
 
-### Running scripts in individual packages
-
-```
-cd package/directory
-pnpm <script name>
-```
-
-### Adding a new package to the monorepo
+## Adding a new package to the monorepo
 
 When merging monorepos it's best practice to add packages one by one, starting from the ones lowest in the dependency chain. And ensuring that the project builds after each package added.
 
@@ -70,7 +134,7 @@ When merging monorepos it's best practice to add packages one by one, starting f
 5. Set the build script to `"build": "toolchain build"`. Look for examples in other packages.
 6. Make sure that package builds.
 
-#### Configure package.json
+## Configure package.json
 
 ```
 "deps": {
@@ -78,7 +142,7 @@ When merging monorepos it's best practice to add packages one by one, starting f
 }
 ```
 
-#### Configure TSC
+## Configure TSC
 
 Add TS config to support browser globals.
 
@@ -92,7 +156,7 @@ Add TS config to support browser globals.
   "types": ["mocha", "node"],
 ```
 
-### Upgrading packages across the monorepo
+## Upgrading packages across the monorepo
 To upgrade all `dxos` packages you can trigger [Upgrade DXOS dependencies](https://github.com/dxos/dxos/actions/workflows/upgrade-deps.yml) job.
 
 If you want to upgrade some specific package or all packages that match specific regexp, you can run
@@ -102,11 +166,11 @@ ncu --deep -u '<PACKAGE>'
 ncu --deep -u '@storybook/*'
 ```
 
-### Release process
+## Release process
 
 The Release process is described [here](https://github.com/dxos/eng/wiki/Build-System-~-Releases).
 
-### Updating Typescript Project References
+## Updating Typescript Project References
 
 Trigger [Standardize configs](https://github.com/dxos/dxos/actions/workflows/sort-deps.yml) job.
 

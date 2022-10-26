@@ -21,7 +21,7 @@ it.skip('generator', async function () {
   const result = party.database.select({ type: OBJECT_PERSON }).exec();
   expect(result.entities).toHaveLength(3);
 
-  const names = result.entities.map(item => item.model.get('name'));
+  const names = result.entities.map((item) => item.model.get('name'));
   expect(names).toHaveLength(3);
 
   await echo.close();
@@ -44,7 +44,9 @@ it.skip('filter', async function () {
       }
     }
   };
-  const matcher = new Matcher({ getter: (item: any, key: string) => item.model.get(key) });
+  const matcher = new Matcher({
+    getter: (item: any, key: string) => item.model.get(key)
+  });
   const queryResult = party.database.select({ type: OBJECT_PERSON }).filter(matcher.getFilter(query)).exec();
   expect(queryResult.entities).toHaveLength(1);
 

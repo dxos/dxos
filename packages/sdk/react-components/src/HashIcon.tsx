@@ -68,15 +68,15 @@ const colorDepth = 500;
 type Size = 'small' | 'medium' | 'large';
 
 const sizes = {
-  'small': {
+  small: {
     width: 16,
     height: 16
   },
-  'medium': {
+  medium: {
     width: 24,
     height: 24
   },
-  'large': {
+  large: {
     width: 32,
     height: 32
   }
@@ -85,16 +85,7 @@ const sizes = {
 /**
  * A stable generic icon based on a hash.
  */
-export const HashIcon = ({
-  value,
-  sx,
-  size = 'medium',
-  ...props
-}: {
-  value: string
-  sx?: any
-  size?: Size
-}) => {
+export const HashIcon = ({ value, sx, size = 'medium', ...props }: { value: string; sx?: any; size?: Size }) => {
   const icon = hashIcons[hash(value) % hashIcons.length];
   const color = hashColors[hash(value) % hashColors.length];
 

@@ -13,7 +13,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { wrtc } from './wrtc';
+import { wrtc } from './webrtc';
 
 interface WebRTCTransportParams {
   initiator: boolean
@@ -94,19 +94,19 @@ export class WebRTCTransport implements Transport {
     return this.params.sessionId;
   }
 
-  async signal (signal: Signal) {
+  async signal(signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));
   }
 
-  async close () {
+  async close() {
     await this._disconnectStreams();
     this._peer!.destroy();
     log('Closed.');
   }
 
-  private async _disconnectStreams () {
+  private async _disconnectStreams() {
     // TODO(rzadp): Find a way of unpiping this?
     this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
   }

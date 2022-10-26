@@ -2,6 +2,17 @@
   "sourceRoot": "packages/devtools/dx-cli/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/devtools/dx-cli/dist",
+        "tsConfig": "packages/devtools/dx-cli/tsconfig.json",
+        "main": "packages/devtools/dx-cli/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -9,6 +20,25 @@
         "lintFilePatterns": [
           "packages/devtools/dx-cli/**/*.{ts,js}"
         ]
+      }
+    },
+    "prerelease": {
+      "executor": "nx:run-script",
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "SENTRY_DSN"
+        },
+        {
+          "env": "SEGMENT_API_KEY"
+        }
+      ],
+      "outputs": [
+        "packages/devtools/dx-cli/dist/src/util/telemetry.js"
+      ],
+      "options": {
+        "script": "api-keys"
       }
     },
     "test": {

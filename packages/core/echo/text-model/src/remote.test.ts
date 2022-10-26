@@ -17,7 +17,8 @@ describe('With remote database', function () {
     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
 
     const text = await frontend.createItem({
-      model: TextModel, type: 'example:type/text'
+      model: TextModel,
+      type: 'example:type/text'
     });
     await text.model.insert('Hello world', 0);
 

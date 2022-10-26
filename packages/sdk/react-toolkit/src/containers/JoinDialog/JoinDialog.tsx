@@ -22,18 +22,18 @@ enum PartyJoinState {
 }
 
 type JoinOptions = {
-  invitation: InvitationDescriptor
-  secretProvider: SecretProvider
-}
+  invitation: InvitationDescriptor;
+  secretProvider: SecretProvider;
+};
 
 export interface JoinDialogProps {
-  open: boolean
-  title: string
-  invitationCode?: string
-  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>
-  onClose?: () => void
-  closeOnSuccess?: boolean
-  modal?: boolean
+  open: boolean;
+  title: string;
+  invitationCode?: string;
+  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>;
+  onClose?: () => void;
+  closeOnSuccess?: boolean;
+  modal?: boolean;
 }
 
 /**
@@ -99,7 +99,7 @@ export const JoinDialog = ({
     } catch (err: any) {
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
-        const messages: {[index: string]: string} = {
+        const messages: { [index: string]: string } = {
           ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed. Please try again.',
           ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the party.'
         };
@@ -130,7 +130,7 @@ export const JoinDialog = ({
     // TODO(burdon): The paste event only seems to be called the first time.
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/paste_event
     const pasteListener = (event: any) => {
-      const invitationCode = (event.clipboardData).getData('text');
+      const invitationCode = event.clipboardData.getData('text');
       setInvitationCode(invitationCode);
       void handleProcessInvitation(invitationCode);
       event.preventDefault();
@@ -166,32 +166,22 @@ export const JoinDialog = ({
 
     const authenticateContent = (
       <>
-        <Typography variant='body1'>
-          Enter the passcode.
-        </Typography>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginTop: 3
-        }}
+        <Typography variant='body1'>Enter the passcode.</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 3
+          }}
         >
-          <Passcode
-            length={4}
-            onSubmit={value => handleAuthenticate(value)}
-          />
-          <HashIcon
-            sx={{ marginLeft: 2 }}
-            size='large'
-            value={invitationCodeFromUrl(invitationCode)}
-          />
+          <Passcode length={4} onSubmit={(value) => handleAuthenticate(value)} />
+          <HashIcon sx={{ marginLeft: 2 }} size='large' value={invitationCodeFromUrl(invitationCode)} />
         </Box>
       </>
     );
 
-    const authenticateActions = (
-      <Button onClick={handleCancel}>Cancel</Button>
-    );
+    const authenticateActions = <Button onClick={handleCancel}>Cancel</Button>;
 
     const errorActions = (
       <>
@@ -235,12 +225,5 @@ export const JoinDialog = ({
 
   const dialogProps = getDialogProps(state);
 
-  return (
-    <Dialog
-      maxWidth='xs'
-      modal={modal}
-      open={open}
-      {...dialogProps}
-    />
-  );
+  return <Dialog maxWidth='xs' modal={modal} open={open} {...dialogProps} />;
 };

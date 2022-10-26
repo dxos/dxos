@@ -12,25 +12,12 @@ import { validateKey } from './util';
 
 describe('ObjectModel', function () {
   it('checks valid keys', function () {
-    const valid = [
-      'x',
-      'foo',
-      'foo_bar',
-      'foo.bar'
-    ];
+    const valid = ['x', 'foo', 'foo_bar', 'foo.bar'];
     for (const key of valid) {
       expect(validateKey(key)).toEqual(key);
     }
 
-    const invalid = [
-      '',
-      ' ',
-      '@',
-      'foo bar',
-      '.foo',
-      'foo.',
-      'foo..bar'
-    ];
+    const invalid = ['', ' ', '@', 'foo bar', '.foo', 'foo.', 'foo..bar'];
     for (const key of invalid) {
       expect(() => validateKey(key)).toThrow();
     }
@@ -70,11 +57,7 @@ describe('ObjectModel', function () {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
-    await model
-      .builder()
-      .set('foo', 100)
-      .set('bar', true)
-      .commit();
+    await model.builder().set('foo', 100).set('bar', true).commit();
 
     expect(model.get('foo')).toEqual(100);
     expect(model.get('bar')).toEqual(true);

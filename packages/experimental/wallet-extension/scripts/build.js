@@ -34,20 +34,18 @@ void (async () => {
       outdir: distDir,
       write: true,
       bundle: true,
-      plugins: [
-        NodeModulesPlugin(),
-        NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin()
-      ],
-      watch: process.argv.includes('--watch') ? {
-        onRebuild: ((error) => {
-          if (error) {
-            console.error(chalk.red('\nBuild failed.'));
-          } else {
-            console.log(chalk.green('\nRebuild finished.'));
+      plugins: [NodeModulesPlugin(), NodeGlobalsPolyfillPlugin(), FixMemdownPlugin()],
+      watch: process.argv.includes('--watch')
+        ? {
+            onRebuild: (error) => {
+              if (error) {
+                console.error(chalk.red('\nBuild failed.'));
+              } else {
+                console.log(chalk.green('\nRebuild finished.'));
+              }
+            }
           }
-        })
-      } : false
+        : false
     });
   } catch (err) {
     console.error(err); // \/ Turns out, they're not always printed.

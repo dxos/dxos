@@ -7,7 +7,7 @@ import debug from 'debug';
 import { Trigger } from '@dxos/async';
 import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
@@ -17,45 +17,48 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
+// TODO(burdon): Remove?
+class MockFeedWriter<T extends {}> implements FeedWriter<T> {
+  constructor(private readonly _writer: (data: T) => Promise<WriteReceipt>) {}
+
+  async write(data: T): Promise<WriteReceipt> {
+    return this._writer(data);
+  }
+}
+
+// TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex());
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
 
   private readonly _replicationFinished = new Trigger();
 
   private _replicating = true;
 
-  constructor (
-    private readonly _modelFactory: ModelFactory,
-    private readonly _modelConstructor: ModelConstructor<M>
-  ) {
+  constructor(private readonly _modelFactory: ModelFactory, private readonly _modelConstructor: ModelConstructor<M>) {
     this._replicationFinished.wake();
   }
 
-  get replicating () {
+  get replicating() {
     return this._replicating;
   }
 
-  configureReplication (value: boolean) {
+  configureReplication(value: boolean) {
     this._replicating = value;
     this._replicate();
   }
 
-  async waitForReplication () {
+  async waitForReplication() {
     log('Waiting for replication...');
     await this._replicationFinished.wait();
     log('Replications started.');
   }
 
-  createPeer (): TestPeer<M> {
+  createPeer(): TestPeer<M> {
     const key = PublicKey.random();
-
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const writer: FeedWriter<Uint8Array> = {
-      write: async (mutation) => {
-        return this._writeMessage(key, mutation);
-      }
-    };
+    const writer = new MockFeedWriter<Uint8Array>((mutation: Uint8Array) => {
+      return Promise.resolve(this._writeMessage(key, mutation));
+    });
 
     const id = PublicKey.random().toHex();
     const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
@@ -65,7 +68,7 @@ export class TestRig<M extends Model<any>> {
     return peer;
   }
 
-  private _writeMessage (peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
+  _writeMessage(peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
     const peer = this._peers.get(peerKey)!;
     const seq = peer.mutations.length;
     const timeframe = peer.timeframe;
@@ -84,11 +87,11 @@ export class TestRig<M extends Model<any>> {
     peer.mutations.push(message);
 
     // Process this mutation locally immediately.
-    setImmediate(() => peer.processMutation(message));
+    setTimeout(() => peer.processMutation(message));
 
     // Process the message later, after resolving mutation-write promise. Doing otherwise breaks the model.
     if (this._replicating) {
-      setImmediate(() => this._replicate());
+      setTimeout(() => this._replicate());
     }
 
     this._replicationFinished.reset();
@@ -100,7 +103,7 @@ export class TestRig<M extends Model<any>> {
     };
   }
 
-  private _replicate () {
+  private _replicate() {
     for (const peer of this._peers.values()) {
       for (const [feed, { mutations }] of this._peers) {
         if (peer.key.equals(feed)) {
@@ -128,18 +131,17 @@ export class TestPeer<M extends Model> {
 
   public mutations: ModelMessage<Uint8Array>[] = [];
 
-  constructor (
-    public readonly stateManager: StateManager<M>,
-    public readonly key: PublicKey
-  ) {}
+  constructor(public readonly stateManager: StateManager<M>, public readonly key: PublicKey) {}
 
-  get model (): M {
+  get model(): M {
     return this.stateManager.model;
   }
 
-  processMutation (message: ModelMessage<Uint8Array>) {
+  processMutation(message: ModelMessage<Uint8Array>) {
     this.stateManager.processMessage(message.meta, message.mutation);
     this.timeframe = Timeframe.merge(
-      this.timeframe, new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]]));
+      this.timeframe,
+      new Timeframe([[PublicKey.from(message.meta.feedKey), message.meta.seq]])
+    );
   }
 }

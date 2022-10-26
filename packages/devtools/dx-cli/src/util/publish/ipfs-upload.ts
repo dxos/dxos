@@ -9,9 +9,9 @@ import { CID, create, globSource } from 'ipfs-http-client';
 import { ConfigProto } from '@dxos/config';
 
 interface UploadOptions {
-  timeout: string | number
-  progress?: (bytes: number, path?: string) => void
-  pin?: boolean
+  timeout: string | number;
+  progress?: (bytes: number, path?: string) => void;
+  pin?: boolean;
 }
 
 export const uploadToIPFS = async (path: string, config?: ConfigProto, options?: UploadOptions): Promise<CID> => {
@@ -30,7 +30,11 @@ export const uploadToIPFS = async (path: string, config?: ConfigProto, options?:
   }
   if (fs.lstatSync(path).isDirectory()) {
     const files = [];
-    for await (const file of ipfsClient.addAll(globSource(path, '**/*'), { progress, pin, wrapWithDirectory: true })) {
+    for await (const file of ipfsClient.addAll(globSource(path, '**/*'), {
+      progress,
+      pin,
+      wrapWithDirectory: true
+    })) {
       files.push(file);
     }
     return files[files.length - 1].cid;

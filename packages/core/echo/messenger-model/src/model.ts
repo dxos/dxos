@@ -9,20 +9,20 @@ import { Message } from '@dxos/protocols/proto/dxos/echo/model/messenger';
 class MessengerModelStateMachine implements StateMachine<Message[], Message, {}> {
   private readonly _messages: Message[] = [];
 
-  getState (): Message[] {
+  getState(): Message[] {
     return this._messages;
   }
 
-  process (mutation: Message, meta: MutationProcessMeta): void {
+  process(mutation: Message, meta: MutationProcessMeta): void {
     this._messages.push(mutation);
     this._messages.sort((msgA, msgB) => parseInt(msgA.timestamp) - parseInt(msgB.timestamp));
   }
 
-  snapshot (): {} {
+  snapshot(): {} {
     throw new Error('Method not implemented.');
   }
 
-  reset (snapshot: {}): void {
+  reset(snapshot: {}): void {
     throw new Error('Method not implemented.');
   }
 }
@@ -37,11 +37,11 @@ export class MessengerModel extends Model<Message[], Message> {
     mutationCodec: schema.getCodecForType('dxos.echo.model.messenger.Message')
   };
 
-  get messages (): Message[] {
+  get messages(): Message[] {
     return this._getState();
   }
 
-  async sendMessage (message: Pick<Message, 'text' | 'sender'>) {
+  async sendMessage(message: Pick<Message, 'text' | 'sender'>) {
     const receipt = await this.write({
       text: message.text,
       timestamp: Date.now().toString(),

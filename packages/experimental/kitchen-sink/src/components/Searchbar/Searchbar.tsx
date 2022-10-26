@@ -4,15 +4,12 @@
 
 import React, { ChangeEvent, KeyboardEvent, useRef, useState } from 'react';
 
-import {
-  Clear as ClearIcon,
-  Search as SearchIcon
-} from '@mui/icons-material';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 
 interface SearchBarProps {
-  onChange?: (value: string) => void
-  delay?: number
+  onChange?: (value: string) => void;
+  delay?: number;
 }
 
 /**
@@ -21,10 +18,7 @@ interface SearchBarProps {
  * @param delay
  * @constructor
  */
-export const Searchbar = ({
-  onChange = console.debug,
-  delay = 100
-}: SearchBarProps) => {
+export const Searchbar = ({ onChange = console.debug, delay = 100 }: SearchBarProps) => {
   const [text, setText] = useState('');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -73,27 +67,20 @@ export const Searchbar = ({
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       InputProps={{
-        startAdornment:
+        startAdornment: (
           <InputAdornment position='end'>
-            <IconButton
-              sx={{ marginRight: 1 }}
-              size='small'
-              onClick={handleSearch}
-              onMouseDown={handleSearch}
-            >
+            <IconButton sx={{ marginRight: 1 }} size='small' onClick={handleSearch} onMouseDown={handleSearch}>
               <SearchIcon />
             </IconButton>
-          </InputAdornment>,
-        endAdornment:
+          </InputAdornment>
+        ),
+        endAdornment: (
           <InputAdornment position='end'>
-            <IconButton
-              size='small'
-              onClick={handleCancel}
-              onMouseDown={handleCancel}
-            >
+            <IconButton size='small' onClick={handleCancel} onMouseDown={handleCancel}>
               <ClearIcon />
             </IconButton>
           </InputAdornment>
+        )
       }}
       sx={{
         backgroundColor: 'white'

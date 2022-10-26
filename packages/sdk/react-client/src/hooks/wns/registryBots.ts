@@ -11,14 +11,14 @@ import { QueryRecord, WRN_TYPE_BOT } from './types';
 const log = debug('dxos:react-client');
 
 interface RegistryBotRecord {
-  version: string
-  name: string
-  names: string[]
-  keywords: string[]
+  version: string;
+  name: string;
+  names: string[];
+  keywords: string[];
 }
 
 export interface UseRegistryBotsProps {
-  sortByKeywords?: string[]
+  sortByKeywords?: string[];
 }
 
 /**
@@ -47,20 +47,23 @@ export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
         log(e);
         return;
       }
-      const botRecords: RegistryBotRecord[] = botsResult.map(({ attributes: { version, name, keywords = [] }, names }) => ({
-        version,
-        name,
-        names,
-        keywords
-      }));
+      const botRecords: RegistryBotRecord[] = botsResult.map(
+        ({ attributes: { version, name, keywords = [] }, names }) => ({
+          version,
+          name,
+          names,
+          keywords
+        })
+      );
 
       if (sortByKeywords === undefined) {
         setRegistryBots(botRecords);
       } else {
-        const filterByKeywords = (bot: RegistryBotRecord) => bot.keywords.some(botKeyword => sortByKeywords.includes(botKeyword));
+        const filterByKeywords = (bot: RegistryBotRecord) =>
+          bot.keywords.some((botKeyword) => sortByKeywords.includes(botKeyword));
         const sortedBotRecords = [
-          ...botRecords.filter(bot => filterByKeywords(bot)),
-          ...botRecords.filter(bot => !filterByKeywords(bot))
+          ...botRecords.filter((bot) => filterByKeywords(bot)),
+          ...botRecords.filter((bot) => !filterByKeywords(bot))
         ];
         setRegistryBots(sortedBotRecords);
       }

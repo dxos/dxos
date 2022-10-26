@@ -17,7 +17,6 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/config',
       '@dxos/react-client',
-      '@dxos/react-client-testing',
       '@dxos/react-components',
       '@dxos/react-toolkit'
     ]
@@ -32,7 +31,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

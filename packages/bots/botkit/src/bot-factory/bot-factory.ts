@@ -9,7 +9,13 @@ import { join } from 'path';
 import { Config } from '@dxos/config';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '@dxos/protocols/proto/dxos/bot';
+import {
+  Bot,
+  BotFactoryService,
+  GetLogsRequest,
+  SendCommandRequest,
+  SpawnBotRequest
+} from '@dxos/protocols/proto/dxos/bot';
 
 import { BotContainer } from '../bot-container';
 import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config';
@@ -21,11 +27,11 @@ import type { ContentLoader } from './ipfs-content-loader';
 const log = debug('dxos:botkit:bot-factory');
 
 export interface BotFactoryOptions {
-  botContainer: BotContainer
-  config: Config
-  contentResolver?: ContentResolver
-  contentLoader?: ContentLoader
-  botSnapshotStorage?: BotSnapshotStorage
+  botContainer: BotContainer;
+  config: Config;
+  contentResolver?: ContentResolver;
+  contentLoader?: ContentLoader;
+  botSnapshotStorage?: BotSnapshotStorage;
 }
 
 /**
@@ -41,7 +47,7 @@ export class BotFactory implements BotFactoryService {
 
   private readonly _bots = new Map<string, BotHandle>();
 
-  constructor (options: BotFactoryOptions) {
+  constructor(options: BotFactoryOptions) {
     this._botContainer = options.botContainer;
     this._config = options.config;
     this._contentLoader = options.contentLoader;
@@ -77,40 +83,42 @@ export class BotFactory implements BotFactoryService {
     });
   }
 
-  async init () {
+  async init() {
     if (this._persistent) {
       const botsToRestore = await this._botSnapshotStorage?.listBackupedBot();
-      await Promise.all(botsToRestore!.map(async botId => {
-        const restoreInfo = await this._botSnapshotStorage?.restoreBot(botId);
-        if (restoreInfo) {
-          const { bot, localPath } = restoreInfo;
-          log(`Restoring bot: ${botId}`);
-          const handle = new BotHandle(botId, join(BOT_OUT_DIR, botId), this._botContainer, {
-            config: this._config,
-            packageSpecifier: bot.packageSpecifier,
-            // TODO(egorgripasov): Restore properly from snapshot storage.
-            partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
-          });
-          handle.startTimestamp = new Date();
-          handle.localPath = localPath;
-          await handle.initializeDirectories();
-          this._bots.set(botId, handle);
-          await handle.forceStart();
-        }
-      }));
+      await Promise.all(
+        botsToRestore!.map(async (botId) => {
+          const restoreInfo = await this._botSnapshotStorage?.restoreBot(botId);
+          if (restoreInfo) {
+            const { bot, localPath } = restoreInfo;
+            log(`Restoring bot: ${botId}`);
+            const handle = new BotHandle(botId, join(BOT_OUT_DIR, botId), this._botContainer, {
+              config: this._config,
+              packageSpecifier: bot.packageSpecifier,
+              // TODO(egorgripasov): Restore properly from snapshot storage.
+              partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
+            });
+            handle.startTimestamp = new Date();
+            handle.localPath = localPath;
+            await handle.initializeDirectories();
+            this._bots.set(botId, handle);
+            await handle.forceStart();
+          }
+        })
+      );
     } else {
       await this._botSnapshotStorage?.reset();
     }
   }
 
-  async getBots () {
+  async getBots() {
     log('List bots request');
     return {
-      bots: Array.from(this._bots.values()).map(handle => handle.bot)
+      bots: Array.from(this._bots.values()).map((handle) => handle.bot)
     };
   }
 
-  async spawnBot (request: SpawnBotRequest) {
+  async spawnBot(request: SpawnBotRequest) {
     const id = PublicKey.stringify(randomBytes(6));
     try {
       log(`[${id}] Resolving bot package: ${JSON.stringify(request.package)}`);
@@ -121,16 +129,11 @@ export class BotFactory implements BotFactoryService {
         request.package = await this._contentResolver.resolve({ name });
       }
 
-      const handle = new BotHandle(
-        id,
-        join(BOT_OUT_DIR, id),
-        this._botContainer,
-        {
-          config: this._config,
-          packageSpecifier,
-          partyKey: request.partyKey
-        }
-      );
+      const handle = new BotHandle(id, join(BOT_OUT_DIR, id), this._botContainer, {
+        config: this._config,
+        packageSpecifier,
+        partyKey: request.partyKey
+      });
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();
       const contentDirectory = handle.getContentPath();
@@ -157,7 +160,7 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async start (request: Bot) {
+  async start(request: Bot) {
     assert(request.id);
     const id = request.id;
     try {
@@ -171,7 +174,7 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async stop (request: Bot) {
+  async stop(request: Bot) {
     assert(request.id);
     const id = request.id;
     try {
@@ -185,7 +188,7 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async remove (request: Bot) {
+  async remove(request: Bot) {
     assert(request.id);
     const id = request.id;
     try {
@@ -199,24 +202,24 @@ export class BotFactory implements BotFactoryService {
     }
   }
 
-  async sendCommand (request: SendCommandRequest) {
+  async sendCommand(request: SendCommandRequest) {
     assert(request.botId);
     const bot = this._getBot(request.botId);
     const respone = await bot.rpc.command(request);
     return respone;
   }
 
-  async removeAll () {
-    await Promise.all(Array.from(this._bots.values()).map(bot => this.remove(bot.bot)));
+  async removeAll() {
+    await Promise.all(Array.from(this._bots.values()).map((bot) => this.remove(bot.bot)));
   }
 
-  getLogs (request: GetLogsRequest) {
+  getLogs(request: GetLogsRequest) {
     assert(request.botId);
     const bot = this._getBot(request.botId);
     return bot.getLogsStream();
   }
 
-  private _getBot (botId: string) {
+  private _getBot(botId: string) {
     const bot = this._bots.get(botId);
     assert(bot, 'Bot not found');
     return bot;

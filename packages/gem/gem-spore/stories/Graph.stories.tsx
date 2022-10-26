@@ -35,11 +35,7 @@ export const Primary = () => {
           <Markers />
           <Grid axis />
           <Zoom extent={[1 / 2, 2]}>
-            <Graph
-              model={model}
-              drag
-              arrows
-            />
+            <Graph model={model} drag arrows />
           </Zoom>
         </SVG>
       </SVGContextProvider>
@@ -50,25 +46,29 @@ export const Primary = () => {
 export const Secondary = () => {
   const model = useMemo(() => new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))), []);
   const context = createSvgContext();
-  const projector = useMemo(() => new GraphForceProjector(context, {
-    guides: true,
-    forces: {
-      manyBody: {
-        strength: -80
-      },
-      link: {
-        distance: 40,
-        iterations: 5
-      },
-      radial: {
-        radius: 100,
-        strength: 0.02
-      }
-    },
-    attributes: {
-      radius: (node, count) => 6 + Math.log(count + 1) * 4
-    }
-  }), []);
+  const projector = useMemo(
+    () =>
+      new GraphForceProjector(context, {
+        guides: true,
+        forces: {
+          manyBody: {
+            strength: -80
+          },
+          link: {
+            distance: 40,
+            iterations: 5
+          },
+          radial: {
+            radius: 100,
+            strength: 0.02
+          }
+        },
+        attributes: {
+          radius: (node, count) => 6 + Math.log(count + 1) * 4
+        }
+      }),
+    []
+  );
 
   return (
     <FullScreen>
@@ -77,12 +77,7 @@ export const Secondary = () => {
           <Markers />
           <Grid axis />
           <Zoom extent={[1 / 2, 2]}>
-            <Graph
-              model={model}
-              drag
-              arrows
-              projector={projector}
-            />
+            <Graph model={model} drag arrows projector={projector} />
           </Zoom>
         </SVG>
       </SVGContextProvider>

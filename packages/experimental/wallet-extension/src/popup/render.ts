@@ -14,8 +14,7 @@ export const render = (app: JSX.Element) => {
   } // Check if `node` polyfills are correct.
 
   // Render application in DOM.
-  createRoot(document.getElementById('app')!)
-    .render(app);
+  createRoot(document.getElementById('app')!).render(app);
 
   // Hot module replacement.
   if (inDev() && module.hot) {

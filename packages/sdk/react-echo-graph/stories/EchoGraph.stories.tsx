@@ -10,8 +10,14 @@ import { ItemID, PARTY_ITEM_TYPE } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 // TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
 import {
-  ProfileInitializer, SelectionEditor, defaultSelectionText, execSelection, itemAdapter,
-  typeMeta, usePartyBuilder, useTestParty
+  ProfileInitializer,
+  SelectionEditor,
+  defaultSelectionText,
+  execSelection,
+  itemAdapter,
+  typeMeta,
+  usePartyBuilder,
+  useTestParty
 } from '@dxos/react-client-testing';
 import { BoxContainer, FullScreen } from '@dxos/react-components';
 
@@ -23,20 +29,17 @@ export default {
 
 const graphStyles = css`
   ${Object.keys(typeMeta).map(
-    type => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[100]}; } }`)}
+    (type) => `g.${type.replace(/\W/g, '_')} { circle { fill: ${typeMeta[type].color[100]}; } }`
+  )}
 `;
 
 const App = () => {
   const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE]);
+  const model = useGraphModel(party, [
+    (item) => Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE
+  ]);
 
-  return (
-    <EchoGraph
-      model={model}
-      itemAdapter={itemAdapter}
-      styles={graphStyles}
-    />
-  );
+  return <EchoGraph model={model} itemAdapter={itemAdapter} styles={graphStyles} />;
 };
 
 const AppWithEditor = () => {
@@ -52,7 +55,7 @@ const AppWithEditor = () => {
     const selection = execSelection(party, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
-    result?.entities.forEach(item => selected.add(item.id));
+    result?.entities.forEach((item) => selected.add(item.id));
     setSelected(selected);
     model.refresh();
   };
@@ -64,23 +67,14 @@ const AppWithEditor = () => {
   return (
     <BoxContainer expand column>
       <Box sx={{ display: 'flex' }}>
-        <SelectionEditor
-          initialValue={defaultSelectionText}
-          onChange={handleSelection}
-          delay={100}
-        />
+        <SelectionEditor initialValue={defaultSelectionText} onChange={handleSelection} delay={100} />
         <Box>
           <Button onClick={handleGenerate}>Generate</Button>
         </Box>
       </Box>
 
       <BoxContainer expand>
-        <EchoGraph
-          model={model}
-          selected={selected}
-          itemAdapter={itemAdapter}
-          styles={graphStyles}
-        />
+        <EchoGraph model={model} selected={selected} itemAdapter={itemAdapter} styles={graphStyles} />
       </BoxContainer>
     </BoxContainer>
   );

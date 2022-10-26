@@ -11,12 +11,12 @@ import { SwarmController, Topology } from './topology';
 export class FullyConnectedTopology implements Topology {
   private _controller?: SwarmController;
 
-  init (controller: SwarmController): void {
+  init(controller: SwarmController): void {
     assert(!this._controller, 'Already initialized');
     this._controller = controller;
   }
 
-  update (): void {
+  update(): void {
     assert(this._controller, 'Not initialized');
     const { candidates: discovered } = this._controller.getState();
     for (const peer of discovered) {
@@ -24,15 +24,15 @@ export class FullyConnectedTopology implements Topology {
     }
   }
 
-  async onOffer (peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: PublicKey): Promise<boolean> {
     return true;
   }
 
-  async destroy (): Promise<void> {
+  async destroy(): Promise<void> {
     // Nothing to do.
   }
 
-  toString () {
+  toString() {
     return 'FullyConnectedTopology';
   }
 }

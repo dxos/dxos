@@ -4,16 +4,13 @@
   "description": "Core DXOS Client API.",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
   "repository": "github:dxos/dxos",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "./dist/src/index.js": "./dist/browser/index.js"
   },
-  "engines": {
-    "node": ">=12.0.0"
-  },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -35,6 +32,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
@@ -42,7 +40,6 @@
   },
   "devDependencies": {
     "@dxos/credentials": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/feed-store": "workspace:*",
@@ -50,10 +47,14 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   },
   "publishConfig": {
     "access": "public"

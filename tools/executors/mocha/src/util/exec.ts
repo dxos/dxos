@@ -10,14 +10,10 @@ export const getBin = (root: string, binary: string) => {
   return `${root}/node_modules/.bin/${binary}`;
 };
 
-export const execTool = async (
-  name: string,
-  args: string[] = [],
-  opts: SpawnSyncOptionsWithBufferEncoding = {}
-) => {
+export const execTool = async (name: string, args: string[] = [], opts: SpawnSyncOptionsWithBufferEncoding = {}) => {
   const child = spawn(name, args, opts);
 
-  // Note: Inheriting stdio of child process breaks Nx CLI output.
+  // NOTE: Inheriting stdio of child process breaks Nx CLI output.
   child.stdout?.on('data', (data: Buffer) => process.stdout.write(data.toString('utf8')));
   child.stderr?.on('data', (data: Buffer) => process.stderr.write(data.toString('utf8')));
 

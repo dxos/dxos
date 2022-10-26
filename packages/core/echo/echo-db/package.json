@@ -4,10 +4,10 @@
   "description": "ECHO database.",
   "license": "MIT",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -18,10 +18,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/credentials": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -34,6 +35,7 @@
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3"
@@ -41,6 +43,7 @@
   "devDependencies": {
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
+    "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",
     "wait-for-expect": "^3.0.2"
   },

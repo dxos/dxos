@@ -7,10 +7,10 @@ import React, { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from '
 import { TextField } from '@mui/material';
 
 interface SelectionEditorProps {
-  onChange: (selection: string) => void
-  initialValue?: string
-  delay?: number
-  rows?: number
+  onChange: (selection: string) => void;
+  initialValue?: string;
+  delay?: number;
+  rows?: number;
 }
 
 const caretMarker = '$1';
@@ -39,12 +39,7 @@ const completions = [
  * Simple editor that evaluates text as method calls against a party object.
  * @constructor
  */
-export const SelectionEditor = ({
-  onChange,
-  initialValue,
-  delay = 500,
-  rows = 6
-}: SelectionEditorProps) => {
+export const SelectionEditor = ({ onChange, initialValue, delay = 500, rows = 6 }: SelectionEditorProps) => {
   const inputRef = useRef<HTMLInputElement>();
   const [text, setText] = useState<string>(initialValue ?? '');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();

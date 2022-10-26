@@ -14,28 +14,28 @@ import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
 //
 
 export type ItemIdFilter = {
-  id: ItemID
-}
+  id: ItemID;
+};
 
 export type ItemFilter = {
-  type?: OneOrMultiple<string>
-  parent?: ItemID | Item
-}
+  type?: OneOrMultiple<string>;
+  parent?: ItemID | Item;
+};
 
 export type LinkFilter = {
-  type?: OneOrMultiple<string>
-}
+  type?: OneOrMultiple<string>;
+};
 
 export type Predicate<T extends Entity> = (entity: T) => boolean;
 
-export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>
+export type RootFilter = ItemIdFilter | ItemFilter | Predicate<Item>;
 
 /**
  * Visitor callback.
  * The visitor is passed the current entities and result (accumulator),
  * which may be modified and returned.
  */
-export type Callable<T extends Entity, R> = (entities: T[], result: R) => R
+export type Callable<T extends Entity, R> = (entities: T[], result: R) => R;
 
 /**
  * Controls how deleted items are filtered.
@@ -59,8 +59,8 @@ export type QueryOptions = {
   /**
    * Controls how deleted items are filtered.
    */
-  deleted?: ItemFilterDeleted
-}
+  deleted?: ItemFilterDeleted;
+};
 
 //
 // Filters
@@ -76,29 +76,32 @@ export const filterToPredicate = (filter: ItemFilter | ItemIdFilter | Predicate<
 
 export const itemFilterToPredicate = (filter: ItemFilter | ItemIdFilter): Predicate<Item> => {
   if ('id' in filter) {
-    return item => item.id === filter.id;
+    return (item) => item.id === filter.id;
   } else {
-    return item =>
+    return (item) =>
       (!filter.type || testOneOrMultiple(filter.type, item.type)) &&
       (!filter.parent || item.parent?.id === coerceToId(filter.parent));
   }
 };
 
-export const linkFilterToPredicate = (filter: LinkFilter): Predicate<Link> => link => (!filter.type || testOneOrMultiple(filter.type, link.type));
+export const linkFilterToPredicate =
+  (filter: LinkFilter): Predicate<Link> =>
+  (link) =>
+    !filter.type || testOneOrMultiple(filter.type, link.type);
 
-export const createQueryOptionsFilter = ({
-  deleted = ItemFilterDeleted.HIDE_DELETED
-}: QueryOptions): Predicate<Entity> => entity => {
-  if (entity.model === null) {
-    return false;
-  }
+export const createQueryOptionsFilter =
+  ({ deleted = ItemFilterDeleted.HIDE_DELETED }: QueryOptions): Predicate<Entity> =>
+  (entity) => {
+    if (entity.model === null) {
+      return false;
+    }
 
-  switch (deleted) {
-    case ItemFilterDeleted.HIDE_DELETED:
-      return !(entity instanceof Item) || !entity.deleted;
-    case ItemFilterDeleted.SHOW_DELETED:
-      return true;
-    case ItemFilterDeleted.SHOW_DELETED_ONLY:
-      return entity instanceof Item && entity.deleted;
-  }
-};
+    switch (deleted) {
+      case ItemFilterDeleted.HIDE_DELETED:
+        return !(entity instanceof Item) || !entity.deleted;
+      case ItemFilterDeleted.SHOW_DELETED:
+        return true;
+      case ItemFilterDeleted.SHOW_DELETED_ONLY:
+        return entity instanceof Item && entity.deleted;
+    }
+  };

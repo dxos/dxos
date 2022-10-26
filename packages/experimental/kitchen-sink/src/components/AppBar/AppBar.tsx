@@ -4,11 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  ExpandMore as OpenIcon,
-  ExpandLess as CloseIcon,
-  Share as ShareIcon
-} from '@mui/icons-material';
+import { ExpandMore as OpenIcon, ExpandLess as CloseIcon, Share as ShareIcon } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, ToggleButton, Toolbar } from '@mui/material';
 
 import { ExportAction, ExportMenu, SelectionEditor } from '@dxos/react-client-testing';
@@ -17,22 +13,15 @@ import { Searchbar } from '../Searchbar';
 import { ViewSelector } from '../View';
 
 interface AppBarProps {
-  view: string
-  onInvite?: () => void
-  onExport?: (type: ExportAction) => void
-  onSearch?: (search: string) => void
-  onSelection?: (selection: string) => void
-  onChangeView: (view: string) => void
+  view: string;
+  onInvite?: () => void;
+  onExport?: (type: ExportAction) => void;
+  onSearch?: (search: string) => void;
+  onSelection?: (selection: string) => void;
+  onChangeView: (view: string) => void;
 }
 
-export const AppBar = ({
-  view,
-  onInvite,
-  onExport,
-  onSearch,
-  onSelection,
-  onChangeView
-}: AppBarProps) => {
+export const AppBar = ({ view, onInvite, onExport, onSearch, onSelection, onChangeView }: AppBarProps) => {
   const [advanced, setAdvanced] = useState<boolean>(false);
 
   return (
@@ -51,52 +40,41 @@ export const AppBar = ({
           </ToggleButton>
 
           <Box sx={{ display: 'flex', flex: 1, marginRight: 2 }}>
-            {onSearch && !advanced && (
-              <Searchbar
-                onChange={onSearch}
-              />
-            )}
+            {onSearch && !advanced && <Searchbar onChange={onSearch} />}
 
             {onSelection && advanced && (
-              <Box sx={{
-                position: 'relative',
-                display: 'flex',
-                flex: 1,
-                marginTop: '-28px'
-              }}>
-                <Box sx={{
-                  position: 'absolute',
-                  width: '100%',
-                  backgroundColor: 'white'
-                }}>
-                  <SelectionEditor
-                    onChange={onSelection}
-                  />
+              <Box
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  flex: 1,
+                  marginTop: '-28px'
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    width: '100%',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <SelectionEditor onChange={onSelection} />
                 </Box>
               </Box>
             )}
           </Box>
 
-          <ViewSelector
-            value={view}
-            onChange={(view: string) => onChangeView(view)}
-          />
+          <ViewSelector value={view} onChange={(view: string) => onChangeView(view)} />
 
-          <Box sx={{
-            marginLeft: 2
-          }}>
-            {onExport && (
-              <ExportMenu
-                onExport={onExport}
-              />
-            )}
+          <Box
+            sx={{
+              marginLeft: 2
+            }}
+          >
+            {onExport && <ExportMenu onExport={onExport} />}
 
             {onInvite && (
-              <IconButton
-                data-id='test-button-share-party'
-                size='small'
-                onClick={onInvite}
-              >
+              <IconButton data-id='test-button-share-party' size='small' onClick={onInvite}>
                 <ShareIcon />
               </IconButton>
             )}

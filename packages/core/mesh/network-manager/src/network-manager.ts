@@ -17,18 +17,15 @@ import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { TransportFactory } from './transport';
 
-export type ProtocolProvider = (opts: {
-  channel: Buffer
-  initiator: boolean
-}) => Protocol;
+export type ProtocolProvider = (opts: { channel: Buffer; initiator: boolean }) => Protocol;
 
 export interface NetworkManagerOptions {
-  transportFactory: TransportFactory
-  signalManager: SignalManager
+  transportFactory: TransportFactory;
+  signalManager: SignalManager;
   /**
    * Enable connection logging for devtools.
    */
-  log?: boolean
+  log?: boolean;
 }
 
 /**
@@ -37,8 +34,8 @@ export interface NetworkManagerOptions {
 export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
@@ -47,20 +44,13 @@ export class NetworkManager {
 
   public readonly topicsUpdated = new Event<void>();
 
-  constructor ({
-    transportFactory,
-    signalManager,
-    log
-  }: NetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     {
       this._signalManager = signalManager;
-
-      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
-        this._swarms.get(topic)?.onSwarmEvent(event)
-      );
+      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     }
     this._messenger = new Messenger({ signalManager: this._signalManager });
 
@@ -74,29 +64,29 @@ export class NetworkManager {
     }
   }
 
-  get signal () {
+  get signal() {
     return this._signalManager;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
-  get topics () {
+  get topics() {
     return Array.from(this._swarms.keys());
   }
 
   // TODO(burdon): Factor out devtools.
-  get connectionLog () {
+  get connectionLog() {
     return this._connectionLog;
   }
 
-  getSwarmMap (topic: PublicKey): SwarmMapper | undefined {
+  getSwarmMap(topic: PublicKey): SwarmMapper | undefined {
     return this._maps.get(topic);
   }
 
-  getSwarm (topic: PublicKey): Swarm | undefined {
+  getSwarm(topic: PublicKey): Swarm | undefined {
     return this._swarms.get(topic);
   }
 
-  async joinProtocolSwarm (options: SwarmOptions) {
+  async joinProtocolSwarm(options: SwarmOptions) {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
@@ -105,29 +95,23 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
 
-    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
+    log('joining', {
+      topic: options.topic,
+      peerId: options.peerId,
+      topology: options.topology.toString()
+    });
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm ${topic}`);
     }
 
-    const swarm = new Swarm(
-      topic,
-      peerId,
-      topology,
-      protocol,
-      this._messenger,
-      this._transportFactory,
-      options.label
-    );
+    const swarm = new Swarm(topic, peerId, topology, protocol, this._messenger, this._transportFactory, options.label);
 
     swarm.errors.handle((error) => {
       log(`Swarm error: ${error}`);
     });
 
     this._swarms.set(topic, swarm);
-    this._signalConnection
-      .join({ topic, peerId })
-      .catch((error) => log(`Error: ${error}`));
+    this._signalConnection.join({ topic, peerId }).catch((error) => log(`Error: ${error}`));
     this._maps.set(topic, new SwarmMapper(swarm, presence));
 
     this.topicsUpdated.emit();
@@ -137,8 +121,8 @@ export class NetworkManager {
     return () => this.leaveProtocolSwarm(topic);
   }
 
-  async leaveProtocolSwarm (topic: PublicKey) {
-    log(`Leave ${topic}`);
+  async leaveProtocolSwarm(topic: PublicKey) {
+    log('leaving', { topic });
 
     if (!this._swarms.has(topic)) {
       return;
@@ -163,12 +147,13 @@ export class NetworkManager {
   /**
    * @deprecated
    */
-  // TODO(marik-d): Remove.
-  async start () {
+  // TODO(dmaretskyi): Remove.
+  async start() {
     console.warn('NetworkManger.start is deprecated.');
   }
 
-  async destroy () {
+  // TODO(burdon): Open/close?
+  async destroy() {
     for (const topic of this._swarms.keys()) {
       await this.leaveProtocolSwarm(topic).catch((err) => {
         log(`Failed to leave swarm ${topic} on NetworkManager.destroy}`);
@@ -184,30 +169,30 @@ export interface SwarmOptions {
   /**
    * Swarm topic.
    */
-  topic: PublicKey
+  topic: PublicKey;
 
   /**
    * This node's peer id.
    */
-  peerId: PublicKey
+  peerId: PublicKey;
 
   /**
    * Requested topology. Must be a new instance for every swarm.
    */
-  topology: Topology
+  topology: Topology;
 
   /**
    * Protocol to use for every connection.
    */
-  protocol: ProtocolProvider
+  protocol: ProtocolProvider;
 
   /**
    * Presence plugin for network mapping, if exists.
    */
-  presence?: any
+  presence?: any;
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.
    */
-  label?: string
+  label?: string;
 }

@@ -34,32 +34,29 @@ jobs:
       - *docker_image
     # https://circleci.com/docs/configuration-reference/#docker-execution-environment
     resource_class: xlarge
+    environment:
+      DX_ENVIRONMENT: circleci
     steps:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
+      - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
+      - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test --coverage --xmlReport
+            - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
             - run: pnpm nx run-many --target=lint
-            - run:
-                command: pnpm nx run-many --target=prerelease
-                no_output_timeout: 30m
-                environment:
-                  NODE_OPTIONS: --max_old_space_size=8198
       - run:
           name: "Upload to codecov.com"
           command: ./.circleci/scripts/upload-codecov.sh
-          when: always
       - store_test_results:
           path: test-results
 
@@ -73,7 +70,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
+      - run: pnpm install-playwright
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
@@ -107,33 +104,20 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
+      - run: pnpm nx build dx-cli
       - run:
-          command: pnpm nx bundle halo-app
+          name: Deploy HALO
+          working_directory: ./packages/apps/halo-app
+          command: ../../../.circleci/scripts/publish.sh
           environment:
-            NODE_OPTIONS: --max_old_space_size=8198
+            NODE_OPTIONS: --max_old_space_size=4096
       - run:
-          name: "Deploy HALO"
-          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
+          name: Deploy Docs
+          working_directory: ./docs
+          command: ../.circleci/scripts/publish.sh
+          no_output_timeout: 30m
           environment:
-            NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
-
-  #
-  # Nightly test run without Nx cache.
-  #
-  full_test:
-    docker:
-      - image: ghcr.io/dxos/circleci-node:latest
-        auth:
-          username: dxos-bot
-          password: $GH_TOKEN
-    steps:
-      - checkout
-      - *cache_restore
-      - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
-      - *cache_save
-      - nx/set-shas
-      - run: pnpm nx run-many --target=test --skip-nx-cache
+            NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
   main:
@@ -142,12 +126,12 @@ workflows:
           context:
             - Github
       # TODO(wittjosiah): Move these jobs back into check.
-#      - e2e:
-#          context:
-#            - Github
-#      - bundle:
-#          context:
-#            - Github
+      # - e2e:
+      #     context:
+      #       - Github
+      # - bundle:
+      #     context:
+      #       - Github
 
   deploy:
     jobs:
@@ -155,20 +139,7 @@ workflows:
           filters:
             branches:
               only:
-                - production
-          context:
-            - Github
-            - Netlify
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
                 - main
-    jobs:
-      - full_test:
+                - release
           context:
             - Github

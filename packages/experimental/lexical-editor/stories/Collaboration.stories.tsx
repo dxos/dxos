@@ -39,21 +39,17 @@ const tableStyles = css`
 `;
 
 type InvitationInfo = {
-  descriptor: InvitationDescriptor
-  secret: string
-}
+  descriptor: InvitationDescriptor;
+  secret: string;
+};
 
 const DOCMENT_TYPE = 'example:type/document';
 
 const EditorContainer: FC<{
-  id: string
-  invitation?: InvitationInfo
-  onInvite?: (invitation: InvitationInfo) => void
-}> = ({
-  id,
-  invitation,
-  onInvite
-}) => {
+  id: string;
+  invitation?: InvitationInfo;
+  onInvite?: (invitation: InvitationInfo) => void;
+}> = ({ id, invitation, onInvite }) => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
   const [item, setItem] = useState<Item<TextModel>>();
@@ -61,11 +57,14 @@ const EditorContainer: FC<{
 
   useEffect(() => {
     if (onInvite) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         client.echo.registerModel(TextModel);
         const party = await client.echo.createParty();
         const invitation = await party.createInvitation();
-        onInvite({ descriptor: invitation.descriptor, secret: invitation.secret.toString() });
+        onInvite({
+          descriptor: invitation.descriptor,
+          secret: invitation.secret.toString()
+        });
         log(`Created: ${party.key.toHex()}`);
         setParty(party);
 
@@ -79,7 +78,7 @@ const EditorContainer: FC<{
     }
 
     if (invitation) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         client.echo.registerModel(TextModel);
         const accept = await client.echo.acceptInvitation(invitation.descriptor);
         accept.authenticate(Buffer.from(invitation.secret));
@@ -96,43 +95,43 @@ const EditorContainer: FC<{
 
   // TODO(burdon): Display client ID.
   return (
-    <div style={{
-      display: 'flex',
-      flex: 1,
-      margin: 8,
-      padding: 8,
-      border: '1px solid #ccc'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flex: 1,
+        margin: 8,
+        padding: 8,
+        border: '1px solid #ccc'
+      }}
+    >
       {party && item && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1
-        }}>
-          <div style={{
+        <div
+          style={{
             display: 'flex',
+            flexDirection: 'column',
             flex: 1
-          }}>
-            <Editor
-              id={id}
-              item={item}
-            >
-              <CollaborationPlugin
-                id={id}
-                providerFactory={providerFactory}
-                shouldBootstrap={true}
-                username={id}
-              />
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flex: 1
+            }}
+          >
+            <Editor id={id} item={item}>
+              <CollaborationPlugin id={id} providerFactory={providerFactory} shouldBootstrap={true} username={id} />
             </Editor>
           </div>
 
-          <div style={{
-            display: 'flex',
-            flexShrink: 0,
-            overflow: 'hidden',
-            padding: 8,
-            fontFamily: 'monospace'
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              flexShrink: 0,
+              overflow: 'hidden',
+              padding: 8,
+              fontFamily: 'monospace'
+            }}
+          >
             <table className={tableStyles}>
               <tbody>
                 <tr>
@@ -163,19 +162,13 @@ export const Primary = () => {
     <Container>
       <ClientProvider>
         <ProfileInitializer>
-          <EditorContainer
-            id='editor-1'
-            onInvite={setInvitation}
-          />
+          <EditorContainer id='editor-1' onInvite={setInvitation} />
         </ProfileInitializer>
       </ClientProvider>
 
       <ClientProvider>
         <ProfileInitializer>
-          <EditorContainer
-            id='editor-2'
-            invitation={invitation}
-          />
+          <EditorContainer id='editor-2' invitation={invitation} />
         </ProfileInitializer>
       </ClientProvider>
     </Container>

@@ -2,16 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-export type Point = [x: number, y: number]
+export type Point = [x: number, y: number];
 
-export type Size = { width: number, height: number }
+export type Size = { width: number; height: number };
 
-export type ScreenBounds = { x: number, y: number, width: number, height: number }
+export type ScreenBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export type Modifiers = {
-  center?: boolean
-  constrain?: boolean
-}
+  center?: boolean;
+  constrain?: boolean;
+};
 
 export class Screen {
   static createBounds = ([x1, y1]: Point, [x2, y2]: Point, mod: Modifiers = {}): ScreenBounds => {
@@ -36,16 +41,16 @@ export class Screen {
       };
     } else {
       return {
-        x, y, width, height
+        x,
+        y,
+        width,
+        height
       };
     }
   };
 
   static center = ({ x, y, width, height }: ScreenBounds): Point => {
-    return [
-      x + width / 2,
-      y + height / 2
-    ];
+    return [x + width / 2, y + height / 2];
   };
 
   static contains = (bounds: ScreenBounds, point: Point): boolean => {

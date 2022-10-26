@@ -6,17 +6,16 @@ import React, { useRef } from 'react';
 import { useRoutes, HashRouter } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
-import { Config, Defaults, Dynamics } from '@dxos/config';
+import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
-import { RpcPort } from '@dxos/rpc';
 
 import {
   AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
   RequireProfile, SpacePage, SpacesPage
 } from './pages';
 
-const configProvider = async () => new Config(await Dynamics(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
 const Routes = () => useRoutes([
   // TODO(wittjosiah): Move behind RequireProfile.
@@ -49,7 +48,7 @@ const Routes = () => useRoutes([
   }
 ]);
 
-export const App = ({ rpcPort }: { rpcPort: RpcPort }) => {
+export const App = () => {
   const clientRef = useRef<Client>();
 
   return (
@@ -62,7 +61,6 @@ export const App = ({ rpcPort }: { rpcPort: RpcPort }) => {
       <ClientProvider
         clientRef={clientRef}
         config={configProvider}
-        options={{ rpcPort }}
       >
         <HashRouter>
           <Routes />

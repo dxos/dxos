@@ -12,9 +12,9 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { ProtocolProvider } from './network-manager';
 
 interface ProtocolFactoryOptions {
-  plugins: any[]
-  getTopics: () => Buffer[]
-  session: Record<string, any>
+  plugins: any[];
+  getTopics: () => Buffer[];
+  session: Record<string, any>;
 }
 
 /**
@@ -26,14 +26,18 @@ interface ProtocolFactoryOptions {
  * @param getTopics retrieve a list of known topic keys to encrypt by public key.
  * @deprecated Use `createProtocolFactory`.
  */
-export const protocolFactory = ({ session = {}, plugins = [], getTopics }: ProtocolFactoryOptions): ProtocolProvider => {
+export const protocolFactory = ({
+  session = {},
+  plugins = [],
+  getTopics
+}: ProtocolFactoryOptions): ProtocolProvider => {
   assert(getTopics);
   // eslint-disable-next-line no-unused-vars
   return ({ channel, initiator }) => {
     const protocol = new Protocol({
       streamOptions: { live: true },
       discoveryToPublicKey: (dk) => {
-        const publicKey = getTopics().find(topic => discoveryKey(topic).equals(dk));
+        const publicKey = getTopics().find((topic) => discoveryKey(topic).equals(dk));
         if (publicKey) {
           protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
@@ -45,9 +49,7 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
       discoveryKey: channel
     });
 
-    protocol
-      .setExtensions(plugins.map(plugin => plugin.createExtension()))
-      .init();
+    protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     log('Created protocol');
     return protocol;
@@ -55,21 +57,27 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
 };
 
 export interface Plugin {
-  createExtension: () => Extension
+  createExtension: () => Extension;
 }
 
-export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) => protocolFactory({
-  getTopics: () => [topic.asBuffer()],
-  session: { peerId: PublicKey.stringify(peerId.asBuffer()) },
-  plugins
-});
+export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) =>
+  protocolFactory({
+    getTopics: () => [topic.asBuffer()],
+    session: { peerId: PublicKey.stringify(peerId.asBuffer()) },
+    plugins
+  });
 
 /**
  * Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
  * @deprecated Use `createProtocolFactory`.
  */
-export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => protocolFactory({
-  getTopics: () => [rendezvousKey],
-  session: { peerId: PublicKey.stringify(peerId) },
-  plugins: [protocolPlugin]
-});
+export const transportProtocolProvider = (
+  rendezvousKey: Buffer,
+  peerId: Buffer,
+  protocolPlugin: any
+): ProtocolProvider =>
+  protocolFactory({
+    getTopics: () => [rendezvousKey],
+    session: { peerId: PublicKey.stringify(peerId) },
+    plugins: [protocolPlugin]
+  });

@@ -12,11 +12,11 @@ import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
   private _doc = new Doc();
 
-  getState (): Doc {
+  getState(): Doc {
     return this._doc;
   }
 
-  process (mutation: Mutation, meta: MutationProcessMeta): void {
+  process(mutation: Mutation, meta: MutationProcessMeta): void {
     const { update, clientId } = mutation;
     assert(update);
 
@@ -25,13 +25,13 @@ class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
     }
   }
 
-  snapshot () {
+  snapshot() {
     return {
       data: encodeStateAsUpdate(this._doc)
     };
   }
 
-  reset (snapshot: Snapshot): void {
+  reset(snapshot: Snapshot): void {
     assert(snapshot.data);
 
     applyUpdate(this._doc, snapshot.data);
@@ -46,26 +46,36 @@ export class TextModel extends Model<Doc, Mutation> {
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
   };
 
-  constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
+  constructor(meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
     super(meta, itemId, getState, writeStream);
 
-    this._getState().on('update', this._handleDocUpdated.bind(this));
+    let unsubscribe = this._subscribeToDocUpdates();
+    this.update.on(() => {
+      unsubscribe();
+      unsubscribe = this._subscribeToDocUpdates();
+    });
   }
 
-  get doc (): Doc {
+  get doc(): Doc {
     return this._getState();
   }
 
-  get content () {
+  get content() {
     return this._getState().getXmlFragment('content');
   }
 
   // TODO(burdon): How is this different?
-  get textContent () {
+  get textContent() {
     return this._textContentInner(this.content);
   }
 
-  private async _handleDocUpdated (update: Uint8Array, origin: any) {
+  private _subscribeToDocUpdates() {
+    const cb = this._handleDocUpdated.bind(this);
+    this._getState().on('update', cb);
+    return () => this._getState().off('update', cb);
+  }
+
+  private async _handleDocUpdated(update: Uint8Array, origin: any) {
     const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
     if (!remote) {
       await this.write({
@@ -75,8 +85,10 @@ export class TextModel extends Model<Doc, Mutation> {
     }
   }
 
-  private _transact (fn: () => void) {
-    return this._getState().transact(fn, { docClientId: this._getState().clientID });
+  private _transact(fn: () => void) {
+    return this._getState().transact(fn, {
+      docClientId: this._getState().clientID
+    });
   }
 
   private _textContentInner = (node: any): string => {
@@ -117,7 +129,7 @@ export class TextModel extends Model<Doc, Mutation> {
       node.insert(0, [paragraph]);
     }
 
-    // TODO(marik-d): What is the type of `node` here?
+    // TODO(dmaretskyi): What is the type of `node` here?
     for (const childNode of (node as any).toArray()) {
       const inserted = this._insertInner(childNode as any, innerIndex, text);
       if (inserted === true) {
@@ -134,11 +146,11 @@ export class TextModel extends Model<Doc, Mutation> {
     return childLength;
   };
 
-  insert (text: string, index: number) {
+  insert(text: string, index: number) {
     return this._transact(() => this._insertInner(this.content, index, text));
   }
 
-  insertTextNode (text: string, index = 0) {
+  insertTextNode(text: string, index = 0) {
     const paragraph = new XmlElement('paragraph');
     const yXmlText = new XmlText(text);
     paragraph.insert(0, [yXmlText]);

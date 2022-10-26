@@ -18,14 +18,14 @@ import {
 import { defaultGraphStyles } from './styles';
 
 export interface GraphProps {
-  className?: string
-  model?: GraphModel<any>
-  projector?: GraphForceProjector<any>
-  drag?: boolean
-  arrows?: boolean
-  labels?: LabelOptions<any>
-  attributes?: AttributesOptions<any>
-  onSelect?: (node: GraphLayoutNode<any>) => void
+  className?: string;
+  model?: GraphModel<any>;
+  projector?: GraphForceProjector<any>;
+  drag?: boolean;
+  arrows?: boolean;
+  labels?: LabelOptions<any>;
+  attributes?: AttributesOptions<any>;
+  onSelect?: (node: GraphLayoutNode<any>) => void;
 }
 
 /**
@@ -65,7 +65,7 @@ export const Graph = ({
 
   useEffect(() => {
     const subscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
-    const subscribeModel = model?.subscribe(graph => projector.update(graph));
+    const subscribeModel = model?.subscribe((graph) => projector.update(graph));
     projector.update(model?.graph);
 
     return () => {
@@ -81,7 +81,5 @@ export const Graph = ({
     };
   }, []);
 
-  return (
-    <g ref={graphRef} className={className} />
-  );
+  return <g ref={graphRef} className={className} />;
 };

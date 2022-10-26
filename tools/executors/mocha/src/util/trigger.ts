@@ -3,9 +3,8 @@
 //
 
 // Copied from @dxos/async.
-export function trigger (timeout?: number): [() => Promise<void>, () => void]
-export function trigger <T>(timeout?: number): [() => Promise<T>, (arg: T) => void]
-export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => void] { // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T) => void] => {
+  // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
   let callback: (arg: T) => void;
 
   const promise = new Promise<T>((resolve, reject) => {
@@ -20,4 +19,4 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
   const resolver = (value: T) => callback(value);
 
   return [provider, resolver];
-}
+};

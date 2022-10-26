@@ -17,7 +17,7 @@ export interface RequireProfileProps {
  */
 export const RequireProfile = ({ redirect }: RequireProfileProps) => {
   const { pathname, search } = useLocation();
-  const profile = useProfile(true);
+  const profile = useProfile();
 
   if (!profile) {
     return (

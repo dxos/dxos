@@ -20,7 +20,7 @@ export default class Publish extends BaseCommand {
     })
   };
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { flags } = await this.parse(Publish);
     const { configPath, verbose } = flags;
 
@@ -38,7 +38,9 @@ export default class Publish extends BaseCommand {
       }
 
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
-        await publisher.rpc.publish({ package: moduleConfig.values.package! });
+        await publisher.rpc.publish({
+          package: moduleConfig.values.package!
+        });
         verbose && this.log('Published to KUBE.');
       });
     } catch (err: any) {

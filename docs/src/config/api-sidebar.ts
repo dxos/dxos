@@ -2,75 +2,92 @@
 // Copyright 2022 DXOS.org
 //
 
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { SidebarGroupCollapsible } from 'vuepress';
+import { capitalCase } from 'change-case';
+import { promises as fs } from 'node:fs';
+import path from 'path';
+import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from 'vuepress';
 
-import { API_SECTIONS, DOCS_PATH, PINNED_PACKAGES } from '../constants';
+import { API_SECTIONS, PINNED_PACKAGES } from '../constants';
 
-const groupByModule = (list: string[]) => list.reduce<{ [key: string]: string[] }>((grouped, item) => {
-  const [module, entity] = item.split('.');
+const apiPath = path.resolve(__dirname, '../../docs/api');
 
-  return {
-    ...grouped,
-    [module]: [...(grouped[module] ?? []), entity]
-  };
-}, {});
+export const link = {
+  package: (name: string) => `/api/${name}`,
+  sectionItem: (pkg: string, section: string, name: string) => `/api/${pkg}/${section}/${name}`
+};
 
-export const moduleToPackage = (module: string) =>
-  `@dxos/${module.slice(5, -3).replaceAll('_', '-')}`;
+type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;
+type MaybePromise<T> = T | Promise<T>;
 
-export const packageToModule = (packageName: string) =>
-  `dxos_${packageName.split('/')[1].replaceAll('-', '_')}.md`;
+const isMarkdown = (file: string) => /\.md$/.test(file);
 
-export const apiSidebar = () => {
-  const apiPath = join(DOCS_PATH, 'api');
+const dirExists = async (path: string) => {
+  try {
+    const stats = await fs.stat(path);
+    if (!stats.isDirectory()) {
+      return false;
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
 
-  const lookupTable: { [key: string]: { [key: string]: string[] } } =
-    API_SECTIONS.reduce((lookup, [folder]) => ({
-      ...lookup,
-      [folder]: groupByModule(
-        readdirSync(join(apiPath, folder))
-          .filter(interfaceFile => !interfaceFile.includes('defs'))
-      )
-    }), {});
+const fileName = (name: string) => path.parse(name)?.name;
 
-  const createChildren = (dir: string, module: string, entities: string[] | undefined) => entities?.map(entity => ({
-    text: entity,
-    link: `/api/${dir}/${module}.${entity}.md`
-  }));
+const sidebarItem: {
+  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>;
+} = {
+  package: async (pkg: string) => ({
+    text: pkg,
+    link: link.package(pkg),
+    collapsible: true,
+    children: [
+      ...(
+        await Promise.all(
+          API_SECTIONS.map(async (section) =>
+            (await dirExists(path.resolve(apiPath, pkg, section)))
+              ? ({
+                  text: capitalCase(section),
+                  collapsible: true,
+                  children: (await fs.readdir(path.resolve(apiPath, pkg, section))).filter(isMarkdown).map((file) => ({
+                    text: fileName(file),
+                    link: link.sectionItem(pkg, section, fileName(file))
+                  }))
+                } as AnySidebarItem)
+              : null
+          )
+        )
+      ).filter((s) => s)
+    ]
+  })
+};
 
-  const modules = readdirSync(join(apiPath, 'modules'))
-    // TODO(wittjosiah): Don't generate these.
-    .filter(module => !module.includes('defs'))
-    .filter(module => !module.includes('definitions'))
-    .map((module): SidebarGroupCollapsible => {
-      const key = module.split('.md')[0];
-      const packageName = moduleToPackage(module);
-
-      const children = [
-        {
-          text: 'Package',
-          link: `/api/modules/${module}`
-        },
-        ...API_SECTIONS
-          .map(([folder, text]) => ({
-            text,
-            collapsible: true,
-            children: createChildren(folder, key, lookupTable[folder][key])
-          }))
-          .filter(({ children }) => Boolean(children))
-      ];
-
-      return {
-        text: packageName,
-        collapsible: true,
-        children
-      };
-    });
-
+export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
+  const allscopes = (await fs.readdir(apiPath, { withFileTypes: true })).filter(
+    (s) => /^@/.test(s.name) && s.isDirectory()
+  );
+  const packagesByScope = await Promise.all(
+    allscopes.map(async (scope) => {
+      const dircontents = await fs.readdir(path.resolve(apiPath, scope.name), {
+        withFileTypes: true
+      });
+      const folders = dircontents.filter((entry) => entry.isDirectory());
+      return folders.map((pkg) => `${scope.name}/${pkg.name}`);
+    })
+  );
+  const flatPackages = packagesByScope.flat();
+  const otherPackages = flatPackages.filter((p) => !!p && !PINNED_PACKAGES.includes(p));
   return [
-    ...PINNED_PACKAGES.map(pinned => modules.find(({ text }) => text === pinned)),
-    ...modules.filter(({ text }) => !PINNED_PACKAGES.includes(text))
-  ].filter((module): module is SidebarGroupCollapsible => !!module);
+    ...(await Promise.all(PINNED_PACKAGES.map(sidebarItem.package))),
+    ...(otherPackages?.length
+      ? [
+          {
+            text: 'Other packages',
+            collapsible: true,
+            children: await Promise.all(otherPackages.map(sidebarItem.package))
+          }
+        ]
+      : [])
+  ];
 };

@@ -24,7 +24,7 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map(party => (
+      {parties.map((party) => (
         <Box key={party.key.toHex()}>
           <CopyText value={party.key.toHex()} />
         </Box>
@@ -58,12 +58,7 @@ const Sender = () => {
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
 
-      <PartySharingDialog
-        open={open}
-        partyKey={partyKey}
-        onClose={() => setOpen(false)}
-        modal={true}
-      />
+      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={true} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />

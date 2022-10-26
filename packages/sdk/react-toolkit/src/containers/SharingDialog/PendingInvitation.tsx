@@ -10,10 +10,10 @@ import { Box, IconButton, Popover, Typography } from '@mui/material';
 import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-components';
 
 export interface PendingInvitationProps {
-  invitationCode: string
-  pin: string | undefined
-  createUrl: (invitationCode: string) => string
-  onCancel: () => void
+  invitationCode: string;
+  pin: string | undefined;
+  createUrl: (invitationCode: string) => string;
+  onCancel: () => void;
 }
 
 /**
@@ -24,22 +24,19 @@ export interface PendingInvitationProps {
  * @param onCancel
  * @constructor
  */
-export const PendingInvitation = ({
-  invitationCode,
-  pin,
-  createUrl,
-  onCancel
-}: PendingInvitationProps) => {
+export const PendingInvitation = ({ invitationCode, pin, createUrl, onCancel }: PendingInvitationProps) => {
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flex: 1,
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      minHeight: 40
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flex: 1,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        minHeight: 40
+      }}
+    >
       <IconButton size='small' disabled>
         <HashIcon value={invitationCode} />
       </IconButton>
@@ -51,16 +48,10 @@ export const PendingInvitation = ({
 
       {!pin && (
         <>
-          <IconButton
-            size='small'
-            title='Copy invitation.'
-          >
+          <IconButton size='small' title='Copy invitation.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
-          <IconButton
-            size='small'
-            onClick={event => setPopoverAnchor(event.currentTarget)}
-          >
+          <IconButton size='small' onClick={(event) => setPopoverAnchor(event.currentTarget)}>
             <QRCodeIcon />
           </IconButton>
           <Popover

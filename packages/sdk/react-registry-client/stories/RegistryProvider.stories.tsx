@@ -18,7 +18,7 @@ const TestApp = () => {
   const [types, setTypes] = useState<RegistryType[]>([]);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const types = await registry.listTypeRecords();
       setTypes(types);
     });
@@ -27,14 +27,8 @@ const TestApp = () => {
   return (
     <div style={{ padding: 16 }}>
       <div style={{ marginBottom: 8 }}>Domains</div>
-      {types.length > 0 && types.map(({ type: { messageName } }) => (
-        <div key={messageName}>
-          {messageName}
-        </div>
-      ))}
-      {types.length === 0 && (
-        <div>Loading...</div>
-      )}
+      {types.length > 0 && types.map(({ type: { messageName } }) => <div key={messageName}>{messageName}</div>)}
+      {types.length === 0 && <div>Loading...</div>}
     </div>
   );
 };

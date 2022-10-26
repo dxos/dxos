@@ -29,20 +29,8 @@ const App = () => {
 
   return (
     <FullScreen>
-      <Layout
-        sidebar={(
-          <EchoGrid
-            items={model.graph.nodes}
-            itemAdapter={itemAdapter}
-            styles={tableStyles}
-          />
-        )}
-      >
-        <EchoGraph
-          model={model}
-          itemAdapter={itemAdapter}
-          styles={graphStyles}
-        />
+      <Layout sidebar={<EchoGrid items={model.graph.nodes} itemAdapter={itemAdapter} styles={tableStyles} />}>
+        <EchoGraph model={model} itemAdapter={itemAdapter} styles={graphStyles} />
       </Layout>
     </FullScreen>
   );

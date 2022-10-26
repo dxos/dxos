@@ -80,4 +80,4 @@ To run in development mode with a pre-created profile:
 rushx build && ./bin/kodama.js --username Test --debug
 ```
 
-Note: the `watch` script is flaky and interferes with stdin.
+NOTE: the `watch` script is flaky and interferes with stdin.

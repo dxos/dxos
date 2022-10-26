@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import pick from 'lodash/pick';
+import pick from 'lodash.pick';
 import path from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
@@ -39,7 +39,8 @@ describe('Code analysis', function () {
       const struct = root.getStructure();
       const info = {
         ...pick(struct, ['name', 'isExported']),
-        properties: struct.properties?.map(p => p.type && pick(p, ['name', 'type', 'scope', 'isReadonly']))
+        properties: struct.properties
+          ?.map((p) => p.type && pick(p, ['name', 'type', 'scope', 'isReadonly']))
           .filter(Boolean)
       };
 
@@ -76,8 +77,8 @@ describe('Code analysis', function () {
         // TODO(burdon): Look at ts-morph tests.
         process(flowchart, root, 2);
         const file = root.getSourceFile();
-        const imports = file.getImportDeclarations().map(i => i.getStructure());
-        const i = imports.find(i => i.moduleSpecifier.startsWith('@dxos/config'));
+        const imports = file.getImportDeclarations().map((i) => i.getStructure());
+        const i = imports.find((i) => i.moduleSpecifier.startsWith('@dxos/config'));
         console.log(i);
         const dir = file.getDirectoryPath();
         console.log(dir);

@@ -19,15 +19,13 @@ enum ShowDialog {
 }
 
 export interface ImportMenuProps {
-  onImport?: (file: File | string) => void
+  onImport?: (file: File | string) => void;
 }
 
 /**
  * Dialog to create, join, or import party.
  */
-export const ImportMenu = ({
-  onImport
-}: ImportMenuProps) => {
+export const ImportMenu = ({ onImport }: ImportMenuProps) => {
   const [inProgress, setInProgress] = useState(false);
   const [showDialog, setShowDialog] = useState<ShowDialog | undefined>();
   const [importMenuAnchorEl, setImportMenuAnchorEl] = useState<HTMLElement | undefined>();
@@ -50,7 +48,7 @@ export const ImportMenu = ({
         data-id='test-button-import'
         size='small'
         disabled={inProgress}
-        onClick={event => setImportMenuAnchorEl(event.currentTarget)}
+        onClick={(event) => setImportMenuAnchorEl(event.currentTarget)}
       >
         <UploadIcon />
       </IconButton>

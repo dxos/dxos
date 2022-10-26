@@ -12,12 +12,12 @@ import { Dialog } from '@dxos/react-components';
 import { ImportMenu } from './ImportMenu';
 
 export interface CreatePartyDialogProps {
-  open: boolean
-  title?: string
-  modal?: boolean
-  onCreate?: () => void
-  onJoin?: (invitationCode: string) => void
-  onImport?: (file: File | string) => void
+  open: boolean;
+  title?: string;
+  modal?: boolean;
+  onCreate?: () => void;
+  onJoin?: (invitationCode: string) => void;
+  onImport?: (file: File | string) => void;
 }
 
 /**
@@ -55,7 +55,7 @@ export const CreatePartyDialog = ({
       <TextField
         fullWidth
         value={invitationCodeOrIpfsCid}
-        onChange={event => setInvitationCodeOrIpfsCid(event.target.value)}
+        onChange={(event) => setInvitationCodeOrIpfsCid(event.target.value)}
         variant='outlined'
         label='Invitation code'
         autoComplete='off'
@@ -64,9 +64,7 @@ export const CreatePartyDialog = ({
           'data-id': 'test-input-join-party'
         }}
       />
-      <div style={{ height: 8, marginTop: 16 }}>
-        {inProgress && <LinearProgress />}
-      </div>
+      <div style={{ height: 8, marginTop: 16 }}>{inProgress && <LinearProgress />}</div>
       {error && <Typography>{String(error.stack)}</Typography>}
     </>
   );
@@ -75,9 +73,7 @@ export const CreatePartyDialog = ({
     <>
       {onImport && (
         <>
-          <ImportMenu
-            onImport={handleImport}
-          />
+          <ImportMenu onImport={handleImport} />
 
           <Box sx={{ flex: 1 }} />
         </>
@@ -122,15 +118,5 @@ export const CreatePartyDialog = ({
     </>
   );
 
-  return (
-    <Dialog
-      open={open}
-      modal={modal}
-      maxWidth='sm'
-      fullWidth
-      title={title}
-      content={content}
-      actions={actions}
-    />
-  );
+  return <Dialog open={open} modal={modal} maxWidth='sm' fullWidth title={title} content={content} actions={actions} />;
 };

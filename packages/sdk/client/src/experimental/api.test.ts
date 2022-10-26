@@ -58,13 +58,13 @@ describe.skip('Experimental API', function () {
 
         // Accept new device.
         const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
-        setImmediate(async () => {
+        setTimeout(async () => {
           const deviceKey = await challenge.wait();
           expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
         });
 
         // Authenticate.
-        setImmediate(async () => {
+        setTimeout(async () => {
           await request.accept(challenge.secret);
         });
       }
@@ -75,10 +75,14 @@ describe.skip('Experimental API', function () {
     //
     {
       const contacts = client1.circle.queryContacts();
-      await Promise.all(contacts.elements.map(async contact => {
-        const receipt = await client1.messenger.send(contact.identityKey, { message: `Hello ${contact.username}!` });
-        expect(receipt.recipient).toBe(contact.identityKey);
-      }));
+      await Promise.all(
+        contacts.elements.map(async (contact) => {
+          const receipt = await client1.messenger.send(contact.identityKey, {
+            message: `Hello ${contact.username}!`
+          });
+          expect(receipt.recipient).toBe(contact.identityKey);
+        })
+      );
     }
 
     //
@@ -88,7 +92,7 @@ describe.skip('Experimental API', function () {
       // Create Space.
       const space = await client1.brane.createSpace();
       const invitation = space.createInvitation(Role.ADMIN);
-      setImmediate(async () => {
+      setTimeout(async () => {
         await invitation.wait();
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
@@ -151,7 +155,9 @@ describe.skip('Experimental API', function () {
       });
 
       // Create item.
-      const item = await space.database.createItem({ type: 'org.dxos.contact' });
+      const item = await space.database.createItem({
+        type: 'org.dxos.contact'
+      });
       expect(item.id).toBeDefined();
 
       // Query items across all spaces.
@@ -163,7 +169,7 @@ describe.skip('Experimental API', function () {
     // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     //
     {
-      type AppRecord = { name: string }
+      type AppRecord = { name: string };
       const AppRecordType = 'org.dxos.app';
 
       // Query records.
@@ -176,7 +182,10 @@ describe.skip('Experimental API', function () {
       });
 
       // Create record.
-      const app = await client1.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
+      const app = await client1.meta.createRecord<AppRecord>({
+        type: AppRecordType,
+        data: { name: 'Tetris' }
+      });
       expect(app.type).toStrictEqual(AppRecordType);
       expect(app.data.name).toStrictEqual('Tetris');
     }

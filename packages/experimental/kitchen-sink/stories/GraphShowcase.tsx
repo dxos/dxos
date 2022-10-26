@@ -14,7 +14,7 @@ import { graphStyles } from '../src';
 faker.seed(100);
 
 interface AppProps {
-  grid?: boolean
+  grid?: boolean;
 }
 
 const App = ({ grid }: AppProps) => {

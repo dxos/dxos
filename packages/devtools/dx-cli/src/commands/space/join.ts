@@ -23,7 +23,7 @@ export default class Join extends BaseCommand {
     })
   };
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { flags } = await this.parse(Join);
     let { invitation: encoded, secret, json } = flags;
     if (!encoded) {

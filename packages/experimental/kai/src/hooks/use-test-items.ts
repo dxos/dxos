@@ -5,11 +5,11 @@
 import faker from 'faker';
 
 export type Item = {
-  id: string
-  type: string
-  title: string
-  description: string
-}
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+};
 
 export const useTestItems = (n: number): Item[] => {
   return Array.from({ length: n }).map(() => ({

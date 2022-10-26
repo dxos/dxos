@@ -12,16 +12,16 @@ import { GlobalErrorWrapper } from './GlobalErrorWrapper';
 // TODO(burdon): Configure loading indicator (that can be reset downstream).
 
 interface ErrorBoundaryProps {
-  indicator?: FunctionComponent<ErrorIndicatorProps> | null
-  view: FunctionComponent<ErrorViewProps>
-  onError: (error: Error) => boolean
-  onReload?: () => void
-  onReset?: () => void
+  indicator?: FunctionComponent<ErrorIndicatorProps> | null;
+  view: FunctionComponent<ErrorViewProps>;
+  onError: (error: Error) => boolean;
+  onReload?: () => void;
+  onReset?: () => void;
 }
 
 interface ErrorBoundaryState {
-  errors: Error[]
-  fatal: boolean
+  errors: Error[];
+  fatal: boolean;
 }
 
 /**
@@ -44,14 +44,14 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     fatal: false // Whether the head error is fatal or not.
   };
 
-  // Note: Render errors also trigger global onerror before componentDidCatch.
-  override componentDidCatch (err: Error) {
+  // NOTE: Render errors also trigger global onerror before componentDidCatch.
+  override componentDidCatch(err: Error) {
     const { errors } = this.state;
 
     this.setState({ errors: [err, ...errors], fatal: true });
   }
 
-  override render () {
+  override render() {
     const { children, onReload, onReset, indicator, view: View } = this.props;
     const { errors, fatal } = this.state;
 
@@ -67,20 +67,12 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
     };
 
     if (fatal) {
-      return (
-        <View
-          error={errors[0]}
-          onReload={onReload}
-          onReset={onReset}
-        />
-      );
+      return <View error={errors[0]} onReload={onReload} onReset={onReset} />;
     }
 
     return (
       <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
-        <GlobalErrorWrapper indicator={indicator}>
-          {children}
-        </GlobalErrorWrapper>
+        <GlobalErrorWrapper indicator={indicator}>{children}</GlobalErrorWrapper>
       </ErrorContext.Provider>
     );
   }

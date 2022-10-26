@@ -36,9 +36,7 @@ export const Primary = () => {
       return null;
     }
 
-    return (
-      <App party={party} />
-    );
+    return <App party={party} />;
   };
 
   return (
@@ -112,7 +110,10 @@ export const Secondary = () => {
     const handleInviteParty = async () => {
       const invitation = await party!.createInvitation();
       const encodedInvitation = invitation.descriptor.encode();
-      const text = JSON.stringify({ encodedInvitation, secret: invitation.secret.toString() });
+      const text = JSON.stringify({
+        encodedInvitation,
+        secret: invitation.secret.toString()
+      });
       await navigator.clipboard.writeText(text);
       console.log(text); // Required for playwright tests.
     };
@@ -120,11 +121,7 @@ export const Secondary = () => {
     if (party) {
       return (
         <>
-          <App
-            party={party}
-            onInvite={handleInviteParty}
-            onExport={handleExportParty}
-          />
+          <App party={party} onInvite={handleInviteParty} onExport={handleExportParty} />
 
           <Snackbar
             open={Boolean(snackbarMessage)}
@@ -138,12 +135,7 @@ export const Secondary = () => {
     }
 
     return (
-      <CreatePartyDialog
-        open
-        onCreate={handleCreateParty}
-        onJoin={handleJoinParty}
-        onImport={handleImportParty}
-      />
+      <CreatePartyDialog open onCreate={handleCreateParty} onJoin={handleJoinParty} onImport={handleImportParty} />
     );
   };
 

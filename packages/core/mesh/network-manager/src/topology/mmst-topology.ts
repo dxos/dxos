@@ -14,17 +14,17 @@ export interface MMSTTopologyOptions {
   /**
    * Number of connections the peer will originate by itself.
    */
-  originateConnections?: number
+  originateConnections?: number;
 
   /**
    * Maximum number of connections allowed, all other connections will be dropped.
    */
-  maxPeers?: number
+  maxPeers?: number;
 
   /**
    * Size of random sample from which peer candidates are selected.
    */
-  sampleSize?: number
+  sampleSize?: number;
 }
 
 export class MMSTTopology implements Topology {
@@ -36,22 +36,18 @@ export class MMSTTopology implements Topology {
 
   private _sampleCollected = false;
 
-  constructor ({
-    originateConnections = 2,
-    maxPeers = 4,
-    sampleSize = 10
-  }: MMSTTopologyOptions = {}) {
+  constructor({ originateConnections = 2, maxPeers = 4, sampleSize = 10 }: MMSTTopologyOptions = {}) {
     this._originateConnections = originateConnections;
     this._maxPeers = maxPeers;
     this._sampleSize = sampleSize;
   }
 
-  init (controller: SwarmController): void {
+  init(controller: SwarmController): void {
     assert(!this._controller, 'Already initialized');
     this._controller = controller;
   }
 
-  update (): void {
+  update(): void {
     assert(this._controller, 'Not initialized');
     const { connected, candidates } = this._controller.getState();
     // Run the algorithms if we have first candidates, ran it before, or have more connections than needed.
@@ -62,7 +58,7 @@ export class MMSTTopology implements Topology {
     }
   }
 
-  async onOffer (peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: PublicKey): Promise<boolean> {
     assert(this._controller, 'Not initialized');
     const { connected } = this._controller.getState();
     const accept = connected.length < this._maxPeers;
@@ -70,17 +66,19 @@ export class MMSTTopology implements Topology {
     return accept;
   }
 
-  async destroy (): Promise<void> {
+  async destroy(): Promise<void> {
     // Nothing to do.
   }
 
-  private _runAlgorithm () {
+  private _runAlgorithm() {
     assert(this._controller, 'Not initialized');
     const { connected, candidates, ownPeerId } = this._controller.getState();
 
     if (connected.length > this._maxPeers) {
       // Disconnect extra peers.
-      const sorted = sortByXorDistance(connected, ownPeerId).reverse().slice(0, this._maxPeers - connected.length);
+      const sorted = sortByXorDistance(connected, ownPeerId)
+        .reverse()
+        .slice(0, this._maxPeers - connected.length);
       for (const peer of sorted) {
         log(`Disconnect ${peer}.`);
         this._controller.disconnect(peer);
@@ -96,9 +94,12 @@ export class MMSTTopology implements Topology {
     }
   }
 
-  toString () {
+  toString() {
     return 'MMSTTopology';
   }
 }
 
-const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] => keys.sort((a, b) => distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer())));
+const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] =>
+  keys.sort((a, b) =>
+    distance.gt(distance(a.asBuffer(), reference.asBuffer()), distance(b.asBuffer(), reference.asBuffer()))
+  );

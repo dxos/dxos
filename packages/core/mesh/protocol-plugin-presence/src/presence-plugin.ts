@@ -19,48 +19,47 @@ import { Alive } from '@dxos/protocols/proto/dxos/mesh/presence';
 
 const log = debug('dxos:mesh:presence');
 
-export interface PresenceOptions {
-  peerTimeout?: number
-  metadata?: any
-}
+export type PresenceOptions = {
+  peerTimeout?: number;
+  metadata?: any;
+};
 
-interface GraphNode {
-  metadata?: any
-  lastUpdate?: number
-}
+type GraphNode = {
+  metadata?: any;
+  lastUpdate?: number;
+};
 
-interface Peer {
-  id: Buffer
-  protocol: Protocol
-}
+type Peer = {
+  id: Buffer;
+  protocol: Protocol;
+};
 
-interface ConnectionEventDetails {
-  fromId: Buffer
-  toId: Buffer
-}
+type ConnectionEventDetails = {
+  fromId: Buffer;
+  toId: Buffer;
+};
 
-interface ProtocolMessageEventDetails {
-  protocol: Protocol
-  message: any
-}
+type ProtocolMessageEventDetails = {
+  protocol: Protocol;
+  message: any;
+};
 
-interface NeighborJoinedEventDetails {
-  peerId: string
-  protocol: Protocol
-}
+type NeighborJoinedEventDetails = {
+  peerId: string;
+  protocol: Protocol;
+};
 
-interface GraphUpdatedEventDetails {
-  graph: any
-  changes: any
-}
+type GraphUpdatedEventDetails = {
+  graph: any;
+  changes: any;
+};
 
 /**
  * Presence protocol plugin.
  */
 export class PresencePlugin {
-  static EXTENSION_NAME = 'dxos.mesh.protocol.presence';
+  static readonly EXTENSION = 'dxos.mesh.protocol.presence';
 
-  private extensionsCreated = 0;
   private readonly _peerTimeout: number;
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.mesh.presence.Alive');
@@ -77,6 +76,7 @@ export class PresencePlugin {
   private readonly _neighborAlreadyConnected = new Event<string>();
   private readonly _neighborJoined = new Event<NeighborJoinedEventDetails>();
   private readonly _neighborLeft = new Event<string>();
+
   readonly graphUpdated = new Event<GraphUpdatedEventDetails>();
 
   private _metadata: any;
@@ -84,10 +84,9 @@ export class PresencePlugin {
   private _broadcast!: Broadcast<Peer>;
   private _scheduler: NodeJS.Timeout | null = null;
 
-  constructor (
-    private readonly _peerId: Buffer,
-    options: PresenceOptions = {}
-  ) {
+  private _extensionsCreated = 0; // TODO(burdon): Debug only?
+
+  constructor(private readonly _peerId: Buffer, options: PresenceOptions = {}) {
     assert(Buffer.isBuffer(_peerId));
 
     const { peerTimeout = 2 * 60 * 1000, metadata } = options;
@@ -102,11 +101,11 @@ export class PresencePlugin {
     });
   }
 
-  get peerId () {
+  get peerId() {
     return this._peerId;
   }
 
-  get peers (): Buffer[] {
+  get peers(): Buffer[] {
     const list: Buffer[] = [];
     this._graph.forEachNode((node) => {
       list.push(Buffer.from(node.id as string, 'hex'));
@@ -115,31 +114,31 @@ export class PresencePlugin {
     return list;
   }
 
-  get graph () {
+  get graph() {
     return this._graph;
   }
 
-  get metadata () {
+  get metadata() {
     return this._metadata;
   }
 
-  setMetadata (metadata: any) {
+  setMetadata(metadata: any) {
     this._metadata = metadata;
   }
 
   /**
    * Create protocol extension.
    */
-  createExtension (): Extension {
+  createExtension(): Extension {
     this.start();
-    this.extensionsCreated++;
+    this._extensionsCreated++;
 
-    return new Extension(PresencePlugin.EXTENSION_NAME)
+    return new Extension(PresencePlugin.EXTENSION)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
       .setCloseHandler(async (protocol) => {
         await this._removePeer(protocol);
-        if (--this.extensionsCreated === 0) {
+        if (--this._extensionsCreated === 0) {
           // The last extension got closed so the plugin can be stopped.
           await this.stop();
         }
@@ -149,11 +148,11 @@ export class PresencePlugin {
   /**
    * NOTICE: Does not return a Promise cause it could hang if the queue is cleared.
    */
-  private _pingLimit () {
+  private _pingLimit() {
     void this._limit(() => this.ping());
   }
 
-  start () {
+  start() {
     if (this._scheduler) {
       return;
     }
@@ -170,7 +169,7 @@ export class PresencePlugin {
     }, Math.floor(this._peerTimeout / 2));
   }
 
-  stop () {
+  stop() {
     log('Stop');
 
     this._limit.clearQueue();
@@ -181,9 +180,11 @@ export class PresencePlugin {
     }
   }
 
-  private _buildGraph () {
+  private _buildGraph() {
     this._graph = createGraph();
-    this._graph.addNode(this._peerId.toString('hex'), { metadata: this._metadata });
+    this._graph.addNode(this._peerId.toString('hex'), {
+      metadata: this._metadata
+    });
     this._graph.on('changed', (changes) => {
       let graphUpdated = false;
 
@@ -226,7 +227,7 @@ export class PresencePlugin {
     });
   }
 
-  private _buildBroadcast () {
+  private _buildBroadcast() {
     const middleware: Middleware<Peer> = {
       lookup: async () => {
         return Array.from(this._neighbors.values()).map((peer) => {
@@ -239,7 +240,7 @@ export class PresencePlugin {
         });
       },
       send: async (packet, { protocol }) => {
-        const presence = protocol.getExtension(PresencePlugin.EXTENSION_NAME);
+        const presence = protocol.getExtension(PresencePlugin.EXTENSION);
         assert(presence);
         await presence.send(packet, { oneway: true });
       },
@@ -256,7 +257,7 @@ export class PresencePlugin {
       id: this._peerId
     });
 
-    this._broadcast.packet.on(packet => {
+    this._broadcast.packet.on((packet) => {
       assert(packet.data);
       const data = this._codec.decode(packet.data);
       if (data.metadata) {
@@ -264,25 +265,28 @@ export class PresencePlugin {
       }
       this._remotePing.emit(data);
     });
-    this._broadcast.sendError.on(err => {
+    this._broadcast.sendError.on((err) => {
       // Filter out "stream closed" errors.
       // TODO(dmaretskyi): Define error classes for these and use instanceof.
-      if (!['ERR_PROTOCOL_STREAM_CLOSED', 'NMSG_ERR_CLOSE'].includes((err as any).code) && err.message !== 'Resource is closed') {
+      if (
+        !['ERR_PROTOCOL_STREAM_CLOSED', 'NMSG_ERR_CLOSE'].includes((err as any).code) &&
+        err.message !== 'Resource is closed'
+      ) {
         console.warn(err);
       }
     });
-    this._broadcast.subscribeError.on(err => console.warn(err));
-    this._remotePing.on(packet => this._updateGraph(packet));
+    this._broadcast.subscribeError.on((err) => console.warn(err));
+    this._remotePing.on((packet) => this._updateGraph(packet));
   }
 
-  private _peerMessageHandler (protocol: Protocol, chunk: any) {
+  private _peerMessageHandler(protocol: Protocol, chunk: any) {
     this._protocolMessage.emit({
       protocol,
       message: chunk
     });
   }
 
-  private _pruneGraph () {
+  private _pruneGraph() {
     const now = Date.now();
     const localPeerId = this._peerId.toString('hex');
     this._graph.beginUpdate();
@@ -294,14 +298,14 @@ export class PresencePlugin {
         return;
       }
 
-      if ((now - node.data.lastUpdate!) > this._peerTimeout) {
+      if (now - node.data.lastUpdate! > this._peerTimeout) {
         this._deleteNode(node.id as string);
       }
     });
     this._graph.endUpdate();
   }
 
-  private _addPeer (protocol: Protocol) {
+  private _addPeer(protocol: Protocol) {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
     assert(typeof peerId === 'string');
@@ -327,7 +331,7 @@ export class PresencePlugin {
   /**
    * Remove peer.
    */
-  private async _removePeer (protocol: Protocol) {
+  private async _removePeer(protocol: Protocol) {
     assert(protocol);
     const { peerId } = protocol.getSession() ?? {};
 
@@ -355,7 +359,7 @@ export class PresencePlugin {
     });
   }
 
-  private _updateGraph ({ peerId: from, connections = [], metadata }: any) {
+  private _updateGraph({ peerId: from, connections = [], metadata }: any) {
     const fromHex = from.toString('hex');
 
     const lastUpdate = Date.now();
@@ -377,43 +381,53 @@ export class PresencePlugin {
       }
     });
 
-    this._graph.forEachLinkedNode(fromHex, (_, link) => {
-      const toDelete = !connections.find((conn: any) => conn.source === link.fromId && conn.target === link.toId);
+    this._graph.forEachLinkedNode(
+      fromHex,
+      (_, link) => {
+        const toDelete = !connections.find((conn: any) => conn.source === link.fromId && conn.target === link.toId);
 
-      if (!toDelete) {
-        return;
-      }
+        if (!toDelete) {
+          return;
+        }
 
-      this._graph.removeLink(link);
+        this._graph.removeLink(link);
 
-      this._deleteNodeIfEmpty(link.fromId as string);
-      this._deleteNodeIfEmpty(link.toId as string);
-    }, false);
+        this._deleteNodeIfEmpty(link.fromId as string);
+        this._deleteNodeIfEmpty(link.toId as string);
+      },
+      false
+    );
 
     this._graph.endUpdate();
   }
 
-  private _deleteNode (id: string) {
+  private _deleteNode(id: string) {
     this._graph.removeNode(id);
-    this._graph.forEachLinkedNode(id, (_, link) => {
-      this._graph.removeLink(link);
-    }, false);
+    this._graph.forEachLinkedNode(
+      id,
+      (_, link) => {
+        this._graph.removeLink(link);
+      },
+      false
+    );
   }
 
-  private _deleteNodeIfEmpty (id: string) {
+  private _deleteNodeIfEmpty(id: string) {
     const links = this._graph.getLinks(id) || [];
     if (links.length === 0) {
       this._graph.removeNode(id);
     }
   }
 
-  async ping (): Promise<void> {
+  async ping(): Promise<void> {
     this._limit.clearQueue();
 
     try {
       const message: Alive = {
         peerId: this._peerId,
-        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
+        connections: Array.from(this._neighbors.values()).map((peer) => ({
+          peerId: PublicKey.bufferize(peer.getSession().peerId)
+        })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
       await this._broadcast.publish(Buffer.from(this._codec.encode(message)));

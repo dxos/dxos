@@ -4,51 +4,44 @@
 
 import assert from 'assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
-import {
-  ComplexMap,
-  ComplexSet,
-  exponentialBackoffInterval,
-  SubscriptionGroup
-} from '@dxos/util';
+import { ComplexMap, ComplexSet, exponentialBackoffInterval } from '@dxos/util';
 
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
 
-export type OnMessage = (params: {
-  author: PublicKey
-  recipient: PublicKey
-  payload: Any
-}) => Promise<void>;
+export type OnMessage = (params: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 
 export interface MessengerOptions {
-  signalManager: SignalManager
-  retryDelay?: number
-  timeout?: number
+  signalManager: SignalManager;
+  retryDelay?: number;
+  timeout?: number;
 }
 
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  //* * { peerId, payloadType } => listeners set */
-  private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(({ peerId, payloadType }) => peerId.toHex() + payloadType);
-  //* * peerId => listeners set */
-  private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
+  // { peerId, payloadType } => listeners set
+  private readonly _listeners = new ComplexMap<{ peerId: PublicKey; payloadType: string }, Set<OnMessage>>(
+    ({ peerId, payloadType }) => peerId.toHex() + payloadType
+  );
 
-  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
+  // peerId => listeners set
+  private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(PublicKey.hash);
+
+  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
+
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
-  private readonly _subscriptions = new SubscriptionGroup();
+
+  private readonly _subscriptions = new EventSubscriptions(); // TODO(burdon): Not released.
   private readonly _retryDelay: number;
   private readonly _timeout: number;
 
-  constructor ({
-    signalManager,
-    retryDelay = 100,
-    timeout = 3000
-  }: MessengerOptions) {
+  constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._signalManager.onMessage.on(async (message) => {
       log(`Received message from ${message.author}`);
@@ -59,7 +52,7 @@ export class Messenger {
     this._timeout = timeout;
   }
 
-  async sendMessage ({ author, recipient, payload }: Message): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     const reliablePayload: ReliablePayload = {
       messageId: PublicKey.random(),
       payload
@@ -98,7 +91,7 @@ export class Messenger {
       clearTimeout(timeout);
     });
 
-    this._subscriptions.push(() => {
+    this._subscriptions.add(() => {
       cancelRetry();
       clearTimeout(timeout);
     });
@@ -110,14 +103,14 @@ export class Messenger {
    * Subscribes onMessage function to messages that contains payload with payloadType.
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
-  async listen ({
+  async listen({
     peerId,
     payloadType,
     onMessage
   }: {
-    peerId: PublicKey
-    payloadType?: string
-    onMessage: OnMessage
+    peerId: PublicKey;
+    payloadType?: string;
+    onMessage: OnMessage;
   }): Promise<ListeningHandle> {
     await this._signalManager.subscribeMessages(peerId);
     let listeners: Set<OnMessage> | undefined;
@@ -145,14 +138,14 @@ export class Messenger {
     };
   }
 
-  private async _encodeAndSend ({
+  private async _encodeAndSend({
     author,
     recipient,
     reliablePayload
   }: {
-    author: PublicKey
-    recipient: PublicKey
-    reliablePayload: ReliablePayload
+    author: PublicKey;
+    recipient: PublicKey;
+    reliablePayload: ReliablePayload;
   }): Promise<void> {
     await this._signalManager.sendMessage({
       author,
@@ -166,7 +159,7 @@ export class Messenger {
     });
   }
 
-  private async _handleMessage (message: Message): Promise<void> {
+  private async _handleMessage(message: Message): Promise<void> {
     switch (message.payload.type_url) {
       case 'dxos.mesh.messaging.ReliablePayload': {
         await this._handleReliablePayload(message);
@@ -179,11 +172,7 @@ export class Messenger {
     }
   }
 
-  private async _handleReliablePayload ({
-    author,
-    recipient,
-    payload
-  }: Message) {
+  private async _handleReliablePayload({ author, recipient, payload }: Message) {
     assert(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = schema
       .getCodecForType('dxos.mesh.messaging.ReliablePayload')
@@ -208,23 +197,21 @@ export class Messenger {
     });
   }
 
-  private async _handleAcknowledgement ({ payload }: { payload: Any }) {
+  private async _handleAcknowledgement({ payload }: { payload: Any }) {
     assert(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(
-      schema
-        .getCodecForType('dxos.mesh.messaging.Acknowledgement')
-        .decode(payload.value).messageId
+      schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').decode(payload.value).messageId
     )?.();
   }
 
-  private async _sendAcknowledgement ({
+  private async _sendAcknowledgement({
     author,
     recipient,
     messageId
   }: {
-    author: PublicKey
-    recipient: PublicKey
-    messageId: PublicKey
+    author: PublicKey;
+    recipient: PublicKey;
+    messageId: PublicKey;
   }): Promise<void> {
     log(`Sent ack: ${messageId} from ${recipient} to ${author}`);
     await this._signalManager.sendMessage({
@@ -232,14 +219,12 @@ export class Messenger {
       recipient: author,
       payload: {
         type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: schema
-          .getCodecForType('dxos.mesh.messaging.Acknowledgement')
-          .encode({ messageId })
+        value: schema.getCodecForType('dxos.mesh.messaging.Acknowledgement').encode({ messageId })
       }
     });
   }
 
-  private async _callListeners (message: Message): Promise<void> {
+  private async _callListeners(message: Message): Promise<void> {
     {
       const defaultListenerMap = this._defaultListeners.get(message.recipient);
       if (defaultListenerMap) {
@@ -250,7 +235,10 @@ export class Messenger {
     }
 
     {
-      const listenerMap = this._listeners.get({ peerId: message.recipient, payloadType: message.payload.type_url });
+      const listenerMap = this._listeners.get({
+        peerId: message.recipient,
+        payloadType: message.payload.type_url
+      });
       if (listenerMap) {
         for (const listener of listenerMap) {
           await listener(message);
@@ -261,5 +249,5 @@ export class Messenger {
 }
 
 export interface ListeningHandle {
-  unsubscribe: () => Promise<void>
+  unsubscribe: () => Promise<void>;
 }

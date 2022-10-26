@@ -40,26 +40,19 @@ describe('PublicKey', function () {
   });
 
   it('from', function () {
-    expect(PublicKey.from(TEST_KEY_HEX).toHex())
-      .to.equal(TEST_KEY_HEX);
+    expect(PublicKey.from(TEST_KEY_HEX).toHex()).to.equal(TEST_KEY_HEX);
 
-    expect(PublicKey.from(Buffer.from(TEST_KEY_HEX, 'hex')).toHex())
-      .to.equal(TEST_KEY_HEX);
+    expect(PublicKey.from(Buffer.from(TEST_KEY_HEX, 'hex')).toHex()).to.equal(TEST_KEY_HEX);
 
-    expect(PublicKey.from(new Uint8Array(32)).toHex())
-      .to.equal('0000000000000000000000000000000000000000000000000000000000000000');
+    expect(PublicKey.from(new Uint8Array(32)).toHex()).to.equal(
+      '0000000000000000000000000000000000000000000000000000000000000000'
+    );
   });
 
   it('equals', function () {
-    expect(PublicKey.equals(
-      PublicKey.from(TEST_KEY_HEX),
-      PublicKey.from(TEST_KEY_HEX)
-    )).to.equal(true);
+    expect(PublicKey.equals(PublicKey.from(TEST_KEY_HEX), PublicKey.from(TEST_KEY_HEX))).to.equal(true);
 
-    expect(PublicKey.equals(
-      PublicKey.random(),
-      PublicKey.random()
-    )).to.equal(false);
+    expect(PublicKey.equals(PublicKey.random(), PublicKey.random())).to.equal(false);
   });
 
   it('expect equality', function () {

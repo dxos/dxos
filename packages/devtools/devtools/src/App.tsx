@@ -4,45 +4,60 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
-import { RegistryProvider } from '@dxos/react-registry-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Loader } from './components';
-import { PanelsContainer } from './containers';
+import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-const Main = ({ client }: { client: Client }) => (
-  <ClientProvider client={client}>
-    <RegistryProvider config={client.config}>
-      <PanelsContainer sections={sections} />
-    </RegistryProvider>
-  </ClientProvider>
-);
+export const App = () => {
+  const [clientProvider, setClientProvider] = useState<Promise<Client>>();
 
-export const App = ({ clientReady }: { clientReady: Event<Client> }) => {
-  const [client, setClient] = useState<Client>();
+  const handleRemoteSource = async (remoteSource?: string) => {
+    const remoteSourceConfig = remoteSource ? {
+      runtime: {
+        client: {
+          remoteSource
+        }
+      }
+    } : {};
+    const config = new Config(await Dynamics(), Defaults(), remoteSourceConfig);
+    const client = new Client(config);
+    setClientProvider(async () => {
+      await client.initialize();
+      return client;
+    });
+  };
 
   useEffect(() => {
-    clientReady.on(client => setClient(client));
+    void handleRemoteSource();
   }, []);
+
+  if (!clientProvider) {
+    return null;
+  }
 
   return (
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <FullScreen sx={{ flexDirection: 'row' }}>
+          <ClientProvider client={clientProvider}>
+            <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              <PanelsContainer sections={sections} />
+            </Box>
 
-        <FullScreen>
-          <Loader loading={!client} label='Looking for DXOS Client...' />
+            <Box sx={{ display: 'flex', flexShrink: 0 }}>
+              <Controls onRemoteSource={handleRemoteSource} />
+            </Box>
+          </ClientProvider>
         </FullScreen>
-
-        {client && <Main client={client} />}
       </ThemeProvider>
     </ErrorBoundary>
   );

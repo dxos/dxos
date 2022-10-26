@@ -32,9 +32,9 @@ chai.use(chaiAsPromised);
 
 class TxSigner implements Partial<Signer> {
   private id = 0;
-  constructor (private keypair: KeyringPair) { }
+  constructor(private keypair: KeyringPair) {}
 
-  public async signRaw ({ address, data }: SignerPayloadRaw): Promise<SignerResult> {
+  public async signRaw({ address, data }: SignerPayloadRaw): Promise<SignerResult> {
     assert(address === this.keypair.address, 'Signer does not have the keyringPair');
 
     const signature = u8aToHex(this.keypair.sign(hexToU8a(data), { withType: true }));
@@ -102,22 +102,24 @@ describe('Signatures', function () {
     }
 
     {
-      const auctionsApi = new PolkadotAuctions(apiPromise, tx => tx.signAsync(keypair));
+      const auctionsApi = new PolkadotAuctions(apiPromise, (tx) => tx.signAsync(keypair));
       await auctionsApi.createAuction(auctionName(), 100000);
     }
   });
 
   it('Can send transactions with lower-level external signer', async function () {
-    const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
+    const signTxFunction: SignTxFunction = async (tx) =>
+      await tx.signAsync(keypair.address, { signer: new TxSigner(keypair) });
 
     const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);
   });
 
   it('Can send transactions with external signer using Client', async function () {
-    const signTxFunction: SignTxFunction = async (tx) => await tx.signAsync(keypair.address, {
-      signer: new ClientSigner(client, apiPromise.registry, keypair.address)
-    });
+    const signTxFunction: SignTxFunction = async (tx) =>
+      await tx.signAsync(keypair.address, {
+        signer: new ClientSigner(client, apiPromise.registry, keypair.address)
+      });
 
     const auctionsApi = new PolkadotAuctions(apiPromise, signTxFunction);
     await auctionsApi.createAuction(auctionName(), 100000);

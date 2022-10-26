@@ -16,7 +16,7 @@ const useTypes = (party?: Party, deps: any[] = []) => {
 
   useEffect(() => {
     const types = new Set<string>();
-    items.forEach(item => item.type && item.type !== PARTY_ITEM_TYPE && types.add(item.type));
+    items.forEach((item) => item.type && item.type !== PARTY_ITEM_TYPE && types.add(item.type));
     setTypes(types);
   }, [items]);
 
@@ -24,19 +24,16 @@ const useTypes = (party?: Party, deps: any[] = []) => {
 };
 
 export const ItemTypeList: FC<{
-  party: Party
-  onChange: (type: string) => void
-}> = ({
-  party,
-  onChange
-}) => {
+  party: Party;
+  onChange: (type: string) => void;
+}> = ({ party, onChange }) => {
   const types = useTypes(party);
 
   return (
     <List
       id={'item-type-list'}
-      items={types.map(type => ({ id: type, text: type }))}
-      onSelect={id => onChange(id)}
+      items={types.map((type) => ({ id: type, text: type }))}
+      onSelect={(id) => onChange(id)}
     />
   );
 };

@@ -4,27 +4,14 @@
 
 import React, { useState } from 'react';
 
-import {
-  Box, Button, Divider, Paper, TextField, Toolbar
-} from '@mui/material';
+import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
 import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import {
-  ClientProvider,
-  useClient,
-  useContacts,
-  useParties,
-  useProfile
-} from '../src';
-import {
-  ClientPanel,
-  ContactsSelector,
-  Container,
-  PartyJoinPanel
-} from './helpers';
+import { ClientProvider, useClient, useContacts, useParties, useProfile } from '../src';
+import { ClientPanel, ContactsSelector, Container, PartyJoinPanel } from './helpers';
 
 export default {
   title: 'react-client/Party Invitations'
@@ -49,7 +36,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateParty = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const party = await client.echo.createParty();
       setPartyKey(party.key);
       resetInvitations();
@@ -57,7 +44,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateInvitation = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       resetInvitations();
 
       const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
@@ -77,49 +64,29 @@ const PartyInvitationContainer = () => {
     <Box>
       <Box sx={{ padding: 1 }}>
         <Toolbar>
-          <Button
-            variant='outlined'
-            onClick={handleCreateParty}
-          >
+          <Button variant='outlined' onClick={handleCreateParty}>
             Create Party
           </Button>
-          <Button
-            disabled={!partyKey}
-            onClick={handleCreateInvitation}
-          >
+          <Button disabled={!partyKey} onClick={handleCreateInvitation}>
             Create Invitation
           </Button>
         </Toolbar>
 
         {contacts.length !== 0 && (
           <Box sx={{ marginTop: 1 }}>
-            <ContactsSelector
-              contacts={contacts}
-              selected={contact}
-              onSelect={setContact}
-            />
+            <ContactsSelector contacts={contacts} selected={contact} onSelect={setContact} />
           </Box>
         )}
 
         {invitationCode && (
           <Box sx={{ marginTop: 1 }}>
-            <TextField
-              disabled
-              multiline
-              fullWidth
-              value={invitationCode}
-              maxRows={3}
-            />
+            <TextField disabled multiline fullWidth value={invitationCode} maxRows={3} />
           </Box>
         )}
 
         {pin && (
           <Box sx={{ marginTop: 1 }}>
-            <TextField
-              disabled
-              type='text'
-              value={pin}
-            />
+            <TextField disabled type='text' value={pin} />
           </Box>
         )}
       </Box>
@@ -128,9 +95,9 @@ const PartyInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any
-  party?: string
-  invitation?: PartyInvitation
+  error?: any;
+  party?: string;
+  invitation?: PartyInvitation;
 }
 
 /**
@@ -158,13 +125,7 @@ const PartyJoinContainer = () => {
     await status.invitation?.authenticate(Buffer.from(pin));
   };
 
-  return (
-    <PartyJoinPanel
-      status={status}
-      onSubmit={handleSubmit}
-      onAuthenticate={handleAuthenticate}
-    />
-  );
+  return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
 };
 
 const TestApp = () => {
@@ -183,14 +144,16 @@ const TestApp = () => {
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      flexShrink: 0,
-      overflow: 'hidden',
-      margin: 1
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        flexShrink: 0,
+        overflow: 'hidden',
+        margin: 1
+      }}
+    >
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
@@ -207,7 +170,14 @@ export const Primary = () => {
 
   return (
     <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          padding: 1,
+          justifyContent: 'space-around'
+        }}
+      >
         {[...new Array(peers)].map((_, i) => (
           <ClientProvider key={i}>
             <TestApp />

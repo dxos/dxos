@@ -12,44 +12,44 @@ import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 import { Model } from './model';
 
 // TODO(burdon): Replace with DXN (push to core protocol def).
-export type ModelType = string
+export type ModelType = string;
 
 // TODO(burdon): Document.
-export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any
+export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any;
 
 // TODO(burdon): Document.
-export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any
+export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any;
 
 /**
  *
  */
 export type ModelMessage<T> = {
-  meta: MutationMetaWithTimeframe
-  mutation: T
-}
+  meta: MutationMetaWithTimeframe;
+  mutation: T;
+};
 
 export interface MutationWriteReceipt extends WriteReceipt {
-  waitToBeProcessed(): Promise<void>
+  waitToBeProcessed(): Promise<void>;
 }
 
-export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>
+export type MutationWriter<T> = (mutation: T) => Promise<MutationWriteReceipt>;
 
 /**
  *
  */
 // TODO(burdon): Rename and document.
 export interface MutationProcessMeta {
-  author: PublicKey
+  author: PublicKey;
 }
 
 /**
  * Manages state and state transitions vis mutations.
  */
 export interface StateMachine<TState, TMutation, TSnapshot> {
-  getState(): TState
-  reset(snapshot: TSnapshot): void
-  process(mutation: TMutation, meta: MutationProcessMeta): void
-  snapshot(): TSnapshot
+  getState(): TState;
+  reset(snapshot: TSnapshot): void;
+  process(mutation: TMutation, meta: MutationProcessMeta): void;
+  snapshot(): TSnapshot;
 }
 
 /**
@@ -57,16 +57,16 @@ export interface StateMachine<TState, TMutation, TSnapshot> {
  */
 // TODO(burdon): Rethink this concept. Remove static field from model.
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
-  type: ModelType
+  type: ModelType;
 
-  // TODO(marik-d): Specify generic type param here to match model's expected message type.
-  mutationCodec: Codec<TMutation>
+  // TODO(dmaretskyi): Specify generic type param here to match model's expected message type.
+  mutationCodec: Codec<TMutation>;
 
   // Snapshot codecs are distinct from the mutation codecs.
-  snapshotCodec?: Codec<TSnasphot>
+  snapshotCodec?: Codec<TSnasphot>;
 
   // Manages state and state transitions vis mutations.
-  stateMachine: () => StateMachine<TState, TMutation, TSnasphot>
+  stateMachine: () => StateMachine<TState, TMutation, TSnasphot>;
 
   /**
    * A way to initialize the model upon item creation.
@@ -77,28 +77,26 @@ export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
    * @returns A mutation to be included in the same message as item creation, or null if no initialization is required.
    */
   // TODO(burdon): Remove from meta? Make generic.
-  getInitMutation? (props: any): Promise<any | null>
-}
+  getInitMutation?(props: any): Promise<any | null>;
+};
 
 /**
  *
  */
-export type ModelConstructor<M extends Model> = (
-  new (
-    meta: ModelMeta,
-    itemId: ItemID,
-    getState: () => StateOf<M>,
-    MutationWriter?: MutationWriter<MutationOf<M>>,
-  ) => M
-) & {
-  meta: ModelMeta
+export type ModelConstructor<M extends Model> = (new (
+  meta: ModelMeta,
+  itemId: ItemID,
+  getState: () => StateOf<M>,
+  MutationWriter?: MutationWriter<MutationOf<M>>
+) => M) & {
+  meta: ModelMeta;
 };
 
 /**
  *
  */
 // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
-export function validateModelClass (model: any): asserts model is ModelConstructor<any> {
+export function validateModelClass(model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
 
   // TODO(burdon): Convert to assert (too verbose).

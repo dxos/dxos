@@ -22,11 +22,11 @@ import { PublicKey } from '@dxos/keys';
  */
 // TODO(burdon): Create stateless (well-formed) root object (e.g., Profile).
 export interface Client {
-  get halo (): Halo
-  get circle (): Circle
-  get brane (): Brane
-  get meta (): Meta
-  get messenger (): Messenger
+  get halo(): Halo;
+  get circle(): Circle;
+  get brane(): Brane;
+  get meta(): Meta;
+  get messenger(): Messenger;
 }
 
 //
@@ -34,24 +34,24 @@ export interface Client {
 //
 
 export interface Meta {
-  createRecord<Type> (record: RecordData<Type>): Promise<Record<Type>>
+  createRecord<Type>(record: RecordData<Type>): Promise<Record<Type>>;
 
   // TODO(burdon): GraphQL queries?
-  queryRecords (query?: MetaQuery): Result<Record, MetaQuery>
+  queryRecords(query?: MetaQuery): Result<Record, MetaQuery>;
 }
 
 export interface MetaQuery {
-  get type (): string
+  get type(): string;
 }
 
 export interface RecordData<Type> {
   // The type field identifies the fully-qualified protobuf message type.
-  get type (): string
-  get data (): Type
+  get type(): string;
+  get data(): Type;
 }
 
 export interface Record<Type = {}> extends RecordData<Type> {
-  get publicKey (): PublicKey
+  get publicKey(): PublicKey;
 }
 
 //
@@ -59,11 +59,11 @@ export interface Record<Type = {}> extends RecordData<Type> {
 //
 
 export interface Messenger {
-  send (key: PublicKey, message: any): Promise<Receipt>
+  send(key: PublicKey, message: any): Promise<Receipt>;
 }
 
 export interface Receipt {
-  get recipient (): PublicKey
+  get recipient(): PublicKey;
 }
 
 //
@@ -71,30 +71,30 @@ export interface Receipt {
 //
 
 export interface Halo {
-  get profile (): Profile
-  createProfile (): Promise<Buffer>
-  recoverProfile (privateKey: Buffer): Promise<Profile>
+  get profile(): Profile;
+  createProfile(): Promise<Buffer>;
+  recoverProfile(privateKey: Buffer): Promise<Profile>;
 
   // TODO(burdon): Split out device management?
-  get device (): Device
-  queryDevices (query?: any): Result<Device>
-  createDeviceAdmissionRequest (): DeviceAdmissionRequest
-  createDeviceAdmissionChallenge (requestKey: Buffer): DeviceAdmissionChallenge
+  get device(): Device;
+  queryDevices(query?: any): Result<Device>;
+  createDeviceAdmissionRequest(): DeviceAdmissionRequest;
+  createDeviceAdmissionChallenge(requestKey: Buffer): DeviceAdmissionChallenge;
 }
 
 export interface Circle {
-  queryContacts (query?: any): Result<Profile>
-  queryInvitations (query?: any): Result<InvitationOffer>
+  queryContacts(query?: any): Result<Profile>;
+  queryInvitations(query?: any): Result<InvitationOffer>;
 }
 
 export interface Profile {
-  get identityKey (): PublicKey
-  get username (): string
+  get identityKey(): PublicKey;
+  get username(): string;
 }
 
 export interface Device {
-  get deviceKey (): PublicKey
-  get name (): string
+  get deviceKey(): PublicKey;
+  get name(): string;
 }
 
 /**
@@ -102,20 +102,20 @@ export interface Device {
  */
 export interface DeviceAdmissionRequest {
   // Serializable discovery key.
-  get requestKey (): Buffer
+  get requestKey(): Buffer;
 
   // Accept and authenticate.
-  accept (secret?: string): Promise<void>
+  accept(secret?: string): Promise<void>;
 }
 
 /**
  * Challenge session instantiated on verifying device.
  */
 export interface DeviceAdmissionChallenge {
-  get secret (): string
+  get secret(): string;
 
   // Wait for peer to complete.
-  wait (): Promise<PublicKey>
+  wait(): Promise<PublicKey>;
 }
 
 /**
@@ -123,13 +123,13 @@ export interface DeviceAdmissionChallenge {
  */
 export interface Invitation {
   // Serializable discovery key.
-  get offerKey (): Buffer
+  get offerKey(): Buffer;
 
   // Second-factor required for authentication.
-  get secret (): string
+  get secret(): string;
 
   // Wait for peer to complete.
-  wait (): Promise<void>
+  wait(): Promise<void>;
 }
 
 /**
@@ -137,7 +137,7 @@ export interface Invitation {
  */
 export interface InvitationOffer {
   // Accept and authenticate.
-  accept (secret?: string): Promise<PublicKey>
+  accept(secret?: string): Promise<PublicKey>;
 }
 
 //
@@ -145,33 +145,35 @@ export interface InvitationOffer {
 //
 
 export interface Brane {
-  createSpace (): Promise<Space>
-  getSpace (key: PublicKey): Promise<Space>
-  querySpaceKeys (query?: any): Result<PublicKey>
-  querySpaces (query?: any): Result<Space>
-  queryItems (query?: any): Result<Item>
+  createSpace(): Promise<Space>;
+  getSpace(key: PublicKey): Promise<Space>;
+  querySpaceKeys(query?: any): Result<PublicKey>;
+  querySpaces(query?: any): Result<Space>;
+  queryItems(query?: any): Result<Item>;
 
   // TODO(burdon): Move to Circle? Or move queryInvitations to Brane (for symmetry)?
-  createInvitationOffer (offerKey: Buffer): InvitationOffer
+  createInvitationOffer(offerKey: Buffer): InvitationOffer;
 }
 
 export interface Space {
-  get publicKey (): PublicKey
-  get database (): Database
-  queryMembers (query?: any): Result<Member>
+  get publicKey(): PublicKey;
+  get database(): Database;
+  queryMembers(query?: any): Result<Member>;
 
   // TODO(burdon): Move to Circle? Or move queryInvitations to Brane (for symmetry)?
-  createInvitation (role: Role, identityKey?: PublicKey): Invitation
+  createInvitation(role: Role, identityKey?: PublicKey): Invitation;
 }
 
 // TODO(burdon): Are admins also members and readers?
 export enum Role {
-  ADMIN, MEMBER, READER
+  ADMIN,
+  MEMBER,
+  READER
 }
 
 export interface Member {
-  get profile (): Profile
-  get role (): Role
+  get profile(): Profile;
+  get role(): Role;
 }
 
 //
@@ -180,36 +182,36 @@ export interface Member {
 
 // TODO(burdon): Typed queries and items out-of-scope for this level (Database may be pluggable within a Space).
 export interface Database {
-  createItem (data: any): Promise<Item>
-  queryItems (query?: any): Result<Item>
+  createItem(data: any): Promise<Item>;
+  queryItems(query?: any): Result<Item>;
 }
 
 export interface Item {
-  get id (): PublicKey
-  get spaceKey (): PublicKey // TODO(burdon): Id or key?
+  get id(): PublicKey;
+  get spaceKey(): PublicKey; // TODO(burdon): Id or key?
 }
 
 //
 // Generic
 //
 
-export type ResultCallback<Element, Query> = (elements: Element[], subscription: Subscription<Element, Query>) => void
+export type ResultCallback<Element, Query> = (elements: Element[], subscription: Subscription<Element, Query>) => void;
 
 /**
  * Generic async query and response.
  */
 export interface Result<Element, Query = {}> {
-  get query (): Query
+  get query(): Query;
 
   // Cached results are immediately available.
-  get elements (): Element[]
+  get elements(): Element[];
 
   // Subscribe to changes.
-  onUpdate (cb: ResultCallback<Element, Query>): Subscription<Element, Query>
+  onUpdate(cb: ResultCallback<Element, Query>): Subscription<Element, Query>;
 }
 
 export interface Subscription<Element, Query> {
-  get query (): Query
-  get result (): Result<Element, Query>
-  cancel (): void
+  get query(): Query;
+  get result(): Result<Element, Query>;
+  cancel(): void;
 }

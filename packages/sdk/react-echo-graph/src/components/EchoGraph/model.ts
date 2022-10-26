@@ -17,24 +17,24 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
     links: []
   };
 
-  get graph () {
+  get graph() {
     return this._graph;
   }
 
-  subscribe (callback: (graph: GraphData<Item<any>>) => void) {
+  subscribe(callback: (graph: GraphData<Item<any>>) => void) {
     return this.updated.on(callback);
   }
 
-  refresh () {
+  refresh() {
     this.updated.emit(this._graph);
   }
 
-  update (items: Item<any>[]) {
-    const partyItem = items.find(item => item.type === PARTY_ITEM_TYPE);
+  update(items: Item<any>[]) {
+    const partyItem = items.find((item) => item.type === PARTY_ITEM_TYPE);
     this._graph.nodes = items;
     this._graph.links = [];
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const { parent } = item;
       if (parent) {
         this._graph.links.push({

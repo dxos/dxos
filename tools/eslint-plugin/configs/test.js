@@ -3,9 +3,7 @@
 //
 
 module.exports = {
-  extends: [
-    'plugin:mocha/recommended'
-  ],
+  extends: ['plugin:mocha/recommended'],
   rules: {
     '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': 'off',
     'mocha/max-top-level-suites': 'off',

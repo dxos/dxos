@@ -3,3 +3,4 @@
 //
 
 export { Pipeline, PipelineAccessor } from './pipeline';
+export * from './timeframe-clock';

@@ -2,30 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trigger } from '@dxos/async';
-import { ClientServiceHost, clientServiceBundle } from '@dxos/client';
-import { Config } from '@dxos/config';
-import { createProtoRpcPeer } from '@dxos/rpc';
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-const client = new ClientServiceHost({
-  // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite. Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
-  config: new Config({ runtime: { client: { mode: 1 /* local */ } } })
+import { WorkerRuntime } from './worker/worker-runtime';
+
+const workerRuntime = new WorkerRuntime(
+  new Config(await Dynamics(), Defaults(), {
+    runtime: {
+      client: {
+        // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite.
+        //  Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
+        mode: 1 /* local */
+      }
+    }
+  })
+);
+
+void workerRuntime.start().catch((err) => {
+  console.error(err);
 });
-const [clientReady, resolve] = trigger();
-void client.open().then(resolve);
 
-onconnect = async event => {
+onconnect = async (event) => {
   const muxer = new PortMuxer(event.ports[0]);
-  const port = muxer.createWorkerPort({ channel: 'dxos:app' });
-  await clientReady();
 
-  const server = createProtoRpcPeer({
-    requested: {},
-    exposed: clientServiceBundle,
-    handlers: client.services,
-    port
+  await workerRuntime.createSession({
+    appPort: muxer.createWorkerPort({ channel: 'dxos:app' }),
+    systemPort: muxer.createWorkerPort({ channel: 'dxos:wrtc' })
   });
-
-  await server.open();
 };

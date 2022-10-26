@@ -25,10 +25,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoList
-        items={items.filter(item => item.type !== '')}
-        itemAdapter={itemAdapter}
-      />
+      <EchoList items={items.filter((item) => item.type !== '')} itemAdapter={itemAdapter} />
     </FullScreen>
   );
 };

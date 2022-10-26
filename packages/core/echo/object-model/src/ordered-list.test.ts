@@ -18,11 +18,11 @@ describe('OrderedList', function () {
 
     {
       await model.set('order', {
-        'a': 'b',
-        'c': 'd',
-        'd': 'e',
-        'b': 'c',
-        'x': 'a'
+        a: 'b',
+        c: 'd',
+        d: 'e',
+        b: 'c',
+        x: 'a'
       });
 
       list.refresh();
@@ -32,9 +32,9 @@ describe('OrderedList', function () {
     {
       // Allow to be disconnected.
       await model.set('order', {
-        'a': 'b',
-        'x': 'y',
-        'b': 'c'
+        a: 'b',
+        x: 'y',
+        b: 'c'
       });
 
       list.refresh();
@@ -47,9 +47,9 @@ describe('OrderedList', function () {
     const { model } = rig.createPeer();
 
     await model.set('order', {
-      'a': 'b',
-      'c': 'd',
-      'b': 'c'
+      a: 'b',
+      c: 'd',
+      b: 'c'
     });
 
     const list = new OrderedList(model, 'order');

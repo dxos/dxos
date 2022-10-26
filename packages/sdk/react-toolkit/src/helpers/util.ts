@@ -22,7 +22,7 @@ export const pickUnique = <T>(array: T[], n: number) => {
 };
 
 // TODO(burdon): Hack.
-export const ordinal = (n: number) => String(n) + ((n === 1) ? 'st' : (n === 2) ? 'nd' : (n === 3) ? 'rd' : 'th');
+export const ordinal = (n: number) => String(n) + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 
 // TODO(burdon): Factor out.
 export const createDownloadLink = (filename: string, text: string): HTMLAnchorElement => {

@@ -3,6 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -12,6 +13,7 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
+    host: true,
     port: 3967
   },
   optimizeDeps: {
@@ -28,6 +30,7 @@ export default defineConfig({
       '@dxos/react-components',
       '@dxos/react-toolkit',
       '@dxos/rpc',
+      '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/util'
     ]
@@ -38,10 +41,16 @@ export default defineConfig({
         /packages/,
         /node_modules/
       ]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        headless: resolve(__dirname, 'headless.html')
+      }
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -71,6 +80,7 @@ export default defineConfig({
     })
   ],
   worker: {
+    format: 'es',
     plugins: [dxosPlugin()]
   }
 });

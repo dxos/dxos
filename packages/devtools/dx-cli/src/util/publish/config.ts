@@ -26,14 +26,14 @@ export const loadConfig = async (configPath: string = EXTENSION_CONFIG_FILENAME)
 
   assert(dxConfig.package?.modules?.length, `No modules found in ${configPath}`);
 
-  return new Config(
-    {
-      version: 1,
-      package: {
-        modules: dxConfig.package.modules.map((module: PackageModule) => defaultsDeep(module, {
+  return new Config({
+    version: 1,
+    package: {
+      modules: dxConfig.package.modules.map((module: PackageModule) =>
+        defaultsDeep(module, {
           build: { command: DEFAULT_BUILD_COMMAND }
-        }))
-      }
+        })
+      )
     }
-  );
+  });
 };

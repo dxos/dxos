@@ -20,7 +20,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
   const builder = usePartyBuilder(party);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       // TODO(burdon): Use PartyBuidler.
       const party = await client.echo.createParty();
       await party.setTitle(faker.lorem.word());
@@ -30,7 +30,7 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 
   useEffect(() => {
     if (builder) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         await callback(builder);
       });
     }
@@ -42,4 +42,5 @@ export const useTestParty = (callback: TestPartyCallback = buildTestParty): Part
 /**
  * @param party
  */
-export const usePartyBuilder = (party?: Party) => useMemo(() => party ? new PartyBuilder(party) : undefined, [party?.key.toHex()]);
+export const usePartyBuilder = (party?: Party) =>
+  useMemo(() => (party ? new PartyBuilder(party) : undefined), [party?.key.toHex()]);

@@ -53,9 +53,7 @@ describe('Stream', function () {
       close(error);
     });
 
-    expect(await Stream.consume(stream)).to.deep.equal([
-      { closed: true, error }
-    ]);
+    expect(await Stream.consume(stream)).to.deep.equal([{ closed: true, error }]);
   });
 
   it('subscribe gets all updates', async function () {
@@ -65,11 +63,14 @@ describe('Stream', function () {
     });
     nextCb('first');
     const received: string[] = [];
-    stream.subscribe(msg => received.push(msg), () => {});
+    stream.subscribe(
+      (msg) => received.push(msg),
+      () => {}
+    );
     nextCb('second');
     expect(received).to.deep.equal(['first', 'second']);
   });
 });
 
 // To not introduce a dependency on @dxos/async.
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

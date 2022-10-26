@@ -5,7 +5,7 @@
 import { Enum, Type } from 'protobufjs';
 
 export interface SanitizeContext {
-  errors: string[]
+  errors: string[];
 }
 
 /**
@@ -24,7 +24,7 @@ export const sanitize = (type: Type, value: any, path: string, context: Sanitize
 
     const field = type.fields[key];
     if (field.repeated) {
-      continue; // TODO(marik-d): Implement.
+      continue; // TODO(dmaretskyi): Implement.
     }
 
     field.resolve();

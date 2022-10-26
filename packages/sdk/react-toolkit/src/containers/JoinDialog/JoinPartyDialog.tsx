@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
 export interface JoinPartyDialogProps extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
-  onJoin?: (party: Party) => Promise<void> | void
+  onJoin?: (party: Party) => Promise<void> | void;
 }
 
 /**
@@ -26,11 +26,5 @@ export const JoinPartyDialog = ({ onJoin, ...props }: JoinPartyDialogProps) => {
     await onJoin?.(party);
   };
 
-  return (
-    <JoinDialog
-      {...props}
-      title='Join Party'
-      onJoin={handleJoin}
-    />
-  );
+  return <JoinDialog {...props} title='Join Party' onJoin={handleJoin} />;
 };

@@ -34,7 +34,7 @@ type Size = 'small' | 'medium' | 'large';
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
 // https://developer.apple.com/documentation/security/password_autofill/enabling_password_autofill_on_an_html_input_element
 const customAttrs = {
-  'autoComplete': 'one-time-code',
+  autoComplete: 'one-time-code',
   'data-com-onepassword-filled': 'dark'
 };
 
@@ -49,7 +49,8 @@ const stylesBySize = {
     fontWeight: 100,
     borderRadius: '2px'
   },
-  medium: { // Standard 40px text field height.
+  medium: {
+    // Standard 40px text field height.
     margin: '0 4px',
     padding: '8px',
     width: 22,
@@ -72,16 +73,16 @@ const stylesBySize = {
 };
 
 export interface PasscodeProps {
-  attempt?: number // Required to reset.
-  disabled?: boolean
-  shake?: boolean
-  size?: Size
-  length?: number
-  value?: string
-  pattern?: RegExp
-  onChange?: (value: string) => void
-  onSubmit?: (value: string) => void
-  sx?: any
+  attempt?: number; // Required to reset.
+  disabled?: boolean;
+  shake?: boolean;
+  size?: Size;
+  length?: number;
+  value?: string;
+  pattern?: RegExp;
+  onChange?: (value: string) => void;
+  onSubmit?: (value: string) => void;
+  sx?: any;
 }
 
 /**
@@ -125,7 +126,7 @@ export const Passcode = ({
     }
   };
 
-  const handleChange = ({ target: { value } }: { target: { value: string }}) => {
+  const handleChange = ({ target: { value } }: { target: { value: string } }) => {
     if (!value.match(pattern) || value.length > length) {
       return;
     }
@@ -162,7 +163,7 @@ export const Passcode = ({
         inputRef.current?.focus();
       }}
     >
-      {(!disabled && onSubmit) && (
+      {!disabled && onSubmit && (
         <form
           style={{
             position: 'absolute',
@@ -193,25 +194,24 @@ export const Passcode = ({
           animation: invalid ? `${shakerKeyFrames} 0.6s linear` : undefined
         }}
       >
-        {
-          chars.map((c, i) => (
-            <Box
-              key={i}
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: focused ? theme.palette.text.primary : theme.palette.text.disabled,
-                border: () => focused ? `1px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
-                cursor: disabled ? 'default' : 'pointer',
-                ...styles
-              }}
-            >
-              {c}
-            </Box>
-          ))
-        }
+        {chars.map((c, i) => (
+          <Box
+            key={i}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: focused ? theme.palette.text.primary : theme.palette.text.disabled,
+              border: () =>
+                focused ? `1px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
+              cursor: disabled ? 'default' : 'pointer',
+              ...styles
+            }}
+          >
+            {c}
+          </Box>
+        ))}
       </Box>
     </Box>
   );

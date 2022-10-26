@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/mocha"
+      "@dxos/typings",
+      "@dxos/mocha",
+      "@dxos/typings"
     ]
   },
   "include": [

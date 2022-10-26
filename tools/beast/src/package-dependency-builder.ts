@@ -16,17 +16,17 @@ const colorHash = new ColorHash({
 });
 
 type PackageDependencyBuilderOptions = {
-  verbose?: boolean
+  verbose?: boolean;
 
   // Don't show links for these packages.
-  exclude?: string[]
-}
+  exclude?: string[];
+};
 
 /**
  * Builder for a package dependency graph.
  */
 export class PackageDependencyBuilder {
-  constructor (
+  constructor(
     private readonly _baseDir: string,
     private readonly _projectMap: ProjectMap,
     private readonly _options: PackageDependencyBuilderOptions
@@ -36,7 +36,7 @@ export class PackageDependencyBuilder {
    * Create docs page.
    */
   // TODO(burdon): Use remark lib (see ridoculous).
-  createDocs (project: Project, docsDir: string, baseUrl: string) {
+  createDocs(project: Project, docsDir: string, baseUrl: string) {
     const baseDir = path.join(this._baseDir, project.subdir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
@@ -60,7 +60,7 @@ export class PackageDependencyBuilder {
   /**
    * Create table.
    */
-  private generateDependenciesTable (project: Project, docsDir: string) {
+  private generateDependenciesTable(project: Project, docsDir: string) {
     const dir = project.subdir;
     const createLink = (p: Project) => {
       const name = p.package.name;
@@ -68,16 +68,19 @@ export class PackageDependencyBuilder {
       return `[\`${name}\`](${link})`;
     };
 
-    const content = [
-      '| Module | Direct |',
-      '|---|---|'
-    ];
+    const content = ['| Module | Direct |', '|---|---|'];
 
-    array(project.descendents).sort().forEach(packageName => {
-      const sub = this._projectMap.getProjectByPackage(packageName)!;
-      const link = createLink(sub);
-      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === packageName) ? '&check;' : ''} |`);
-    });
+    array(project.descendents)
+      .sort()
+      .forEach((packageName) => {
+        const sub = this._projectMap.getProjectByPackage(packageName)!;
+        const link = createLink(sub);
+        content.push(
+          `| ${link} | ${
+            array(project.dependencies).some((sub) => sub.package.name === packageName) ? '&check;' : ''
+          } |`
+        );
+      });
 
     return content.join('\n');
   }
@@ -87,25 +90,25 @@ export class PackageDependencyBuilder {
    * https://mermaid.live
    * https://mermaid-js.github.io/mermaid/#/README
    */
-  generatePackageGraph (project: Project, docsDir: string, baseUrl: string) {
+  generatePackageGraph(project: Project, docsDir: string, baseUrl: string) {
     const safeName = (name: string) => name.replace(/@/g, '');
 
     const flowchart = new Flowchart({
       linkStyle: {
-        'stroke': '#333',
+        stroke: '#333',
         'stroke-width': '1px'
       }
     });
 
     flowchart
       .addClassDef('def', {
-        'fill': '#fff',
-        'stroke': '#333',
+        fill: '#fff',
+        stroke: '#333',
         'stroke-width': '1px'
       })
       .addClassDef('root', {
-        'fill': '#fff',
-        'stroke': '#333',
+        fill: '#fff',
+        stroke: '#333',
         'stroke-width': '4px'
       });
 
@@ -118,12 +121,12 @@ export class PackageDependencyBuilder {
       const addLinks = (current: Project) => {
         visited.add(current);
 
-        current.dependencies.forEach(sub => {
+        current.dependencies.forEach((sub) => {
           if (
             // Don't link excluded packages.
             !this._options.exclude?.includes(sub.package.name) &&
             // Skip any descendents that depend directly on the package.
-            !array(current.dependencies).some(packageName => packageName.descendents.has(sub.package.name))
+            !array(current.dependencies).some((packageName) => packageName.descendents.has(sub.package.name))
           ) {
             flowchart.addLink({
               source: safeName(current.package.name),
@@ -144,7 +147,11 @@ export class PackageDependencyBuilder {
     // Subgraphs
     //
     {
-      type Folder = { label: string, folders?: Map<string, Folder>, packages: string[] }
+      type Folder = {
+        label: string;
+        folders?: Map<string, Folder>;
+        packages: string[];
+      };
 
       const root = new Map<string, Folder>();
 
@@ -172,7 +179,7 @@ export class PackageDependencyBuilder {
           }
         };
 
-        array(visited).forEach(project => {
+        array(visited).forEach((project) => {
           // Skip top-level "packages" directory.
           const [, ...parts] = project.subdir.split('/');
           parts.pop();
@@ -190,22 +197,24 @@ export class PackageDependencyBuilder {
       //
       {
         const process = (graph: SubgraphBuilder, folders: Map<string, Folder>, parent?: Folder) => {
-          array(folders).forEach(folder => {
+          array(folders).forEach((folder) => {
             const hidden = parent && folder.label === '_';
             const sub = graph.addSubgraph({
               id: folder.label,
               label: hidden ? ' ' : folder.label,
-              style: hidden ? {
-                'fill': colorHash.hex(parent.label),
-                'stroke': '#333',
-                'stroke-dasharray': '5 5'
-              } : {
-                'fill': colorHash.hex(folder.label),
-                'stroke': '#333'
-              }
+              style: hidden
+                ? {
+                    fill: colorHash.hex(parent.label),
+                    stroke: '#333',
+                    'stroke-dasharray': '5 5'
+                  }
+                : {
+                    fill: colorHash.hex(folder.label),
+                    stroke: '#333'
+                  }
             });
 
-            folder.packages.forEach(packageName => {
+            folder.packages.forEach((packageName) => {
               sub.addNode({
                 id: safeName(packageName),
                 label: packageName,

@@ -5,13 +5,8 @@
 import debug from 'debug';
 import React, { ReactNode, RefObject, memo, useEffect, useRef, useState } from 'react';
 
-import {
-  ArrowUpward as UpIcon,
-  ArrowDownward as Downicon
-} from '@mui/icons-material';
-import {
-  Box, IconButton, Table, TableCell, TableContainer, TableBody, TableHead, TableRow
-} from '@mui/material';
+import { ArrowUpward as UpIcon, ArrowDownward as Downicon } from '@mui/icons-material';
+import { Box, IconButton, Table, TableCell, TableContainer, TableBody, TableHead, TableRow } from '@mui/material';
 // code import isEqualWith from 'lodash.isequalwith';
 
 const log = debug('dxos:console:virtual-table');
@@ -22,37 +17,37 @@ const log = debug('dxos:console:virtual-table');
 // Data.
 //
 
-export type RowData = { [index: string]: any }
+export type RowData = { [index: string]: any };
 
 interface Column {
-  key: string
-  title?: string
-  width?: number
-  sortable?: boolean
+  key: string;
+  title?: string;
+  width?: number;
+  sortable?: boolean;
 }
 
 interface Row {
-  key: string
-  data: RowData
-  top: number
-  height: number
+  key: string;
+  data: RowData;
+  top: number;
+  height: number;
 }
 
-type SortDirection = 'up' | 'down' | undefined
+type SortDirection = 'up' | 'down' | undefined;
 
 //
 // Table Header.
 //
 
 interface HeaderCellProps {
-  column: Column
-  sortDirection?: SortDirection
-  onSort: (sort: SortDirection) => void
+  column: Column;
+  sortDirection?: SortDirection;
+  onSort: (sort: SortDirection) => void;
 }
 
 const HeaderCell = ({ column: { key, title, width, sortable }, sortDirection, onSort }: HeaderCellProps) => {
   const handleSort = () => {
-    onSort((sortDirection === 'up') ? 'down' : (sortDirection === 'down') ? undefined : 'up');
+    onSort(sortDirection === 'up' ? 'down' : sortDirection === 'down' ? undefined : 'up');
   };
 
   return (
@@ -76,17 +71,12 @@ const HeaderCell = ({ column: { key, title, width, sortable }, sortDirection, on
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             WebkitUserSelect: 'none'
-          }}>
+          }}
+        >
           {title || key}
         </Box>
         {sortable && sortDirection && (
-          <IconButton size='small'>
-            {(sortDirection === 'up' && (
-              <UpIcon />
-            )) || (
-              <Downicon />
-            )}
-          </IconButton>
+          <IconButton size='small'>{(sortDirection === 'up' && <UpIcon />) || <Downicon />}</IconButton>
         )}
       </Box>
     </TableCell>
@@ -100,13 +90,13 @@ const HeaderCell = ({ column: { key, title, width, sortable }, sortDirection, on
 const rowHeight = 42;
 
 export interface DataCellProps {
-  column: Column
-  key: string
-  row: RowData
-  height: number
-  rowSelected: boolean
-  getValue: (data: RowData, key: string) => any
-  value: any
+  column: Column;
+  key: string;
+  row: RowData;
+  height: number;
+  rowSelected: boolean;
+  getValue: (data: RowData, key: string) => any;
+  value: any;
 }
 
 export const DefaultTableCell = ({ children }: { children: ReactNode }): JSX.Element => (
@@ -123,19 +113,27 @@ export const DefaultTableCell = ({ children }: { children: ReactNode }): JSX.Ele
 );
 
 interface VirtualTableCellProps {
-  column: Column
-  key: string
-  row: RowData
-  rowSelected: boolean
-  getValue: (data: RowData, key: string) => any
-  renderCell?: (props: DataCellProps) => JSX.Element | undefined
-  height: number
+  column: Column;
+  key: string;
+  row: RowData;
+  rowSelected: boolean;
+  getValue: (data: RowData, key: string) => any;
+  renderCell?: (props: DataCellProps) => JSX.Element | undefined;
+  height: number;
 }
 
 const VirtualTableCell = ({ column, row, height, renderCell, rowSelected, getValue }: VirtualTableCellProps) => {
   const { key, width } = column;
   const value = getValue(row, key);
-  const props: DataCellProps = { column, key, row, height, rowSelected, getValue, value };
+  const props: DataCellProps = {
+    column,
+    key,
+    row,
+    height,
+    rowSelected,
+    getValue,
+    value
+  };
 
   let component = renderCell!(props);
   if (!component) {
@@ -176,12 +174,12 @@ const VirtualTableCell = ({ column, row, height, renderCell, rowSelected, getVal
 //
 
 interface VirtualTableRowProps {
-  row: Row
-  columns: Column[]
-  getValue: (data: RowData, key: string) => any
-  selected: boolean
-  handleSelect: (key: string) => void
-  renderCell?: (props: DataCellProps) => JSX.Element | undefined
+  row: Row;
+  columns: Column[];
+  getValue: (data: RowData, key: string) => any;
+  selected: boolean;
+  handleSelect: (key: string) => void;
+  renderCell?: (props: DataCellProps) => JSX.Element | undefined;
 }
 
 const VirtualTableRow = ({ row, columns, selected, handleSelect, getValue, renderCell }: VirtualTableRowProps) => {
@@ -249,14 +247,16 @@ const MemoVirtualTableRow = memo(VirtualTableRow, (oldProps, newProps) => {
 //
 
 interface ScrollState {
-  clientHeight: number
-  scrollHeight: number
-  scrollTop: number
+  clientHeight: number;
+  scrollHeight: number;
+  scrollTop: number;
 }
 
 const useScrollHandler = (scrollContainerRef: RefObject<HTMLDivElement>): [ScrollState, () => void] => {
   const [scrollState, setScrollState] = useState<ScrollState>({
-    clientHeight: 0, scrollHeight: 0, scrollTop: 0
+    clientHeight: 0,
+    scrollHeight: 0,
+    scrollTop: 0
   });
 
   const handleUpdate = () => {
@@ -284,48 +284,49 @@ const useScrollHandler = (scrollContainerRef: RefObject<HTMLDivElement>): [Scrol
 // Table.
 //
 
-export type SelectionModel = string[]
+export type SelectionModel = string[];
 
 export interface GetRowHeightProps {
-  row: RowData
-  i: number
-  rowSelected: boolean
+  row: RowData;
+  i: number;
+  rowSelected: boolean;
 }
 
 const defaultRowHeight = () => rowHeight;
 const defaultValue = (data: RowData, key: string) => data[key];
 
 export interface VirtualTableProps<T> {
-  rows?: T[]
-  selected?: SelectionModel
-  onSelect?: (selected: SelectionModel) => void
-  columns: Column[]
-  getRowKey: (row: RowData) => string
-  getRowHeight?: (props: GetRowHeightProps) => number
-  getValue?: (data: RowData, key: string) => any
-  renderCell?: (props: DataCellProps) => JSX.Element | undefined
+  rows?: T[];
+  selected?: SelectionModel;
+  onSelect?: (selected: SelectionModel) => void;
+  columns: Column[];
+  getRowKey: (row: RowData) => string;
+  getRowHeight?: (props: GetRowHeightProps) => number;
+  getValue?: (data: RowData, key: string) => any;
+  renderCell?: (props: DataCellProps) => JSX.Element | undefined;
 }
 
 // TODO(burdon): Side/bottom master/detail.
 // TODO(burdon): Column filter.
 // TODO(burdon): Request more data callback.
 // TODO(burdon): Paging (vs virtual scroll).
-export const VirtualTable = <T extends RowData> (
-  {
-    rows: dataRows = [],
-    selected: controlledSelected = [],
-    onSelect,
-    columns = [],
-    getRowKey,
-    getRowHeight = defaultRowHeight,
-    getValue = defaultValue,
-    renderCell
-  }: VirtualTableProps<T>
-) => {
+export const VirtualTable = <T extends RowData>({
+  rows: dataRows = [],
+  selected: controlledSelected = [],
+  onSelect,
+  columns = [],
+  getRowKey,
+  getRowHeight = defaultRowHeight,
+  getValue = defaultValue,
+  renderCell
+}: VirtualTableProps<T>) => {
   //
   // Sorting.
   //
-  const [{ sortKey, sortDirection }, setSort] = useState<{ sortKey?: string, sortDirection?: SortDirection }>({});
+  const [{ sortKey, sortDirection }, setSort] = useState<{
+    sortKey?: string;
+    sortDirection?: SortDirection;
+  }>({});
   const handleSort = (sortKey: string, sortDirection: SortDirection) => setSort({ sortKey, sortDirection });
 
   //
@@ -347,7 +348,10 @@ export const VirtualTable = <T extends RowData> (
   //
   // Do layout and cache positions.
   //
-  const [{ height, sortedRows }, setProps] = useState<{ height: number, sortedRows: Row[] }>({ height: 0, sortedRows: [] });
+  const [{ height, sortedRows }, setProps] = useState<{
+    height: number;
+    sortedRows: Row[];
+  }>({ height: 0, sortedRows: [] });
   useEffect(() => {
     const ts = Date.now();
 
@@ -370,7 +374,7 @@ export const VirtualTable = <T extends RowData> (
     const sortedRows: Row[] = [];
     const height = rows.reduce((h, row, i) => {
       const key = getRowKey(row);
-      const rowSelected = !!controlledSelection.find(s => s === key);
+      const rowSelected = !!controlledSelection.find((s) => s === key);
       const rowHeight = getRowHeight({ i, row, rowSelected });
       sortedRows.push({ key, data: row, top: h, height: rowHeight });
       return h + rowHeight;
@@ -385,7 +389,11 @@ export const VirtualTable = <T extends RowData> (
   //
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollState] = useScrollHandler(scrollContainerRef);
-  const [range, setRange] = useState<{ start: number, end: number, rows: Row[] }>({ start: 0, end: 0, rows: [] });
+  const [range, setRange] = useState<{
+    start: number;
+    end: number;
+    rows: Row[];
+  }>({ start: 0, end: 0, rows: [] });
   useEffect(() => {
     const { clientHeight, scrollTop } = scrollState;
 
@@ -394,7 +402,7 @@ export const VirtualTable = <T extends RowData> (
     sortedRows.forEach(({ top }, i) => {
       if (scrollTop > top) {
         first = i;
-      } else if ((scrollTop + clientHeight) > top) {
+      } else if (scrollTop + clientHeight > top) {
         last = i;
       }
     });
@@ -437,9 +445,7 @@ export const VirtualTable = <T extends RowData> (
           flex: 1
         }}
       >
-        <Table
-          stickyHeader
-        >
+        <Table stickyHeader>
           {/* Columns. */}
           <TableHead>
             <TableRow>
@@ -448,7 +454,7 @@ export const VirtualTable = <T extends RowData> (
                   key={column.key}
                   column={column}
                   sortDirection={sortKey === column.key ? sortDirection : undefined}
-                  onSort={sortDirection => handleSort(column.key, sortDirection)}
+                  onSort={(sortDirection) => handleSort(column.key, sortDirection)}
                 />
               ))}
             </TableRow>
@@ -461,8 +467,8 @@ export const VirtualTable = <T extends RowData> (
               height
             }}
           >
-            {range.rows.map(row => {
-              const rowSelected = !!controlledSelection.find(s => s === row.key);
+            {range.rows.map((row) => {
+              const rowSelected = !!controlledSelection.find((s) => s === row.key);
 
               return (
                 <MemoVirtualTableRow
@@ -481,9 +487,7 @@ export const VirtualTable = <T extends RowData> (
       </TableContainer>
 
       {/* Footer. */}
-      <TableFooter
-        rows={dataRows}
-      />
+      <TableFooter rows={dataRows} />
     </Box>
   );
 };

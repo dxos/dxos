@@ -8,7 +8,7 @@ import { RpcPort } from '@dxos/rpc';
 
 export const wrapPort = (port: Runtime.Port): RpcPort => ({
   send: async (msg) => port.postMessage(Array.from(msg)),
-  subscribe: cb => {
+  subscribe: (cb) => {
     const handler = (msg: any) => {
       cb(new Uint8Array(msg));
     };

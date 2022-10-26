@@ -9,9 +9,7 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from
  * E.g., to use in callbacks where the state value is stale.
  * @param initialValue
  */
-export const useStateRef = <V>(
-  initialValue?: V | (() => V)
-): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
+export const useStateRef = <V>(initialValue?: V | (() => V)): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
   const [value, setValue] = useState<V>(initialValue);
   const ref = useRef<V>();
   useEffect(() => {
@@ -27,10 +25,7 @@ export const useStateRef = <V>(
  * @param initialValue
  * @param deps
  */
-export const useDynamicRef = <V>(
-  initialValue: () => V,
-  deps: any[]
-): RefObject<V> => {
+export const useDynamicRef = <V>(initialValue: () => V, deps: any[]): RefObject<V> => {
   const [, setValue] = useState<V>(initialValue);
   const ref = useRef<V>(initialValue());
   useEffect(() => {
@@ -47,8 +42,10 @@ export const useDynamicRef = <V>(
  * @param deps
  */
 export const useTimestamp = (deps?): [number, () => void, number] => {
-  const [{ timestamp, previous }, setTimestamp] =
-    useState<{ timestamp: number, previous?: number }>({ timestamp: Date.now() });
+  const [{ timestamp, previous }, setTimestamp] = useState<{
+    timestamp: number;
+    previous?: number;
+  }>({ timestamp: Date.now() });
   useEffect(() => {
     setTimestamp({ timestamp: Date.now(), previous: timestamp });
   }, deps ?? []);

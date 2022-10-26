@@ -18,27 +18,28 @@ describe('Registry API mock', function () {
     mock = new MemoryRegistryClientBackend();
     const registry = new RegistryClient(mock);
     const owner = AccountKey.random();
-    await Promise.all(faker.datatype.array(5).map(() =>
-      mock.registerDomainName('example', owner)
-    ));
+    await Promise.all(faker.datatype.array(5).map(() => mock.registerDomainName('example', owner)));
 
     const types = await registerMockTypes(registry);
 
-    records = await Promise.all(faker.datatype.array(30).map(() =>
-      registerMockRecord(registry, {
-        typeRecord: faker.random.arrayElement(types)
-      })
-    ));
+    records = await Promise.all(
+      faker.datatype.array(30).map(() =>
+        registerMockRecord(registry, {
+          typeRecord: faker.random.arrayElement(types)
+        })
+      )
+    );
 
     names = records.map(() => createDXN());
-    await Promise.all(records.map((record, index) => registerMockResource(
-      registry,
-      {
-        name: names[index],
-        record,
-        owner
-      }
-    )));
+    await Promise.all(
+      records.map((record, index) =>
+        registerMockResource(registry, {
+          name: names[index],
+          record,
+          owner
+        })
+      )
+    );
   });
 
   it('Returns a specific resource', async function () {

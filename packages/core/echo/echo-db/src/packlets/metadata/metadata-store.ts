@@ -20,8 +20,8 @@ import { Directory } from '@dxos/random-access-storage';
 export const STORAGE_VERSION = 1;
 
 export interface AddPartyOptions {
-  key: PublicKey
-  genesisFeed: PublicKey
+  key: PublicKey;
+  genesisFeed: PublicKey;
 }
 
 const emptyEchoMetadata = (): EchoMetadata => ({
@@ -34,11 +34,9 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
 
-  constructor (
-    private readonly _directory: Directory
-  ) {}
+  constructor(private readonly _directory: Directory) {}
 
-  get version (): number {
+  get version(): number {
     return this._metadata.version ?? 0;
   }
 
@@ -46,7 +44,7 @@ export class MetadataStore {
    * Returns a list of currently saved parties. The list and objects in it can be modified addParty and
    * addPartyFeed functions.
    */
-  get parties (): PartyMetadata[] {
+  get parties(): PartyMetadata[] {
     return this._metadata.parties ?? [];
   }
 
@@ -54,7 +52,7 @@ export class MetadataStore {
    * Loads metadata from persistent storage.
    */
   @synchronized
-  async load (): Promise<void> {
+  async load(): Promise<void> {
     const file = this._directory.getOrCreateFile('EchoMetadata');
     try {
       const { size: fileLength } = await file.stat();
@@ -63,7 +61,7 @@ export class MetadataStore {
       }
       // Loading file size from first 4 bytes.
       const dataSize = fromBytesInt32(await file.read(0, 4));
-      log(`Load: data size ${dataSize}`);
+      log('loaded', { size: dataSize });
 
       // Sanity check.
       {
@@ -75,7 +73,7 @@ export class MetadataStore {
       const data = await file.read(4, dataSize);
       this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
-      log(`Error loading metadata: ${err}`);
+      log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
     } finally {
       await file.close();
@@ -83,7 +81,7 @@ export class MetadataStore {
   }
 
   @synchronized
-  private async _save (): Promise<void> {
+  private async _save(): Promise<void> {
     const data: EchoMetadata = {
       ...this._metadata,
       version: STORAGE_VERSION,
@@ -97,12 +95,11 @@ export class MetadataStore {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
 
       // Saving file size at first 4 bytes.
-      log(`Save: data size ${encoded.length}`);
       await file.write(0, toBytesInt32(encoded.length));
+      log('saved', { size: encoded.length });
 
       // Saving data.
       await file.write(4, encoded);
-
     } finally {
       await file.close();
     }
@@ -111,24 +108,27 @@ export class MetadataStore {
   /**
    * Clears storage - doesn't work for now.
    */
-  async clear (): Promise<void> {
-    log('Clearing all echo metadata...');
+  async clear(): Promise<void> {
+    log('clearing all metadata');
     await this._directory.delete();
   }
 
-  getIdentityRecord (): IdentityRecord | undefined {
+  getIdentityRecord(): IdentityRecord | undefined {
     return this._metadata.identity;
   }
 
-  async setIdentityRecord (record: IdentityRecord) {
+  async setIdentityRecord(record: IdentityRecord) {
     assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
     await this._save();
   }
 
-  async addSpace (record: PartyMetadata) {
-    assert(!(this._metadata.parties ?? []).find(party => party.key === record.key), 'Cannot overwrite existing party in metadata');
+  async addSpace(record: PartyMetadata) {
+    assert(
+      !(this._metadata.parties ?? []).find((party) => party.key === record.key),
+      'Cannot overwrite existing party in metadata'
+    );
 
     (this._metadata.parties ??= []).push(record);
     await this._save();

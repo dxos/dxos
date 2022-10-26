@@ -11,13 +11,10 @@ import { truncateKey } from '@dxos/debug';
  * Wrapper (e.g., for Party).
  */
 export class TreeRoot {
-  constructor (
-    public id: string,
-    public readonly children: TreeNode[]
-  ) {}
+  constructor(public id: string, public readonly children: TreeNode[]) {}
 }
 
-export type TreeNode = TreeRoot | Item
+export type TreeNode = TreeRoot | Item;
 
 /**
  * Create tree using depth first traversal.
@@ -38,7 +35,7 @@ export const treeLogger = (node: TreeNode, ancestors: [TreeNode, number][] = [],
       const first = ancestors.slice(j).every(([_, i]) => i === 0);
 
       // Root.
-      parts.push(j === 0 ? first ? '├' : ' ' : '');
+      parts.push(j === 0 ? (first ? '├' : ' ') : '');
 
       // Ancestor name (if first row) or padding.
       parts.push(first ? `─(${name(node)})─` : ''.padEnd(len + 4));

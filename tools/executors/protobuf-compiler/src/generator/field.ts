@@ -15,10 +15,12 @@ export const getFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): t
   if (field.repeated) {
     return f.createArrayTypeNode(getScalarFieldType(field, subs));
   } else if (field.map && field instanceof protobufjs.MapField) {
-    return f.createTypeReferenceNode('Partial', [f.createTypeReferenceNode('Record', [
-      f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-      getScalarFieldType(field, subs)
-    ])]);
+    return f.createTypeReferenceNode('Partial', [
+      f.createTypeReferenceNode('Record', [
+        f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+        getScalarFieldType(field, subs)
+      ])
+    ]);
   } else {
     return getScalarFieldType(field, subs);
   }

@@ -16,7 +16,7 @@ import { PublicKey } from '@dxos/keys';
  * Plugin to sign HALO messages.
  */
 export class ClientSignerAdapter implements HaloSigner {
-  async sign (request: SignRequest, key: KeyRecord): Promise<SignResponse> {
+  async sign(request: SignRequest, key: KeyRecord): Promise<SignResponse> {
     await cryptoWaitReady();
 
     assert(key.secretKey, 'Secret key is missing.');
@@ -41,15 +41,11 @@ export class ClientSigner implements Partial<Signer> {
 
   private readonly publicKey: PublicKey;
 
-  constructor (
-    private client: Client,
-    private registry: Registry,
-    address: string
-  ) {
+  constructor(private client: Client, private registry: Registry, address: string) {
     this.publicKey = PublicKey.from(decodeAddress(address));
   }
 
-  public async signRaw ({ data }: SignerPayloadRaw): Promise<SignerResult> {
+  public async signRaw({ data }: SignerPayloadRaw): Promise<SignerResult> {
     let payload = hexToU8a(data);
 
     // @polkadot/api/packages/types/src/extrinsic/util.ts

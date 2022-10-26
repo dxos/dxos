@@ -27,18 +27,16 @@ export const Primary = () => {
           <CopyText value={key} monospace variant='h6' length={8} />
         </Box>
         <Divider />
-        <TextField
-          sx={{ marginTop: 2 }}
-          spellCheck={false}
-          fullWidth
-        />
+        <TextField sx={{ marginTop: 2 }} spellCheck={false} fullWidth />
       </Box>
 
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: 1
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: 1
+        }}
+      >
         <Box sx={{ flex: 1, flexShrink: 0, overflow: 'hidden' }}>
           <CopyText value='hello' monospace />
         </Box>

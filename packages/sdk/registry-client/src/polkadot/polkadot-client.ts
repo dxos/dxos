@@ -13,10 +13,7 @@ import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler
 export class PolkadotClient {
   protected transactionsHandler: ApiTransactionHandler;
 
-  constructor (
-    protected api: ApiPromise,
-    signFn: SignTxFunction | AddressOrPair = tx => tx
-  ) {
+  constructor(protected api: ApiPromise, signFn: SignTxFunction | AddressOrPair = (tx) => tx) {
     this.transactionsHandler = new ApiTransactionHandler(api, signFn);
   }
 }

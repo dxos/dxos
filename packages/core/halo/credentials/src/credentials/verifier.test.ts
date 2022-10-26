@@ -53,7 +53,9 @@ describe('verifier', function () {
       // Tamper with the signature.
       credential.proof.value[0]++;
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - invalid issuer', async function () {
@@ -76,7 +78,9 @@ describe('verifier', function () {
       // Tamper with the credential.
       credential.issuer = partyKey;
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - invalid nonce', async function () {
@@ -100,7 +104,9 @@ describe('verifier', function () {
       // Remove the nonce.
       credential.proof.nonce = undefined;
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - no nonce provided', async function () {
@@ -123,7 +129,9 @@ describe('verifier', function () {
       // Tamper with the credential.
       credential.proof.nonce = PublicKey.random().asUint8Array();
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
   });
 
@@ -199,7 +207,9 @@ describe('verifier', function () {
 
       credential.proof.chain = undefined;
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - invalid chain signature', async function () {
@@ -237,7 +247,9 @@ describe('verifier', function () {
 
       credential.proof.chain!.credential.proof.value![0] = 123;
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - invalid chain assertion', async function () {
@@ -283,7 +295,9 @@ describe('verifier', function () {
         subject
       });
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('fail - chain does not lead to issuer', async function () {
@@ -294,7 +308,6 @@ describe('verifier', function () {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
       const chain: Chain = {
-
         credential: await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
@@ -331,7 +344,9 @@ describe('verifier', function () {
         signer: keyring
       });
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
 
     it('pass - delegated authority with 2 devices', async function () {
@@ -442,7 +457,9 @@ describe('verifier', function () {
         signer: keyring
       });
 
-      expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
+      expect(await verifyCredential(credential)).toMatchObject({
+        kind: 'fail'
+      });
     });
   });
 });

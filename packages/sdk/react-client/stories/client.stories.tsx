@@ -15,14 +15,12 @@ const TestApp = () => {
   const client = useClient();
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       await client.halo.createProfile({ username: 'test-user' });
     });
   }, []);
 
-  return (
-    <ClientPanel client={client} />
-  );
+  return <ClientPanel client={client} />;
 };
 
 export const Primary = () => (

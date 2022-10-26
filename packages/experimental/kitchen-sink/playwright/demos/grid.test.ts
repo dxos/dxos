@@ -32,7 +32,7 @@ describe('Grid demo', function () {
   let [columns, rows] = [0, 0];
   if (process.env.GRID) {
     // Example: `GRID=2,1 rushx demo:grid`
-    [columns = 2, rows = 1] = process.env.GRID!.split(',').map(i => parseInt(i));
+    [columns = 2, rows = 1] = process.env.GRID!.split(',').map((i) => parseInt(i));
   } else {
     [columns, rows] = [Math.floor(width / minSize.width), Math.floor(height / minSize.height)];
   }
@@ -42,16 +42,13 @@ describe('Grid demo', function () {
    */
   const createLauncher = async (
     url: string,
-    position: { x: number, y: number },
-    size: { width: number, height: number }
+    position: { x: number; y: number },
+    size: { width: number; height: number }
   ) => {
     const launcher = new Launcher(baseUrl, chromium, {
       headless: false,
       // https://peter.sh/experiments/chromium-command-line-switches
-      args: [
-        `--window-position=${position.x},${position.y}`,
-        `--window-size=${size.width},${size.height}`
-      ]
+      args: [`--window-position=${position.x},${position.y}`, `--window-size=${size.width},${size.height}`]
     });
 
     await launcher.open();
@@ -74,7 +71,7 @@ describe('Grid demo', function () {
    * Generates iterator of browser launcher promises.
    * NOTE: Synchronous generator of promises vs async generator (async function* {})
    */
-  function * createGrid (url: string, [rows, columns]: [number, number]): Generator<Promise<Launcher>> {
+  function* createGrid(url: string, [rows, columns]: [number, number]): Generator<Promise<Launcher>> {
     const size = {
       width: Math.round((width - (columns - 1) * spacing) / columns),
       height: Math.round((height - marginTop - (rows - 1) * spacing) / rows)
@@ -82,10 +79,14 @@ describe('Grid demo', function () {
 
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
-        const launcher = createLauncher(url, {
-          x: column * (size.width + spacing),
-          y: marginTop + row * (size.height + spacing)
-        }, size);
+        const launcher = createLauncher(
+          url,
+          {
+            x: column * (size.width + spacing),
+            y: marginTop + row * (size.height + spacing)
+          },
+          size
+        );
 
         yield launcher;
       }
@@ -118,7 +119,7 @@ describe('Grid demo', function () {
         await invite(previous, launcher);
 
         // Select view.
-        const view = (page === 3) ? 'board' : 'graph'; // faker.random.arrayElement(['list', 'board', 'graph']);
+        const view = page === 3 ? 'board' : 'graph'; // faker.random.arrayElement(['list', 'board', 'graph']);
         await launcher.page.click(`button[data-id=test-button-view-${view}]`);
 
         // TODO(burdon): Scroll board.
@@ -137,8 +138,7 @@ describe('Grid demo', function () {
     if (graph) {
       await graph.page.click('button[data-id=test-button-selection]');
 
-      const defaultSelectionText =
-        `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })\n.children()`;
+      const defaultSelectionText = `select()\n.filter({ type: '${TestType.Org}' })\n.children()\n.filter({ type: '${TestType.Project}' })\n.children()`;
 
       let i = 0;
       const lines = defaultSelectionText.split('\n');
@@ -147,7 +147,9 @@ describe('Grid demo', function () {
           clearInterval(interval);
         } else {
           // Generate data.
-          await graph!.page.click('button[data-id=test-button-create-item]', { modifiers: ['Meta'] });
+          await graph!.page.click('button[data-id=test-button-create-item]', {
+            modifiers: ['Meta']
+          });
 
           // NOTE: May lose focus when other window opens.
           const text = lines[i++];

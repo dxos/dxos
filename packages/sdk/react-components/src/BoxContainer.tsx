@@ -6,10 +6,10 @@ import { Box, BoxProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 interface StyledBoxProps extends BoxProps {
-  expand?: boolean
-  column?: boolean
-  scrollX?: boolean
-  scrollY?: boolean
+  expand?: boolean;
+  column?: boolean;
+  scrollX?: boolean;
+  scrollY?: boolean;
 }
 
 /**

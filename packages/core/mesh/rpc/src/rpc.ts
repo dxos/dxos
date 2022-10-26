@@ -19,29 +19,29 @@ const DEFAULT_TIMEOUT = 3000;
 const log = debug('dxos:rpc');
 const error = log.extend('error');
 
-type MaybePromise<T> = Promise<T> | T
+type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
-  messageHandler: (method: string, request: Any) => MaybePromise<Any>
-  streamHandler?: (method: string, request: Any) => Stream<Any>
-  port: RpcPort
-  timeout?: number
+  messageHandler: (method: string, request: Any) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any) => Stream<Any>;
+  port: RpcPort;
+  timeout?: number;
   /**
    * Do not require or send handshake messages.
    */
-  noHandshake?: boolean
+  noHandshake?: boolean;
 }
 
 /**
  * Interface for a transport-agnostic port to send/receive binary messages.
  */
 export interface RpcPort {
-  send: (msg: Uint8Array) => MaybePromise<void>
-  subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void
+  send: (msg: Uint8Array) => MaybePromise<void>;
+  subscribe: (cb: (msg: Uint8Array) => void) => (() => void) | void;
 }
 
 class RequestItem {
-  constructor (
+  constructor(
     public readonly resolve: (response: Response) => void,
     public readonly reject: (error?: Error) => void,
     public readonly stream: boolean
@@ -76,7 +76,7 @@ export class RpcPeer {
   private _unsubscribe: (() => void) | undefined;
   private _clearOpenInterval: (() => void) | undefined;
 
-  constructor (private readonly _options: RpcPeerOptions) {}
+  constructor(private readonly _options: RpcPeerOptions) {}
 
   /**
    * Open the peer. Required before making any calls.
@@ -84,12 +84,12 @@ export class RpcPeer {
    * Will block before the other peer calls `open`.
    */
   @synchronized
-  async open () {
+  async open() {
     if (this._open) {
       return;
     }
 
-    this._unsubscribe = this._options.port.subscribe(async msg => {
+    this._unsubscribe = this._options.port.subscribe(async (msg) => {
       try {
         await this._receive(msg);
       } catch (err) {
@@ -108,7 +108,7 @@ export class RpcPeer {
     await this._sendMessage({ open: true });
 
     this._clearOpenInterval = exponentialBackoffInterval(() => {
-      void this._sendMessage({ open: true }).catch(error => log(`Error: ${error}`));
+      void this._sendMessage({ open: true }).catch((error) => log(`Error: ${error}`));
     }, 50);
 
     await this._remoteOpenTrigger.wait();
@@ -123,7 +123,7 @@ export class RpcPeer {
   /**
    * Close the peer. Stop taking or making requests.
    */
-  close () {
+  close() {
     this._unsubscribe?.();
     this._clearOpenInterval?.();
     for (const req of this._outgoingRequests.values()) {
@@ -136,7 +136,7 @@ export class RpcPeer {
   /**
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
-  private async _receive (msg: Uint8Array): Promise<void> {
+  private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = codec.decode(msg, { preserveAny: true });
 
     if (decoded.request) {
@@ -154,9 +154,13 @@ export class RpcPeer {
       const req = decoded.request;
       if (req.stream) {
         log(`Request (stream): ${req.method}`);
-        this._callStreamHandler(req, response => {
-          log(`Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(response.error)} close=${response.close}`);
-          void this._sendMessage({ response }).catch(error => {
+        this._callStreamHandler(req, (response) => {
+          log(
+            `Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(
+              response.error
+            )} close=${response.close}`
+          );
+          void this._sendMessage({ response }).catch((error) => {
             log(`Unhandled error during stream close: ${error}`);
           });
         });
@@ -164,7 +168,11 @@ export class RpcPeer {
         log(`Request: ${req.method}`);
         const response = await this._callHandler(req);
 
-        log(`Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(response.error)}`);
+        log(
+          `Send response (stream): ${req.method} response=${response.payload?.type_url} error=${JSON.stringify(
+            response.error
+          )}`
+        );
         await this._sendMessage({ response });
       }
     } else if (decoded.response) {
@@ -231,7 +239,7 @@ export class RpcPeer {
    *
    * Peer should be open before making this call.
    */
-  async call (method: string, request: Any): Promise<Any> {
+  async call(method: string, request: Any): Promise<Any> {
     if (!this._open) {
       throw new RpcNotOpenError();
     }
@@ -257,7 +265,10 @@ export class RpcPeer {
 
     let response: Response;
     try {
-      response = await Promise.race([promise, createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))]);
+      response = await Promise.race([
+        promise,
+        createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
+      ]);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -272,7 +283,12 @@ export class RpcPeer {
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
-      throw new SerializedRpcError(response.error.name ?? 'UnknownError', response.error.message ?? 'Unknown Error', response.error.stack ?? '', method);
+      throw new SerializedRpcError(
+        response.error.name ?? 'UnknownError',
+        response.error.message ?? 'Unknown Error',
+        response.error.stack ?? '',
+        method
+      );
     } else {
       throw new Error('Malformed response.');
     }
@@ -283,7 +299,7 @@ export class RpcPeer {
    *
    * Peer should be open before making this call.
    */
-  callStream (method: string, request: Any): Stream<Any> {
+  callStream(method: string, request: Any): Stream<Any> {
     if (!this._open) {
       throw new RpcNotOpenError();
     }
@@ -300,7 +316,7 @@ export class RpcPeer {
           assert(response.error.name);
           assert(response.error.message);
           assert(response.error.stack);
-          // TODO(marik-d): Stack trace might be lost because the stream producer function is called asynchronously.
+          // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
           close(new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method));
         } else if (response.payload) {
           next(response.payload);
@@ -329,7 +345,7 @@ export class RpcPeer {
           payload: request,
           stream: true
         }
-      }).catch(error => close(error));
+      }).catch((error) => close(error));
 
       return () => {
         this._sendMessage({
@@ -339,11 +355,11 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage (message: RpcMessage) {
+  private async _sendMessage(message: RpcMessage) {
     await this._options.port.send(codec.encode(message, { preserveAny: true }));
   }
 
-  private async _callHandler (req: Request): Promise<Response> {
+  private async _callHandler(req: Request): Promise<Response> {
     try {
       assert(typeof req.id === 'number');
       assert(req.payload);
@@ -361,7 +377,7 @@ export class RpcPeer {
     }
   }
 
-  private _callStreamHandler (req: Request, callback: (response: Response) => void) {
+  private _callStreamHandler(req: Request, callback: (response: Response) => void) {
     try {
       assert(this._options.streamHandler, 'Requests with streaming responses are not supported.');
       assert(typeof req.id === 'number');
@@ -375,13 +391,13 @@ export class RpcPeer {
         });
       });
       responseStream.subscribe(
-        msg => {
+        (msg) => {
           callback({
             id: req.id,
             payload: msg
           });
         },
-        error => {
+        (error) => {
           if (error) {
             callback({
               id: req.id,
@@ -430,10 +446,7 @@ const encodeError = (err: any): ErrorResponse => {
  */
 const createTimeoutPromise = (timeout: number, error: Error) => {
   const timeoutPromise = new Promise<any>((resolve, reject) => {
-    const timeoutId = setTimeout(
-      () => reject(error),
-      timeout
-    );
+    const timeoutId = setTimeout(() => reject(error), timeout);
 
     // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
     if (typeof timeoutId === 'object' && 'unref' in timeoutId) {

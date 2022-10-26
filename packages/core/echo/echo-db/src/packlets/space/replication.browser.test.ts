@@ -7,12 +7,13 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { Timeframe } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from '../common';
+import { valueEncoding } from '../common';
 
 describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {
@@ -20,24 +21,43 @@ describe('replication', function () {
     const storage = createStorage();
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
-    const feedStore1 = new FeedStore(storage.createDirectory('feeds1'), { valueEncoding: codec });
-    const feedStore2 = new FeedStore(storage.createDirectory('feeds2'), { valueEncoding: codec });
+    const keyring1 = new Keyring();
+    const feedStore1 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
+        root: storage.createDirectory('feeds1'),
+        signer: keyring1,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    });
 
-    const keyring = new Keyring();
+    const keyring2 = new Keyring();
+    const feedStore2 = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
+        root: storage.createDirectory('feeds2'),
+        signer: keyring2,
+        hypercore: {
+          valueEncoding
+        }
+      })
+    });
 
-    const srcFeed = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
-    const dstFeed = await feedStore2.openReadOnlyFeed(srcFeed.key);
+    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), {
+      writable: true
+    });
+    const feed2 = await feedStore2.openFeed(feed1.key);
 
-    const stream1 = srcFeed.feed.replicate(true);
-    const stream2 = dstFeed.feed.replicate(false);
+    const stream1 = feed1.replicate(true, { live: true });
+    const stream2 = feed2.replicate(false, { live: true });
     stream1.pipe(stream2).pipe(stream1);
 
-    await srcFeed.append({
-      timeframe: new Timeframe([[srcFeed.key, 123]])
+    await feed1.append({
+      timeframe: new Timeframe([[feed1.key, 123]])
     });
 
     await waitForExpect(() => {
-      expect(dstFeed.feed.length).toEqual(1);
+      expect(feed2.properties.length).toEqual(1);
     });
   });
 });
