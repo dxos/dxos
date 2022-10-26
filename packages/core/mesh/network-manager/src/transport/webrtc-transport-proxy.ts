@@ -43,17 +43,20 @@ export class WebRTCTransportProxy implements Transport {
 
     this._serviceStream.waitUntilReady().then(
       () => {
-        this._serviceStream.subscribe(async (msg: BridgeEvent) => {
-          if (msg.connection) {
-            await this._handleConnection(msg.connection);
-          } else if (msg.data) {
-            this._handleData(msg.data);
-          } else if (msg.signal) {
-            await this._handleSignal(msg.signal);
+        this._serviceStream.subscribe(async (event: BridgeEvent) => {
+          console.log('bridge event', event);
+
+          if (event.connection) {
+            await this._handleConnection(event.connection);
+          } else if (event.data) {
+            this._handleData(event.data);
+          } else if (event.signal) {
+            await this._handleSignal(event.signal);
           }
         });
 
         this._params.stream.on('data', async (data: Uint8Array) => {
+          console.log('proxy stream data');
           try {
             await this._params.bridgeService.sendData({
               proxyId: this._proxyId,
@@ -86,11 +89,13 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private _handleData(dataEvent: BridgeEvent.DataEvent) {
+    console.log('proxy handleData');
     // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
     this._params.stream.write(Buffer.from(dataEvent.payload));
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
+    console.log('proxy handleSignal');
     await this._params.sendSignal({
       author: this._params.ownId,
       recipient: this._params.remoteId,
@@ -101,6 +106,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   async signal(signal: Signal): Promise<void> {
+    console.log('proxy signal');
     await this._params.bridgeService.sendSignal({
       proxyId: this._proxyId,
       signal

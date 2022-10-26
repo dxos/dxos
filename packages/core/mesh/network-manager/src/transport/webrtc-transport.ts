@@ -46,6 +46,7 @@ export class WebRTCTransport implements Transport {
       config: this.params.webrtcConfig
     });
     this._peer.on('signal', async (data) => {
+      console.log('WebRTCTransport.signal');
       try {
         await this.params.sendSignal({
           author: this.params.ownId,
@@ -59,7 +60,7 @@ export class WebRTCTransport implements Transport {
       }
     });
     this._peer.on('connect', () => {
-      log(`Connection established ${this.params.ownId} -> ${this.params.remoteId}`);
+      console.log(`Connection established ${this.params.ownId} -> ${this.params.remoteId}`);
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });

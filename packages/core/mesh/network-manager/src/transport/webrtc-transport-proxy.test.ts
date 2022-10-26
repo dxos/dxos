@@ -22,7 +22,7 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe.only('WebRTCTransportProxy', function () {
+describe('WebRTCTransportProxy', function () {
   const setupProxy = async ({
     initiator = true,
     ownId = PublicKey.random(),
@@ -176,8 +176,7 @@ describe.only('WebRTCTransportProxy', function () {
       expect(received[1]).toBe('{"message": "Hello"}');
     });
   })
-    .timeout(2_000)
-    .retries(3);
+    .timeout(2_000);
 
   describe('Multiplexing', function () {
     let service: any;

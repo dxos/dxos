@@ -5,6 +5,7 @@
 import assert from 'assert';
 import { Duplex } from 'stream';
 
+import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,8 +23,8 @@ import { ComplexMap } from '@dxos/util';
 import { WebRTCTransport } from './webrtc-transport';
 
 export class WebRTCTransportService implements BridgeService {
-  private readonly transports = new ComplexMap<PublicKey, { transport: WebRTCTransport; stream: Duplex }>((key) =>
-    key.toHex()
+  private readonly transports = new ComplexMap<PublicKey, { transport: WebRTCTransport; stream: Duplex }>(
+    PublicKey.hash
   );
 
   constructor(private readonly _webrtcConfig?: any) {}
@@ -40,23 +41,13 @@ export class WebRTCTransportService implements BridgeService {
         }
       });
 
-      duplex.on('data', (payload) => {
+      event.on((event) => next(event));
+
+      transport.peer.on('data', (chunk) => {
+        console.log('duplex data');
         next({
           data: {
-            payload
-          }
-        });
-      });
-
-      duplex.on('signal', (data) => {
-        console.log({
-          signal: {
-            payload: data
-          }
-        });
-        next({
-          signal: {
-            payload: data
+            payload: chunk
           }
         });
       });
@@ -93,8 +84,13 @@ export class WebRTCTransportService implements BridgeService {
 
     const duplex: Duplex = new Duplex({
       read: () => {},
-      write: (chunk) => duplex.emit('data', chunk)
+      write: function (chunk) {
+        console.log('Data duplex:', chunk);
+        event.emit({ data: { payload: chunk } });
+      }
     });
+    const event = new Event<BridgeEvent>();
+
     const transport = new WebRTCTransport({
       initiator: request.initiator,
       stream: duplex,
@@ -104,7 +100,9 @@ export class WebRTCTransportService implements BridgeService {
       topic: PublicKey.from(''),
       sendSignal: (msg) => {
         console.log('Signal');
-        duplex.emit('signal', msg.data.signal);
+        event.emit({
+          signal: { payload: msg.data.signal }
+        });
       }
     });
 
@@ -113,6 +111,7 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
+    console.log('sendSignal');
     assert(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.transport.signal(signal);
   }
