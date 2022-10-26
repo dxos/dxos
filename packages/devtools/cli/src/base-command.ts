@@ -21,7 +21,8 @@ import {
   getTelemetryContext,
   PublisherRpcPeer,
   SENTRY_DESTINATION,
-  TELEMETRY_API_KEY
+  TELEMETRY_API_KEY,
+  TelemetryContext
 } from './util';
 
 const log = debug('dxos:cli:main');
@@ -31,6 +32,7 @@ const ENV_DX_CONFIG = 'DX_CONFIG';
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
   private _client?: Client;
+  protected _telemetryContext?: TelemetryContext;
 
   static override flags = {
     config: Flags.string({
@@ -63,9 +65,8 @@ export abstract class BaseCommand extends Command {
   override async init(): Promise<void> {
     await super.init();
 
-    const { installationId, isInternalUser, fullCrashReports, disableTelemetry } = await getTelemetryContext(
-      this.config.configDir
-    );
+    this._telemetryContext = await getTelemetryContext(this.config.configDir);
+    const { installationId, isInternalUser, fullCrashReports, disableTelemetry } = this._telemetryContext;
 
     if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
@@ -129,7 +130,7 @@ export abstract class BaseCommand extends Command {
 
   // Called after each run.
   override async finally() {
-    const { installationId, isInternalUser } = await getTelemetryContext(this.config.configDir);
+    const { installationId, isInternalUser } = this._telemetryContext ?? {};
 
     Telemetry.event({
       installationId,
