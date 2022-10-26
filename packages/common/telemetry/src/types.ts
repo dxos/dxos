@@ -9,15 +9,17 @@ export type InitOptions = {
 };
 
 type CommonOptions = {
-  installationId: string;
-  identityId: string;
-  name: string;
+  installationId?: string;
+  identityId?: string;
   properties?: object;
   timestamp?: Date;
 };
 
 export type PageOptions = CommonOptions & {
+  name?: string;
   category?: string;
 };
 
-export type EventOptions = CommonOptions;
+export type EventOptions = CommonOptions & {
+  name: string;
+};

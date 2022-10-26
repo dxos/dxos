@@ -63,8 +63,9 @@ export abstract class BaseCommand extends Command {
   override async init(): Promise<void> {
     await super.init();
 
-    const { installationId, identityId, isInternalUser, fullCrashReports, disableTelemetry } =
-      await getTelemetryContext(this.config.configDir);
+    const { installationId, isInternalUser, fullCrashReports, disableTelemetry } = await getTelemetryContext(
+      this.config.configDir
+    );
 
     if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
@@ -91,7 +92,6 @@ export abstract class BaseCommand extends Command {
 
     Telemetry.event({
       installationId,
-      identityId,
       name: this.id ?? 'unknown',
       properties: {
         environment: DX_ENVIRONMENT,
