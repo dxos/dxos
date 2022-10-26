@@ -14,7 +14,7 @@ import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
@@ -320,7 +320,7 @@ export class BotHandle {
       logFilePath: this.getLogFilePath(this.startTimestamp)
     });
 
-    this._log('Openning RPC channel');
+    this._log('Opening RPC channel');
     this._rpc = createRpcClient(schema.getService('dxos.bot.BotService'), {
       port,
       timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.

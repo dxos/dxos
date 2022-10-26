@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { Invitation, InvitationDescriptor } from '@dxos/client';
+import { InvitationChallenge, InvitationWrapper } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import { ClientProvider, useClient, useParties, useProfile } from '../src';
@@ -71,7 +71,7 @@ const HaloInvitationContainer = () => {
 interface Status {
   error?: any;
   identity?: string;
-  invitation?: Invitation;
+  invitation?: InvitationChallenge;
 }
 
 /**
@@ -83,7 +83,7 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
+      const invitationDescriptor = InvitationWrapper.decode(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({
         identity: invitationDescriptor.identityKey?.toString(),

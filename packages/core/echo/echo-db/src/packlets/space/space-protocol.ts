@@ -39,8 +39,8 @@ export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
 
-  private readonly _presence: PresencePlugin;
-  private readonly _authenticator: AuthPlugin;
+  private readonly _presencePlugin: PresencePlugin;
+  private readonly _authPlugin: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
 
@@ -48,15 +48,17 @@ export class SpaceProtocol {
 
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
+
+    // Plugins
     this._swarmIdentity = identity;
+    this._presencePlugin = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
+    this._authPlugin = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this._customPlugins = plugins;
 
-    this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
-    this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
     this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
 
-    this.authenticationFailed = this._authenticator.authenticationFailed;
+    this.authenticationFailed = this._authPlugin.authenticationFailed;
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -80,7 +82,7 @@ export class SpaceProtocol {
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
-      presence: this._presence,
+      presence: this._presencePlugin,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._discoveryKey}`
     });
@@ -125,13 +127,13 @@ export class SpaceProtocol {
       initiator
     });
 
-    const plugins: Plugin[] = [this._presence, this._authenticator, this._replicator, ...this._customPlugins];
+    const plugins: Plugin[] = [this._presencePlugin, this._authPlugin, this._replicator, ...this._customPlugins];
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     return protocol;
   }
 
   get peers() {
-    return this._presence.peers.map((peer) => PublicKey.from(peer));
+    return this._presencePlugin.peers.map((peer) => PublicKey.from(peer));
   }
 }

@@ -4,7 +4,7 @@
 
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { InvitationDescriptor } from '@dxos/client';
+import { InvitationWrapper } from '@dxos/client';
 import type { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useClient, useParties, usePartyInvitations, useSecretProvider } from '@dxos/react-client';
@@ -47,7 +47,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
 
   const onJoin = useCallback(async () => {
     setLoading(true);
-    const parsedInvitation = InvitationDescriptor.decode(invitationCodeValue);
+    const parsedInvitation = InvitationWrapper.decode(invitationCodeValue);
     const redeemeingInvitation = client.echo.acceptInvitation(parsedInvitation);
     redeemeingInvitation.authenticate(await secretProvider());
     const joinedParty = await redeemeingInvitation.getParty();

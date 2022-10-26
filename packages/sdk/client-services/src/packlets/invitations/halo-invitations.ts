@@ -9,13 +9,10 @@ import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Identity, IdentityManager } from '../identity';
-import { InvitationDescriptor } from '../invitations';
-
-// TODO(burdon): Move to halo.
 
 /**
  * Create and process Halo (space) invitations for device management.
@@ -74,7 +71,7 @@ export class HaloInvitations {
           await peer.open();
           log('Inviter RPC open');
 
-          await peer.rpc.InviteeInvitationService.acceptIdenity({
+          await peer.rpc.InviteeInvitationService.acceptIdentity({
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
             genesisFeedKey: identity.haloGenesisFeedKey
@@ -85,14 +82,18 @@ export class HaloInvitations {
       ])
     });
 
-    return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
+    return {
+      type: InvitationDescriptor.Type.INTERACTIVE,
+      swarmKey: swarmKey.asUint8Array(),
+      invitation: new Uint8Array() // TODO(burdon): Required.
+    };
   }
 
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Identity> {
-    const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
+  async acceptInvitation(invitation: InvitationDescriptor): Promise<Identity> {
+    const swarmKey = PublicKey.from(invitation.swarmKey);
 
     let connected = false;
     const done = new Trigger();
@@ -121,7 +122,7 @@ export class HaloInvitations {
             },
             handlers: {
               InviteeInvitationService: {
-                acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
+                acceptIdentity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
                   try {
                     log('Accept identity', {
                       identityKey,

@@ -37,6 +37,7 @@ describe('space-manager', function () {
     expect(space1.isOpen).to.be.true;
 
     // TODO(burdon): Create invitation and join.
+    // TODO(burdon): Need to factor out DataInvitations from services.
 
     // const space2 = await spaceManager2.acceptSpace();
     // expect(space2.key).not.to.be.undefined;

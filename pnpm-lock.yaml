@@ -977,8 +977,10 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1006,8 +1008,10 @@ importers:
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/rpc': link:../../mesh/rpc
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0

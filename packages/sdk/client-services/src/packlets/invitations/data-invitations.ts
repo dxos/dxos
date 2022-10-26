@@ -9,13 +9,12 @@ import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { InvitationDescriptor } from './invitation-descriptor';
-
-// TODO(burdon): Possible to factor out echo-db deps.
+// TODO(burdon): Rename SpaceInvitations?
+// TODO(burdon): Isolate deps on protocol throughout echo-db.
 
 /**
  * Create and manage data invitations for Data spaces.
@@ -43,10 +42,10 @@ export class DataInvitations {
           log('Inviter connected');
           const peer = createProtoRpcPeer({
             requested: {
-              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+              InviteeInvitationService: schema.getService('dxos.echo.invitations.InviteeInvitationService')
             },
             exposed: {
-              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+              InviterInvitationService: schema.getService('dxos.echo.invitations.InviterInvitationService')
             },
             handlers: {
               InviterInvitationService: {
@@ -109,15 +108,20 @@ export class DataInvitations {
       ])
     });
 
-    return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
+    return {
+      type: InvitationDescriptor.Type.INTERACTIVE,
+      swarmKey: swarmKey.asUint8Array(),
+      invitation: new Uint8Array() // TODO(burdon): Required.
+    };
   }
 
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Space> {
+  async acceptInvitation(invitation: InvitationDescriptor): Promise<Space> {
     log('Accept invitation');
-    const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
+
+    const swarmKey = PublicKey.from(invitation.swarmKey);
 
     const done = new Trigger();
     let space: Space;
@@ -140,10 +144,10 @@ export class DataInvitations {
           connected = true;
           const peer = createProtoRpcPeer({
             requested: {
-              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+              InviterInvitationService: schema.getService('dxos.echo.invitations.InviterInvitationService')
             },
             exposed: {
-              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+              InviteeInvitationService: schema.getService('dxos.echo.invitations.InviteeInvitationService')
             },
             handlers: {
               InviteeInvitationService: {
@@ -181,7 +185,6 @@ export class DataInvitations {
     });
 
     await done.wait();
-
     return space!;
   }
 }

@@ -25,7 +25,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
+import { DataInvitations, HaloInvitations, InvitationWrapper } from '../invitations';
 
 /**
  * @deprecated
@@ -133,16 +133,17 @@ export class ServiceContext {
     this.initialized.wake();
   }
 
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
+  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
     assert(this.spaceManager);
     assert(this.dataInvitations);
 
     const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    return this.dataInvitations.createInvitation(space, { onFinish });
+    const invitation = await this.dataInvitations.createInvitation(space, { onFinish });
+    return InvitationWrapper.fromProto(invitation);
   }
 
-  async joinSpace(invitationDescriptor: InvitationDescriptor) {
+  async joinSpace(invitationDescriptor: InvitationWrapper) {
     assert(this.dataInvitations);
-    return this.dataInvitations.acceptInvitation(invitationDescriptor);
+    return this.dataInvitations.acceptInvitation(invitationDescriptor.toProto());
   }
 }

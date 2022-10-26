@@ -8,7 +8,7 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
 import { Snackbar } from '@mui/material';
 
-import { InvitationDescriptor, Party } from '@dxos/client';
+import { InvitationWrapper, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
@@ -69,7 +69,7 @@ export const Secondary = () => {
 
     const handleJoinParty = async (invitationText: string) => {
       const { encodedInvitation, secret } = JSON.parse(invitationText);
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(InvitationWrapper.decode(encodedInvitation));
       invitation.authenticate(Buffer.from(secret));
       const party = await invitation.getParty();
       setParty(party);
