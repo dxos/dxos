@@ -6,13 +6,30 @@ import React from 'react';
 
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { Main } from '@dxos/react-ui';
+import { Loading, Main } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
 import { Composer, ProviderFallback } from './components';
-import { PartyProvider, ProfileProvider, TextItemProvider } from './context';
+import {
+  PartyProvider,
+  ProfileProvider,
+  TextItemProvider,
+  useTextItem
+} from './context';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
+
+// TODO(wittjosiah): This is a temporary wrapper to make Composer exportable.
+//   We want to consider whether the Profile/Party/Item providers should be a part of the sdk.
+const Demo = () => {
+  const { item } = useTextItem();
+
+  if (!item) {
+    return <Loading label='Loading' />;
+  }
+
+  return <Composer item={item} />;
+};
 
 export const App = () => {
   return (
@@ -27,7 +44,7 @@ export const App = () => {
         <PartyProvider>
           <TextItemProvider>
             <Main>
-              <Composer />
+              <Demo />
             </Main>
           </TextItemProvider>
         </PartyProvider>

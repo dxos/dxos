@@ -9,6 +9,7 @@ import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
+import { TextModel } from '@dxos/text-model';
 
 import {
   AppLayout,
@@ -79,7 +80,13 @@ export const App = () => {
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider clientRef={clientRef} config={configProvider}>
+      <ClientProvider
+        clientRef={clientRef}
+        config={configProvider}
+        onInitialize={async (client) => {
+          client.echo.registerModel(TextModel);
+        }}
+      >
         <HashRouter>
           <Routes />
         </HashRouter>

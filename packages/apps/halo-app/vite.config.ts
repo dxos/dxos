@@ -24,6 +24,7 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/keys',
       '@dxos/log',
+      '@dxos/composer',
       '@dxos/config',
       '@dxos/protocols',
       '@dxos/react-async',
@@ -34,8 +35,21 @@ export default defineConfig({
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/text-model',
       '@dxos/util'
-    ]
+    ],
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'yjs',
+          setup: ({ onResolve }) => {
+            onResolve({ filter: /yjs/ }, () => {
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+            })
+          }
+        }
+      ]
+    }
   },
   build: {
     commonjsOptions: {

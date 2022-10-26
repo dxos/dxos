@@ -6,6 +6,7 @@ import { Plus, Rocket } from 'phosphor-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 import {
@@ -15,6 +16,7 @@ import {
   useTranslation,
   Heading
 } from '@dxos/react-uikit';
+import { TextModel } from '@dxos/text-model';
 
 import { SpaceList } from '../../components';
 
@@ -24,6 +26,14 @@ export const SpacesPage = () => {
   const navigate = useNavigate();
   const [showJoin, setShowJoin] = useState(false);
   const { t } = useTranslation('halo');
+
+  const handleCreateSpace = async () => {
+    const space = await client.echo.createParty();
+    await space.database.createItem({
+      model: TextModel,
+      type: DOCUMENT_TYPE
+    });
+  };
 
   return (
     <Main>
@@ -36,7 +46,7 @@ export const SpacesPage = () => {
         </Button>
         <Button
           variant='primary'
-          onClick={() => client.echo.createParty()}
+          onClick={handleCreateSpace}
           className='flex gap-1'
         >
           <Plus className={getSize(5)} />

@@ -8,13 +8,15 @@ import StarterKit from '@tiptap/starter-kit';
 import cx from 'classnames';
 import React from 'react';
 
+import { Item } from '@dxos/client';
 import { defaultFocus } from '@dxos/react-ui';
+import { TextModel } from '@dxos/text-model';
 
-import { useTextItem } from '../context';
+export interface ComposerProps {
+  item: Item<TextModel>;
+}
 
-export const Composer = () => {
-  const { item } = useTextItem();
-
+export const Composer = ({ item }: ComposerProps) => {
   const editor = useEditor(
     {
       extensions: [
