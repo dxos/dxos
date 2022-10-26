@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { ClientProvider, useClient } from '@dxos/react-client';
 import { Loading, Main } from '@dxos/react-ui';
 
 import { templateForComponent } from '../../testing';
@@ -14,11 +14,7 @@ import { Presence, PresenceProps } from './Presence';
 export default {
   title: 'react-uikit/Presence',
   component: Presence,
-  argTypes: {
-    onCreate: { action: 'create' },
-    onRecover: { action: 'recover' },
-    onInviteDevice: { action: 'inviteDevice' }
-  }
+  argTypes: {}
 };
 
 const Template = (args: Omit<PresenceProps, 'profile'>) => {
@@ -49,3 +45,11 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
 
 export const Default = templateForComponent(Template)({});
 Default.args = {};
+Default.decorators = [
+  // TODO(wittjosiah): Factor out.
+  (Story) => (
+    <ClientProvider>
+      <Story />
+    </ClientProvider>
+  )
+];

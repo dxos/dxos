@@ -24,11 +24,9 @@ const ThemeWrapper = ({ children }) => {
 
 export const decorators = [
   (Story) => (
-    createElement(ClientProvider, {
-      children: createElement(UiKitProvider, {
-        children: createElement(ThemeWrapper, {
-          children: createElement(Story)
-        })
+    createElement(UiKitProvider, {
+      children: createElement(ThemeWrapper, {
+        children: createElement(Story)
       })
     })
   )
