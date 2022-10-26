@@ -23,13 +23,9 @@ const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 describe('space-manager', function () {
   const createPeer = async () => {
-    const storage = createStorage();
     const builder = new TestFeedBuilder()
-      .setStorage(storage, 'feeds')
-      .setKeyring(new Keyring(storage.createDirectory('keyring')));
-
-    // TODO(burdon): TestBuilder callback pattern:
-    //  .setKeyring(({ storage ) => new Keyring(storage.createDirectory('keyring')))
+      .setStorage(createStorage(), 'feeds')
+      .setKeyring(({ storage }) => new Keyring(storage.createDirectory('keyring')));
 
     const identityKey = await builder.keyring.createKey();
     const deviceKey = await builder.keyring.createKey();
@@ -38,7 +34,7 @@ describe('space-manager', function () {
     return new SpaceManager({
       keyring: builder.keyring,
       feedStore: builder.createFeedStore(),
-      metadataStore: new MetadataStore(storage.createDirectory('metadata')),
+      metadataStore: new MetadataStore(builder.storage.createDirectory('metadata')),
       networkManager: WebsocketNetworkManagerProvider(SIGNAL_URL)(),
       dataService: new DataService(),
       modelFactory: new ModelFactory().registerModel(ObjectModel),

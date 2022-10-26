@@ -19,7 +19,10 @@ export type TestBuilderOptions<T extends {}> = {
   generator?: TestGenerator<T>;
 };
 
-type PropertyProvider<T extends {}, P> = (cb: TestBuilderOptions<T>) => P;
+type PropertyProvider<T extends {}, P> = (cb: TestBuilder<T>) => P;
+
+const evaluate = <T extends {}, P>(builder: TestBuilder<T>, arg: P | PropertyProvider<T, P>) =>
+  arg === 'function' ? (arg as Function)(builder) : arg;
 
 /**
  * The builder provides building blocks for tests with sensible defaults.
@@ -53,20 +56,14 @@ export class TestBuilder<T extends {}> {
     return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
-  // TODO(burdon): Generalize.
   setKeyring(keyring: Keyring | PropertyProvider<T, Keyring>) {
-    if (typeof keyring === 'function') {
-      this._properties.keyring = keyring(this._properties);
-    } else {
-      this._properties.keyring = keyring;
-    }
-
+    this._properties.keyring = evaluate(this, keyring);
     return this;
   }
 
   setStorage(storage: Storage, root?: string) {
-    this._properties.storage = storage;
-    if (this._properties.storage && root) {
+    this._properties.storage = evaluate(this, storage);
+    if (root) {
       this._properties.root = this.storage.createDirectory(root);
     }
 
@@ -74,7 +71,7 @@ export class TestBuilder<T extends {}> {
   }
 
   setRoot(root: Directory) {
-    this._properties.root = root;
+    this._properties.root = evaluate(this, root);
     return this;
   }
 
