@@ -64,9 +64,7 @@ describe('ProtocolStream', function () {
     });
 
     const [streamClosed, setStreamClosed] = latch({ count: 2 });
-    const pipeline = stream1
-      .pipe(stream2, setStreamClosed)
-      .pipe(stream1, setStreamClosed);
+    const pipeline = stream1.pipe(stream2, setStreamClosed).pipe(stream1, setStreamClosed);
 
     await handshake();
 
@@ -169,9 +167,7 @@ describe('ProtocolStream', function () {
     const stream2 = new ProtocolStream(false, { onhandshake: setHandshake });
 
     const [streamClosed, setStreamClosed] = latch({ count: 2 });
-    const pipeline = stream1
-      .pipe(stream2, setStreamClosed)
-      .pipe(stream1, setStreamClosed);
+    const pipeline = stream1.pipe(stream2, setStreamClosed).pipe(stream1, setStreamClosed);
     await handshake();
 
     //

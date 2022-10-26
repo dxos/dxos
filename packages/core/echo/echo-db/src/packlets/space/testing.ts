@@ -13,7 +13,9 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { valueEncoding } from '../common';
 import { Database } from '../database';
-import { AuthProvider, AuthVerifier, Space, SpaceProtocol } from '../space';
+import { AuthProvider, AuthVerifier } from './auth-plugin';
+import { Space } from './space';
+import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): Create composite with feed-store builder.
 // TODO(burdon): Use in other tests outside of echo.

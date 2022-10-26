@@ -16,8 +16,8 @@ import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
-import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from '../testing';
 import { ReplicatorPlugin } from './replicator-plugin';
+import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.

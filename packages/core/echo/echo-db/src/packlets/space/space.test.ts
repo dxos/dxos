@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest } from '@dxos/testutils';
 
-import { TestAgentBuilder } from '../testing';
+import { TestAgentBuilder } from './testing';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();

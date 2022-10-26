@@ -10,8 +10,8 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { afterTest } from '@dxos/testutils';
 
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from '../testing';
 import { SpaceProtocol } from './space-protocol';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './testing';
 
 describe('space/space-protocol', function () {
   it('two peers discover each other', async function () {
