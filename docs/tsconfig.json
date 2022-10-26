@@ -9,7 +9,8 @@
       "DOM"
     ],
     "types": [
-      "node"
+      "node",
+      "@vuepress/client/types"
     ]
   },
   "include": [
