@@ -122,13 +122,6 @@ export class Space {
     return this._isOpen;
   }
 
-  /**
-   * @test-only
-   */
-  get controlPipeline(): PipelineAccessor {
-    return this._controlPipeline.pipeline;
-  }
-
   get genesisFeedKey(): PublicKey {
     return this._genesisFeedKey;
   }
@@ -139,6 +132,13 @@ export class Space {
 
   get dataFeedKey() {
     return this._dataFeed.key;
+  }
+
+  /**
+   * @test-only
+   */
+  get controlPipeline(): PipelineAccessor {
+    return this._controlPipeline.pipeline;
   }
 
   @synchronized

@@ -69,7 +69,6 @@ describe('space/space-protocol', function () {
     const feedStore2 = builder2.createFeedStore();
 
     const feedKey = await builder1.keyring.createKey();
-
     const feed1 = await feedStore1.openFeed(feedKey, { writable: true });
     const feed2 = await feedStore2.openFeed(feedKey);
 
@@ -85,6 +84,8 @@ describe('space/space-protocol', function () {
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(2);
     });
+
+    await builder.close();
   });
 
   it('replicates a feed through a webrtc connection', async function () {
@@ -132,5 +133,7 @@ describe('space/space-protocol', function () {
     await waitForExpect(() => {
       expect(feed2.properties.length).toEqual(2);
     });
+
+    await builder.close();
   });
 });
