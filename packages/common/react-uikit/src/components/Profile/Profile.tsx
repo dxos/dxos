@@ -21,7 +21,7 @@ export const Profile = ({ profile }: ProfileProps) => {
   const invitations = useHaloInvitations(client);
 
   useEffect(() => {
-    if (client && invitations.length < 1) {
+    if (invitations.length < 1) {
       void client.halo.createInvitation();
     }
   }, [client, invitations]);

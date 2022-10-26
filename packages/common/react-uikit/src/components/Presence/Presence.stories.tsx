@@ -5,11 +5,21 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { ClientProvider, useClient } from '@dxos/react-client';
-import { Loading, Main } from '@dxos/react-ui';
+import { defaultTestingConfig, InvitationDescriptor } from '@dxos/client';
+import {
+  ClientProvider,
+  useClient,
+  useProfile,
+  useSecretProvider
+} from '@dxos/react-client';
+import { Group, Loading, Main } from '@dxos/react-ui';
+import { humanize } from '@dxos/util';
 
 import { templateForComponent } from '../../testing';
+import { SingleInputStep } from '../SingleInputStep';
 import { Presence, PresenceProps } from './Presence';
+
+const textEncoder = new TextEncoder();
 
 export default {
   title: 'react-uikit/Presence',
@@ -48,8 +58,76 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider>
+    <ClientProvider config={defaultTestingConfig}>
       <Story />
     </ClientProvider>
   )
 ];
+
+const SharingTemplate = () => {
+  return (
+    <>
+      <ClientProvider config={defaultTestingConfig}>
+        <Template />
+      </ClientProvider>
+      <ClientProvider config={defaultTestingConfig}>
+        <Group label={{ children: 'Joiner' }} className='w-1/2'>
+          <JoinPanel />
+        </Group>
+      </ClientProvider>
+    </>
+  );
+};
+
+// TODO(wittjosiah): Factor out.
+const JoinPanel = () => {
+  const client = useClient();
+  const profile = useProfile();
+  const [secretProvider, secretResolver, _resetSecret] =
+    useSecretProvider<Uint8Array>();
+  const [invitationCode, setInvitationCode] = useState('');
+  const [pinCode, setPinCode] = useState('');
+  const [showPin, setShowPin] = useState(false);
+
+  const handleInvite = async () => {
+    const invitation = InvitationDescriptor.decode(invitationCode);
+    setShowPin(true);
+    console.log({ invitation });
+    const acceptedInvitation = await client.halo.acceptInvitation(invitation);
+    console.log({ acceptedInvitation });
+    const secret = await secretProvider();
+    console.log({ secret });
+    await acceptedInvitation.authenticate(secret);
+    console.log('accepted');
+  };
+
+  const handlePin = () => {
+    secretResolver(textEncoder.encode(pinCode));
+  };
+
+  if (profile) {
+    return <>{humanize(profile.publicKey)}</>;
+  }
+
+  if (showPin) {
+    return (
+      <SingleInputStep
+        inputLabel='Pin'
+        onChange={setPinCode}
+        onNext={handlePin}
+        onBack={() => setShowPin(false)}
+      />
+    );
+  }
+
+  return (
+    <SingleInputStep
+      inputLabel='Invitation'
+      onChange={setInvitationCode}
+      onNext={handleInvite}
+    />
+  );
+};
+
+export const Sharing = templateForComponent(SharingTemplate)({});
+Sharing.args = {};
