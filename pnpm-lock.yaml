@@ -207,6 +207,7 @@ importers:
     specifiers:
       '@dxos/plate': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
       '@types/eslint': ^8.4.6
       '@types/markdown-it': ^12.2.3
@@ -214,6 +215,7 @@ importers:
       '@types/prettier': ^2.7.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@vuepress/bundler-vite': ^2.0.0-beta.51
       '@vuepress/client': ^2.0.0-beta.51
       '@vuepress/plugin-register-components': ^2.0.0-beta.51
       '@vuepress/plugin-search': ^2.0.0-beta.51
@@ -228,10 +230,12 @@ importers:
       typedoc: 0.23.15
       typescript: ^4.7.2
       vue: ^3.2.40
+      vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.51
     devDependencies:
       '@dxos/plate': link:../tools/plate
       '@dxos/react-components': link:../packages/sdk/react-components
+      '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3
@@ -239,6 +243,7 @@ importers:
       '@types/prettier': 2.7.1
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@vuepress/bundler-vite': 2.0.0-beta.51
       '@vuepress/client': 2.0.0-beta.51
       '@vuepress/plugin-register-components': 2.0.0-beta.51
       '@vuepress/plugin-search': 2.0.0-beta.51
@@ -253,6 +258,7 @@ importers:
       typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
       typescript: 4.8.4
       vue: 3.2.41
+      vue-router: 4.1.6_vue@3.2.41
       vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
 
   packages/apps/halo-app:
@@ -898,11 +904,13 @@ importers:
 
   packages/common/telemetry:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/sentry': workspace:*
       '@segment/snippet': ^4.15.3
       '@types/analytics-node': ^3.1.9
       analytics-node: ^6.2.0
     dependencies:
+      '@dxos/log': link:../log
       '@dxos/sentry': link:../sentry
       '@segment/snippet': 4.15.3
       analytics-node: 6.2.0
@@ -12781,6 +12789,10 @@ packages:
     resolution: {integrity: sha512-Ku31WzpOV/8cruFaXaEZKF81WkNnvCSlBY4eOGtz5WMSdJvX1v1WWlSMGZeqUwPtQ27ZZz7B62erEMq8JDjcXw==}
     dev: true
 
+  /@vue/devtools-api/6.4.5:
+    resolution: {integrity: sha512-JD5fcdIuFxU4fQyXUu3w2KpAJHzTVdN+p4iOX2lMWSHMOoQdMAcpFLZzm9Z/2nmsoZ1a96QEhZ26e50xLBsgOQ==}
+    dev: true
+
   /@vue/reactivity-transform/3.2.41:
     resolution: {integrity: sha512-mK5+BNMsL4hHi+IR3Ft/ho6Za+L3FA5j8WvreJ7XzHrqkPq8jtF/SMo7tuc9gHjLDwKZX1nP1JQOKo9IEAn54A==}
     dependencies:
@@ -12840,7 +12852,7 @@ packages:
       rollup: 2.79.1
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vue: 3.2.41
-      vue-router: 4.1.5_vue@3.2.41
+      vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
       - less
       - sass
@@ -13032,7 +13044,7 @@ packages:
       '@vuepress/utils': 2.0.0-beta.51
       chokidar: 3.5.3
       vue: 3.2.41
-      vue-router: 4.1.5_vue@3.2.41
+      vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -31583,6 +31595,15 @@ packages:
       vue: ^3.2.0
     dependencies:
       '@vue/devtools-api': 6.4.4
+      vue: 3.2.41
+    dev: true
+
+  /vue-router/4.1.6_vue@3.2.41:
+    resolution: {integrity: sha512-DYWYwsG6xNPmLq/FmZn8Ip+qrhFEzA14EI12MsMgVxvHFDYvlr4NXpVF5hrRH1wVcDP8fGi5F4rxuJSl8/r+EQ==}
+    peerDependencies:
+      vue: ^3.2.0
+    dependencies:
+      '@vue/devtools-api': 6.4.5
       vue: 3.2.41
     dev: true
 
