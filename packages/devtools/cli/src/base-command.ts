@@ -92,8 +92,9 @@ export abstract class BaseCommand extends Command {
 
     Telemetry.event({
       installationId,
-      name: this.id ?? 'unknown',
+      name: 'dx-cli:command:start',
       properties: {
+        command: this.id,
         environment: DX_ENVIRONMENT,
         release: DX_RELEASE,
         isInternalUser
@@ -127,7 +128,20 @@ export abstract class BaseCommand extends Command {
   }
 
   // Called after each run.
-  override async finally() {}
+  override async finally() {
+    const { installationId, isInternalUser } = await getTelemetryContext(this.config.configDir);
+
+    Telemetry.event({
+      installationId,
+      name: 'dx-cli:command:finish',
+      properties: {
+        command: this.id,
+        environment: DX_ENVIRONMENT,
+        release: DX_RELEASE,
+        isInternalUser
+      }
+    });
+  }
 
   /**
    * Lazily create the client.
