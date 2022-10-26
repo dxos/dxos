@@ -19,6 +19,8 @@ export type TestBuilderOptions<T extends {}> = {
   generator?: TestGenerator<T>;
 };
 
+type PropertyProvider<T extends {}, P> = (cb: TestBuilderOptions<T>) => P;
+
 /**
  * The builder provides building blocks for tests with sensible defaults.
  * - Factory methods trigger the automatic generation of unset required properties.
@@ -51,8 +53,14 @@ export class TestBuilder<T extends {}> {
     return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
-  setKeyring(keyring: Keyring) {
-    this._properties.keyring = keyring;
+  // TODO(burdon): Generalize.
+  setKeyring(keyring: Keyring | PropertyProvider<T, Keyring>) {
+    if (typeof keyring === 'function') {
+      this._properties.keyring = keyring(this._properties);
+    } else {
+      this._properties.keyring = keyring;
+    }
+
     return this;
   }
 

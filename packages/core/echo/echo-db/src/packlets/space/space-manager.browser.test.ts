@@ -5,21 +5,17 @@
 // @dxos/mocha platform=browser
 
 import { createCredentialSignerWithKey } from '@dxos/credentials';
-import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { valueEncoding } from '../common';
+import { TestFeedBuilder } from '../common';
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
 import { SpaceManager } from './space-manager';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './testing';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
@@ -28,39 +24,36 @@ const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 describe('space-manager', function () {
   const createPeer = async () => {
     const storage = createStorage();
-    const keyring = new Keyring(storage.createDirectory('keyring'));
-    const identityKey = await keyring.createKey();
+    const builder = new TestFeedBuilder()
+      .setStorage(storage, 'feeds')
+      .setKeyring(new Keyring(storage.createDirectory('keyring')));
 
-    // TODO(burdon): Use builders.
+    // TODO(burdon): TestBuilder callback pattern:
+    //  .setKeyring(({ storage ) => new Keyring(storage.createDirectory('keyring')))
+
+    const identityKey = await builder.keyring.createKey();
+    const deviceKey = await builder.keyring.createKey();
+
+    // TODO(burdon): Use TestAgentBuilder.
     return new SpaceManager({
+      keyring: builder.keyring,
+      feedStore: builder.createFeedStore(),
       metadataStore: new MetadataStore(storage.createDirectory('metadata')),
-      feedStore: new FeedStore<FeedMessage>({
-        factory: new FeedFactory<FeedMessage>({
-          root: storage.createDirectory('feeds'),
-          signer: keyring,
-          hypercore: {
-            valueEncoding
-          }
-        })
-      }),
-      networkManager: new NetworkManager({
-        signalManager: new WebsocketSignalManager([SIGNAL_URL]),
-        transportFactory: createWebRTCTransportFactory()
-      }),
-      keyring,
+      networkManager: WebsocketNetworkManagerProvider(SIGNAL_URL)(),
       dataService: new DataService(),
       modelFactory: new ModelFactory().registerModel(ObjectModel),
       signingContext: {
+        // TODO(burdon): Util to convert to Identity in SpaceProtocol
         identityKey,
-        deviceKey: await keyring.createKey(),
+        deviceKey,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
         credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialSigner: createCredentialSignerWithKey(keyring, identityKey)
+        credentialSigner: createCredentialSignerWithKey(builder.keyring, identityKey)
       }
     });
   };
 
-  it.skip('invitations', async function () {
+  it('invitations', async function () {
     const peer1 = await createPeer();
     await peer1.open();
     afterTest(() => peer1.close());
