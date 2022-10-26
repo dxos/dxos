@@ -4,62 +4,41 @@
 
 // @dxos/mocha platform=browser
 
-import { createCredentialSignerWithKey } from '@dxos/credentials';
-import { Keyring } from '@dxos/keyring';
-import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { expect } from 'chai';
+
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { TestFeedBuilder } from '../common';
-import { DataService } from '../database';
-import { MetadataStore } from '../metadata';
-import { SpaceManager } from './space-manager';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, WebsocketNetworkManagerProvider } from './testing';
+import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 describe('space-manager', function () {
-  const createPeer = async () => {
-    const builder = new TestFeedBuilder()
-      .setStorage(createStorage(), 'feeds')
-      .setKeyring(({ storage }) => new Keyring(storage.createDirectory('keyring')));
-
-    const identityKey = await builder.keyring.createKey();
-    const deviceKey = await builder.keyring.createKey();
-
-    // TODO(burdon): Use TestAgentBuilder.
-    return new SpaceManager({
-      keyring: builder.keyring,
-      feedStore: builder.createFeedStore(),
-      metadataStore: new MetadataStore(builder.storage.createDirectory('metadata')),
-      networkManager: WebsocketNetworkManagerProvider(SIGNAL_URL)(),
-      dataService: new DataService(),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
-      signingContext: {
-        // TODO(burdon): Util to convert to Identity in SpaceProtocol
-        identityKey,
-        deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER,
-        credentialSigner: createCredentialSignerWithKey(builder.keyring, identityKey)
-      }
+  it('invitations', async function () {
+    const builder = new TestAgentBuilder({
+      storage: createStorage(),
+      networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
     });
-  };
 
-  it.skip('invitations', async function () {
-    const peer1 = await createPeer();
-    await peer1.open();
-    afterTest(() => peer1.close());
+    const peer1 = await builder.createPeer();
+    const spaceManager1 = peer1.createSpaceManager();
+    await spaceManager1.open();
 
-    const peer2 = await createPeer();
-    await peer2.open();
-    afterTest(() => peer2.close());
+    const peer2 = await builder.createPeer();
+    const spaceManager2 = peer2.createSpaceManager();
+    await spaceManager2.open();
 
-    // TODO(dmaretskyi): ???
-    // const space = await peer1.createSpace()
-    // const invitation = await space.createInvitation()
+    afterTest(() => spaceManager1.close());
+    afterTest(() => spaceManager2.close());
+
+    const space1 = await spaceManager1.createSpace();
+    expect(space1.isOpen).to.be.true;
+
+    // TODO(burdon): Create invitation and join.
+
+    // const space2 = await spaceManager2.acceptSpace();
+    // expect(space2.key).not.to.be.undefined;
   });
 });

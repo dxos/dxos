@@ -119,10 +119,7 @@ export class TestAgent {
     return this._spaces.get(spaceKey);
   }
 
-  /**
-   *
-   */
-  async createSpaceManager() {
+  createSpaceManager() {
     return new SpaceManager({
       keyring: this._feedBuilder.keyring,
       feedStore: this._feedBuilder.createFeedStore(),
@@ -141,9 +138,6 @@ export class TestAgent {
     });
   }
 
-  /**
-   *
-   */
   async createSpace(
     identityKey: PublicKey = this.identityKey,
     spaceKey?: PublicKey,
@@ -175,9 +169,6 @@ export class TestAgent {
     return space;
   }
 
-  /**
-   *
-   */
   createSpaceProtocol(topic: PublicKey, plugins: Plugin[] = []) {
     return new SpaceProtocol({
       topic,
