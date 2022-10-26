@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FeedStore, TestBuilder } from '@dxos/feed-store';
+import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager, MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -11,25 +11,11 @@ import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager, P
 import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { valueEncoding } from '../common';
+import { TestFeedBuilder } from '../common';
 import { Database } from '../database';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
 import { SpaceProtocol } from './space-protocol';
-
-// TODO(burdon): Create composite with feed-store builder.
-// TODO(burdon): Use in other tests outside of echo.
-
-/**
- * Builder with default encoder and generator.
- */
-export class TestFeedBuilder extends TestBuilder<FeedMessage> {
-  constructor() {
-    super({
-      valueEncoding
-    });
-  }
-}
 
 export type NetworkManagerProvider = () => NetworkManager;
 
