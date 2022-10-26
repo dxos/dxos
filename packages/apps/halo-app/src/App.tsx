@@ -13,7 +13,6 @@ import { UiKitProvider } from '@dxos/react-uikit';
 import {
   AppLayout,
   AppsPage,
-  AuthPage,
   ContactsPage,
   CreateProfilePage,
   DevicesPage,
@@ -31,64 +30,58 @@ import translationResources from './translations';
 const configProvider = async () =>
   new Config(await Dynamics(), await Envs(), Defaults());
 
-const Routes = () => useRoutes([
-  // TODO(wittjosiah): Move behind RequireProfile.
-  {
-    path: '/auth/:origin',
-    element: <AuthPage />
-  },
-  {
-    path: '/profile/create',
-    element: <CreateProfilePage />
-  },
-  {
-    path: '/profile/recover',
-    element: <RecoverProfilePage />
-  },
-  {
-    path: '/profile/invite-device',
-    element: <InviteDevicePage />
-  },
-  {
-    path: '/',
-    element: <LockPage />
-  },
-  {
-    path: '/',
-    element: <RequireProfile redirect='/' />,
-    children: [
-      {
-        path: '/invitation/:code',
-        element: <InvitationPage />
-      },
-      {
-        path: '/',
-        element: <AppLayout />,
-        children: [
-          { path: '/devices', element: <DevicesPage /> },
-          { path: '/identity', element: <IdentityPage /> },
-          { path: '/spaces', element: <SpacesPage /> },
-          { path: '/contacts', element: <ContactsPage /> },
-          { path: '/apps', element: <AppsPage /> },
-          { path: '/spaces/:space', element: <SpacePage /> }
-        ]
-      }]
-  }
-]);
+const Routes = () =>
+  useRoutes([
+    {
+      path: '/profile/create',
+      element: <CreateProfilePage />
+    },
+    {
+      path: '/profile/recover',
+      element: <RecoverProfilePage />
+    },
+    {
+      path: '/profile/invite-device',
+      element: <InviteDevicePage />
+    },
+    {
+      path: '/',
+      element: <LockPage />
+    },
+    {
+      path: '/',
+      element: <RequireProfile redirect='/' />,
+      children: [
+        {
+          path: '/invitation/:code',
+          element: <InvitationPage />
+        },
+        {
+          path: '/',
+          element: <AppLayout />,
+          children: [
+            { path: '/devices', element: <DevicesPage /> },
+            { path: '/identity', element: <IdentityPage /> },
+            { path: '/spaces', element: <SpacesPage /> },
+            { path: '/contacts', element: <ContactsPage /> },
+            { path: '/apps', element: <AppsPage /> },
+            { path: '/spaces/:space', element: <SpacePage /> }
+          ]
+        }
+      ]
+    }
+  ]);
 
 export const App = () => {
   const clientRef = useRef<Client>();
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-        <ClientProvider
-          clientRef={clientRef}
-          config={configProvider}
-        >
-          <HashRouter>
-            <Routes />
-          </HashRouter>
-        </ClientProvider>
+      <ClientProvider clientRef={clientRef} config={configProvider}>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
+      </ClientProvider>
     </UiKitProvider>
   );
 };
