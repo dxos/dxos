@@ -29,7 +29,7 @@ import { Identity } from '../identity';
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
-  networkPlugins: Plugin[];
+  networkPlugins?: Plugin[];
 }
 
 export type JoinIdentityParams = {
@@ -84,15 +84,14 @@ export class IdentityManager {
         peerKey: identityRecord.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      networkPlugins: []
+      }
     });
 
     return new Identity({
-      identityKey: identityRecord.identityKey,
-      deviceKey: identityRecord.deviceKey,
+      space,
       signer: this._keyring,
-      space
+      identityKey: identityRecord.identityKey,
+      deviceKey: identityRecord.deviceKey
     });
   }
 
