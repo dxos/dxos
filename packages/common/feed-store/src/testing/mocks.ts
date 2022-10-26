@@ -14,7 +14,10 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
   public readonly written = new Event<[T, WriteReceipt]>();
   public readonly messages: T[] = [];
 
-  constructor(readonly feedKey = PublicKey.random()) {}
+  // prettier-ignore
+  constructor(
+    readonly feedKey = PublicKey.random()
+  ) {}
 
   async write(data: T): Promise<WriteReceipt> {
     this.messages.push(data);

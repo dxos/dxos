@@ -17,7 +17,11 @@ export const createServiceBundle = <S>(services: ServiceBundle<S>): ServiceBundl
  * A type-safe RPC peer.
  */
 export class ProtoRpcPeer<S> {
-  constructor(public readonly rpc: S, private readonly peer: RpcPeer) {}
+  // prettier-ignore
+  constructor(
+    public readonly rpc: S,
+    private readonly peer: RpcPeer
+  ) {}
 
   async open() {
     await this.peer.open();

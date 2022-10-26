@@ -20,7 +20,11 @@ export class Peer {
 
   readonly closed = new Event();
 
-  constructor(private _protocol: Protocol, private _extension: Extension) {}
+  // prettier-ignore
+  constructor(
+    private _protocol: Protocol,
+    private _extension: Extension
+  ) {}
 
   /**
    * Share feeds to the remote peer.

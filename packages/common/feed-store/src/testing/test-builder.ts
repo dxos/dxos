@@ -28,7 +28,10 @@ export type TestBuilderOptions<T extends {}> = {
 export class TestBuilder<T extends {}> {
   static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
 
-  constructor(protected readonly _properties: TestBuilderOptions<T> = {}) {}
+  // prettier-ignore
+  constructor(
+    protected readonly _properties: TestBuilderOptions<T> = {}
+  ) {}
 
   clone(): TestBuilder<T> {
     return new TestBuilder<T>(Object.assign({}, this._properties));

@@ -31,7 +31,10 @@ export type SchemaDef = {
  * Wrapper for ECHO Item that represents an `ObjectModel` schema.
  */
 export class Schema {
-  constructor(private readonly _schema: ObjectModel) {}
+  // prettier-ignore
+  constructor(
+    private readonly _schema: ObjectModel
+  ) {}
 
   get name(): string {
     return this._schema.get('schema');

@@ -28,7 +28,10 @@ export class MemberStateMachine {
 
   readonly onMemberAdmitted = new Callback<AsyncCallback<MemberInfo>>();
 
-  constructor(private readonly _partyKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _partyKey: PublicKey
+  ) {}
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members;

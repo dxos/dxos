@@ -21,7 +21,11 @@ import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } 
 export class PipelineState {
   public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
 
-  constructor(private _iterator: FeedSetIterator<any>, private _timeframeClock: TimeframeClock) {}
+  // prettier-ignore
+  constructor(
+    private _iterator: FeedSetIterator<any>,
+    private _timeframeClock: TimeframeClock
+  ) {}
 
   // TODO(burdon): For testing only.
   get endTimeframe() {
@@ -98,7 +102,10 @@ export class Pipeline implements PipelineAccessor {
 
   private _isOpen = false;
 
-  constructor(private readonly _initialTimeframe: Timeframe) {
+  // prettier-ignore
+  constructor(
+    private readonly _initialTimeframe: Timeframe
+  ) {
     this.feedSetIterator.stalled.on((iterator) => {
       log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
     });

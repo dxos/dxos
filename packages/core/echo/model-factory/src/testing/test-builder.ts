@@ -21,27 +21,19 @@ const log = debug('dxos:echo:model-test-rig');
  * Factory for peers to test model replication.
  * @deprecated
  */
-// TODO(burdon): This is exported to @dxos/object-model.
+// TODO(burdon): Clean-up. This is exported to @dxos/object-model.
 export class TestBuilder<M extends Model<any>> {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
-
   private readonly _replicationFinished = new Trigger();
 
   private _replicating = true;
 
-  constructor(private readonly _modelFactory: ModelFactory, private readonly _modelConstructor: ModelConstructor<M>) {
+  // prettier-ignore
+  constructor(
+    private readonly _modelFactory: ModelFactory,
+    private readonly _modelConstructor: ModelConstructor<M>
+  ) {
     this._replicationFinished.wake();
-  }
-
-  configureReplication(value: boolean) {
-    this._replicating = value;
-    this._replicate();
-  }
-
-  async waitForReplication() {
-    log('Waiting for replication...');
-    await this._replicationFinished.wait();
-    log('Replications started.');
   }
 
   createPeer(): TestPeer<M> {
@@ -56,6 +48,17 @@ export class TestBuilder<M extends Model<any>> {
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
     return peer;
+  }
+
+  configureReplication(value: boolean) {
+    this._replicating = value;
+    this._replicate();
+  }
+
+  async waitForReplication() {
+    log('Waiting for replication...');
+    await this._replicationFinished.wait();
+    log('Replications started.');
   }
 
   _writeMessage(peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
@@ -120,7 +123,11 @@ export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
   public mutations: ModelMessage<Uint8Array>[] = [];
 
-  constructor(public readonly stateManager: StateManager<M>, public readonly key: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    public readonly stateManager: StateManager<M>,
+    public readonly key: PublicKey
+  ) {}
 
   get model(): M {
     return this.stateManager.model;

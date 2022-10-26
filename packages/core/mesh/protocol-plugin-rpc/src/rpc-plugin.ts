@@ -29,7 +29,10 @@ export class RpcPlugin {
 
   private readonly _peers: Map<string, Connection> = new Map();
 
-  constructor(private _onConnect: OnConnect) {}
+  // prettier-ignore
+  constructor(
+    private _onConnect: OnConnect
+  ) {}
 
   createExtension(): Extension {
     return new Extension(RpcPlugin.EXTENSION)
