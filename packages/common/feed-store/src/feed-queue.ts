@@ -35,7 +35,11 @@ export class FeedQueue<T extends {}> {
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
 
-  constructor(private readonly _feed: FeedWrapper<T>, private readonly _options: FeedQueueOptions = {}) {}
+  // prettier-ignore
+  constructor(
+    private readonly _feed: FeedWrapper<T>,
+    private readonly _options: FeedQueueOptions = {}
+  ) {}
 
   [inspect.custom]() {
     return inspectObject(this);

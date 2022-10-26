@@ -39,7 +39,11 @@ export class SwarmMapper {
 
   readonly mapUpdated = new Event<PeerInfo[]>();
 
-  constructor(private readonly _swarm: Swarm, private readonly _presence: PresencePlugin | undefined) {
+  // prettier-ignore
+  constructor(
+    private readonly _swarm: Swarm,
+    private readonly _presence: PresencePlugin | undefined
+  ) {
     this._subscriptions.add(
       _swarm.connectionAdded.on((connection) => {
         this._update();

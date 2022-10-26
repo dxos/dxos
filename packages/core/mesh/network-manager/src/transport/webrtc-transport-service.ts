@@ -25,7 +25,10 @@ import { wrtc } from './webrtc';
 export class WebRTCTransportService implements BridgeService {
   protected peers = new ComplexMap<PublicKey, SimplePeer>(PublicKey.hash);
 
-  constructor(private readonly _webrtcConfig?: any) {}
+  // prettier-ignore
+  constructor(
+    private readonly _webrtcConfig?: any
+  ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     return new Stream(({ ready, next, close }) => {

@@ -46,6 +46,7 @@ export class FeedFactory<T extends {}> {
       log('created', {
         path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`
       });
+
       return native;
     };
   }
@@ -66,7 +67,6 @@ export class FeedFactory<T extends {}> {
       {},
       this._hypercoreOptions,
       {
-        // TODO(burdon): Test if can omit (given crypto signer) in v10.
         secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
         crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
       },

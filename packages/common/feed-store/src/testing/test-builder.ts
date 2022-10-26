@@ -4,19 +4,16 @@
 
 import type { ValueEncoding } from 'hypercore';
 
-import { Codec } from '@dxos/codec-protobuf';
-import { createCodecEncoding } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import { defaultCodec, defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
+import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
-  codec?: Codec<T>;
   storage?: Storage;
-  directory?: Directory;
+  root?: Directory;
   keyring?: Keyring;
   valueEncoding?: ValueEncoding<T>;
   generator?: TestGenerator<T>;
@@ -27,34 +24,31 @@ export type TestBuilderOptions<T extends {}> = {
  * - Factory methods trigger the automatic generation of unset required properties.
  * - Avoids explosion of overly specific test functions that require and return large bags of properties.
  */
-// TODO(burdon): Apply this pattern elsewhere.
 export class TestBuilder<T extends {}> {
-  static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
+  static readonly ROOT_DIR = 'feeds';
 
-  constructor(protected readonly _properties: TestBuilderOptions<T> = {}) {}
+  // prettier-ignore
+  constructor(
+    protected readonly _properties: TestBuilderOptions<T> = {}
+  ) {}
 
+  /**
+   * Creates a new builder with the current builder's properties.
+   */
   clone(): TestBuilder<T> {
     return new TestBuilder<T>(Object.assign({}, this._properties));
-  }
-
-  get storage(): Storage {
-    return (this._properties.storage ??= createStorage({
-      type: StorageType.RAM
-    }));
-  }
-
-  get directory(): Directory {
-    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring(): Keyring {
     return (this._properties.keyring ??= new Keyring());
   }
 
-  setStorage(type: StorageType, root = TestBuilder.ROOT_DIR) {
-    this._properties.storage = createStorage({ type, root });
-    this._properties.directory = this.storage.createDirectory('feeds');
-    return this;
+  get storage(): Storage {
+    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
+  }
+
+  get root(): Directory {
+    return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   setKeyring(keyring: Keyring) {
@@ -62,16 +56,26 @@ export class TestBuilder<T extends {}> {
     return this;
   }
 
-  createFeedFactory() {
-    const codec = this._properties.codec;
-    const valueEncoding =
-      this._properties.valueEncoding ?? codec !== undefined ? createCodecEncoding(codec!) : undefined;
+  setStorage(storage: Storage, root?: string) {
+    this._properties.storage = storage;
+    if (this._properties.storage && root) {
+      this._properties.root = this.storage.createDirectory(root);
+    }
 
+    return this;
+  }
+
+  setRoot(root: Directory) {
+    this._properties.root = root;
+    return this;
+  }
+
+  createFeedFactory() {
     return new FeedFactory<T>({
-      root: this.directory,
+      root: this.root,
       signer: this.keyring,
       hypercore: {
-        valueEncoding
+        valueEncoding: this._properties.valueEncoding
       }
     });
   }
@@ -89,14 +93,9 @@ export class TestBuilder<T extends {}> {
 export class TestItemBuilder extends TestBuilder<TestItem> {
   constructor() {
     super({
-      codec: defaultCodec,
       valueEncoding: defaultValueEncoding,
       generator: defaultTestGenerator
     });
-  }
-
-  get codec() {
-    return this._properties.codec!;
   }
 
   get valueEncoding() {

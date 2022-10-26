@@ -25,7 +25,6 @@
     "docs": "docs",
     "dx-cli": "packages/devtools/dx-cli",
     "echo-db": "packages/core/echo/echo-db",
-    "echo-testing": "packages/core/echo/echo-testing",
     "esbuild": "tools/executors/esbuild",
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-rules": "tools/eslint-rules",

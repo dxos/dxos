@@ -19,7 +19,11 @@ export class OrderedList {
 
   private _unsubscribe: () => void;
 
-  constructor(private readonly _model: ObjectModel, private readonly _property = 'order') {
+  // prettier-ignore
+  constructor(
+    private readonly _model: ObjectModel,
+    private readonly _property = 'order'
+  ) {
     this.refresh();
     this._unsubscribe = this._model.update.on(() => this.refresh());
   }

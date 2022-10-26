@@ -35,7 +35,10 @@ export class WebRTCTransportProxy implements Transport {
   private _serviceStream!: Stream<BridgeEvent>;
   private readonly _proxyId = PublicKey.random();
 
-  constructor(private readonly _params: WebRTCTransportProxyParams) {
+  // prettier-ignore
+  constructor(
+    private readonly _params: WebRTCTransportProxyParams
+  ) {
     this._serviceStream = this._params.bridgeService.open({
       proxyId: this._proxyId,
       initiator: this._params.initiator

@@ -76,7 +76,10 @@ export class RpcPeer {
   private _unsubscribe: (() => void) | undefined;
   private _clearOpenInterval: (() => void) | undefined;
 
-  constructor(private readonly _options: RpcPeerOptions) {}
+  // prettier-ignore
+  constructor(
+    private readonly _options: RpcPeerOptions
+  ) {}
 
   /**
    * Open the peer. Required before making any calls.

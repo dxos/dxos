@@ -19,7 +19,10 @@ interface MatcherOptions {
  * NOTE: The approach here is to match items against the DNF predicate tree.
  */
 export class Matcher {
-  constructor(private readonly _options: MatcherOptions) {}
+  // prettier-ignore
+  constructor(
+    private readonly _options: MatcherOptions
+  ) {}
 
   getFilter(query: Query) {
     return (item: any) => this._matchItem(item, query.root!);

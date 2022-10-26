@@ -48,7 +48,10 @@ export class MemorySignalManager implements SignalManager {
     payload: Any;
   }>();
 
-  constructor(private readonly _context: MemorySignalManagerContext) {
+  // prettier-ignore
+  constructor(
+    private readonly _context: MemorySignalManagerContext
+  ) {
     this._context.swarmEvent.on((data) => this.swarmEvent.emit(data));
   }
 
