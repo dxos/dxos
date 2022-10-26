@@ -9,6 +9,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import {
   ERR_PROTOCOL_CONNECTION_INVALID,
@@ -61,7 +62,6 @@ export interface ProtocolOptions {
 /**
  * Wraps a hypercore-protocol object.
  */
-// TODO(burdon): Must rename this class.
 export class Protocol {
   private _isOpen = false;
 
@@ -84,7 +84,7 @@ export class Protocol {
   /**
    * https://github.com/mafintosh/hypercore-protocol
    */
-  private readonly _stream: ProtocolStream;
+  private readonly _stream: ProtocolStream<FeedMessage>;
 
   private _extensionInit: ExtensionInit;
   private _init = false;
@@ -111,7 +111,7 @@ export class Protocol {
     this._discoveryKey = options.discoveryKey;
     this._initiator = !!options.initiator;
 
-    this._stream = new ProtocolStream(this._initiator, {
+    this._stream = new ProtocolStream<FeedMessage>(this._initiator, {
       ...this._streamOptions,
       onhandshake: async () => {
         try {
@@ -369,7 +369,7 @@ export class Protocol {
       try {
         initialKey = this._discoveryToPublicKey?.(discoveryKey);
         if (!initialKey) {
-          throw new ERR_PROTOCOL_CONNECTION_INVALID('key not found');
+          throw new ERR_PROTOCOL_CONNECTION_INVALID('Key not found');
         }
 
         // Init stream.

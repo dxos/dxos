@@ -25,7 +25,10 @@ export class SignalRPCClient {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor(private readonly _url: string) {
+  // prettier-ignore
+  constructor(
+    private readonly _url: string
+  ) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
       try {

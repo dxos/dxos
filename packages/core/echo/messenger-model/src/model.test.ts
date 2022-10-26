@@ -4,13 +4,13 @@
 
 import expect from 'expect';
 
-import { ModelFactory, TestRig } from '@dxos/model-factory';
+import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 
 import { MessengerModel } from './model';
 
 describe('MessengerModel', function () {
   it('send message', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(MessengerModel), MessengerModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(MessengerModel), MessengerModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 

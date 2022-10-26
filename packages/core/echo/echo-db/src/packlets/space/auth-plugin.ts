@@ -14,9 +14,6 @@ export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined
 
 export type AuthVerifier = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
 
-export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
-export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
-
 const EXTENSION_NAME = 'dxos.credentials.auth';
 
 /**

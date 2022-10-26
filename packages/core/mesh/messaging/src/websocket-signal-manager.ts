@@ -41,7 +41,10 @@ export class WebsocketSignalManager implements SignalManager {
     payload: Any;
   }>();
 
-  constructor(private readonly _hosts: string[]) {
+  // prettier-ignore
+  constructor(
+    private readonly _hosts: string[]
+  ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {

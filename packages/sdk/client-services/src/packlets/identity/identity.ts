@@ -26,24 +26,23 @@ export type IdentityParams = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
-// TODO(burdon): Rename Halo (i.e., something bigger?)
 export class Identity {
+  private readonly _space: Space;
+  private readonly _signer: Signer;
+  private readonly _deviceStateMachine: DeviceStateMachine;
+
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
 
-  private readonly _signer: Signer;
-  private readonly _space: Space;
-  private readonly _deviceStateMachine: DeviceStateMachine;
+  constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
+    this._space = space;
+    this._signer = signer;
 
-  constructor({ identityKey, deviceKey, signer, space }: IdentityParams) {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
 
-    this._signer = signer;
-    this._space = space;
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
-    // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);

@@ -12,10 +12,9 @@ import { createStorage, Directory, StorageType } from '@dxos/random-access-stora
  * Creates feeds with default properties.
  */
 export class HypercoreFactory<T> {
+  // prettier-ignore
   constructor(
-    private readonly _root: Directory = createStorage({
-      type: StorageType.RAM
-    }).createDirectory(),
+    private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
     private readonly _options?: HypercoreOptions
   ) {
     assert(this._root);

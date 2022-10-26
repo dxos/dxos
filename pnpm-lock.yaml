@@ -1019,31 +1019,6 @@ importers:
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
-  packages/core/echo/echo-testing:
-    specifiers:
-      '@dxos/echo-db': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@types/faker': ^5.5.9
-      '@types/lodash.times': ^4.3.6
-      abstract-leveldown: ~7.0.0
-      faker: ^5.5.3
-      jsondown: dxos/jsondown#main
-      lodash.times: ^4.3.2
-    dependencies:
-      '@dxos/echo-db': link:../echo-db
-      '@dxos/object-model': link:../object-model
-      '@dxos/protocols': link:../../protocols
-      faker: 5.5.3
-      lodash.times: 4.3.2
-    devDependencies:
-      '@dxos/random-access-storage': link:../../../common/random-access-storage
-      '@types/faker': 5.5.9
-      '@types/lodash.times': 4.3.7
-      abstract-leveldown: 7.0.0
-      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
-
   packages/core/echo/messenger-model:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -2148,7 +2123,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/gem-core': workspace:*
@@ -2203,7 +2177,6 @@ importers:
       '@dxos/client-testing': link:../../sdk/client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/echo-testing': link:../../core/echo/echo-testing
       '@dxos/gem-core': link:../../gem/gem-core
       '@dxos/gem-spore': link:../../gem/gem-spore
       '@dxos/object-model': link:../../core/echo/object-model
@@ -12188,12 +12161,6 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
-  /@types/lodash.times/4.3.7:
-    resolution: {integrity: sha512-Jd7PPonqfO2zpNdwpF4dAH4DPSJ7hnsX35k8pFtkgNqSQWSWLINbi1HnTFAE/oOn6XXfXONahZWVVK3klTOIPg==}
-    dependencies:
-      '@types/lodash': 4.14.186
-    dev: true
-
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -13447,6 +13414,7 @@ packages:
     resolution: {integrity: sha512-+OVvxH2rHVEhWLdbudP6p0+dNMXu8JA1CbhP19T8paTYAcX7oJ4OVjT+ZUVpv7mITxXHqDMej+GdqXBmXkw09w==}
     dependencies:
       xtend: 4.0.2
+    dev: false
 
   /abstract-leveldown/6.2.3:
     resolution: {integrity: sha512-BsLm5vFMRUrrLeCcRc+G0t2qOaTzpoJQLOubq2XM72eNpjF5UdU5o/5NvlNhx95XHcAvcl8OMXr4mlg/fRgUXQ==}
@@ -13478,6 +13446,7 @@ packages:
       level-concat-iterator: 3.1.0
       level-supports: 2.1.0
       queue-microtask: 1.2.3
+    dev: false
 
   /accepts/1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -15233,6 +15202,7 @@ packages:
   /catering/2.1.1:
     resolution: {integrity: sha512-K7Qy8O9p76sL3/3m7/zLKbRkyOlSZAgzEaLhyj2mXS8PsCud2Eo4hAb8aLtZqHh0QGqLcb9dlJSu6lHRVENm1w==}
     engines: {node: '>=6'}
+    dev: false
 
   /cborg/1.9.5:
     resolution: {integrity: sha512-fLBv8wmqtlXqy1Yu+pHzevAIkW6k2K0ZtMujNzWphLsA34vzzg9BHn+5GmZqOJkSA9V7EMKsWrf6K976c1QMjQ==}
@@ -23277,6 +23247,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       catering: 2.1.1
+    dev: false
 
   /level-errors/2.0.1:
     resolution: {integrity: sha512-UVprBJXite4gPS+3VznfgDSU8PTRuVX0NXwoWW50KLxd2yw4Y1t2JUR5In1itQnudZqRMT9DlAM3Q//9NCjCFw==}
@@ -23311,6 +23282,7 @@ packages:
   /level-supports/2.1.0:
     resolution: {integrity: sha512-E486g1NCjW5cF78KGPrMDRBYzPuueMZ6VBXHT6gC7A8UYWGiM14fGgp+s/L1oFfDWSPV/+SFkYCmZ0SiESkRKA==}
     engines: {node: '>=10'}
+    dev: false
 
   /leveldown/5.6.0:
     resolution: {integrity: sha512-iB8O/7Db9lPaITU1aA2txU/cBEXAt4vWwKQRrrWuS6XDgbP4QZGj9BL2aNbwb002atoQ/lIotJkfyzz+ygQnUQ==}
@@ -23564,10 +23536,6 @@ packages:
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
     dev: true
-
-  /lodash.times/4.3.2:
-    resolution: {integrity: sha512-FfaJzl0SA35CRPDh5SWe2BTght6y5KSK7yJv166qIp/8q7qOwBDCvuDZE2RUSMRpBkLF6rZKbLEUoTmaP3qg6A==}
-    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -24183,6 +24151,7 @@ packages:
       inherits: 2.0.4
       ltgt: 2.2.1
       safe-buffer: 5.1.2
+    dev: false
 
   /memdown/5.1.0_tjbpekhnedejisbcwvc5eec3ii:
     resolution: {integrity: sha512-B3J+UizMRAlEArDjWHTMmadet+UKwHd3UjMgGBkZcKAxAYVPS9o0Yeiha4qvz7iGiL2Sb3igUft6p7nbFWctpw==}
@@ -24716,6 +24685,7 @@ packages:
 
   /minimist/0.0.8:
     resolution: {integrity: sha512-miQKw5Hv4NS1Psg2517mV4e4dYNaO3++hjAvLOAzKqZ61rH8NS1SK+vbfBWZ5PY/Me/bEWhUwqMghEW5Fb9T7Q==}
+    dev: false
 
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
@@ -24832,6 +24802,7 @@ packages:
     hasBin: true
     dependencies:
       minimist: 0.0.8
+    dev: false
 
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
@@ -32872,3 +32843,4 @@ packages:
       abstract-leveldown: 7.0.0
       memdown: 1.4.1
       mkdirp: 0.5.1
+    dev: false
