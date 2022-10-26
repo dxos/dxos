@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -14,9 +15,11 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { ComplexMap } from '@dxos/util';
 
 import { TestFeedBuilder } from '../common';
-import { Database } from '../database';
+import { Database, DataService } from '../database';
+import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
+import { SpaceManager } from './space-manager';
 import { SpaceProtocol } from './space-protocol';
 
 export type NetworkManagerProvider = () => NetworkManager;
@@ -114,6 +117,25 @@ export class TestAgent {
 
   getSpace(spaceKey: PublicKey) {
     return this._spaces.get(spaceKey);
+  }
+
+  createSpaceManager() {
+    return new SpaceManager({
+      keyring: this._feedBuilder.keyring,
+      feedStore: this._feedBuilder.createFeedStore(),
+      metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
+      networkManager: this._networkManagerProvider(),
+      dataService: new DataService(),
+      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      signingContext: {
+        // TODO(burdon): Util to convert to Identity in SpaceProtocol
+        identityKey: this.identityKey,
+        deviceKey: this.deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER,
+        credentialSigner: createCredentialSignerWithKey(this._feedBuilder.keyring, this.identityKey)
+      }
+    });
   }
 
   async createSpace(
