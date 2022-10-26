@@ -35,5 +35,7 @@ export const uikit = {
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',
   'generic copy label': 'Copy',
-  'generic help label': 'Help'
+  'generic help label': 'Help',
+  'manage profile label': 'Manage identity',
+  'manage party label': 'Manage space'
 };

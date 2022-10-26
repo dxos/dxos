@@ -29,8 +29,19 @@ const defaultCreateUrl = (invitationCode: string) => {
   );
 };
 
-export const Profile = ({
-  profile,
+export const UsernameInput = ({ profile }: { profile: NaturalProfile }) => {
+  const { t } = useTranslation();
+  return (
+    <Input
+      label={t('username label')}
+      initialValue={profile.username}
+      placeholder={humanize(profile.publicKey.toHex())}
+      className='my-0'
+    />
+  );
+};
+
+export const HaloInviteSingleton = ({
   createInvitationUrl = defaultCreateUrl
 }: ProfileProps) => {
   const { t } = useTranslation();
@@ -51,25 +62,25 @@ export const Profile = ({
     [invitations]
   );
 
+  return invitationUrl ? (
+    <QrCode
+      size={40}
+      value={invitationUrl}
+      label={t('copy invite code label', { ns: 'halo' })}
+      side='left'
+      className='w-full h-auto'
+    />
+  ) : (
+    <Loading label={t('generic loading label')} size='md' />
+  );
+};
+
+export const Profile = (props: ProfileProps) => {
+  const { t } = useTranslation();
   return (
     <div role='none' className='flex flex-col gap-4 items-center'>
-      <Input
-        label={t('username label')}
-        initialValue={profile.username}
-        placeholder={humanize(profile.publicKey.toHex())}
-        className='my-0'
-      />
-      {invitationUrl ? (
-        <QrCode
-          size={40}
-          value={invitationUrl}
-          label={t('copy invite code label', { ns: 'halo' })}
-          side='left'
-          className='w-full h-auto'
-        />
-      ) : (
-        <Loading label={t('generic loading label')} size='md' />
-      )}
+      <UsernameInput {...props} />
+      <HaloInviteSingleton {...props} />
       <Button variant='outline' className='w-full flex gap-2'>
         <Eraser className={getSize(5)} />
         {t('reset device label', { ns: 'halo' })}

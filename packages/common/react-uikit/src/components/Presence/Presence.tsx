@@ -3,23 +3,26 @@
 //
 
 import cx from 'classnames';
-import React, { Suspense } from 'react';
+import { UserPlus, UserCircleGear, Gear } from 'phosphor-react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Party, Profile as NaturalProfile } from '@dxos/client';
 import {
   Avatar,
   AvatarProps,
+  Button,
   defaultActive,
   defaultFocus,
   defaultHover,
-  Loading,
+  getSize,
   Popover,
   PopoverProps
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
-import { Profile } from '../Profile';
+import { PartyInviteSingleton } from '../Party';
+import { UsernameInput } from '../Profile';
 
 export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
@@ -27,26 +30,22 @@ export interface PresenceProps
   profile: NaturalProfile;
   party?: Party;
   closeLabel?: string;
+  onClickManageParty?: () => void;
+  onClickManageProfile?: () => void;
 }
 
-const PresenceContent = ({ profile }: PresenceProps) => {
-  return (
-    <>
-      <Profile profile={profile} />
-    </>
-  );
-};
-
-export const Presence = (props: PresenceProps) => {
-  const { t } = useTranslation();
+const ProfileMenu = (props: PresenceProps) => {
   const {
     profile,
+    onClickManageProfile,
     party: _party,
     closeLabel: _closeLabel,
+    onClickManageParty: _onClickManageParty,
     sideOffset,
     collisionPadding,
     ...avatarProps
   } = props;
+  const { t } = useTranslation();
   return (
     <Popover
       openTrigger={
@@ -72,12 +71,53 @@ export const Presence = (props: PresenceProps) => {
       }
       collisionPadding={collisionPadding ?? 8}
       sideOffset={sideOffset ?? -8}
+      className='flex flex-col gap-4 items-center'
     >
-      <Suspense
-        fallback={<Loading label={t('generic loading label')} size='lg' />}
-      >
-        <PresenceContent {...props} />
-      </Suspense>
+      <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
+        <UserCircleGear className={getSize(5)} />
+        <span>{t('manage profile label')}</span>
+      </Button>
+      <UsernameInput profile={profile} />
     </Popover>
+  );
+};
+
+const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
+  const {
+    party,
+    onClickManageParty,
+    profile: _profile,
+    onClickManageProfile: _onClickManageProfile,
+    closeLabel: _closeLabel,
+    sideOffset,
+    collisionPadding
+  } = props;
+  const { t } = useTranslation();
+  return (
+    <Popover
+      openTrigger={
+        <Button className='rounded-full flex items-center justify-center'>
+          <UserPlus className={getSize(5)} />
+        </Button>
+      }
+      collisionPadding={collisionPadding ?? 8}
+      sideOffset={sideOffset ?? -8}
+      className='flex flex-col gap-4 items-center'
+    >
+      <PartyInviteSingleton party={party} />
+      <Button className='flex w-full gap-2' onClick={onClickManageParty}>
+        <Gear className={getSize(5)} />
+        <span>{t('manage space label')}</span>
+      </Button>
+    </Popover>
+  );
+};
+
+export const Presence = (props: PresenceProps) => {
+  return (
+    <>
+      <ProfileMenu {...props} />
+      {props.party && <PartyMenu {...props} party={props.party!} />}
+    </>
   );
 };

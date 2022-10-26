@@ -5,7 +5,11 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultTestingConfig, InvitationDescriptor } from '@dxos/client';
+import {
+  defaultTestingConfig,
+  InvitationDescriptor,
+  Party
+} from '@dxos/client';
 import {
   ClientProvider,
   useClient,
@@ -131,3 +135,31 @@ const JoinPanel = () => {
 
 export const Sharing = templateForComponent(SharingTemplate)({});
 Sharing.args = {};
+
+const WithinSpaceTemplate = () => {
+  const client = useClient();
+  const [party, setParty] = useState<Party>();
+
+  useEffect(() => {
+    if (client && !party) {
+      void client.echo.createParty().then((party: Party) => setParty(party));
+    }
+  }, [client]);
+
+  return party ? (
+    <Template party={party} />
+  ) : (
+    <Loading label='Creating space…' />
+  );
+};
+
+export const WithinSpace = templateForComponent(WithinSpaceTemplate)({});
+WithinSpace.args = {};
+WithinSpace.decorators = [
+  // TODO(wittjosiah): Factor out.
+  (Story) => (
+    <ClientProvider config={defaultTestingConfig}>
+      <Story />
+    </ClientProvider>
+  )
+];
