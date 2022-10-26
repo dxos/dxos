@@ -1,6 +1,8 @@
 ---
 position: 1.5
 label: Quick start
+next: how-it-works
+prev: why
 ---
 # Quick start
 ## Using an ECHO database for state consensus
@@ -56,7 +58,7 @@ npm i -g @dxos/cli
 ```
 Now you can use the `dx` command line tool:
 ```bash
-dx apps create hello # or with --template=bare
+dx app create hello # or with --template=bare
 cd hello
 npm run dev
 ```
