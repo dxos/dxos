@@ -33,6 +33,8 @@ const configProvider = async () =>
 const Routes = () =>
   useRoutes([
     {
+      // TODO(wittjosiah): This should be "identity".
+      // TODO(wittjosiah): These pages should redirect to lock page if identity exists.
       path: '/profile/create',
       element: <CreateProfilePage />
     },
