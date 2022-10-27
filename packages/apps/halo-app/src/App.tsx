@@ -16,14 +16,14 @@ import {
   AppsPage,
   ContactsPage,
   CreateIdentityPage,
-  DeviceInvitationPage,
   DevicesPage,
   IdentityPage,
+  JoinIdentityPage,
+  JoinSpacePage,
   LockPage,
   RecoverIdentityPage,
   RequireIdentity,
   SpacePage,
-  SpaceInvitationPage,
   SpacesPage
 } from './pages';
 import translationResources from './translations';
@@ -51,7 +51,7 @@ const Routes = () =>
         },
         {
           path: '/identity/join',
-          element: <DeviceInvitationPage />
+          element: <JoinIdentityPage />
         }
       ]
     },
@@ -61,7 +61,7 @@ const Routes = () =>
       children: [
         {
           path: '/spaces/join',
-          element: <SpaceInvitationPage />
+          element: <JoinSpacePage />
         },
         {
           path: '/',

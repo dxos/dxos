@@ -3,12 +3,10 @@
 //
 
 import { Plus, Rocket } from 'phosphor-react';
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
 import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-toolkit';
 import {
   Button,
   getSize,
@@ -18,13 +16,12 @@ import {
 } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
+import { JoinSpaceDialog } from '..';
 import { SpaceList } from '../../components';
 
 export const SpacesPage = () => {
   const client = useClient();
   const spaces = useParties();
-  const navigate = useNavigate();
-  const [showJoin, setShowJoin] = useState(false);
   const { t } = useTranslation('halo');
 
   const handleCreateSpace = async () => {
@@ -40,10 +37,14 @@ export const SpacesPage = () => {
       <div role='none' className='flex gap-2 items-center'>
         <Heading>{t('spaces label')}</Heading>
         <div role='none' className='flex-grow' />
-        <Button onClick={() => setShowJoin(true)} className='flex gap-1'>
-          <Rocket className={getSize(5)} />
-          {t('join space label', { ns: 'uikit' })}
-        </Button>
+        <JoinSpaceDialog
+          openTrigger={
+            <Button className='flex gap-1'>
+              <Rocket className={getSize(5)} />
+              {t('join space label', { ns: 'uikit' })}
+            </Button>
+          }
+        />
         <Button
           variant='primary'
           onClick={handleCreateSpace}
@@ -55,12 +56,6 @@ export const SpacesPage = () => {
       </div>
 
       {spaces?.length > 0 && <SpaceList spaces={spaces} />}
-
-      <JoinPartyDialog
-        open={showJoin}
-        onClose={() => setShowJoin(false)}
-        onJoin={(space) => navigate(`/spaces/${space.key.toHex()}`)}
-      />
     </Main>
   );
 };

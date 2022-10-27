@@ -17,15 +17,19 @@ import {
 // TODO(wittjosiah): Factor out.
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const url = new URL(text);
-    const invitation = url.searchParams.get('invitation');
+    const searchParams = new URLSearchParams(
+      text.substring(text.lastIndexOf('?'))
+    );
+    const invitation = searchParams.get('invitation');
+    console.log({ invitation, searchParams });
     return invitation ?? text;
-  } catch {
+  } catch (err) {
+    console.log(err);
     return text;
   }
 };
 
-export const DeviceInvitationPage = () => {
+export const JoinIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
   const profile = useProfile();

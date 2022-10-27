@@ -8,6 +8,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { InvitationDescriptor } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import {
+  Dialog,
+  DialogProps,
   Heading,
   Main,
   SingleInputStep,
@@ -17,10 +19,14 @@ import {
 // TODO(wittjosiah): Factor out.
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const url = new URL(text);
-    const invitation = url.searchParams.get('invitation');
+    const searchParams = new URLSearchParams(
+      text.substring(text.lastIndexOf('?'))
+    );
+    const invitation = searchParams.get('invitation');
+    console.log({ invitation, searchParams });
     return invitation ?? text;
-  } catch {
+  } catch (err) {
+    console.log(err);
     return text;
   }
 };
@@ -28,7 +34,30 @@ const invitationCodeFromUrl = (text: string) => {
 /**
  *
  */
-export const SpaceInvitationPage = () => {
+export const JoinSpacePage = () => {
+  const { t } = useTranslation();
+
+  return (
+    <Main className='max-w-lg mx-auto'>
+      <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
+      <JoinSpacePanel />
+    </Main>
+  );
+};
+
+// TODO(wittjosiah): Factor out.
+export const JoinSpaceDialog = (props: Partial<DialogProps>) => {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog title={t('join space label', { ns: 'uikit' })} {...props}>
+      <JoinSpacePanel />
+    </Dialog>
+  );
+};
+
+// TODO(wittjosiah): Factor out.
+const JoinSpacePanel = () => {
   const { t } = useTranslation();
   const client = useClient();
   const navigate = useNavigate();
@@ -42,6 +71,7 @@ export const SpaceInvitationPage = () => {
     let invitation: InvitationDescriptor;
     try {
       const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
+      console.log(parsedInvitationCode);
       invitation = InvitationDescriptor.decode(parsedInvitationCode);
       const redeemeingInvitation = client.echo.acceptInvitation(invitation);
       const space = await redeemeingInvitation.getParty();
@@ -60,21 +90,17 @@ export const SpaceInvitationPage = () => {
   }, []);
 
   return (
-    <Main className='max-w-lg mx-auto'>
-      <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
-      {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
-      <SingleInputStep
-        {...{
-          pending,
-          inputLabel: t('invitation code label', { ns: 'uikit' }),
-          inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
-          inputProps: {
-            initialValue: invitationCode
-          },
-          onChange: setInvitationCode,
-          onNext
-        }}
-      />
-    </Main>
+    <SingleInputStep
+      {...{
+        pending,
+        inputLabel: t('invitation code label', { ns: 'uikit' }),
+        inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
+        inputProps: {
+          initialValue: invitationCode
+        },
+        onChange: setInvitationCode,
+        onNext
+      }}
+    />
   );
 };
