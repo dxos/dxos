@@ -257,7 +257,6 @@ importers:
 
   packages/apps/halo-app:
     specifiers:
-      '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
@@ -270,8 +269,6 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
@@ -279,8 +276,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
@@ -308,16 +303,12 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       classnames: 2.3.2
       debug: 4.3.4
       phosphor-react: 1.4.1_react@18.2.0
@@ -326,7 +317,6 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       url-join: 5.0.0
     devDependencies:
-      '@babel/core': 7.19.3
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@types/debug': 4.1.7

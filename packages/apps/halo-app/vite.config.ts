@@ -22,6 +22,7 @@ export default defineConfig({
     include: [
       '@dxos/async',
       '@dxos/client',
+      '@dxos/client-services',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/composer',
@@ -29,8 +30,6 @@ export default defineConfig({
       '@dxos/protocols',
       '@dxos/react-async',
       '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/react-toolkit',
       '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
@@ -39,6 +38,7 @@ export default defineConfig({
       '@dxos/util'
     ],
     esbuildOptions: {
+      // TODO(wittjosiah): Remove.
       plugins: [
         {
           name: 'yjs',

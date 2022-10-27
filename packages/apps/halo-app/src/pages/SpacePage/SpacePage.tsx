@@ -3,13 +3,12 @@
 //
 
 import { CaretLeft } from 'phosphor-react';
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import type { Item } from '@dxos/client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/composer';
 import { useParty, useSelection } from '@dxos/react-client';
-import { PartySharingDialog } from '@dxos/react-toolkit';
 import {
   Button,
   getSize,
@@ -33,7 +32,6 @@ export const SpacePage = () => {
     useSelection<Item<TextModel>>(
       space?.select().filter({ type: DOCUMENT_TYPE })
     ) ?? [];
-  const [showShare, setShowShare] = useState(false);
 
   if (!space) {
     return null;
@@ -53,11 +51,6 @@ export const SpacePage = () => {
       ) : (
         <Loading label={t('generic loading label')} size='md' />
       )}
-      <PartySharingDialog
-        open={showShare}
-        partyKey={space.key}
-        onClose={() => setShowShare(false)}
-      />
     </Main>
   );
 };
