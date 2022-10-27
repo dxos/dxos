@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { CredentialSigner } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
-import { FeedWriter, WriteReceipt } from '@dxos/feed-store';
+import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -223,10 +223,6 @@ export class SpaceInvitations {
     });
   }
 }
-
-// TODO(burdon): Factor out.
-const writeMessages = <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> =>
-  Promise.all(messages.map((message) => writer.write(message)));
 
 // TODO(burdon): Factor out (with tests). See CredentialGenerator.
 const createAdmissionCredentials = async (

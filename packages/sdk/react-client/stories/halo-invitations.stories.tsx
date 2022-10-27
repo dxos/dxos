@@ -40,7 +40,7 @@ const HaloInvitationContainer = () => {
       setPin(invitation.secret.toString());
     });
 
-    setInvitationCode(invitation.descriptor.encode());
+    setInvitationCode(invitation.encode());
   };
 
   if (!client.halo.profile) {

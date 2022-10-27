@@ -143,8 +143,9 @@ export class ServiceContext {
     return InvitationWrapper.fromProto(invitation);
   }
 
-  async joinSpace(invitationDescriptor: InvitationWrapper) {
+  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
     assert(this.spaceInvitations);
+
     return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
   }
 }

@@ -114,7 +114,7 @@ describe('ServiceContext', function () {
 
       const space1 = await peer1.spaceManager!.createSpace();
       const invitation = await peer1.createInvitation(space1.key);
-      const space2 = await peer2.joinSpace(invitation);
+      const space2 = await peer2.acceptInvitation(invitation);
       expect(space1.key).toEqual(space2.key);
 
       // TODO(burdon): Write multiple items.

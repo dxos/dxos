@@ -32,17 +32,17 @@ export interface InvitationOptions {
   expiration?: number;
 }
 
+// TODO(burdon): Remove/rename.
 export type InviterInvitation = {
-  // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
   invitationCode: string;
   secret: Uint8Array | undefined;
 };
 
+// TODO(burdon): Remove/rename.
 export type InviteeInvitation = {
   secret?: Uint8Array | undefined; // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void; // Is triggered after supplying the secret.
 };
 
 export type InviterInvitations = InviterInvitation[];
-
 export type InviteeInvitations = Map<string, InviteeInvitation>;

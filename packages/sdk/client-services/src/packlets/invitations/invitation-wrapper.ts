@@ -11,7 +11,7 @@ import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-// TODO(burdon): Move to SDK.
+// TODO(burdon): Move to Client API.
 
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -35,11 +35,20 @@ export interface InvitationQueryParameters {
  *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
  */
-// TODO(burdon): Must rename to avoid clash with protobuf; merge with SDK Invitation.
+// TODO(burdon): Move to Client API (and/or remove).
 export class InvitationWrapper {
+  static decode(code: string): InvitationWrapper {
+    const json = base62.decode(code).toString();
+    return InvitationWrapper.fromQueryParameters(JSON.parse(json));
+  }
+
+  static encode(invitation: InvitationWrapper): string {
+    const buffer = Buffer.from(JSON.stringify(invitation.toQueryParameters()));
+    return base62.encode(buffer);
+  }
+
   static fromQueryParameters(queryParameters: InvitationQueryParameters): InvitationWrapper {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
-
     const descriptor = new InvitationWrapper(
       parseInvitationType(type),
       PublicKey.from(swarmKey),
@@ -55,9 +64,9 @@ export class InvitationWrapper {
   }
 
   static fromProto(invitation: InvitationDescriptor): InvitationWrapper {
-    assert(invitation.type !== undefined, 'Invitation type not provided.');
-    assert(invitation.swarmKey, 'Invitation swarm key not provided.');
-    assert(invitation.invitation, 'Invitation not provided.');
+    assert(invitation.type !== undefined);
+    assert(invitation.swarmKey, 'Missing swarm key');
+    assert(invitation.invitation);
 
     return new InvitationWrapper(
       invitation.type,
@@ -66,12 +75,6 @@ export class InvitationWrapper {
       invitation.identityKey ? PublicKey.from(invitation.identityKey) : undefined,
       invitation.secret ? Buffer.from(invitation.secret) : undefined
     );
-  }
-
-  // TODO(burdon): Move to client API.
-  static decode(code: string): InvitationWrapper {
-    const json = base62.decode(code).toString();
-    return InvitationWrapper.fromQueryParameters(JSON.parse(json));
   }
 
   constructor(
@@ -97,9 +100,16 @@ export class InvitationWrapper {
     return query.hash;
   }
 
-  /**
-   * Exports an InvitationWrapper to an object suitable for use as query parameters.
-   */
+  toProto(): InvitationDescriptor {
+    return {
+      type: this.type,
+      swarmKey: this.swarmKey.asUint8Array(),
+      invitation: this.invitation,
+      identityKey: this.identityKey?.asUint8Array(),
+      secret: this.secret
+    };
+  }
+
   toQueryParameters(): InvitationQueryParameters {
     const query: Partial<InvitationQueryParameters> = {
       swarmKey: this.swarmKey.toHex(),
@@ -112,24 +122,7 @@ export class InvitationWrapper {
     }
 
     query.hash = ripemd160(stableStringify(query));
-
     return query as InvitationQueryParameters;
-  }
-
-  toProto(): InvitationDescriptor {
-    return {
-      type: this.type,
-      swarmKey: this.swarmKey.asUint8Array(),
-      invitation: this.invitation,
-      identityKey: this.identityKey?.asUint8Array(),
-      secret: this.secret
-    };
-  }
-
-  // TODO(burdon): Move to client API.
-  encode(): string {
-    const buffer = Buffer.from(JSON.stringify(this.toQueryParameters()));
-    return base62.encode(buffer);
   }
 }
 

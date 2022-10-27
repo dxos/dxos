@@ -10,25 +10,23 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
-/**
- * Represents a Space invitation.
- */
 message InvitationDescriptor {
-  /**
-   * Defines an invitation type.
-   */
   enum Type {
-    /// Interactive invitation is when both peers are online at the same time.
+    /// Both peers online at the same time.
     INTERACTIVE = 0;
-    /// Offline is when only a single peer needs to be online at the time.
+    /// Invited peer's public key is known and invitation can be accepted by any valid peer.
     OFFLINE = 1;
   }
 
   Type type = 1;
+
+  /// Topic for network handshake.
   bytes swarm_key = 2;
+
+  /// TODO(burdon): ???
   bytes invitation = 3;
 
-  /// Only present if type == OFFLINE.
+  /// Only present if type === OFFLINE.
   optional bytes identity_key = 4;
 
   /// Must be stripped out when passing to another peer.
@@ -51,6 +49,7 @@ message AcceptDeviceRequest {
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
+// TODO(burdon): Rename methods (less terse).
 service HaloInvitationsService {
   ///
   rpc AdmitDevice(AdmitDeviceRequest) returns (google.protobuf.Empty);
@@ -75,6 +74,7 @@ message AcceptAgentRequest {
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
+// TODO(burdon): Rename methods (less terse).
 service SpaceInvitationsService {
   ///
   rpc AdmitAgent(AdmitAgentRequest) returns (google.protobuf.Empty);

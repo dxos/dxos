@@ -237,7 +237,7 @@ export class PartyService implements PartyServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.joinSpace(InvitationWrapper.fromProto(request));
+      const partyPromise = this.serviceContext.acceptInvitation(InvitationWrapper.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

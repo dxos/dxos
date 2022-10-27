@@ -18,3 +18,6 @@ export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteRec
     return cb(data);
   }
 });
+
+export const writeMessages = <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> =>
+  Promise.all(messages.map((message) => writer.write(message)));

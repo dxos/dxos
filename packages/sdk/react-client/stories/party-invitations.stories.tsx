@@ -50,13 +50,13 @@ const PartyInvitationContainer = () => {
       const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
         inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
       });
-      invitation.finished.on(() => resetInvitations());
 
+      invitation.finished.on(() => resetInvitations());
       if (!contact) {
         invitation.connected.on(() => setPin(invitation.secret.toString()));
       }
 
-      setInvitationCode(invitation.descriptor.encode());
+      setInvitationCode(invitation.encode());
     });
   };
 

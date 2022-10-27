@@ -60,6 +60,10 @@ export class InvitationRequest {
     return this._hasConnected;
   }
 
+  encode() {
+    return InvitationWrapper.encode(this._descriptor);
+  }
+
   /**
    * Wait until connected.
    */

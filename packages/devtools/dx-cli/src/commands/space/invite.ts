@@ -39,7 +39,7 @@ export default class Invite extends BaseCommand {
       }
 
       const invitation = await party.createInvitation();
-      const descriptor = invitation.descriptor.encode();
+      const descriptor = invitation.encode();
       const secret = invitation.secret.toString();
 
       this.log(chalk`\n{blue Invitation}: ${descriptor}`);

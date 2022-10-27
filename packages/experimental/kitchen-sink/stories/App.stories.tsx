@@ -109,7 +109,7 @@ export const Secondary = () => {
 
     const handleInviteParty = async () => {
       const invitation = await party!.createInvitation();
-      const encodedInvitation = invitation.descriptor.encode();
+      const encodedInvitation = invitation.encode();
       const text = JSON.stringify({
         encodedInvitation,
         secret: invitation.secret.toString()
