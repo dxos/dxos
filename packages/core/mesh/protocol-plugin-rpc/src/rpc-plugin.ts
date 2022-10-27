@@ -31,7 +31,7 @@ export class RpcPlugin {
 
   // prettier-ignore
   constructor(
-    private _onConnect: OnConnect
+    private readonly _onConnect: OnConnect
   ) {}
 
   createExtension(): Extension {

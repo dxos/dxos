@@ -74,20 +74,22 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
 
   const peer = new RpcPeer({
     ...rest,
+
     messageHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
-
       if (!exposedRpcs[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
+
       return exposedRpcs[serviceName].call(methodName, request);
     },
+
     streamHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
-
       if (!exposedRpcs[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
+
       return exposedRpcs[serviceName].callStream(methodName, request);
     }
   });

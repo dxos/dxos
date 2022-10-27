@@ -86,6 +86,7 @@ export class NetworkManager {
     return this._swarms.get(topic);
   }
 
+  // TODO(burdon): Return handle to leave.
   async joinProtocolSwarm(options: SwarmOptions) {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');

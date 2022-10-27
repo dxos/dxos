@@ -5,26 +5,30 @@
 import { Trigger } from '@dxos/async';
 import { CredentialSigner } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
+import { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema, TypedMessage } from '@dxos/protocols';
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { createProtoRpcPeer } from '@dxos/rpc';
+import { InvitationDescriptor, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-// TODO(burdon): Add this to the Service host (along-side SpaceManager).
-// TODO(burdon): State-machine (handle callbacks).
-// TODO(burdon): Objective create the peer once (not on each request) and route to appropriate logic.
+// TODO(burdon): Objective: Service impl pattern with clean open/close semantics.
 // TODO(burdon): Isolate deps on protocol throughout echo-db.
-// TODO(burdon): Service impl pattern with clean open/close semantics.
 
-// TODO(burdon): Plugin should be created with the space (not on each request).
+// TODO(burdon): Plugin should be created with the space (not on each request)?
+//  - What is the life-cycle of the network swarm connection?
+//    Why is this done each time instead of relying on the current swarm?
+//  - Make docs clear (e.g., Host/Guest, request/offer).
+
+// TODO(burdon): RPCPlugin vs. AuthPlugin?
 
 /**
  * Create and manage data invitations for Data spaces.
  */
+// TODO(burdon): Rename SpaceInvitations? ("data" clashes with data pipeline, which also exists in Halo).
 export class DataInvitations {
   constructor(
     private readonly _networkManager: NetworkManager,
@@ -33,141 +37,188 @@ export class DataInvitations {
   ) {}
 
   /**
-   * Create an invitation to an exiting identity HALO.
+   * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
+  // TODO(burdon): Instead of callback, add wait function to returned wrapper object.
   async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
 
-    const swarmKey = PublicKey.random();
-    await this._networkManager.joinProtocolSwarm({
-      topic: swarmKey,
-      peerId: swarmKey,
-      topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [
-        new RpcPlugin(async (port) => {
-          log('Inviter connected');
-          const peer = createProtoRpcPeer({
-            requested: {
-              SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-            },
-            exposed: {
-              SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-            },
-            handlers: {
-              SpaceInvitationsService: {
-                admitAgent: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
-                  const credentials = await createAdmissionCredentials(
-                    this._signingContext.credentialSigner,
-                    identityKey,
-                    space.key,
-                    deviceKey,
-                    controlFeedKey,
-                    dataFeedKey
-                  );
+    // TODO(burdon): Timeout (which should automatically close everything).
+    const admitted = new Trigger();
 
-                  // TODO(burdon): Factor out batch writer.
-                  await Promise.all(credentials.map((message) => space.controlPipeline.writer.write(message)));
-                }
-              }
-            },
-            port
-          });
+    const topic = PublicKey.random();
+    const connection = await this._joinSwarm(
+      topic,
+      this._createRpcPlugin(
+        {
+          // TODO(burdon): Rename verbs (this means the "guest" is requesting credentials).
+          // TODO(burdon): What prevents the other side from just calling us? Require secret?
+          admitAgent: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
+            await writeMessages(
+              space.controlPipeline.writer,
+              await createAdmissionCredentials(
+                this._signingContext.credentialSigner,
+                identityKey,
+                space.key,
+                deviceKey,
+                controlFeedKey,
+                dataFeedKey
+              )
+            );
 
-          await peer.open();
-          log('Inviter RPC open');
+            admitted.wake();
+          },
 
+          // TODO(burdon): Make calls optional and throw error if not handled?
+          acceptAgent: async () => {
+            throw new Error('invalid call');
+          }
+        },
+        // This is called once the connection is established with the peer.
+        async (peer) => {
           await peer.rpc.SpaceInvitationsService.acceptAgent({
             spaceKey: space.key,
             genesisFeedKey: space.genesisFeedKey
           });
 
+          await admitted.wait();
           onFinish?.();
-        })
-      ])
-    });
+
+          // TODO(burdon): Automatically close on return?
+          await connection.close();
+        }
+      )
+    );
 
     return {
       type: InvitationDescriptor.Type.INTERACTIVE,
-      swarmKey: swarmKey.asUint8Array(),
+      swarmKey: topic.asUint8Array(),
       invitation: new Uint8Array() // TODO(burdon): Required.
     };
   }
 
   /**
-   * Joins an existing identity HALO by invitation.
+   * Waits for the host peer (inviter) to accept our join request.
+   * The local guest peer (invitee) then sends the local party invitation to the host,
+   * which then writes the guest's credentials to the space.
    */
-  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Space> {
-    log('Accept invitation');
-    const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
+  async acceptInvitation(invitation: InvitationDescriptor): Promise<Space> {
+    log('Accept invitation', invitation);
 
-    const done = new Trigger();
-    let space: Space;
-    let connected = false;
-    await this._networkManager.joinProtocolSwarm({
-      topic: swarmKey,
-      peerId: PublicKey.random(),
-      topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [
-        new RpcPlugin(async (port) => {
-          log('Invitee connected');
-          // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
-          // TODO(dmaretskyi): More robust way to handle this.
-          if (connected) {
-            // TODO(dmaretskyi): Close connection.
-            log.warn('Ignore duplicate connection');
-            return;
+    // TODO(burdon): Timeout (which should automatically close everything).
+    const accepted = new Trigger<Space>();
+    const admitted = new Trigger<Space>();
+
+    const topic = PublicKey.from(invitation.swarmKey);
+    const connection = await this._joinSwarm(
+      topic,
+      this._createRpcPlugin(
+        {
+          admitAgent: async () => {
+            throw new Error('invalid call');
+          },
+          // TODO(burdon): Rename verbs (this means the "host" is accepting us (the "guest").
+          acceptAgent: async ({ spaceKey, genesisFeedKey }) => {
+            // Create local space.
+            const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
+            accepted.wake(space);
           }
+        },
+        // This is called once the connection is established with the peer.
+        async (peer) => {
+          const space = await accepted.wait();
 
-          connected = true;
-          const peer = createProtoRpcPeer({
-            requested: {
-              SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-            },
-            exposed: {
-              SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-            },
-            handlers: {
-              SpaceInvitationsService: {
-                acceptAgent: async ({ spaceKey, genesisFeedKey }) => {
-                  try {
-                    log('Accept space', { spaceKey, genesisFeedKey });
-                    space = await this._spaceManager.acceptSpace({
-                      spaceKey,
-                      genesisFeedKey
-                    });
-
-                    log('Try to admit member');
-                    await peer.rpc.SpaceInvitationsService.admitAgent({
-                      identityKey: this._signingContext.identityKey,
-                      deviceKey: this._signingContext.deviceKey,
-                      controlFeedKey: space.controlFeedKey,
-                      dataFeedKey: space.dataFeedKey
-                    });
-
-                    done.wake();
-                    log('Invitee done');
-                  } catch (err: any) {
-                    log.catch(err);
-                  }
-                }
-              }
-            },
-            port
+          // Send local space's details to host (inviter).
+          // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
+          await peer.rpc.SpaceInvitationsService.admitAgent({
+            identityKey: this._signingContext.identityKey,
+            deviceKey: this._signingContext.deviceKey,
+            controlFeedKey: space.controlFeedKey,
+            dataFeedKey: space.dataFeedKey
           });
 
-          await peer.open();
-          log('Invitee RPC open');
-        })
-      ])
+          admitted.wake(space);
+        }
+      )
+    );
+
+    // TODO(burdon): Close if timeout.
+    const space = await admitted.wait();
+    await connection.close();
+    return space;
+  }
+
+  //
+  //
+  //
+  // Utils
+  // TODO(burdon): Common across all invitation processing and RPCs.
+  //
+  //
+  //
+
+  // TODO(burdon): Timeout.
+  private async _joinSwarm(topic: PublicKey, plugin: RpcPlugin) {
+    // TODO(burdon): Return close handler.
+    await this._networkManager.joinProtocolSwarm({
+      topic,
+      peerId: PublicKey.random(),
+      topology: new StarTopology(topic),
+      // TODO(burdon): Second arg should be peerKey?
+      protocol: createProtocolFactory(topic, topic, [plugin])
     });
 
-    await done.wait();
+    return {
+      close: async () => {
+        await this._networkManager.leaveProtocolSwarm(topic);
+      }
+    };
+  }
 
-    return space!;
+  /**
+   * Creates an RPC plugin with the given handlers.
+   * Calls the callback once the connection is established?
+   */
+  private _createRpcPlugin(
+    handlers: SpaceInvitationsService,
+    // TODO(burdon): Standardize error handling (e.g., close connection).
+    onConnect: (peer: ProtoRpcPeer<{ SpaceInvitationsService: SpaceInvitationsService }>) => Promise<void>
+  ) {
+    return new RpcPlugin(async (port) => {
+      // TODO(burdon): What does connection mean? Just one peer?
+      //  See original comment re handling multiple connections.
+      const peer = createProtoRpcPeer({
+        // TODO(burdon): Remove boilerplate?
+        requested: {
+          SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
+        },
+        exposed: {
+          SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
+        },
+        handlers: {
+          SpaceInvitationsService: handlers
+        },
+        port
+      });
+
+      try {
+        await peer.open();
+        await onConnect(peer);
+      } catch (err: any) {
+        // TODO(burdon): Common error handling (e.g., close connection).
+        log.error('RPC handler failed', err);
+      } finally {
+        await peer.close();
+      }
+    });
   }
 }
 
-// TODO(burdon): Factor out (for tests).
+// TODO(burdon): Factor out.
+const writeMessages = <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> =>
+  Promise.all(messages.map((message) => writer.write(message)));
+
+// TODO(burdon): Factor out (with tests).
 const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
