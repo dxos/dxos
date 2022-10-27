@@ -36,6 +36,7 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+      NODE_OPTIONS: --max_old_space_size=8198
     steps:
       - checkout
       - *cache_restore
