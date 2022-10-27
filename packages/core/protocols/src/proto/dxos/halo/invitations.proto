@@ -23,7 +23,7 @@ message InvitationDescriptor {
   /// Topic for network handshake.
   bytes swarm_key = 2;
 
-  /// TODO(burdon): ???
+  /// TODO(burdon): Remove?
   bytes invitation = 3;
 
   /// Only present if type === OFFLINE.

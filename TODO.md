@@ -1,5 +1,7 @@
 # TODOs
 
+Staging area for internal work-in-progress (written-up into GH issues).
+
 ## Issues
 
 - https://github.com/dxos/dxos/issues/1576

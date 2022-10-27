@@ -30,7 +30,7 @@ const invalidOp = (_: any): Promise<void> => {
 };
 
 /**
- * Create and manage data invitations for Data spaces.
+ * Manages the life-cycle of Space invitations between peers.
  */
 export class SpaceInvitations {
   constructor(
@@ -42,6 +42,7 @@ export class SpaceInvitations {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
+  // TODO(burdon): Give handler state machine to API with e.g., sync state. Replace onFinish.
   // TODO(burdon): Instead of callback, add wait function to returned wrapper object.
   async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
@@ -52,7 +53,7 @@ export class SpaceInvitations {
     const topic = PublicKey.random();
     const connection = await this._joinSwarm(
       topic,
-      this._createRpcPlugin(
+      createRpcPlugin(
         {
           // TODO(burdon): Rename verbs (this means the "guest" is requesting credentials).
           // TODO(burdon): What prevents the other side from just calling us? Require secret?
@@ -75,27 +76,28 @@ export class SpaceInvitations {
           // TODO(burdon): Make calls optional and throw error if not handled?
           acceptAgent: invalidOp
         },
+        {
+          // This is called once the connection is established with the peer.
+          onOpen: async (peer) => {
+            await peer.rpc.SpaceInvitationsService.acceptAgent({
+              spaceKey: space.key,
+              genesisFeedKey: space.genesisFeedKey
+            });
 
-        // This is called once the connection is established with the peer.
-        async (peer) => {
-          await peer.rpc.SpaceInvitationsService.acceptAgent({
-            spaceKey: space.key,
-            genesisFeedKey: space.genesisFeedKey
-          });
+            await admitted.wait();
+            onFinish?.();
+          },
 
-          await admitted.wait();
-          onFinish?.();
-        },
-
-        // This is called once the connection is closed (or on error).
-        async () => {
-          await connection.close();
+          // This is called once the connection is closed (or on error).
+          onClose: async () => {
+            await connection.close();
+          }
         }
       )
     );
 
     return {
-      type: InvitationDescriptor.Type.INTERACTIVE,
+      type: InvitationDescriptor.Type.INTERACTIVE, // TODO(burdon): Remove (default).
       swarmKey: topic.asUint8Array(),
       invitation: new Uint8Array() // TODO(burdon): Required.
     };
@@ -109,6 +111,7 @@ export class SpaceInvitations {
   async acceptInvitation(invitation: InvitationDescriptor): Promise<Space> {
     log('Accept invitation', invitation);
 
+    // TODO(burdon): State machine.
     // TODO(burdon): Timeout (which should automatically close everything).
     const accepted = new Trigger<Space>();
     const admitted = new Trigger<Space>();
@@ -116,7 +119,7 @@ export class SpaceInvitations {
     const topic = PublicKey.from(invitation.swarmKey);
     const connection = await this._joinSwarm(
       topic,
-      this._createRpcPlugin(
+      createRpcPlugin(
         {
           admitAgent: invalidOp,
 
@@ -127,29 +130,31 @@ export class SpaceInvitations {
             accepted.wake(space);
           }
         },
+        {
+          // TODO(burdon): Anyone could be called here (and multiple times if network interrupted).
+          // This is called once the connection is established with the peer.
+          onOpen: async (peer) => {
+            // Wait for host to ACK and local space to be created.
+            const space = await accepted.wait();
 
-        // This is called once the connection is established with the peer.
-        async (peer) => {
-          // Wait for host to ACK and local space to be created.
-          const space = await accepted.wait();
+            // Send local space's details to host (inviter).
+            // TODO(burdon): Do we need to include the space key in case these get mixed up?
+            // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
+            await peer.rpc.SpaceInvitationsService.admitAgent({
+              identityKey: this._signingContext.identityKey,
+              deviceKey: this._signingContext.deviceKey,
+              controlFeedKey: space.controlFeedKey,
+              dataFeedKey: space.dataFeedKey
+            });
 
-          // Send local space's details to host (inviter).
-          // TODO(burdon): Do we need to include the space key in case these get mixed up?
-          // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
-          await peer.rpc.SpaceInvitationsService.admitAgent({
-            identityKey: this._signingContext.identityKey,
-            deviceKey: this._signingContext.deviceKey,
-            controlFeedKey: space.controlFeedKey,
-            dataFeedKey: space.dataFeedKey
-          });
+            // All done.
+            admitted.wake(space);
+          },
 
-          // All done.
-          admitted.wake(space);
-        },
-
-        // This is called once the connection is closed (or on error).
-        async () => {
-          await connection.close();
+          // This is called once the connection is closed (or on error).
+          onClose: async () => {
+            await connection.close();
+          }
         }
       )
     );
@@ -167,8 +172,8 @@ export class SpaceInvitations {
   //
 
   // TODO(burdon): Timeout.
+  // TODO(burdon): Integrate this handler into the network manager calls.
   private async _joinSwarm(topic: PublicKey, plugin: RpcPlugin) {
-    // TODO(burdon): Return close handler.
     await this._networkManager.joinProtocolSwarm({
       topic,
       peerId: PublicKey.random(),
@@ -183,46 +188,53 @@ export class SpaceInvitations {
       }
     };
   }
-
-  /**
-   * Creates an RPC plugin with the given handlers.
-   * Calls the callback once the connection is established?
-   */
-  private _createRpcPlugin(
-    handlers: SpaceInvitationsService,
-    // TODO(burdon): Standardize error handling (e.g., close connection).
-    onConnect: (peer: ProtoRpcPeer<{ SpaceInvitationsService: SpaceInvitationsService }>) => Promise<void>,
-    onClose?: () => Promise<void>
-  ) {
-    return new RpcPlugin(async (port) => {
-      // TODO(burdon): What does connection mean? Just one peer?
-      //  See original comment re handling multiple connections.
-      const peer = createProtoRpcPeer({
-        // TODO(burdon): Remove boilerplate?
-        requested: {
-          SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-        },
-        exposed: {
-          SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
-        },
-        handlers: {
-          SpaceInvitationsService: handlers
-        },
-        port
-      });
-
-      try {
-        await peer.open();
-        await onConnect(peer);
-      } catch (err: any) {
-        log.error('RPC handler failed', err);
-      } finally {
-        await peer.close();
-        await onClose?.();
-      }
-    });
-  }
 }
+
+type CreateRpcPluginOptions = {
+  onOpen?: (peer: ProtoRpcPeer<{ SpaceInvitationsService: SpaceInvitationsService }>) => Promise<void>;
+  onClose?: () => Promise<void>;
+};
+
+/**
+ * Creates an RPC plugin with the given handlers.
+ * Calls the callback once the connection is established?
+ */
+// TODO(burdon): Factor out.
+// prettier-ignore
+const createRpcPlugin = (
+  handlers: SpaceInvitationsService,
+  options?: CreateRpcPluginOptions
+) => {
+  const { onOpen, onClose } = options ?? {};
+
+  return new RpcPlugin(async (port) => {
+    // TODO(burdon): What does connection mean? Just one peer?
+    //  See original comment re handling multiple connections.
+    const peer = createProtoRpcPeer({
+      // TODO(burdon): Rename?
+      requested: {
+        SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
+      },
+      exposed: {
+        SpaceInvitationsService: schema.getService('dxos.halo.invitations.SpaceInvitationsService')
+      },
+      handlers: {
+        SpaceInvitationsService: handlers
+      },
+      port
+    });
+
+    try {
+      await peer.open();
+      await onOpen?.(peer);
+    } catch (err: any) {
+      log.error('RPC handler failed', err);
+    } finally {
+      await peer.close();
+      await onClose?.();
+    }
+  });
+};
 
 // TODO(burdon): Factor out (with tests). See CredentialGenerator.
 const createAdmissionCredentials = async (

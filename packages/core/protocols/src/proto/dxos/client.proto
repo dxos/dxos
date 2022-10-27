@@ -25,7 +25,8 @@ service SystemService {
 }
 
 //
-// Invitations shared across HALO and ECHO
+// Invitations shared across HALO and ECHO.
+// TODO(burdon): Consolidate with invitation protobufs.
 //
 
 enum InvitationState {
@@ -224,6 +225,7 @@ message CreateSnaspotRequest {
   dxos.keys.PublicKey party_key = 1;
 }
 
+// TODO(burdon): Rename SpaceService.
 service PartyService {
   // TODO(rzadp): Combine the two into one?
   rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
@@ -237,6 +239,7 @@ service PartyService {
   /// Open and close or activate and deactivate a party.
   rpc SetPartyState(SetPartyStateRequest) returns (Party);
 
+  // TODO(burdon): Rename.
   rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
   rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
