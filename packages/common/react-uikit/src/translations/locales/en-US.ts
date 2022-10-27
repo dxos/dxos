@@ -6,12 +6,12 @@ export const uikit = {
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
-  'create profile label': 'Create a profile',
-  'create profile description': 'Create a new profile.',
-  'recover profile label': 'Use a seed phrase',
-  'recover profile description': 'Enter your seed phrase to log in manually.',
-  'invite device label': 'Use an authed device',
-  'invite device description':
+  'create identity label': 'Create an identity',
+  'create identity description': 'Create a new identity.',
+  'recover identity label': 'Use a seed phrase',
+  'recover identity description': 'Enter your seed phrase to log in manually.',
+  'join identity label': 'Use an authed device',
+  'join identity description':
     'Add this device to an identity you’re already logged into on another device.',
   'join space label': 'Join a space',
   'create space label': 'Create a space',

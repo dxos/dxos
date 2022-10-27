@@ -30,7 +30,7 @@ export const RecoverIdentityPage = () => {
   }, [seedphrase]);
   return (
     <Main className='max-w-lg mx-auto'>
-      <Heading>{t('recover profile label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('recover identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
           pending,

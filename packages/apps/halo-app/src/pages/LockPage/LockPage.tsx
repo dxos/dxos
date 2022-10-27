@@ -54,9 +54,9 @@ export const LockPage = () => {
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices
             {...{
-              onInviteDevice: () => navigate('/profile/invite-device'),
-              onCreate: () => navigate('/profile/create'),
-              onRecover: () => navigate('/profile/recover')
+              onJoin: () => navigate('/identity/join'),
+              onCreate: () => navigate('/identity/create'),
+              onRecover: () => navigate('/identity/recover')
             }}
           />
         </>

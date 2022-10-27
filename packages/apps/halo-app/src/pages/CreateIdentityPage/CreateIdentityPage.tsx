@@ -30,7 +30,7 @@ export const CreateIdentityPage = () => {
   }, [username]);
   return (
     <Main className='max-w-lg mx-auto'>
-      <Heading>{t('create profile label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('create identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
           pending,

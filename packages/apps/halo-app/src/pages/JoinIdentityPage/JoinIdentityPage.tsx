@@ -68,7 +68,7 @@ export const JoinIdentityPage = () => {
 
   return (
     <Main className='max-w-lg mx-auto'>
-      <Heading>{t('invite device label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
       {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
       <SingleInputStep
         {...{
