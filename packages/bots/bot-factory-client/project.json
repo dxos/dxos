@@ -29,8 +29,7 @@
           "@dxos/keys",
           "@dxos/protocol-plugin-rpc",
           "@dxos/protocols",
-          "@dxos/rpc",
-          "@dxos/network-manager"
+          "@dxos/rpc"
         ]
       }
     },
