@@ -19,6 +19,8 @@ const workerRuntime = new WorkerRuntime(
   })
 );
 
+console.log('Starting worker runtime...');
+
 void workerRuntime
   .start()
   .then(() => {
