@@ -23,7 +23,6 @@ const invitationCodeFromUrl = (text: string) => {
       text.substring(text.lastIndexOf('?'))
     );
     const invitation = searchParams.get('invitation');
-    console.log({ invitation, searchParams });
     return invitation ?? text;
   } catch (err) {
     console.log(err);
@@ -71,7 +70,6 @@ const JoinSpacePanel = () => {
     let invitation: InvitationDescriptor;
     try {
       const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-      console.log(parsedInvitationCode);
       invitation = InvitationDescriptor.decode(parsedInvitationCode);
       const redeemeingInvitation = client.echo.acceptInvitation(invitation);
       const space = await redeemeingInvitation.getParty();
