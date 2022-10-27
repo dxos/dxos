@@ -25,14 +25,13 @@
     "isomorphic-fetch": "^3.0.0",
     "preact": "^10.11.0",
     "preact-render-to-string": "^5.2.4",
-    "url-join": "^4.0.1"
+    "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.9",
     "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "^16.11.58",
-    "@types/url-join": "~4.0.1",
     "faker": "^5.5.3",
     "mocha": "^8.4.0",
     "ts-node": "10.9.1",
