@@ -10,7 +10,8 @@
 declare module 'streamx' {
   import { EventEmitter } from 'events';
 
-  type Callback <T> = (value: T) => void
+  type Callback = (err: Error, value: any) => void;
+  type EventCallback = (value: any) => void;
 
   export class Stream extends EventEmitter {
     readonly readable: boolean;
@@ -18,89 +19,89 @@ declare module 'streamx' {
     readonly destroyed: boolean;
     readonly destroying: boolean;
 
-    destroy (err?: Error)
+    destroy(err?: Error);
 
-    on (event: string, cb: Callback)
-    off (event: string, cb: Callback)
+    on(event: string, cb: EventCallback);
+    off(event: string, cb: EventCallback);
   }
 
   interface IReadable {
-    pipe (dest: Writable, cb?: Callback)
-    read (): any
-    push ()
-    unshift ()
-    resume ()
-    pause ()
+    pipe(dest: Writable, cb?: Callback);
+    read(): any;
+    push();
+    unshift();
+    resume();
+    pause();
   }
 
   interface IWritable {
-    pipe (dest: Writable, cb?: Callback)
-    read (): any
-    push ()
-    unshift ()
-    resume ()
-    pause ()
+    pipe(dest: Writable, cb?: Callback);
+    read(): any;
+    push();
+    unshift();
+    resume();
+    pause();
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L209
    */
   export class Readable extends Stream implements IReadable {
-    constructor (any)
+    constructor(args?: any);
 
-    pipe (dest: Writable, cb?: Callback)
+    pipe(dest: Writable, cb?: Callback);
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L104
    */
   export class Writable extends Stream implements IWritable {
-    constructor (any)
+    constructor(args?: any);
 
-    write: (data: any, next: () => void) => void;
-    end ()
+    write: (data: any) => void;
+    end();
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L801
    */
   export class Duplex extends Readable implements Writable {
-    constructor (any)
+    constructor(args?: any);
 
-    pipe (dest: Writable, cb?: Callback)
-    read (): any
-    push ()
-    unshift ()
-    resume ()
-    pause ()
-    write (data: any, next: () => void): void
-    end ()
+    pipe(dest: Writable, cb?: Callback);
+    read(): any;
+    push();
+    unshift();
+    resume();
+    pause();
+    write: (data: any) => void;
+    end();
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L839
    */
   export class Transform extends Duplex {
-    constructor (any)
+    constructor(args?: any);
 
-    _transform (data: Buffer, cb: (err: Error, mappedData: Buffer) => void): void
+    _transform(data: Buffer, cb?: Callback): void;
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L883
    */
   export class PassThrough extends Transform {
-    constructor (any)
+    constructor(args?: any);
   }
 
   /**
    * https://github.com/streamxorg/streamx/blob/master/index.js#L902
    */
   export class Pipeline {
-    constructor (src: Stream, dst: Stream, cb: () => void)
+    constructor(src: Stream, dst: Stream, cb?: Callback);
   }
 
-  function pipeline (stream: Stream, ...streams: Stream[], cb?: () => void): void
+  function pipeline(stream: Stream, ...streams: Stream[], cb?: Callback): void;
 
   export = pipeline;
 }
