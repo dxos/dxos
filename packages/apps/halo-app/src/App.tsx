@@ -28,8 +28,7 @@ import {
 } from './pages';
 import translationResources from './translations';
 
-const configProvider = async () =>
-  new Config(await Dynamics(), await Envs(), Defaults());
+const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
 const Routes = () =>
   useRoutes([
