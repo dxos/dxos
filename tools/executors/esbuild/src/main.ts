@@ -4,7 +4,7 @@
 
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build } from 'esbuild';
-import { writeFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { join } from 'path';
 
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
@@ -51,7 +51,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   });
 
   if (result.metafile && options.outdir) {
-    writeFileSync(join(options.outdir, 'metafile.json'), JSON.stringify(result.metafile, null, 2));
+    await writeFile(join(options.outdir, 'metafile.json'), JSON.stringify(result.metafile, null, 2));
   }
 
   return { success: result.errors.length === 0 };
