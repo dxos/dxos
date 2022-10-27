@@ -47,7 +47,7 @@ export const SpacePage = () => {
         <Heading>{humanize(space.key)}</Heading>
       </div>
       {item ? (
-        <Composer item={item} />
+        <Composer item={item} className='z-0' />
       ) : (
         <Loading label={t('generic loading label')} size='md' />
       )}

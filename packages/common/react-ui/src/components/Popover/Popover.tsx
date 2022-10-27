@@ -15,6 +15,7 @@ export interface PopoverProps
   children: ReactNode;
   closeLabel?: string;
   initiallyOpen?: boolean;
+  mountAsSibling?: boolean;
 }
 
 type KeyUpEvent = Parameters<
@@ -26,6 +27,7 @@ export const Popover = ({
   children,
   closeLabel,
   initiallyOpen,
+  mountAsSibling,
   ...contentProps
 }: PopoverProps) => {
   const [isOpen, setIsOpen] = useState(!!initiallyOpen);
@@ -35,38 +37,47 @@ export const Popover = ({
       setIsOpen(keyUpId === 'open');
     }
   }, []);
+
+  const popoverContent = (
+    <PopoverPrimitive.Content
+      align='center'
+      {...contentProps}
+      className={cx(
+        'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
+        'rounded-lg p-4 shadow-xl elevated-buttons',
+        'bg-white dark:bg-neutral-800',
+        defaultFocus,
+        contentProps.className
+      )}
+    >
+      <PopoverPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
+      {children}
+      {closeLabel && (
+        <PopoverPrimitive.Close
+          className={cx(
+            'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
+            defaultFocus,
+            defaultHover({})
+          )}
+          aria-label={closeLabel}
+          data-keyupid='close'
+        >
+          <X className='h-4 w-4 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400' />
+        </PopoverPrimitive.Close>
+      )}
+    </PopoverPrimitive.Content>
+  );
+
   return (
     <PopoverPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       <PopoverPrimitive.Trigger asChild onKeyUp={onKeyUp} data-keyupid='open'>
         {openTrigger}
       </PopoverPrimitive.Trigger>
-      <PopoverPrimitive.Content
-        align='center'
-        {...contentProps}
-        className={cx(
-          'radix-side-top:animate-slide-up radix-side-bottom:animate-slide-down',
-          'rounded-lg p-4 shadow-xl elevated-buttons',
-          'bg-white dark:bg-neutral-800',
-          defaultFocus,
-          contentProps.className
-        )}
-      >
-        <PopoverPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
-        {children}
-        {closeLabel && (
-          <PopoverPrimitive.Close
-            className={cx(
-              'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
-              defaultFocus,
-              defaultHover({})
-            )}
-            aria-label={closeLabel}
-            data-keyupid='close'
-          >
-            <X className='h-4 w-4 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400' />
-          </PopoverPrimitive.Close>
-        )}
-      </PopoverPrimitive.Content>
+      {mountAsSibling ? (
+        popoverContent
+      ) : (
+        <PopoverPrimitive.Portal>{popoverContent}</PopoverPrimitive.Portal>
+      )}
     </PopoverPrimitive.Root>
   );
 };

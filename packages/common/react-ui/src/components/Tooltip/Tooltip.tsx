@@ -14,16 +14,40 @@ export interface TooltipProps
   content: ReactNode;
   children: ReactNode;
   tooltipLabelsTrigger?: boolean;
+  mountAsSibling?: boolean;
 }
 
 export const Tooltip = ({
   content,
   children,
   tooltipLabelsTrigger,
+  mountAsSibling,
   ...contentProps
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
+
+  const tooltipContent = (
+    <TooltipPrimitive.Content
+      forceMount
+      {...contentProps}
+      className={cx(
+        'radix-side-top:animate-slide-down-fade',
+        'radix-side-right:animate-slide-left-fade',
+        'radix-side-bottom:animate-slide-up-fade',
+        'radix-side-left:animate-slide-right-fade',
+        'inline-flex items-center rounded-md px-4 py-2.5',
+        'shadow-lg bg-white dark:bg-neutral-800',
+        !isOpen && 'sr-only',
+        defaultTooltip,
+        contentProps.className
+      )}
+    >
+      <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
+      {content}
+    </TooltipPrimitive.Content>
+  );
+
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
       <TooltipPrimitive.Trigger
@@ -37,24 +61,13 @@ export const Tooltip = ({
           {content}
         </span>
       )}
-      <TooltipPrimitive.Content
-        forceMount
-        {...contentProps}
-        className={cx(
-          'radix-side-top:animate-slide-down-fade',
-          'radix-side-right:animate-slide-left-fade',
-          'radix-side-bottom:animate-slide-up-fade',
-          'radix-side-left:animate-slide-right-fade',
-          'inline-flex items-center rounded-md px-4 py-2.5',
-          'shadow-lg bg-white dark:bg-neutral-800',
-          !isOpen && 'sr-only',
-          defaultTooltip,
-          contentProps.className
-        )}
-      >
-        <TooltipPrimitive.Arrow className='fill-current text-white dark:text-neutral-800' />
-        {content}
-      </TooltipPrimitive.Content>
+      {mountAsSibling ? (
+        tooltipContent
+      ) : (
+        <TooltipPrimitive.Portal forceMount>
+          {tooltipContent}
+        </TooltipPrimitive.Portal>
+      )}
     </TooltipPrimitive.Root>
   );
 };
