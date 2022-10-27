@@ -73,7 +73,7 @@ export const Dialog = ({
         >
           <DialogPrimitive.Title
             className={cx(
-              'text-sm font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
+              'text-sm font-display font-medium text-neutral-900 dark:text-neutral-100 rounded-md',
               titleVisuallyHidden && 'sr-only',
               defaultFocus
             )}
