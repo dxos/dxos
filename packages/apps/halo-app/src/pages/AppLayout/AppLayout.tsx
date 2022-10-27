@@ -11,7 +11,7 @@ import {
   SignOut
 } from 'phosphor-react';
 import React from 'react';
-import { Outlet, useLocation, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useParty, useProfile } from '@dxos/react-client';
 import {
@@ -29,6 +29,7 @@ const iconAttributes = { className: 'h-5 w-5' };
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
   const profile = useProfile();
+  const navigate = useNavigate();
   const location = useLocation();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex);
@@ -124,6 +125,7 @@ export const AppLayout = () => {
           className='flex-none'
           size={10}
           sideOffset={4}
+          onClickManageProfile={() => navigate('/identity')}
         />
       </div>
 
