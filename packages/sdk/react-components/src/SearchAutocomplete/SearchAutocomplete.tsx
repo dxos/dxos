@@ -9,23 +9,18 @@ import { Autocomplete, TextField } from '@mui/material';
 import { SearchModel, SearchResult } from './SearchModel';
 
 export interface SearchAutocompleteProps<T> {
-  model: SearchModel<T>
-  clearOnSelect?: boolean
-  onSelect: (value: SearchResult<T>) => void
-  groupBy?: string
+  model: SearchModel<T>;
+  clearOnSelect?: boolean;
+  onSelect: (value: SearchResult<T>) => void;
+  groupBy?: string;
 }
 
 /**
  * Registry search with optional filters.
  */
-export const SearchAutocomplete = ({
-  model,
-  clearOnSelect,
-  onSelect,
-  groupBy
-}: SearchAutocompleteProps<any>) => {
+export const SearchAutocomplete = ({ model, clearOnSelect, onSelect, groupBy }: SearchAutocompleteProps<any>) => {
   const [results, setResults] = useState(model.results);
-  useEffect(() => model.subscribe(values => setResults(values)), [model]);
+  useEffect(() => model.subscribe((values) => setResults(values)), [model]);
 
   // TODO(burdon): Features:
   //  - Filtered list.
@@ -53,11 +48,11 @@ export const SearchAutocomplete = ({
       options={results}
       noOptionsText='No matches'
       isOptionEqualToValue={(a, b) => a.id === b.id}
-      groupBy={groupBy ? option => (option as any)[groupBy] : undefined}
-      getOptionLabel={option => option.text}
+      groupBy={groupBy ? (option) => (option as any)[groupBy] : undefined}
+      getOptionLabel={(option) => option.text}
       onInputChange={(event, text) => handleInputChange(text)}
       onChange={(event, value) => handleChange(value)}
-      renderInput={params => (
+      renderInput={(params) => (
         <TextField
           {...params}
           autoFocus

@@ -9,9 +9,9 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, inMemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import type { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -19,26 +19,17 @@ import { RpcPlugin } from './rpc-plugin';
 
 const signalContext = new MemorySignalManagerContext();
 
-const createPeer = async (
-  topic: PublicKey,
-  peerId: PublicKey,
-  onConnect: (port: RpcPort, peerId: string) => void
-) => {
+const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port: RpcPort, peerId: string) => void) => {
   const networkManager = new NetworkManager({
     signalManager: new MemorySignalManager(signalContext),
-    transportFactory: inMemoryTransportFactory
+    transportFactory: MemoryTransportFactory
   });
-
   afterTest(() => networkManager.destroy());
   const plugin = new RpcPlugin(onConnect);
   await networkManager.joinProtocolSwarm({
     topic,
     peerId,
-    protocol: createProtocolFactory(
-      topic,
-      peerId,
-      [plugin]
-    ),
+    protocol: createProtocolFactory(topic, peerId, [plugin]),
     topology: new StarTopology(topic)
   });
   return { plugin, networkManager };
@@ -112,19 +103,12 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      serverConnected,
-      clientConnected
-    ]);
+    await Promise.all([serverConnected, clientConnected]);
     assert(client);
     assert(server);
-    await Promise.all([
-      server.open(),
-      client.open()
-    ]);
+    await Promise.all([server.open(), client.open()]);
 
     const response = await client.rpc.testCall({ data: 'requestData' });
-
     expect(response.data).toEqual('responseData');
   });
 
@@ -166,10 +150,7 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      client1Connected,
-      client2Connected
-    ]);
+    await Promise.all([client1Connected, client2Connected]);
     assert(client1);
     assert(client2);
 
@@ -180,10 +161,6 @@ describe('Protocol plugin rpc', function () {
     ]);
 
     const peerIds = responses.map((response) => response.data);
-    expect(peerIds).toEqual([
-      client1Id.toHex(),
-      client2Id.toHex(),
-      client1Id.toHex()
-    ]);
+    expect(peerIds).toEqual([client1Id.toHex(), client2Id.toHex(), client1Id.toHex()]);
   });
 });

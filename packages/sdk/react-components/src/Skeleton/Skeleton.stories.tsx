@@ -11,20 +11,9 @@ export default {
 };
 
 export const Primary = () => {
-  return (
-    <Skeleton
-      variant='rectangular'
-      height={100}
-    />
-  );
+  return <Skeleton variant='rectangular' height={100} />;
 };
 
 export const ExtendedDelay = () => {
-  return (
-    <Skeleton
-      variant='rectangular'
-      height={100}
-      delay={5000}
-    />
-  );
+  return <Skeleton variant='rectangular' height={100} delay={5000} />;
 };

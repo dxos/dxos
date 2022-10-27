@@ -10,10 +10,10 @@ const DEFAULT_DRAGGING_OVER_STYLES = {
 };
 
 export interface DroppableContainerProps {
-  id: string
-  children: ReactNode
-  style?: CSSProperties
-  draggingOverStyle?: CSSProperties
+  id: string;
+  children: ReactNode;
+  style?: CSSProperties;
+  draggingOverStyle?: CSSProperties;
 }
 
 export const DroppableContainer = ({

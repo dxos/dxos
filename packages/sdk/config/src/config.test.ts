@@ -18,19 +18,22 @@ it('Empty config', function () {
 });
 
 it('Basic config', function () {
-  const config = new Config({
-    runtime: {
-      props: {
-        title: 'testing'
+  const config = new Config(
+    {
+      runtime: {
+        props: {
+          title: 'testing'
+        }
+      }
+    },
+    {
+      runtime: {
+        app: {
+          theme: 'light'
+        }
       }
     }
-  }, {
-    runtime: {
-      app: {
-        theme: 'light'
-      }
-    }
-  });
+  );
 
   expect(config.values).toEqual({
     version: 1,
@@ -46,38 +49,45 @@ it('Basic config', function () {
 });
 
 it('Runtime and module config', function () {
-  const config = new Config({
-    package: {
-      modules: [{
-        name: 'example:app/tasks',
-        record: {
-          web: {
-            entryPoint: 'main.js'
+  const config = new Config(
+    {
+      package: {
+        modules: [
+          {
+            name: 'example:app/tasks',
+            record: {
+              web: {
+                entryPoint: 'main.js'
+              }
+            }
           }
-        }
-      }]
-    }
-  }, {
-    runtime: {
-      services: {
-        signal: {
-          server: 'ws://localhost:4000'
+        ]
+      }
+    },
+    {
+      runtime: {
+        services: {
+          signal: {
+            server: 'ws://localhost:4000'
+          }
         }
       }
     }
-  });
+  );
 
   expect(config.values).toEqual({
     version: 1,
     package: {
-      modules: [{
-        name: 'example:app/tasks',
-        record: {
-          web: {
-            entryPoint: 'main.js'
+      modules: [
+        {
+          name: 'example:app/tasks',
+          record: {
+            web: {
+              entryPoint: 'main.js'
+            }
           }
         }
-      }]
+      ]
     },
     runtime: {
       services: {
@@ -93,13 +103,16 @@ it.skip('Mapping', function () {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
-  const config = new Config({
-    runtime: {
-      client: {
-        tag: 'testing'
+  const config = new Config(
+    {
+      runtime: {
+        client: {
+          tag: 'testing'
+        }
       }
-    }
-  } as any, mapFromKeyValues(envmap, process.env));
+    } as any,
+    mapFromKeyValues(envmap, process.env)
+  );
 
   expect(config.values).toEqual({
     runtime: {
@@ -123,11 +136,14 @@ it.skip('Mapping', function () {
 });
 
 it.skip('mapToKeyValuesping', function () {
-  const config = new Config({
-    client: {
-      tag: 'testing'
-    }
-  } as any, defaults as any);
+  const config = new Config(
+    {
+      client: {
+        tag: 'testing'
+      }
+    } as any,
+    defaults as any
+  );
 
   const values = mapToKeyValues(envmap, config.values);
 

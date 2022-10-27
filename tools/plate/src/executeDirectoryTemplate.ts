@@ -5,23 +5,15 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import {
-  executeFileTemplate,
-  TemplatingResult,
-  isTemplateFile,
-  TEMPLATE_FILE_IGNORE
-} from './executeFileTemplate';
+import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [
-  ...TEMPLATE_FILE_IGNORE,
-  /^index(\.d)?\.[tj]s/
-];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /^index(\.d)?\.[tj]s/];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
-  templateDirectory: string
-  outputDirectory: string
-  input?: Partial<TInput>
+  templateDirectory: string;
+  outputDirectory: string;
+  input?: Partial<TInput>;
 };
 
 export const executeDirectoryTemplate = async <TInput>(
@@ -29,10 +21,7 @@ export const executeDirectoryTemplate = async <TInput>(
 ): Promise<TemplatingResult> => {
   const { templateDirectory, outputDirectory, input } = options;
   const allFiles = (await readDir(templateDirectory)).filter(
-    (file) =>
-      !TEMPLATE_DIRECTORY_IGNORE.some((pattern) =>
-        pattern.test(path.relative(templateDirectory, file))
-      )
+    (file) => !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(path.relative(templateDirectory, file)))
   );
   const templateFiles = allFiles.filter(isTemplateFile);
   const regularFiles = allFiles.filter((file) => !isTemplateFile(file));
@@ -46,12 +35,9 @@ export const executeDirectoryTemplate = async <TInput>(
       })
     )
   );
-  const stringPath = (p: string | string[]) =>
-    typeof p === 'string' ? p : path.join(...p);
+  const stringPath = (p: string | string[]) => (typeof p === 'string' ? p : path.join(...p));
   const isOverwrittenByTemplateOutput = (f: string): boolean => {
-    return templateOutputs.some((files) =>
-      files.some((file) => stringPath(file.path) === f)
-    );
+    return templateOutputs.some((files) => files.some((file) => stringPath(file.path) === f));
   };
   return [
     ...regularFiles

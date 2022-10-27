@@ -5,11 +5,12 @@
 import Analytics from 'analytics-node';
 import assert from 'node:assert';
 
+import { log } from '@dxos/log';
 import { captureException } from '@dxos/sentry';
 
 import { EventOptions, InitOptions, PageOptions } from './types';
 
-let analytics: Analytics;
+let analytics: Analytics | undefined;
 
 /**
  *
@@ -27,38 +28,31 @@ export const init = (options: InitOptions) => {
 /**
  *
  */
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
-  assert(analytics, 'Analytics not initialized');
+export const page = ({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) => {
+  if (!analytics) {
+    log.debug('Analytics not initialized', { action: 'page' });
+  }
 
-  analytics.page({
+  analytics?.page({
     ...options,
-    anonymousId,
-    properties: {
-      ...options.properties,
-      machineId
-    }
+    userId,
+    anonymousId
   });
 };
 
 /**
  *
  */
-export const event = ({
-  machineId,
-  identityId: anonymousId,
-  name: event,
-  ...options
-}: EventOptions) => {
-  assert(analytics, 'Analytics not initialized');
+export const event = ({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) => {
+  if (!analytics) {
+    log.debug('Analytics not initialized', { action: 'event' });
+  }
 
-  analytics.track({
+  analytics?.track({
     ...options,
+    userId,
     anonymousId,
-    event,
-    properties: {
-      ...options.properties,
-      machineId
-    }
+    event
   });
 };
 
@@ -66,9 +60,11 @@ export const event = ({
  *
  */
 export const flush = async () => {
-  assert(analytics, 'Analytics not initialized');
+  if (!analytics) {
+    log.debug('Analytics not initialized', { action: 'flush' });
+  }
 
-  await analytics.flush(err => {
+  await analytics?.flush((err) => {
     captureException(err);
   });
 };

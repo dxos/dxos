@@ -9,18 +9,19 @@ import { expectToThrow } from '@dxos/debug';
 import { sleep, promiseTimeout, waitForCondition } from './async';
 import { trigger } from './trigger';
 
-const timeout = (f: Function, timeout = 0) => new Promise((resolve, reject) => {
-  const handle = setTimeout(async () => {
-    try {
-      const value = await f();
-      resolve(value);
-    } catch (err) {
-      reject(err);
-    } finally {
-      clearTimeout(handle);
-    }
-  }, timeout);
-});
+const timeout = (f: Function, timeout = 0) =>
+  new Promise((resolve, reject) => {
+    const handle = setTimeout(async () => {
+      try {
+        const value = await f();
+        resolve(value);
+      } catch (err) {
+        reject(err);
+      } finally {
+        clearTimeout(handle);
+      }
+    }, timeout);
+  });
 
 it('sleep', async function () {
   const now = Date.now();

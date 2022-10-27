@@ -9,7 +9,7 @@ import { Box, Fade, Skeleton as MuiSkeleton, SkeletonProps as MuiSkeletonProps }
 import { useMounted } from '@dxos/react-async';
 
 export interface SkeletonProps extends MuiSkeletonProps {
-  delay?: number
+  delay?: number;
 }
 
 export const Skeleton = ({ delay = 500, ...props }: SkeletonProps) => {

@@ -15,15 +15,14 @@ const AsyncComponent = ({ nocheck = false }: { nocheck?: boolean }) => {
   const isMounted = useMounted();
   useEffect(() => {
     setTimeout(() => {
-      if (nocheck || isMounted()) { // Check if still mounted.
+      if (nocheck || isMounted()) {
+        // Check if still mounted.
         setValue('Done');
       }
     }, 2000);
   }, []);
 
-  return (
-    <div>{value}</div>
-  );
+  return <div>{value}</div>;
 };
 
 const TestApp = () => {
@@ -38,9 +37,7 @@ const TestApp = () => {
     return null;
   }
 
-  return (
-    <AsyncComponent nocheck />
-  );
+  return <AsyncComponent nocheck />;
 };
 
 export const Primary = () => (

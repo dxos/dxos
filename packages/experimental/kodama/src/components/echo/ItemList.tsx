@@ -15,20 +15,16 @@ const LABEL_PROPERTY = 'name';
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
-  party: Party
-  type?: string
-  onCancel?: () => void
-}> = ({
-  party,
-  type = TYPE_ITEM,
-  onCancel
-}) => {
+  party: Party;
+  type?: string;
+  onCancel?: () => void;
+}> = ({ party, type = TYPE_ITEM, onCancel }) => {
   // TODO(burdon): Select should not return party item by default.
   // TODO(burdon): Clean-up API (e.g., provide default value as empty list).
   // TODO(burdon): Not updated if model properties change.
   const items = useSelection(party?.select().filter({ type }), [party, type]) ?? [];
 
-  const handleUpdate = (data: { id?: string, text: string }) => {
+  const handleUpdate = (data: { id?: string; text: string }) => {
     if (data.id) {
       const item = party.database.getItem(data.id)!;
       item.model.set(LABEL_PROPERTY, data.text);
@@ -53,7 +49,7 @@ export const ItemList: FC<{
         showCount
         onCancel={onCancel}
         onUpdate={handleUpdate}
-        items={items.map(item => ({
+        items={items.map((item) => ({
           id: item.id,
           text: item.model.get(LABEL_PROPERTY) // TODO(burdon): Hack (need schema).
         }))}

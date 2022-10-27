@@ -11,7 +11,7 @@ export default class List extends BaseCommand {
   static override enableJsonFlag = true;
   static override description = 'List apps.';
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { flags } = await this.parse(List);
     try {
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {

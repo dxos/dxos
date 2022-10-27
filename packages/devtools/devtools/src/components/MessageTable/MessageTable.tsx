@@ -89,7 +89,7 @@ export const MessageTable = ({
       <TableBody>
         {
           // Messages with feed metadata.
-          messages.map(({ key: feedKey, seq, data }) => {
+          messages.map(({ feedKey, seq, data }) => {
             const key = feedKey.toString();
             const rowKey = `key-${key}-${seq}`;
             const type = getType(data);

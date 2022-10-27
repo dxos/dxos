@@ -42,8 +42,8 @@ describe('Protocol', function () {
       userSession: { peerId: 'user2' }
     }).init();
 
-    protocol1.error.on(err => console.log('protocol1', err));
-    protocol2.error.on(err => console.log('protocol2', err));
+    protocol1.error.on((err) => console.log('protocol1', err));
+    protocol2.error.on((err) => console.log('protocol2', err));
 
     pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
   }).timeout(1 * 1000);
@@ -79,8 +79,8 @@ describe('Protocol', function () {
       userSession: { peerId: 'user2' }
     }).init();
 
-    protocol1.error.on(err => console.log('protocol1', err));
-    protocol2.error.on(err => console.log('protocol2', err));
+    protocol1.error.on((err) => console.log('protocol1', err));
+    protocol2.error.on((err) => console.log('protocol2', err));
 
     await pipeProtocols(protocol1, protocol2);
 
@@ -100,10 +100,7 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user1' }
     })
-      .setExtension(
-        new Extension(bufferExtension, { timeout })
-          .setInitHandler(async () => {})
-      )
+      .setExtension(new Extension(bufferExtension, { timeout }).setInitHandler(async () => {}))
       .init();
 
     const protocol2 = new Protocol({
@@ -114,31 +111,35 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user2' }
     })
-      .setExtension(new Extension(bufferExtension, { timeout })
-        .setInitHandler(async () => {})
-        .setMessageHandler(async (protocol, message) => {
-          const { data } = message;
+      .setExtension(
+        new Extension(bufferExtension, { timeout })
+          .setInitHandler(async () => {})
+          .setMessageHandler(async (protocol, message) => {
+            const { data } = message;
 
-          switch (Buffer.from(data).toString()) {
-            case 'ping': {
-              return Buffer.from('pong');
+            switch (Buffer.from(data).toString()) {
+              case 'ping': {
+                return Buffer.from('pong');
+              }
+              default: {
+                throw new Error('Invalid data.');
+              }
             }
-            default: {
-              throw new Error('Invalid data.');
-            }
-          }
-        }))
+          })
+      )
       .init();
 
-    protocol1.error.on(err => console.log('protocol1', err));
-    protocol2.error.on(err => console.log('protocol2', err));
+    protocol1.error.on((err) => console.log('protocol1', err));
+    protocol2.error.on((err) => console.log('protocol2', err));
 
     protocol1.setHandshakeHandler(async (protocol) => {
       const bufferMessages = protocol.getExtension(bufferExtension)!;
       expect(bufferMessages).toBeDefined();
 
       {
-        const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
+        const {
+          response: { data }
+        } = await bufferMessages.send(Buffer.from('ping'));
         expect(data).toEqual(Buffer.from('pong'));
         await protocol1.close();
       }
@@ -160,10 +161,7 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user1' }
     })
-      .setExtension(
-        new Extension(extension, { timeout })
-          .setInitHandler(async () => {})
-      )
+      .setExtension(new Extension(extension, { timeout }).setInitHandler(async () => {}))
       .init();
 
     const protocol2 = new Protocol({
@@ -174,31 +172,35 @@ describe('Protocol', function () {
       },
       userSession: { peerId: 'user2' }
     })
-      .setExtension(new Extension(extension, { timeout })
-        .setInitHandler(async () => {})
-        .setMessageHandler(async (protocol, message) => {
-          const { data } = message;
+      .setExtension(
+        new Extension(extension, { timeout })
+          .setInitHandler(async () => {})
+          .setMessageHandler(async (protocol, message) => {
+            const { data } = message;
 
-          switch (Buffer.from(data).toString()) {
-            case 'ping': {
-              return Uint8Array.from(Buffer.from('pong'));
+            switch (Buffer.from(data).toString()) {
+              case 'ping': {
+                return Uint8Array.from(Buffer.from('pong'));
+              }
+              default: {
+                throw new Error('Invalid data.');
+              }
             }
-            default: {
-              throw new Error('Invalid data.');
-            }
-          }
-        }))
+          })
+      )
       .init();
 
-    protocol1.error.on(err => console.log('protocol1', err));
-    protocol2.error.on(err => console.log('protocol2', err));
+    protocol1.error.on((err) => console.log('protocol1', err));
+    protocol2.error.on((err) => console.log('protocol2', err));
 
     protocol1.setHandshakeHandler(async (protocol) => {
       const messages = protocol.getExtension(extension)!;
       expect(messages).toBeDefined();
 
       {
-        const { response: { data } } = await messages.send(Uint8Array.from(Buffer.from('ping')));
+        const {
+          response: { data }
+        } = await messages.send(Uint8Array.from(Buffer.from('ping')));
         expect(data).toEqual(Buffer.from('pong'));
         await protocol1.close();
       }
@@ -222,12 +224,15 @@ describe('Protocol', function () {
     let onInitCalled = 0;
     const onInit = () => onInitCalled++;
 
-    const protocol1 = new Protocol({ discoveryKey: topic, initiator: true, userSession: { peerId: 'user1' } })
+    const protocol1 = new Protocol({
+      discoveryKey: topic,
+      initiator: true,
+      userSession: { peerId: 'user1' }
+    })
       .setExtension(
-        new Extension(bufferExtension, { timeout })
-          .setInitHandler(async () => {
-            onInit();
-          })
+        new Extension(bufferExtension, { timeout }).setInitHandler(async () => {
+          onInit();
+        })
       )
       .setHandshakeHandler(async (protocol) => {
         expect(onInitCalled).toBe(2);
@@ -242,12 +247,16 @@ describe('Protocol', function () {
         expect(session).toBe('user2');
 
         {
-          const { response: { data } } = await bufferMessages.send(Buffer.from('ping'));
+          const {
+            response: { data }
+          } = await bufferMessages.send(Buffer.from('ping'));
           expect(data).toEqual(Buffer.from('pong'));
         }
 
         {
-          const result = await bufferMessages.send(Buffer.from('oneway'), { oneway: true });
+          const result = await bufferMessages.send(Buffer.from('oneway'), {
+            oneway: true
+          });
           expect(result).toBeUndefined();
           const data = await waitOneWayMessage.promise;
           expect(data).toEqual(Buffer.from('oneway'));
@@ -274,45 +283,51 @@ describe('Protocol', function () {
       })
       .init();
 
-    const protocol2 = new Protocol({ discoveryKey: topic, initiator: false, userSession: { peerId: 'user2' } })
+    const protocol2 = new Protocol({
+      discoveryKey: topic,
+      initiator: false,
+      userSession: { peerId: 'user2' }
+    })
       .setHandshakeHandler(async () => {
         expect(onInitCalled).toBe(2);
       })
-      .setExtension(new Extension(bufferExtension, { timeout })
-        .setInitHandler(async () => {
-          await sleep(200);
-          onInit();
-        })
-        .setMessageHandler(async (protocol, message) => {
-          const { data } = message;
+      .setExtension(
+        new Extension(bufferExtension, { timeout })
+          .setInitHandler(async () => {
+            await sleep(200);
+            onInit();
+          })
+          .setMessageHandler(async (protocol, message) => {
+            const { data } = message;
 
-          switch (Buffer.from(data).toString()) {
-            // Async response.
-            case 'ping': {
-              return Buffer.from('pong');
-            }
+            switch (Buffer.from(data).toString()) {
+              // Async response.
+              case 'ping': {
+                return Buffer.from('pong');
+              }
 
-            case 'oneway': {
-              waitOneWayMessage.resolve(data);
-              return;
-            }
+              case 'oneway': {
+                waitOneWayMessage.resolve(data);
+                return;
+              }
 
-            // Timeout.
-            case 'timeout': {
-              await sleep(timeout * 2);
-              break;
-            }
+              // Timeout.
+              case 'timeout': {
+                await sleep(timeout * 2);
+                break;
+              }
 
-            // Error.
-            default: {
-              throw new Error('Invalid data.');
+              // Error.
+              default: {
+                throw new Error('Invalid data.');
+              }
             }
-          }
-        }))
+          })
+      )
       .init();
 
-    protocol1.error.on(err => console.log('protocol1', err));
-    protocol2.error.on(err => console.log('protocol2', err));
+    protocol1.error.on((err) => console.log('protocol1', err));
+    protocol2.error.on((err) => console.log('protocol2', err));
 
     expect(protocol1.id).toBeDefined();
     expect(protocol2.id).toBeDefined();
@@ -334,21 +349,21 @@ describe('Protocol', function () {
     let onHandshakeCalled = 0;
     const onHandshake = () => onHandshakeCalled++;
 
-    const protocol = (name: string, error?: any, initiator?: boolean) => new Protocol({ discoveryKey: topic, initiator: !!initiator })
-      .setContext({ name })
-      .setHandshakeHandler(async () => {
-        onHandshake();
-      })
-      .setExtension(
-        new Extension(bufferExtension)
-          .setInitHandler(async () => {
+    const protocol = (name: string, error?: any, initiator?: boolean) =>
+      new Protocol({ discoveryKey: topic, initiator: !!initiator })
+        .setContext({ name })
+        .setHandshakeHandler(async () => {
+          onHandshake();
+        })
+        .setExtension(
+          new Extension(bufferExtension).setInitHandler(async () => {
             if (error) {
               await sleep(50);
               throw error;
             }
           })
-      )
-      .init();
+        )
+        .init();
 
     const protocol1 = protocol('protocol1');
     const protocol2 = protocol('protocol2', new Error('big error'), true);

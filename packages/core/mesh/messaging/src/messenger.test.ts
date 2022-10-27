@@ -72,7 +72,11 @@ describe('Messenger', function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
     const { peerId: peerId2, received: received2 } = await setupPeer();
 
-    const message: Message = { author: peerId1, recipient: peerId2, payload: PAYLOAD_1 };
+    const message: Message = {
+      author: peerId1,
+      recipient: peerId2,
+      payload: PAYLOAD_1
+    };
 
     await messenger1.sendMessage(message);
 
@@ -82,16 +86,8 @@ describe('Messenger', function () {
   });
 
   it('Message 3 peers', async function () {
-    const {
-      messenger: messenger1,
-      received: received1,
-      peerId: peerId1
-    } = await setupPeer();
-    const {
-      messenger: messenger2,
-      received: received2,
-      peerId: peerId2
-    } = await setupPeer();
+    const { messenger: messenger1, received: received1, peerId: peerId1 } = await setupPeer();
+    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
     const { received: received3, peerId: peerId3 } = await setupPeer();
 
     {
@@ -133,11 +129,7 @@ describe('Messenger', function () {
 
   it('Message routing', async function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
-    const {
-      messenger: messenger2,
-      received: received2,
-      peerId: peerId2
-    } = await setupPeer();
+    const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
 
     // Subscribe first listener for second messenger.
     const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
@@ -242,16 +234,16 @@ describe('Messenger', function () {
 
   describe('Reliability', function () {
     interface SendMessageArgs {
-      author: PublicKey
-      recipient: PublicKey
-      payload: Any
+      author: PublicKey;
+      recipient: PublicKey;
+      payload: Any;
     }
 
     const setupPeer = async ({
       // Imitates signal network disruptions (e. g. message doubling, ).
       messageDisruption = (data) => [data]
     }: {
-      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[]
+      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[];
     } = {}) => {
       const received: Message[] = [];
       const onMessage = async (message: Message) => {
@@ -286,9 +278,7 @@ describe('Messenger', function () {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
-      const unreliableConnection = (
-        data: SendMessageArgs
-      ): SendMessageArgs[] => {
+      const unreliableConnection = (data: SendMessageArgs): SendMessageArgs[] => {
         i++;
         if (i % 3 !== 0) {
           return [data];

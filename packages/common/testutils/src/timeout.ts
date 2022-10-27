@@ -16,10 +16,7 @@ export const testTimeout = <T>(promise: Promise<T>, timeout = 500): Promise<T> =
     };
   });
 
-  return Promise.race([
-    promise,
-    timeoutPromise
-  ]).finally(() => {
+  return Promise.race([promise, timeoutPromise]).finally(() => {
     cancelTimeout();
   });
 };

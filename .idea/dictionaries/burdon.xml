@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>demuxer</w>
       <w>deno</w>
       <w>dmaretskyi</w>
       <w>hypercore</w>
@@ -22,6 +23,7 @@
       <w>onstatus</w>
       <w>onunhave</w>
       <w>onunwant</w>
+      <w>onwait</w>
       <w>onwant</w>
       <w>reopenable</w>
       <w>ridoculous</w>
@@ -31,6 +33,8 @@
       <w>testutils</w>
       <w>truncatable</w>
       <w>undownload</w>
+      <w>unhave</w>
+      <w>unwant</w>
     </words>
   </dictionary>
 </component>

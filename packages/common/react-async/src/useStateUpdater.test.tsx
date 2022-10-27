@@ -19,7 +19,7 @@ const complex = {
 };
 
 const Test = () => {
-  const [value,, updateValue] = useStateUpdater({ complex, items: [] });
+  const [value, , updateValue] = useStateUpdater({ complex, items: [] });
   useEffect(() => {
     // https://github.com/kolodny/immutability-helper
     updateValue({
@@ -29,9 +29,7 @@ const Test = () => {
     });
   }, []);
 
-  return (
-    <pre>{JSON.stringify(value)}</pre>
-  );
+  return <pre>{JSON.stringify(value)}</pre>;
 };
 
 let rootContainer: HTMLElement;

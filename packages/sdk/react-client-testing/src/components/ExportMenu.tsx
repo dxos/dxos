@@ -13,12 +13,10 @@ export enum ExportAction {
 }
 
 interface ExportMenuProps {
-  onExport?: (type: ExportAction) => void
+  onExport?: (type: ExportAction) => void;
 }
 
-export const ExportMenu = ({
-  onExport
-}: ExportMenuProps) => {
+export const ExportMenu = ({ onExport }: ExportMenuProps) => {
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<HTMLElement | undefined>();
 
   const handleExport = (action: ExportAction) => {
@@ -31,7 +29,7 @@ export const ExportMenu = ({
       <IconButton
         data-id='test-button-export'
         size='small'
-        onClick={event => setExportMenuAnchorEl(event.currentTarget)}
+        onClick={(event) => setExportMenuAnchorEl(event.currentTarget)}
       >
         <DownloadIcon />
       </IconButton>
@@ -41,16 +39,8 @@ export const ExportMenu = ({
         anchorEl={exportMenuAnchorEl}
         onClose={() => setExportMenuAnchorEl(undefined)}
       >
-        <MenuItem
-          onClick={() => handleExport(ExportAction.EXPORT_FILE)}
-        >
-          Export to File
-        </MenuItem>
-        <MenuItem
-          onClick={() => handleExport(ExportAction.EXPORT_IPFS)}
-        >
-          Export to IPFS
-        </MenuItem>
+        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_FILE)}>Export to File</MenuItem>
+        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_IPFS)}>Export to IPFS</MenuItem>
       </Menu>
     </>
   );

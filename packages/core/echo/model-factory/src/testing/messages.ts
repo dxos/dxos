@@ -2,11 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Timeframe, schema, ItemID } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { schema, ItemID } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Timeframe } from '@dxos/timeframe';
 
 export const createSetPropertyMutation = (
-  itemId: ItemID, key: string, value: string, timeframe = new Timeframe()
+  itemId: ItemID,
+  key: string,
+  value: string,
+  timeframe = new Timeframe()
 ): FeedMessage => ({
   timeframe,
   payload: {

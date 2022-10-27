@@ -9,10 +9,10 @@ import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createAsyncIterator, createReadable } from './streams';
+import { createAsyncIterator, createReadable } from './iterator';
 
 describe('AsyncIterator', function () {
-  it.only('iterates a feed until stopped', async function () {
+  it('iterates a feed until stopped', async function () {
     const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
@@ -48,10 +48,9 @@ describe('AsyncIterator', function () {
               break;
             }
 
-            log(String(value));
+            log('received', { data: String(value) });
             inc();
           } catch (err) {
-            // TODO(burdon): Premature close error thrown in the browser environment.
             end();
             break;
           }

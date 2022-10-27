@@ -16,7 +16,7 @@ import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
 import { PARTY_ITEM_TYPE } from './stubs';
 
-export type ActivationOptions = any
+export type ActivationOptions = any;
 
 /**
  * Main public Party API.
@@ -34,7 +34,7 @@ export class PartyProxy implements Party {
   /**
    * @internal
    */
-  constructor (
+  constructor(
     private _serviceProvider: ClientServiceProvider,
     private _modelFactory: ModelFactory,
     party: PartyProto,
@@ -63,24 +63,24 @@ export class PartyProxy implements Party {
   }
 
   // TODO(burdon): Getter required by react hook.
-  get invitationProxy () {
+  get invitationProxy() {
     return this._invitationProxy;
   }
 
-  get key () {
+  get key() {
     return this._key;
   }
 
-  get isOpen () {
+  get isOpen() {
     return this._isOpen;
   }
 
-  get isActive () {
+  get isActive() {
     return this._isActive;
   }
 
   // TODO(burdon): Invert party/database? (e.g., const db = client.connect()).
-  get database (): Database {
+  get database(): Database {
     if (!this._database) {
       throw new Error('Party not open.');
     }
@@ -91,21 +91,21 @@ export class PartyProxy implements Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-  get select (): Database['select'] {
+  get select(): Database['select'] {
     return this.database.select.bind(this.database);
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
-  get reduce (): Database['reduce'] {
+  get reduce(): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }
 
   /**
    * Called by EchoProxy open.
    */
-  async initialize () {
+  async initialize() {
     // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
     await this._database!.initialize();
     // }
@@ -117,25 +117,27 @@ export class PartyProxy implements Party {
   /**
    * Called by EchoProxy close.
    */
-  async destroy () {
+  async destroy() {
     if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
       await this._database.destroy();
     }
   }
 
-  async open () {
+  async open() {
     await this._setOpen(true);
   }
 
-  async close () {
+  async close() {
     await this._setOpen(false);
   }
 
-  async getDetails (): Promise<PartyDetails> {
-    return this._serviceProvider.services.PartyService.getPartyDetails({ partyKey: this._key });
+  async getDetails(): Promise<PartyDetails> {
+    return this._serviceProvider.services.PartyService.getPartyDetails({
+      partyKey: this._key
+    });
   }
 
-  async _setOpen (open: boolean) {
+  async _setOpen(open: boolean) {
     await this._serviceProvider.services.PartyService.setPartyState({
       partyKey: this.key,
       open
@@ -143,7 +145,7 @@ export class PartyProxy implements Party {
   }
 
   // TODO(burdon): Requires comment.
-  async setActive (active: boolean, options: ActivationOptions) {
+  async setActive(active: boolean, options: ActivationOptions) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
     // await this._serviceProvider.services.PartyService.setPartyState({
@@ -156,21 +158,21 @@ export class PartyProxy implements Party {
   /**
    * TODO: Currently broken.
    */
-  get properties (): ObjectProperties {
+  get properties(): ObjectProperties {
     return this._item!.model;
   }
 
   /**
    * @deprecated Use party.properties.
    */
-  async setTitle (title: string) {
+  async setTitle(title: string) {
     // await this.setProperty(PARTY_TITLE_PROPERTY, title);
   }
 
   /**
    * @deprecated Use party.properties.
    */
-  getTitle () {
+  getTitle() {
     return todo();
     // return this.getProperty(PARTY_TITLE_PROPERTY);
   }
@@ -178,14 +180,14 @@ export class PartyProxy implements Party {
   /**
    * @deprecated Use party.properties.
    */
-  async setProperty (key: string, value?: any) {
+  async setProperty(key: string, value?: any) {
     await this.properties.set(key, value);
   }
 
   /**
    * @deprecated Use party.properties.
    */
-  getProperty (key: string, defaultValue?: any) {
+  getProperty(key: string, defaultValue?: any) {
     return this.properties.get(key, defaultValue);
   }
 
@@ -193,9 +195,11 @@ export class PartyProxy implements Party {
    * Return set of party members.
    */
   // TODO(burdon): Don't expose result object and provide type.
-  queryMembers () {
+  queryMembers() {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
+      this._serviceProvider.services.PartyService.subscribeMembers({
+        partyKey: this.key
+      }),
       (response) => response?.members ?? []
     );
   }
@@ -211,7 +215,7 @@ export class PartyProxy implements Party {
    * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
    *   but only the specified recipient can accept the invitation.
    */
-  async createInvitation ({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
+  async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
     return this._invitationProxy.createInvitationRequest({ stream });
   }
@@ -219,7 +223,7 @@ export class PartyProxy implements Party {
   /**
    * Implementation method.
    */
-  createSnapshot (): Promise<PartySnapshot> {
+  createSnapshot(): Promise<PartySnapshot> {
     return todo();
     // return this._serviceProvider.services.PartyService.createSnapshot({ party_key: this.key });
   }
@@ -228,7 +232,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy to update this party instance.
    * @internal
    */
-  _processPartyUpdate (party: PartyProto) {
+  _processPartyUpdate(party: PartyProto) {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;

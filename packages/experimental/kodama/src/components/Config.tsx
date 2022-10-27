@@ -13,10 +13,7 @@ export const Config = () => {
 
   return (
     <Box flexDirection='column'>
-      <SyntaxHighlight
-        language='json'
-        code={JSON.stringify(config.values, undefined, 2)}
-      />
+      <SyntaxHighlight language='json' code={JSON.stringify(config.values, undefined, 2)} />
     </Box>
   );
 };

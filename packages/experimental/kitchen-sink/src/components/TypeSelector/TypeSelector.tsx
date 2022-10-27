@@ -11,14 +11,11 @@ import { IconRadio, IconRadioGroup } from '../IconRadio';
 // TODO(burdon): Use ToggleButtonGroup
 
 interface TypeSelectorProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const TypeSelector = ({
-  value: controlledValue,
-  onChange
-}: TypeSelectorProps) => {
+export const TypeSelector = ({ value: controlledValue, onChange }: TypeSelectorProps) => {
   const [value, setValue] = useState(controlledValue);
   useEffect(() => {
     setValue(controlledValue);

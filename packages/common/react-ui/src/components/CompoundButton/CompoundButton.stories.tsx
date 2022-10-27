@@ -14,9 +14,7 @@ export default {
   component: CompoundButton
 };
 
-const Container = ({ children }: PropsWithChildren<{}>) => (
-  <div className='flex gap-4'>{children}</div>
-);
+const Container = ({ children }: PropsWithChildren<{}>) => <div className='flex gap-4'>{children}</div>;
 
 const Template = ({ ...args }: Omit<CompoundButtonProps, 'ref'>) => (
   <Container>
@@ -25,7 +23,7 @@ const Template = ({ ...args }: Omit<CompoundButtonProps, 'ref'>) => (
   </Container>
 );
 
-export const Default = templateForComponent(Template)({ });
+export const Default = templateForComponent(Template)({});
 Default.args = {
   children: 'Hello',
   description: 'This is a compound button',

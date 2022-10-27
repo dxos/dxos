@@ -14,13 +14,16 @@ import { useEffect, useState } from 'react';
  *   return (
  *     <div>{ts}</div>
  *   );
-*  };
+ *  };
  * ```
  *
  * @param deps
  */
 export const useTimestamp = (deps?: any[]): [number, () => void, number | undefined] => {
-  const [{ timestamp, previous }, setTimestamp] = useState<{ timestamp: number, previous?: number }>({
+  const [{ timestamp, previous }, setTimestamp] = useState<{
+    timestamp: number;
+    previous?: number;
+  }>({
     timestamp: Date.now()
   });
 

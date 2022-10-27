@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/shims",
-      "@dxos/mocha"
+      "@dxos/typings",
+      "@dxos/mocha",
+      "@dxos/typings"
     ]
   },
   "include": [

@@ -43,20 +43,20 @@ import {
 
 const editorStyles = css`
   border: 1px solid green;
-  
+
   > div {
     outline: none;
     margin: 16px 64px;
   }
-  
+
   .ltr {
     text-align: left;
   }
-  
+
   .rtl {
     text-align: right;
   }
-  
+
   .editor-paragraph {
     margin: 0 0 15px 0;
     position: relative;
@@ -108,11 +108,15 @@ const Popup = () => {
     popupRef.current!.style.top = `${y + 24}px`;
   }, [editor]);
 
-  useEffect(() => editor.registerUpdateListener(({ editorState }) => {
-    editorState.read(() => {
-      updatePopup();
-    });
-  }), [editor]);
+  useEffect(
+    () =>
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          updatePopup();
+        });
+      }),
+    [editor]
+  );
 
   useEffect(() => {
     const keyDownHandler = (event: KeyboardEvent) => {
@@ -165,10 +169,8 @@ const _CommandPopupPlugin = () => {
  * https://lexical.dev/docs/getting-started/quick-start
  */
 const _Editor: FC<{
-  onDebug?: (debug: any) => void
-}> = ({
-  onDebug
-}) => {
+  onDebug?: (debug: any) => void;
+}> = ({ onDebug }) => {
   const handleError = (error: Error) => {
     onDebug?.({ error });
   };
@@ -186,17 +188,12 @@ const _Editor: FC<{
       initialConfig={{
         namespace: 'dxos',
         theme,
-        nodes: [
-          HashtagNode
-        ],
+        nodes: [HashtagNode],
         onError: handleError
       }}
     >
       <div className={editorStyles}>
-        <LexicalRichTextPlugin
-          contentEditable={<LexicalContentEditable spellCheck={false} />}
-          placeholder=''
-        />
+        <LexicalRichTextPlugin contentEditable={<LexicalContentEditable spellCheck={false} />} placeholder='' />
         {/*
         <LexicalRichTextPlugin
           contentEditable={<LexicalContentEditable spellcheck={false}/>}

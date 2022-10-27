@@ -17,7 +17,7 @@ export default class Create extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args } = await this.parse(Create);
     let { name } = args;
     if (!name) {

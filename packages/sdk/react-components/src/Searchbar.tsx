@@ -8,9 +8,9 @@ import { Clear as ResetIcon } from '@mui/icons-material';
 import { FormControl, IconButton, Input, InputAdornment } from '@mui/material';
 
 export interface SearchBarProps {
-  placeholder?: string
-  onSearch?: (text?: string) => void
-  delay?: number
+  placeholder?: string;
+  onSearch?: (text?: string) => void;
+  delay?: number;
 }
 
 export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) => {
@@ -55,16 +55,13 @@ export const Searchbar = ({ placeholder, onSearch, delay = 0 }: SearchBarProps) 
         value={text || ''}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        endAdornment={(
+        endAdornment={
           <InputAdornment position='end'>
-            <IconButton
-              color='info'
-              onClick={handleReset}
-            >
+            <IconButton color='info' onClick={handleReset}>
               <ResetIcon />
             </IconButton>
           </InputAdornment>
-        )}
+        }
       />
     </FormControl>
   );

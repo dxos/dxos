@@ -38,6 +38,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/testutils": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
@@ -52,7 +53,8 @@
   "@dxos/signal": "workspace:*",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/level-js": "~4.0.1",
-    "@types/memdown": "^3.0.0"
+    "@types/memdown": "^3.0.0",
+    "@types/readable-stream": "^2.3.9"
   },
   "publishConfig": {
     "access": "public"

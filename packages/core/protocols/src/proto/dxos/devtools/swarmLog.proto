@@ -1,0 +1,32 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+
+package dxos.devtools.swarmLog;
+
+message SwarmInfo {
+  dxos.keys.PublicKey id = 1;
+  dxos.keys.PublicKey topic = 2;
+  optional string label = 3;
+  bool is_active = 4;
+  repeated ConnectionInfo connections = 5;
+}
+
+message ConnectionInfo {
+  string state = 1;
+  dxos.keys.PublicKey session_id = 2;
+  dxos.keys.PublicKey remote_peer_id = 3;
+  optional string transport = 4;
+  repeated string protocol_extensions = 5;
+  repeated ConnectionEvent events = 6;
+}
+
+message ConnectionEvent {
+  string type = 1;
+  optional string newState = 2;
+  optional string error = 3;
+}

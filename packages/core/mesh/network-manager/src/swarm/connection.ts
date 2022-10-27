@@ -51,7 +51,7 @@ export enum ConnectionState {
   /**
    * Connection closed.
    */
-  CLOSED = 'CLOSED',
+  CLOSED = 'CLOSED'
 }
 
 /**
@@ -65,7 +65,7 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
-  constructor (
+  constructor(
     public readonly topic: PublicKey,
     public readonly ownId: PublicKey, // TODO(burdon): peerID?
     public readonly remoteId: PublicKey,
@@ -76,28 +76,31 @@ export class Connection {
     private readonly _transportFactory: TransportFactory
   ) {}
 
-  get state () {
+  get state() {
     return this._state;
   }
 
-  get transport () {
+  get transport() {
     return this._transport;
   }
 
-  get protocol () {
+  get protocol() {
     return this._protocol;
   }
 
-  initiate () {
-    this._signalMessaging.offer({
-      author: this.ownId,
-      recipient: this.remoteId,
-      sessionId: this.sessionId,
-      topic: this.topic,
-      data: { offer: {} }
-    })
-      .then(answer => {
-        log(`Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`);
+  initiate() {
+    this._signalMessaging
+      .offer({
+        author: this.ownId,
+        recipient: this.remoteId,
+        sessionId: this.sessionId,
+        topic: this.topic,
+        data: { offer: {} }
+      })
+      .then((answer) => {
+        log(
+          `Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`
+        );
         if (this.state !== ConnectionState.INITIAL) {
           log('Ignoring answer.');
           return;
@@ -115,12 +118,12 @@ export class Connection {
         }
         this._changeState(ConnectionState.ACCEPTED);
       })
-      .catch(err => {
+      .catch((err) => {
         this.errors.raise(err);
       });
   }
 
-  connect () {
+  connect() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
@@ -141,7 +144,7 @@ export class Connection {
 
     this._transport.closed.once(() => {
       this._transport = undefined;
-      this.close().catch(err => this.errors.raise(err));
+      this.close().catch((err) => this.errors.raise(err));
     });
 
     this._transport.errors.pipeTo(this.errors);
@@ -154,7 +157,7 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal (msg: SignalMessage) {
+  async signal(msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
@@ -175,17 +178,17 @@ export class Connection {
     await this._transport.signal(msg.data.signal);
   }
 
-  private _changeState (state: ConnectionState): void {
+  private _changeState(state: ConnectionState): void {
     this._state = state;
     this.stateChanged.emit(state);
   }
 
   @synchronized
-  async close () {
+  async close() {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-    // TODO(marik-d): CLOSING state.
+    // TODO(dmaretskyi): CLOSING state.
 
     log(`Closing ${this.ownId}`);
 

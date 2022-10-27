@@ -8,18 +8,12 @@ import React, { FC, useEffect, useRef } from 'react';
  * Standard file upload dialog.
  */
 export const FileUploadDialog: FC<{
-  open?: boolean
-  onClose: () => void
-  onUpload: (files: File[]) => void
-  accept?: string
-  multiple?: false
-}> = ({
-  open = false,
-  onClose,
-  onUpload,
-  accept,
-  multiple = false
-}) => {
+  open?: boolean;
+  onClose: () => void;
+  onUpload: (files: File[]) => void;
+  accept?: string;
+  multiple?: false;
+}> = ({ open = false, onClose, onUpload, accept, multiple = false }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,7 +34,10 @@ export const FileUploadDialog: FC<{
       // - Try with onInputCapture and onChangeCapture.
       // Adding the event listener on the 'change' event fixed the issue.
       inputRef?.current?.addEventListener('change', handleUpload);
-      document.body.addEventListener('focus', listener, { capture: true, once: true });
+      document.body.addEventListener('focus', listener, {
+        capture: true,
+        once: true
+      });
       inputRef.current!.click();
     }
 

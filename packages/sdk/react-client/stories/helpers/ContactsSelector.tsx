@@ -4,17 +4,19 @@
 
 import React from 'react';
 
-import {
-  FormControl, InputLabel, MenuItem, Select, SelectChangeEvent
-} from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 
 /**
  * Displays contact selector.
  */
-export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
-  contacts: any[]
-  selected?: string
-  onSelect: (selected: string) => void
+export const ContactsSelector = ({
+  contacts,
+  selected = '',
+  onSelect
+}: {
+  contacts: any[];
+  selected?: string;
+  onSelect: (selected: string) => void;
 }) => (
   <FormControl fullWidth>
     <InputLabel id='contact-select-label'>Contact</InputLabel>
@@ -25,7 +27,7 @@ export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
       onChange={(event: SelectChangeEvent) => onSelect(event.target.value)}
     >
       <MenuItem value='' />
-      {contacts.map(contact => (
+      {contacts.map((contact) => (
         <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
           {contact.displayName}
         </MenuItem>

@@ -13,7 +13,7 @@ import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protoco
 import { MutationUtil, ValueUtil } from './mutation';
 import { validateKey } from './util';
 
-export type ObjectModelState = Record<string, any>
+export type ObjectModelState = Record<string, any>;
 
 /**
  * Processes object mutations.
@@ -21,22 +21,22 @@ export type ObjectModelState = Record<string, any>
 class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
   private _object: ObjectModelState = {};
 
-  getState (): ObjectModelState {
+  getState(): ObjectModelState {
     return this._object;
   }
 
-  reset (snapshot: ObjectSnapshot): void {
+  reset(snapshot: ObjectSnapshot): void {
     assert(snapshot.root);
     const object: any = {};
     ValueUtil.applyValue(object, 'root', snapshot.root);
     this._object = object.root;
   }
 
-  process (mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
+  process(mutation: ObjectMutationSet, meta: MutationProcessMeta): void {
     MutationUtil.applyMutationSet(this._object, mutation);
   }
 
-  snapshot (): ObjectSnapshot {
+  snapshot(): ObjectSnapshot {
     return {
       root: ValueUtil.createMessage(this._object)
     };
@@ -49,16 +49,17 @@ class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMu
 export class MutationBuilder {
   _mutations: ObjectMutation[] = [];
 
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _model: ObjectModel
   ) {}
 
-  set (key: string, value: any) {
+  set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));
     return this;
   }
 
-  async commit () {
+  async commit() {
     return this._model._makeMutation({ mutations: this._mutations });
   }
 }
@@ -67,8 +68,8 @@ export class MutationBuilder {
  * Defines generic object accessor.
  */
 export interface ObjectProperties {
-  get (key: string, defaultValue?: unknown): any
-  set (key: string, value: unknown): Promise<void>
+  get(key: string, defaultValue?: unknown): any;
+  set(key: string, value: unknown): Promise<void>;
 }
 
 /**
@@ -82,7 +83,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     mutationCodec: schema.getCodecForType('dxos.echo.model.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
-    async getInitMutation (obj: any): Promise<ObjectMutationSet> {
+    async getInitMutation(obj: any): Promise<ObjectMutationSet> {
       return {
         mutations: MutationUtil.createMultiFieldMutation(obj)
       };
@@ -94,25 +95,23 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
   /**
    * Returns an immutable object.
    */
-  toObject () {
+  toObject() {
     return cloneDeep(this._getState());
   }
 
-  builder () {
+  builder() {
     return new MutationBuilder(this);
   }
 
-  get (key: string, defaultValue?: unknown) {
+  get(key: string, defaultValue?: unknown) {
     validateKey(key);
     return cloneDeep(get(this._getState(), key, defaultValue));
   }
 
-  async set (key: string, value: unknown) {
+  async set(key: string, value: unknown) {
     validateKey(key);
     await this._makeMutation({
-      mutations: [
-        MutationUtil.createFieldMutation(key, value)
-      ]
+      mutations: [MutationUtil.createFieldMutation(key, value)]
     });
   }
 
@@ -120,7 +119,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * @deprecated
    */
   // TODO(burdon): Remove.
-  getProperty (key: string, defaultValue: any = undefined): any {
+  getProperty(key: string, defaultValue: any = undefined): any {
     return this.get(key, defaultValue);
   }
 
@@ -128,7 +127,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * @deprecated
    */
   // TODO(burdon): Remove.
-  async setProperty (key: string, value: any) {
+  async setProperty(key: string, value: any) {
     await this.set(key, value);
   }
 
@@ -136,13 +135,13 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
    * @deprecated
    */
   // TODO(burdon): Remove.
-  async setProperties (properties: any) {
+  async setProperties(properties: any) {
     await this._makeMutation({
       mutations: MutationUtil.createMultiFieldMutation(properties)
     });
   }
 
-  async addToSet (key: string, value: any) {
+  async addToSet(key: string, value: any) {
     await this._makeMutation({
       mutations: [
         {
@@ -154,7 +153,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     });
   }
 
-  async removeFromSet (key: string, value: any) {
+  async removeFromSet(key: string, value: any) {
     await this._makeMutation({
       mutations: [
         {
@@ -166,7 +165,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
     });
   }
 
-  async pushToArray (key: string, value: any) {
+  async pushToArray(key: string, value: any) {
     await this._makeMutation({
       mutations: [
         {
@@ -181,7 +180,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
   /**
    * @internal
    */
-  async _makeMutation (mutation: ObjectMutationSet) {
+  async _makeMutation(mutation: ObjectMutationSet) {
     const receipt = await this.write(mutation);
     await receipt.waitToBeProcessed();
   }

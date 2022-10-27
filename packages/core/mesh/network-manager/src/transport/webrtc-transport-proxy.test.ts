@@ -18,7 +18,7 @@ import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { SignalMessage } from '../signal';
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
@@ -29,16 +29,16 @@ describe('WebRTCTransportProxy', function () {
     remoteId = PublicKey.random(),
     sessionId = PublicKey.random(),
     topic = PublicKey.random(),
-    stream = new Duplex({ write: () => { }, read: () => { } }),
-    sendSignal = () => { }
+    stream = new Duplex({ write: () => {}, read: () => {} }),
+    sendSignal = () => {}
   }: {
-    initiator?: boolean
-    ownId?: PublicKey
-    remoteId?: PublicKey
-    sessionId?: PublicKey
-    topic?: PublicKey
-    stream?: NodeJS.ReadWriteStream
-    sendSignal?: (msg: SignalMessage) => void
+    initiator?: boolean;
+    ownId?: PublicKey;
+    remoteId?: PublicKey;
+    sessionId?: PublicKey;
+    topic?: PublicKey;
+    stream?: NodeJS.ReadWriteStream;
+    sendSignal?: (msg: SignalMessage) => void;
   } = {}) => {
     const [port1, port2] = createLinkedPorts();
 
@@ -62,7 +62,9 @@ describe('WebRTCTransportProxy', function () {
 
     // Starting RPC client
     const rpcClient = createProtoRpcPeer({
-      requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
+      requested: {
+        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+      },
       exposed: {},
       handlers: {},
       port: port2,
@@ -105,7 +107,9 @@ describe('WebRTCTransportProxy', function () {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  }).timeout(1_000).retries(3);
+  })
+    .timeout(1_000)
+    .retries(3);
 
   it('establish connection and send data through with protocol', async function () {
     if (mochaExecutor.environment !== 'nodejs') {
@@ -121,12 +125,15 @@ describe('WebRTCTransportProxy', function () {
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
     const { webRTCTransportProxy: connection1 } = await setupProxy({
       initiator: true,
-      stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+      stream: protocolProvider1({
+        channel: discoveryKey(topic),
+        initiator: true
+      }).stream,
       ownId: peer1Id,
       remoteId: peer2Id,
       sessionId,
       topic,
-      sendSignal: async msg => {
+      sendSignal: async (msg) => {
         await sleep(10);
         await connection2.signal(msg.data.signal);
       }
@@ -137,12 +144,15 @@ describe('WebRTCTransportProxy', function () {
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
     const { webRTCTransportProxy: connection2 } = await setupProxy({
       initiator: false,
-      stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+      stream: protocolProvider2({
+        channel: discoveryKey(topic),
+        initiator: false
+      }).stream,
       ownId: peer2Id,
       remoteId: peer1Id,
       sessionId,
       topic,
-      sendSignal: async msg => {
+      sendSignal: async (msg) => {
         await sleep(10);
         await connection1.signal(msg.data.signal);
       }
@@ -165,7 +175,9 @@ describe('WebRTCTransportProxy', function () {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('{"message": "Hello"}');
     });
-  }).timeout(2_000).retries(3);
+  })
+    .timeout(2_000)
+    .retries(3);
 
   describe('Multiplexing', function () {
     let service: any;
@@ -190,7 +202,9 @@ describe('WebRTCTransportProxy', function () {
       await service.open();
 
       rpcClient = createProtoRpcPeer({
-        requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
+        requested: {
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        },
         exposed: {},
         handlers: {},
         port: port2,
@@ -217,36 +231,40 @@ describe('WebRTCTransportProxy', function () {
       const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
       const proxy1 = new WebRTCTransportProxy({
         initiator: true,
-        stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+        stream: protocolProvider1({
+          channel: discoveryKey(topic),
+          initiator: true
+        }).stream,
         ownId: peer1Id,
         remoteId: peer2Id,
         sessionId,
         topic,
-        sendSignal: async msg => {
+        sendSignal: async (msg) => {
           await sleep(10);
           await proxy2.signal(msg.data.signal);
         },
         bridgeService: rpcClient.rpc.BridgeService
-      }
-      );
+      });
       afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
       const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
       const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
       const proxy2 = new WebRTCTransportProxy({
         initiator: false,
-        stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+        stream: protocolProvider2({
+          channel: discoveryKey(topic),
+          initiator: false
+        }).stream,
         ownId: peer2Id,
         remoteId: peer1Id,
         sessionId,
         topic,
-        sendSignal: async msg => {
+        sendSignal: async (msg) => {
           await sleep(10);
           await proxy1.signal(msg.data.signal);
         },
         bridgeService: rpcClient.rpc.BridgeService
-      }
-      );
+      });
       afterTest(() => proxy2.errors.assertNoUnhandledErrors());
 
       const received: any[] = [];
@@ -265,6 +283,8 @@ describe('WebRTCTransportProxy', function () {
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('{"message": "Hello"}');
       });
-    }).timeout(5_000).retries(3);
+    })
+      .timeout(5_000)
+      .retries(3);
   });
 });

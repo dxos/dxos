@@ -5,11 +5,7 @@
 import React, { useState } from 'react';
 import urlJoin from 'url-join';
 
-import {
-  Face as NewIcon,
-  Contacts as AddressIcon,
-  Adb as BotIcon
-} from '@mui/icons-material';
+import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import { InvitationRequest, PartyMember } from '@dxos/client';
@@ -35,17 +31,17 @@ enum MemberType {
 }
 
 export interface SharingDialogProps {
-  open: boolean
-  modal?: boolean
-  title: string
-  members?: PartyMember[] // TODO(rzadp): Support HALO members as well (different devices).
-  invitations?: InvitationRequest[]
-  onCreateInvitation: () => void
-  onCancelInvitation: (invitation: InvitationRequest) => void
-  onCreateOfflineInvitation?: () => void
-  onCreateBotInvitation?: (resource: ResourceSet) => void
-  onClose?: () => void
-  createUrl?: (invitationCode: string) => string
+  open: boolean;
+  modal?: boolean;
+  title: string;
+  members?: PartyMember[]; // TODO(rzadp): Support HALO members as well (different devices).
+  invitations?: InvitationRequest[];
+  onCreateInvitation: () => void;
+  onCancelInvitation: (invitation: InvitationRequest) => void;
+  onCreateOfflineInvitation?: () => void;
+  onCreateBotInvitation?: (resource: ResourceSet) => void;
+  onClose?: () => void;
+  createUrl?: (invitationCode: string) => string;
 }
 
 /**
@@ -69,8 +65,7 @@ export const SharingDialog = ({
   const [memberType, setMemberType] = useState(MemberType.ONLINE);
   const [bot, setBot] = useState<ResourceSet>();
 
-  const active = memberType === MemberType.ONLINE ||
-    (memberType === MemberType.BOT && bot);
+  const active = memberType === MemberType.ONLINE || (memberType === MemberType.BOT && bot);
 
   const handleInvitation = () => {
     switch (memberType) {
@@ -97,18 +92,20 @@ export const SharingDialog = ({
       modal={modal}
       title={title}
       maxWidth='sm'
-      content={(
+      content={
         <>
           <Typography variant='body2' sx={{ marginBottom: 2 }}>
             {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the party.`}
           </Typography>
 
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 3
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 3
+            }}
+          >
             {(onCreateOfflineInvitation || onCreateBotInvitation) && (
               <>
                 <ToggleButtonGroup
@@ -135,29 +132,24 @@ export const SharingDialog = ({
                 </ToggleButtonGroup>
 
                 <Box sx={{ flex: 1, paddingLeft: 3, paddingRight: 3 }}>
-                  {memberType === MemberType.BOT && (
-                    <SpawnBotPanel
-                      onSelect={resource => setBot(resource)}
-                    />
-                  )}
+                  {memberType === MemberType.BOT && <SpawnBotPanel onSelect={(resource) => setBot(resource)} />}
                 </Box>
               </>
             )}
 
-            <Button
-              disabled={!active}
-              onClick={handleInvitation}
-            >
+            <Button disabled={!active} onClick={handleInvitation}>
               {memberType === MemberType.ONLINE ? 'Create invitation' : 'Send invitation'}
             </Button>
           </Box>
 
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: 8 * 40,
-            overflow: 'auto'
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: 8 * 40,
+              overflow: 'auto'
+            }}
+          >
             {/* Users */}
             {invitations.map((invitation, i) => (
               <PendingInvitation
@@ -171,17 +163,12 @@ export const SharingDialog = ({
 
             {/* Members */}
             {members.map((member, i) => (
-              <MemberRow
-                key={i}
-                member={member}
-              />
+              <MemberRow key={i} member={member} />
             ))}
           </Box>
         </>
-      )}
-      actions={(
-        <Button onClick={onClose}>Close</Button>
-      )}
+      }
+      actions={<Button onClick={onClose}>Close</Button>}
     />
   );
 };

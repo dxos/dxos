@@ -7,10 +7,10 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { CSSProperties, ReactNode } from 'react';
 
 export interface DraggableContainerProps {
-  id: string
-  children: ReactNode
-  style?: CSSProperties
-  placeholderStyles?: CSSProperties
+  id: string;
+  children: ReactNode;
+  style?: CSSProperties;
+  placeholderStyles?: CSSProperties;
 }
 
 export const DraggableContainer = ({
@@ -19,14 +19,7 @@ export const DraggableContainer = ({
   style: customStyles = {},
   placeholderStyles = {}
 }: DraggableContainerProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   // TODO(kaplanski): Better way to handle styles? (i.e., Emotion, etc.).
   return (

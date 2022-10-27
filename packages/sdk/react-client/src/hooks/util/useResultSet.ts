@@ -14,7 +14,13 @@ import { ResultSet } from '@dxos/client';
  * @deprecated
  * @returns Always up-to-date value of the result set
  */
-export const useResultSet = <T>(resultSet: ResultSet<T>): T[] => useSubscription(useMemo(() => ({
-  getCurrentValue: () => resultSet.value,
-  subscribe: (cb: any) => resultSet.subscribe(cb)
-}), [resultSet]));
+export const useResultSet = <T>(resultSet: ResultSet<T>): T[] =>
+  useSubscription(
+    useMemo(
+      () => ({
+        getCurrentValue: () => resultSet.value,
+        subscribe: (cb: any) => resultSet.subscribe(cb)
+      }),
+      [resultSet]
+    )
+  );

@@ -12,7 +12,7 @@ import { Client, Party } from '@dxos/client';
  * Useful for setting up examples or tests which display multiple peers in a single view.
  */
 export const usePartyBootstrap = (peerCount = 2) => {
-  const [peers, setPeers] = useState<{ client: Client, party: Party }[]>([]);
+  const [peers, setPeers] = useState<{ client: Client; party: Party }[]>([]);
 
   useEffect(() => {
     setTimeout(async () => {

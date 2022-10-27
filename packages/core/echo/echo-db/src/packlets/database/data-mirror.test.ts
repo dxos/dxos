@@ -9,8 +9,8 @@ import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Timeframe } from '@dxos/timeframe';
 
 import { DataMirror } from './data-mirror';
 import { DataService } from './data-service';
@@ -25,13 +25,21 @@ describe('DataMirror', function () {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), feed);
-    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, { snapshots: true });
+    const itemDemuxer = new ItemDemuxer(itemManager, modelFactory, {
+      snapshots: true
+    });
 
     const process = itemDemuxer.open();
-    feed.written.on(([msg, meta]) => process({
-      data: msg,
-      meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe() }
-    } as any));
+    feed.written.on(([msg, meta]) =>
+      process({
+        data: msg,
+        meta: {
+          ...meta,
+          memberKey: PublicKey.random(),
+          timeframe: new Timeframe()
+        }
+      } as any)
+    );
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
     const dataServiceRouter = new DataService();
@@ -46,13 +54,11 @@ describe('DataMirror', function () {
     // Create item
     const promise = promiseTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
-    const item = await itemManager.createItem(
-      ObjectModel.meta.type
-    ) as Item<ObjectModel>;
+    const item = (await itemManager.createItem(ObjectModel.meta.type)) as Item<ObjectModel>;
 
     await promise;
 
-    const mirroredItem = await mirrorItemManager.getItem(item.id) as Item<ObjectModel> | undefined;
+    const mirroredItem = (await mirrorItemManager.getItem(item.id)) as Item<ObjectModel> | undefined;
 
     expect(mirroredItem).not.toBeUndefined();
     expect(mirroredItem!.id).toEqual(item.id);

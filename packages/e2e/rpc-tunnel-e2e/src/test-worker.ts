@@ -12,13 +12,10 @@ import { TestClient } from './test-client';
 const clientOne = new TestClient();
 const clientTwo = new TestClient({ value: 10050 });
 
-onconnect = async event => {
+onconnect = async (event) => {
   const muxer = new PortMuxer(event.ports[0]);
 
-  await Promise.all([
-    setup(muxer, Channels.ONE, clientOne),
-    setup(muxer, Channels.TWO, clientTwo)
-  ]);
+  await Promise.all([setup(muxer, Channels.ONE, clientOne), setup(muxer, Channels.TWO, clientTwo)]);
 };
 
 const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {

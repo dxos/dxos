@@ -3,17 +3,10 @@
 //
 
 import cx from 'classnames';
-import React, {
-  ChangeEvent,
-  ComponentProps,
-  ReactNode,
-  useCallback,
-  useState,
-  useTransition
-} from 'react';
+import React, { ChangeEvent, ComponentProps, ReactNode, useCallback, useState, useTransition } from 'react';
 
 import { useId } from '../../hooks';
-import { ValidationValence } from '../../props';
+import { MessageValence } from '../../props';
 import {
   defaultDescription,
   defaultDisabled,
@@ -24,28 +17,24 @@ import {
   valenceInputBorder
 } from '../../styles';
 
-export enum InputSize {
-  md = 'md',
-  lg = 'lg'
-}
+export type InputSize = 'md' | 'lg';
 
-export interface InputProps
-  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
-  label: ReactNode
-  labelVisuallyHidden?: boolean
-  description?: ReactNode
-  descriptionVisuallyHidden?: boolean
-  initialValue?: string
-  onChange?: (value: string) => void
-  disabled?: boolean
-  size?: InputSize
-  validationMessage?: ReactNode
-  validationValence?: ValidationValence
+export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
+  label: ReactNode;
+  labelVisuallyHidden?: boolean;
+  description?: ReactNode;
+  descriptionVisuallyHidden?: boolean;
+  initialValue?: string;
+  onChange?: (value: string) => void;
+  disabled?: boolean;
+  size?: InputSize;
+  validationMessage?: ReactNode;
+  validationValence?: MessageValence;
 }
 
 const sizeMap = new Map<InputSize, string>([
-  [InputSize.md, ''],
-  [InputSize.lg, 'text-base']
+  ['md', ''],
+  ['lg', 'text-base']
 ]);
 
 export const Input = ({
@@ -70,9 +59,7 @@ export const Input = ({
 
   const [_isPending, startTransition] = useTransition();
 
-  const [internalValue, setInternalValue] = useState<string>(
-    initialValue?.toString() || ''
-  );
+  const [internalValue, setInternalValue] = useState<string>(initialValue?.toString() || '');
 
   const onInternalChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -86,8 +73,7 @@ export const Input = ({
     [onChange]
   );
 
-  const isInvalid =
-    !!validationMessage && validationValence === ValidationValence.error;
+  const isInvalid = !!validationMessage && validationValence === 'error';
 
   return (
     <div className={cx('my-4', className)} role='none'>
@@ -107,7 +93,7 @@ export const Input = ({
           defaultFocus,
           defaultPlaceholder,
           defaultHover({ disabled }),
-          sizeMap.get(size || InputSize.md),
+          sizeMap.get(size ?? 'md'),
           'bg-white/50 border text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:text-white',
           valenceInputBorder(validationMessage ? validationValence : undefined),
           disabled && defaultDisabled
@@ -126,15 +112,10 @@ export const Input = ({
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
-          className={cx(
-            descriptionVisuallyHidden && !isInvalid && 'sr-only'
-          )}
+          className={cx(descriptionVisuallyHidden && !isInvalid && 'sr-only')}
         >
           {validationMessage && (
-            <span
-              id={validationId}
-              className={valenceColorText(validationValence)}
-            >
+            <span id={validationId} className={valenceColorText(validationValence)}>
               {validationMessage}{' '}
             </span>
           )}

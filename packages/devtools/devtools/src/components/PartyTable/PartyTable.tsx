@@ -7,9 +7,9 @@ import React from 'react';
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
-import { Timeframe } from '@dxos/protocols';
-import { SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools';
+import { SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { CopyText, HashIcon } from '@dxos/react-components';
+import { Timeframe } from '@dxos/timeframe';
 
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';

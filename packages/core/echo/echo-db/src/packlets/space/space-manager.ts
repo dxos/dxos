@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
@@ -19,21 +19,32 @@ import { Database, DataService } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
-
-// TODO(burdon): Factor out to CredentialGenerator?
-export interface SigningContext {
-  credentialProvider: AuthProvider
-  credentialAuthenticator: AuthVerifier
-  credentialSigner: CredentialSigner // TODO(burdon): Already has keyring.
-  identityKey: PublicKey
-  deviceKey: PublicKey
-}
+import { SpaceProtocol } from './space-protocol';
 
 // TODO(burdon): ???
 export interface AcceptSpaceOptions {
-  spaceKey: PublicKey
-  genesisFeedKey: PublicKey
+  spaceKey: PublicKey;
+  genesisFeedKey: PublicKey;
 }
+
+// TODO(burdon): Factor out to CredentialGenerator?
+export interface SigningContext {
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
+  credentialProvider: AuthProvider;
+  credentialAuthenticator: AuthVerifier;
+  credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
+}
+
+export type SpaceManagerParams = {
+  metadataStore: MetadataStore;
+  feedStore: FeedStore<FeedMessage>;
+  networkManager: NetworkManager;
+  keyring: Keyring;
+  dataService: DataService;
+  modelFactory: ModelFactory;
+  signingContext: SigningContext;
+};
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
@@ -42,17 +53,34 @@ export class SpaceManager {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   public readonly update = new Event();
 
-  constructor (
-    private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore,
-    private readonly _networkManager: NetworkManager,
-    private readonly _keyring: Keyring,
-    private readonly _dataService: DataService,
-    private readonly _modelFactory: ModelFactory,
-    private readonly _signingContext: SigningContext // TODO(burdon): Contains keyring.
-  ) {}
+  private readonly _metadataStore: MetadataStore;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _networkManager: NetworkManager;
+  private readonly _keyring: Keyring;
+  private readonly _dataService: DataService;
+  private readonly _modelFactory: ModelFactory;
+  private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
 
-  async open () {
+  constructor({
+    metadataStore,
+    feedStore,
+    networkManager,
+    keyring,
+    dataService,
+    modelFactory,
+    signingContext
+  }: SpaceManagerParams) {
+    // TODO(burdon): Assert.
+    this._metadataStore = metadataStore;
+    this._feedStore = feedStore;
+    this._networkManager = networkManager;
+    this._keyring = keyring;
+    this._dataService = dataService;
+    this._modelFactory = modelFactory;
+    this._signingContext = signingContext;
+  }
+
+  async open() {
     await this._metadataStore.load();
 
     for (const spaceMetadata of this._metadataStore.parties) {
@@ -63,14 +91,14 @@ export class SpaceManager {
     }
   }
 
-  async close () {
-    await Promise.all([...this.spaces.values()].map(space => space.close()));
+  async close() {
+    await Promise.all([...this.spaces.values()].map((space) => space.close()));
   }
 
   /**
    * Creates a new space writing the genesis credentials to the control feed.
    */
-  async createSpace () {
+  async createSpace() {
     // TODO(burdon): Extract into genensis workflow/factory.
     // TODO(burdon): Re-use with Halo space construction.
     const spaceKey = await this._keyring.createKey();
@@ -89,7 +117,10 @@ export class SpaceManager {
     // Write genesis credentials.
     {
       const generator = new CredentialGenerator(
-        this._keyring, this._signingContext.identityKey, this._signingContext.deviceKey);
+        this._keyring,
+        this._signingContext.identityKey,
+        this._signingContext.deviceKey
+      );
 
       const credentials = [
         ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey)),
@@ -111,7 +142,7 @@ export class SpaceManager {
   }
 
   // TODO(burdon): Rename join space.
-  async acceptSpace (opts: AcceptSpaceOptions): Promise<Space> {
+  async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
     const metadata: PartyMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
@@ -127,34 +158,39 @@ export class SpaceManager {
     return space;
   }
 
-  private _insertSpace (space: Space) {
+  private _insertSpace(space: Space) {
     this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
     this.spaces.set(space.key, space);
     this.update.emit();
   }
 
-  private async _constructSpace (metadata: PartyMetadata) {
-    const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.controlFeedKey ?? failUndefined(), this._keyring);
-    const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.dataFeedKey ?? failUndefined(), this._keyring);
+  private async _constructSpace(metadata: PartyMetadata) {
+    const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
+    const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 
-    // Might be the same as controlFeed above, in case this space was created by the current agent.
-    const genesisFeed = await this._feedStore.openReadOnlyFeed(metadata.genesisFeedKey ?? failUndefined());
+    // The genesis feed will be the same as the control feed if the space was created by the local agent.
+    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
-    return new Space({
-      controlFeed,
-      dataFeed,
-      genesisFeed,
-      feedProvider: key => this._feedStore.openReadOnlyFeed(key),
-      spaceKey: metadata.key,
-      networkManager: this._networkManager,
-      initialTimeframe: new Timeframe(),
-      networkPlugins: [],
-      swarmIdentity: { // TODO(burdon): Related to context object?
+    const spaceKey = metadata.key;
+    const protocol = new SpaceProtocol({
+      topic: spaceKey,
+      identity: {
         peerKey: this._signingContext.deviceKey,
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
+      networkManager: this._networkManager
+    });
+
+    return new Space({
+      spaceKey,
+      protocol,
+      genesisFeed,
+      controlFeed,
+      dataFeed,
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
+      databaseFactory: async ({ databaseBackend }) =>
+        new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
     });
   }
 }

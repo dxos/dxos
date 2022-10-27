@@ -11,10 +11,10 @@ import { truncateKey } from '@dxos/debug';
 import { CopyToClipboard } from './CopyToClipboard';
 
 export interface CopyTextProps extends TypographyProps {
-  value?: string
-  length?: number
-  monospace?: boolean
-  onCopyToClipboard?: (text: string) => void // TODO(burdon): onCopy.
+  value?: string;
+  length?: number;
+  monospace?: boolean;
+  onCopyToClipboard?: (text: string) => void; // TODO(burdon): onCopy.
 }
 
 export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, variant, ...rest }: CopyTextProps) => {
@@ -23,12 +23,14 @@ export const CopyText = ({ value, length, monospace, onCopyToClipboard, sx, vari
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      alignItems: 'center',
-      overflow: 'hidden',
-      height: 40
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
+        height: 40
+      }}
+    >
       <Typography
         sx={{
           overflow: 'hidden',

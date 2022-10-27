@@ -5,19 +5,14 @@
 import assert from 'node:assert';
 
 type LatchProps = {
-  count?: number
-  timeout?: number
-}
+  count?: number;
+  timeout?: number;
+};
 
-type LatchResult = [
-  () => Promise<number>,
-  () => void,
-  (err: Error) => void
-]
+type LatchResult = [() => Promise<number>, () => number, (err: Error) => void];
 
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
- * @deprecated Use `until`.
  */
 // TODO(burdon): Reconcile with until/trigger.
 export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
@@ -27,12 +22,12 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
   let doResolve: (value: number) => void;
   let doReject: (err: Error) => void;
   const promise = new Promise<number>((resolve, reject) => {
-    doResolve = value => {
+    doResolve = (value) => {
       clearTimeout(t);
       resolve(value);
     };
 
-    doReject = err => {
+    doReject = (err) => {
       clearTimeout(t);
       reject(err);
     };
@@ -51,6 +46,8 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
       if (++i === count) {
         doResolve(i);
       }
+
+      return i;
     },
     (err: Error) => doReject(err)
   ];

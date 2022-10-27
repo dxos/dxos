@@ -24,7 +24,7 @@ export const PartyView = () => {
       <Box flexDirection='column' flexGrow={1}>
         <PartyList
           partyKey={party?.key}
-          onSelect={partyKey => {
+          onSelect={(partyKey) => {
             setPartyKey(partyKey);
             focusNext();
           }}
@@ -41,10 +41,7 @@ export const PartyView = () => {
             }}
           />
 
-          <ItemTypeList
-            party={party}
-            onChange={setType}
-          />
+          <ItemTypeList party={party} onChange={setType} />
 
           <Box padding={1}>
             <Text>ENTER to select ECHO Space; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>

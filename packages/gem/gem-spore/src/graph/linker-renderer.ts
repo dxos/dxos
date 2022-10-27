@@ -25,7 +25,8 @@ export const linkerRenderer = (
   target?: GraphLayoutNode<any>,
   point?: Point
 ) => {
-  d3.select(root).selectAll('g.linker')
+  d3.select(root)
+    .selectAll('g.linker')
     .data([{ id: 'linker' }])
     .join('g')
     .attr('class', 'linker')
@@ -33,7 +34,7 @@ export const linkerRenderer = (
     .selectAll<SVGPathElement, any>('path')
     .data(source ? [{ id: 'link' }] : [])
     .join('path')
-    .attr('marker-end', () => target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)')
+    .attr('marker-end', () => (target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'))
     .attr('d', () => {
       return line(
         getCircumferencePoints(

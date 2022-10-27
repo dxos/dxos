@@ -23,9 +23,9 @@ const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
-  config?: Config
-  packageSpecifier?: BotPackageSpecifier
-  partyKey?: PublicKey
+  config?: Config;
+  packageSpecifier?: BotPackageSpecifier;
+  partyKey?: PublicKey;
 }
 
 /**
@@ -45,17 +45,13 @@ export class BotHandle {
   /**
    * @param workingDirectory Path to the directory where bot code, data and logs are stored.
    */
-  constructor (
+  constructor(
     readonly id: string,
     readonly workingDirectory: string,
     private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
-    const {
-      config = new Config({ version: 1 }),
-      packageSpecifier,
-      partyKey
-    } = options;
+    const { config = new Config({ version: 1 }), packageSpecifier, partyKey } = options;
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
@@ -96,34 +92,38 @@ export class BotHandle {
     });
   }
 
-  get rpc () {
+  get rpc() {
     assert(this._rpc, 'BotHandle is not open');
     return this._rpc.rpc;
   }
 
-  get bot () {
+  get bot() {
     return this._bot;
   }
 
-  get config () {
+  get config() {
     return this._config;
   }
 
-  get logsDir () {
+  get logsDir() {
     return join(this.workingDirectory, 'logs');
   }
 
-  get startTimestamp () {
+  get startTimestamp() {
     return this._startTimestamps[this._startTimestamps.length - 1];
   }
 
-  set startTimestamp (startTimestamp: Date) {
+  set startTimestamp(startTimestamp: Date) {
     this._startTimestamps.push(startTimestamp);
   }
 
-  async initializeDirectories () {
-    await fs.promises.mkdir(join(this.workingDirectory, 'content'), { recursive: true });
-    await fs.promises.mkdir(join(this.workingDirectory, 'storage'), { recursive: true });
+  async initializeDirectories() {
+    await fs.promises.mkdir(join(this.workingDirectory, 'content'), {
+      recursive: true
+    });
+    await fs.promises.mkdir(join(this.workingDirectory, 'storage'), {
+      recursive: true
+    });
     await fs.promises.mkdir(this.logsDir, { recursive: true });
     this._config = new Config(
       {
@@ -141,7 +141,7 @@ export class BotHandle {
     );
   }
 
-  async spawn (invitation?: InvitationDescriptor): Promise<Bot> {
+  async spawn(invitation?: InvitationDescriptor): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._initialize(invitation);
@@ -149,7 +149,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async start (): Promise<Bot> {
+  async start(): Promise<Bot> {
     if (this.bot.status === Bot.Status.STOPPED) {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.RUNNING;
@@ -161,7 +161,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async stop (): Promise<Bot> {
+  async stop(): Promise<Bot> {
     if (this.bot.status === Bot.Status.RUNNING) {
       this.bot.attemptsToAchieveDesiredState = 0;
       this.bot.desiredState = Bot.Status.STOPPED;
@@ -173,7 +173,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async remove () {
+  async remove() {
     this.bot.desiredState = Bot.Status.STOPPED;
     if (this.bot.status === Bot.Status.RUNNING) {
       await this.forceStop();
@@ -181,7 +181,7 @@ export class BotHandle {
     await this._clearFiles();
   }
 
-  async forceStart (): Promise<Bot> {
+  async forceStart(): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._start();
@@ -189,7 +189,7 @@ export class BotHandle {
     return this.bot;
   }
 
-  async forceStop (): Promise<Bot> {
+  async forceStop(): Promise<Bot> {
     try {
       await this._reportingStream?.close();
     } catch (err: any) {
@@ -209,11 +209,11 @@ export class BotHandle {
     return this.bot;
   }
 
-  toString () {
+  toString() {
     return `BotHandle: ${this._bot.id}`;
   }
 
-  async onStatusChange (): Promise<void> {
+  async onStatusChange(): Promise<void> {
     if (this.bot.status === this.bot.desiredState) {
       this.bot.attemptsToAchieveDesiredState = 0;
       return;
@@ -235,7 +235,7 @@ export class BotHandle {
   /**
    * Called when the process backing the bot exits.
    */
-  onProcessExited (status: BotExitStatus) {
+  onProcessExited(status: BotExitStatus) {
     this.bot.status = Bot.Status.STOPPED;
     this.bot.runtime = {
       ...this.bot.runtime,
@@ -248,7 +248,7 @@ export class BotHandle {
   /**
    * Called when there's an critical error from the bot container backing the bot.
    */
-  onProcessError (error: Error) {
+  onProcessError(error: Error) {
     this.bot.status = Bot.Status.STOPPED;
 
     this.bot.runtime = {
@@ -261,28 +261,28 @@ export class BotHandle {
   /**
    * Returns the name of the log file for the specified timestamp.
    */
-  getLogFilePath (startTimestamp: Date) {
+  getLogFilePath(startTimestamp: Date) {
     return join(this.logsDir, `${startTimestamp.toISOString()}.log`);
   }
 
   /**
    * Returns the path to a directory where bot content is stored.
    */
-  getContentPath (): string {
+  getContentPath(): string {
     return join(this.workingDirectory, 'content');
   }
 
   /**
    * Returns the path to a directory that is used as a storage for bot.
    */
-  getStoragePath (): string {
+  getStoragePath(): string {
     return join(this.workingDirectory, 'storage');
   }
 
   /**
    * Returns a stream with all the logs associted with given bot and then watches for new logs.
    */
-  getLogsStream (): Stream<GetLogsResponse> {
+  getLogsStream(): Stream<GetLogsResponse> {
     return new Stream<GetLogsResponse>(({ next, close }) => {
       for (const startTimestamps of this._startTimestamps) {
         const logFilePath = this.getLogFilePath(startTimestamps);
@@ -313,7 +313,7 @@ export class BotHandle {
     });
   }
 
-  private async _spawn (): Promise<void> {
+  private async _spawn(): Promise<void> {
     const port = await this._botContainer.spawn({
       id: this.id,
       localPath: this.localPath,
@@ -321,17 +321,14 @@ export class BotHandle {
     });
 
     this._log('Openning RPC channel');
-    this._rpc = createRpcClient(
-      schema.getService('dxos.bot.BotService'),
-      {
-        port,
-        timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
-      }
-    );
+    this._rpc = createRpcClient(schema.getService('dxos.bot.BotService'), {
+      port,
+      timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
+    });
     await this._rpc.open();
   }
 
-  private async _initialize (invitation?: InvitationDescriptor): Promise<void> {
+  private async _initialize(invitation?: InvitationDescriptor): Promise<void> {
     this._log('Initializing bot');
     await this.rpc.initialize({
       config: this.config.values,
@@ -342,7 +339,7 @@ export class BotHandle {
     this._log('Initialization complete');
   }
 
-  private async _start (): Promise<void> {
+  private async _start(): Promise<void> {
     this._log('Starting bot');
     await this.rpc.start({
       config: this.config.values
@@ -351,7 +348,7 @@ export class BotHandle {
     this._log('Bot started');
   }
 
-  private _startReporting () {
+  private _startReporting() {
     assert(this._reportingStream === undefined);
     const stream = this.rpc.startReporting();
     stream.subscribe(
@@ -363,7 +360,7 @@ export class BotHandle {
     this._reportingStream = stream;
   }
 
-  private _updateAfterStart () {
+  private _updateAfterStart() {
     this._bot.status = Bot.Status.RUNNING;
     this._bot.lastStart = this.startTimestamp;
     this._bot.runtime = {};
@@ -371,11 +368,14 @@ export class BotHandle {
     this._log('Bot started');
   }
 
-  private async _clearFiles () {
-    await fs.promises.rm(this.workingDirectory, { recursive: true, force: true });
+  private async _clearFiles() {
+    await fs.promises.rm(this.workingDirectory, {
+      recursive: true,
+      force: true
+    });
   }
 
-  private async _waitForNextAttemp (): Promise<void> {
+  private async _waitForNextAttemp(): Promise<void> {
     const timeout = this.bot.attemptsToAchieveDesiredState!++ * ATTEMPT_DELAY;
     return sleep(timeout);
   }

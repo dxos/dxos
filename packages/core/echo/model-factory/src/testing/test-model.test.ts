@@ -5,12 +5,12 @@
 import expect from 'expect';
 
 import { ModelFactory } from '../model-factory';
+import { TestBuilder } from './test-builder';
 import { TestModel } from './test-model';
-import { TestRig } from './test-rig';
 
 describe('test model', function () {
   it('basic mutations', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer = rig.createPeer();
 
     await peer.model.set('title', 'DXOS');
@@ -19,7 +19,7 @@ describe('test model', function () {
   });
 
   it('multiple peers', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
@@ -32,7 +32,7 @@ describe('test model', function () {
   });
 
   it('concurrency - states converge', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 

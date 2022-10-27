@@ -26,9 +26,9 @@ const ListItem = styled('li')(({ theme }) => ({
 }));
 
 export interface RegistryTypeFilterProps {
-  types: RegistryType[]
-  selected?: CID[]
-  onSelectedChange: (selected: CID[]) => void
+  types: RegistryType[];
+  selected?: CID[];
+  onSelectedChange: (selected: CID[]) => void;
 }
 
 /**
@@ -43,7 +43,7 @@ export const RegistryTypeFilter = ({
 
   return (
     <List>
-      {types.map(type => (
+      {types.map((type) => (
         <ListItem key={type.type.messageName}>
           <Chip
             label={getTypeName(type)}

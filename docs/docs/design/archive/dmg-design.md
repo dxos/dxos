@@ -187,11 +187,11 @@ The KUBE server contains a Web server that maps conventional HTTP requests onto 
 
 DMG Records may be mapped onto URLs as follows:
 
-> Note: Multiple domain names may be mapped to a KUBE Subnet, therefore there may be a many-to-one relationship between Subnet and DMG Realm.
+> NOTE: Multiple domain names may be mapped to a KUBE Subnet, therefore there may be a many-to-one relationship between Subnet and DMG Realm.
 
 ![URL](./diagrams/dmg-url.drawio.svg)
 
-> *   Note: Realm is just a FQ hostname.
+> *   NOTE: Realm is just a FQ hostname.
 > *   TODO: Resources are "leaf" nodes of the graph and are processed by a `handler` specified by its ancestors Records, which may be inherited.
 
 Realms represent a logical partition of the KUBE subnet's DMG.
@@ -207,7 +207,7 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 Records are retrieved via the DMG Record Service, which defines the following API.
 
-> Note: The path may return a hierarchical list of Record refs.
+> NOTE: The path may return a hierarchical list of Record refs.
 
 ```protobuf
 package dxos.dmg.service;
@@ -241,7 +241,7 @@ message RecordResponse {
 }
 ```
 
-> Note: The API support both git and blockchain/IPFS implementations.
+> NOTE: The API support both git and blockchain/IPFS implementations.
 
 **Example**
 
@@ -316,7 +316,7 @@ The DMG Record can be retrieved as a JSON document via a TCP or HTTP request:
 ```
 
 The `type` field references a DMG Record that represents a protocol buffer schema definition.
-Note: DMG references may point to Records defined in another Subnet.
+NOTE: DMG references may point to Records defined in another Subnet.
 
 Given the Example above, the following are all valid requests that return a resource located within a DMG Record's bundle.
 

@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, EventSubscriptions, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { ComplexMap, SubscriptionGroup } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { Message, SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
@@ -30,27 +30,27 @@ export enum SignalState {
   DISCONNECTED = 'DISCONNECTED',
 
   /** Socket was closed. */
-  CLOSED = 'CLOSED',
+  CLOSED = 'CLOSED'
 }
 
 export type SignalStatus = {
-  host: string
-  state: SignalState
-  error?: string
-  reconnectIn: number
-  connectionStarted: number
-  lastStateChange: number
+  host: string;
+  state: SignalState;
+  error?: string;
+  reconnectIn: number;
+  connectionStarted: number;
+  lastStateChange: number;
 };
 
 export type CommandTrace = {
-  messageId: string
-  host: string
-  incoming: boolean
-  time: number
-  method: string
-  payload: any
-  response?: any
-  error?: string
+  messageId: string;
+  host: string;
+  incoming: boolean;
+  time: number;
+  method: string;
+  payload: any;
+  response?: any;
+  error?: string;
 };
 
 /**
@@ -80,51 +80,46 @@ export class SignalClient implements SignalMethods {
 
   private _client!: SignalRPCClient;
 
-  private _cleanupSubscriptions = new SubscriptionGroup();
-  readonly statusChanged = new Event<SignalStatus>();
+  private _subscriptions = new EventSubscriptions();
 
+  readonly statusChanged = new Event<SignalStatus>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
-    topic: PublicKey
-    swarmEvent: SwarmEvent
+    topic: PublicKey;
+    swarmEvent: SwarmEvent;
   }>();
 
-  private readonly _swarmStreams = new ComplexMap<
-    PublicKey,
-    Stream<SwarmEvent>
-  >((key) => key.toHex());
+  private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>((key) => key.toHex());
 
-  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>(
-    (key) => key.toHex()
-  );
+  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>((key) => key.toHex());
 
   /**
    * @param _host Signal server websocket URL.
    */
-  constructor (
+  constructor(
     private readonly _host: string,
     private readonly _onMessage: ({
       author,
       recipient,
       payload
     }: {
-      author: PublicKey
-      recipient: PublicKey
-      payload: Any
+      author: PublicKey;
+      recipient: PublicKey;
+      payload: Any;
     }) => Promise<void>
   ) {
     this._setState(SignalState.CONNECTING);
     this._createClient();
   }
 
-  private _setState (newState: SignalState) {
+  private _setState(newState: SignalState) {
     this._state = newState;
     this._lastStateChange = Date.now();
     log(`Signal state changed ${JSON.stringify(this.getStatus())}`);
     this.statusChanged.emit(this.getStatus());
   }
 
-  private _createClient () {
+  private _createClient() {
     this._connectionStarted = Date.now();
     try {
       this._client = new SignalRPCClient(this._host);
@@ -138,7 +133,7 @@ export class SignalClient implements SignalMethods {
       this._reconnect();
     }
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.connected.on(() => {
         this._lastError = undefined;
         this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
@@ -146,7 +141,7 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.error.on((error) => {
         log(`Socket error: ${error.message}`);
         if (this._state === SignalState.CLOSED) {
@@ -164,14 +159,11 @@ export class SignalClient implements SignalMethods {
       })
     );
 
-    this._cleanupSubscriptions.push(
+    this._subscriptions.add(
       this._client.disconnected.on(() => {
         log('Socket disconnected');
         // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-        if (
-          this._state !== SignalState.CONNECTING &&
-          this._state !== SignalState.RE_CONNECTING
-        ) {
+        if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
           return;
         }
 
@@ -185,7 +177,7 @@ export class SignalClient implements SignalMethods {
     );
   }
 
-  private _reconnect () {
+  private _reconnect() {
     log(`Reconnecting in ${this._reconnectAfter}ms`);
     if (this._reconnectIntervalId !== undefined) {
       console.error('Signal api already reconnecting.');
@@ -198,7 +190,7 @@ export class SignalClient implements SignalMethods {
     this._reconnectIntervalId = setTimeout(() => {
       this._reconnectIntervalId = undefined;
 
-      this._cleanupSubscriptions.unsubscribe();
+      this._subscriptions.clear();
 
       // Close client if it wasn't already closed.
       this._client.close().catch(() => {});
@@ -208,8 +200,8 @@ export class SignalClient implements SignalMethods {
     }, this._reconnectAfter);
   }
 
-  async close () {
-    this._cleanupSubscriptions.unsubscribe();
+  async close() {
+    this._subscriptions.clear();
 
     if (this._reconnectIntervalId !== undefined) {
       clearTimeout(this._reconnectIntervalId);
@@ -220,7 +212,7 @@ export class SignalClient implements SignalMethods {
     log('Closed.');
   }
 
-  getStatus (): SignalStatus {
+  getStatus(): SignalStatus {
     return {
       host: this._host,
       state: this._state,
@@ -231,26 +223,15 @@ export class SignalClient implements SignalMethods {
     };
   }
 
-  async join ({
-    topic,
-    peerId
-  }: {
-    topic: PublicKey
-    peerId: PublicKey
-  }): Promise<void> {
-    log(`Join: topic=${topic} peerId=${peerId}`);
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    log('joining', { topic, peerId });
+
     await this.subscribeMessages(peerId);
     await this._subscribeSwarmEvents(topic, peerId);
   }
 
-  async leave ({
-    topic,
-    peerId
-  }: {
-    topic: PublicKey
-    peerId: PublicKey
-  }): Promise<void> {
-    log(`Leave: topic=${topic} peerId=${peerId}`);
+  async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
+    log('leaving', { topic, peerId });
 
     this._swarmStreams.get(topic)?.close();
     this._swarmStreams.delete(topic);
@@ -259,19 +240,13 @@ export class SignalClient implements SignalMethods {
     this._messageStreams.delete(topic);
   }
 
-  async sendMessage (msg: Message): Promise<void> {
+  async sendMessage(msg: Message): Promise<void> {
     await this._client.sendMessage(msg);
   }
 
   @synchronized
-  private async _subscribeSwarmEvents (
-    topic: PublicKey,
-    peerId: PublicKey
-  ): Promise<void> {
-    assert(
-      !this._swarmStreams.has(topic),
-      'Already subscribed to swarm events.'
-    );
+  private async _subscribeSwarmEvents(topic: PublicKey, peerId: PublicKey): Promise<void> {
+    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
     const swarmStream = await this._client.join({ topic, peerId });
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
@@ -282,13 +257,13 @@ export class SignalClient implements SignalMethods {
     // Saving swarm stream.
     this._swarmStreams.set(topic, swarmStream);
 
-    this._cleanupSubscriptions.push(() => {
+    this._subscriptions.add(() => {
       swarmStream.close();
       this._swarmStreams.delete(topic);
     });
   }
 
-  async subscribeMessages (peerId: PublicKey): Promise<void> {
+  async subscribeMessages(peerId: PublicKey): Promise<void> {
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
       return;
@@ -309,7 +284,7 @@ export class SignalClient implements SignalMethods {
       this._messageStreams.set(peerId, messageStream);
     }
 
-    this._cleanupSubscriptions.push(() => {
+    this._subscriptions.add(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
     });

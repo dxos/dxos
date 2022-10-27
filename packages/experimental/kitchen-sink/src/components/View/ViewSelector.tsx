@@ -4,11 +4,7 @@
 
 import React from 'react';
 
-import {
-  Language as GraphIcon,
-  GridOnOutlined as GridIcon,
-  FormatListBulleted as ListIcon
-} from '@mui/icons-material';
+import { Language as GraphIcon, GridOnOutlined as GridIcon, FormatListBulleted as ListIcon } from '@mui/icons-material';
 
 import { IconRadio, IconRadioGroup } from '../IconRadio';
 
@@ -19,14 +15,11 @@ export enum ViewType {
 }
 
 interface ViewSelectorProps {
-  value: string
-  onChange: (value: string) => void
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const ViewSelector = ({
-  value,
-  onChange
-}: ViewSelectorProps) => (
+export const ViewSelector = ({ value, onChange }: ViewSelectorProps) => (
   <IconRadioGroup value={value} onChange={onChange}>
     <IconRadio data-id='test-button-view-list' value={ViewType.List} size='small'>
       <ListIcon />

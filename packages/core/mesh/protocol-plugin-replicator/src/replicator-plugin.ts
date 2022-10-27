@@ -5,10 +5,11 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKeyLike } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { schemaJson } from '@dxos/protocols';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 import { Peer } from './peer';
@@ -19,17 +20,22 @@ export type ReplicatorContextInfo = {
   /**
    * Passed from protocol.getContext()
    */
-  context: any
+  context: any;
 
   /**
    * Peer id, loaded from protocol.getSession()
    */
-  session?: string
-}
+  session?: string;
+};
 
 type LoadFunction = (info: ReplicatorContextInfo) => Promise<FeedData[]>;
-type SubscribeFunction = (share: (feeds: FeedData[]) => Promise<void> | undefined, info: ReplicatorContextInfo) => () => void;
-type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedDescriptor[]>;
+
+type SubscribeFunction = (
+  share: (feeds: FeedData[]) => Promise<void> | undefined,
+  info: ReplicatorContextInfo
+) => () => void;
+
+type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedWrapper<FeedMessage>[]>;
 
 const defaultSubscribe: SubscribeFunction = () => () => {};
 const defaultReplicate: ReplicateFunction = async () => [];
@@ -38,18 +44,18 @@ export type ReplicatorMiddleware = {
   /**
    * Returns a list of local feeds to replicate.
    */
-  load: LoadFunction
+  load: LoadFunction;
 
   /**
    * Subscribe to new local feeds being opened.
    */
-  subscribe?: SubscribeFunction
+  subscribe?: SubscribeFunction;
 
   /**
    * Maps feed replication requests to a set of feed descriptors to be replicated.
    */
-  replicate?: ReplicateFunction
-}
+  replicate?: ReplicateFunction;
+};
 
 /**
  * Manages key exchange and feed replication.
@@ -63,7 +69,7 @@ export class ReplicatorPlugin {
   private readonly _subscribe: SubscribeFunction;
   private readonly _replicate: ReplicateFunction;
 
-  constructor ({ load, subscribe, replicate }: ReplicatorMiddleware, options?: { timeout: number }) {
+  constructor({ load, subscribe, replicate }: ReplicatorMiddleware, options?: { timeout: number }) {
     this._options = options ?? { timeout: 10000 };
     this._load = load;
     this._subscribe = subscribe ?? defaultSubscribe;
@@ -74,8 +80,11 @@ export class ReplicatorPlugin {
    * Creates a protocol extension for key exchange.
    * @return {Extension}
    */
-  createExtension () {
-    return new Extension(ReplicatorPlugin.EXTENSION, { schema: schemaJson, timeout: this._options.timeout })
+  createExtension() {
+    return new Extension(ReplicatorPlugin.EXTENSION, {
+      schema: schemaJson,
+      timeout: this._options.timeout
+    })
       .setInitHandler(this._initHandler.bind(this))
       .setHandshakeHandler(this._handshakeHandler.bind(this))
       .setMessageHandler(this._messageHandler.bind(this))
@@ -83,7 +92,7 @@ export class ReplicatorPlugin {
       .setFeedHandler(this._feedHandler.bind(this));
   }
 
-  async _initHandler (protocol: Protocol) {
+  async _initHandler(protocol: Protocol) {
     const extension = protocol.getExtension(ReplicatorPlugin.EXTENSION);
     assert(extension, `Missing '${ReplicatorPlugin.EXTENSION}' extension in protocol.`);
 
@@ -96,7 +105,7 @@ export class ReplicatorPlugin {
    * @param {Protocol} protocol
    * @returns {Promise<void>}
    */
-  async _handshakeHandler (protocol: Protocol) {
+  async _handshakeHandler(protocol: Protocol) {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
     const { peerId: session } = protocol.getSession() ?? {};
@@ -129,11 +138,12 @@ export class ReplicatorPlugin {
   /**
    * Handles key exchange requests.
    */
-  async _messageHandler (protocol: Protocol, message: any) {
+  async _messageHandler(protocol: Protocol, message: any) {
     try {
       const { type, data } = message; // TODO(burdon): Type?
       switch (type) {
-        case 'share-feeds': { // TODO(burdon): Const/enum.
+        case 'share-feeds': {
+          // TODO(burdon): Const/enum.
           await this._replicateHandler(protocol, data || []);
           break;
         }
@@ -147,7 +157,7 @@ export class ReplicatorPlugin {
     }
   }
 
-  async _replicateHandler (protocol: Protocol, data: any) {
+  async _replicateHandler(protocol: Protocol, data: any) {
     const peer = this._peers.get(protocol);
     const context = protocol.getContext();
     const { peerId: session } = protocol.getSession() ?? {};
@@ -162,11 +172,11 @@ export class ReplicatorPlugin {
     }
   }
 
-  async _feedHandler (protocol: Protocol, discoveryKey: PublicKeyLike) {
+  async _feedHandler(protocol: Protocol, discoveryKey: PublicKeyLike) {
     await this._replicateHandler(protocol, [{ discoveryKey }]);
   }
 
-  _closeHandler (protocol: Protocol) {
+  _closeHandler(protocol: Protocol) {
     const peer = this._peers.get(protocol);
     peer?.close();
     this._peers.delete(protocol);

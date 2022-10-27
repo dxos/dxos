@@ -21,7 +21,7 @@ const Main = () => {
   // 1. Create party.
   useEffect(() => {
     // TODO(wittjosiah): Attempt to load existing party.
-    void client.echo.createParty().then(party => setParty(party));
+    void client.echo.createParty().then((party) => setParty(party));
   }, []);
 
   // 3. Select items.
@@ -72,7 +72,15 @@ const Main = () => {
   };
 
   return (
-    <Box sx={{ padding: 2, width: 800, margin: 'auto', marginTop: 2, border: '1px solid #CCC' }}>
+    <Box
+      sx={{
+        padding: 2,
+        width: 800,
+        margin: 'auto',
+        marginTop: 2,
+        border: '1px solid #CCC'
+      }}
+    >
       <Box sx={{ display: 'flex' }}>
         <TextField
           inputRef={inputRef}
@@ -81,19 +89,19 @@ const Main = () => {
           placeholder='Enter task.'
           autoComplete='off'
           spellCheck={false}
-          onKeyDown={event => event.key === 'Enter' && handleCreateTask()}
+          onKeyDown={(event) => event.key === 'Enter' && handleCreateTask()}
         />
 
         <Button onClick={handleCreateTask}>Add</Button>
       </Box>
 
       <List sx={{ my: 2 }}>
-        {items.map(item => (
+        {items.map((item) => (
           <ListItemButton key={item.id} disableRipple>
             <ListItemIcon>
               <Checkbox
                 checked={item.model.get('done') ?? false}
-                onChange={event => {
+                onChange={(event) => {
                   handleTaskChecked(item, event.target.checked);
                 }}
               />
@@ -104,33 +112,33 @@ const Main = () => {
       </List>
 
       <Box>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('share')}>Share</Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('join')}>Join</Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={handleExport}>Export</Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('import')}>Import</Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('share')}>
+          Share
+        </Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('join')}>
+          Join
+        </Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={handleExport}>
+          Export
+        </Button>
+        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('import')}>
+          Import
+        </Button>
       </Box>
 
       {/* 4. Sharing. */}
-      <PartySharingDialog
-        open={action === 'share'}
-        onClose={() => setAction(undefined)}
-        partyKey={party.key}
-      />
+      <PartySharingDialog open={action === 'share'} onClose={() => setAction(undefined)} partyKey={party.key} />
 
       {/* 5. Joining. */}
       <JoinPartyDialog
         open={action === 'join'}
-        onJoin={party => setParty(party)}
+        onJoin={(party) => setParty(party)}
         onClose={() => setAction(undefined)}
         closeOnSuccess={true}
       />
 
       {/* 6. Import. */}
-      <FileUploadDialog
-        open={action === 'import'}
-        onClose={() => setAction(undefined)}
-        onUpload={handleImport}
-      />
+      <FileUploadDialog open={action === 'import'} onClose={() => setAction(undefined)} onUpload={handleImport} />
     </Box>
   );
 };
@@ -140,24 +148,21 @@ export const App = () => {
 
   if (!profile) {
     return (
-      <Box sx={{
-        marginY: 2,
-        marginX: 'auto',
-        width: 300,
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <Button
-          variant='contained'
-          onClick={() => window.open('https://halo.dxos.org', '_blank')}
-        >
+      <Box
+        sx={{
+          marginY: 2,
+          marginX: 'auto',
+          width: 300,
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
+        <Button variant='contained' onClick={() => window.open('https://halo.dxos.org', '_blank')}>
           Create a HALO identity
         </Button>
       </Box>
     );
   }
 
-  return (
-    <Main />
-  );
+  return <Main />;
 };

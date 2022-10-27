@@ -7,11 +7,11 @@ import protobufjs from 'protobufjs';
 
 import { Substitutions } from './common';
 
-export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>
+export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>;
 
 export interface BidirectionalMapingDescriptors {
-  encode: MapingDescriptors
-  decode: MapingDescriptors
+  encode: MapingDescriptors;
+  decode: MapingDescriptors;
 }
 
 export const createMappingDescriptors = (substitutions: Substitutions): BidirectionalMapingDescriptors => {
@@ -77,9 +77,11 @@ const asyncObjectMap = async <K extends keyof any, T, U>(
 ): Promise<Record<K, U>> => {
   const res: Record<K, U> = {} as any;
 
-  await Promise.all(Object.entries(record).map(async ([key, value]) => {
-    res[key as keyof typeof res] = await map(value as T, key as K);
-  }));
+  await Promise.all(
+    Object.entries(record).map(async ([key, value]) => {
+      res[key as keyof typeof res] = await map(value as T, key as K);
+    })
+  );
 
   return res;
 };

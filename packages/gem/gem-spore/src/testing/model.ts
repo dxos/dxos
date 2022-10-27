@@ -16,33 +16,31 @@ import { TestNode } from './types';
 export class TestGraphModel implements GraphModel<TestNode> {
   public readonly updated = new EventEmitter<GraphData<TestNode>>();
 
-  constructor (
-    private readonly _graph: GraphData<TestNode> = emptyGraph
-  ) {}
+  constructor(private readonly _graph: GraphData<TestNode> = emptyGraph) {}
 
-  get graph () {
+  get graph() {
     return this._graph;
   }
 
-  getNode (id: string) {
-    return this._graph.nodes.find(item => item.id === id);
+  getNode(id: string) {
+    return this._graph.nodes.find((item) => item.id === id);
   }
 
-  getRandomNode () {
+  getRandomNode() {
     return faker.random.arrayElement(this._graph.nodes);
   }
 
-  subscribe (callback: (graph: GraphData<TestNode>) => void) {
+  subscribe(callback: (graph: GraphData<TestNode>) => void) {
     return this.updated.on(callback);
   }
 
-  clear () {
+  clear() {
     this._graph.nodes = [];
     this._graph.links = [];
     this.update();
   }
 
-  createNodes (node: TestNode = undefined, n = 1, update = true) {
+  createNodes(node: TestNode = undefined, n = 1, update = true) {
     Array.from({ length: n }).forEach(() => {
       const child = createNode();
       const parent = node || faker.random.arrayElement(this._graph.nodes);
@@ -56,26 +54,26 @@ export class TestGraphModel implements GraphModel<TestNode> {
     update && this.update();
   }
 
-  deleteNode (node: string, update = true) {
+  deleteNode(node: string, update = true) {
     this._graph.nodes = this._graph.nodes.filter(({ id }) => id !== node);
     this._graph.links = this._graph.links.filter(({ source, target }) => source !== node && target !== node);
 
     update && this.update();
   }
 
-  createLink (source: TestNode, target: TestNode, update = true) {
+  createLink(source: TestNode, target: TestNode, update = true) {
     this._graph.links.push(createLink(source, target));
 
     update && this.update();
   }
 
-  deleteLink (link: string, update = true) {
+  deleteLink(link: string, update = true) {
     this._graph.links = this._graph.links.filter(({ id }) => id !== link);
 
     update && this.update();
   }
 
-  update () {
+  update() {
     this.updated.emit(this._graph);
   }
 }

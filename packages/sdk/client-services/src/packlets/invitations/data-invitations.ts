@@ -21,7 +21,7 @@ import { InvitationDescriptor } from './invitation-descriptor';
  * Create and manage data invitations for Data spaces.
  */
 export class DataInvitations {
-  constructor (
+  constructor(
     private readonly _networkManager: NetworkManager,
     private readonly _signingContext: SigningContext,
     private readonly _spaceManager: SpaceManager
@@ -30,7 +30,7 @@ export class DataInvitations {
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation (space: Space, { onFinish }: { onFinish?: () => void} = {}): Promise<InvitationDescriptor> {
+  async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
 
     const swarmKey = PublicKey.random();
@@ -115,7 +115,7 @@ export class DataInvitations {
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor): Promise<Space> {
+  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Space> {
     log('Accept invitation');
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 

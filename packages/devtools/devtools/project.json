@@ -18,7 +18,7 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "packages/devtools/devtools/out/dxos/storybook/halo",
+        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
         "config": {
           "configFolder": "packages/devtools/devtools/.storybook"
         }
@@ -35,7 +35,7 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/devtools/devtools/out/halo",
+        "outputPath": "packages/devtools/devtools/out/devtools",
         "configFile": "packages/devtools/devtools/vite.config.ts"
       }
     },
@@ -53,7 +53,7 @@
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/devtools/devtools/out/halo",
+        "outputPath": "packages/devtools/devtools/out/devtools",
         "configFile": "packages/devtools/devtools/vite.config.ts"
       }
     },

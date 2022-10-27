@@ -33,9 +33,7 @@ export const Secondary = () => {
 
   return (
     <FullScreen>
-      <CreateItemButton
-        onCreate={(type?: string, title?: string) => handleCreate(type, title)}
-      />
+      <CreateItemButton onCreate={(type?: string, title?: string) => handleCreate(type, title)} />
     </FullScreen>
   );
 };

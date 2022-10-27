@@ -22,12 +22,14 @@ describe('HypercoreFactory', function () {
     const numBlocks = 100;
 
     // Create feeds.
-    const feeds = await Promise.all(Array.from({ length: numFeeds }).map(async () => {
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = factory.createFeed(publicKey, { secretKey });
-      await feed.open();
-      return feed;
-    }));
+    const feeds = await Promise.all(
+      Array.from({ length: numFeeds }).map(async () => {
+        const { publicKey, secretKey } = createKeyPair();
+        const feed = factory.createFeed(publicKey, { secretKey });
+        await feed.open();
+        return feed;
+      })
+    );
 
     // Write data.
     {
@@ -52,6 +54,6 @@ describe('HypercoreFactory', function () {
       expect(blocks.length).to.eq(feed.length);
     }
 
-    await Promise.all(feeds.map(feed => feed.close()));
+    await Promise.all(feeds.map((feed) => feed.close()));
   });
 });

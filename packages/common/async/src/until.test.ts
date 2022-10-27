@@ -14,6 +14,7 @@ describe('until', function () {
     const value = await until<number>(async (resolve) => {
       await sleep(100);
       resolve(100);
+      return 1;
     });
 
     expect(value).to.equal(100);

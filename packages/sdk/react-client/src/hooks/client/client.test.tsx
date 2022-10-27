@@ -21,22 +21,22 @@ describe('Client hook', function () {
     let error;
     const { result } = renderHook(render, {
       wrapper: class Wrapper extends Component<PropsWithChildren<unknown>> {
-        constructor (props: PropsWithChildren<unknown>) {
+        constructor(props: PropsWithChildren<unknown>) {
           super(props);
           this.state = { hasError: false };
         }
 
-        static getDerivedStateFromError () {
+        static getDerivedStateFromError() {
           // Update state so the next render will show the fallback UI.
           return { hasError: true };
         }
 
-        override componentDidCatch (err: Error) {
+        override componentDidCatch(err: Error) {
           console.log({ err });
           error = err;
         }
 
-        override render () {
+        override render() {
           return this.props.children;
         }
       }

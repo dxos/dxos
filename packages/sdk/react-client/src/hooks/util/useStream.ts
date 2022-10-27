@@ -9,11 +9,7 @@ import { Stream } from '@dxos/codec-protobuf';
 /**
  * Subscribe to service API streams.
  */
-export const useStream = <T>(
-  streamFactory: () => Stream<T>,
-  defaultValue: T,
-  deps: DependencyList = []
-): T => {
+export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, deps: DependencyList = []): T => {
   const [value, setValue] = useState<T | undefined>(defaultValue);
   useEffect(() => {
     const stream = streamFactory();

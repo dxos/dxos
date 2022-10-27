@@ -11,9 +11,9 @@ import { u } from 'unist-builder';
 import { removeTrailing, visitDirectives } from './util.js';
 
 type Type = {
-  lang: string
-  parser?: (content: string, options: { hash?: string }) => string
-}
+  lang: string;
+  parser?: (content: string, options: { hash?: string }) => string;
+};
 
 const langType: { [key: string]: Type } = {
   '.sh': {
@@ -101,9 +101,11 @@ export function remarkSnippets () {
 
               // Check if the link node already exists.
               const linkNode = parent.children[i! + 1];
-              if (linkNode?.type === 'paragraph' &&
+              if (
+                linkNode?.type === 'paragraph' &&
                 linkNode.children[0]?.type === 'html' &&
-                linkNode.children[0]?.value === '<sub>') {
+                linkNode.children[0]?.value === '<sub>'
+              ) {
                 existing++;
               }
 
@@ -136,14 +138,22 @@ export function remarkSnippets () {
                 // Get package name.
                 const [pkgName, relPath] = getNodePackage();
 
-                nodes.push(u('paragraph', {}, [
-                  u('html', { value: '<sub>' }),
-                  pkgName ? u('inlineCode', { value: pkgName }) : null,
-                  u('link', { url: path.relative(rootDir, filePath) }, [
-                    u('inlineCode', { value: `[${relPath ?? path.basename(filePath)}]` })
-                  ]),
-                  u('html', { value: '</sub>' })
-                ].filter(Boolean)));
+                nodes.push(
+                  u(
+                    'paragraph',
+                    {},
+                    [
+                      u('html', { value: '<sub>' }),
+                      pkgName ? u('inlineCode', { value: pkgName }) : null,
+                      u('link', { url: path.relative(rootDir, filePath) }, [
+                        u('inlineCode', {
+                          value: `[${relPath ?? path.basename(filePath)}]`
+                        })
+                      ]),
+                      u('html', { value: '</sub>' })
+                    ].filter(Boolean)
+                  )
+                );
               }
 
               nodes.push(u('code', { lang, value: content }));

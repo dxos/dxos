@@ -40,10 +40,11 @@ export const Dynamics = <T = ConfigProto>(): T => ({} as T);
  */
 export const Envs = <T = ConfigProto>(basePath = DEFAULT_BASE_PATH): T => {
   const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
-  return content ? mapFromKeyValues(content, process.env) as T : {} as T;
+  return content ? (mapFromKeyValues(content, process.env) as T) : ({} as T);
 };
 
 /**
  * JSON config.
  */
-export const Defaults = <T = ConfigProto>(basePath = DEFAULT_BASE_PATH): T => maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;
+export const Defaults = <T = ConfigProto>(basePath = DEFAULT_BASE_PATH): T =>
+  maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? ({} as T);

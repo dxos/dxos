@@ -52,7 +52,10 @@ describe('ItemManager', function () {
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
-      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      const child = await itemManager.constructItem({
+        ...defaultOpts(),
+        parentId: parent.id
+      });
 
       expect(child.parent).toEqual(parent);
       expect(parent.children).toEqual([child]);
@@ -63,7 +66,10 @@ describe('ItemManager', function () {
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
-      const child = await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      const child = await itemManager.constructItem({
+        ...defaultOpts(),
+        parentId: parent.id
+      });
 
       itemManager.deconstructItem(child.id);
 
@@ -76,8 +82,14 @@ describe('ItemManager', function () {
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
       const parent = await itemManager.constructItem(defaultOpts());
-      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
-      await itemManager.constructItem({ ...defaultOpts(), parentId: parent.id });
+      await itemManager.constructItem({
+        ...defaultOpts(),
+        parentId: parent.id
+      });
+      await itemManager.constructItem({
+        ...defaultOpts(),
+        parentId: parent.id
+      });
 
       expect(itemManager.entities.size).toEqual(3);
       expect(parent.children.length).toEqual(2);

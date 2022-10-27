@@ -39,13 +39,13 @@ export const parseAndGenerateSchema = async (
 };
 
 export interface GenerateSchemaOptions {
-  schema: pb.Root
+  schema: pb.Root;
   substitutions?: {
-    map: SubstitutionsMap
-    module: ModuleSpecifier
-  }
-  baseDir: string | undefined
-  outDir: string
+    map: SubstitutionsMap;
+    module: ModuleSpecifier;
+  };
+  baseDir: string | undefined;
+  outDir: string;
 }
 
 /**
@@ -76,8 +76,12 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
     writeFileSync(outFile, source);
   }
 
-  const generatedSourceFile =
-    createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()));
+  const generatedSourceFile = createIndexSourceFile(
+    options.substitutions?.module,
+    options.schema,
+    options.outDir,
+    Array.from(namespaces.keys())
+  );
   const source = printer.printFile(generatedSourceFile);
 
   writeFileSync(join(options.outDir, 'index.ts'), source);

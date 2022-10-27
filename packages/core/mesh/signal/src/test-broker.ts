@@ -15,26 +15,31 @@ import { randomInt } from '@dxos/util';
 const log = debug('dxos:signal:test-broker');
 
 interface TestBrokerOptions {
-  port?: number
-  timeout?: number
+  port?: number;
+  timeout?: number;
 }
 
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
+
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
   private readonly _port: number;
   private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor ({ port = 8080, timeout = 5_000 }: TestBrokerOptions = {}) {
+  constructor({ port = 8080, timeout = 5_000 }: TestBrokerOptions = {}) {
     this._port = port;
     this._timeout = timeout;
     this._serverProcess = this.startProcess();
   }
 
-  public startProcess (): ChildProcessWithoutNullStreams {
-    const arch = ['x64', 'amd64', 'ppc64'].includes(process.arch) ? 'amd64' : ['arm64'].includes(process.arch) ? 'arm64' : '32';
+  public startProcess(): ChildProcessWithoutNullStreams {
+    const arch = ['x64', 'amd64', 'ppc64'].includes(process.arch)
+      ? 'amd64'
+      : ['arm64'].includes(process.arch)
+      ? 'arm64'
+      : '32';
     if (arch === '32') {
       throw new Error('32 bit architecture not supported');
     }
@@ -45,11 +50,9 @@ export class TestBroker {
     }
 
     log(`Starting signal-test-${os}-${arch} in ${this._binPath}`);
-    const server = spawn(
-      `./signal-test-${os}-${arch}`,
-      ['-port', this._port.toString(), 'server'],
-      { cwd: this._binPath }
-    );
+    const server = spawn(`./signal-test-${os}-${arch}`, ['-port', this._port.toString(), 'server'], {
+      cwd: this._binPath
+    });
 
     server.stdout.on('data', (data) => {
       log(`TestServer stdout: ${data}`);
@@ -70,7 +73,7 @@ export class TestBroker {
     return server;
   }
 
-  public async waitUntilStarted (): Promise<void> {
+  public async waitUntilStarted(): Promise<void> {
     let waited = 0;
     const waitInc = 20;
     while (waited < this._timeout) {
@@ -94,11 +97,11 @@ export class TestBroker {
     }
   }
 
-  public stop (): void {
+  public stop(): void {
     this._serverProcess.kill('SIGINT');
   }
 
-  public url (): string {
+  public url(): string {
     return `ws://localhost:${this._port}/.well-known/dx/signal`;
   }
 }

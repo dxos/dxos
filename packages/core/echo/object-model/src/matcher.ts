@@ -10,8 +10,8 @@ import { TextIndex } from './text-index';
 export type Getter = (item: any, path: string) => any;
 
 interface MatcherOptions {
-  getter: Getter
-  textIndex?: TextIndex
+  getter: Getter;
+  textIndex?: TextIndex;
 }
 
 /**
@@ -19,11 +19,12 @@ interface MatcherOptions {
  * NOTE: The approach here is to match items against the DNF predicate tree.
  */
 export class Matcher {
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _options: MatcherOptions
   ) {}
 
-  getFilter (query: Query) {
+  getFilter(query: Query) {
     return (item: any) => this._matchItem(item, query.root!);
   }
 
@@ -31,14 +32,14 @@ export class Matcher {
    * Returns list of matched items.
    */
   // TODO(burdon): Async API?
-  matchItems (query: Query, items: any[]) {
-    return items.filter(item => this._matchItem(item, query.root!));
+  matchItems(query: Query, items: any[]) {
+    return items.filter((item) => this._matchItem(item, query.root!));
   }
 
   /**
    * Recursively match predicate tree against current item.
    */
-  _matchItem (item: any, predicate: Predicate): boolean {
+  _matchItem(item: any, predicate: Predicate): boolean {
     const { getter } = this._options;
 
     switch (predicate.op) {
@@ -54,7 +55,8 @@ export class Matcher {
         return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) === -1;
       }
 
-      case Predicate.Operation.NOT: { // NAND.
+      case Predicate.Operation.NOT: {
+        // NAND.
         return predicate.predicates!.findIndex((predicate: Predicate) => !this._matchItem(item, predicate)) !== -1;
       }
 
@@ -91,14 +93,14 @@ export class Matcher {
         // Match text against cached text index.
         if (this._options.textIndex) {
           const matches = this._options.textIndex.search(text);
-          return matches.findIndex(match => match.id === item.id) !== -1;
+          return matches.findIndex((match) => match.id === item.id) !== -1;
         }
 
         // Match text against each word.
         const value = getter(item, predicate.key!);
         if (typeof value === 'string') {
           const words = value.toLowerCase().split(/\s+/);
-          return words.findIndex(word => word.indexOf(text) === 0) !== -1;
+          return words.findIndex((word) => word.indexOf(text) === 0) !== -1;
         }
         break;
       }

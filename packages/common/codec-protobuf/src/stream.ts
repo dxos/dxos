@@ -12,24 +12,21 @@ type Producer<T> = (callbacks: {
    * Advises that the producer is ready to stream the data.
    * Called automatically with the first call to `next`.
    */
-  ready: () => void
+  ready: () => void;
 
   /**
    * Sends a message into the stream.
    */
-  next: (message: T) => void
+  next: (message: T) => void;
 
   /**
    * Closes the stream.
    * Optional error can be provided.
    */
-  close: (error?: Error) => void
-}) => (() => void) | void
+  close: (error?: Error) => void;
+}) => (() => void) | void;
 
-export type StreamItem<T> =
-  | { ready: true }
-  | { data: T }
-  | { closed: true, error?: Error }
+export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
 
 /**
  * Represents a typed stream of data.
@@ -42,18 +39,18 @@ export class Stream<T> {
   /**
    * Consumes the entire stream to the end until it closes and returns a promise with the resulting items.
    */
-  static consume <T> (stream: Stream<T>): Promise<StreamItem<T>[]> {
-    return new Promise(resolve => {
+  static consume<T>(stream: Stream<T>): Promise<StreamItem<T>[]> {
+    return new Promise((resolve) => {
       const items: StreamItem<T>[] = [];
 
       stream.onReady(() => {
         items.push({ ready: true });
       });
       stream.subscribe(
-        data => {
+        (data) => {
           items.push({ data });
         },
-        error => {
+        (error) => {
           if (error) {
             items.push({ closed: true, error });
           } else {
@@ -68,10 +65,10 @@ export class Stream<T> {
   /**
    * Maps all data coming through the stream.
    */
-  static map<T, U> (source: Stream<T>, map: (data: T) => U): Stream<U> {
+  static map<T, U>(source: Stream<T>, map: (data: T) => U): Stream<U> {
     return new Stream(({ ready, next, close }) => {
       source.onReady(ready);
-      source.subscribe(data => next(map(data)), close);
+      source.subscribe((data) => next(map(data)), close);
 
       return () => source.close();
     });
@@ -93,8 +90,8 @@ export class Stream<T> {
    */
   private _buffer: T[] | null = [];
 
-  constructor (producer: Producer<T>) {
-    this._readyPromise = new Promise(resolve => {
+  constructor(producer: Producer<T>) {
+    this._readyPromise = new Promise((resolve) => {
       this._resolveReadyPromise = resolve;
     });
 
@@ -103,7 +100,7 @@ export class Stream<T> {
         this._markAsReady();
       },
 
-      next: msg => {
+      next: (msg) => {
         if (this._isClosed) {
           log('Stream is closed, dropping message.');
           return;
@@ -124,7 +121,7 @@ export class Stream<T> {
         }
       },
 
-      close: err => {
+      close: (err) => {
         if (this._isClosed) {
           return;
         }
@@ -146,7 +143,7 @@ export class Stream<T> {
     }
   }
 
-  private _markAsReady () {
+  private _markAsReady() {
     if (!this._isReady) {
       this._isReady = true;
       this._readyHandler?.();
@@ -154,7 +151,7 @@ export class Stream<T> {
     }
   }
 
-  subscribe (onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
+  subscribe(onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -183,14 +180,14 @@ export class Stream<T> {
   /**
    * Resolves when stream is ready.
    */
-  waitUntilReady (): Promise<void> {
+  waitUntilReady(): Promise<void> {
     return this._readyPromise;
   }
 
   /**
    * Registers a callback to be called when stream is ready.
    */
-  onReady (onReady: () => void): void {
+  onReady(onReady: () => void): void {
     assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
     this._readyHandler = onReady;
 
@@ -202,7 +199,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
-  close () {
+  close() {
     if (this._isClosed) {
       return;
     }

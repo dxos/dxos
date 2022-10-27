@@ -5,10 +5,7 @@
 import { css } from '@emotion/css';
 import React from 'react';
 
-import {
-  Add as AddIcon,
-  Share as ShareIcon
-} from '@mui/icons-material';
+import { Add as AddIcon, Share as ShareIcon } from '@mui/icons-material';
 
 import { useTestItems } from '../hooks';
 import { Actions } from './Actions';
@@ -27,7 +24,7 @@ const styles = css`
   right: 0;
   top: 0;
   bottom: 0;
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
   > div {
     display: flex;
     flex-direction: column;
@@ -37,7 +34,7 @@ const styles = css`
     .header {
       margin-top: 8px;
     }
-    
+
     .items {
       overflow-y: scroll;
     }
@@ -62,17 +59,12 @@ export const App = () => {
           <Searchbar />
         </div>
         <div className='items'>
-          {items.map(item => (
-            <ItemCard
-              key={item.id}
-              item={item}
-            />
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} />
           ))}
         </div>
         <div>
-          <Actions
-            actions={actions}
-          />
+          <Actions actions={actions} />
         </div>
       </div>
     </div>

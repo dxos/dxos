@@ -11,10 +11,8 @@ import { TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const CreateParty: FC<{
-  onCreate: (partyKey: PublicKey) => void
-}> = ({
-  onCreate
-}) => {
+  onCreate: (partyKey: PublicKey) => void;
+}> = ({ onCreate }) => {
   const client = useClient();
   const [name, setName] = useState<string>();
   const [focused, setFocused] = useState(false);

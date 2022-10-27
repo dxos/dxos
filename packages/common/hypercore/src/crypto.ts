@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 /**
  * Create encoding (e.g., from protobuf codec).
  */
-export const createCodecEncoding = <T> (codec: Codec<T>): AbstractValueEncoding<T> => ({
+export const createCodecEncoding = <T>(codec: Codec<T>): AbstractValueEncoding<T> => ({
   encode: (obj: T) => Buffer.from(codec.encode(obj)),
   decode: (buffer: Buffer) => codec.decode(buffer)
 });

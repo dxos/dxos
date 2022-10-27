@@ -25,41 +25,30 @@ void (async () => {
     outdir: distDir,
     write: true,
     bundle: true,
-    plugins: [
-      NodeModulesPlugin()
-    ],
-    watch: process.argv.includes('--watch') ? {
-      onRebuild: ((error) => {
-        if (error) {
-          console.error(chalk.red('\nBuild failed.'));
-        } else {
-          console.log(chalk.green('\nRebuild finished.'));
+    plugins: [NodeModulesPlugin()],
+    watch: process.argv.includes('--watch')
+      ? {
+          onRebuild: (error) => {
+            if (error) {
+              console.error(chalk.red('\nBuild failed.'));
+            } else {
+              console.log(chalk.green('\nRebuild finished.'));
+            }
+          }
         }
-      })
-    } : false
+      : false
   };
 
   try {
     await build({
       ...config,
-      entryPoints: [
-        'background.ts',
-        'content.ts'
-      ].map(entryPoint => join(srcDir, entryPoint))
+      entryPoints: ['background.ts', 'content.ts'].map((entryPoint) => join(srcDir, entryPoint))
     });
 
     await build({
       ...config,
-      entryPoints: [
-        'devtools.ts',
-        'panel.ts',
-        'sandbox.ts'
-      ].map(entryPoint => join(srcDir, entryPoint)),
-      plugins: [
-        ...config.plugins,
-        NodeGlobalsPolyfillPlugin(),
-        FixMemdownPlugin()
-      ]
+      entryPoints: ['devtools.ts', 'panel.ts', 'sandbox.ts'].map((entryPoint) => join(srcDir, entryPoint)),
+      plugins: [...config.plugins, NodeGlobalsPolyfillPlugin(), FixMemdownPlugin()]
     });
   } catch (err) {
     console.error(err);

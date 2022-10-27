@@ -10,11 +10,11 @@ export default class Shell extends BaseCommand {
   static override description = 'Interactive shell.';
 
   // BaseCommand handler is also called.
-  override async catch () {
+  override async catch() {
     void this.run();
   }
 
-  async run (): Promise<void> {
+  async run(): Promise<void> {
     while (true) {
       // https://github.com/oclif/cli-ux
       const command = await CliUx.ux.prompt('');

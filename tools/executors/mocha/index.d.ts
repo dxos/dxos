@@ -4,7 +4,7 @@
 
 declare global {
   const mochaExecutor: {
-    environment: import('@dxos/mocha').TestEnvironment
+    environment: import('@dxos/mocha').TestEnvironment;
   };
 }
 

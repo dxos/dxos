@@ -17,10 +17,10 @@ export const ExportDialog = ({
   filename,
   encrypter
 }: {
-  open: boolean
-  onClose: () => void
-  filename: string
-  encrypter: (passphrase: string) => Promise<string>
+  open: boolean;
+  onClose: () => void;
+  filename: string;
+  encrypter: (passphrase: string) => Promise<string>;
 }) => {
   const [error, setError] = useState<string>();
   const minLength = 8;
@@ -52,7 +52,7 @@ export const ExportDialog = ({
       open={open}
       onClose={onClose}
       title='Export Keys'
-      content={(
+      content={
         <TextField
           sx={{ marginTop: 1 }}
           autoFocus
@@ -62,13 +62,15 @@ export const ExportDialog = ({
           label='Passphrase'
           onChange={handleChange}
         />
-      )}
-      actions={(
+      }
+      actions={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant='contained' color='primary' onClick={handleExport}>Export</Button>
+          <Button variant='contained' color='primary' onClick={handleExport}>
+            Export
+          </Button>
         </>
-      )}
+      }
     />
   );
 };

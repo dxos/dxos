@@ -34,7 +34,7 @@ export const Keychain = () => {
           {
             key: 'type',
             width: 12,
-            value: type => KeyType[type]
+            value: (type) => KeyType[type]
           },
           {
             key: 'own',
@@ -48,13 +48,13 @@ export const Keychain = () => {
             key: 'created',
             width: 18,
             color: 'gray',
-            value: date => formatDate(date)
+            value: (date) => formatDate(date)
           },
           {
             key: 'public_key',
             width: 20,
             color: 'green',
-            value: key => truncateKey(key, 4)
+            value: (key) => truncateKey(key, 4)
           }
         ]}
         rows={keys}

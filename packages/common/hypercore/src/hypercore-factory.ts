@@ -10,10 +10,10 @@ import { createStorage, Directory, StorageType } from '@dxos/random-access-stora
 
 /**
  * Creates feeds with default properties.
- *
  */
-export class HypercoreFactory {
-  constructor (
+export class HypercoreFactory<T> {
+  // prettier-ignore
+  constructor(
     private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
     private readonly _options?: HypercoreOptions
   ) {
@@ -26,7 +26,7 @@ export class HypercoreFactory {
    * NOTE: We have to use our `random-access-storage` implementation since the native ones
    * do not behave uniformly across platforms.
    */
-  createFeed (publicKey: Buffer, options?: HypercoreOptions): Hypercore {
+  createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
     const directory = this._root.createDirectory(publicKey.toString());
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
     return hypercore(storage, publicKey, Object.assign({}, this._options, options));

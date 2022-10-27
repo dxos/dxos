@@ -8,7 +8,7 @@ import { IDbStorage } from './idb-storage';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    return ((globalThis as any).IDBMutableFile) ? new FirefoxStorage(root) : new IDbStorage(root);
+    return (globalThis as any).IDBMutableFile ? new FirefoxStorage(root) : new IDbStorage(root);
   }
 
   switch (type) {

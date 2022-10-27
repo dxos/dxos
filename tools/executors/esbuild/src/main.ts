@@ -20,8 +20,10 @@ export interface EsbuildExecutorOptions {
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing "esbuild"...');
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  console.info('Executing esbuild...');
+  if (context.isVerbose) {
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
 
   const result = await build({
     entryPoints: options.entryPoints,

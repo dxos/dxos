@@ -17,50 +17,31 @@ import { graphStyles } from '../Theme';
 import { ViewType } from './ViewSelector';
 
 interface ViewContainerProps {
-  value: string
-  model?: EchoGraphModel
-  items?: Item<ObjectModel>[]
-  itemAdapter: ItemAdapter
-  selected?: Set<ItemID>
-  onCreateItem?: (type: string, title: string, parent?: ItemID) => void
+  value: string;
+  model?: EchoGraphModel;
+  items?: Item<ObjectModel>[];
+  itemAdapter: ItemAdapter;
+  selected?: Set<ItemID>;
+  onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
-export const ViewContainer = ({
-  value,
-  model,
-  items,
-  itemAdapter,
-  selected,
-  onCreateItem
-}: ViewContainerProps) => (
+export const ViewContainer = ({ value, model, items, itemAdapter, selected, onCreateItem }: ViewContainerProps) => (
   <>
     {value === ViewType.List && (
       <BoxContainer expand column>
-        <EchoList
-          itemAdapter={itemAdapter}
-          items={items}
-        />
+        <EchoList itemAdapter={itemAdapter} items={items} />
       </BoxContainer>
     )}
 
     {value === ViewType.Board && (
       <BoxContainer expand>
-        <EchoBoard
-          itemAdapter={itemAdapter}
-          items={items}
-          onCreateItem={onCreateItem}
-        />
+        <EchoBoard itemAdapter={itemAdapter} items={items} onCreateItem={onCreateItem} />
       </BoxContainer>
     )}
 
     {value === ViewType.Graph && (
       <BoxContainer expand>
-        <EchoGraph
-          model={model}
-          selected={selected}
-          itemAdapter={itemAdapter}
-          styles={graphStyles}
-        />
+        <EchoGraph model={model} selected={selected} itemAdapter={itemAdapter} styles={graphStyles} />
       </BoxContainer>
     )}
   </>

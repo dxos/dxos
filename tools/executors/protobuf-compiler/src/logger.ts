@@ -8,7 +8,7 @@ import { ModuleSpecifier } from './module-specifier';
 import { SubstitutionsMap } from './parser';
 
 export class Logger {
-  logCompilationOptions (
+  logCompilationOptions(
     substitutionsModule: ModuleSpecifier | undefined,
     protoFilePaths: string[],
     baseDirPath: string | undefined,
@@ -25,7 +25,7 @@ export class Logger {
     console.log();
   }
 
-  logParsedSubstitutions (substitutions: SubstitutionsMap) {
+  logParsedSubstitutions(substitutions: SubstitutionsMap) {
     if (Object.keys(substitutions).length > 0) {
       console.log(chalk`Loaded {bold ${Object.keys(substitutions).length}} substitutions:`);
       console.log();

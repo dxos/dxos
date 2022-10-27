@@ -12,28 +12,28 @@ import { StorageType } from './storage';
  * https://github.com/random-access-storage/random-access-storage
  */
 export interface File extends RandomAccessStorageProperties {
-  readonly destroyed: boolean
+  readonly destroyed: boolean;
 
   // TODO(burdon): Can we remove these since they are not standard across implementations?
-  readonly directory: string
-  readonly filename: string
+  readonly directory: string;
+  readonly filename: string;
 
   // Added by factory.
-  readonly type: StorageType
-  readonly native: RandomAccessStorage
+  readonly type: StorageType;
+  readonly native: RandomAccessStorage;
 
-  write (offset: number, data: Buffer): Promise<void>
-  read (offset: number, size: number): Promise<Buffer>
-  del (offset: number, size: number): Promise<void>
-  stat (): Promise<FileStat>
-  close (): Promise<Error>
-  destroy (): Promise<Error>
+  write(offset: number, data: Buffer): Promise<void>;
+  read(offset: number, size: number): Promise<Buffer>;
+  del(offset: number, size: number): Promise<void>;
+  stat(): Promise<FileStat>;
+  close(): Promise<Error>;
+  destroy(): Promise<Error>;
 
   // Not supported in node, memory.
-  truncate? (offset: number): Promise<void>
+  truncate?(offset: number): Promise<void>;
 
   // random-access-memory only.
-  clone?(): RandomAccessStorage
+  clone?(): RandomAccessStorage;
 }
 
 const pifyFields = (object: any, type: StorageType, fields: string[]) => {
@@ -54,15 +54,7 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
  * NOTE: This is safe since these are interface methods only (not used internally).
  */
 export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
-  const file = pifyFields(native, type, [
-    'write',
-    'read',
-    'del',
-    'stat',
-    'close',
-    'destroy',
-    'truncate'
-  ]);
+  const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
 
   return Object.assign(file, { type, native });
 };

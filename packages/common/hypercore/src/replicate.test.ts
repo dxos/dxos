@@ -10,7 +10,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createReadable } from './streams';
+import { createReadable } from './iterator';
 import { batch, createDataItem, TestDataItem } from './testing';
 
 const noop = () => {};
@@ -131,7 +131,10 @@ describe('Replication', function () {
 
       // Write batch of messages with delay.
       batch((next, i, remaining) => {
-        const size = faker.datatype.number({ min: 1, max: Math.min(10, remaining) });
+        const size = faker.datatype.number({
+          min: 1,
+          max: Math.min(10, remaining)
+        });
         for (let j = 0; j < size; j++) {
           core1.append(JSON.stringify(createDataItem(i + j)), noop);
         }

@@ -17,7 +17,7 @@ export class TestClient {
   private _value: number;
   private _update = new Event();
 
-  constructor ({ persistant, value }: { persistant?: boolean, value?: number} = {}) {
+  constructor({ persistant, value }: { persistant?: boolean; value?: number } = {}) {
     this._persistent = Boolean(persistant);
 
     if (value) {
@@ -34,42 +34,43 @@ export class TestClient {
     }
   }
 
-  persist (value: number) {
+  persist(value: number) {
     this._persistent && localStorage.setItem('testclient', String(value));
   }
 
-  get value () {
+  get value() {
     return this._value;
   }
 
-  set value (value: number) {
+  set value(value: number) {
     this.persist(value);
     this._value = value;
   }
 
-  get handlers () {
+  get handlers() {
     const TestStreamService: TestStreamService = {
-      testCall: req => new Stream(({ next, close }) => {
-        if (req.data !== 'requestData') {
-          log('Invalid request, closing...');
-          close();
-          return;
-        }
-
-        log('Opening stream...');
-        next({ data: String(this.value) });
-
-        setInterval(() => {
-          this._value++;
-          this._update.emit();
-          next({ data: String(this.value) });
-          log(`Value incremented to ${this._value}`);
-
-          if (this._value > 1000000) {
+      testCall: (req) =>
+        new Stream(({ next, close }) => {
+          if (req.data !== 'requestData') {
+            log('Invalid request, closing...');
             close();
+            return;
           }
-        }, 10);
-      })
+
+          log('Opening stream...');
+          next({ data: String(this.value) });
+
+          setInterval(() => {
+            this._value++;
+            this._update.emit();
+            next({ data: String(this.value) });
+            log(`Value incremented to ${this._value}`);
+
+            if (this._value > 1000000) {
+              close();
+            }
+          }, 10);
+        })
     };
 
     return {
@@ -77,7 +78,7 @@ export class TestClient {
     };
   }
 
-  subscribe (callback: (value: number) => void) {
+  subscribe(callback: (value: number) => void) {
     this._update.on(() => {
       callback(this._value);
     });

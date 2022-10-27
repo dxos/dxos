@@ -12,22 +12,25 @@ import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
 class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();
 
-  getState (): Map<any, any> {
+  getState(): Map<any, any> {
     return this._state;
   }
 
-  process (mutation: TestItemMutation, meta: MutationProcessMeta): void {
+  process(mutation: TestItemMutation, meta: MutationProcessMeta): void {
     const { key, value } = mutation;
     this._state.set(key, value);
   }
 
-  snapshot (): TestItemSnapshot {
+  snapshot(): TestItemSnapshot {
     return {
-      keys: Array.from(this._state.entries()).map(([key, value]) => ({ key, value }))
+      keys: Array.from(this._state.entries()).map(([key, value]) => ({
+        key,
+        value
+      }))
     };
   }
 
-  reset (snapshot: TestItemSnapshot): void {
+  reset(snapshot: TestItemSnapshot): void {
     this._state.clear();
     (snapshot.keys ?? []).forEach(({ key, value }) => this._state.set(key, value));
   }
@@ -41,23 +44,25 @@ export class TestModel extends Model<Map<any, any>, TestItemMutation> {
     snapshotCodec: schema.getCodecForType('example.testing.data.TestItemSnapshot')
   };
 
-  get keys () {
+  get keys() {
     return Array.from(this._getState().keys());
   }
 
-  get properties () {
+  get properties() {
     return Object.fromEntries(this._getState());
   }
 
-  get (key: string) {
+  get(key: string) {
     return this._getState().get(key);
   }
 
-  async set (key: string, value: string) {
-    const receipt = await this.write(checkType<TestItemMutation>({
-      key,
-      value
-    }));
+  async set(key: string, value: string) {
+    const receipt = await this.write(
+      checkType<TestItemMutation>({
+        key,
+        value
+      })
+    );
 
     await receipt.waitToBeProcessed();
   }

@@ -21,10 +21,7 @@ export class BotRPCPeer {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor (
-    private readonly _url: string,
-    private readonly _handlers: BotService
-  ) {
+  constructor(private readonly _url: string, private readonly _handlers: BotService) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
       try {
@@ -65,10 +62,10 @@ export class BotRPCPeer {
       noHandshake: true,
       timeout: 1_000_000,
       port: {
-        send: msg => {
+        send: (msg) => {
           this._socket.send(msg);
         },
-        subscribe: cb => {
+        subscribe: (cb) => {
           this._socket.onmessage = async (msg: WebSocket.MessageEvent) => {
             if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
               cb(Buffer.from(await msg.data.arrayBuffer()));
@@ -81,7 +78,7 @@ export class BotRPCPeer {
     });
   }
 
-  get rpc (): BotHost {
+  get rpc(): BotHost {
     return this._rpc.rpc.BotHost;
   }
 }

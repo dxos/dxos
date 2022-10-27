@@ -25,19 +25,20 @@ const log = debug('dxos:echo-db:data-mirror');
  * This class is analogous to ItemDemuxer but for databases running in remote mode.
  */
 export class DataMirror {
-  constructor (
+  constructor(
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
     private readonly _partyKey: PublicKey
   ) {}
 
-  open () {
-    const entities = this._dataService.subscribeEntitySet({ partyKey: this._partyKey });
+  open() {
+    const entities = this._dataService.subscribeEntitySet({
+      partyKey: this._partyKey
+    });
     entities.subscribe(
-      async diff => {
+      async (diff) => {
         for (const addedEntity of diff.added ?? []) {
           log(`Construct: ${JSON.stringify(addedEntity)}`);
-
           assert(addedEntity.itemId);
           assert(addedEntity.genesis);
           assert(addedEntity.genesis.modelType);
@@ -68,16 +69,19 @@ export class DataMirror {
           this._subscribeToUpdates(entity);
         }
       },
-      err => {
+      (err) => {
         log(`Connection closed: ${err}`);
       }
     );
   }
 
-  private _subscribeToUpdates (entity: Entity<Model<any>>) {
-    const stream = this._dataService.subscribeEntityStream({ partyKey: this._partyKey, itemId: entity.id });
+  private _subscribeToUpdates(entity: Entity<Model<any>>) {
+    const stream = this._dataService.subscribeEntityStream({
+      partyKey: this._partyKey,
+      itemId: entity.id
+    });
     stream.subscribe(
-      async update => {
+      async (update) => {
         log(`Update[${entity.id}]: ${JSON.stringify(update)}`);
         if (update.snapshot) {
           assert(update.snapshot.model);
@@ -85,16 +89,19 @@ export class DataMirror {
         } else if (update.mutation) {
           if (update.mutation.data?.mutation) {
             assert(update.mutation.meta);
-            await entity._stateManager.processMessage({
-              feedKey: update.mutation.meta.feedKey ?? failUndefined(),
-              memberKey: update.mutation.meta.memberKey ?? failUndefined(),
-              seq: update.mutation.meta.seq ?? failUndefined(),
-              timeframe: update.mutation.meta.timeframe ?? failUndefined()
-            }, update.mutation.data.mutation ?? failUndefined());
+            await entity._stateManager.processMessage(
+              {
+                feedKey: update.mutation.meta.feedKey ?? failUndefined(),
+                memberKey: update.mutation.meta.memberKey ?? failUndefined(),
+                seq: update.mutation.meta.seq ?? failUndefined(),
+                timeframe: update.mutation.meta.timeframe ?? failUndefined()
+              },
+              update.mutation.data.mutation ?? failUndefined()
+            );
           }
         }
       },
-      err => {
+      (err) => {
         log(`Connection closed: ${err}`);
       }
     );

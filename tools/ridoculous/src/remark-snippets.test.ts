@@ -14,17 +14,15 @@ import { remarkSnippets } from './remark-snippets.js';
 import { removeTrailing } from './util.js';
 
 test('remarkSnippets with remark', async () => {
-  const tree = u('root', [
-    u('html', { value: '<!-- @code(../src/test.proto) -->' })
-  ]);
+  const tree = u('root', [u('html', { value: '<!-- @code(../src/test.proto) -->' })]);
 
   // Process content.
   const original = toMarkdown(tree as any);
-  const processor = remark()
-    .use(remarkSnippets);
+  const processor = remark().use(remarkSnippets);
 
-  processor
-    .data({ config: { baseDir: path.join(process.cwd(), './testing/docs') } });
+  processor.data({
+    config: { baseDir: path.join(process.cwd(), './testing/docs') }
+  });
 
   const { value } = await processor.process(original);
 

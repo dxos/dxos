@@ -16,14 +16,23 @@ import { createServicesDictionary } from './service';
 
 const f = ts.factory;
 
-const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context: string) => substitutionsModule && ts.factory.createImportDeclaration(
-  [],
-  [],
-  ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
-  ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
-);
+const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context: string) =>
+  substitutionsModule &&
+  ts.factory.createImportDeclaration(
+    [],
+    [],
+    ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
+    ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
+  );
 
-export const createNamespaceSourceFile = (types: pb.ReflectionObject[], substitutions: SubstitutionsMap, outDir: string, namespace: string, substitutionsModule: ModuleSpecifier | undefined, otherNamespaces: string[]) => {
+export const createNamespaceSourceFile = (
+  types: pb.ReflectionObject[],
+  substitutions: SubstitutionsMap,
+  outDir: string,
+  namespace: string,
+  substitutionsModule: ModuleSpecifier | undefined,
+  otherNamespaces: string[]
+) => {
   const outFile = join(outDir, getFileNameForNamespace(namespace));
   const ctx: GeneratorContext = {
     outputFilename: outFile,
@@ -34,7 +43,11 @@ export const createNamespaceSourceFile = (types: pb.ReflectionObject[], substitu
 
   const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, dirname(outFile));
 
-  const otherNamespaceImports = createNamespaceImports(otherNamespaces.filter(ns => ns !== namespace), outDir, dirname(outFile));
+  const otherNamespaceImports = createNamespaceImports(
+    otherNamespaces.filter((ns) => ns !== namespace),
+    outDir,
+    dirname(outFile)
+  );
 
   return ts.factory.createSourceFile(
     [
@@ -48,11 +61,17 @@ export const createNamespaceSourceFile = (types: pb.ReflectionObject[], substitu
   );
 };
 
-export const createIndexSourceFile = (substitutionsModule: ModuleSpecifier | undefined, root: pb.Root, outDirPath: string, namespaces: string[]) => {
-  const {
-    imports: schemaImports,
-    exports: schemaExports
-  } = createSerializerDefinition(substitutionsModule, root, outDirPath);
+export const createIndexSourceFile = (
+  substitutionsModule: ModuleSpecifier | undefined,
+  root: pb.Root,
+  outDirPath: string,
+  namespaces: string[]
+) => {
+  const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(
+    substitutionsModule,
+    root,
+    outDirPath
+  );
 
   const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);
   const otherNamespaceImports = createNamespaceImports(namespaces, outDirPath, outDirPath);
@@ -71,25 +90,37 @@ export const createIndexSourceFile = (substitutionsModule: ModuleSpecifier | und
   );
 };
 
-const createNamespaceImports = (namespaces: string[], outDirPath: string, context: string) => namespaces
-  .sort((b, a) => b.localeCompare(a))
-  .map(ns => f.createImportDeclaration(
-    [],
-    [],
-    f.createImportClause(false, undefined, f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))),
-    f.createStringLiteral(ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context))
-  ));
+const createNamespaceImports = (namespaces: string[], outDirPath: string, context: string) =>
+  namespaces
+    .sort((b, a) => b.localeCompare(a))
+    .map((ns) =>
+      f.createImportDeclaration(
+        [],
+        [],
+        f.createImportClause(
+          false,
+          undefined,
+          f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))
+        ),
+        f.createStringLiteral(
+          ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context)
+        )
+      )
+    );
 
 export const getFileNameForNamespace = (namespace: string) => {
   const name = parseFullyQualifiedName(namespace);
   return `${name.join('/')}.ts`;
 };
 
-const createStreamImport = () => f.createImportDeclaration(
-  [],
-  [],
-  f.createImportClause(true, undefined, f.createNamedImports([
-    f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))
-  ])),
-  f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
-);
+const createStreamImport = () =>
+  f.createImportDeclaration(
+    [],
+    [],
+    f.createImportClause(
+      true,
+      undefined,
+      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))])
+    ),
+    f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
+  );

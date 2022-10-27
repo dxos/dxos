@@ -25,86 +25,86 @@ export const createHaloMenu = (client: Client): MenuItem => {
         <Module
           id='halo'
           parent={parent}
-          items={!client.halo.profile ? [
-            {
-              id: 'create-profile',
-              label: 'Create Profile',
-              component: () => {
-                const [, setPath] = useModule();
-                return (
-                  <CreateProfile
-                    onCreate={() => {
-                      setPath('root'); // TODO(burdon): Navigate to 'root.halo' and reset child component.
-                    }}
-                  />
-                );
-              }
-            },
-            {
-              id: 'recover-profile',
-              label: 'Recover Identity',
-              component: () => (
-                <RecoverProfile />
-              )
-            }
-          ] : [
-            {
-              id: 'profile',
-              label: 'Profile',
-              component: () => (
-                <Panel>
-                  <Profile />
-                </Panel>
-              )
-            },
-            {
-              id: 'keychain',
-              label: 'Keychain',
-              component: () => (
-                <Panel>
-                  <Keychain />
-                </Panel>
-              )
-            },
-            {
-              id: 'contacts',
-              label: 'Contacts',
-              component: () => (
-                <Panel>
-                  <Contacts />
-                </Panel>
-              )
-            },
-            {
-              id: 'devices',
-              label: 'Devices',
-              component: () => (
-                <Panel>
-                  <Devices />
-                </Panel>
-              )
-            },
-            {
-              id: 'share',
-              label: 'Add Device',
-              component: () => (
-                <Panel>
-                  <Share
-                    onCreate={() => {
-                      return client.halo.createInvitation();
-                    }}
-                  />
-                </Panel>
-              )
-            },
-            {
-              id: 'join',
-              label: 'Auth Device',
-              component: () => (
-                <Join />
-              )
-            }
-          ]}
+          items={
+            !client.halo.profile
+              ? [
+                  {
+                    id: 'create-profile',
+                    label: 'Create Profile',
+                    component: () => {
+                      const [, setPath] = useModule();
+                      return (
+                        <CreateProfile
+                          onCreate={() => {
+                            setPath('root'); // TODO(burdon): Navigate to 'root.halo' and reset child component.
+                          }}
+                        />
+                      );
+                    }
+                  },
+                  {
+                    id: 'recover-profile',
+                    label: 'Recover Identity',
+                    component: () => <RecoverProfile />
+                  }
+                ]
+              : [
+                  {
+                    id: 'profile',
+                    label: 'Profile',
+                    component: () => (
+                      <Panel>
+                        <Profile />
+                      </Panel>
+                    )
+                  },
+                  {
+                    id: 'keychain',
+                    label: 'Keychain',
+                    component: () => (
+                      <Panel>
+                        <Keychain />
+                      </Panel>
+                    )
+                  },
+                  {
+                    id: 'contacts',
+                    label: 'Contacts',
+                    component: () => (
+                      <Panel>
+                        <Contacts />
+                      </Panel>
+                    )
+                  },
+                  {
+                    id: 'devices',
+                    label: 'Devices',
+                    component: () => (
+                      <Panel>
+                        <Devices />
+                      </Panel>
+                    )
+                  },
+                  {
+                    id: 'share',
+                    label: 'Add Device',
+                    component: () => (
+                      <Panel>
+                        <Share
+                          onCreate={() => {
+                            return client.halo.createInvitation();
+                          }}
+                        />
+                      </Panel>
+                    )
+                  },
+                  {
+                    id: 'join',
+                    label: 'Auth Device',
+                    component: () => <Join />
+                  }
+                ]
+          }
         />
       );
     }

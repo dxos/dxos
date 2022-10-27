@@ -16,11 +16,11 @@ export const ClientPanel = ({
   profile = {},
   parties = []
 }: {
-  client: Client
-  profile?: Partial<ReturnType<typeof useProfile>>
-  parties?: Party[]
+  client: Client;
+  profile?: Partial<ReturnType<typeof useProfile>>;
+  parties?: Party[];
 }) => {
-  const data = (parties.length !== 0) ? { parties: parties.map(({ key }) => key.toHex()) } : undefined;
+  const data = parties.length !== 0 ? { parties: parties.map(({ key }) => key.toHex()) } : undefined;
 
   return (
     <Box>

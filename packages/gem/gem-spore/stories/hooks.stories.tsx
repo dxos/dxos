@@ -9,14 +9,7 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
-import {
-  FullScreen,
-  SVGContextProvider,
-  defaultGridStyles,
-  useGrid,
-  useSvgContext,
-  useZoom
-} from '@dxos/gem-core';
+import { FullScreen, SVGContextProvider, defaultGridStyles, useGrid, useSvgContext, useZoom } from '@dxos/gem-core';
 
 import {
   GraphForceProjector,
@@ -47,7 +40,7 @@ export default {
 // TODO(burdon): Delete nodes (alt-click).
 
 interface ComponentProps {
-  model: TestGraphModel
+  model: TestGraphModel;
 }
 
 const PrimaryComponent = ({ model }: ComponentProps) => {
@@ -56,23 +49,26 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   const grid = useGrid();
   const zoom = useZoom();
 
-  const { projector, renderer } = useMemo(() => ({
-    projector: new GraphForceProjector(context, {
-      forces: {
-        link: {
-          distance: 20,
-          iterations: 3
-        },
-        manyBody: {
-          strength: -10
+  const { projector, renderer } = useMemo(
+    () => ({
+      projector: new GraphForceProjector(context, {
+        forces: {
+          link: {
+            distance: 20,
+            iterations: 3
+          },
+          manyBody: {
+            strength: -10
+          }
         }
-      }
+      }),
+      renderer: new GraphRenderer(context, graphRef)
     }),
-    renderer: new GraphRenderer(context, graphRef)
-  }), []);
+    []
+  );
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on(graph => projector.update(graph));
+    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
     model.update();
@@ -180,7 +176,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    const unsubscribeModel = model.updated.on(graph => projector.update(graph));
+    const unsubscribeModel = model.updated.on((graph) => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
     void projector.start();
     model.update();

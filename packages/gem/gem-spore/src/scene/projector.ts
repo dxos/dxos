@@ -10,34 +10,31 @@ import { EventEmitter, SVGContext } from '@dxos/gem-core';
 export abstract class Projector<DATA, LAYOUT, OPTIONS> {
   public readonly updated = new EventEmitter<{ layout: LAYOUT }>();
 
-  constructor (
-    private readonly _context: SVGContext,
-    private readonly _options?: OPTIONS
-  ) {}
+  constructor(private readonly _context: SVGContext, private readonly _options?: OPTIONS) {}
 
-  get context (): SVGContext {
+  get context(): SVGContext {
     return this._context;
   }
 
-  get options (): OPTIONS {
-    return this._options || {} as OPTIONS;
+  get options(): OPTIONS {
+    return this._options || ({} as OPTIONS);
   }
 
-  update (data?: DATA) {
+  update(data?: DATA) {
     this.onUpdate(data);
   }
 
-  async start () {
+  async start() {
     await this.onStart();
   }
 
-  async stop () {
+  async stop() {
     await this.onStop();
   }
 
-  protected abstract onUpdate (data?: DATA);
+  protected abstract onUpdate(data?: DATA);
 
-  protected async onStart () {}
+  protected async onStart() {}
 
-  protected async onStop () {}
+  protected async onStop() {}
 }

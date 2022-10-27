@@ -9,7 +9,7 @@ describe('classes', function () {
   it('field instance', function () {
     @ownershipClass
     class Inner {
-      run () {
+      run() {
         log('Running');
       }
     }
@@ -18,16 +18,14 @@ describe('classes', function () {
     class Outer {
       inner = new Inner();
 
-      constructor (
-        private readonly _id: string
-      ) {}
+      constructor(private readonly _id: string) {}
 
       @debugInfo
-      get id () {
+      get id() {
         return this._id;
       }
 
-      run () {
+      run() {
         this.inner.run();
       }
     }
@@ -42,7 +40,7 @@ describe('classes', function () {
   it('return values', async function () {
     @ownershipClass
     class Instance {
-      run () {
+      run() {
         log('Running');
       }
     }
@@ -51,16 +49,14 @@ describe('classes', function () {
     class Factory {
       inner = new Instance();
 
-      constructor (
-        private readonly _id: string
-      ) {}
+      constructor(private readonly _id: string) {}
 
       @debugInfo
-      get id () {
+      get id() {
         return this._id;
       }
 
-      async create () {
+      async create() {
         return new Instance();
       }
     }
