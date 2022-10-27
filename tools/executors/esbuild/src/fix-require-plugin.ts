@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from 'esbuild';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 
 /**
  * When compiling to ESM, esbuild will rewrite all `require` calls to `__require`; which throw runtime errors.
@@ -18,15 +18,15 @@ import { readFileSync, writeFileSync } from 'fs';
 export const fixRequirePlugin = (): Plugin => ({
   name: 'fix-require',
   setup: (build) => {
-    build.onEnd((args) => {
+    build.onEnd(async (args) => {
       if (!args.metafile) {
         throw new Error('Metafile is require for fixRequirePlugin');
       }
 
       for (const file of Object.keys(args.metafile.outputs)) {
-        const content = readFileSync(file, 'utf-8');
+        const content = await readFile(file, 'utf-8');
         const fixedContent = processOutput(content);
-        writeFileSync(file, fixedContent, 'utf-8');
+        await writeFile(file, fixedContent, 'utf-8');
       }
     });
   }
