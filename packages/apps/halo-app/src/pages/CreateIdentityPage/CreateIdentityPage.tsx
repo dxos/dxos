@@ -6,9 +6,14 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import { Main, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
+import {
+  Main,
+  Heading,
+  SingleInputStep,
+  useTranslation
+} from '@dxos/react-uikit';
 
-export const CreateProfilePage = () => {
+export const CreateIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
   const [username, setUsername] = useState('');

@@ -25,7 +25,7 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InviteDevicePage = () => {
+export const DeviceInvitationPage = () => {
   const { t } = useTranslation();
   const client = useClient();
   const profile = useProfile();

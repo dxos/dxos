@@ -15,13 +15,13 @@ import {
   AppLayout,
   AppsPage,
   ContactsPage,
-  CreateProfilePage,
+  CreateIdentityPage,
+  DeviceInvitationPage,
   DevicesPage,
   IdentityPage,
-  InviteDevicePage,
   LockPage,
-  RecoverProfilePage,
-  RequireProfile,
+  RecoverIdentityPage,
+  RequireIdentity,
   SpacePage,
   SpaceInvitationPage,
   SpacesPage
@@ -34,26 +34,30 @@ const configProvider = async () =>
 const Routes = () =>
   useRoutes([
     {
-      // TODO(wittjosiah): This should be "identity".
-      // TODO(wittjosiah): These pages should redirect to lock page if identity exists.
-      path: '/profile/create',
-      element: <CreateProfilePage />
-    },
-    {
-      path: '/profile/recover',
-      element: <RecoverProfilePage />
-    },
-    {
-      path: '/profile/invite-device',
-      element: <InviteDevicePage />
-    },
-    {
       path: '/',
       element: <LockPage />
     },
     {
       path: '/',
-      element: <RequireProfile redirect='/' />,
+      element: <RequireIdentity inverse redirect='/spaces' />,
+      children: [
+        {
+          path: '/identity/create',
+          element: <CreateIdentityPage />
+        },
+        {
+          path: '/identity/recover',
+          element: <RecoverIdentityPage />
+        },
+        {
+          path: '/identity/join',
+          element: <DeviceInvitationPage />
+        }
+      ]
+    },
+    {
+      path: '/',
+      element: <RequireIdentity redirect='/' />,
       children: [
         {
           path: '/spaces/join',

@@ -13,7 +13,7 @@ import {
   useTranslation
 } from '@dxos/react-uikit';
 
-export const RecoverProfilePage = () => {
+export const RecoverIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
   const [seedphrase, setSeedphrase] = useState('');
