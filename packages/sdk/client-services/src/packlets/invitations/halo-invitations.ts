@@ -23,18 +23,18 @@ const invalidOp = (_: any): Promise<void> => {
  */
 export class HaloInvitations {
   constructor(
-    private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
-    private readonly _onInitialize: () => Promise<void>
+    private readonly _networkManager: NetworkManager,
+    private readonly _onInitialize: () => Promise<void> // TODO(burdon): ???
   ) {}
 
   /**
    * Create an invitation to an exiting identity HALO.
    */
   async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
-    log('Create invitation');
     const identity = this._identityManager.identity ?? failUndefined();
 
+    // TODO(burdon): Use data-invitation's swarm abstraction.
     const swarmKey = PublicKey.random();
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
@@ -52,7 +52,6 @@ export class HaloInvitations {
             handlers: {
               HaloInvitationsService: {
                 admitDevice: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
-                  log('Admit device', { deviceKey });
                   await identity.controlPipeline.writer.write({
                     '@type': 'dxos.echo.feed.CredentialsMessage',
                     credential: await identity.getIdentityCredentialSigner().createCredential({
@@ -73,8 +72,6 @@ export class HaloInvitations {
           });
 
           await peer.open();
-          log('Inviter RPC open');
-
           await peer.rpc.HaloInvitationsService.acceptDevice({
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,

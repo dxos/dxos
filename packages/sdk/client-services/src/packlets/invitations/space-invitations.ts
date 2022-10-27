@@ -32,12 +32,11 @@ const invalidOp = (_: any): Promise<void> => {
 /**
  * Create and manage data invitations for Data spaces.
  */
-// TODO(burdon): Rename SpaceInvitations? ("data" clashes with data pipeline, which also exists in Halo).
-export class DataInvitations {
+export class SpaceInvitations {
   constructor(
+    private readonly _spaceManager: SpaceManager,
     private readonly _networkManager: NetworkManager,
-    private readonly _signingContext: SigningContext,
-    private readonly _spaceManager: SpaceManager
+    private readonly _signingContext: SigningContext
   ) {}
 
   /**

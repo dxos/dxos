@@ -36,7 +36,7 @@ message InvitationDescriptor {
 }
 
 //
-// HALO device management.
+// HALO device invitations.
 //
 
 message AdmitDeviceRequest {
@@ -60,7 +60,7 @@ service HaloInvitationsService {
 }
 
 //
-// Space membership management.
+// Space agent invitations.
 //
 
 message AdmitAgentRequest {
