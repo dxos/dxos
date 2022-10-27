@@ -4,12 +4,7 @@
 
 import cx from 'classnames';
 
-import {
-  defaultDisabled,
-  defaultFocus,
-  defaultHover,
-  defaultActive
-} from '../../styles';
+import { defaultDisabled, defaultFocus, defaultHover, defaultActive } from '../../styles';
 import { ButtonProps } from './ButtonProps';
 
 export const primaryButtonColors = 'bg-primary-600 text-white hover:bg-primary-650';

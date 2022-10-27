@@ -9,8 +9,7 @@ import React, { ComponentProps, ReactNode, useCallback, useState } from 'react';
 
 import { defaultFocus, defaultHover } from '../../styles';
 
-export interface PopoverProps
-  extends Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'> {
+export interface PopoverProps extends Omit<ComponentProps<typeof PopoverPrimitive.Content>, 'children'> {
   openTrigger: ReactNode;
   children: ReactNode;
   closeLabel?: string;
@@ -18,9 +17,7 @@ export interface PopoverProps
   mountAsSibling?: boolean;
 }
 
-type KeyUpEvent = Parameters<
-  Exclude<ComponentProps<typeof PopoverPrimitive.Trigger>['onKeyUp'], undefined>
->[0];
+type KeyUpEvent = Parameters<Exclude<ComponentProps<typeof PopoverPrimitive.Trigger>['onKeyUp'], undefined>>[0];
 
 export const Popover = ({
   openTrigger,
@@ -73,11 +70,7 @@ export const Popover = ({
       <PopoverPrimitive.Trigger asChild onKeyUp={onKeyUp} data-keyupid='open'>
         {openTrigger}
       </PopoverPrimitive.Trigger>
-      {mountAsSibling ? (
-        popoverContent
-      ) : (
-        <PopoverPrimitive.Portal>{popoverContent}</PopoverPrimitive.Portal>
-      )}
+      {mountAsSibling ? popoverContent : <PopoverPrimitive.Portal>{popoverContent}</PopoverPrimitive.Portal>}
     </PopoverPrimitive.Root>
   );
 };

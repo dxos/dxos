@@ -19,18 +19,10 @@ export interface PartyProps {
 const defaultCreateUrl = (invitationCode: string) => {
   const invitationPath = '/spaces/join'; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(
-    origin,
-    pathname,
-    `/#${invitationPath}`,
-    `?invitation=${invitationCode}`
-  );
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
 };
 
-export const PartyInviteSingleton = ({
-  createInvitationUrl = defaultCreateUrl,
-  party
-}: PartyProps) => {
+export const PartyInviteSingleton = ({ createInvitationUrl = defaultCreateUrl, party }: PartyProps) => {
   const { t } = useTranslation();
   const invitations = usePartyInvitations(party.key);
 
@@ -42,9 +34,7 @@ export const PartyInviteSingleton = ({
 
   // TODO(wittjosiah): This should re-generate once it is used.
   const invitationUrl = useMemo(
-    () =>
-      invitations[0] &&
-      createInvitationUrl(invitations[0].descriptor.encode().toString()),
+    () => invitations[0] && createInvitationUrl(invitations[0].descriptor.encode().toString()),
     [invitations]
   );
 

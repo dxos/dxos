@@ -84,5 +84,4 @@ export const sizeHeightMap = new Map<Size, string>([
 
 export const getSizeHeight = sizeHeightMap.get.bind(sizeHeightMap);
 export const getSizeWidth = sizeWidthMap.get.bind(sizeWidthMap);
-export const getSize = (size: Size) =>
-  cx(getSizeHeight(size), getSizeWidth(size));
+export const getSize = (size: Size) => cx(getSizeHeight(size), getSizeWidth(size));

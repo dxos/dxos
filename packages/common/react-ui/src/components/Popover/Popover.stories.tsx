@@ -37,12 +37,7 @@ export const AvatarTrigger = templateForComponent(Template)({
       tabIndex={0}
       label={<span className='sr-only'>Open popover</span>}
       fallbackValue='open popover'
-      className={cx(
-        'button-elevation cursor-pointer rounded-md',
-        defaultHover({}),
-        defaultFocus,
-        defaultActive
-      )}
+      className={cx('button-elevation cursor-pointer rounded-md', defaultHover({}), defaultFocus, defaultActive)}
     />
   ),
   closeLabel: 'Close',

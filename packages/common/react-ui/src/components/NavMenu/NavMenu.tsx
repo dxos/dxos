@@ -4,12 +4,7 @@
 
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import cx from 'classnames';
-import React, {
-  ComponentProps,
-  ForwardedRef,
-  forwardRef,
-  ReactNode
-} from 'react';
+import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
 import { defaultFocus, defaultHover } from '../../styles';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
@@ -22,10 +17,7 @@ interface NavMenuItemSharedProps {
 }
 
 export interface NavMenuLinkItemProps extends NavMenuItemSharedProps {
-  triggerLinkProps: Omit<
-    ComponentProps<typeof NavigationMenuPrimitive.Link>,
-    'children'
-  >;
+  triggerLinkProps: Omit<ComponentProps<typeof NavigationMenuPrimitive.Link>, 'children'>;
   children: ReactNode;
 }
 
@@ -48,16 +40,12 @@ export type NavMenuItem =
   | NavMenuInvokerItemProps
   | NavMenuSeparatorProps;
 
-export interface NavMenuProps
-  extends ComponentProps<typeof NavigationMenuPrimitive.Root> {
+export interface NavMenuProps extends ComponentProps<typeof NavigationMenuPrimitive.Root> {
   items: NavMenuItem[];
 }
 
 const NavMenuInvokerItem = forwardRef(
-  (
-    { content, children, active }: NavMenuInvokerItemProps,
-    ref: ForwardedRef<HTMLLIElement>
-  ) => {
+  ({ content, children, active }: NavMenuInvokerItemProps, ref: ForwardedRef<HTMLLIElement>) => {
     return (
       <NavigationMenuPrimitive.Item ref={ref}>
         <NavigationMenuPrimitive.Trigger
@@ -87,10 +75,7 @@ const NavMenuInvokerItem = forwardRef(
 );
 
 const NavMenuLinkItem = forwardRef(
-  (
-    { triggerLinkProps, children, active }: NavMenuLinkItemProps,
-    ref: ForwardedRef<HTMLLIElement>
-  ) => (
+  ({ triggerLinkProps, children, active }: NavMenuLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
     <NavigationMenuPrimitive.Item asChild ref={ref}>
       <NavigationMenuPrimitive.Link
         {...triggerLinkProps}
@@ -111,15 +96,7 @@ const NavMenuLinkItem = forwardRef(
 );
 
 const NavMenuTooltipLinkItem = forwardRef(
-  (
-    {
-      tooltip,
-      triggerLinkProps,
-      active,
-      children
-    }: NavMenuTooltipLinkItemProps,
-    ref: ForwardedRef<HTMLLIElement>
-  ) => (
+  ({ tooltip, triggerLinkProps, active, children }: NavMenuTooltipLinkItemProps, ref: ForwardedRef<HTMLLIElement>) => (
     <Tooltip {...tooltip}>
       {/* todo: why does the Tooltip not show if you use <NavMenuLinkItem {…}/> here? */}
       <NavigationMenuPrimitive.Item asChild ref={ref}>
@@ -145,26 +122,16 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return (
-    <span
-      role='none'
-      className='h-5 border-l border-neutral-300 dark:border-neutral-700'
-    />
-  );
+  return <span role='none' className='h-5 border-l border-neutral-300 dark:border-neutral-700' />;
 };
 
-const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps =>
-  'tooltip' in o;
-const isLinkItem = (o: any): o is NavMenuLinkItemProps =>
-  'triggerLinkProps' in o;
+const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;
+const isLinkItem = (o: any): o is NavMenuLinkItemProps => 'triggerLinkProps' in o;
 const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 
 export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
-    <NavigationMenuPrimitive.Root
-      {...rootProps}
-      className={cx('flex justify-center', rootProps.className)}
-    >
+    <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
       <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation overflow-x-auto'>
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
@@ -192,10 +159,7 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
       </NavigationMenuPrimitive.List>
 
       <div
-        className={cx(
-          'absolute flex justify-center',
-          'w-[140%] left-[-20%] top-[100%]'
-        )}
+        className={cx('absolute flex justify-center', 'w-[140%] left-[-20%] top-[100%]')}
         style={{
           perspective: '2000px'
         }}

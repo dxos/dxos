@@ -9,21 +9,14 @@ import React, { ComponentProps, ReactNode, useState } from 'react';
 import { useId } from '../../hooks';
 import { defaultTooltip } from '../../styles';
 
-export interface TooltipProps
-  extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
+export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
   content: ReactNode;
   children: ReactNode;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
 }
 
-export const Tooltip = ({
-  content,
-  children,
-  tooltipLabelsTrigger,
-  mountAsSibling,
-  ...contentProps
-}: TooltipProps) => {
+export const Tooltip = ({ content, children, tooltipLabelsTrigger, mountAsSibling, ...contentProps }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
 
@@ -50,10 +43,7 @@ export const Tooltip = ({
 
   return (
     <TooltipPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipPrimitive.Trigger
-        asChild
-        {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}
-      >
+      <TooltipPrimitive.Trigger asChild {...(tooltipLabelsTrigger && { 'aria-labelledby': labelId })}>
         {children}
       </TooltipPrimitive.Trigger>
       {tooltipLabelsTrigger && (
@@ -61,13 +51,7 @@ export const Tooltip = ({
           {content}
         </span>
       )}
-      {mountAsSibling ? (
-        tooltipContent
-      ) : (
-        <TooltipPrimitive.Portal forceMount>
-          {tooltipContent}
-        </TooltipPrimitive.Portal>
-      )}
+      {mountAsSibling ? tooltipContent : <TooltipPrimitive.Portal forceMount>{tooltipContent}</TooltipPrimitive.Portal>}
     </TooltipPrimitive.Root>
   );
 };

@@ -5,17 +5,8 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import {
-  defaultTestingConfig,
-  InvitationDescriptor,
-  Party
-} from '@dxos/client';
-import {
-  ClientProvider,
-  useClient,
-  useProfile,
-  useSecretProvider
-} from '@dxos/react-client';
+import { defaultTestingConfig, InvitationDescriptor, Party } from '@dxos/client';
+import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
 import { Group, Loading, Main } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
@@ -35,10 +26,7 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
   const client = useClient();
   const [profile, setProfile] = useState(() => client.halo.profile);
 
-  useEffect(
-    () => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)),
-    [client]
-  );
+  useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
 
   useEffect(() => {
     if (client && !profile) {
@@ -48,11 +36,7 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
 
   return (
     <Main className='flex justify-end'>
-      {profile ? (
-        <Presence {...args} profile={profile} />
-      ) : (
-        <Loading label='Loading…' />
-      )}
+      {profile ? <Presence {...args} profile={profile} /> : <Loading label='Loading…' />}
     </Main>
   );
 };
@@ -87,8 +71,7 @@ const SharingTemplate = () => {
 const JoinPanel = () => {
   const client = useClient();
   const profile = useProfile();
-  const [secretProvider, secretResolver, _resetSecret] =
-    useSecretProvider<Uint8Array>();
+  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
   const [invitationCode, setInvitationCode] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [showPin, setShowPin] = useState(false);
@@ -115,22 +98,11 @@ const JoinPanel = () => {
 
   if (showPin) {
     return (
-      <SingleInputStep
-        inputLabel='Pin'
-        onChange={setPinCode}
-        onNext={handlePin}
-        onBack={() => setShowPin(false)}
-      />
+      <SingleInputStep inputLabel='Pin' onChange={setPinCode} onNext={handlePin} onBack={() => setShowPin(false)} />
     );
   }
 
-  return (
-    <SingleInputStep
-      inputLabel='Invitation'
-      onChange={setInvitationCode}
-      onNext={handleInvite}
-    />
-  );
+  return <SingleInputStep inputLabel='Invitation' onChange={setInvitationCode} onNext={handleInvite} />;
 };
 
 export const Sharing = templateForComponent(SharingTemplate)({});
@@ -155,11 +127,7 @@ const WithinSpaceTemplate = () => {
     }
   }, [client]);
 
-  return party ? (
-    <Template party={party} />
-  ) : (
-    <Loading label='Creating space…' />
-  );
+  return party ? <Template party={party} /> : <Loading label='Creating space…' />;
 };
 
 export const WithinSpace = templateForComponent(WithinSpaceTemplate)({});

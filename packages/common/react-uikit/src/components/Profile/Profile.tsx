@@ -21,12 +21,7 @@ export interface ProfileProps {
 const defaultCreateUrl = (invitationCode: string) => {
   const invitationPath = '/profile/invite-device'; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(
-    origin,
-    pathname,
-    `/#${invitationPath}`,
-    `?invitation=${invitationCode}`
-  );
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
 };
 
 export const UsernameInput = ({ profile }: { profile: NaturalProfile }) => {
@@ -41,9 +36,7 @@ export const UsernameInput = ({ profile }: { profile: NaturalProfile }) => {
   );
 };
 
-export const HaloInviteSingleton = ({
-  createInvitationUrl = defaultCreateUrl
-}: ProfileProps) => {
+export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: ProfileProps) => {
   const { t } = useTranslation();
   const client = useClient();
   const invitations = useHaloInvitations(client);
@@ -56,9 +49,7 @@ export const HaloInviteSingleton = ({
 
   // TODO(wittjosiah): This should re-generate once it is used.
   const invitationUrl = useMemo(
-    () =>
-      invitations[0] &&
-      createInvitationUrl(invitations[0].descriptor.encode().toString()),
+    () => invitations[0] && createInvitationUrl(invitations[0].descriptor.encode().toString()),
     [invitations]
   );
 

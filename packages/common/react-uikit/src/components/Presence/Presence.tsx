@@ -55,11 +55,7 @@ const ProfileMenu = (props: PresenceProps) => {
           variant='circle'
           {...avatarProps}
           fallbackValue={profile.publicKey.toHex()}
-          label={
-            <span className='sr-only'>
-              {profile.username ?? humanize(profile.publicKey.toHex())}
-            </span>
-          }
+          label={<span className='sr-only'>{profile.username ?? humanize(profile.publicKey.toHex())}</span>}
           className={cx(
             'bg-white p-0.5 button-elevation rounded-full cursor-pointer',
             defaultHover({}),
@@ -98,10 +94,7 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
     <Popover
       openTrigger={
         <Button
-          className={cx(
-            getSize(size ?? 7),
-            'rounded-md px-[0.25rem] py-[0.25rem] flex items-center justify-center'
-          )}
+          className={cx(getSize(size ?? 7), 'rounded-md px-[0.25rem] py-[0.25rem] flex items-center justify-center')}
         >
           <UserPlus className='w-full h-auto' />
         </Button>

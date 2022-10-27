@@ -47,10 +47,7 @@ export const Dialog = ({
         leaveFrom='opacity-100'
         leaveTo='opacity-0'
       >
-        <DialogPrimitive.Overlay
-          forceMount
-          className='fixed inset-0 z-20 bg-black/50'
-        />
+        <DialogPrimitive.Overlay forceMount className='fixed inset-0 z-20 bg-black/50' />
       </Transition.Child>
       <Transition.Child
         as={Fragment}
@@ -82,9 +79,7 @@ export const Dialog = ({
             {title}
           </DialogPrimitive.Title>
           {description && (
-            <DialogPrimitive.Description
-              className={cx('mt-2', defaultDescription)}
-            >
+            <DialogPrimitive.Description className={cx('mt-2', defaultDescription)}>
               {description}
             </DialogPrimitive.Description>
           )}
@@ -107,9 +102,7 @@ export const Dialog = ({
           {closeTriggers && (
             <div className='flex flex-wrap justify-end gap-4'>
               {closeTriggers.map((closeTrigger, key) => (
-                <DialogPrimitive.Close key={key}>
-                  {closeTrigger}
-                </DialogPrimitive.Close>
+                <DialogPrimitive.Close key={key}>{closeTrigger}</DialogPrimitive.Close>
               ))}
             </div>
           )}
@@ -120,15 +113,11 @@ export const Dialog = ({
 
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      {openTrigger && (
-        <DialogPrimitive.Trigger asChild>{openTrigger}</DialogPrimitive.Trigger>
-      )}
+      {openTrigger && <DialogPrimitive.Trigger asChild>{openTrigger}</DialogPrimitive.Trigger>}
       {mountAsSibling ? (
         dialogOverlayAndContent
       ) : (
-        <DialogPrimitive.Portal>
-          {dialogOverlayAndContent}
-        </DialogPrimitive.Portal>
+        <DialogPrimitive.Portal>{dialogOverlayAndContent}</DialogPrimitive.Portal>
       )}
     </DialogPrimitive.Root>
   );

@@ -11,10 +11,7 @@ const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 export const ClientProvider = ({ children }: PropsWithChildren<{}>) => {
   return (
-    <NaturalClientProvider
-      config={configProvider}
-      fallback={<span>Starting client…</span>}
-    >
+    <NaturalClientProvider config={configProvider} fallback={<span>Starting client…</span>}>
       {children}
     </NaturalClientProvider>
   );

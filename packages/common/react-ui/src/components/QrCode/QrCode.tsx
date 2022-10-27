@@ -20,15 +20,7 @@ export interface QrCodeProps
   size?: Size;
 }
 
-export const QrCode = ({
-  value,
-  label,
-  size,
-  side,
-  sideOffset,
-  collisionPadding,
-  ...buttonProps
-}: QrCodeProps) => {
+export const QrCode = ({ value, label, size, side, sideOffset, collisionPadding, ...buttonProps }: QrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
@@ -37,19 +29,10 @@ export const QrCode = ({
     <Tooltip content={label} {...{ side, sideOffset, collisionPadding }}>
       <Button
         {...buttonProps}
-        className={cx(
-          'py-0 px-0 overflow-hidden',
-          getSize(size ?? 32),
-          buttonProps.className
-        )}
+        className={cx('py-0 px-0 overflow-hidden', getSize(size ?? 32), buttonProps.className)}
         onClick={copyValue}
       >
-        <QRCodeSVG
-          value={value}
-          includeMargin
-          role='none'
-          className='w-full h-auto'
-        />
+        <QRCodeSVG value={value} includeMargin role='none' className='w-full h-auto' />
         <div id={labelId} className='sr-only'>
           {label}
         </div>
