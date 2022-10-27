@@ -19,9 +19,14 @@ const workerRuntime = new WorkerRuntime(
   })
 );
 
-void workerRuntime.start().catch((err) => {
-  console.error(err);
-});
+void workerRuntime
+  .start()
+  .then(() => {
+    console.log('Worker runtime started.');
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
 onconnect = async (event) => {
   const muxer = new PortMuxer(event.ports[0]);
@@ -30,4 +35,6 @@ onconnect = async (event) => {
     appPort: muxer.createWorkerPort({ channel: 'dxos:app' }),
     systemPort: muxer.createWorkerPort({ channel: 'dxos:wrtc' })
   });
+
+  console.log('Worker session started.');
 };
