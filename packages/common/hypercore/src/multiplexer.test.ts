@@ -4,7 +4,6 @@
 
 import { expect } from 'chai';
 import faker from 'faker';
-import util from 'node:util';
 import { PassThrough, Transform } from 'streamx';
 
 import { latch } from '@dxos/async';
@@ -14,10 +13,7 @@ import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { Multiplexer } from './multiplexer';
-
-const noop = () => {};
-
-const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
+import { noop, py } from './testing';
 
 describe('Multiplexing', function () {
   it('multiplexes feeds', async function () {
@@ -27,7 +23,7 @@ describe('Multiplexing', function () {
     await plex1.open();
     await plex2.open();
 
-    const numFeeds = 3;
+    const numFeeds = 1;
     const factory = new HypercoreFactory();
     const feeds = await Promise.all(
       Array.from(Array(numFeeds)).map(async () => {

@@ -5,11 +5,10 @@
 import assert from 'assert';
 import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
-import util from 'node:util';
 
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 
-const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
+import { py } from './testing';
 
 /**
  * Creates feeds with default properties.
@@ -39,7 +38,7 @@ export class HypercoreFactory<T> {
    */
   async openFeed(publicKey: Buffer, options?: HypercoreOptions): Promise<Hypercore<T>> {
     const feed = this.createFeed(publicKey, options);
-    await py(feed, feed.open)();
+    await py(feed, feed.open)(); // TODO(burdon): Sometimes strange bug if done inside function.
     return feed;
   }
 }
