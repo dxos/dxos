@@ -76,6 +76,7 @@ export class DataInvitations {
           // TODO(burdon): Make calls optional and throw error if not handled?
           acceptAgent: invalidOp
         },
+
         // This is called once the connection is established with the peer.
         async (peer) => {
           await peer.rpc.SpaceInvitationsService.acceptAgent({
@@ -86,6 +87,7 @@ export class DataInvitations {
           await admitted.wait();
           onFinish?.();
         },
+
         // This is called once the connection is closed (or on error).
         async () => {
           await connection.close();
@@ -126,6 +128,7 @@ export class DataInvitations {
             accepted.wake(space);
           }
         },
+
         // This is called once the connection is established with the peer.
         async (peer) => {
           // Wait for host to ACK and local space to be created.
@@ -144,6 +147,7 @@ export class DataInvitations {
           // All done.
           admitted.wake(space);
         },
+
         // This is called once the connection is closed (or on error).
         async () => {
           await connection.close();
