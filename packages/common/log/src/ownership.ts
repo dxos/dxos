@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 const kOwnershipScope = Symbol('kOwnershipScope');
 const kCurrentOwnershipScope = Symbol('kCurrentOwnershipScope');

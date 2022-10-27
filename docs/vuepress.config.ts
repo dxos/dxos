@@ -10,6 +10,8 @@ import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
 import { apiSidebar, DOCS_PATH, link, PINNED_PACKAGES, showcasePlugin, sidebarSection, telemetryPlugin } from './src';
 
+const env = (value?: string) => (value ? `'${value}'` : undefined);
+
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
@@ -69,14 +71,9 @@ const config: UserConfig = defineUserConfig({
   bundler: viteBundler({
     viteOptions: {
       define: {
-        'process.env.DX_ENVIRONMENT': `'${process.env.DX_ENVIRONMENT}'`,
-        'process.env.DX_RELEASE': `'${process.env.DX_RELEASE}'`,
-        'process.env.SEGMENT_API_KEY': `'${process.env.SEGMENT_API_KEY}'`
-      },
-      resolve: {
-        alias: {
-          'node:assert': 'assert'
-        }
+        'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+        'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
+        'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
       },
       optimizeDeps: {
         force: true,

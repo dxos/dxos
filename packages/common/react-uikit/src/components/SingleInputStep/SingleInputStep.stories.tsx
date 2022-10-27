@@ -57,8 +57,8 @@ CreateProfile.args = {
 export const JoinSpace = () => (
   <Template
     rootLabel='join space label'
-    inputLabel='space invitation label'
-    inputPlaceholder='space invitation placeholder'
+    inputLabel='invitation code label'
+    inputPlaceholder='invitation code placeholder'
     backLabel='cancel label'
     nextLabel='redeem invitation label'
     onChange={() => {}}

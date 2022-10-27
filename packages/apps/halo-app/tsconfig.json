@@ -30,12 +30,6 @@
       "path": "../../sdk/react-client-testing"
     },
     {
-      "path": "../../sdk/react-components"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
-    },
-    {
       "path": "./tsconfig.node.json"
     }
   ]

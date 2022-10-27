@@ -4,11 +4,9 @@
 
 import React from 'react';
 
-import { Box, Button } from '@mui/material';
-
 import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
-import { Toolbar } from '@dxos/react-components';
+import { Button } from '@dxos/react-uikit';
 
 import { SpaceList } from './SpaceList';
 
@@ -21,13 +19,11 @@ const Story = () => {
   const spaces = useParties();
 
   return (
-    <Box>
-      <Toolbar>
-        <Button onClick={() => client.echo.createParty()}>Add Space</Button>
-      </Toolbar>
+    <div>
+      <Button onClick={() => client.echo.createParty()}>Add Space</Button>
 
       <SpaceList spaces={spaces} />
-    </Box>
+    </div>
   );
 };
 

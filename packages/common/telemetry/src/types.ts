@@ -3,7 +3,7 @@
 //
 
 export type InitOptions = {
-  apiKey?: string;
+  apiKey: string;
   batchSize?: number;
   enable?: boolean;
 };
