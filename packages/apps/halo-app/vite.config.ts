@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -21,26 +22,38 @@ export default defineConfig({
     include: [
       '@dxos/async',
       '@dxos/client',
+      '@dxos/client-services',
       '@dxos/keys',
       '@dxos/log',
+      '@dxos/composer',
       '@dxos/config',
       '@dxos/protocols',
       '@dxos/react-async',
       '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/react-toolkit',
+      '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/text-model',
       '@dxos/util'
-    ]
+    ],
+    esbuildOptions: {
+      // TODO(wittjosiah): Remove.
+      plugins: [
+        {
+          name: 'yjs',
+          setup: ({ onResolve }) => {
+            onResolve({ filter: /yjs/ }, () => {
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+            })
+          }
+        }
+      ]
+    }
   },
   build: {
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
@@ -51,6 +64,13 @@ export default defineConfig({
   },
   plugins: [
     dxosPlugin(),
+    themePlugin({
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
+      ]
+    }),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

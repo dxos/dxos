@@ -2,90 +2,60 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, Rocket } from 'phosphor-react';
+import React from 'react';
 
-import { Add as CreateIcon, Redeem as JoinIcon } from '@mui/icons-material';
-import { Box, SpeedDial, SpeedDialAction, SpeedDialIcon, Typography } from '@mui/material';
-
+import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-toolkit';
+import {
+  Button,
+  getSize,
+  Main,
+  useTranslation,
+  Heading
+} from '@dxos/react-uikit';
+import { TextModel } from '@dxos/text-model';
 
+import { JoinSpaceDialog } from '..';
 import { SpaceList } from '../../components';
 
 export const SpacesPage = () => {
   const client = useClient();
   const spaces = useParties();
-  const navigate = useNavigate();
-  const [showJoin, setShowJoin] = useState(false);
+  const { t } = useTranslation('halo');
 
-  const actions = [
-    {
-      icon: <CreateIcon />,
-      name: 'Create',
-      onClick: async () => {
-        await client.echo.createParty();
-      }
-    },
-    {
-      icon: <JoinIcon />,
-      name: 'Join',
-      onClick: () => {
-        setShowJoin(true);
-      }
-    }
-  ];
+  const handleCreateSpace = async () => {
+    const space = await client.echo.createParty();
+    await space.database.createItem({
+      model: TextModel,
+      type: DOCUMENT_TYPE
+    });
+  };
 
   return (
-    <Box sx={{ overflow: 'auto' }}>
-      <Box
-        sx={{
-          maxWidth: '25rem',
-          margin: '0 auto'
-        }}
-      >
-        {spaces?.length === 0 && (
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Typography sx={{ paddingY: 4 }}>Create a space!</Typography>
-          </Box>
-        )}
-        {spaces?.length > 0 && (
-          <SpaceList
-            spaces={spaces}
-            onSelect={spaceKey => {
-              navigate(`/spaces/${spaceKey.toHex()}`);
-            }}
-          />
-        )}
-        <SpeedDial
-          ariaLabel='Add party'
-          icon={<SpeedDialIcon />}
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            right: 16
-          }}
+    <Main>
+      <div role='none' className='flex gap-2 items-center'>
+        <Heading>{t('spaces label')}</Heading>
+        <div role='none' className='flex-grow' />
+        <JoinSpaceDialog
+          openTrigger={
+            <Button className='flex gap-1'>
+              <Rocket className={getSize(5)} />
+              {t('join space label', { ns: 'uikit' })}
+            </Button>
+          }
+        />
+        <Button
+          variant='primary'
+          onClick={handleCreateSpace}
+          className='flex gap-1'
         >
-          {actions.map((action) => (
-            <SpeedDialAction
-              key={action.name}
-              icon={action.icon}
-              tooltipTitle={action.name}
-              onClick={action.onClick}
-            />
-          ))}
-        </SpeedDial>
-      </Box>
+          <Plus className={getSize(5)} />
+          {t('create space label', { ns: 'uikit' })}
+        </Button>
+      </div>
 
-      <JoinPartyDialog
-        open={showJoin}
-        onClose={() => setShowJoin(false)}
-        onJoin={space => navigate(`/spaces/${space.key.toHex()}`)}
-      />
-    </Box>
+      {spaces?.length > 0 && <SpaceList spaces={spaces} />}
+    </Main>
   );
 };

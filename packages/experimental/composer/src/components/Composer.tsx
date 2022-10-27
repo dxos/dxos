@@ -8,13 +8,16 @@ import StarterKit from '@tiptap/starter-kit';
 import cx from 'classnames';
 import React from 'react';
 
+import { Item } from '@dxos/client';
 import { defaultFocus } from '@dxos/react-ui';
+import { TextModel } from '@dxos/text-model';
 
-import { useTextItem } from '../context';
+export interface ComposerProps {
+  item: Item<TextModel>;
+  className?: string;
+}
 
-export const Composer = () => {
-  const { item } = useTextItem();
-
+export const Composer = ({ item, className }: ComposerProps) => {
   const editor = useEditor(
     {
       extensions: [
@@ -25,7 +28,8 @@ export const Composer = () => {
         attributes: {
           class: cx(
             defaultFocus,
-            'bg-neutral-50/25 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full p-4 dark:bg-neutral-700/25 dark:border-neutral-600 dark:text-white'
+            'bg-neutral-50/25 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full p-4 dark:bg-neutral-700/25 dark:border-neutral-600 dark:text-white',
+            className
           )
         }
       }
