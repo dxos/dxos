@@ -11,9 +11,9 @@ import {
   SignOut
 } from 'phosphor-react';
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 
-import { useProfile } from '@dxos/react-client';
+import { useParty, useProfile } from '@dxos/react-client';
 import {
   Presence,
   NavMenu,
@@ -22,12 +22,17 @@ import {
   getSize
 } from '@dxos/react-uikit';
 
+import { useSafeSpaceKey } from '../../hooks';
+
 const iconAttributes = { className: 'h-5 w-5' };
 
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
   const profile = useProfile();
   const location = useLocation();
+  const { space: spaceHex } = useParams();
+  const spaceKey = useSafeSpaceKey(spaceHex);
+  const space = useParty(spaceKey);
 
   const centerMenuItems = [
     {
@@ -115,6 +120,7 @@ export const AppLayout = () => {
 
         <Presence
           profile={profile!}
+          party={space}
           className='flex-none'
           size={10}
           sideOffset={4}

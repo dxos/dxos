@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, ShareNetwork } from 'phosphor-react';
+import { CaretLeft } from 'phosphor-react';
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -47,11 +47,6 @@ export const SpacePage = () => {
           {t('back label', { ns: 'uikit' })}
         </Button>
         <Heading>{humanize(space.key)}</Heading>
-        <div role='none' className='flex-grow' />
-        <Button onClick={() => setShowShare(true)} className='flex gap-1'>
-          <ShareNetwork className={getSize(5)} />
-          {t('share space label', { ns: 'uikit' })}
-        </Button>
       </div>
       {item ? (
         <Composer item={item} />

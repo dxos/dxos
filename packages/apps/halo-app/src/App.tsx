@@ -18,12 +18,12 @@ import {
   CreateProfilePage,
   DevicesPage,
   IdentityPage,
-  InvitationPage,
   InviteDevicePage,
   LockPage,
   RecoverProfilePage,
   RequireProfile,
   SpacePage,
+  SpaceInvitationPage,
   SpacesPage
 } from './pages';
 import translationResources from './translations';
@@ -56,8 +56,8 @@ const Routes = () =>
       element: <RequireProfile redirect='/' />,
       children: [
         {
-          path: '/invitation/:code',
-          element: <InvitationPage />
+          path: '/spaces/join',
+          element: <SpaceInvitationPage />
         },
         {
           path: '/',

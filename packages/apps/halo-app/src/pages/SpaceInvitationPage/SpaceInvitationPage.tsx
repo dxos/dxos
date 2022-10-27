@@ -1,12 +1,12 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2021 DXOS.org
 //
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationDescriptor } from '@dxos/client';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import {
   Heading,
   Main,
@@ -25,13 +25,14 @@ const invitationCodeFromUrl = (text: string) => {
   }
 };
 
-export const InviteDevicePage = () => {
+/**
+ *
+ */
+export const SpaceInvitationPage = () => {
   const { t } = useTranslation();
   const client = useClient();
-  const profile = useProfile();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') ?? '/spaces';
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
   const [pending, setPending] = useState(false);
@@ -42,19 +43,15 @@ export const InviteDevicePage = () => {
     try {
       const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
       invitation = InvitationDescriptor.decode(parsedInvitationCode);
-      await client.halo.acceptInvitation(invitation);
+      const redeemeingInvitation = client.echo.acceptInvitation(invitation);
+      const space = await redeemeingInvitation.getParty();
+      navigate(`/spaces/${space.key.toHex()}`);
     } catch (err: any) {
       setPending(false);
       // TODO(wittjosiah): Error rendering.
       console.error(err);
     }
   }, [invitationCode]);
-
-  useEffect(() => {
-    if (profile) {
-      navigate(redirect);
-    }
-  }, [profile, redirect]);
 
   useEffect(() => {
     if (invitationParam) {
@@ -64,7 +61,7 @@ export const InviteDevicePage = () => {
 
   return (
     <Main className='max-w-lg mx-auto'>
-      <Heading>{t('invite device label', { ns: 'uikit' })}</Heading>
+      <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
       {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
       <SingleInputStep
         {...{
@@ -75,8 +72,7 @@ export const InviteDevicePage = () => {
             initialValue: invitationCode
           },
           onChange: setInvitationCode,
-          onNext,
-          onBack: () => history.back()
+          onNext
         }}
       />
     </Main>

@@ -17,13 +17,13 @@ export interface PartyProps {
 
 // TODO(wittjosiah): Remove.
 const defaultCreateUrl = (invitationCode: string) => {
-  const invitationPath = '/invitation'; // App-specific.
+  const invitationPath = '/spaces/join'; // App-specific.
   const { origin, pathname } = window.location;
   return urlJoin(
     origin,
     pathname,
     `/#${invitationPath}`,
-    `?code=${invitationCode}`
+    `?invitation=${invitationCode}`
   );
 };
 
