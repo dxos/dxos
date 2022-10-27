@@ -10,12 +10,7 @@ import { Loading, Main } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
 import { Composer, ProviderFallback } from './components';
-import {
-  PartyProvider,
-  ProfileProvider,
-  TextItemProvider,
-  useTextItem
-} from './context';
+import { PartyProvider, ProfileProvider, TextItemProvider, useTextItem } from './context';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
