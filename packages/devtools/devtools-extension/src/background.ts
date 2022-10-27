@@ -22,10 +22,7 @@ browser.runtime.onConnect.addListener((port) => {
     const messageListener = (message: any) => {
       const port = contentPorts.get(tabId);
       if (port) {
-        log(
-          `Forwarding message from panel to content on tab ${tabId}:`,
-          message
-        );
+        log(`Forwarding message from panel to content on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
         error(`Missing content port for tab ${tabId}`);
@@ -45,10 +42,7 @@ browser.runtime.onConnect.addListener((port) => {
     const messageListener = (message: any) => {
       const port = panelPorts.get(tabId);
       if (port) {
-        log(
-          `Forwarding message from content to panel on tab ${tabId}:`,
-          message
-        );
+        log(`Forwarding message from content to panel on tab ${tabId}:`, message);
         port.postMessage(message);
       } else {
         error(`Missing panel port for tab ${tabId}`);

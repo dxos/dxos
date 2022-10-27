@@ -106,10 +106,7 @@ class CircularLayout {
   private _map = new Map<string, number>();
   private _radius: Fraction = [1, 1];
 
-  constructor(
-    private readonly _context: SVGContext,
-    private readonly _duraction = 1000
-  ) {}
+  constructor(private readonly _context: SVGContext, private readonly _duraction = 1000) {}
 
   get layout() {
     return this.doLayout.bind(this);
@@ -188,9 +185,7 @@ class KubeLayout {
     group.each((d, i, nodes) => {
       let layout = this._kubeLayoutMap.get(d.id);
       if (!layout) {
-        layout = new CircularLayout(this._context, 500).initialize(
-          this._radius
-        );
+        layout = new CircularLayout(this._context, 500).initialize(this._radius);
         this._kubeLayoutMap.set(d.id, layout);
       }
 
@@ -252,18 +247,9 @@ class MeshLayout {
   private readonly _circleLayout: CircularLayout;
   private readonly _kubeLayout: KubeLayout;
 
-  constructor(
-    private readonly _context: SVGContext,
-    private readonly _radius: Fraction = [5, 2]
-  ) {
-    this._circleLayout = useMemo(
-      () => new CircularLayout(this._context).initialize(this._radius),
-      []
-    );
-    this._kubeLayout = useMemo(
-      () => new KubeLayout(this._context).initialize([3, 5]),
-      []
-    );
+  constructor(private readonly _context: SVGContext, private readonly _radius: Fraction = [5, 2]) {
+    this._circleLayout = useMemo(() => new CircularLayout(this._context).initialize(this._radius), []);
+    this._kubeLayout = useMemo(() => new KubeLayout(this._context).initialize([3, 5]), []);
   }
 
   get layout() {
@@ -272,11 +258,7 @@ class MeshLayout {
 
   // NOTE: Don't do transitions inside join.
   doLayout(group: D3Selection, objects: Kube[]) {
-    group.call(
-      createOne('circle', 'outer', (el) =>
-        el.attr('r', this._context.scale.model.toValue(this._radius))
-      )
-    );
+    group.call(createOne('circle', 'outer', (el) => el.attr('r', this._context.scale.model.toValue(this._radius))));
 
     group
       .selectAll<SVGGElement, Kube>('g.kube')
@@ -320,9 +302,7 @@ class MeshLayout {
 const createObjects = (n = 5): Kube[] =>
   Array.from({ length: n }).map(() => ({
     id: `kube-${faker.datatype.uuid()}`,
-    bots: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }).map(
-      () => ({ id: faker.datatype.uuid() })
-    )
+    bots: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }).map(() => ({ id: faker.datatype.uuid() }))
   }));
 
 const Container = () => {
@@ -334,15 +314,9 @@ const Container = () => {
   const [objects, setObjects] = useState<Kube[]>(() => createObjects(5));
 
   useButton('Reset', () => setObjects([]));
-  useButton('Add', () =>
-    setObjects((objects) => [...objects, ...createObjects(1)])
-  );
+  useButton('Add', () => setObjects((objects) => [...objects, ...createObjects(1)]));
   useButton('Remove', () =>
-    setObjects((objects) =>
-      objects
-        .map((obj) => (faker.datatype.boolean() ? obj : undefined))
-        .filter(Boolean)
-    )
+    setObjects((objects) => objects.map((obj) => (faker.datatype.boolean() ? obj : undefined)).filter(Boolean))
   );
   useButton('Mutate', () => {
     setObjects((objects) =>
@@ -350,9 +324,7 @@ const Container = () => {
         bots: faker.datatype.boolean()
           ? bots
           : [
-              ...bots
-                .map((bot) => (faker.datatype.number(10) > 7 ? bot : undefined))
-                .filter(Boolean),
+              ...bots.map((bot) => (faker.datatype.number(10) > 7 ? bot : undefined)).filter(Boolean),
               ...Array.from({ length: faker.datatype.number(4) }).map(() => ({
                 id: faker.datatype.uuid()
               }))

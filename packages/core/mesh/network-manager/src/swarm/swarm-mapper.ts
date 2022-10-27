@@ -29,10 +29,7 @@ type Unsubscribe = () => void;
 
 export class SwarmMapper {
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _connectionSubscriptions = new ComplexMap<
-    PublicKey,
-    Unsubscribe
-  >(PublicKey.hash);
+  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(PublicKey.hash);
 
   private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(PublicKey.hash);
 
@@ -42,6 +39,7 @@ export class SwarmMapper {
 
   readonly mapUpdated = new Event<PeerInfo[]>();
 
+  // prettier-ignore
   constructor(
     private readonly _swarm: Swarm,
     private readonly _presence: PresencePlugin | undefined
@@ -103,10 +101,7 @@ export class SwarmMapper {
         const from = PublicKey.from(link.fromId);
         const to = PublicKey.from(link.toId);
         // Ignore connections to self, they are already handled.
-        if (
-          !from.equals(this._swarm.ownPeerId) &&
-          !to.equals(this._swarm.ownPeerId)
-        ) {
+        if (!from.equals(this._swarm.ownPeerId) && !to.equals(this._swarm.ownPeerId)) {
           this._peers.get(from)!.connections.push(to);
         }
       });

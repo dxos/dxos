@@ -25,12 +25,11 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import {
-  DataInvitations,
-  HaloInvitations,
-  InvitationDescriptor
-} from '../invitations';
+import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -46,8 +45,9 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public dataInvitations?: DataInvitations; // TOOD(burdon): Move.
+  public dataInvitations?: DataInvitations; // TODO(burdon): Move.
 
+  // prettier-ignore
   constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
@@ -74,13 +74,9 @@ export class ServiceContext {
     );
 
     // TODO(burdon): Rename.
-    this.haloInvitations = new HaloInvitations(
-      this.networkManager,
-      this.identityManager,
-      async () => {
-        await this._initialize();
-      }
-    );
+    this.haloInvitations = new HaloInvitations(this.networkManager, this.identityManager, async () => {
+      await this._initialize();
+    });
   }
 
   async open() {
@@ -103,10 +99,7 @@ export class ServiceContext {
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.dataService.trackParty(
-      identity.haloSpaceKey,
-      identity.haloDatabase.createDataServiceHost()
-    );
+    this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -121,24 +114,21 @@ export class ServiceContext {
       deviceKey: identity.deviceKey
     };
 
-    const spaceManager = new SpaceManager(
-      this.metadataStore,
-      this.feedStore,
-      this.networkManager,
-      this.keyring,
-      this.dataService,
-      this.modelFactory,
+    // Create in constructor (avoid all of these private variables).
+    const spaceManager = new SpaceManager({
+      metadataStore: this.metadataStore,
+      feedStore: this.feedStore,
+      networkManager: this.networkManager,
+      keyring: this.keyring,
+      dataService: this.dataService,
+      modelFactory: this.modelFactory,
       signingContext
-    );
+    });
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
 
-    this.dataInvitations = new DataInvitations(
-      this.networkManager,
-      signingContext,
-      this.spaceManager
-    );
+    this.dataInvitations = new DataInvitations(this.networkManager, signingContext, this.spaceManager);
 
     this.initialized.wake();
   }
@@ -147,9 +137,7 @@ export class ServiceContext {
     assert(this.spaceManager);
     assert(this.dataInvitations);
 
-    const space =
-      this.spaceManager.spaces.get(spaceKey) ??
-      raise(new Error('Space not found.'));
+    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
     return this.dataInvitations.createInvitation(space, { onFinish });
   }
 

@@ -12,7 +12,10 @@ export class PortTracer {
 
   private readonly _port: RpcPort;
 
-  constructor(private readonly _wrappedPort: RpcPort) {
+  // prettier-ignore
+  constructor(
+    private readonly _wrappedPort: RpcPort
+  ) {
     this._port = {
       send: (msg: Uint8Array) => {
         this.message.emit({

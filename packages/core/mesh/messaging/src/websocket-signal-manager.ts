@@ -19,15 +19,10 @@ export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peer_id */
-  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(
-    (topic) => topic.toHex()
-  );
+  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>((topic) => topic.toHex());
 
   /** host => topic => peer_id */
-  private readonly _topicsJoinedPerSignal = new Map<
-    string,
-    ComplexMap<PublicKey, PublicKey>
-  >();
+  private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconciling?: boolean = false;
   private _reconcileTimeoutId?: NodeJS.Timeout;
@@ -46,16 +41,14 @@ export class WebsocketSignalManager implements SignalManager {
     payload: Any;
   }>();
 
-  constructor(private readonly _hosts: string[]) {
+  // prettier-ignore
+  constructor(
+    private readonly _hosts: string[]
+  ) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
-    assert(
-      _hosts.length === 1,
-      'Only a single signaling server connection is supported'
-    );
+    assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalClient(host, async (message) =>
-        this.onMessage.emit(message)
-      );
+      const server = new SignalClient(host, async (message) => this.onMessage.emit(message));
       // TODO(mykola): Add subscription group
       server.swarmEvent.on((data) => this.swarmEvent.emit(data));
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
@@ -67,9 +60,7 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   getStatus(): SignalStatus[] {
-    return Array.from(this._servers.values()).map((server) =>
-      server.getStatus()
-    );
+    return Array.from(this._servers.values()).map((server) => server.getStatus());
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
@@ -114,10 +105,7 @@ export class WebsocketSignalManager implements SignalManager {
     }
 
     if (!this._reconcileTimeoutId) {
-      this._reconcileTimeoutId = setTimeout(
-        async () => this._scheduleReconcile(),
-        3000
-      );
+      this._reconcileTimeoutId = setTimeout(async () => this._scheduleReconcile(), 3000);
     }
   }
 
@@ -181,9 +169,7 @@ export class WebsocketSignalManager implements SignalManager {
     log(`Signal ${recipient}`);
     await Promise.all(
       [...this._servers.values()].map((server: SignalClient) =>
-        server
-          .sendMessage({ author, recipient, payload })
-          .catch((err) => log(err))
+        server.sendMessage({ author, recipient, payload }).catch((err) => log(err))
       )
     );
   }
@@ -191,9 +177,7 @@ export class WebsocketSignalManager implements SignalManager {
   async subscribeMessages(peerId: PublicKey): Promise<void> {
     log(`Subscribed for message stream peerId=${peerId}`);
     await Promise.all(
-      [...this._servers.values()].map((signalClient: SignalClient) =>
-        signalClient.subscribeMessages(peerId)
-      )
+      [...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId))
     );
   }
 
@@ -202,8 +186,6 @@ export class WebsocketSignalManager implements SignalManager {
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);
     }
-    await Promise.all(
-      Array.from(this._servers.values()).map((server) => server.close())
-    );
+    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { init as sentryInit } from '@sentry/node';
+import { init as sentryInit, setTag } from '@sentry/node';
 import type { Event } from '@sentry/node';
 
 import { InitOptions } from './types';
@@ -12,7 +12,7 @@ export * from '@sentry/node';
 export const init = (options: InitOptions) => {
   sentryInit({
     dsn: options.destination,
-    serverName: options.machineId,
+    serverName: options.installationId,
     release: options.release,
     environment: options.environment ?? process.env.DX_ENVIRONMENT,
     tracesSampleRate: options.sampleRate,
@@ -23,6 +23,10 @@ export const init = (options: InitOptions) => {
 
       return event;
     }
+  });
+
+  Object.entries(options.properties ?? {}).forEach(([key, value]) => {
+    setTag(key, value);
   });
 };
 

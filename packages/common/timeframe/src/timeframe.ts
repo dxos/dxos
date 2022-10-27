@@ -20,13 +20,10 @@ export class Timeframe {
   }
 
   toJSON() {
-    return this.frames().reduce(
-      (frames: Record<string, number>, [key, seq]) => {
-        frames[key.truncate()] = seq;
-        return frames;
-      },
-      {}
-    );
+    return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
+      frames[key.truncate()] = seq;
+      return frames;
+    }, {});
   }
 
   toString() {
@@ -47,9 +44,7 @@ export class Timeframe {
 
   // TODO(burdon): Change to getter.
   frames(): [PublicKey, number][] {
-    return Array.from(this._frames.entries()).filter(
-      (frame): frame is [PublicKey, number] => !!frame
-    );
+    return Array.from(this._frames.entries()).filter((frame): frame is [PublicKey, number] => !!frame);
   }
 
   // TODO(burdon): Change to getter.
@@ -69,9 +64,7 @@ export class Timeframe {
   withoutKeys(keys: PublicKey[]): Timeframe {
     return new Timeframe(
       this.frames().filter(([frameKey]) =>
-        keys.every(
-          (key) => Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0
-        )
+        keys.every((key) => Buffer.compare(key.asBuffer(), frameKey.asBuffer()) !== 0)
       )
     );
   }
@@ -80,10 +73,7 @@ export class Timeframe {
    * Returns a total amount of messages represented by this timeframe.
    */
   totalMessages(): number {
-    return Array.from(this._frames.values()).reduce(
-      (result, seq) => result + seq + 1,
-      0
-    );
+    return Array.from(this._frames.values()).reduce((result, seq) => result + seq + 1, 0);
   }
 
   /**

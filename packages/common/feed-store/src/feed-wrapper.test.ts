@@ -11,12 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
-import {
-  defaultValueEncoding,
-  TestBuilder,
-  TestItem,
-  TestItemBuilder
-} from './testing';
+import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
 
 describe('FeedWrapper', function () {
   const factory = new TestBuilder().createFeedFactory();
@@ -32,10 +27,7 @@ describe('FeedWrapper', function () {
 
   it('creates a writable feed', async function () {
     const key = PublicKey.random();
-    const feed = new FeedWrapper(
-      factory.createFeed(key, { writable: true }),
-      key
-    );
+    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
     expect(feed.properties.readable).to.be.true;
     expect(feed.properties.writable).to.be.true;
@@ -62,10 +54,7 @@ describe('FeedWrapper', function () {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper(
-      feedFactory.createFeed(key, { writable: true }),
-      key
-    );
+    const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
 
     for (const _ of Array.from(Array(numBlocks)).keys()) {
       await feed.append(faker.lorem.sentence());
@@ -139,10 +128,7 @@ describe('FeedWrapper', function () {
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const feed1 = new FeedWrapper(
-      feedFactory.createFeed(key1, { writable: true }),
-      key1
-    );
+    const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true }), key1);
     const feed2 = new FeedWrapper(feedFactory.createFeed(key1), key1);
 
     await feed1.open();
@@ -187,9 +173,7 @@ describe('FeedWrapper', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        for await (const block of createReadable(
-          feed2.createReadableStream()
-        )) {
+        for await (const block of createReadable(feed2.createReadableStream())) {
           log('read', block);
           inc();
         }

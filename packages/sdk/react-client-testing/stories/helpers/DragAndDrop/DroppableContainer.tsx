@@ -26,10 +26,7 @@ export const DroppableContainer = ({
 
   // TODO(kaplanski): Is this a dnd-kit bug or is there a better way of checking?
   // When hovering over item, isOver returns false and over id doesn't match container id, so manually check current sortable containerId.
-  const isOverContainer =
-    isOver ||
-    over?.id === id ||
-    over?.data.current?.sortable.containerId === id;
+  const isOverContainer = isOver || over?.id === id || over?.data.current?.sortable.containerId === id;
 
   return (
     <div

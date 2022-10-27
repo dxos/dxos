@@ -40,9 +40,7 @@ export class ZoomHandler {
     this._enabled = this._options.enabled ?? true;
 
     // https://github.com/d3/d3-zoom#zoom
-    this._zoom = d3
-      .zoom()
-      .scaleExtent(this._options.extent ?? defaultOptions.extent);
+    this._zoom = d3.zoom().scaleExtent(this._options.extent ?? defaultOptions.extent);
   }
 
   /**
@@ -64,12 +62,7 @@ export class ZoomHandler {
     if (enable) {
       d3.select(this._context.svg)
         .call(this._zoom)
-        .on(
-          'dblclick.zoom',
-          this._options?.onDblClick
-            ? () => this._options.onDblClick(this)
-            : null
-        );
+        .on('dblclick.zoom', this._options?.onDblClick ? () => this._options.onDblClick(this) : null);
     } else {
       d3.select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.
     }
@@ -79,10 +72,7 @@ export class ZoomHandler {
   }
 
   reset(duration = 500) {
-    d3.select(this._context.svg)
-      .transition()
-      .duration(duration)
-      .call(this._zoom.transform, d3.zoomIdentity);
+    d3.select(this._context.svg).transition().duration(duration).call(this._zoom.transform, d3.zoomIdentity);
 
     return this;
   }

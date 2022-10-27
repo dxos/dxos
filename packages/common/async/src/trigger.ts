@@ -8,18 +8,13 @@ import { promiseTimeout } from './async';
  * Returns a tuple containing a Promise that will be resolved when the resolver function is called.
  * @deprecated Use `Trigger` instead.
  */
-export const trigger = <T = void>(
-  timeout?: number
-): [() => Promise<T>, (arg: T) => void] => {
+export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T) => void] => {
   // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
   let callback: (arg: T) => void;
 
   const promise = new Promise<T>((resolve, reject) => {
     if (timeout) {
-      setTimeout(
-        () => reject(new Error(`Timed out after ${timeout}ms`)),
-        timeout
-      );
+      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
     }
 
     callback = resolve;
@@ -58,11 +53,7 @@ export class Trigger<T = void> {
    */
   async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
     if (timeout) {
-      return promiseTimeout(
-        this._promise,
-        timeout,
-        new Error(`Timed out after ${timeout}ms.`)
-      );
+      return promiseTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
     } else {
       return this._promise;
     }

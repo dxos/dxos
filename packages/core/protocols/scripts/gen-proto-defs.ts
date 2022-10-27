@@ -14,12 +14,7 @@ const HEADER = '// Generated file: do not edit.';
 /**
  * Generate protocol buffer definition files.
  */
-const main = (
-  pattern: string,
-  prefix = './src/proto',
-  dist = './dist/src/proto/gen',
-  outdir = './proto'
-) => {
+const main = (pattern: string, prefix = './src/proto', dist = './dist/src/proto/gen', outdir = './proto') => {
   // https://nodejs.org/api/fs.html
   // https://nodejs.org/api/path.html
   fs.rmSync(outdir, { recursive: true, force: true });
@@ -52,17 +47,10 @@ const main = (
 
       // Relative path.
       const exportFile = path.join(path.dirname(sub), filename);
-      const relative = path.join(
-        path.relative(exportFile, '.'),
-        dist,
-        exportFile
-      );
+      const relative = path.join(path.relative(exportFile, '.'), dist, exportFile);
 
       // JS compiled output (required for tests).
-      fs.writeFileSync(
-        jsOutFile,
-        `${HEADER}\nmodule.exports = require('${relative}');\n`
-      );
+      fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relative}');\n`);
 
       // TS definitions.
       fs.writeFileSync(tsOutFile, `${HEADER}\nexport * from '${relative}';\n`);
@@ -78,8 +66,7 @@ const main = (
             sourceRoot: '',
             sources: [path.join(path.relative(exportFile, '.'), prefix, sub)],
             names: [],
-            mappings:
-              'AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC'
+            mappings: 'AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC'
           },
           undefined,
           2

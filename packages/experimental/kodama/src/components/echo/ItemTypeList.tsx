@@ -16,10 +16,7 @@ const useTypes = (party?: Party, deps: any[] = []) => {
 
   useEffect(() => {
     const types = new Set<string>();
-    items.forEach(
-      (item) =>
-        item.type && item.type !== PARTY_ITEM_TYPE && types.add(item.type)
-    );
+    items.forEach((item) => item.type && item.type !== PARTY_ITEM_TYPE && types.add(item.type));
     setTypes(types);
   }, [items]);
 

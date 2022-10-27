@@ -21,16 +21,11 @@ export class WorkspaceProcessor implements ProjectMap {
   private readonly _projectsByName = new Map<string, Project>();
   private readonly _projectsByPackage = new Map<string, Project>();
 
-  constructor(
-    private readonly _baseDir: string,
-    private readonly _options: WorkspaceProcessorOptions = {}
-  ) {}
+  constructor(private readonly _baseDir: string, private readonly _options: WorkspaceProcessorOptions = {}) {}
 
   getProjects(filter?: string): Project[] {
     const projects = array(this._projectsByPackage);
-    return filter
-      ? projects.filter((p) => minimatch(p.name, filter))
-      : projects;
+    return filter ? projects.filter((p) => minimatch(p.name, filter)) : projects;
   }
 
   getProjectByName(name: string): Project | undefined {
@@ -48,9 +43,7 @@ export class WorkspaceProcessor implements ProjectMap {
     // Parse project definitions.
     for (const name of Object.keys(projects)) {
       const subdir = projects[name];
-      const packageJson = this.readJson<PackageJson>(
-        path.join(subdir, 'package.json')
-      );
+      const packageJson = this.readJson<PackageJson>(path.join(subdir, 'package.json'));
       const project: Project = {
         name,
         subdir,
@@ -77,11 +70,7 @@ export class WorkspaceProcessor implements ProjectMap {
    * Recursively process the project.
    * @return Array of descendents.
    */
-  private processProject(
-    project: Project,
-    visited: Set<string>,
-    chain: string[] = [project.package.name]
-  ): void {
+  private processProject(project: Project, visited: Set<string>, chain: string[] = [project.package.name]): void {
     const {
       package: { dependencies: dependencyMap = {} }
     } = project;
@@ -114,17 +103,13 @@ export class WorkspaceProcessor implements ProjectMap {
           console.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
         } else {
           this.processProject(dep, visited, nextChain);
-          array(dep.descendents).forEach((packageName) =>
-            project.descendents.add(packageName)
-          );
+          array(dep.descendents).forEach((packageName) => project.descendents.add(packageName));
         }
       });
     }
   }
 
   private readJson<T>(filepath: string): T {
-    return JSON.parse(
-      fs.readFileSync(path.join(this._baseDir, filepath), { encoding: 'utf-8' })
-    );
+    return JSON.parse(fs.readFileSync(path.join(this._baseDir, filepath), { encoding: 'utf-8' }));
   }
 }

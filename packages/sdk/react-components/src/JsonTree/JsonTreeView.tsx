@@ -3,13 +3,7 @@
 //
 
 import isPlainObject from 'lodash.isplainobject';
-import React, {
-  ChangeEvent,
-  ReactElement,
-  ReactNode,
-  useEffect,
-  useState
-} from 'react';
+import React, { ChangeEvent, ReactElement, ReactNode, useEffect, useState } from 'react';
 
 import {
   ChevronRight as ChevronRightIcon,
@@ -25,13 +19,7 @@ import { PublicKey } from '@dxos/keys';
 //
 // Calculate all IDs.
 //
-const visitor = (
-  value: any,
-  depth = 1,
-  path = '',
-  ids: string[] = [],
-  i = 0
-) => {
+const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) => {
   if (i >= depth) {
     return ids;
   }
@@ -39,13 +27,9 @@ const visitor = (
   ids.push(path || '.');
 
   if (isPlainObject(value)) {
-    Object.entries(value).forEach(([key, value]) =>
-      visitor(value, depth, `${path}.${key}`, ids, i + 1)
-    );
+    Object.entries(value).forEach(([key, value]) => visitor(value, depth, `${path}.${key}`, ids, i + 1));
   } else if (Array.isArray(value)) {
-    value.forEach((value, i) =>
-      visitor(value, depth, `${path}.${i}`, ids, i + 1)
-    );
+    value.forEach((value, i) => visitor(value, depth, `${path}.${i}`, ids, i + 1));
   }
 
   return ids;
@@ -77,12 +61,10 @@ interface BooleanValueProps {
   theme?: any;
   value: boolean;
 }
-const BooleanValue = styled(DefaultValue)<BooleanValueProps>(
-  ({ theme, value }) => ({
-    color: value ? theme.palette.success.dark : theme.palette.error.dark,
-    fontFamily: 'monospace'
-  })
-);
+const BooleanValue = styled(DefaultValue)<BooleanValueProps>(({ theme, value }) => ({
+  color: value ? theme.palette.success.dark : theme.palette.error.dark,
+  fontFamily: 'monospace'
+}));
 
 const NumberValue = styled(DefaultValue)(({ theme }) => ({
   color: theme.palette.warning.dark
@@ -134,9 +116,7 @@ const TreeItem = ({
           >
             {label}
           </Typography>
-          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>
-            {value !== undefined ? ':' : ''}
-          </span>
+          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>{value !== undefined ? ':' : ''}</span>
           {value}
         </Box>
       }
@@ -161,13 +141,7 @@ export interface JsonTreeViewProps {
  * Visualizes an object as a tree view of all properties.
  * Works with JSON and other objects with nested values.
  */
-export const JsonTreeView = ({
-  sx,
-  size,
-  depth = Infinity,
-  data = {},
-  onSelect
-}: JsonTreeViewProps) => {
+export const JsonTreeView = ({ sx, size, depth = Infinity, data = {}, onSelect }: JsonTreeViewProps) => {
   if (!data) {
     data = {};
   }
@@ -192,9 +166,7 @@ export const JsonTreeView = ({
 
     if (isPlainObject(value)) {
       const items = Object.entries(value)
-        .map(([key, value]) =>
-          renderNode(value, key, level + 1, `${path}.${key}`)
-        )
+        .map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`))
         .filter(Boolean);
       return level === 0 ? (
         items
@@ -207,9 +179,7 @@ export const JsonTreeView = ({
 
     if (Array.isArray(value)) {
       const items = value
-        .map((value, key) =>
-          renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)
-        )
+        .map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`))
         .filter(Boolean);
       return level === 0 ? (
         items
@@ -223,15 +193,9 @@ export const JsonTreeView = ({
     // TODO(burdon): Pluggable types (eg, date, string, number, boolean, etc).
     let itemValue;
     if (value instanceof Uint8Array) {
-      itemValue = (
-        <KeyValue size={size}>
-          {truncateKey(PublicKey.stringify(value), 8)}
-        </KeyValue>
-      );
+      itemValue = <KeyValue size={size}>{truncateKey(PublicKey.stringify(value), 8)}</KeyValue>;
     } else if (value instanceof PublicKey) {
-      itemValue = (
-        <KeyValue size={size}>{truncateKey(value.toHex(), 8)}</KeyValue>
-      );
+      itemValue = <KeyValue size={size}>{truncateKey(value.toHex(), 8)}</KeyValue>;
     } else if (value === null) {
       itemValue = <ConstValue size={size}>null</ConstValue>;
     } else if (typeof value === 'boolean') {
@@ -248,15 +212,7 @@ export const JsonTreeView = ({
       itemValue = <DefaultValue size={size}>{String(value)}</DefaultValue>;
     }
 
-    return (
-      <TreeItem
-        key={path}
-        nodeId={path}
-        size={size}
-        label={key}
-        value={itemValue}
-      />
-    );
+    return <TreeItem key={path} nodeId={path} size={size} label={key} value={itemValue} />;
   };
 
   const handleToggle = (_event: ChangeEvent<unknown>, nodeIds: string[]) => {

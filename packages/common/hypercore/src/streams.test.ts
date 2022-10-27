@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
 
-describe('Hypercore', function () {
+describe('Streams', function () {
   it('reads from stream', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();

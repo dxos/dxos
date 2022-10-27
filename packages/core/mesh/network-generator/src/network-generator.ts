@@ -44,14 +44,10 @@ export class NetworkGenerator {
       return {
         network,
         addNode(id: any) {
-          network
-            .addPeer(idGenerator.get(id))
-            .catch((err) => self.error.emit(err));
+          network.addPeer(idGenerator.get(id)).catch((err) => self.error.emit(err));
         },
         addLink(from: Buffer, to: Buffer) {
-          network
-            .addConnection(idGenerator.get(from), idGenerator.get(to))
-            .catch((err) => self.error.emit(err));
+          network.addConnection(idGenerator.get(from), idGenerator.get(to)).catch((err) => self.error.emit(err));
         },
         getNodesCount() {
           return network.graph.getNodesCount();
@@ -60,8 +56,7 @@ export class NetworkGenerator {
     });
 
     TOPOLOGIES.forEach((topology) => {
-      this[topology] = async (...args: any) =>
-        this.createTopology(topology, ...args);
+      this[topology] = async (...args: any) => this.createTopology(topology, ...args);
     });
   }
 

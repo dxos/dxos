@@ -64,21 +64,14 @@ const parseTestResult = ([arg]: any[]) => {
   }
 };
 
-export const runTests = async (
-  page: Page,
-  browserType: BrowserType,
-  bundleFile: string,
-  options: RunTestsOptions
-) => {
+export const runTests = async (page: Page, browserType: BrowserType, bundleFile: string, options: RunTestsOptions) => {
   let stats: Stats;
   const suites: SuitesWithErrors = { suites: {}, tests: [], errors: [] };
   const lock = new Lock();
 
   const handleResult = (result: TestResult | TestError | Stats) => {
     if ('title' in result) {
-      const suiteSelector = result.suite
-        .map((suite) => ['suites', suite])
-        .flat();
+      const suiteSelector = result.suite.map((suite) => ['suites', suite]).flat();
       suiteSelector.push('tests');
       const tests: TestResult[] = get(suites, suiteSelector) ?? [];
       set(suites, suiteSelector, [...tests, result]);
@@ -119,14 +112,11 @@ export const runTests = async (
   await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
   const [getPromise, resolve] = trigger<RunTestsResults>();
-  await page.exposeFunction(
-    'browserMocha__testsDone',
-    async (exitCode: number) => {
-      await lock.executeSynchronized(async () => {
-        resolve({ suites, stats });
-      });
-    }
-  );
+  await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
+    await lock.executeSynchronized(async () => {
+      resolve({ suites, stats });
+    });
+  });
 
   const exitTimeout = setTimeout(() => {
     if (options.debug) {

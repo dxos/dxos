@@ -4,17 +4,14 @@
 
 import expect from 'expect';
 
-import { ModelFactory, TestRig } from '@dxos/model-factory';
+import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 
 import { ObjectModel } from './object-model';
 import { OrderedList } from './ordered-list';
 
 describe('OrderedList', function () {
   it('refresh', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(ObjectModel),
-      ObjectModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     const list = new OrderedList(model, 'order');
@@ -46,10 +43,7 @@ describe('OrderedList', function () {
   });
 
   it('clear', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(ObjectModel),
-      ObjectModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     await model.set('order', {
@@ -69,10 +63,7 @@ describe('OrderedList', function () {
   });
 
   it('set and remove', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(ObjectModel),
-      ObjectModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
     const list = new OrderedList(model);

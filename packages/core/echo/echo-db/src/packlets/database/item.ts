@@ -7,10 +7,7 @@ import debug from 'debug';
 import { FeedWriter } from '@dxos/feed-store';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
-import {
-  EchoEnvelope,
-  ItemMutation
-} from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { Entity } from './entity';
 import { ItemManager } from './item-manager';
@@ -100,26 +97,18 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
   }
 
   get links(): Link<any, any, any>[] {
-    return Array.from(this._links.values()).filter(
-      (link) => !link._isDangling()
-    );
+    return Array.from(this._links.values()).filter((link) => !link._isDangling());
   }
 
   get refs(): Link<any, any, any>[] {
-    return Array.from(this._refs.values()).filter(
-      (link) => !link._isDangling()
-    );
+    return Array.from(this._refs.values()).filter((link) => !link._isDangling());
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph starting from this item.
    */
   select(): Selection<Item<any>> {
-    return createItemSelection(
-      this as Item,
-      this._itemManager.debouncedUpdate,
-      undefined
-    );
+    return createItemSelection(this as Item, this._itemManager.debouncedUpdate, undefined);
   }
 
   /**
@@ -181,9 +170,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
 
     // Wait for mutation below to be processed.
     // TODO(burdon): Refine to wait for this specific mutation.
-    const onUpdate = this._onUpdate.waitFor(
-      () => parentId === this._parent?.id
-    );
+    const onUpdate = this._onUpdate.waitFor(() => parentId === this._parent?.id);
 
     await this._writeStream.write({
       itemId: this.id,
@@ -199,10 +186,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
    * Process a mutation from the stream.
    * @private (Package-private).
    */
-  _processMutation(
-    mutation: ItemMutation,
-    getItem: (itemId: ItemID) => Item<any> | undefined
-  ) {
+  _processMutation(mutation: ItemMutation, getItem: (itemId: ItemID) => Item<any> | undefined) {
     log('_processMutation %s', JSON.stringify(mutation));
 
     const { action, parentId } = mutation;

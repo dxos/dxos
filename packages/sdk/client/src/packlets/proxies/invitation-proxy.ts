@@ -44,9 +44,7 @@ export class InvitationProxy {
     this._isClosed = true;
   }
 
-  async createInvitationRequest({
-    stream
-  }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
+  async createInvitationRequest({ stream }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
     return new Promise((resolve, reject) => {
       const connected = new Event();
       const finished = new Event();
@@ -59,15 +57,8 @@ export class InvitationProxy {
         (invitationMsg) => {
           if (!invitation) {
             assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
-            const descriptor = InvitationDescriptor.fromProto(
-              invitationMsg.descriptor
-            );
-            invitation = new InvitationRequest(
-              descriptor,
-              connected,
-              finished,
-              error
-            );
+            const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
+            invitation = new InvitationRequest(descriptor, connected, finished, error);
             invitation.canceled.on(() => this._removeInvitation(invitation));
 
             this.activeInvitations.push(invitation);
@@ -75,10 +66,7 @@ export class InvitationProxy {
             resolve(invitation);
           }
 
-          if (
-            invitationMsg.state === InvitationState.CONNECTED &&
-            !invitation.hasConnected
-          ) {
+          if (invitationMsg.state === InvitationState.CONNECTED && !invitation.hasConnected) {
             connected.emit();
           }
 
@@ -107,9 +95,7 @@ export class InvitationProxy {
   }
 
   protected _removeInvitation(invitation: InvitationRequest) {
-    const index = this.activeInvitations.findIndex(
-      (activeInvitation) => activeInvitation === invitation
-    );
+    const index = this.activeInvitations.findIndex((activeInvitation) => activeInvitation === invitation);
     this.activeInvitations.splice(index, 1);
     this.invitationsUpdate.emit();
   }
@@ -119,8 +105,7 @@ export class InvitationProxy {
     invitationDescriptor,
     onAuthenticate
   }: HandleInvitationRedemptionOpts): HandleInvitationRedemptionResult {
-    const [getInvitationProcess, resolveInvitationProcess] =
-      trigger<RedeemedInvitationProto>();
+    const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitationProto>();
     const [waitForFinish, resolveFinish] = trigger<RedeemedInvitationProto>();
 
     stream.subscribe(
@@ -145,9 +130,7 @@ export class InvitationProxy {
     );
 
     const authenticate = async (secret: Uint8Array) => {
-      if (
-        invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE
-      ) {
+      if (invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
 
@@ -159,10 +142,7 @@ export class InvitationProxy {
       });
     };
 
-    if (
-      invitationDescriptor.secret &&
-      invitationDescriptor.type === InvitationDescriptorProto.Type.INTERACTIVE
-    ) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorProto.Type.INTERACTIVE) {
       // Authenticate straight away, if secret is already provided.
       void authenticate(invitationDescriptor.secret);
     }

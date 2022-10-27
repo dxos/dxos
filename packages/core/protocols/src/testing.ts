@@ -23,8 +23,6 @@ export const createTestItemMutation = (
   payload: {
     '@type': 'dxos.echo.feed.EchoEnvelope',
     itemId,
-    mutation: schema
-      .getCodecForType('example.testing.data.TestItemMutation')
-      .encode({ key, value })
+    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
   }
 });

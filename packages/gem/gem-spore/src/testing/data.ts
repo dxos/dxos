@@ -20,8 +20,7 @@ export const createNode = (type: string = undefined): TestNode => ({
   label: faker.lorem.words(3).replace(/ /g, '-')
 });
 
-export const createNodes = (n = 0): TestNode[] =>
-  Array.from({ length: n }).map(createNode);
+export const createNodes = (n = 0): TestNode[] => Array.from({ length: n }).map(createNode);
 
 export const createLink = (source: TestNode, target: TestNode): GraphLink => ({
   id: `${source.id}-${target.id}`,
@@ -107,8 +106,5 @@ export const createGraph = (numNodes = 0, numLinks = 0) => {
 export const deleteNodes = (graph: GraphData<TestNode>, ids: string[]) => {
   graph.nodes = graph.nodes.filter(({ id }) => ids.indexOf(id) === -1);
 
-  graph.links = graph.links.filter(
-    ({ source, target }) =>
-      ids.indexOf(source) === -1 && ids.indexOf(target) === -1
-  );
+  graph.links = graph.links.filter(({ source, target }) => ids.indexOf(source) === -1 && ids.indexOf(target) === -1);
 };

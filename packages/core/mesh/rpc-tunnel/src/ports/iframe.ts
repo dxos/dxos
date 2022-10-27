@@ -7,11 +7,7 @@ import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
 
-const sendToIFrame = (
-  iframe: HTMLIFrameElement,
-  origin: string,
-  message: MessageData
-) => {
+const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
     log.debug('IFrame content window missing', { origin });
     return;
@@ -40,12 +36,7 @@ export type IFramePortOptions = {
  * @param options.onOrigin Callback triggered when origin of destination window is verified.
  * @returns RPC port for messaging.
  */
-export const createIFramePort = ({
-  channel,
-  iframe,
-  origin,
-  onOrigin
-}: IFramePortOptions): RpcPort => {
+export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePortOptions): RpcPort => {
   return {
     send: async (data) => {
       if (!origin) {
@@ -53,10 +44,7 @@ export const createIFramePort = ({
         return;
       }
 
-      const payload = data.buffer.slice(
-        data.byteOffset,
-        data.byteOffset + data.byteLength
-      );
+      const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       const message = { channel, payload };
       if (iframe) {
         sendToIFrame(iframe, origin, message);
@@ -75,10 +63,7 @@ export const createIFramePort = ({
         }
 
         const isMessageData =
-          event.data &&
-          typeof event.data === 'object' &&
-          'channel' in event.data &&
-          'payload' in event.data;
+          event.data && typeof event.data === 'object' && 'channel' in event.data && 'payload' in event.data;
         const message = isMessageData ? (event.data as MessageData) : undefined;
         if (message?.channel !== channel) {
           return;

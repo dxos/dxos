@@ -2,17 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy
-} from '@dnd-kit/sortable';
-import {
-  ColumnOrderState,
-  createTable,
-  getCoreRowModel,
-  useTableInstance
-} from '@tanstack/react-table';
+import { horizontalListSortingStrategy, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { ColumnOrderState, createTable, getCoreRowModel, useTableInstance } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 
 import { DraggableContainer } from '../DraggableContainer';
@@ -34,8 +25,7 @@ const getColumns = (cols: any[]) =>
   );
 
 const DEFAULT_COLUMN_WIDTH = '300px';
-const getGridCellSize = (columns: any[]) =>
-  columns.map((column) => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
+const getGridCellSize = (columns: any[]) => columns.map((column) => column.width ?? DEFAULT_COLUMN_WIDTH).join(' ');
 
 export interface DroppableTableProps {
   id: string;
@@ -89,18 +79,10 @@ export const DroppableTable = ({
           width: 'fit-content'
         }}
       >
-        <SortableContext
-          id={`columns-${id}`}
-          items={columnOrder}
-          strategy={horizontalListSortingStrategy}
-        >
+        <SortableContext id={`columns-${id}`} items={columnOrder} strategy={horizontalListSortingStrategy}>
           {instance.getHeaderGroups().map((headerGroup) =>
             headerGroup.headers.map((header) => (
-              <DraggableContainer
-                key={header.id}
-                id={header.id}
-                style={{ padding: 8 }}
-              >
+              <DraggableContainer key={header.id} id={header.id} style={{ padding: 8 }}>
                 {header.isPlaceholder ? null : header.renderHeader()}
               </DraggableContainer>
             ))

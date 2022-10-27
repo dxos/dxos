@@ -25,32 +25,16 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
-    throw new InvalidConfigurationError(
-      'RAM storage cannot be used in persistent mode.'
-    );
+    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
   }
-  if (
-    !persistent &&
-    storageType !== undefined &&
-    storageType !== StorageDriver.RAM
-  ) {
-    throw new InvalidConfigurationError(
-      'Cannot use a persistent storage in not persistent mode.'
-    );
+  if (!persistent && storageType !== undefined && storageType !== StorageDriver.RAM) {
+    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
   }
   if (persistent && keyStorage === StorageDriver.RAM) {
-    throw new InvalidConfigurationError(
-      'RAM key storage cannot be used in persistent mode.'
-    );
+    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
   }
-  if (
-    !persistent &&
-    keyStorage !== StorageDriver.RAM &&
-    keyStorage !== undefined
-  ) {
-    throw new InvalidConfigurationError(
-      'Cannot use a persistent key storage in not persistent mode.'
-    );
+  if (!persistent && keyStorage !== StorageDriver.RAM && keyStorage !== undefined) {
+    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
@@ -58,10 +42,7 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
       type: persistent ? toStorageType(storageType) : StorageType.RAM,
       root: `${path}/`
     }),
-    keyStorage: createKeyStorage(
-      `${path}/keystore`,
-      persistent ? toKeyStorageType(keyStorage) : 'ram'
-    )
+    keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
 };
 
@@ -77,15 +58,11 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
     case 'ram':
       return memdown();
     default:
-      throw new InvalidConfigurationError(
-        `Invalid key storage type: ${defaultedType}`
-      );
+      throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
   }
 };
 
-const toStorageType = (
-  type: StorageDriver | undefined
-): StorageType | undefined => {
+const toStorageType = (type: StorageDriver | undefined): StorageType | undefined => {
   switch (type) {
     case undefined:
       return undefined;
@@ -104,9 +81,7 @@ const toStorageType = (
   }
 };
 
-const toKeyStorageType = (
-  type: StorageDriver | undefined
-): KeyStorageType | undefined => {
+const toKeyStorageType = (type: StorageDriver | undefined): KeyStorageType | undefined => {
   switch (type) {
     case undefined:
       return undefined;

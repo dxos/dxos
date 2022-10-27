@@ -29,20 +29,14 @@ export const getBrowser = (browserType: BrowserType) => {
   }
 };
 
-export const getNewBrowserContext = async (
-  browserType: BrowserType,
-  options: BrowserOptions
-) => {
+export const getNewBrowserContext = async (browserType: BrowserType, options: BrowserOptions) => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
   await mkdir(userDataDir, { recursive: true });
 
   const browserRunner = getBrowser(browserType);
   const context = await browserRunner.launchPersistentContext(userDataDir, {
     headless: options.headless,
-    args: [
-      ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
-      ...(options.browserArgs ?? [])
-    ]
+    args: [...(options.debug ? ['--auto-open-devtools-for-tabs'] : []), ...(options.browserArgs ?? [])]
   });
   const page = await context.newPage();
 

@@ -31,10 +31,7 @@ export const useControlledState = <T>(
   return [
     value,
     (callback: T | ((previous: T) => T)) => {
-      const newValue =
-        typeof callback === 'function'
-          ? (callback as Function)(value)
-          : callback;
+      const newValue = typeof callback === 'function' ? (callback as Function)(value) : callback;
       setValue(newValue);
       onChange?.(newValue);
     }

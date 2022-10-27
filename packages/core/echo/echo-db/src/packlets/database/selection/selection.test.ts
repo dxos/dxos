@@ -21,18 +21,12 @@ const ids = (entities: Entity[]) => entities.map((entity) => entity.id);
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
-const createModel = (id: ItemID) =>
-  modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
+const createModel = (id: ItemID) => modelFactory.createModel(ObjectModel.meta.type, id, {}, PublicKey.random());
 
 const createItem = (id: ItemID, type: ItemType, parent?: Item<any>) =>
   new Item(null as any, id, type, createModel(id), undefined, parent);
 
-const createLink = (
-  id: ItemID,
-  type: ItemType,
-  source: Item<any>,
-  target: Item<any>
-) => {
+const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<any>) => {
   const link = new Link(null as any, id, type, createModel(id), {
     sourceId: source.id,
     targetId: target.id,
@@ -83,17 +77,7 @@ const person2 = createItem('person/2', ITEM_PERSON, org1);
 const person3 = createItem('person/3', ITEM_PERSON, org2);
 const person4 = createItem('person/4', ITEM_PERSON, org2);
 
-const items: Item<any>[] = [
-  org1,
-  org2,
-  project1,
-  project2,
-  project3,
-  person1,
-  person2,
-  person3,
-  person4
-];
+const items: Item<any>[] = [org1, org2, project1, project2, project3, person1, person2, person3, person4];
 
 const links: Link<any>[] = [
   createLink('link/1', LINK_MEMBER, project1, person1),
@@ -111,40 +95,27 @@ describe('Selection', function () {
     });
 
     it('by id', function () {
-      expect(createRootSelection({ id: org1.id }).exec().entities).toEqual([
-        org1
-      ]);
+      expect(createRootSelection({ id: org1.id }).exec().entities).toEqual([org1]);
 
-      expect(createRootSelection({ id: org2.id }).exec().entities).toEqual([
-        org2
-      ]);
+      expect(createRootSelection({ id: org2.id }).exec().entities).toEqual([org2]);
     });
 
     it('single type', function () {
-      expect(
-        createRootSelection({ type: ITEM_PROJECT }).exec().entities
-      ).toHaveLength(3);
+      expect(createRootSelection({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
     it('multiple types', function () {
-      expect(
-        createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] }).exec().entities
-      ).toHaveLength(5);
+      expect(createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] }).exec().entities).toHaveLength(5);
     });
   });
 
   describe('filter', function () {
     it('invalid', function () {
-      expect(
-        createRootSelection().filter({ type: 'dxos:type/invalid' }).exec()
-          .entities
-      ).toHaveLength(0);
+      expect(createRootSelection().filter({ type: 'dxos:type/invalid' }).exec().entities).toHaveLength(0);
     });
 
     it('single type', function () {
-      expect(
-        createRootSelection().filter({ type: ITEM_PROJECT }).exec().entities
-      ).toHaveLength(3);
+      expect(createRootSelection().filter({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
     it('multiple types', function () {
@@ -167,68 +138,48 @@ describe('Selection', function () {
   describe('children', function () {
     it('from multiple items', function () {
       expect(
-        ids(
-          createRootSelection()
-            .filter({ type: ITEM_ORG })
-            .children({ type: ITEM_PROJECT })
-            .exec().entities
-        )
+        ids(createRootSelection().filter({ type: ITEM_ORG }).children({ type: ITEM_PROJECT }).exec().entities)
       ).toStrictEqual(ids([project1, project2, project3]));
     });
 
     it('from single item', function () {
-      expect(
-        ids(createRootSelection({ id: org1.id }).children().exec().entities)
-      ).toStrictEqual(ids([project1, project2, person1, person2]));
+      expect(ids(createRootSelection({ id: org1.id }).children().exec().entities)).toStrictEqual(
+        ids([project1, project2, person1, person2])
+      );
     });
   });
 
   describe('parent', function () {
     it('from multiple items', function () {
-      expect(
-        ids(
-          createRootSelection().filter({ type: ITEM_PROJECT }).parent().exec()
-            .entities
-        )
-      ).toStrictEqual(ids([org1, org2]));
+      expect(ids(createRootSelection().filter({ type: ITEM_PROJECT }).parent().exec().entities)).toStrictEqual(
+        ids([org1, org2])
+      );
     });
 
     it('from single item', function () {
-      expect(
-        ids(createRootSelection({ id: project1.id }).parent().exec().entities)
-      ).toStrictEqual(ids([org1]));
+      expect(ids(createRootSelection({ id: project1.id }).parent().exec().entities)).toStrictEqual(ids([org1]));
     });
 
     it('is empty', function () {
-      expect(
-        createRootSelection({ id: org1.id }).parent().exec().entities
-      ).toEqual([]);
+      expect(createRootSelection({ id: org1.id }).parent().exec().entities).toEqual([]);
     });
   });
 
   describe('links', function () {
     it('links from single item', function () {
-      expect(
-        ids(
-          createRootSelection({ id: project1.id }).links().target().exec()
-            .entities
-        )
-      ).toStrictEqual(ids([person1, person2]));
+      expect(ids(createRootSelection({ id: project1.id }).links().target().exec().entities)).toStrictEqual(
+        ids([person1, person2])
+      );
     });
 
     it('links from multiple items', function () {
-      expect(
-        createRootSelection({ type: ITEM_PROJECT }).links().exec().entities
-      ).toHaveLength(links.length);
+      expect(createRootSelection({ type: ITEM_PROJECT }).links().exec().entities).toHaveLength(links.length);
     });
 
     it('sources', function () {
-      expect(
-        ids(
-          createRootSelection({ type: ITEM_PERSON }).refs().source().exec()
-            .entities
-        )
-      ).toStrictEqual(ids([project1, project2]));
+      expect(ids(createRootSelection({ type: ITEM_PERSON }).refs().source().exec().entities)).toStrictEqual(
+        ids([project1, project2])
+      );
     });
   });
 
@@ -291,17 +242,13 @@ describe('Selection', function () {
       {
         const promise = query.update.waitForCount(1);
         update.emit([]);
-        await expect(
-          promiseTimeout(promise, 10, new Error('timeout'))
-        ).rejects.toThrow('timeout');
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([org1]);
-        await expect(
-          promiseTimeout(promise, 10, new Error('timeout'))
-        ).rejects.toThrow('timeout');
+        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
     });
   });

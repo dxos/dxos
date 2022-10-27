@@ -207,6 +207,7 @@ importers:
     specifiers:
       '@dxos/plate': workspace:*
       '@dxos/react-components': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
       '@types/eslint': ^8.4.6
       '@types/markdown-it': ^12.2.3
@@ -214,6 +215,7 @@ importers:
       '@types/prettier': ^2.7.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@vuepress/bundler-vite': ^2.0.0-beta.51
       '@vuepress/client': ^2.0.0-beta.51
       '@vuepress/plugin-register-components': ^2.0.0-beta.51
       '@vuepress/plugin-search': ^2.0.0-beta.51
@@ -228,10 +230,12 @@ importers:
       typedoc: 0.23.15
       typescript: ^4.7.2
       vue: ^3.2.40
+      vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.51
     devDependencies:
       '@dxos/plate': link:../tools/plate
       '@dxos/react-components': link:../packages/sdk/react-components
+      '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3
@@ -239,6 +243,7 @@ importers:
       '@types/prettier': 2.7.1
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@vuepress/bundler-vite': 2.0.0-beta.51
       '@vuepress/client': 2.0.0-beta.51
       '@vuepress/plugin-register-components': 2.0.0-beta.51
       '@vuepress/plugin-search': 2.0.0-beta.51
@@ -253,14 +258,15 @@ importers:
       typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
       typescript: 4.8.4
       vue: 3.2.41
+      vue-router: 4.1.6_vue@3.2.41
       vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
 
   packages/apps/halo-app:
     specifiers:
+      '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/composer': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -269,33 +275,30 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/react-uikit': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
-      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
-      classnames: ^2.3.2
       debug: ^4.3.3
-      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
       typescript: ^4.7.2
-      url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
-      '@dxos/composer': link:../../experimental/composer
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -303,20 +306,19 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../common/react-uikit
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      classnames: 2.3.2
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       debug: 4.3.4
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-      url-join: 5.0.0
     devDependencies:
+      '@babel/core': 7.19.3
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@types/debug': 4.1.7
@@ -804,10 +806,8 @@ importers:
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
       '@headlessui/react': ^1.7.3
-      '@radix-ui/react-avatar': ^1.0.1
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
-      '@radix-ui/react-popover': ^1.0.2
       '@radix-ui/react-tooltip': ^1.0.2
       '@tailwindcss/forms': ^0.5.3
       '@types/react': ^18.0.21
@@ -816,7 +816,6 @@ importers:
       alea: ^1.0.1
       autoprefixer: ^10.4.12
       classnames: ^2.3.2
-      jdenticon: ^3.2.0
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       qrcode.react: ^3.1.0
@@ -831,16 +830,13 @@ importers:
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-avatar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-popover': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-tooltip': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.18
       classnames: 2.3.2
-      jdenticon: 3.2.0
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
       tailwindcss: 3.1.8
@@ -858,12 +854,8 @@ importers:
 
   packages/common/react-uikit:
     specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
-      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
@@ -877,20 +869,14 @@ importers:
       react-dom: ^18.2.0
       react-i18next: ^11.18.6
       storybook-dark-mode: ^1.1.2
-      url-join: ^5.0.0
       vite: 3.0.9
     dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../debug
-      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../react-ui
-      '@dxos/util': link:../util
       classnames: 2.3.2
       debug: 4.3.4
       i18next: 21.10.0
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
-      url-join: 5.0.0
     devDependencies:
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@types/debug': 4.1.7
@@ -918,11 +904,13 @@ importers:
 
   packages/common/telemetry:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/sentry': workspace:*
       '@segment/snippet': ^4.15.3
       '@types/analytics-node': ^3.1.9
       analytics-node: ^6.2.0
     dependencies:
+      '@dxos/log': link:../log
       '@dxos/sentry': link:../sentry
       '@segment/snippet': 4.15.3
       analytics-node: 6.2.0
@@ -1030,31 +1018,6 @@ importers:
       hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
-
-  packages/core/echo/echo-testing:
-    specifiers:
-      '@dxos/echo-db': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@types/faker': ^5.5.9
-      '@types/lodash.times': ^4.3.6
-      abstract-leveldown: ~7.0.0
-      faker: ^5.5.3
-      jsondown: dxos/jsondown#main
-      lodash.times: ^4.3.2
-    dependencies:
-      '@dxos/echo-db': link:../echo-db
-      '@dxos/object-model': link:../object-model
-      '@dxos/protocols': link:../../protocols
-      faker: 5.5.3
-      lodash.times: 4.3.2
-    devDependencies:
-      '@dxos/random-access-storage': link:../../../common/random-access-storage
-      '@types/faker': 5.5.9
-      '@types/lodash.times': 4.3.7
-      abstract-leveldown: 7.0.0
-      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
 
   packages/core/echo/messenger-model:
     specifiers:
@@ -2160,7 +2123,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/gem-core': workspace:*
@@ -2190,6 +2152,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/url-join': ~4.0.1
       buffer: ^6.0.3
       clsx: ^1.1.1
       concurrently: ~7.0.0
@@ -2208,13 +2171,12 @@ importers:
       ts-node: 10.9.1
       typescript: ^4.7.2
       uint8arrays: 3.0.0
-      url-join: ^5.0.0
+      url-join: ^4.0.1
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-testing': link:../../sdk/client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/echo-testing': link:../../core/echo/echo-testing
       '@dxos/gem-core': link:../../gem/gem-core
       '@dxos/gem-spore': link:../../gem/gem-spore
       '@dxos/object-model': link:../../core/echo/object-model
@@ -2240,7 +2202,7 @@ importers:
       it-all: 1.0.6
       mobile-detect: 1.4.5
       uint8arrays: 3.0.0
-      url-join: 5.0.0
+      url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/async': link:../../common/async
@@ -2255,6 +2217,7 @@ importers:
       '@types/node': 16.11.66
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
+      '@types/url-join': 4.0.1
       buffer: 6.0.3
       concurrently: 7.0.0
       dotenv: 8.6.0
@@ -2447,6 +2410,7 @@ importers:
       '@types/faker': ^5.5.9
       '@types/isomorphic-fetch': ^0.0.36
       '@types/node': ^16.11.58
+      '@types/url-join': ~4.0.1
       assert: ^2.0.0
       faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
@@ -2455,7 +2419,7 @@ importers:
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
       typescript: ^4.7.2
-      url-join: ^5.0.0
+      url-join: ^4.0.1
     dependencies:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -2464,12 +2428,13 @@ importers:
       isomorphic-fetch: 3.0.0
       preact: 10.11.2
       preact-render-to-string: 5.2.5_preact@10.11.2
-      url-join: 5.0.0
+      url-join: 4.0.1
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 16.11.66
+      '@types/url-join': 4.0.1
       faker: 5.5.3
       mocha: 8.4.0
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
@@ -3135,6 +3100,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/string-hash': ^1.1.1
+      '@types/url-join': ~4.0.1
       babel-plugin-add-module-exports: ^1.0.4
       clsx: ^1.1.1
       debug: ^4.3.3
@@ -3146,7 +3112,7 @@ importers:
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
       string-hash: ~1.1.3
-      url-join: ^5.0.0
+      url-join: ^4.0.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/debug': link:../../common/debug
@@ -3160,7 +3126,7 @@ importers:
       qrcode.react: 3.1.0_react@18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       string-hash: 1.1.3
-      url-join: 5.0.0
+      url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.19.3
       '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
@@ -3181,6 +3147,7 @@ importers:
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/string-hash': 1.1.1
+      '@types/url-join': 4.0.1
       babel-plugin-add-module-exports: 1.0.4
       clsx: 1.2.1
       faker: 5.5.3
@@ -3328,6 +3295,7 @@ importers:
       '@types/lodash.isplainobject': ^4.0.6
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/url-join': ~4.0.1
       '@types/uuid': ~8.3.3
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
@@ -3338,7 +3306,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      url-join: ^5.0.0
+      url-join: ^4.0.1
       uuid: ^8.3.2
     dependencies:
       '@dxos/debug': link:../../common/debug
@@ -3352,7 +3320,7 @@ importers:
       lodash.isplainobject: 4.0.6
       mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.1.0_react@18.2.0
-      url-join: 5.0.0
+      url-join: 4.0.1
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
       '@babel/core': 7.19.3
@@ -3380,6 +3348,7 @@ importers:
       '@types/lodash.isplainobject': 4.0.7
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
+      '@types/url-join': 4.0.1
       '@types/uuid': 8.3.4
       babel-plugin-add-module-exports: 1.0.4
       react: 18.2.0
@@ -8170,21 +8139,6 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /@radix-ui/react-avatar/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-GfUgw4i/OWmb76bmM9qLnedYOsXhPvRXL6xaxyZzhiIVEwo2KbmxTaSQv5r1Oh8nNqBs1vfYPGuVmhEfpxpnvw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.19.4
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
-      '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
   /@radix-ui/react-collection/1.0.1_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-uuiFbs+YCKjn3X1DTSx9G7BHApu4GHbi3kgiwsnFUbOKCrwejAJv4eE4Vc8C0Oaxt9T0aV4ox0WCOdx+39Xo+g==}
     peerDependencies:
@@ -8326,34 +8280,6 @@ packages:
       '@radix-ui/react-visually-hidden': 1.0.1_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@radix-ui/react-popover/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
-    resolution: {integrity: sha512-4tqZEl9w95R5mlZ/sFdgBnfhCBOEPepLIurBA5kt/qaAhldJ1tNQd0ngr0ET0AHbPotT4mwxMPr7a+MA/wbK0g==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.19.4
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-dismissable-layer': 1.0.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-focus-guards': 1.0.0_react@18.2.0
-      '@radix-ui/react-focus-scope': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-id': 1.0.0_react@18.2.0
-      '@radix-ui/react-popper': 1.0.1_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-portal': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-slot': 1.0.1_react@18.2.0
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      aria-hidden: 1.2.1_iapumuv4e6jcjznwuxpf4tt22e
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-remove-scroll: 2.5.5_iapumuv4e6jcjznwuxpf4tt22e
-    transitivePeerDependencies:
-      - '@types/react'
     dev: false
 
   /@radix-ui/react-popper/1.0.1_rj7ozvcq3uehdlnj3cbwzbi5ce:
@@ -12235,12 +12161,6 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
-  /@types/lodash.times/4.3.7:
-    resolution: {integrity: sha512-Jd7PPonqfO2zpNdwpF4dAH4DPSJ7hnsX35k8pFtkgNqSQWSWLINbi1HnTFAE/oOn6XXfXONahZWVVK3klTOIPg==}
-    dependencies:
-      '@types/lodash': 4.14.186
-    dev: true
-
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -12510,6 +12430,10 @@ packages:
 
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
+
+  /@types/url-join/4.0.1:
+    resolution: {integrity: sha512-wDXw9LEEUHyV+7UWy7U315nrJGJ7p1BzaCxDpEoLr789Dk1WDVMMlf3iBfbG2F8NdWnYyFbtTxUn2ZNbm1Q4LQ==}
+    dev: true
 
   /@types/use-subscription/1.0.0:
     resolution: {integrity: sha512-0WWZ5GUDKMXUY/1zy4Ur5/zsC0s/B+JjXfHdkvx6JgDNZzZV5eW+KKhDqsTGyqX56uh99gwGwbsKbVwkcVIKQA==}
@@ -12865,6 +12789,10 @@ packages:
     resolution: {integrity: sha512-Ku31WzpOV/8cruFaXaEZKF81WkNnvCSlBY4eOGtz5WMSdJvX1v1WWlSMGZeqUwPtQ27ZZz7B62erEMq8JDjcXw==}
     dev: true
 
+  /@vue/devtools-api/6.4.5:
+    resolution: {integrity: sha512-JD5fcdIuFxU4fQyXUu3w2KpAJHzTVdN+p4iOX2lMWSHMOoQdMAcpFLZzm9Z/2nmsoZ1a96QEhZ26e50xLBsgOQ==}
+    dev: true
+
   /@vue/reactivity-transform/3.2.41:
     resolution: {integrity: sha512-mK5+BNMsL4hHi+IR3Ft/ho6Za+L3FA5j8WvreJ7XzHrqkPq8jtF/SMo7tuc9gHjLDwKZX1nP1JQOKo9IEAn54A==}
     dependencies:
@@ -12924,7 +12852,7 @@ packages:
       rollup: 2.79.1
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vue: 3.2.41
-      vue-router: 4.1.5_vue@3.2.41
+      vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
       - less
       - sass
@@ -13116,7 +13044,7 @@ packages:
       '@vuepress/utils': 2.0.0-beta.51
       chokidar: 3.5.3
       vue: 3.2.41
-      vue-router: 4.1.5_vue@3.2.41
+      vue-router: 4.1.6_vue@3.2.41
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13486,6 +13414,7 @@ packages:
     resolution: {integrity: sha512-+OVvxH2rHVEhWLdbudP6p0+dNMXu8JA1CbhP19T8paTYAcX7oJ4OVjT+ZUVpv7mITxXHqDMej+GdqXBmXkw09w==}
     dependencies:
       xtend: 4.0.2
+    dev: false
 
   /abstract-leveldown/6.2.3:
     resolution: {integrity: sha512-BsLm5vFMRUrrLeCcRc+G0t2qOaTzpoJQLOubq2XM72eNpjF5UdU5o/5NvlNhx95XHcAvcl8OMXr4mlg/fRgUXQ==}
@@ -13517,6 +13446,7 @@ packages:
       level-concat-iterator: 3.1.0
       level-supports: 2.1.0
       queue-microtask: 1.2.3
+    dev: false
 
   /accepts/1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -15238,12 +15168,6 @@ packages:
   /caniuse-lite/1.0.30001420:
     resolution: {integrity: sha512-OnyeJ9ascFA9roEj72ok2Ikp7PHJTKubtEJIQ/VK3fdsS50q4KWy+Z5X0A1/GswEItKX0ctAp8n4SYDE7wTu6A==}
 
-  /canvas-renderer/2.2.1:
-    resolution: {integrity: sha512-RrBgVL5qCEDIXpJ6NrzyRNoTnXxYarqm/cS/W6ERhUJts5UQtt/XPEosGN3rqUkZ4fjBArlnCbsISJ+KCFnIAg==}
-    dependencies:
-      '@types/node': 18.11.0
-    dev: false
-
   /capital-case/1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
     dependencies:
@@ -15278,6 +15202,7 @@ packages:
   /catering/2.1.1:
     resolution: {integrity: sha512-K7Qy8O9p76sL3/3m7/zLKbRkyOlSZAgzEaLhyj2mXS8PsCud2Eo4hAb8aLtZqHh0QGqLcb9dlJSu6lHRVENm1w==}
     engines: {node: '>=6'}
+    dev: false
 
   /cborg/1.9.5:
     resolution: {integrity: sha512-fLBv8wmqtlXqy1Yu+pHzevAIkW6k2K0ZtMujNzWphLsA34vzzg9BHn+5GmZqOJkSA9V7EMKsWrf6K976c1QMjQ==}
@@ -22275,14 +22200,6 @@ packages:
       filelist: 1.0.4
       minimatch: 3.1.2
 
-  /jdenticon/3.2.0:
-    resolution: {integrity: sha512-z6Iq3fTODUMSOiR2nNYrqigS6Y0GvdXfyQWrUby7htDHvX7GNEwaWR4hcaL+FmhEgBe08Xkup/BKxXQhDJByPA==}
-    engines: {node: '>=6.4.0'}
-    hasBin: true
-    dependencies:
-      canvas-renderer: 2.2.1
-    dev: false
-
   /jed/1.1.1:
     resolution: {integrity: sha512-z35ZSEcXHxLW4yumw0dF6L464NT36vmx3wxJw8MDpraBcWuNVgUPZgPJKcu1HekNgwlMFNqol7i/IpSbjhqwqA==}
     dev: true
@@ -23330,6 +23247,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       catering: 2.1.1
+    dev: false
 
   /level-errors/2.0.1:
     resolution: {integrity: sha512-UVprBJXite4gPS+3VznfgDSU8PTRuVX0NXwoWW50KLxd2yw4Y1t2JUR5In1itQnudZqRMT9DlAM3Q//9NCjCFw==}
@@ -23364,6 +23282,7 @@ packages:
   /level-supports/2.1.0:
     resolution: {integrity: sha512-E486g1NCjW5cF78KGPrMDRBYzPuueMZ6VBXHT6gC7A8UYWGiM14fGgp+s/L1oFfDWSPV/+SFkYCmZ0SiESkRKA==}
     engines: {node: '>=10'}
+    dev: false
 
   /leveldown/5.6.0:
     resolution: {integrity: sha512-iB8O/7Db9lPaITU1aA2txU/cBEXAt4vWwKQRrrWuS6XDgbP4QZGj9BL2aNbwb002atoQ/lIotJkfyzz+ygQnUQ==}
@@ -23617,10 +23536,6 @@ packages:
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
     dev: true
-
-  /lodash.times/4.3.2:
-    resolution: {integrity: sha512-FfaJzl0SA35CRPDh5SWe2BTght6y5KSK7yJv166qIp/8q7qOwBDCvuDZE2RUSMRpBkLF6rZKbLEUoTmaP3qg6A==}
-    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -24236,6 +24151,7 @@ packages:
       inherits: 2.0.4
       ltgt: 2.2.1
       safe-buffer: 5.1.2
+    dev: false
 
   /memdown/5.1.0_tjbpekhnedejisbcwvc5eec3ii:
     resolution: {integrity: sha512-B3J+UizMRAlEArDjWHTMmadet+UKwHd3UjMgGBkZcKAxAYVPS9o0Yeiha4qvz7iGiL2Sb3igUft6p7nbFWctpw==}
@@ -24769,6 +24685,7 @@ packages:
 
   /minimist/0.0.8:
     resolution: {integrity: sha512-miQKw5Hv4NS1Psg2517mV4e4dYNaO3++hjAvLOAzKqZ61rH8NS1SK+vbfBWZ5PY/Me/bEWhUwqMghEW5Fb9T7Q==}
+    dev: false
 
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
@@ -24885,6 +24802,7 @@ packages:
     hasBin: true
     dependencies:
       minimist: 0.0.8
+    dev: false
 
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
@@ -26498,6 +26416,7 @@ packages:
       react: '>=16'
     dependencies:
       react: 18.2.0
+    dev: true
 
   /picocolors/0.2.1:
     resolution: {integrity: sha512-cMlDqaLEqfSaW8Z7N5Jw+lyIW869EzT73/F5lhtY9cLGoVxSXznfgfXMO0Z5K0o0Q2TkTXq+0KFsdnSe3jDViA==}
@@ -31249,9 +31168,8 @@ packages:
     resolution: {integrity: sha512-c2H1fIgpUdwFRIru9HFno5DT73Ok8hg5oOb5AT3ayIgvCRfxgs2jyt5Slw8kEB7j3QUr6yJmMPDT/odjk7jXow==}
     dev: true
 
-  /url-join/5.0.0:
-    resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+  /url-join/4.0.1:
+    resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
     dev: false
 
   /url-loader/4.1.1_lit45vopotvaqup7lrvlnvtxwy:
@@ -31677,6 +31595,15 @@ packages:
       vue: ^3.2.0
     dependencies:
       '@vue/devtools-api': 6.4.4
+      vue: 3.2.41
+    dev: true
+
+  /vue-router/4.1.6_vue@3.2.41:
+    resolution: {integrity: sha512-DYWYwsG6xNPmLq/FmZn8Ip+qrhFEzA14EI12MsMgVxvHFDYvlr4NXpVF5hrRH1wVcDP8fGi5F4rxuJSl8/r+EQ==}
+    peerDependencies:
+      vue: ^3.2.0
+    dependencies:
+      '@vue/devtools-api': 6.4.5
       vue: 3.2.41
     dev: true
 
@@ -32916,3 +32843,4 @@ packages:
       abstract-leveldown: 7.0.0
       memdown: 1.4.1
       mkdirp: 0.5.1
+    dev: false

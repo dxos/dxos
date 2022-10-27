@@ -6,14 +6,7 @@ import * as d3 from 'd3';
 import debug from 'debug';
 
 import { Projector } from '../scene';
-import {
-  emptyGraph,
-  GraphData,
-  GraphLayout,
-  GraphLayoutLink,
-  GraphLayoutNode,
-  GraphNode
-} from './types';
+import { emptyGraph, GraphData, GraphLayout, GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
 
 const log = debug('gem:graph-force-projector');
 
@@ -23,11 +16,7 @@ const log = debug('gem:graph-force-projector');
  * @param cb
  * @param def
  */
-const valueOrFunction = <T>(
-  v: T | ((...args: any[]) => T) | undefined,
-  cb,
-  def: T
-) => {
+const valueOrFunction = <T>(v: T | ((...args: any[]) => T) | undefined, cb, def: T) => {
   return typeof v === 'function' ? cb(v) : v ?? def;
 };
 
@@ -39,12 +28,7 @@ const valueOrFunction = <T>(
  * @param def
  */
 const maybeCreate = <T>(options: T | boolean, cb, def = undefined) => {
-  const value =
-    typeof options === 'boolean'
-      ? (options as boolean)
-        ? {}
-        : undefined
-      : options ?? def;
+  const value = typeof options === 'boolean' ? ((options as boolean) ? {} : undefined) : options ?? def;
   if (value) {
     return cb(value);
   }
@@ -141,9 +125,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     guides: []
   };
 
-  numChildren = (node) =>
-    this._layout.graph.links.filter((link) => link.source.id === node.id)
-      .length;
+  numChildren = (node) => this._layout.graph.links.filter((link) => link.source.id === node.id).length;
 
   get simulation() {
     return this._simulation;
@@ -156,9 +138,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
   mergeData(data: GraphData<N> = emptyGraph) {
     // Merge nodes.
     const nodes = data.nodes.map((node) => {
-      let current: GraphLayoutNode<N> = this._layout.graph.nodes.find(
-        (n) => n.id === node.id
-      );
+      let current: GraphLayoutNode<N> = this._layout.graph.nodes.find((n) => n.id === node.id);
       if (!current) {
         current = {
           id: node.id
@@ -185,10 +165,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
   }
 
   onUpdate(data?: GraphData<N>) {
-    log(
-      'onUpdate',
-      JSON.stringify({ nodes: data?.nodes.length, links: data?.links.length })
-    );
+    log('onUpdate', JSON.stringify({ nodes: data?.nodes.length, links: data?.links.length }));
     this.mergeData(data);
     this.updateForces();
 
@@ -208,9 +185,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
     this._layout.graph.nodes.forEach((node) => {
       if (!node.initialized) {
         // Get starting point from linked element.
-        const link = this._layout.graph.links.find(
-          (link) => link.target.id === node.id
-        );
+        const link = this._layout.graph.links.find((link) => link.target.id === node.id);
 
         // Iniital positions.
         Object.assign(node, {
@@ -223,11 +198,7 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
 
       const children = this.numChildren(node);
       Object.assign(node, {
-        r: valueOrFunction<number>(
-          this.options?.attributes?.radius,
-          (f) => f(node, children),
-          6
-        )
+        r: valueOrFunction<number>(this.options?.attributes?.radius, (f) => f(node, children), 6)
       });
     });
 
@@ -326,82 +297,63 @@ export class GraphForceProjector<N extends GraphNode> extends Projector<
       // https://github.com/d3/d3-force#centering
       .force(
         'center',
-        maybeCreate<ForcesCenterOptions>(
-          forces?.center,
-          (config: ForcesCenterOptions) => {
-            const force = d3.forceCenter();
-            if (config.strength) {
-              force.strength(config.strength);
-            }
-            return force;
+        maybeCreate<ForcesCenterOptions>(forces?.center, (config: ForcesCenterOptions) => {
+          const force = d3.forceCenter();
+          if (config.strength) {
+            force.strength(config.strength);
           }
-        )
+          return force;
+        })
       )
 
       // Collision
       // https://github.com/d3/d3-force#forceCollide
       .force(
         'collide',
-        maybeCreate<ForceCollideOptions>(
-          forces?.collide,
-          (config: ForceCollideOptions) => {
-            const force = d3.forceCollide();
-            force.radius(16);
-            if (config.strength) {
-              force.strength(config.strength);
-            }
-            return force;
+        maybeCreate<ForceCollideOptions>(forces?.collide, (config: ForceCollideOptions) => {
+          const force = d3.forceCollide();
+          force.radius(16);
+          if (config.strength) {
+            force.strength(config.strength);
           }
-        )
+          return force;
+        })
       )
 
       // Radial
       // https://github.com/d3/d3-force#forceRadial
       .force(
         'radial',
-        maybeCreate<ForceRadialOptions>(
-          forces?.radial,
-          (config: ForceRadialOptions) => {
-            const force = d3.forceRadial(
-              config.radius ?? 0,
-              config.x ?? 0,
-              config.y ?? 0
-            );
-            if (config.strength) {
-              force.strength(config.strength);
-            }
-            return force;
+        maybeCreate<ForceRadialOptions>(forces?.radial, (config: ForceRadialOptions) => {
+          const force = d3.forceRadial(config.radius ?? 0, config.x ?? 0, config.y ?? 0);
+          if (config.strength) {
+            force.strength(config.strength);
           }
-        )
+          return force;
+        })
       )
 
       // Positioning
       // https://github.com/d3/d3-force#positioning
       .force(
         'x',
-        maybeCreate<ForcePositioningOptions>(
-          forces?.x,
-          (config: ForcePositioningOptions) => {
-            const force = d3.forceX(config.value ?? 0);
-            if (config.strength) {
-              force.strength(config.strength);
-            }
-            return force;
+        maybeCreate<ForcePositioningOptions>(forces?.x, (config: ForcePositioningOptions) => {
+          const force = d3.forceX(config.value ?? 0);
+          if (config.strength) {
+            force.strength(config.strength);
           }
-        )
+          return force;
+        })
       )
       .force(
         'y',
-        maybeCreate<ForcePositioningOptions>(
-          forces?.y,
-          (config: ForcePositioningOptions) => {
-            const force = d3.forceY(config.value ?? 0);
-            if (config.strength) {
-              force.strength(config.strength);
-            }
-            return force;
+        maybeCreate<ForcePositioningOptions>(forces?.y, (config: ForcePositioningOptions) => {
+          const force = d3.forceY(config.value ?? 0);
+          if (config.strength) {
+            force.strength(config.strength);
           }
-        )
+          return force;
+        })
       )
 
       .restart();

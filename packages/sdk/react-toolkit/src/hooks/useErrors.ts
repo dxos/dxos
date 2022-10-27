@@ -12,11 +12,11 @@ export interface ErrorContextState {
   resetErrors: () => void;
 }
 
-export const ErrorContext: Context<ErrorContextState | undefined> =
-  createContext<ErrorContextState | undefined>(undefined);
+export const ErrorContext: Context<ErrorContextState | undefined> = createContext<ErrorContextState | undefined>(
+  undefined
+);
 
 export const useErrors = (): [Error[], () => void] => {
-  const { errors, resetErrors } =
-    useContext(ErrorContext) ?? raise(new Error('Missing ErrorContext.'));
+  const { errors, resetErrors } = useContext(ErrorContext) ?? raise(new Error('Missing ErrorContext.'));
   return [errors, () => resetErrors()];
 };

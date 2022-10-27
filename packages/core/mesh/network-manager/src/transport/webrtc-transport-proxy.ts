@@ -9,11 +9,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  ConnectionState,
-  BridgeEvent,
-  BridgeService
-} from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
@@ -39,7 +35,10 @@ export class WebRTCTransportProxy implements Transport {
   private _serviceStream!: Stream<BridgeEvent>;
   private readonly _proxyId = PublicKey.random();
 
-  constructor(private readonly _params: WebRTCTransportProxyParams) {
+  // prettier-ignore
+  constructor(
+    private readonly _params: WebRTCTransportProxyParams
+  ) {
     this._serviceStream = this._params.bridgeService.open({
       proxyId: this._proxyId,
       initiator: this._params.initiator
@@ -72,9 +71,7 @@ export class WebRTCTransportProxy implements Transport {
     );
   }
 
-  private async _handleConnection(
-    connectionEvent: BridgeEvent.ConnectionEvent
-  ): Promise<void> {
+  private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
       this.errors.raise(new Error(connectionEvent.error));
     }
@@ -156,10 +153,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
   }
 
   create(options: TransportOptions): Transport {
-    assert(
-      this._bridgeService,
-      'WebRTCTransportProxyFactory is not ready to open connections'
-    );
+    assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
 
     const transport = new WebRTCTransportProxy({
       ...options,

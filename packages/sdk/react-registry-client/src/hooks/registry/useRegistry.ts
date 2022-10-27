@@ -13,19 +13,14 @@ export type RegistryContext = {
   accounts?: AccountsClient;
 };
 
-export const RegistryContext = createContext<RegistryContext | undefined>(
-  undefined
-);
+export const RegistryContext = createContext<RegistryContext | undefined>(undefined);
 
 /**
  * Requires `RegistryProvider` component wrapper.
  */
 export const useRegistry = (): RegistryClient => {
   const context =
-    useContext(RegistryContext) ??
-    raise(
-      new Error('`useRegistry` hook is called outside of RegistryContext.')
-    );
+    useContext(RegistryContext) ?? raise(new Error('`useRegistry` hook is called outside of RegistryContext.'));
 
   return context.registry;
 };
@@ -37,10 +32,7 @@ export const useRegistry = (): RegistryClient => {
  */
 export const useAccountClient = (): AccountsClient | undefined => {
   const context =
-    useContext(RegistryContext) ??
-    raise(
-      new Error('`useAccountClient` hook is called outside of RegistryContext.')
-    );
+    useContext(RegistryContext) ?? raise(new Error('`useAccountClient` hook is called outside of RegistryContext.'));
 
   return context.accounts;
 };

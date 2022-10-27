@@ -6,11 +6,12 @@ import type { Event, Transport } from '@sentry/types';
 
 export type InitOptions = {
   destination?: string;
-  machineId?: string;
+  installationId?: string;
   release?: string;
   environment?: string;
   sampleRate?: number;
   scrubFilenames?: boolean;
+  properties?: object;
   transport?: () => Transport;
   onError?: (event: Event) => void;
 };

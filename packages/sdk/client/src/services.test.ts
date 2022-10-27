@@ -8,10 +8,7 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import {
-  InvitationRequest,
-  RedeemedInvitation
-} from '@dxos/protocols/proto/dxos/client';
+import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxos/client';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -39,23 +36,14 @@ describe.skip('Client Services', function () {
       await inviter.services.ProfileService.createProfile({
         username: 'test-user'
       });
-      const invitation = await new Promise<InvitationRequest>(
-        (resolve, reject) => {
-          inviter.services.ProfileService.createInvitation().subscribe(
-            resolve,
-            reject
-          );
-        }
-      );
+      const invitation = await new Promise<InvitationRequest>((resolve, reject) => {
+        inviter.services.ProfileService.createInvitation().subscribe(resolve, reject);
+      });
 
       assert(invitation.descriptor);
-      const redeemedInvitation = await new Promise<RedeemedInvitation>(
-        (resolve, reject) => {
-          invitee.services.ProfileService.acceptInvitation(
-            invitation.descriptor!
-          ).subscribe(resolve, reject);
-        }
-      );
+      const redeemedInvitation = await new Promise<RedeemedInvitation>((resolve, reject) => {
+        invitee.services.ProfileService.acceptInvitation(invitation.descriptor!).subscribe(resolve, reject);
+      });
 
       await invitee.services.ProfileService.authenticateInvitation({
         processId: redeemedInvitation.id,

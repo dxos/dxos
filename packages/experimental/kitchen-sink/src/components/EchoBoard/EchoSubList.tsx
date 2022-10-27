@@ -5,16 +5,7 @@
 import React, { useState } from 'react';
 
 import { Add as AddIcon } from '@mui/icons-material';
-import {
-  colors,
-  Box,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography
-} from '@mui/material';
+import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -30,12 +21,7 @@ export interface EchoChildListProps {
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
-export const EchoSubList = ({
-  item,
-  itemAdapter,
-  type,
-  onCreateItem
-}: EchoChildListProps) => {
+export const EchoSubList = ({ item, itemAdapter, type, onCreateItem }: EchoChildListProps) => {
   const [showDialog, setShowDialog] = useState(false);
   const { plural, color, icon: Icon } = itemAdapter.meta?.(type) ?? {};
 
@@ -79,12 +65,7 @@ export const EchoSubList = ({
         </Box>
         <List dense disablePadding>
           {itemAdapter.linkedItems?.(item, type).map((item) => (
-            <ListItem
-              key={item.id}
-              dense
-              disableGutters
-              sx={{ py: 0, height: 26, minHeight: 26 }}
-            >
+            <ListItem key={item.id} dense disableGutters sx={{ py: 0, height: 26, minHeight: 26 }}>
               {Icon && (
                 <ListItemIcon sx={{ minWidth: 36, color: color[500] }}>
                   <Icon />

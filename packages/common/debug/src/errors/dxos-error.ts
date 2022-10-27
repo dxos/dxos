@@ -24,11 +24,7 @@ export class DXOSError extends Error {
  * @param userErrorMessage Minimal error message that can be displayed as-is in the UI.
  */
 export class DXOSUserError extends DXOSError {
-  constructor(
-    code: string,
-    dxosErrorMessage?: string,
-    readonly userErrorMessage = dxosErrorMessage
-  ) {
+  constructor(code: string, dxosErrorMessage?: string, readonly userErrorMessage = dxosErrorMessage) {
     super(code, dxosErrorMessage);
   }
 }

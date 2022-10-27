@@ -4,10 +4,7 @@
 
 import React, { FunctionComponent, PropsWithChildren } from 'react';
 
-import {
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
-} from '@mui/icons-material';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import {
   AppBar as MuiAppBar,
   AppBarProps as MuiAppBarProps,
@@ -46,10 +43,8 @@ const Drawer = styled(MuiDrawer, {
     boxSizing: 'content-box',
     overflow: 'hidden',
     border: 'none',
-    borderRight:
-      direction === 'left' ? `1px solid ${theme.palette.divider}` : undefined,
-    borderLeft:
-      direction === 'right' ? `1px solid ${theme.palette.divider}` : undefined
+    borderRight: direction === 'left' ? `1px solid ${theme.palette.divider}` : undefined,
+    borderLeft: direction === 'right' ? `1px solid ${theme.palette.divider}` : undefined
   }
 }));
 
@@ -67,8 +62,7 @@ export interface AppBarProps extends MuiAppBarProps {
 }
 
 const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) =>
-    prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<AppBarProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
@@ -101,8 +95,7 @@ interface ContentProps {
 }
 
 const Content = styled('main', {
-  shouldForwardProp: (prop) =>
-    prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   display: 'flex',
   overflow: 'hidden',
@@ -124,9 +117,7 @@ const Content = styled('main', {
   })
 }));
 
-export const SlidingContent: FunctionComponent<
-  PropsWithChildren<ContentProps>
-> = Content;
+export const SlidingContent: FunctionComponent<PropsWithChildren<ContentProps>> = Content;
 
 // ----------------------------------------------------------------------------.
 // Helpers.
@@ -137,17 +128,8 @@ interface CloseButtonProps {
   onClose: () => void;
 }
 
-export const CloseButton = ({
-  direction = 'left',
-  onClose,
-  ...props
-}: CloseButtonProps) => (
-  <IconButton
-    size='small'
-    aria-label='close drawer'
-    onClick={() => onClose()}
-    {...props}
-  >
+export const CloseButton = ({ direction = 'left', onClose, ...props }: CloseButtonProps) => (
+  <IconButton size='small' aria-label='close drawer' onClick={() => onClose()} {...props}>
     {direction === 'left' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
   </IconButton>
 );
@@ -158,17 +140,8 @@ export interface OpenButtonProps {
   sx?: any;
 }
 
-export const OpenButton = ({
-  direction = 'left',
-  onOpen,
-  ...props
-}: OpenButtonProps) => (
-  <IconButton
-    size='small'
-    aria-label='open drawer'
-    onClick={() => onOpen()}
-    {...props}
-  >
+export const OpenButton = ({ direction = 'left', onOpen, ...props }: OpenButtonProps) => (
+  <IconButton size='small' aria-label='open drawer' onClick={() => onOpen()} {...props}>
     {direction === 'left' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
   </IconButton>
 );

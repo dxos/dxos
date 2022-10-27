@@ -16,8 +16,7 @@ export default {
 
 export const Primary = () => {
   const theme = useTheme();
-  const key =
-    'ef235aacf90d9f4aadd8c92e4b2562e1d9eb97f0df9ba3b508258739cb013db2';
+  const key = 'ef235aacf90d9f4aadd8c92e4b2562e1d9eb97f0df9ba3b508258739cb013db2';
 
   return (
     <Container>

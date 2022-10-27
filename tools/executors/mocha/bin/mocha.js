@@ -27,14 +27,10 @@ const getArg = (flag) => {
 const project = getArg('--project');
 const reporter = getArg('--reporter');
 
-spawnSync(
-  'pnpm',
-  ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`],
-  {
-    shell: true,
-    stdio: 'inherit',
-    env: {
-      ...process.env
-    }
+spawnSync('pnpm', ['-w', 'nx', 'test', project, '--reporter', `"${reporter}"`], {
+  shell: true,
+  stdio: 'inherit',
+  env: {
+    ...process.env
   }
-);
+});

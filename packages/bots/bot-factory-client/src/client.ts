@@ -8,17 +8,10 @@ import assert from 'node:assert';
 import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import {
-  createProtocolFactory,
-  NetworkManager,
-  StarTopology
-} from '@dxos/network-manager';
+import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import {
-  BotFactoryService,
-  BotPackageSpecifier
-} from '@dxos/protocols/proto/dxos/bot';
+import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';
@@ -80,11 +73,7 @@ export class BotFactoryClient {
 
     // TODO(burdon): Retry.
     // TODO(yivlad): Convert promiseTimeout to typescript.
-    const port = await promiseTimeout(
-      portPromise,
-      30_000,
-      new Error('Timeout on connecting to bot factory.')
-    );
+    const port = await promiseTimeout(portPromise, 30_000, new Error('Timeout on connecting to bot factory.'));
     const service = schema.getService('dxos.bot.BotFactoryService');
     this._rpc = createRpcClient(service, { port, timeout: 60_000 });
     await this._rpc.open();

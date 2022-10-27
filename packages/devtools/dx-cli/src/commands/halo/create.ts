@@ -26,9 +26,7 @@ export default class Create extends BaseCommand {
       } else {
         const seedphrase = generateSeedPhrase();
         profile = await client.halo.createProfile({ seedphrase, username });
-        this.log(
-          `IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`
-        );
+        this.log(`IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`);
         return { seedphrase, username: profile.username };
       }
     });

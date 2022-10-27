@@ -20,11 +20,7 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
-export {
-  clientServiceBundle,
-  ClientServiceHost,
-  InvitationDescriptor
-} from '@dxos/client-services';
+export { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
 
 export { PublicKey } from '@dxos/keys';
 
@@ -33,19 +29,12 @@ export { ItemID } from '@dxos/protocols';
 // TODO(burdon): Remove exported protos?
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
-export {
-  Profile,
-  SignRequest,
-  SignResponse
-} from '@dxos/protocols/proto/dxos/client';
+export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 export { ObjectModel, OrderedList } from '@dxos/object-model';
 
 // TODO(wittjosiah): Remove.
-export {
-  NetworkManager,
-  createWebRTCTransportFactory
-} from '@dxos/network-manager';
+export { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 
 export * from './packlets/api';
 export * from './packlets/proxies';

@@ -9,17 +9,15 @@ import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate } from '../executeDirectoryTemplate';
+import { executeDirectoryTemplate } from './executeDirectoryTemplate';
 
-const fmtDuration = (d: number) =>
-  `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
+const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
 
 const main = async () => {
   yargs(hideBin(process.argv))
     .scriptName('plate')
     .option('dry', {
-      description:
-        'Show only what files would be generated without writing them to disk',
+      description: 'Show only what files would be generated without writing them to disk',
       type: 'boolean',
       default: false
     })
@@ -73,9 +71,7 @@ const main = async () => {
           );
         }
         const now = Date.now();
-        console.log(
-          `wrote ${files.length} files [${fmtDuration(now - tstart)}]`
-        );
+        console.log(`wrote ${files.length} files [${fmtDuration(now - tstart)}]`);
       }
     })
     .help().argv;

@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
-import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
+import { createFeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
@@ -17,26 +17,18 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
-// TODO(burdon): Remove?
-class MockFeedWriter<T extends {}> implements FeedWriter<T> {
-  constructor(private readonly _writer: (data: T) => Promise<WriteReceipt>) {}
-
-  async write(data: T): Promise<WriteReceipt> {
-    return this._writer(data);
-  }
-}
-
-// TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
-// TODO(burdon): Rename and/or move to separate testing package.
-export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(
-    PublicKey.hash
-  );
-
+/**
+ * Factory for peers to test model replication.
+ * @deprecated
+ */
+// TODO(burdon): Clean-up. This is exported to @dxos/object-model.
+export class TestBuilder<M extends Model<any>> {
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
   private readonly _replicationFinished = new Trigger();
 
   private _replicating = true;
 
+  // prettier-ignore
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _modelConstructor: ModelConstructor<M>
@@ -44,8 +36,18 @@ export class TestRig<M extends Model<any>> {
     this._replicationFinished.wake();
   }
 
-  get replicating() {
-    return this._replicating;
+  createPeer(): TestPeer<M> {
+    const key = PublicKey.random();
+    const writer = createFeedWriter<Uint8Array>((data: Uint8Array) => {
+      return Promise.resolve(this._writeMessage(key, data));
+    });
+
+    const id = PublicKey.random().toHex();
+    const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
+
+    const peer = new TestPeer(stateManager, key);
+    this._peers.set(key, peer);
+    return peer;
   }
 
   configureReplication(value: boolean) {
@@ -57,26 +59,6 @@ export class TestRig<M extends Model<any>> {
     log('Waiting for replication...');
     await this._replicationFinished.wait();
     log('Replications started.');
-  }
-
-  createPeer(): TestPeer<M> {
-    const key = PublicKey.random();
-    const writer = new MockFeedWriter<Uint8Array>((mutation: Uint8Array) => {
-      return Promise.resolve(this._writeMessage(key, mutation));
-    });
-
-    const id = PublicKey.random().toHex();
-    const stateManager = this._modelFactory.createModel<M>(
-      this._modelConstructor.meta.type,
-      id,
-      {},
-      key,
-      writer
-    );
-
-    const peer = new TestPeer(stateManager, key);
-    this._peers.set(key, peer);
-    return peer;
   }
 
   _writeMessage(peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
@@ -123,9 +105,7 @@ export class TestRig<M extends Model<any>> {
 
         const timeframeSeq = peer.timeframe.get(feed);
         const startingIndex = timeframeSeq === undefined ? 0 : timeframeSeq + 1;
-        log(
-          `Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`
-        );
+        log(`Replicating feed ${feed} -> ${peer.key} range [${startingIndex}; ${mutations.length})`);
 
         for (let i = startingIndex; i < mutations.length; i++) {
           log(`Process ${feed}:${i} -> ${peer.key}`);
@@ -141,9 +121,9 @@ export class TestRig<M extends Model<any>> {
 
 export class TestPeer<M extends Model> {
   public timeframe = new Timeframe();
-
   public mutations: ModelMessage<Uint8Array>[] = [];
 
+  // prettier-ignore
   constructor(
     public readonly stateManager: StateManager<M>,
     public readonly key: PublicKey

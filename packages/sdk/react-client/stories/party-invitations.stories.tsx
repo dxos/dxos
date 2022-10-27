@@ -10,19 +10,8 @@ import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import {
-  ClientProvider,
-  useClient,
-  useContacts,
-  useParties,
-  useProfile
-} from '../src';
-import {
-  ClientPanel,
-  ContactsSelector,
-  Container,
-  PartyJoinPanel
-} from './helpers';
+import { ClientProvider, useClient, useContacts, useParties, useProfile } from '../src';
+import { ClientPanel, ContactsSelector, Container, PartyJoinPanel } from './helpers';
 
 export default {
   title: 'react-client/Party Invitations'
@@ -58,11 +47,9 @@ const PartyInvitationContainer = () => {
     setTimeout(async () => {
       resetInvitations();
 
-      const invitation = await client.echo
-        .getParty(partyKey!)!
-        .createInvitation({
-          inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
-        });
+      const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
+        inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
+      });
       invitation.finished.on(() => resetInvitations());
 
       if (!contact) {
@@ -87,23 +74,13 @@ const PartyInvitationContainer = () => {
 
         {contacts.length !== 0 && (
           <Box sx={{ marginTop: 1 }}>
-            <ContactsSelector
-              contacts={contacts}
-              selected={contact}
-              onSelect={setContact}
-            />
+            <ContactsSelector contacts={contacts} selected={contact} onSelect={setContact} />
           </Box>
         )}
 
         {invitationCode && (
           <Box sx={{ marginTop: 1 }}>
-            <TextField
-              disabled
-              multiline
-              fullWidth
-              value={invitationCode}
-              maxRows={3}
-            />
+            <TextField disabled multiline fullWidth value={invitationCode} maxRows={3} />
           </Box>
         )}
 
@@ -134,9 +111,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(
-        InvitationDescriptor.decode(invitationCode)
-      );
+      const invitation = await client.echo.acceptInvitation(InvitationDescriptor.decode(invitationCode));
       setStatus({ invitation });
 
       const party = await invitation.getParty();
@@ -150,13 +125,7 @@ const PartyJoinContainer = () => {
     await status.invitation?.authenticate(Buffer.from(pin));
   };
 
-  return (
-    <PartyJoinPanel
-      status={status}
-      onSubmit={handleSubmit}
-      onAuthenticate={handleAuthenticate}
-    />
-  );
+  return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
 };
 
 const TestApp = () => {

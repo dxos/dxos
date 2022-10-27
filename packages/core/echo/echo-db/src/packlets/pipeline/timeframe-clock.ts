@@ -21,17 +21,17 @@ export const mapFeedIndexesToTimeframe = (indexes: FeedIndex[]): Timeframe =>
 export class TimeframeClock {
   readonly update = new Event<Timeframe>();
 
-  constructor(private _timeframe = new Timeframe()) {}
+  // prettier-ignore
+  constructor(
+    private _timeframe = new Timeframe()
+  ) {}
 
   get timeframe() {
     return this._timeframe;
   }
 
   updateTimeframe(key: PublicKey, seq: number) {
-    this._timeframe = Timeframe.merge(
-      this._timeframe,
-      new Timeframe([[key, seq]])
-    );
+    this._timeframe = Timeframe.merge(this._timeframe, new Timeframe([[key, seq]]));
     this.update.emit(this._timeframe);
   }
 

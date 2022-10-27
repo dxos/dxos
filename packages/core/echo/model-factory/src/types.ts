@@ -15,14 +15,10 @@ import { Model } from './model';
 export type ModelType = string;
 
 // TODO(burdon): Document.
-export type StateOf<M extends Model> = M extends Model<infer TState, any>
-  ? TState
-  : any;
+export type StateOf<M extends Model> = M extends Model<infer TState, any> ? TState : any;
 
 // TODO(burdon): Document.
-export type MutationOf<M extends Model> = M extends Model<any, infer TMutation>
-  ? TMutation
-  : any;
+export type MutationOf<M extends Model> = M extends Model<any, infer TMutation> ? TMutation : any;
 
 /**
  *
@@ -100,9 +96,7 @@ export type ModelConstructor<M extends Model> = (new (
  *
  */
 // eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
-export function validateModelClass(
-  model: any
-): asserts model is ModelConstructor<any> {
+export function validateModelClass(model: any): asserts model is ModelConstructor<any> {
   assert(typeof model === 'function');
 
   // TODO(burdon): Convert to assert (too verbose).

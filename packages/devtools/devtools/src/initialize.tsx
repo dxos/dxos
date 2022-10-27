@@ -22,7 +22,7 @@ const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
   const [client, setClient] = useState<Client>();
 
   useEffect(() => {
-    clientReady.on(client => setClient(client));
+    clientReady.on((client) => setClient(client));
   }, []);
 
   return (
@@ -43,6 +43,5 @@ const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
 };
 
 export const initializeDevtools = (clientReady: Event<Client>) => {
-  createRoot(document.getElementById('root')!)
-    .render(<Devtools clientReady={clientReady} />);
+  createRoot(document.getElementById('root')!).render(<Devtools clientReady={clientReady} />);
 };

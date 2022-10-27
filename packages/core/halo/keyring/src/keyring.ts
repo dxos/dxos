@@ -10,20 +10,14 @@ import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import {
-  createStorage,
-  Directory,
-  StorageType
-} from '@dxos/random-access-storage';
+import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
 /**
  * Manages keys.
  */
 export class Keyring implements Signer {
-  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(
-    PublicKey.hash
-  );
+  private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
 
   constructor(
     private readonly _storage: Directory = createStorage({
@@ -73,9 +67,7 @@ export class Keyring implements Signer {
       const recordBytes = await file.read(0, size);
       await file.close();
 
-      const record = schema
-        .getCodecForType('dxos.halo.keyring.KeyRecord')
-        .decode(recordBytes);
+      const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
 
@@ -115,18 +107,11 @@ export class Keyring implements Signer {
 
     const record: KeyRecord = {
       publicKey: publicKey.asUint8Array(),
-      privateKey: new Uint8Array(
-        await subtleCrypto.exportKey('pkcs8', keyPair.privateKey)
-      )
+      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey))
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
-    await file.write(
-      0,
-      Buffer.from(
-        schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)
-      )
-    );
+    await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
     await file.close();
   }
 
@@ -141,10 +126,6 @@ export class Keyring implements Signer {
   }
 }
 
-const keyPairToPublicKey = async (
-  keyPair: CryptoKeyPair
-): Promise<PublicKey> => {
-  return PublicKey.from(
-    new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey))
-  );
+const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => {
+  return PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
 };

@@ -9,10 +9,7 @@ import { File, Storage, StorageType } from '../common';
 
 export const randomText = () => Math.random().toString(36).substring(2);
 
-export function storageTests(
-  testGroupName: StorageType,
-  createStorage: () => Storage
-) {
+export function storageTests(testGroupName: StorageType, createStorage: () => Storage) {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
@@ -50,9 +47,7 @@ export function storageTests(
       const directory = storage.createDirectory();
 
       const count = 10;
-      const files = [...Array(count)].map(() =>
-        directory.getOrCreateFile(randomText())
-      );
+      const files = [...Array(count)].map(() => directory.getOrCreateFile(randomText()));
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
@@ -99,11 +94,7 @@ export function storageTests(
     });
 
     it('destroy clears all data', async () => {
-      if (
-        new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(
-          testGroupName
-        )
-      ) {
+      if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)) {
         return;
       }
       const storage = createStorage();
@@ -172,11 +163,7 @@ export function storageTests(
       await writeAndCheck(file, buffer);
 
       await directory.delete();
-      await assert.rejects(
-        async () => await file.read(0, buffer.length),
-        Error,
-        'Closed'
-      );
+      await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
     });
 
     it('del method', async function () {

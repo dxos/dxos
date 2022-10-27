@@ -58,9 +58,7 @@ export const WithVersions = () => {
         <RegistrySearchPanel
           model={model}
           versions
-          onSelect={(resource, version) =>
-            setSelected(`${resource.name.toString()}@${version}`)
-          }
+          onSelect={(resource, version) => setSelected(`${resource.name.toString()}@${version}`)}
         />
 
         <Box sx={{ marginTop: 2 }}>{selected}</Box>

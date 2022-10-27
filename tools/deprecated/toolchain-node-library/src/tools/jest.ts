@@ -20,11 +20,7 @@ export interface ExecJestOpts {
  * @param userArgs
  * @param forceClose
  */
-export const execJest = async ({
-  project,
-  userArgs = [],
-  forceClose
-}: ExecJestOpts) => {
+export const execJest = async ({ project, userArgs = [], forceClose }: ExecJestOpts) => {
   const config = project.isReactPackage
     ? join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.react.json')
     : join(TOOLCHAIN_PACKAGE_DIR, 'jest.config.json');

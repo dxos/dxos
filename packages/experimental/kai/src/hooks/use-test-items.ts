@@ -16,8 +16,6 @@ export const useTestItems = (n: number): Item[] => {
     id: faker.datatype.uuid(),
     type: faker.lorem.word(),
     title: faker.lorem.sentence(4),
-    description: faker.lorem.sentences(
-      faker.datatype.number({ min: 4, max: 16 })
-    )
+    description: faker.lorem.sentences(faker.datatype.number({ min: 4, max: 16 }))
   }));
 };

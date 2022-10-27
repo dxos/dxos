@@ -5,10 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/keys';
-import {
-  Credential,
-  PartyMember
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
@@ -31,7 +28,10 @@ export class MemberStateMachine {
 
   readonly onMemberAdmitted = new Callback<AsyncCallback<MemberInfo>>();
 
-  constructor(private readonly _partyKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _partyKey: PublicKey
+  ) {}
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members;

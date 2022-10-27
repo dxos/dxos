@@ -42,10 +42,7 @@ export class AccountsClient {
   /**
    * Is the given device a listed device of this DXNS account?
    */
-  async belongsToAccount(
-    account: AccountKey,
-    device: string
-  ): Promise<boolean> {
+  async belongsToAccount(account: AccountKey, device: string): Promise<boolean> {
     return this._backend.belongsToAccount(account, device);
   }
 }

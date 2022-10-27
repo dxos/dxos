@@ -80,15 +80,12 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
 
             // Add to the latest list item.
             const parentList = stack[depth - 1];
-            const parentListItem =
-              parentList.children[parentList.children.length - 1];
+            const parentListItem = parentList.children[parentList.children.length - 1];
             parentListItem?.children.push(list); // Add after the list item's paragraph.
           }
 
           const listItem = u('listItem', { spread: false }, [
-            u('paragraph', {}, [
-              u('link', { url: `#${link}` }, [u('text', { value: node.value })])
-            ])
+            u('paragraph', {}, [u('link', { url: `#${link}` }, [u('text', { value: node.value })])])
           ]);
 
           list.children.push(listItem);

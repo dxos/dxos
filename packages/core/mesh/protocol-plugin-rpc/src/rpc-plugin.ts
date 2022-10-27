@@ -9,10 +9,7 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
-type OnConnect = (
-  port: RpcPort,
-  peerId: string
-) => MaybePromise<(() => MaybePromise<void>) | void>;
+type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>;
 
 type SerializedObject = {
   data: Buffer;
@@ -32,7 +29,10 @@ export class RpcPlugin {
 
   private readonly _peers: Map<string, Connection> = new Map();
 
-  constructor(private _onConnect: OnConnect) {}
+  // prettier-ignore
+  constructor(
+    private _onConnect: OnConnect
+  ) {}
 
   createExtension(): Extension {
     return new Extension(RpcPlugin.EXTENSION)
@@ -85,10 +85,7 @@ export const getPeerId = (peer: Protocol) => {
   return peerId as string;
 };
 
-export const createPort = async (
-  peer: Protocol,
-  receive: Event<SerializedObject>
-): Promise<RpcPort> => ({
+export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
   send: async (msg) => {
     const extension = peer.getExtension(RpcPlugin.EXTENSION);
     assert(extension, 'Extension is not set');

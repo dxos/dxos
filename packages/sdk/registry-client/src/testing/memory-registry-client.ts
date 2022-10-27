@@ -10,15 +10,7 @@ import { schema } from '@dxos/protocols';
 import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap } from '@dxos/util';
 
-import {
-  AccountKey,
-  Authority,
-  CID,
-  DomainKey,
-  DXN,
-  RecordWithCid,
-  RegistryClientBackend
-} from '../api';
+import { AccountKey, Authority, CID, DomainKey, DXN, RecordWithCid, RegistryClientBackend } from '../api';
 
 /**
  * In-memory implementation of the registry client with statically specified records.
@@ -57,10 +49,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return key;
   }
 
-  async registerDomainName(
-    domainName: string,
-    owner: AccountKey
-  ): Promise<Authority> {
+  async registerDomainName(domainName: string, owner: AccountKey): Promise<Authority> {
     const key = DomainKey.random();
     const authority = {
       key,
@@ -84,16 +73,9 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return Array.from(this.resources.entries());
   }
 
-  async registerResource(
-    name: DXN,
-    cid: CID | undefined,
-    owner: AccountKey
-  ): Promise<void> {
+  async registerResource(name: DXN, cid: CID | undefined, owner: AccountKey): Promise<void> {
     assert(name.tag, 'Tag is required');
-    const domainName =
-      typeof name.authority === 'string'
-        ? name.authority
-        : name.authority.toHex();
+    const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
     const domain = this.authorities.get(domainName);
     if (domain?.owner !== owner.toHex()) {
       throw new Error('Domain owner mismatch');
@@ -122,9 +104,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   }
 
   async registerRecord(record: RawRecord): Promise<CID> {
-    const data = compactAddLength(
-      schema.getCodecForType('dxos.registry.Record').encode(record)
-    );
+    const data = compactAddLength(schema.getCodecForType('dxos.registry.Record').encode(record));
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

@@ -73,13 +73,9 @@ const TestApp = () => {
       <Box>
         <Button onClick={() => setTrigger(ErrorType.Invalid)}>Render</Button>
         <Button onClick={() => setTrigger(ErrorType.Async)}>Async</Button>
-        <Button onClick={() => setTrigger(ErrorType.AsyncFatal)}>
-          Async Fatal
-        </Button>
+        <Button onClick={() => setTrigger(ErrorType.AsyncFatal)}>Async Fatal</Button>
         <Button onClick={() => setTrigger(ErrorType.Promise)}>Promise</Button>
-        <Button onClick={() => setTrigger(ErrorType.PromiseFatal)}>
-          Promise Fatal
-        </Button>
+        <Button onClick={() => setTrigger(ErrorType.PromiseFatal)}>Promise Fatal</Button>
         <Button onClick={resetError} color='secondary'>
           Reset
         </Button>

@@ -2,14 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, {
-  FC,
-  ReactNode,
-  createContext,
-  useContext,
-  useMemo,
-  useReducer
-} from 'react';
+import React, { FC, ReactNode, createContext, useContext, useMemo, useReducer } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 
@@ -53,9 +46,7 @@ const appStateReducer = (state: AppState, action: Action) => {
   return state;
 };
 
-const AppStateContext = createContext<[AppState, ActionHandler] | undefined>(
-  undefined
-);
+const AppStateContext = createContext<[AppState, ActionHandler] | undefined>(undefined);
 
 export const AppStateProvider: FC<{
   children: ReactNode;
@@ -74,11 +65,7 @@ export const AppStateProvider: FC<{
     [dispatch]
   );
 
-  return (
-    <AppStateContext.Provider value={[state, handler]}>
-      {children}
-    </AppStateContext.Provider>
-  );
+  return <AppStateContext.Provider value={[state, handler]}>{children}</AppStateContext.Provider>;
 };
 
 export const useAppState = () => {

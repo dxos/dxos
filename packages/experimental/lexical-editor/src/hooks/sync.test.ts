@@ -65,9 +65,7 @@ describe('YJS sync', function () {
       return client;
     };
 
-    const [inviter, invitee] = await Promise.all(
-      Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`))
-    );
+    const [inviter, invitee] = await Promise.all(Array.from({ length: 2 }).map((_, i) => createPeer(`user-${i}`)));
 
     const TEST_TYPE = 'example:type/test';
 
@@ -78,9 +76,7 @@ describe('YJS sync', function () {
       expect(party.key).toBeDefined();
       const { username } = client.halo.profile!;
       ({ descriptor } = await party.createInvitation());
-      log(
-        `Created invitation: ${JSON.stringify({ username, party: party.key })}`
-      );
+      log(`Created invitation: ${JSON.stringify({ username, party: party.key })}`);
       expect(descriptor).toBeDefined();
     }
 
@@ -90,9 +86,7 @@ describe('YJS sync', function () {
       const invitation = await client.echo.acceptInvitation(descriptor);
       const party = await invitation.getParty();
       expect(party).toBeDefined();
-      log(
-        `Accepted invitation: ${JSON.stringify({ username, party: party.key })}`
-      );
+      log(`Accepted invitation: ${JSON.stringify({ username, party: party.key })}`);
     }
 
     // TODO(burdon): Use TextModel (which has embedded Doc). Delete replicator.

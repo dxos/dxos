@@ -3,10 +3,7 @@
 //
 
 const REGEX = /Copyright [0-9]+ DXOS.org/;
-const TEMPLATE =
-  ['//', `// Copyright ${new Date().getFullYear()} DXOS.org`, '//', ''].join(
-    '\n'
-  ) + '\n';
+const TEMPLATE = ['//', `// Copyright ${new Date().getFullYear()} DXOS.org`, '//', ''].join('\n') + '\n';
 
 module.exports = {
   pattern: REGEX,
