@@ -24,7 +24,7 @@ export const RequireIdentity = ({
   const { pathname, search } = useLocation();
   const profile = useProfile();
 
-  if (!profile || (inverse && profile)) {
+  if ((!inverse && !profile) || (inverse && profile)) {
     const redirect = inverse ? '' : `?redirect=${pathname}${search}`;
     return <Navigate to={`${to}${redirect}`} />;
   }

@@ -6,31 +6,35 @@ import { Plus } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { HaloSharingDialog } from '@dxos/react-toolkit';
+import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Main, Button, useTranslation, Heading } from '@dxos/react-uikit';
 
-import { DeviceList } from '../../components';
+import { DeviceList, InvitationList } from '../../components';
 
 export const DevicesPage = () => {
+  const { t } = useTranslation('halo');
+  const client = useClient();
   const [devices] = useState([
     { publicKey: PublicKey.random(), displayName: 'This Device' }
   ]);
-  const [showShare, setShowShare] = useState(false);
-  const { t } = useTranslation('halo');
+  const invitations = useHaloInvitations(client);
+
+  const handleInvite = () => {
+    void client.halo.createInvitation();
+  };
 
   return (
     <Main>
       <div role='none' className='flex items-center'>
         <Heading>{t('devices label')}</Heading>
         <div role='none' className='flex-grow' />
-        <Button variant='primary' className='flex gap-2'>
+        <Button variant='primary' className='flex gap-2' onClick={handleInvite}>
           <Plus className='w-4 h-4' />
           {t('add device label')}
         </Button>
       </div>
       <DeviceList items={devices} />
-
-      <HaloSharingDialog open={showShare} onClose={() => setShowShare(false)} />
+      {invitations.length > 0 && <InvitationList invitations={invitations} />}
     </Main>
   );
 };
