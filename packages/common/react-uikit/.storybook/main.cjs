@@ -27,7 +27,11 @@ module.exports = {
     optimizeDeps: {
       force: true,
       include: [
+        '@dxos/client',
+        '@dxos/config',
+        '@dxos/react-client',
         '@dxos/react-ui',
+        '@dxos/util',
         'storybook-dark-mode',
         'i18next',
         'lodash/merge'

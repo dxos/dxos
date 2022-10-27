@@ -3,11 +3,15 @@
 //
 
 export * from './AppLayout';
-export * from './AuthPage';
+export * from './AppsPage';
+export * from './ContactsPage';
+export * from './CreateIdentityPage';
 export * from './DevicesPage';
 export * from './IdentityPage';
-export * from './InvitationPage';
+export * from './JoinIdentityPage';
+export * from './JoinSpacePage';
 export * from './LockPage';
-export * from './RequireProfile';
+export * from './RecoverIdentityPage';
+export * from './RequireIdentity';
 export * from './SpacePage';
 export * from './SpacesPage';

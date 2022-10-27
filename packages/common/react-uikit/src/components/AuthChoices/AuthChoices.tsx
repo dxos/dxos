@@ -10,46 +10,46 @@ import { CompoundButton } from '@dxos/react-ui';
 
 export interface AuthChoicesProps {
   onCreate?: () => void;
-  onInviteDevice?: () => void;
+  onJoin?: () => void;
   onRecover?: () => void;
 }
 
-export const AuthChoices = ({ onCreate, onInviteDevice, onRecover }: AuthChoicesProps) => {
+export const AuthChoices = ({ onCreate, onJoin, onRecover }: AuthChoicesProps) => {
   const { t } = useTranslation();
 
   return (
     <div role='none' className='flex flex-col gap-2 mt-4 px-2'>
       {onCreate && (
         <CompoundButton
-          description={t('create profile description')}
+          description={t('create identity description')}
           before={<Plus className='w-6 h-6' />}
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onCreate}
         >
-          {t('create profile label')}
+          {t('create identity label')}
         </CompoundButton>
       )}
-      {onInviteDevice && (
+      {onJoin && (
         <CompoundButton
-          description={t('invite device description')}
+          description={t('join identity description')}
           before={<QrCode className='w-6 h-6' />}
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
-          onClick={onInviteDevice}
+          onClick={onJoin}
         >
-          {t('invite device label')}
+          {t('join identity label')}
         </CompoundButton>
       )}
       {onRecover && (
         <CompoundButton
-          description={t('recover profile description')}
+          description={t('recover identity description')}
           before={<Textbox className='w-6 h-6' />}
           after={<CaretRight className='w-4 h-4' weight='bold' />}
           className='text-lg w-full'
           onClick={onRecover}
         >
-          {t('recover profile label')}
+          {t('recover identity label')}
         </CompoundButton>
       )}
     </div>

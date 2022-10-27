@@ -18,7 +18,7 @@ export default {
   argTypes: {
     onCreate: { action: 'create' },
     onRecover: { action: 'recover' },
-    onInviteDevice: { action: 'inviteDevice' }
+    onJoin: { action: 'join' }
   }
 };
 

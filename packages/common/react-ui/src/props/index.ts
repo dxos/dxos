@@ -3,3 +3,4 @@
 //
 
 export * from './MessageValence';
+export * from './Size';

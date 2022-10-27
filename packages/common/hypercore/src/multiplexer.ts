@@ -44,7 +44,7 @@ export class Multiplexer {
     const feedKey = PublicKey.from(core.key);
     this._feeds.set(feedKey, core);
     this._streams.set(feedKey, stream);
-    log('added', PublicKey.from(feedKey));
+    log('added', { feedKey: PublicKey.from(feedKey) });
 
     stream
       .pipe(
