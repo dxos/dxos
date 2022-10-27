@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { QRCodeSVG } from 'qrcode.react';
-import React, { useCallback, cloneElement, ReactHTMLElement } from 'react';
+import React, { useCallback, ReactHTMLElement } from 'react';
 
 import { useId } from '../../hooks';
 import { Size } from '../../props';
@@ -50,13 +50,9 @@ export const QrCode = ({
           role='none'
           className='w-full h-auto'
         />
-        {typeof label === 'string' ? (
-          <span id={labelId} className='sr-only'>
-            {label}
-          </span>
-        ) : (
-          cloneElement(label, { id: labelId })
-        )}
+        <div id={labelId} className='sr-only'>
+          {label}
+        </div>
       </Button>
     </Tooltip>
   );
