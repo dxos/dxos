@@ -9,10 +9,14 @@ import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
-import { createProtoRpcPeer } from '@dxos/rpc';
+import { HaloInvitationsService, InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Identity, IdentityManager } from '../identity';
+
+const invalidOp = (_: any): Promise<void> => {
+  throw new Error('invalid call');
+};
 
 /**
  * Create and process Halo (space) invitations for device management.
@@ -38,7 +42,6 @@ export class HaloInvitations {
       topology: new StarTopology(swarmKey),
       protocol: createProtocolFactory(swarmKey, swarmKey, [
         new RpcPlugin(async (port) => {
-          log('Inviter connected');
           const peer = createProtoRpcPeer({
             requested: {
               HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
@@ -62,7 +65,8 @@ export class HaloInvitations {
                     })
                   });
                   // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
-                }
+                },
+                acceptDevice: invalidOp
               }
             },
             port
@@ -71,7 +75,7 @@ export class HaloInvitations {
           await peer.open();
           log('Inviter RPC open');
 
-          await peer.rpc.HaloInvitationsService.acceptIdentity({
+          await peer.rpc.HaloInvitationsService.acceptDevice({
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
             genesisFeedKey: identity.haloGenesisFeedKey
@@ -113,7 +117,7 @@ export class HaloInvitations {
           }
 
           connected = true;
-          const peer = createProtoRpcPeer({
+          const peer: ProtoRpcPeer<{ HaloInvitationsService: HaloInvitationsService }> = createProtoRpcPeer({
             requested: {
               HaloInvitationsService: schema.getService('dxos.halo.invitations.HaloInvitationsService')
             },
@@ -122,7 +126,8 @@ export class HaloInvitations {
             },
             handlers: {
               HaloInvitationsService: {
-                acceptIdentity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
+                admitDevice: invalidOp,
+                acceptDevice: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
                   try {
                     log('Accept identity', {
                       identityKey,

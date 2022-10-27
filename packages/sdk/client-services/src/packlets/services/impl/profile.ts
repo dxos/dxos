@@ -20,7 +20,7 @@ import {
   RedeemedInvitation,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
-import type { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';

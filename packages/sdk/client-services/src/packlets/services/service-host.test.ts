@@ -7,7 +7,7 @@ import { Config, ConfigProto } from '@dxos/config';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { afterTest } from '@dxos/testutils';
 
 import { ClientServiceHost } from './service-host';

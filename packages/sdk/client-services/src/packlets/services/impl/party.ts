@@ -26,8 +26,8 @@ import {
   SubscribePartyRequest,
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
@@ -204,7 +204,7 @@ export class PartyService implements PartyServiceRpc {
 
           next({
             state: InvitationState.WAITING_FOR_CONNECTION,
-            descriptor: invitation.toProto()
+            descriptor: invitation!.toProto()
           });
 
           // if (invitation.type === InvitationDescriptor.Type.OFFLINE) {

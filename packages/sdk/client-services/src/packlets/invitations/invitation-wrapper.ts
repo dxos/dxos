@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { ripemd160 } from '@dxos/crypto';
 import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 // TODO(burdon): Move to SDK.
 

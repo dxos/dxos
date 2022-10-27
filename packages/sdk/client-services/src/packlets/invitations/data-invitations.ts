@@ -25,6 +25,10 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 // TODO(burdon): RPCPlugin vs. AuthPlugin?
 
+const invalidOp = (_: any): Promise<void> => {
+  throw new Error('invalid call');
+};
+
 /**
  * Create and manage data invitations for Data spaces.
  */
@@ -70,9 +74,7 @@ export class DataInvitations {
           },
 
           // TODO(burdon): Make calls optional and throw error if not handled?
-          acceptAgent: async () => {
-            throw new Error('invalid call');
-          }
+          acceptAgent: invalidOp
         },
         // This is called once the connection is established with the peer.
         async (peer) => {
@@ -83,8 +85,9 @@ export class DataInvitations {
 
           await admitted.wait();
           onFinish?.();
-
-          // TODO(burdon): Automatically close on return?
+        },
+        // This is called once the connection is closed (or on error).
+        async () => {
           await connection.close();
         }
       )
@@ -114,10 +117,9 @@ export class DataInvitations {
       topic,
       this._createRpcPlugin(
         {
-          admitAgent: async () => {
-            throw new Error('invalid call');
-          },
-          // TODO(burdon): Rename verbs (this means the "host" is accepting us (the "guest").
+          admitAgent: invalidOp,
+
+          // TODO(burdon): Rename verbs: this means the "host" is accepting the local peer (the "guest").
           acceptAgent: async ({ spaceKey, genesisFeedKey }) => {
             // Create local space.
             const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
@@ -126,9 +128,11 @@ export class DataInvitations {
         },
         // This is called once the connection is established with the peer.
         async (peer) => {
+          // Wait for host to ACK and local space to be created.
           const space = await accepted.wait();
 
           // Send local space's details to host (inviter).
+          // TODO(burdon): Do we need to include the space key in case these get mixed up?
           // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
           await peer.rpc.SpaceInvitationsService.admitAgent({
             identityKey: this._signingContext.identityKey,
@@ -137,15 +141,17 @@ export class DataInvitations {
             dataFeedKey: space.dataFeedKey
           });
 
+          // All done.
           admitted.wake(space);
+        },
+        // This is called once the connection is closed (or on error).
+        async () => {
+          await connection.close();
         }
       )
     );
 
-    // TODO(burdon): Close if timeout.
-    const space = await admitted.wait();
-    await connection.close();
-    return space;
+    return await admitted.wait();
   }
 
   //
@@ -182,7 +188,8 @@ export class DataInvitations {
   private _createRpcPlugin(
     handlers: SpaceInvitationsService,
     // TODO(burdon): Standardize error handling (e.g., close connection).
-    onConnect: (peer: ProtoRpcPeer<{ SpaceInvitationsService: SpaceInvitationsService }>) => Promise<void>
+    onConnect: (peer: ProtoRpcPeer<{ SpaceInvitationsService: SpaceInvitationsService }>) => Promise<void>,
+    onClose?: () => Promise<void>
   ) {
     return new RpcPlugin(async (port) => {
       // TODO(burdon): What does connection mean? Just one peer?
@@ -205,10 +212,10 @@ export class DataInvitations {
         await peer.open();
         await onConnect(peer);
       } catch (err: any) {
-        // TODO(burdon): Common error handling (e.g., close connection).
         log.error('RPC handler failed', err);
       } finally {
         await peer.close();
+        await onClose?.();
       }
     });
   }
@@ -218,7 +225,7 @@ export class DataInvitations {
 const writeMessages = <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> =>
   Promise.all(messages.map((message) => writer.write(message)));
 
-// TODO(burdon): Factor out (with tests).
+// TODO(burdon): Factor out (with tests). See CredentialGenerator.
 const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,

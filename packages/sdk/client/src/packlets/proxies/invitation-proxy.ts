@@ -14,7 +14,7 @@ import {
   InvitationState,
   RedeemedInvitation as RedeemedInvitationProto
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';

@@ -14,7 +14,7 @@ import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitations';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
