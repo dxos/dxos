@@ -128,9 +128,9 @@ describe('Multiplexing', function () {
         case 3:
           // prettier-ignore
           return stream1
-            .pipe(createWireTap('SEND'))
+            .pipe(createWireTap('send'))
             .pipe(stream2, onStreamClose)
-            .pipe(createWireTap('RECV'))
+            .pipe(createWireTap('recv'))
             .pipe(stream1, onStreamClose);
       }
     };
