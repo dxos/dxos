@@ -4,10 +4,10 @@
 
 import assert from 'assert';
 
-import { failUndefined, todo } from '@dxos/debug';
+import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
 import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/teleport';
-import { Event } from '@dxos/async';
 
 import { Channel, CreateStreamOpts, StreamHandle } from './channel';
 import { Framer } from './framer';
@@ -23,11 +23,11 @@ export class Muxer {
   private readonly _channels = new Map<string, Channel>();
   private readonly _remoteChannels = new Set<string>();
   private readonly _streamsByRemoteId = new Map<number, StreamHandle>();
-  
+
   private _nextId = 0;
   private _destroyed = false;
 
-  public close = new Event()
+  public close = new Event();
 
   constructor() {
     this._framer.port.subscribe((msg) => {
@@ -64,15 +64,17 @@ export class Muxer {
       destroy: {
         error: err?.message
       }
-    })
+    });
     this._dispose();
   }
 
   private _dispose() {
-    if(this._destroyed) return;
+    if (this._destroyed) {
+      return;
+    }
 
     this._destroyed = true;
-    this._framer.destroy()
+    this._framer.destroy();
 
     // TODO(dmaretskyi): Destroy streams.
 

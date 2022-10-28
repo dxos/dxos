@@ -53,7 +53,7 @@ export class Channel {
   createPort(tag: string, opts: CreateStreamOpts = {}): RpcPort {
     const stream = this._onStream(tag, opts);
 
-    assert(!stream.push, `Port already open: ${tag}`); 
+    assert(!stream.push, `Port already open: ${tag}`);
 
     return {
       send: (data: Uint8Array) => {

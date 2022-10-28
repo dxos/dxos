@@ -6,12 +6,12 @@ import { expect } from 'chai';
 
 import { latch, promiseTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
+import { TestService } from '@dxos/protocols/dist/src/proto/gen/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Muxer } from './muxer';
 import { RpcPort } from './rpc-port';
-import { TestService } from '@dxos/protocols/dist/src/proto/gen/example/testing/rpc';
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -75,7 +75,7 @@ describe('Muxer', function () {
     await wait();
   });
 
-  it('destroy releases other stream', async () => {
+  it('destroy releases other stream', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const promise = promiseTimeout(peer1.close.waitForCount(1), 100);
@@ -85,7 +85,7 @@ describe('Muxer', function () {
     await promise;
   });
 
-  it('two concurrent rpc ports', async () => {
+  it('two concurrent rpc ports', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const [wait, inc] = latch({ count: 4, timeout: 500 });
@@ -126,7 +126,7 @@ describe('Muxer', function () {
     await wait();
   });
 
-  it('two extensions', async () => {
+  it('two extensions', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const [wait, inc] = latch({ count: 4, timeout: 500 });
@@ -164,5 +164,5 @@ describe('Muxer', function () {
     }
 
     await wait();
-  })
+  });
 });
