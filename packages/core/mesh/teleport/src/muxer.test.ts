@@ -53,7 +53,7 @@ describe('Muxer', function () {
               voidCall: async () => {}
             }
           },
-          port: channel.createPort('dxos.test.extension1', {
+          port: channel.createPort('rpc', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
           })
         });
