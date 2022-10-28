@@ -86,17 +86,14 @@ export const App = () => {
   // TODO(wittjosiah): Factor out to notification component.
   //   Example: https://github.com/vite-pwa/vite-plugin-pwa/blob/cd7992b0ac5b2845e97f02ae4eca04ca75ef2ff9/examples/react-router/src/ReloadPrompt.tsx.
   const {
-    offlineReady: [_offlineReady, _setOfflineReady],
-    needRefresh: [_needRefresh, _setNeedRefresh],
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err) => {
       console.error(err);
     }
   });
-
-  const needRefresh = false;
-  const offlineReady = true;
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
