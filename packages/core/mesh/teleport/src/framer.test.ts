@@ -70,6 +70,7 @@ describe('Framer', () => {
     }
   })
 
+  // This test is a bit slow because of sleep and flush on interval.
   it('works', async () => {
     const peer1 = new Framer()
     const peer2 = new Framer()

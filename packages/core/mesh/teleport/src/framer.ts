@@ -20,14 +20,20 @@ export class Framer {
     write: (chunk, encoding, callback) => {
       assert(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.')
 
+      if(this._buffer && this._buffer.length > 0) {
+        this._buffer = Buffer.concat([this._buffer, chunk])
+      } else {
+        this._buffer = chunk
+      }
+
       if(this._messageCb) {
-        this._process(chunk, callback)
+        this._process()
+        callback()
       } else {
         this._subscribeCb = () => { // Schedule the processing of the chunk after the peer subscribes to the messages.
-          this._process(chunk, () => {
-            this._subscribeCb = undefined
-            callback()
-          })
+          this._process()
+          this._subscribeCb = undefined
+          callback()
         }
       }
     }
@@ -52,13 +58,7 @@ export class Framer {
     return this._stream
   }
 
-  private _process(chunk: Buffer, callback: () => void) {
-    if(this._buffer && this._buffer.length > 0) {
-      this._buffer = Buffer.concat([this._buffer, chunk])
-    } else {
-      this._buffer = chunk
-    }
-
+  private _process() {
     let offset = 0;
     while (offset < this._buffer!.length) {
       const frame = readFrame(this._buffer!, offset)
@@ -76,8 +76,6 @@ export class Framer {
     } else {
       this._buffer = undefined
     }
-
-    callback()
   }
 }
 
