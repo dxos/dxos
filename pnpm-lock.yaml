@@ -1627,14 +1627,28 @@ importers:
 
   packages/core/mesh/teleport:
     specifiers:
+      '@dxos/async': workspace:^2.33.8
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/varint': ^6.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       typescript: ^4.7.2
+      varint: ^6.0.0
+      wait-for-expect: ^3.0.2
     dependencies:
+      '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
+      varint: 6.0.0
     devDependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/rpc': link:../rpc
+      '@dxos/testutils': link:../../../common/testutils
+      '@types/varint': 6.0.0
       typescript: 4.8.4
+      wait-for-expect: 3.0.2
 
   packages/core/protocols:
     specifiers:
@@ -12503,6 +12517,12 @@ packages:
 
   /@types/uuid/8.3.4:
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
+    dev: true
+
+  /@types/varint/6.0.0:
+    resolution: {integrity: sha512-2jBazyxGl4644tvu3VAez8UA/AtrcEetT9HOeAbqZ/vAcRVL/ZDFQjSS7rkWusU5cyONQVUz+nwwrNZdMva4ow==}
+    dependencies:
+      '@types/node': 18.11.0
     dev: true
 
   /@types/vinyl/2.0.6:
