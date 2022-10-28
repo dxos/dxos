@@ -30,11 +30,7 @@ export const MemberRow = ({ member, onRemove }: MemberRowProps) => (
   >
     <MemberAvatar key={member.publicKey.toString()} member={member} />
 
-    <Typography
-      sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}
-    >
-      {member.displayName}
-    </Typography>
+    <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>{member.displayName}</Typography>
 
     {/* TODO(burdon): Role (Read-only, Editor, Admin). */}
     {onRemove && (

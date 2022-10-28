@@ -86,10 +86,7 @@ export const codegen = (
         return arg;
       }
     };
-    buf +=
-      parts
-        .map((s, i) => s + (i < args.length ? preprocessArg(args[i]) : ''))
-        .join('') + '\n';
+    buf += parts.map((s, i) => s + (i < args.length ? preprocessArg(args[i]) : '')).join('') + '\n';
   });
 
   const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`;

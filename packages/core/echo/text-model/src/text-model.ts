@@ -3,22 +3,9 @@
 //
 
 import assert from 'node:assert';
-import {
-  Doc,
-  XmlElement,
-  XmlText,
-  XmlFragment,
-  applyUpdate,
-  encodeStateAsUpdate
-} from 'yjs';
+import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
-import {
-  Model,
-  ModelMeta,
-  MutationProcessMeta,
-  MutationWriter,
-  StateMachine
-} from '@dxos/model-factory';
+import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
 import { ItemID, schema } from '@dxos/protocols';
 import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
@@ -59,11 +46,11 @@ export class TextModel extends Model<Doc, Mutation> {
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
   };
 
+  // prettier-ignore
   constructor(
     meta: ModelMeta,
     itemId: ItemID,
-    getState: () => Doc,
-    writeStream?: MutationWriter<Mutation>
+    getState: () => Doc, writeStream?: MutationWriter<Mutation>
   ) {
     super(meta, itemId, getState, writeStream);
 
@@ -94,10 +81,7 @@ export class TextModel extends Model<Doc, Mutation> {
   }
 
   private async _handleDocUpdated(update: Uint8Array, origin: any) {
-    const remote =
-      origin &&
-      origin.docClientId &&
-      origin.docClientId !== this._getState().clientID;
+    const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
     if (!remote) {
       await this.write({
         clientId: this._getState().clientID,

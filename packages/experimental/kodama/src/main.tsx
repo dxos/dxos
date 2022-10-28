@@ -70,9 +70,7 @@ const main = async () => {
         }
 
         // Create client.
-        const config: ConfigProto = yaml.load(
-          fs.readFileSync(configFile, { encoding: 'utf8' })
-        ) as ConfigProto;
+        const config: ConfigProto = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigProto;
         const client = new Client(config);
         await client.initialize();
 

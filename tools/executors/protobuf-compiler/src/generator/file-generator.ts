@@ -7,34 +7,21 @@ import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
-import {
-  getSafeNamespaceIdentifier,
-  parseFullyQualifiedName
-} from '../namespaces';
+import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
 import { SubstitutionsMap } from '../parser';
 import { GeneratorContext } from './context';
-import {
-  createDeclarations,
-  createTypeDictionary
-} from './declaration-generator';
+import { createDeclarations, createTypeDictionary } from './declaration-generator';
 import { createSerializerDefinition } from './serializer-definition-generator';
 import { createServicesDictionary } from './service';
 
 const f = ts.factory;
 
-const createSubstitutionsImport = (
-  substitutionsModule: ModuleSpecifier,
-  context: string
-) =>
+const createSubstitutionsImport = (substitutionsModule: ModuleSpecifier, context: string) =>
   substitutionsModule &&
   ts.factory.createImportDeclaration(
     [],
     [],
-    ts.factory.createImportClause(
-      false,
-      ts.factory.createIdentifier('substitutions'),
-      undefined
-    ),
+    ts.factory.createImportClause(false, ts.factory.createIdentifier('substitutions'), undefined),
     ts.factory.createStringLiteral(substitutionsModule.importSpecifier(context))
   );
 
@@ -52,13 +39,9 @@ export const createNamespaceSourceFile = (
     subs: substitutions
   };
 
-  const declarations: ts.Statement[] = Array.from(
-    createDeclarations(types, ctx)
-  );
+  const declarations: ts.Statement[] = Array.from(createDeclarations(types, ctx));
 
-  const substitutionsImport =
-    substitutionsModule &&
-    createSubstitutionsImport(substitutionsModule, dirname(outFile));
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, dirname(outFile));
 
   const otherNamespaceImports = createNamespaceImports(
     otherNamespaces.filter((ns) => ns !== namespace),
@@ -84,17 +67,14 @@ export const createIndexSourceFile = (
   outDirPath: string,
   namespaces: string[]
 ) => {
-  const { imports: schemaImports, exports: schemaExports } =
-    createSerializerDefinition(substitutionsModule, root, outDirPath);
-
-  const substitutionsImport =
-    substitutionsModule &&
-    createSubstitutionsImport(substitutionsModule, outDirPath);
-  const otherNamespaceImports = createNamespaceImports(
-    namespaces,
-    outDirPath,
+  const { imports: schemaImports, exports: schemaExports } = createSerializerDefinition(
+    substitutionsModule,
+    root,
     outDirPath
   );
+
+  const substitutionsImport = substitutionsModule && createSubstitutionsImport(substitutionsModule, outDirPath);
+  const otherNamespaceImports = createNamespaceImports(namespaces, outDirPath, outDirPath);
 
   return ts.factory.createSourceFile(
     [
@@ -110,11 +90,7 @@ export const createIndexSourceFile = (
   );
 };
 
-const createNamespaceImports = (
-  namespaces: string[],
-  outDirPath: string,
-  context: string
-) =>
+const createNamespaceImports = (namespaces: string[], outDirPath: string, context: string) =>
   namespaces
     .sort((b, a) => b.localeCompare(a))
     .map((ns) =>
@@ -124,17 +100,10 @@ const createNamespaceImports = (
         f.createImportClause(
           false,
           undefined,
-          f.createNamespaceImport(
-            f.createIdentifier(
-              getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))
-            )
-          )
+          f.createNamespaceImport(f.createIdentifier(getSafeNamespaceIdentifier(parseFullyQualifiedName(ns))))
         ),
         f.createStringLiteral(
-          ModuleSpecifier.resolveFromFilePath(
-            getFileNameForNamespace(ns),
-            outDirPath
-          ).importSpecifier(context)
+          ModuleSpecifier.resolveFromFilePath(getFileNameForNamespace(ns), outDirPath).importSpecifier(context)
         )
       )
     );
@@ -151,9 +120,7 @@ const createStreamImport = () =>
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([
-        f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))
-      ])
+      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))])
     ),
     f.createStringLiteral(CODEC_MODULE.importSpecifier(''))
   );

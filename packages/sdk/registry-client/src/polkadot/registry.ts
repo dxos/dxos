@@ -11,37 +11,20 @@ import { schema } from '@dxos/protocols';
 import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import {
-  AccountKey,
-  Authority,
-  CID,
-  DomainKey,
-  DXN,
-  RecordWithCid,
-  RegistryClientBackend
-} from '../api';
-import {
-  Multihash,
-  Resource as BaseResource,
-  Record as PolkadotRecord
-} from './interfaces';
+import { AccountKey, Authority, CID, DomainKey, DXN, RecordWithCid, RegistryClientBackend } from '../api';
+import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
 import { PolkadotClient } from './polkadot-client';
 
 /**
  * Polkadot DXNS registry client backend.
  */
-export class PolkadotRegistry
-  extends PolkadotClient
-  implements RegistryClientBackend
-{
+export class PolkadotRegistry extends PolkadotClient implements RegistryClientBackend {
   //
   // Domains
   //
 
   async getDomainKey(domainName: string): Promise<DomainKey> {
-    const rawKey = (await this.api.query.registry.domainNames(domainName))
-      .unwrap()
-      .toU8a();
+    const rawKey = (await this.api.query.registry.domainNames(domainName)).unwrap().toU8a();
 
     return new DomainKey(rawKey);
   }
@@ -64,9 +47,7 @@ export class PolkadotRegistry
 
   async registerAuthority(owner: AccountKey): Promise<DomainKey> {
     const domainKey = DomainKey.random();
-    await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.registerDomain(domainKey.value, owner.value)
-    );
+    await this.transactionsHandler.sendTransaction(this.api.tx.registry.registerDomain(domainKey.value, owner.value));
 
     return domainKey;
   }
@@ -78,17 +59,11 @@ export class PolkadotRegistry
   async getResource(name: DXN): Promise<CID | undefined> {
     assert(name.tag, 'Tag is required');
 
-    const authority =
-      typeof name.authority === 'string'
-        ? await this.getDomainKey(name.authority)
-        : name.authority;
+    const authority = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(authority, 'Authority not found');
 
     const resource = (
-      await this.api.query.registry.resources<Option<BaseResource>>(
-        authority.value,
-        name.path
-      )
+      await this.api.query.registry.resources<Option<BaseResource>>(authority.value, name.path)
     ).unwrapOr(undefined);
     if (!resource) {
       return undefined;
@@ -107,9 +82,7 @@ export class PolkadotRegistry
     const result = resources.flatMap(([key, resource]) => {
       const path = key.args[1].toString();
       const domainKey = new DomainKey(key.args[0].toU8a());
-      const authority = authorities.find(
-        (authority) => authority.key.toHex() === domainKey.toHex()
-      );
+      const authority = authorities.find((authority) => authority.key.toHex() === domainKey.toHex());
       const tags = this._decodeResource(resource.unwrap());
 
       return Object.entries(tags).map(([tag, cid]): [DXN, CID] => [
@@ -123,25 +96,14 @@ export class PolkadotRegistry
     return result;
   }
 
-  async registerResource(
-    name: DXN,
-    cid: CID,
-    owner: AccountKey
-  ): Promise<void> {
+  async registerResource(name: DXN, cid: CID, owner: AccountKey): Promise<void> {
     assert(name.tag, 'Tag is required');
-    const domainKey =
-      typeof name.authority === 'string'
-        ? await this.getDomainKey(name.authority)
-        : name.authority;
+    const domainKey = typeof name.authority === 'string' ? await this.getDomainKey(name.authority) : name.authority;
     assert(domainKey, 'Domain not found');
 
     if (!cid) {
       await this.transactionsHandler.sendTransaction(
-        this.api.tx.registry.deleteResource(
-          domainKey.value,
-          owner.value,
-          name.path
-        )
+        this.api.tx.registry.deleteResource(domainKey.value, owner.value, name.path)
       );
     } else {
       await this.transactionsHandler.sendTransaction(
@@ -159,12 +121,7 @@ export class PolkadotRegistry
 
   private _decodeResource(resource: BaseResource): Record<string, CID> {
     const decodeMap = (map: BTreeMap<Text, Multihash>): Record<string, CID> =>
-      Object.fromEntries(
-        Array.from(map.entries()).map(([key, value]) => [
-          key.toString(),
-          CID.from(value.toU8a())
-        ])
-      );
+      Object.fromEntries(Array.from(map.entries()).map(([key, value]) => [key.toString(), CID.from(value.toU8a())]));
 
     return decodeMap(resource.tags ?? new Map());
   }
@@ -174,9 +131,7 @@ export class PolkadotRegistry
   //
 
   async getRecord(cid: CID): Promise<RecordWithCid | undefined> {
-    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(
-      undefined
-    );
+    const record = (await this.api.query.registry.records(cid.value)).unwrapOr(undefined);
     if (!record) {
       return undefined;
     }
@@ -204,28 +159,20 @@ export class PolkadotRegistry
   }
 
   async registerRecord(record: RawRecord): Promise<CID> {
-    const data = compactAddLength(
-      schema.getCodecForType('dxos.registry.Record').encode(record)
-    );
+    const data = compactAddLength(schema.getCodecForType('dxos.registry.Record').encode(record));
 
     return this.registerRecordBytes(data);
   }
 
   async registerRecordBytes(data: Uint8Array): Promise<CID> {
-    const { events } = await this.transactionsHandler.sendTransaction(
-      this.api.tx.registry.addRecord(data)
-    );
-    const event = events
-      .map((eventRecord) => eventRecord.event)
-      .find(this.api.events.registry.RecordAdded.is);
+    const { events } = await this.transactionsHandler.sendTransaction(this.api.tx.registry.addRecord(data));
+    const event = events.map((eventRecord) => eventRecord.event).find(this.api.events.registry.RecordAdded.is);
     assert(event && this.api.events.registry.RecordAdded.is(event));
 
     return new CID(event.data[1].toU8a());
   }
 
   private _decodeRecord(record: PolkadotRecord): RawRecord {
-    return schema
-      .getCodecForType('dxos.registry.Record')
-      .decode(Buffer.from(record.data));
+    return schema.getCodecForType('dxos.registry.Record').decode(Buffer.from(record.data));
   }
 }

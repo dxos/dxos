@@ -4,3 +4,4 @@
 
 export * from './codec';
 export * from './feeds';
+export * from './testing';

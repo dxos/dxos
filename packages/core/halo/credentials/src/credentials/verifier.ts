@@ -11,13 +11,9 @@ import { getSignaturePayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
-export type VerificationResult =
-  | { kind: 'pass' }
-  | { kind: 'fail'; errors: string[] };
+export type VerificationResult = { kind: 'pass' } | { kind: 'fail'; errors: string[] };
 
-export const verifyCredential = async (
-  credential: Credential
-): Promise<VerificationResult> => {
+export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
   if (!credential.issuer.equals(credential.proof.signer)) {
     if (!credential.proof.chain) {
       return {
@@ -26,11 +22,7 @@ export const verifyCredential = async (
       };
     }
 
-    const result = await verifyChain(
-      credential.proof.chain,
-      credential.issuer,
-      credential.proof.signer
-    );
+    const result = await verifyChain(credential.proof.chain, credential.issuer, credential.proof.signer);
     if (result.kind === 'fail') {
       return result;
     }
@@ -48,9 +40,7 @@ export const verifyCredential = async (
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-export const verifyCredentialSignature = async (
-  credential: Credential
-): Promise<VerificationResult> => {
+export const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
   if (credential.proof.type !== SIGNATURE_TYPE_ED25519) {
     return {
       kind: 'fail',
@@ -59,13 +49,7 @@ export const verifyCredentialSignature = async (
   }
 
   const signData = getSignaturePayload(credential);
-  if (
-    !(await verifySignature(
-      credential.proof.signer,
-      signData,
-      credential.proof.value
-    ))
-  ) {
+  if (!(await verifySignature(credential.proof.signer, signData, credential.proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 
@@ -85,14 +69,10 @@ export const verifyChain = async (
     return result;
   }
 
-  if (
-    !isValidAuthorizedDeviceCredential(chain.credential, authority, subject)
-  ) {
+  if (!isValidAuthorizedDeviceCredential(chain.credential, authority, subject)) {
     return {
       kind: 'fail',
-      errors: [
-        `Invalid credential chain: invalid assertion for key: ${subject}`
-      ]
+      errors: [`Invalid credential chain: invalid assertion for key: ${subject}`]
     };
   }
 

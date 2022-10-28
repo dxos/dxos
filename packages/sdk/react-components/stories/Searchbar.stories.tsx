@@ -20,11 +20,7 @@ export const Primary = () => {
   return (
     <Container>
       <Box sx={{ padding: 1 }}>
-        <Searchbar
-          placeholder='Search records'
-          onSearch={setValue}
-          delay={500}
-        />
+        <Searchbar placeholder='Search records' onSearch={setValue} delay={500} />
         <Divider />
         <Box>{value}</Box>
       </Box>

@@ -67,10 +67,7 @@ export class ExtensionInit extends Extension {
 
   async sendCommand(command: Command, data?: Record<string, any>) {
     if (data?.peerId) {
-      assert(
-        ['undefined', 'string'].includes(typeof data.peerId),
-        'PeerId must be a string.'
-      );
+      assert(['undefined', 'string'].includes(typeof data.peerId), 'PeerId must be a string.');
     }
     return this.send(Buffer.from(JSON.stringify({ command, data })));
   }

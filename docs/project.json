@@ -6,6 +6,19 @@
     // TODO(wittjosiah): Run as apart of release please to ensure api docs are up to date.
     "prerelease": {
       "executor": "nx:run-script",
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_RELEASE"
+        },
+        {
+          "env": "SEGMENT_API_KEY"
+        }
+      ],
       "outputs": [
         "docs/docs/api",
         "docs/docs/.vuepress/dist"

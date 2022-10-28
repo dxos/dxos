@@ -2,19 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import { viteBundler } from '@vuepress/bundler-vite';
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
 import { join, resolve } from 'node:path';
 import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
-import {
-  apiSidebar,
-  DOCS_PATH,
-  link,
-  PINNED_PACKAGES,
-  showcasePlugin,
-  sidebarSection
-} from './src';
+import { apiSidebar, DOCS_PATH, link, PINNED_PACKAGES, showcasePlugin, sidebarSection, telemetryPlugin } from './src';
+
+const env = (value?: string) => (value ? `'${value}'` : undefined);
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
@@ -69,8 +65,27 @@ const config: UserConfig = defineUserConfig({
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
+    telemetryPlugin(),
     await showcasePlugin()
-  ]
+  ],
+  bundler: viteBundler({
+    viteOptions: {
+      define: {
+        'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+        'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
+        'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
+      },
+      optimizeDeps: {
+        force: true,
+        include: ['@dxos/telemetry']
+      },
+      build: {
+        commonjsOptions: {
+          include: [/packages/, /node_modules/]
+        }
+      }
+    }
+  })
 });
 
 export default config;

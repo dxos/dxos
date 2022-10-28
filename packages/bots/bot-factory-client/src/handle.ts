@@ -3,17 +3,11 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import {
-  BotFactoryService,
-  GetLogsResponse
-} from '@dxos/protocols/proto/dxos/bot';
+import { BotFactoryService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
 import { ProtoRpcPeer } from '@dxos/rpc';
 
 export class BotHandle {
-  constructor(
-    private readonly _id: string,
-    private _rpc: ProtoRpcPeer<BotFactoryService>
-  ) {}
+  constructor(private readonly _id: string, private _rpc: ProtoRpcPeer<BotFactoryService>) {}
 
   get id(): string {
     return this._id;

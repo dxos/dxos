@@ -5,16 +5,7 @@
 import debug from 'debug';
 import faker from 'faker';
 
-import {
-  Database,
-  Item,
-  ObjectModel,
-  Schema,
-  SchemaDef,
-  SchemaField,
-  SchemaRef,
-  TYPE_SCHEMA
-} from '@dxos/client';
+import { Database, Item, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
 import type { Model } from '@dxos/model-factory';
 
 import { TestType } from './partyBuilder';
@@ -128,10 +119,7 @@ export class SchemaBuilder {
    * Create items for a given schema.
    * NOTE: Assumes that referenced items have already been constructed.
    */
-  async createItems(
-    { schema, fields }: SchemaDefWithGenerator,
-    numItems: number
-  ): Promise<Item<Model<any, any>>[]> {
+  async createItems({ schema, fields }: SchemaDefWithGenerator, numItems: number): Promise<Item<Model<any, any>>[]> {
     log(`Creating items for: ${schema}`);
 
     return await Promise.all(
@@ -140,10 +128,7 @@ export class SchemaBuilder {
           .map((field) => {
             if (field.ref) {
               // Look-up item.
-              const { entities: items } = this._database
-                .select()
-                .filter({ type: field.ref.schema })
-                .exec();
+              const { entities: items } = this._database.select().filter({ type: field.ref.schema }).exec();
               if (items.length) {
                 return {
                   [field.key]: faker.random.arrayElement(items).id

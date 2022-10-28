@@ -63,15 +63,7 @@ export class DXN {
   /**
    * Create new DXN overriding specified fields.
    */
-  with({
-    authority,
-    path,
-    tag
-  }: {
-    authority?: DomainKey | string;
-    path?: string;
-    tag?: string | null;
-  }) {
+  with({ authority, path, tag }: { authority?: DomainKey | string; path?: string; tag?: string | null }) {
     authority = authority ?? this.authority;
     path = path ?? this.path;
     tag = tag === null ? undefined : tag ?? this.tag;
@@ -135,12 +127,7 @@ export class DXN {
 
     // Prohibit repeated or trailing delimiters.
     path.split(/[./-]/).forEach((word) => {
-      if (
-        word.length === 0 ||
-        word.endsWith('-') ||
-        word.endsWith('.') ||
-        word.endsWith('/')
-      ) {
+      if (word.length === 0 || word.endsWith('-') || word.endsWith('.') || word.endsWith('/')) {
         throw new Error(`Invalid path: ${path}`);
       }
     });

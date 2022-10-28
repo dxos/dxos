@@ -14,10 +14,7 @@ import { CID, RegistryType } from '../api';
 const getProtoTypeFromTypeRecord = (record: RegistryType): Type =>
   record.type.protobufDefs.lookupType(record.type.messageName);
 
-export type RecordExtension<T> = { '@type': CID } & Pick<
-  T,
-  Exclude<keyof T, '@type'>
->;
+export type RecordExtension<T> = { '@type': CID } & Pick<T, Exclude<keyof T, '@type'>>;
 
 const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.
@@ -47,10 +44,7 @@ export const decodeExtensionPayload = async (
     const typeRecord = await resolveType(typeCid);
 
     const dataType = getProtoTypeFromTypeRecord(typeRecord);
-    const dataJson = dataType.toObject(
-      dataType.decode(Buffer.from(extension.data)),
-      OBJECT_CONVERSION_OPTIONS
-    );
+    const dataJson = dataType.toObject(dataType.decode(Buffer.from(extension.data)), OBJECT_CONVERSION_OPTIONS);
 
     return {
       '@type': typeCid,
@@ -84,10 +78,7 @@ export const encodeExtensionPayload = async (
   return mapper(data, RECORD_EXTENSION_NAME);
 };
 
-export const sanitizeExtensionData = (
-  data: unknown,
-  expectedType: CID
-): RecordExtension<any> => {
+export const sanitizeExtensionData = (data: unknown, expectedType: CID): RecordExtension<any> => {
   assert(typeof data === 'object' && data !== null);
   if (!('@type' in data)) {
     return { '@type': expectedType, ...data };

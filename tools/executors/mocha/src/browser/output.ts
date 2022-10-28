@@ -20,10 +20,7 @@ export type OutputResultsOptions = {
 /**
  * Attempts to approximate Mocha's spec reported from a results JSON string.
  */
-export const outputResults = async (
-  results: RunTestsResults,
-  options: OutputResultsOptions
-) => {
+export const outputResults = async (results: RunTestsResults, options: OutputResultsOptions) => {
   const { suites, stats } = results;
 
   logSuites(suites);
@@ -48,22 +45,14 @@ export const outputResults = async (
   if (options.outDir) {
     const xml = buildXmlReport(results, options);
     await mkdir(options.outDir, { recursive: true });
-    await writeFile(
-      join(options.outDir, `${options.browserType}.xml`),
-      xml,
-      'utf-8'
-    );
+    await writeFile(join(options.outDir, `${options.browserType}.xml`), xml, 'utf-8');
   }
 
   return stats.failures > 0 ? 1 : 0;
 };
 
 // TODO(wittjosiah): Include duration based on speed, also retries.
-const logSuites = (
-  { suites, tests }: Suites,
-  depth = 1,
-  errors: TestResult[] = []
-) => {
+const logSuites = ({ suites, tests }: Suites, depth = 1, errors: TestResult[] = []) => {
   tests?.forEach((test) => {
     if (test.status === 'failed') {
       errors.push(test);
@@ -95,10 +84,7 @@ const status = (value: TestStatus, errorCount: number) => {
   }
 };
 
-const buildXmlReport = (
-  { suites, stats }: RunTestsResults,
-  options: OutputResultsOptions
-) => {
+const buildXmlReport = ({ suites, stats }: RunTestsResults, options: OutputResultsOptions) => {
   const builder = new XMLBuilder({
     ignoreAttributes: false,
     format: true
@@ -122,34 +108,18 @@ const buildXmlReport = (
   return builder.build(output);
 };
 
-const buildXmlTestSuites = (
-  suite: Suites,
-  errors: TestError[],
-  stats: Stats,
-  name = 'Root Suite'
-): object => {
-  const tests = suite.tests
-    ? suite.tests.filter((test) => test.status !== 'pending')
-    : [];
+const buildXmlTestSuites = (suite: Suites, errors: TestError[], stats: Stats, name = 'Root Suite'): object => {
+  const tests = suite.tests ? suite.tests.filter((test) => test.status !== 'pending') : [];
 
   return [
     {
       '@_name': name,
       '@_timestamp': stats.start,
       '@_tests': tests.length,
-      '@_time':
-        tests.reduce(
-          (time, test) => (test.duration ? time + test.duration : time),
-          0
-        ) / 1000,
-      '@_failures': tests.reduce(
-        (count, test) => (test.status === 'failed' ? count + 1 : count),
-        0
-      ),
+      '@_time': tests.reduce((time, test) => (test.duration ? time + test.duration : time), 0) / 1000,
+      '@_failures': tests.reduce((count, test) => (test.status === 'failed' ? count + 1 : count), 0),
       testcase: tests.map((test) => {
-        const error = errors.find(
-          (error) => [...error.suite, error.test].join(' ') === test.fullTitle
-        );
+        const error = errors.find((error) => [...error.suite, error.test].join(' ') === test.fullTitle);
 
         return {
           '@_name': test.fullTitle,
@@ -167,9 +137,7 @@ const buildXmlTestSuites = (
       })
     },
     ...(suite.suites
-      ? Object.entries(suite.suites).map(([name, suite]) =>
-          buildXmlTestSuites(suite, errors, stats, name)
-        )
+      ? Object.entries(suite.suites).map(([name, suite]) => buildXmlTestSuites(suite, errors, stats, name))
       : [])
   ].flat();
 };

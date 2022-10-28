@@ -35,10 +35,7 @@ type SubscribeFunction = (
   info: ReplicatorContextInfo
 ) => () => void;
 
-type ReplicateFunction = (
-  feeds: FeedData[],
-  info: ReplicatorContextInfo
-) => Promise<FeedWrapper<FeedMessage>[]>;
+type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedWrapper<FeedMessage>[]>;
 
 const defaultSubscribe: SubscribeFunction = () => () => {};
 const defaultReplicate: ReplicateFunction = async () => [];
@@ -72,10 +69,7 @@ export class ReplicatorPlugin {
   private readonly _subscribe: SubscribeFunction;
   private readonly _replicate: ReplicateFunction;
 
-  constructor(
-    { load, subscribe, replicate }: ReplicatorMiddleware,
-    options?: { timeout: number }
-  ) {
+  constructor({ load, subscribe, replicate }: ReplicatorMiddleware, options?: { timeout: number }) {
     this._options = options ?? { timeout: 10000 };
     this._load = load;
     this._subscribe = subscribe ?? defaultSubscribe;
@@ -100,10 +94,7 @@ export class ReplicatorPlugin {
 
   async _initHandler(protocol: Protocol) {
     const extension = protocol.getExtension(ReplicatorPlugin.EXTENSION);
-    assert(
-      extension,
-      `Missing '${ReplicatorPlugin.EXTENSION}' extension in protocol.`
-    );
+    assert(extension, `Missing '${ReplicatorPlugin.EXTENSION}' extension in protocol.`);
 
     const peer = new Peer(protocol, extension);
     this._peers.set(protocol, peer);

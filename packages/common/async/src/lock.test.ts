@@ -56,14 +56,7 @@ describe('Lock', function () {
     await p2;
     events.push('after');
 
-    expect(events).to.deep.equal([
-      'lock1',
-      'lock2',
-      'lock3',
-      'p1 resolve',
-      'p2 resolve',
-      'after'
-    ]);
+    expect(events).to.deep.equal(['lock1', 'lock2', 'lock3', 'p1 resolve', 'p2 resolve', 'after']);
   });
 
   it('deadlock', async function () {
@@ -182,12 +175,7 @@ describe('synchronized decorator', function () {
     await p1;
     await p2;
 
-    expect(events).to.deep.equal([
-      'foo start',
-      'foo end',
-      'bar start',
-      'bar end'
-    ]);
+    expect(events).to.deep.equal(['foo start', 'foo end', 'bar start', 'bar end']);
   });
 
   it('methods on different instances', async function () {
@@ -201,11 +189,6 @@ describe('synchronized decorator', function () {
     await p1;
     await p2;
 
-    expect(events).to.deep.equal([
-      'foo start',
-      'bar start',
-      'foo end',
-      'bar end'
-    ]);
+    expect(events).to.deep.equal(['foo start', 'bar start', 'foo end', 'bar end']);
   });
 });

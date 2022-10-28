@@ -28,10 +28,7 @@ type MappingSpec = Record<string, { path: string; type?: string }>;
  * @param {object} values
  * @return {object}
  */
-export const mapFromKeyValues = (
-  spec: MappingSpec,
-  values: Record<string, any>
-) => {
+export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>) => {
   const config = {};
 
   for (const [key, { path, type }] of Object.entries(spec)) {
@@ -147,9 +144,7 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow<K extends ConfigKey>(
-    key: K
-  ): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
+  getOrThrow<K extends ConfigKey>(key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
     const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);

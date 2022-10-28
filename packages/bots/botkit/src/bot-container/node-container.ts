@@ -29,10 +29,7 @@ export class NodeContainer implements BotContainer {
   ) {}
 
   async spawn({ localPath, id, logFilePath }: SpawnOptions): Promise<RpcPort> {
-    assert(
-      localPath,
-      'Node container only supports "localPath" package specifiers.'
-    );
+    assert(localPath, 'Node container only supports "localPath" package specifiers.');
     if (this._processes.has(id)) {
       throw new Error(`Bot ${id} already exists.`);
     }
@@ -63,10 +60,7 @@ export class NodeContainer implements BotContainer {
 
     child.on('disconnect', () => {
       log(`[${id}] IPC stream disconnected`);
-      this.error.emit([
-        id,
-        new Error('Bot child process disconnected from IPC stream.')
-      ]);
+      this.error.emit([id, new Error('Bot child process disconnected from IPC stream.')]);
     });
 
     if (logFilePath) {
@@ -79,8 +73,7 @@ export class NodeContainer implements BotContainer {
   }
 
   async kill(id: string) {
-    const child =
-      this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
+    const child = this._processes.get(id) ?? raise(new Error(`Bot ${id} not found.`));
 
     child.kill();
   }
@@ -97,10 +90,7 @@ export interface IpcProcessLike {
   on(event: 'message', listener: (message: Serializable) => void): void;
   off(event: 'message', listener: (message: Serializable) => void): void;
 
-  send?(
-    message: Serializable,
-    callback?: ((error: Error | null) => void) | undefined
-  ): boolean;
+  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean;
 }
 
 export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({
@@ -121,9 +111,7 @@ export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({
   subscribe: (cb) => {
     const ipcCallback = (msg: Serializable): void => {
       if (!(msg instanceof Uint8Array)) {
-        log(
-          `Invalid message type received from on IPC socket: type=${typeof msg}`
-        );
+        log(`Invalid message type received from on IPC socket: type=${typeof msg}`);
         return;
       }
       cb(msg);

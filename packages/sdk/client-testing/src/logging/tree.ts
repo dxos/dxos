@@ -20,19 +20,14 @@ export type TreeNode = TreeRoot | Item;
  * Create tree using depth first traversal.
  * https://waylonwalker.com/drawing-ascii-boxes/#connectors
  */
-export const treeLogger = (
-  node: TreeNode,
-  ancestors: [TreeNode, number][] = [],
-  rows: string[] = []
-) => {
+export const treeLogger = (node: TreeNode, ancestors: [TreeNode, number][] = [], rows: string[] = []) => {
   if (node.children?.length) {
     node.children!.forEach((child: TreeNode, i) => {
       treeLogger(child, [...ancestors, [node, i]], rows);
     });
   } else {
     const len = 10;
-    const name = (node: TreeNode) =>
-      chalk.blue(truncateKey(node.id, (len - 2) / 2));
+    const name = (node: TreeNode) => chalk.blue(truncateKey(node.id, (len - 2) / 2));
 
     const parts = [];
     ancestors.forEach(([node, i], j) => {

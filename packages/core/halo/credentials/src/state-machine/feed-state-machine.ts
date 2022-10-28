@@ -5,10 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/keys';
-import {
-  AdmittedFeed,
-  Credential
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
@@ -35,7 +32,10 @@ export class FeedStateMachine {
 
   readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
 
-  constructor(private readonly _partyKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _partyKey: PublicKey
+  ) {}
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
     return this._feeds;

@@ -22,16 +22,12 @@ export class DXNSContentResolver implements ContentResolver {
   constructor(private readonly _registry: RegistryClient) {}
 
   async resolve({ name }: { name: string }): Promise<ContentResolverResult> {
-    const botRecord = await this._registry.getRecordByName<Bot>(
-      DXN.parse(name)
-    );
+    const botRecord = await this._registry.getRecordByName<Bot>(DXN.parse(name));
     assert(botRecord, `Bot resource not found: ${name}`);
     const botIpfsCID = botRecord.payload.bundle;
     const botLocalPath = botRecord.payload.localPath;
     if (!botIpfsCID && !botLocalPath) {
-      throw new Error(
-        `Unable to resolve bot content by the provided name: ${name}`
-      );
+      throw new Error(`Unable to resolve bot content by the provided name: ${name}`);
     }
 
     const result: ContentResolverResult = {};

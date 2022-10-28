@@ -30,11 +30,7 @@ interface StyledBoxProps extends BoxProps {
  * ```
  */
 export const BoxContainer: any = styled(Box, {
-  shouldForwardProp: (prop) =>
-    prop !== 'expand' &&
-    prop !== 'column' &&
-    prop !== 'scrollX' &&
-    prop !== 'scrollY'
+  shouldForwardProp: (prop) => prop !== 'expand' && prop !== 'column' && prop !== 'scrollX' && prop !== 'scrollY'
 })<StyledBoxProps>(({ expand, column, scrollX, scrollY }) => ({
   display: 'flex',
   flexDirection: column ? 'column' : undefined,

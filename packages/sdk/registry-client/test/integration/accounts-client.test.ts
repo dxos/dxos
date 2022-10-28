@@ -44,14 +44,11 @@ describe('Accounts Client', function () {
   describe('Adding devices', function () {
     it('Can add a second device', async function () {
       const account = await accountsApi.createAccount();
-      expect(await accountsApi.belongsToAccount(account, alice.address)).to.be
-        .true;
-      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be
-        .false;
+      expect(await accountsApi.belongsToAccount(account, alice.address)).to.be.true;
+      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.false;
 
       await accountsApi.addDevice(account, bob.address);
-      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be
-        .true;
+      expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.true;
     });
   });
 });

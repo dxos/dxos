@@ -126,11 +126,7 @@ export const Passcode = ({
     }
   };
 
-  const handleChange = ({
-    target: { value }
-  }: {
-    target: { value: string };
-  }) => {
+  const handleChange = ({ target: { value } }: { target: { value: string } }) => {
     if (!value.match(pattern) || value.length > length) {
       return;
     }
@@ -206,13 +202,9 @@ export const Passcode = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              color: focused
-                ? theme.palette.text.primary
-                : theme.palette.text.disabled,
+              color: focused ? theme.palette.text.primary : theme.palette.text.disabled,
               border: () =>
-                focused
-                  ? `1px solid ${theme.palette.primary.main}`
-                  : `1px solid ${theme.palette.divider}`,
+                focused ? `1px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
               cursor: disabled ? 'default' : 'pointer',
               ...styles
             }}

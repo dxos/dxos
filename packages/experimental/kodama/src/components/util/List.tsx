@@ -88,17 +88,7 @@ export const List: FC<{
   onUpdate?: (item: { id?: string; text: string }) => void;
   onSelect?: (id: string) => void;
   onCancel?: () => void;
-}> = ({
-  id,
-  focusId,
-  items = [],
-  pageSize = 10,
-  title,
-  showCount,
-  onUpdate,
-  onSelect,
-  onCancel
-}) => {
+}> = ({ id, focusId, items = [], pageSize = 10, title, showCount, onUpdate, onSelect, onCancel }) => {
   const [{ debug }] = useAppState();
   const { isFocused } = useFocus({ id: focusId });
   const { focusPrevious, focusNext } = useFocusManager();
@@ -186,12 +176,7 @@ export const List: FC<{
 
         <Box flexDirection='column'>
           {visibleItems.map((item, i) => (
-            <ListItem
-              key={item.id}
-              item={item}
-              selected={isFocused && startIndex + i === cursor}
-              onUpdate={onUpdate}
-            />
+            <ListItem key={item.id} item={item} selected={isFocused && startIndex + i === cursor} onUpdate={onUpdate} />
           ))}
         </Box>
 

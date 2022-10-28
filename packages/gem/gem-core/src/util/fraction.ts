@@ -45,9 +45,7 @@ export class FractionUtil {
    */
   static round = ([n, d]: Fraction, p = 1): Fraction => {
     FractionUtil.validate([n, d]);
-    const v = Math.round(
-      FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p]))
-    );
+    const v = Math.round(FractionUtil.toNumber(FractionUtil.divide([n, d], [1, p])));
     return FractionUtil.simplify([v, p]);
   };
 

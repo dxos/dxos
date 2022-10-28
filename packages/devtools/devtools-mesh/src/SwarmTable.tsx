@@ -5,14 +5,7 @@
 import React from 'react';
 
 import InfoIcon from '@mui/icons-material/Info';
-import {
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow
-} from '@mui/material';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
@@ -52,9 +45,7 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
     <TableBody>
       {swarms.map((swarm) => (
         <TableRow key={swarm.id.toHex()}>
-          <TableCell sx={{ maxWidth: 200 }}>
-            {swarm.label && <CopyText value={swarm.label} />}
-          </TableCell>
+          <TableCell sx={{ maxWidth: 200 }}>{swarm.label && <CopyText value={swarm.label} />}</TableCell>
           <TableCell sx={{ maxWidth: 200 }}>
             <CopyText value={swarm.topic.toHex()} />
           </TableCell>

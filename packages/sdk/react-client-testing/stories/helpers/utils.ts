@@ -8,11 +8,7 @@ import { OrderedList } from '@dxos/client';
 
 export const moveItemInArray = (array: any[], item: any, index: number) => {
   const arrayWithoutItem = array.filter((currentItem) => currentItem !== item);
-  return [
-    ...arrayWithoutItem.slice(0, index),
-    item,
-    ...arrayWithoutItem.slice(index)
-  ];
+  return [...arrayWithoutItem.slice(0, index), item, ...arrayWithoutItem.slice(index)];
 };
 
 export const updateSourceAndTargetState = (
@@ -31,11 +27,7 @@ export const updateSourceAndTargetState = (
         };
       }
 
-      if (
-        sourceOrderedList &&
-        newSourceOrder &&
-        currentOrder.id === sourceOrderedList.id
-      ) {
+      if (sourceOrderedList && newSourceOrder && currentOrder.id === sourceOrderedList.id) {
         return {
           id: currentOrder.id,
           values: newSourceOrder

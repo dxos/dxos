@@ -17,7 +17,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
+import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
@@ -43,9 +43,7 @@ const middleware = ({
 
   return {
     subscribe: (next) => {
-      const unsubscribe = feedStore.feedOpened.on((feed) =>
-        next([encodeFeed(feed)])
-      );
+      const unsubscribe = feedStore.feedOpened.on((feed) => next([encodeFeed(feed)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();
@@ -75,14 +73,16 @@ const middleware = ({
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const keyring = new Keyring();
-  const feedFactory = new FeedFactory<FeedMessage>({
-    root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
-    signer: keyring,
-    hypercore: {
-      valueEncoding: 'utf-8'
-    }
+  const feedStore = new FeedStore<FeedMessage>({
+    factory: new FeedFactory<FeedMessage>({
+      root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      signer: keyring,
+      hypercore: {
+        valueEncoding: 'utf-8'
+      }
+    })
   });
-  const feedStore = new FeedStore<FeedMessage>({ factory: feedFactory });
+
   const feed = await feedStore.openFeed(await keyring.createKey());
 
   let closed = false;
@@ -123,11 +123,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       const messages: any[] = [];
 
       // Create combined stream.
-      const stream = multi.obj(
-        feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) =>
-          feed.createReadableStream()
-        )
-      );
+      const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper<FeedMessage>) => feed.createReadableStream()));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });
@@ -164,8 +160,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
     await waitForExpect(
       () => {
         const result = network.peers.reduce(
-          (prev: boolean, peer: any) =>
-            prev && peer.getFeedsNum() === network.peers.length,
+          (prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length,
           true
         );
         expect(result).to.be.true;

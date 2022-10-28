@@ -6,18 +6,9 @@ import cloneDeep from 'lodash.clonedeep';
 import get from 'lodash.get';
 import assert from 'node:assert';
 
-import {
-  ModelMeta,
-  Model,
-  StateMachine,
-  MutationProcessMeta
-} from '@dxos/model-factory';
+import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
 import { schema } from '@dxos/protocols';
-import {
-  ObjectMutation,
-  ObjectMutationSet,
-  ObjectSnapshot
-} from '@dxos/protocols/proto/dxos/echo/model/object';
+import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { MutationUtil, ValueUtil } from './mutation';
 import { validateKey } from './util';
@@ -27,9 +18,7 @@ export type ObjectModelState = Record<string, any>;
 /**
  * Processes object mutations.
  */
-class ObjectModelStateMachine
-  implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot>
-{
+class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMutationSet, ObjectSnapshot> {
   private _object: ObjectModelState = {};
 
   getState(): ObjectModelState {
@@ -60,7 +49,10 @@ class ObjectModelStateMachine
 export class MutationBuilder {
   _mutations: ObjectMutation[] = [];
 
-  constructor(private readonly _model: ObjectModel) {}
+  // prettier-ignore
+  constructor(
+    private readonly _model: ObjectModel
+  ) {}
 
   set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));
@@ -84,16 +76,11 @@ export interface ObjectProperties {
  * Object mutation model.
  */
 // TODO(burdon): Make generic (separate model?) With read/write validation.
-export class ObjectModel
-  extends Model<ObjectModelState, ObjectMutationSet>
-  implements ObjectProperties
-{
+export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> implements ObjectProperties {
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     stateMachine: () => new ObjectModelStateMachine(),
-    mutationCodec: schema.getCodecForType(
-      'dxos.echo.model.object.ObjectMutationSet'
-    ),
+    mutationCodec: schema.getCodecForType('dxos.echo.model.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation(obj: any): Promise<ObjectMutationSet> {
@@ -102,9 +89,7 @@ export class ObjectModel
       };
     },
 
-    snapshotCodec: schema.getCodecForType(
-      'dxos.echo.model.object.ObjectSnapshot'
-    )
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.object.ObjectSnapshot')
   };
 
   /**

@@ -16,16 +16,17 @@ import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
 import {
-  getTelemetryApiKey,
+  DX_ENVIRONMENT,
+  DX_RELEASE,
   getTelemetryContext,
-  PublisherRpcPeer
+  PublisherRpcPeer,
+  SENTRY_DESTINATION,
+  TELEMETRY_KEY
 } from './util';
 
 const log = debug('dxos:cli:main');
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
-const SENTRY_DESTINATION =
-  'https://2647916221e643869965e78469479aa4@o4504012000067584.ingest.sentry.io/4504012027265029';
 
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
@@ -62,29 +63,41 @@ export abstract class BaseCommand extends Command {
   override async init(): Promise<void> {
     await super.init();
 
-    const { machineId, identityId, fullCrashReports, disableTelemetry } =
-      await getTelemetryContext(this.config.configDir);
+    const { installationId, isInternalUser, fullCrashReports, disableTelemetry } = await getTelemetryContext(
+      this.config.configDir
+    );
 
-    if (!disableTelemetry) {
+    if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
-        machineId,
-        destination: process.env.SENTRY_DSN ?? SENTRY_DESTINATION,
+        installationId,
+        destination: SENTRY_DESTINATION,
+        environment: DX_ENVIRONMENT,
+        release: DX_RELEASE,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
-        scrubFilenames: !fullCrashReports
+        scrubFilenames: !fullCrashReports,
+        properties: {
+          isInternalUser
+        }
       });
     }
 
-    Telemetry.init({
-      apiKey: getTelemetryApiKey(),
-      batchSize: 20,
-      enable: !disableTelemetry
-    });
+    if (TELEMETRY_KEY) {
+      Telemetry.init({
+        apiKey: TELEMETRY_KEY,
+        batchSize: 20,
+        enable: Boolean(TELEMETRY_KEY) && !disableTelemetry
+      });
+    }
 
     Telemetry.event({
-      machineId,
-      identityId,
-      name: this.id ?? 'unknown'
+      installationId,
+      name: this.id ?? 'unknown',
+      properties: {
+        environment: DX_ENVIRONMENT,
+        release: DX_RELEASE,
+        isInternalUser
+      }
     });
 
     // Load user config file.
@@ -92,9 +105,7 @@ export abstract class BaseCommand extends Command {
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       try {
-        this._clientConfig = yaml.load(
-          String(fs.readFileSync(configFile))
-        ) as ConfigProto;
+        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
       } catch (err) {
         Sentry.captureException(err);
         console.error(`Invalid config file: ${configFile}`);
@@ -103,9 +114,7 @@ export abstract class BaseCommand extends Command {
       if (configFile) {
         console.error(`Config file not found: ${configFile}`);
       } else {
-        console.error(
-          `Set config via ${ENV_DX_CONFIG} env variable or config flag.`
-        );
+        console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
       }
 
       process.exit(1);
@@ -138,9 +147,7 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in client object.
    */
-  async execWithClient<T>(
-    callback: (client: Client) => Promise<T | undefined>
-  ): Promise<T | undefined> {
+  async execWithClient<T>(callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
     try {
       const client = await this.getClient();
       const value = await callback(client);
@@ -161,23 +168,17 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in kube publisher.
    */
-  async execWithPublisher<T>(
-    callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>
-  ): Promise<T | undefined> {
+  async execWithPublisher<T>(callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     let rpc: PublisherRpcPeer | undefined;
     try {
       assert(this._clientConfig);
 
-      const wsEndpoint =
-        this._clientConfig?.runtime?.services?.publisher?.server;
+      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
       assert(wsEndpoint);
 
       rpc = new PublisherRpcPeer(wsEndpoint);
 
-      await Promise.race([
-        rpc.connected.waitForCount(1),
-        rpc.error.waitForCount(1).then((err) => Promise.reject(err))
-      ]);
+      await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
 
       const value = await callback(rpc);
 

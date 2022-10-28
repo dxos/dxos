@@ -75,10 +75,7 @@ export class ApiTransactionHandler {
     sudoSignFn: SignTxFunction | AddressOrPair
   ): Promise<SendTransactionResult> {
     const sudoTx = this.api.tx.sudo.sudo(transaction);
-    const signFn =
-      typeof sudoSignFn === 'function'
-        ? sudoSignFn
-        : (tx: Tx) => tx.signAsync(sudoSignFn);
+    const signFn = typeof sudoSignFn === 'function' ? sudoSignFn : (tx: Tx) => tx.signAsync(sudoSignFn);
     return this.sendTransaction(sudoTx, signFn);
   }
 
@@ -105,9 +102,7 @@ export class ApiTransactionHandler {
   }
 
   ensureExtrinsicNotFailed(events: EventRecord[]) {
-    const rejectionEvent = events
-      .map((e) => e.event)
-      .find(this.api.events.system.ExtrinsicFailed.is);
+    const rejectionEvent = events.map((e) => e.event).find(this.api.events.system.ExtrinsicFailed.is);
     if (rejectionEvent) {
       throw new Error(this.getErrorName(rejectionEvent));
     }

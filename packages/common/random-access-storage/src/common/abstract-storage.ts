@@ -84,17 +84,11 @@ export abstract class AbstractStorage implements Storage {
   /**
    * Attempt to reopen file.
    */
-  protected _openFile(
-    file: RandomAccessStorage
-  ): RandomAccessStorage | undefined {
+  protected _openFile(file: RandomAccessStorage): RandomAccessStorage | undefined {
     return undefined;
   }
 
-  protected abstract _createFile(
-    path: string,
-    filename: string,
-    opts?: any
-  ): RandomAccessStorage;
+  protected abstract _createFile(path: string, filename: string, opts?: any): RandomAccessStorage;
 
   private _getFileIfExists(filename: string): File | undefined {
     if (this._files.has(filename)) {
@@ -116,9 +110,7 @@ export abstract class AbstractStorage implements Storage {
 
   private async _closeFilesInPath(path: string): Promise<void> {
     await Promise.all(
-      Array.from(this._getFiles(path).values()).map((file) =>
-        file.close().catch((err: any) => log.catch(err))
-      )
+      Array.from(this._getFiles(path).values()).map((file) => file.close().catch((err: any) => log.catch(err)))
     );
   }
 

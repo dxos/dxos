@@ -38,10 +38,7 @@ type CreatePeerCallback = (id: Buffer) => Promise<Peer>;
  * @param fromPeer Peer initiator of the connection
  * @param toPeer Peer target
  */
-type CreateConnectionCallback = (
-  fromPeer: Peer,
-  toPeer: Peer
-) => Promise<Stream | undefined>;
+type CreateConnectionCallback = (fromPeer: Peer, toPeer: Peer) => Promise<Stream | undefined>;
 
 /**
  * Class helper to generate random buffer ids based on a number.
@@ -74,10 +71,7 @@ export class Network extends EventEmitter {
   constructor(options: NetworkOptions = {}) {
     super();
 
-    const {
-      createPeer = (id) => ({ id }),
-      createConnection = () => new PassThrough()
-    } = options;
+    const { createPeer = (id) => ({ id }), createConnection = () => new PassThrough() } = options;
 
     this._createPeer = async (...args) => createPeer(...args);
     this._createConnection = async (...args) => createConnection(...args);
@@ -140,9 +134,7 @@ export class Network extends EventEmitter {
     const peer = this._createPeer(id)
       .then((peer) => {
         if (!Buffer.isBuffer(peer.id)) {
-          throw new Error(
-            'createPeer expect to return an object with an "id" buffer prop'
-          );
+          throw new Error('createPeer expect to return an object with an "id" buffer prop');
         }
 
         node.data = peer;
@@ -164,11 +156,7 @@ export class Network extends EventEmitter {
   /**
    * Add a new connection to the network
    */
-  async addConnection(
-    from: Buffer,
-    to: Buffer,
-    conn?: Connection
-  ): Promise<Connection> {
+  async addConnection(from: Buffer, to: Buffer, conn?: Connection): Promise<Connection> {
     assert(Buffer.isBuffer(from));
     assert(Buffer.isBuffer(to));
 
@@ -242,17 +230,9 @@ export class Network extends EventEmitter {
     const fromPeer = await this._getPeerOrCreate(from);
     const toPeer = await this._getPeerOrCreate(to);
 
-    const connection = (async () =>
-      conn ||
-      (await this._createConnection(fromPeer, toPeer)) ||
-      new PassThrough())()
+    const connection = (async () => conn || (await this._createConnection(fromPeer, toPeer)) || new PassThrough())()
       .then((stream) => {
-        if (
-          !(
-            typeof stream === 'object' &&
-            typeof (stream as any).pipe === 'function'
-          )
-        ) {
+        if (!(typeof stream === 'object' && typeof (stream as any).pipe === 'function')) {
           throw new Error('createConnection expect to return a stream');
         }
 

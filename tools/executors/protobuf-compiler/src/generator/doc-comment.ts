@@ -4,10 +4,7 @@
 
 import ts from 'typescript';
 
-export const attachDocComment = <T extends ts.Node>(
-  node: T,
-  comment: string
-): T =>
+export const attachDocComment = <T extends ts.Node>(node: T, comment: string): T =>
   ts.addSyntheticLeadingComment(
     node,
     ts.SyntaxKind.MultiLineCommentTrivia,

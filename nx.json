@@ -94,7 +94,11 @@
       ]
     },
     "prerelease": {
-      "inputs": ["default", "^production"]
+      "inputs": ["default", "^production"],
+      "dependsOn": [
+        "^build",
+        "^bundle"
+      ]
     },
     "proto": {
       "inputs": ["production", "^production"],

@@ -22,8 +22,7 @@ export const defaultCodec: Codec<any> = {
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
 };
 
-export const defaultValueEncoding: AbstractValueEncoding<any> =
-  createCodecEncoding(defaultCodec);
+export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncoding(defaultCodec);
 
 export type TestBlockGenerator<T> = (i: number) => T;
 
@@ -39,7 +38,10 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 export class TestGenerator<T extends {}> {
   _count = 0;
 
-  constructor(private readonly _generate: TestBlockGenerator<T>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _generate: TestBlockGenerator<T>
+  ) {}
 
   async writeBlocks(
     writer: FeedWriter<T>,
@@ -68,6 +70,4 @@ export class TestGenerator<T extends {}> {
   }
 }
 
-export const defaultTestGenerator = new TestGenerator<TestItem>(
-  defaultTestBlockGenerator
-);
+export const defaultTestGenerator = new TestGenerator<TestItem>(defaultTestBlockGenerator);

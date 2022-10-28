@@ -17,11 +17,7 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
   <>
-    <Group
-      label={{ children: null }}
-      elevation={0}
-      className='flex gap-4 px-1 mb-4'
-    >
+    <Group label={{ children: null }} elevation={0} className='flex gap-4 px-1 mb-4'>
       {children}
     </Group>
     <Group label={{ children: null }} elevation={5} className='flex gap-4 px-1'>
@@ -42,10 +38,6 @@ const Template = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
 export const Default = templateForComponent(Template)({});
 Default.args = { children: 'Hello', disabled: false, variant: 'default' };
 
-export const Primary = () => (
-  <Template {...{ variant: 'primary', children: 'Hello' }} />
-);
+export const Primary = () => <Template {...{ variant: 'primary', children: 'Hello' }} />;
 
-export const Outline = () => (
-  <Template {...{ variant: 'outline', children: 'Hello' }} />
-);
+export const Outline = () => <Template {...{ variant: 'outline', children: 'Hello' }} />;

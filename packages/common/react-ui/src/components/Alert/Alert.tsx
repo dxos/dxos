@@ -16,23 +16,13 @@ export interface AlertProps extends Omit<ComponentProps<'div'>, 'title'> {
   children?: ReactNode;
 }
 
-export const Alert = ({
-  title,
-  children,
-  assertive,
-  valence,
-  ...divProps
-}: AlertProps) => {
+export const Alert = ({ title, children, assertive, valence, ...divProps }: AlertProps) => {
   const labelId = useId('alertLabel');
   return (
     <div
       role={assertive ? 'alert' : 'group'}
       {...divProps}
-      className={cx(
-        'p-3 border rounded-md',
-        valenceAlertColors(valence),
-        divProps.className
-      )}
+      className={cx('p-3 border rounded-md', valenceAlertColors(valence), divProps.className)}
       aria-labelledby={labelId}
     >
       <p id={labelId} className='font-medium mb-2'>

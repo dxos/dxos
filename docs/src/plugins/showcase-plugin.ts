@@ -37,10 +37,7 @@ export const showcasePlugin = async (): Promise<Plugin> => {
       const rawSource = await readFile(filePath, 'utf-8');
       // Remove copyright and default export.
       const tsSource = rawSource.trim().split('\n').slice(4, -1).join('\n');
-      const transpiledSource = prettier.format(
-        ts.transpile(tsSource, tsConfig),
-        prettierConfig
-      );
+      const transpiledSource = prettier.format(ts.transpile(tsSource, tsConfig), prettierConfig);
       const [{ messages }] = await eslint.lintText(transpiledSource, {
         filePath: filePath.replace('.tsx', '.jsx')
       });
@@ -51,11 +48,7 @@ export const showcasePlugin = async (): Promise<Plugin> => {
             return source;
           }
 
-          return (
-            source.slice(0, fix.range[0]) +
-            fix.text +
-            source.slice(fix.range[1])
-          );
+          return source.slice(0, fix.range[0]) + fix.text + source.slice(fix.range[1]);
         }, transpiledSource);
 
       return {

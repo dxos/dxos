@@ -8,8 +8,7 @@ import { useClient } from '@dxos/react-client';
 
 import { JoinDialog, JoinDialogProps } from './JoinDialog';
 
-export interface JoinHaloDialogProps
-  extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
+export interface JoinHaloDialogProps extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
   onJoin?: () => Promise<void> | void;
 }
 
@@ -19,10 +18,7 @@ export interface JoinHaloDialogProps
 export const JoinHaloDialog = ({ onJoin, ...props }: JoinHaloDialogProps) => {
   const client = useClient();
 
-  const handleJoin: JoinDialogProps['onJoin'] = async ({
-    invitation,
-    secretProvider
-  }) => {
+  const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
     const acceptedInvitation = await client.halo.acceptInvitation(invitation);
     const secret = await secretProvider();
     await acceptedInvitation.authenticate(secret);

@@ -5,11 +5,7 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
-import {
-  AdmittedFeed,
-  Chain,
-  PartyMember
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, verifyCredential } from '../credentials';
 import { PartyStateMachine } from './party-state-machine';
@@ -300,8 +296,7 @@ describe('PartyStateMachine', function () {
           chain: {
             credential: haloState.credentials.find(
               (c) =>
-                c.subject.assertion['@type'] ===
-                  'dxos.halo.credentials.AuthorizedDevice' &&
+                c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
                 c.subject.id.equals(device1)
             )!
           },
@@ -328,9 +323,7 @@ describe('PartyStateMachine', function () {
       chain: {
         credential: haloState.credentials.find(
           (c) =>
-            c.subject.assertion['@type'] ===
-              'dxos.halo.credentials.AuthorizedDevice' &&
-            c.subject.id.equals(device2)
+            c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device2)
         )!
       }
     });

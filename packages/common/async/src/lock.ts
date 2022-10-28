@@ -59,8 +59,7 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = function (this: any, ...args: any) {
-    const lock: Lock =
-      this[classLockSymbol] ?? (this[classLockSymbol] = new Lock());
+    const lock: Lock = this[classLockSymbol] ?? (this[classLockSymbol] = new Lock());
     return lock.executeSynchronized(() => method.apply(this, args));
   };
 };

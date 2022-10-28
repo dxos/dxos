@@ -4,12 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import {
-  Box,
-  Fade,
-  Skeleton as MuiSkeleton,
-  SkeletonProps as MuiSkeletonProps
-} from '@mui/material';
+import { Box, Fade, Skeleton as MuiSkeleton, SkeletonProps as MuiSkeletonProps } from '@mui/material';
 
 import { useMounted } from '@dxos/react-async';
 

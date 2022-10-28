@@ -34,9 +34,7 @@ export const linkerRenderer = (
     .selectAll<SVGPathElement, any>('path')
     .data(source ? [{ id: 'link' }] : [])
     .join('path')
-    .attr('marker-end', () =>
-      target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'
-    )
+    .attr('marker-end', () => (target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'))
     .attr('d', () => {
       return line(
         getCircumferencePoints(

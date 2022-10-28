@@ -63,11 +63,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
 
   async open(itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
-    this._itemDemuxer = new ItemDemuxer(
-      itemManager,
-      modelFactory,
-      this._options
-    );
+    this._itemDemuxer = new ItemDemuxer(itemManager, modelFactory, this._options);
     this._echoProcessor = this._itemDemuxer.open();
 
     if (this._snapshot) {
@@ -86,11 +82,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   }
 
   createDataServiceHost() {
-    return new DataServiceHost(
-      this._itemManager,
-      this._itemDemuxer,
-      this._outboundStream ?? undefined
-    );
+    return new DataServiceHost(this._itemManager, this._itemDemuxer, this._outboundStream ?? undefined);
   }
 }
 
@@ -102,6 +94,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
   private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 
+  // prettier-ignore
   constructor(
     private readonly _service: DataService,
     private readonly _partyKey: PublicKey
@@ -111,17 +104,10 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     return false;
   }
 
-  async open(
-    itemManager: ItemManager,
-    modelFactory: ModelFactory
-  ): Promise<void> {
+  async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
-    const dataMirror = new DataMirror(
-      this._itemManager,
-      this._service,
-      this._partyKey
-    );
+    const dataMirror = new DataMirror(this._itemManager, this._service, this._partyKey);
 
     this._subscriptions.add(
       modelFactory.registered.on(async (model) => {

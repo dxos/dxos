@@ -4,15 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  TextField
-} from '@mui/material';
+import { Button, Dialog, DialogTitle, DialogActions, DialogContent, DialogContentText, TextField } from '@mui/material';
 
 export interface ImportIpfsDialogProps {
   open: boolean;
@@ -20,11 +12,7 @@ export interface ImportIpfsDialogProps {
   onClose: () => void;
 }
 
-export const ImportIpfsDialog = ({
-  open,
-  onImport,
-  onClose
-}: ImportIpfsDialogProps) => {
+export const ImportIpfsDialog = ({ open, onImport, onClose }: ImportIpfsDialogProps) => {
   const [cid, setCid] = useState('');
   const handleImport = () => {
     onImport(cid);
@@ -34,9 +22,7 @@ export const ImportIpfsDialog = ({
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
       <DialogTitle>Import IPFS Resource</DialogTitle>
       <DialogContent>
-        <DialogContentText sx={{ mb: 4 }}>
-          Enter or paste the resource CID.
-        </DialogContentText>
+        <DialogContentText sx={{ mb: 4 }}>Enter or paste the resource CID.</DialogContentText>
         <TextField
           autoFocus
           variant='standard'
@@ -50,11 +36,7 @@ export const ImportIpfsDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button
-          disabled={cid.length === 0}
-          onClick={handleImport}
-          variant='contained'
-        >
+        <Button disabled={cid.length === 0} onClick={handleImport} variant='contained'>
           Import
         </Button>
       </DialogActions>

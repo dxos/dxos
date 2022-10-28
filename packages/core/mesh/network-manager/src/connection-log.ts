@@ -5,10 +5,7 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import {
-  SwarmInfo,
-  ConnectionInfo
-} from '@dxos/protocols/proto/dxos/devtools/swarmLog';
+import { SwarmInfo, ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
@@ -25,17 +22,12 @@ export class ConnectionLog {
   /**
    * SwarmId => info
    */
-  private readonly _swarms = new ComplexMap<PublicKey, SwarmInfo>(
-    PublicKey.hash
-  );
+  private readonly _swarms = new ComplexMap<PublicKey, SwarmInfo>(PublicKey.hash);
 
   readonly update = new Event();
 
   getSwarmInfo(swarmId: PublicKey) {
-    return (
-      this._swarms.get(swarmId) ??
-      raise(new Error(`Swarm not found: ${swarmId}`))
-    );
+    return this._swarms.get(swarmId) ?? raise(new Error(`Swarm not found: ${swarmId}`));
   }
 
   get swarms(): SwarmInfo[] {
@@ -59,9 +51,7 @@ export class ConnectionLog {
         state: ConnectionState.INITIAL,
         remotePeerId: connection.remoteId,
         sessionId: connection.sessionId,
-        transport:
-          connection.transport &&
-          Object.getPrototypeOf(connection.transport).constructor.name,
+        transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: connection.protocol.extensionNames,
         events: []
       };

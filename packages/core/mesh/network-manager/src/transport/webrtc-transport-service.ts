@@ -25,20 +25,19 @@ import { wrtc } from './webrtc';
 export class WebRTCTransportService implements BridgeService {
   protected peers = new ComplexMap<PublicKey, SimplePeer>(PublicKey.hash);
 
-  constructor(private readonly _webrtcConfig?: any) {}
+  // prettier-ignore
+  constructor(
+    private readonly _webrtcConfig?: any
+  ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     return new Stream(({ ready, next, close }) => {
       log(
-        `Creating webrtc connection initiator=${
-          request.initiator
-        } webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
+        `Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
       );
       const peer = new SimplePeerConstructor({
         initiator: request.initiator,
-        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
-          ? undefined
-          : wrtc ?? raise(new Error('wrtc not available')),
+        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
         config: this._webrtcConfig
       });
 

@@ -40,14 +40,8 @@ export interface ExtensionOptions {
 export type InitHandler = (protocol: Protocol) => Promise<void> | void;
 export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
 export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
-export type MessageHandler = (
-  protocol: Protocol,
-  message: any
-) => Promise<any> | void;
-export type FeedHandler = (
-  protocol: Protocol,
-  discoveryKey: Buffer
-) => Promise<void> | void;
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void;
 
 /**
  * Reliable message passing via using Dat protocol extensions.
@@ -97,10 +91,7 @@ export class Extension extends Nanomessage {
    * @param {Object} options
    * @param {Number} options.timeout
    */
-  constructor(
-    name: string,
-    { schema: userSchema, ...nmOptions }: ExtensionOptions = {}
-  ) {
+  constructor(name: string, { schema: userSchema, ...nmOptions }: ExtensionOptions = {}) {
     super(nmOptions);
 
     assert(typeof name === 'string' && name.length > 0, 'name is required.');
@@ -180,21 +171,15 @@ export class Extension extends Nanomessage {
     log(`init[${this._name}]: ${keyToHuman(protocol.id)}`);
 
     this._protocol = protocol;
-    this._protocolExtension = this._protocol.stream.registerExtension(
-      this.name,
-      {
-        onmessage: async (msg: any) => {
-          try {
-            await this._subscribeCb?.(msg);
-          } catch (err: any) {
-            log(
-              `${this.name} failed to execute subscribe callback on message.`,
-              { msg, err }
-            );
-          }
+    this._protocolExtension = this._protocol.stream.registerExtension(this.name, {
+      onmessage: async (msg: any) => {
+        try {
+          await this._subscribeCb?.(msg);
+        } catch (err: any) {
+          log(`${this.name} failed to execute subscribe callback on message.`, { msg, err });
         }
       }
-    );
+    });
 
     await this.open();
   }
@@ -263,10 +248,7 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send(
-    message: Buffer | Uint8Array | WithTypeUrl<object>,
-    options: { oneway?: boolean } = {}
-  ) {
+  async send(message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -281,11 +263,7 @@ export class Extension extends Nanomessage {
     try {
       const response = await this.request(builtMessage);
       if (response && response.code && response.message) {
-        throw new ERR_EXTENSION_RESPONSE_FAILED(
-          this._name,
-          response.code,
-          response.message
-        );
+        throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }
 
       return { response };
@@ -298,11 +276,7 @@ export class Extension extends Nanomessage {
         throw ERR_EXTENSION_RESPONSE_TIMEOUT.from(err);
       }
 
-      throw new ERR_EXTENSION_RESPONSE_FAILED(
-        this._name,
-        err.code || 'Error',
-        err.message
-      );
+      throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
     }
   }
 
@@ -338,20 +312,20 @@ export class Extension extends Nanomessage {
   /**
    * @overrides _send in Nanomessage
    */
-  private _send(chunk: Uint8Array) {
+  private _send(msg: Buffer) {
     assert(this._protocol);
     assert(this._protocolExtension);
     if (this._protocol.stream.destroyed) {
       return;
     }
 
-    this._protocolExtension.send(chunk);
+    this._protocolExtension.send(msg);
   }
 
   /**
    * @override _onMessage from Nanomessagerpc
    */
-  private async _onMessage(msg: any) {
+  private async _onMessage(msg: Buffer) {
     try {
       await this.open();
       if (this._messageHandler) {
@@ -361,11 +335,7 @@ export class Extension extends Nanomessage {
       }
     } catch (err: any) {
       this.emit('error', err);
-      const responseError = new ERR_EXTENSION_RESPONSE_FAILED(
-        this._name,
-        err.code || 'Error',
-        err.message
-      );
+      const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
         '@type': 'dxos.mesh.protocol.Error',
         code: responseError.responseCode,
@@ -377,9 +347,7 @@ export class Extension extends Nanomessage {
   /**
    * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
    */
-  private _buildMessage(
-    message: Buffer | Uint8Array | WithTypeUrl<object>
-  ): WithTypeUrl<any> {
+  private _buildMessage(message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
     if (typeof message === 'string') {
       // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));

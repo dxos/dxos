@@ -20,12 +20,7 @@ export interface ProfileDialogProps {
 /**
  * @deprecated Replace with RegistrationDialog.
  */
-export const ProfileDialog = ({
-  open,
-  onCreate,
-  onCancel,
-  onJoinHalo
-}: ProfileDialogProps) => {
+export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileDialogProps) => {
   const [username, setUsername] = useState('');
 
   const handleUpdate = () => {

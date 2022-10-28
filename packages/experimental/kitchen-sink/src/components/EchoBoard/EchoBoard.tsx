@@ -20,11 +20,7 @@ export interface EchoBoardProps {
   onCreateItem?: (type: string, title: string, parent?: ItemID) => void;
 }
 
-export const EchoBoard = ({
-  items = [],
-  itemAdapter,
-  onCreateItem
-}: EchoBoardProps) => (
+export const EchoBoard = ({ items = [], itemAdapter, onCreateItem }: EchoBoardProps) => (
   <Grid
     container
     spacing={2}
@@ -47,12 +43,7 @@ export const EchoBoard = ({
             <EchoCard item={item} itemAdapter={itemAdapter}>
               {childTypes!.map((type) => (
                 <Box key={type} sx={{ paddingBottom: 0.5 }}>
-                  <EchoSubList
-                    item={item}
-                    itemAdapter={itemAdapter}
-                    type={type}
-                    onCreateItem={onCreateItem}
-                  />
+                  <EchoSubList item={item} itemAdapter={itemAdapter} type={type} onCreateItem={onCreateItem} />
                 </Box>
               ))}
             </EchoCard>

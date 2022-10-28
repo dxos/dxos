@@ -13,8 +13,7 @@ import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
 
-const invitationCodeFromUrl = (text: string) =>
-  text.substring(text.lastIndexOf('/') + 1);
+const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
 
 enum PartyJoinState {
   INIT,
@@ -51,14 +50,11 @@ export const JoinDialog = ({
   closeOnSuccess = true,
   modal
 }: JoinDialogProps) => {
-  const [state, setState] = useState(
-    initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT
-  );
+  const [state, setState] = useState(initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
-  const [secretProvider, secretResolver, resetSecret] =
-    useSecretProvider<Buffer>();
+  const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
@@ -104,8 +100,7 @@ export const JoinDialog = ({
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
         const messages: { [index: string]: string } = {
-          ERR_EXTENSION_RESPONSE_FAILED:
-            'Authentication failed. Please try again.',
+          ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed. Please try again.',
           ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the party.'
         };
 
@@ -158,18 +153,14 @@ export const JoinDialog = ({
         spellCheck={false}
         value={invitationCode}
         onChange={(event) => setInvitationCode(event.target.value)}
-        onKeyDown={handleKey('Enter', () =>
-          handleProcessInvitation(invitationCode)
-        )}
+        onKeyDown={handleKey('Enter', () => handleProcessInvitation(invitationCode))}
       />
     );
 
     const joinPartyActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={() => handleProcessInvitation(invitationCode)}>
-          Accept
-        </Button>
+        <Button onClick={() => handleProcessInvitation(invitationCode)}>Accept</Button>
       </>
     );
 
@@ -184,15 +175,8 @@ export const JoinDialog = ({
             marginTop: 3
           }}
         >
-          <Passcode
-            length={4}
-            onSubmit={(value) => handleAuthenticate(value)}
-          />
-          <HashIcon
-            sx={{ marginLeft: 2 }}
-            size='large'
-            value={invitationCodeFromUrl(invitationCode)}
-          />
+          <Passcode length={4} onSubmit={(value) => handleAuthenticate(value)} />
+          <HashIcon sx={{ marginLeft: 2 }} size='large' value={invitationCodeFromUrl(invitationCode)} />
         </Box>
       </>
     );

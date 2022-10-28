@@ -397,11 +397,7 @@ const waitImmediate = () => new Promise((resolve) => setTimeout(resolve));
  * @param {string} eventName
  * @param {Function} callback
  */
-export const onEvent = (
-  eventEmitter: EventEmitter,
-  eventName: string,
-  callback: (args: any) => void
-) => {
+export const onEvent = (eventEmitter: EventEmitter, eventName: string, callback: (args: any) => void) => {
   eventEmitter.on(eventName, callback);
   return () => eventEmitter.off(eventName, callback);
 };
@@ -410,11 +406,7 @@ export const onEvent = (
  * @deprecated
  */
 // TODO(burdon): Remove.
-export const addListener = (
-  eventEmitter: EventEmitter,
-  eventName: string,
-  callback: () => void
-) => {
+export const addListener = (eventEmitter: EventEmitter, eventName: string, callback: () => void) => {
   const off = onEvent(eventEmitter, eventName, callback);
   return {
     remove: () => off()
@@ -447,7 +439,5 @@ export const waitForEvent = (
     });
   });
 
-  return timeout
-    ? promiseTimeout(promise, timeout, error ?? new Error()).finally(off)
-    : promise.finally(off);
+  return timeout ? promiseTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
 };

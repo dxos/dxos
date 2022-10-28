@@ -12,7 +12,8 @@ import {
   MetadataStore,
   Space,
   SwarmIdentity,
-  Database
+  Database,
+  SpaceProtocol
 } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -21,19 +22,14 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import {
-  AdmittedFeed,
-  IdentityRecord,
-  SpaceRecord
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { Timeframe } from '@dxos/timeframe';
+import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { Identity } from '../identity';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord;
   swarmIdentity: SwarmIdentity;
-  networkPlugins: Plugin[];
+  networkPlugins?: Plugin[];
 }
 
 export type JoinIdentityParams = {
@@ -48,6 +44,7 @@ export class IdentityManager {
 
   private _identity?: Identity;
 
+  // TODO(burdon): IdentityManagerParams.
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor(
     private readonly _metadataStore: MetadataStore,
@@ -87,49 +84,38 @@ export class IdentityManager {
         peerKey: identityRecord.deviceKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      },
-      networkPlugins: []
+      }
     });
 
     return new Identity({
-      identityKey: identityRecord.identityKey,
-      deviceKey: identityRecord.deviceKey,
+      space,
       signer: this._keyring,
-      space
+      identityKey: identityRecord.identityKey,
+      deviceKey: identityRecord.deviceKey
     });
   }
 
-  private async _constructSpace({
-    spaceRecord,
-    swarmIdentity,
-    networkPlugins
-  }: ConstructSpaceParams) {
-    const controlFeed = await this._feedStore.openFeed(
-      spaceRecord.writeControlFeedKey,
-      { writable: true }
-    );
-    const dataFeed = await this._feedStore.openFeed(
-      spaceRecord.writeDataFeedKey,
-      { writable: true }
-    );
+  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
+    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
 
-    // Might be the same feed as the control feed on the top.
-    // It's important to initialize it after writable feeds so that the feed is in the writable state.
-    const genesisFeed = await this._feedStore.openFeed(
-      spaceRecord.genesisFeedKey
-    );
+    // The genesis feed will be the same as the control feed if the space was created by the local agent.
+    // NOTE: Must be initialized after writable feeds so that it is in a writable state.
+    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
+
+    const protocol = new SpaceProtocol({
+      topic: spaceRecord.spaceKey,
+      identity: swarmIdentity,
+      networkManager: this._networkManager
+    });
 
     return new Space({
       spaceKey: spaceRecord.spaceKey,
+      protocol,
       genesisFeed,
       controlFeed,
       dataFeed,
-      // TODO(dmaretskyi): This might always be the empty timeframe.
-      initialTimeframe: new Timeframe(),
-      feedProvider: (key) => this._feedStore.openFeed(key),
-      networkManager: this._networkManager,
-      networkPlugins,
-      swarmIdentity,
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
       databaseFactory: async ({ databaseBackend }) =>
         new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
     });
@@ -155,11 +141,7 @@ export class IdentityManager {
     await identity.open();
 
     {
-      const generator = new CredentialGenerator(
-        this._keyring,
-        identityRecord.identityKey,
-        identityRecord.deviceKey
-      );
+      const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
       const credentials = [
         // Space genesis.
         ...(await generator.createSpaceGenesis(

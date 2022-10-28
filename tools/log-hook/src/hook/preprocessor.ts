@@ -60,10 +60,7 @@ class TraceInjector extends Visitor {
 
   private _sourceMap?: SourceMapConsumer;
 
-  constructor(
-    private readonly filename: string,
-    private readonly code: string
-  ) {
+  constructor(private readonly filename: string, private readonly code: string) {
     super();
 
     this._linePositions.push(0);
@@ -74,9 +71,7 @@ class TraceInjector extends Visitor {
     }
 
     try {
-      this._sourceMap = new SourceMapConsumer(
-        JSON.parse(readFileSync(`${filename}.map`, 'utf-8'))
-      );
+      this._sourceMap = new SourceMapConsumer(JSON.parse(readFileSync(`${filename}.map`, 'utf-8')));
     } catch {} // Ignore.
   }
 
@@ -84,20 +79,14 @@ class TraceInjector extends Visitor {
     // Account for SWC bugs & quirks.
     const position = span.start - this.programSpan.start + this.spanOffset;
 
-    let line = this._linePositions.findIndex(
-      (linePosition) => linePosition > position
-    );
+    let line = this._linePositions.findIndex((linePosition) => linePosition > position);
     if (line === -1) {
       line = this._linePositions.length;
     }
     const column = position - this._linePositions[line - 1];
 
     if (this._sourceMap) {
-      const {
-        line: newLine,
-        column: newColumn,
-        source
-      } = this._sourceMap.originalPositionFor({ line, column });
+      const { line: newLine, column: newColumn, source } = this._sourceMap.originalPositionFor({ line, column });
       if (newLine && newColumn && source) {
         return {
           line: newLine,
@@ -199,8 +188,7 @@ class TraceInjector extends Visitor {
  */
 const isLoggerInvocation = (expr: CallExpression) =>
   isLoggerFuncExpression(expr.callee) ||
-  (expr.callee.type === 'MemberExpression' &&
-    isLoggerFuncExpression(expr.callee.object));
+  (expr.callee.type === 'MemberExpression' && isLoggerFuncExpression(expr.callee.object));
 
 const isLoggerFuncExpression = (e: Expression | Super | Import) =>
   (e.type === 'Identifier' && e.value === 'log') ||
@@ -224,9 +212,7 @@ const isCjsImportedLoggerExpression = (expr: Expression | Super | Import) =>
   expr.property.type === 'Identifier' &&
   expr.property.value === 'log';
 
-const createObjectExpression = (
-  properties: Record<string, Expression>
-): ObjectExpression => ({
+const createObjectExpression = (properties: Record<string, Expression>): ObjectExpression => ({
   type: 'ObjectExpression',
   properties: Object.entries(properties).map(([key, value]) => ({
     type: 'KeyValueProperty',

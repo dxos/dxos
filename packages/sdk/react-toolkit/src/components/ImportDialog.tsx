@@ -66,15 +66,7 @@ export const ImportDialog = ({
         open={open}
         title='Import keys'
         error={error}
-        content={
-          <TextField
-            sx={{ marginTop: 1 }}
-            autoFocus
-            fullWidth
-            label='Passphrase'
-            onChange={handlePassChange}
-          />
-        }
+        content={<TextField sx={{ marginTop: 1 }} autoFocus fullWidth label='Passphrase' onChange={handlePassChange} />}
         actions={
           <>
             <Button onClick={() => onClose()}>Cancel</Button>

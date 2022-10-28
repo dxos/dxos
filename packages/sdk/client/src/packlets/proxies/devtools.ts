@@ -4,10 +4,7 @@
 
 import debug from 'debug';
 
-import {
-  clientServiceBundle,
-  ClientServiceProvider
-} from '@dxos/client-services';
+import { clientServiceBundle, ClientServiceProvider } from '@dxos/client-services';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { Client } from './client';
@@ -39,11 +36,7 @@ const port: RpcPort = {
       }
 
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'content-script'
-      ) {
+      if (typeof message !== 'object' || message === null || message.source !== 'content-script') {
         return;
       }
 
@@ -57,10 +50,7 @@ const port: RpcPort = {
 
 // Console debug access.
 // TODO(burdon): Debug only.
-export const createDevtoolsRpcServer = async (
-  client: Client,
-  serviceHost: ClientServiceProvider
-) => {
+export const createDevtoolsRpcServer = async (client: Client, serviceHost: ClientServiceProvider) => {
   let server: RpcPeer;
   ((window as any).__DXOS__ as DevtoolsHook) = {
     client,

@@ -2,14 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Dispatch,
-  RefObject,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from 'react';
 
 /**
  * Extension of useState to return an up-to-date reference.
@@ -27,11 +20,7 @@ import {
  */
 export const useStateWithRef = <V>(
   initialValue?: V | (() => V)
-): [
-  V | undefined,
-  Dispatch<SetStateAction<V | undefined>>,
-  RefObject<V | undefined>
-] => {
+): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {
   const [value, setValue] = useState<V | undefined>(initialValue);
   const ref = useRef<V>();
   useEffect(() => {

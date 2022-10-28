@@ -87,14 +87,7 @@ export const ModalDialog = ({
  * For example, this enables the testing of multiple dialogs in parallel from different client context.
  * @constructor
  */
-export const NonModalDialog = ({
-  title,
-  content,
-  actions,
-  processing,
-  error,
-  ...dialogProps
-}: DialogProps) => {
+export const NonModalDialog = ({ title, content, actions, processing, error, ...dialogProps }: DialogProps) => {
   const { open } = dialogProps;
   if (!open) {
     return null;

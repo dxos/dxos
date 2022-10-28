@@ -2,48 +2,39 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Plus } from 'phosphor-react';
 import React, { useState } from 'react';
 
-import { Add as AddIcon } from '@mui/icons-material';
-import { Box, Fab } from '@mui/material';
-
 import { PublicKey } from '@dxos/keys';
-import { HaloSharingDialog } from '@dxos/react-toolkit';
+import { useClient, useHaloInvitations } from '@dxos/react-client';
+import { Main, Button, useTranslation, Heading } from '@dxos/react-uikit';
 
-import { DeviceList } from '../../components';
+import { DeviceList, InvitationList } from '../../components';
 
 export const DevicesPage = () => {
-  const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);
-  const [showShare, setShowShare] = useState(false);
+  const { t } = useTranslation('halo');
+  const client = useClient();
+  const [devices] = useState([
+    { publicKey: PublicKey.random(), displayName: 'This Device' }
+  ]);
+  const invitations = useHaloInvitations(client);
+
+  const handleInvite = () => {
+    void client.halo.createInvitation();
+  };
 
   return (
-    <Box sx={{ overflow: 'auto' }}>
-      <Box
-        sx={{
-          maxWidth: '25rem',
-          margin: '0 auto',
-          padding: 2
-        }}
-      >
-        <DeviceList
-          devices={devices}
-        />
-      </Box>
-      <Fab
-        onClick={() => setShowShare(true)}
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16
-        }}
-      >
-        <AddIcon />
-      </Fab>
-
-      <HaloSharingDialog
-        open={showShare}
-        onClose={() => setShowShare(false)}
-      />
-    </Box>
+    <Main>
+      <div role='none' className='flex items-center'>
+        <Heading>{t('devices label')}</Heading>
+        <div role='none' className='flex-grow' />
+        <Button variant='primary' className='flex gap-2' onClick={handleInvite}>
+          <Plus className='w-4 h-4' />
+          {t('add device label')}
+        </Button>
+      </div>
+      <DeviceList items={devices} />
+      {invitations.length > 0 && <InvitationList invitations={invitations} />}
+    </Main>
   );
 };

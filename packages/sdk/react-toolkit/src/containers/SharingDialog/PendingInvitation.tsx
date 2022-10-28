@@ -4,18 +4,10 @@
 
 import React, { useState } from 'react';
 
-import {
-  Clear as CancelIcon,
-  QrCode2 as QRCodeIcon
-} from '@mui/icons-material';
+import { Clear as CancelIcon, QrCode2 as QRCodeIcon } from '@mui/icons-material';
 import { Box, IconButton, Popover, Typography } from '@mui/material';
 
-import {
-  CopyToClipboard,
-  HashIcon,
-  Passcode,
-  QRCode
-} from '@dxos/react-components';
+import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-components';
 
 export interface PendingInvitationProps {
   invitationCode: string;
@@ -32,15 +24,8 @@ export interface PendingInvitationProps {
  * @param onCancel
  * @constructor
  */
-export const PendingInvitation = ({
-  invitationCode,
-  pin,
-  createUrl,
-  onCancel
-}: PendingInvitationProps) => {
-  const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(
-    null
-  );
+export const PendingInvitation = ({ invitationCode, pin, createUrl, onCancel }: PendingInvitationProps) => {
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
     <Box
@@ -57,9 +42,7 @@ export const PendingInvitation = ({
       </IconButton>
 
       {/* TODO(burdon): Show expiration time. */}
-      <Typography
-        sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}
-      >
+      <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
         {!pin ? 'Waiting...' : 'Passcode'}
       </Typography>
 
@@ -68,10 +51,7 @@ export const PendingInvitation = ({
           <IconButton size='small' title='Copy invitation.'>
             <CopyToClipboard text={createUrl(invitationCode)} />
           </IconButton>
-          <IconButton
-            size='small'
-            onClick={(event) => setPopoverAnchor(event.currentTarget)}
-          >
+          <IconButton size='small' onClick={(event) => setPopoverAnchor(event.currentTarget)}>
             <QRCodeIcon />
           </IconButton>
           <Popover

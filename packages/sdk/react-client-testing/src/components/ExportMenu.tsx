@@ -17,9 +17,7 @@ interface ExportMenuProps {
 }
 
 export const ExportMenu = ({ onExport }: ExportMenuProps) => {
-  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<
-    HTMLElement | undefined
-  >();
+  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<HTMLElement | undefined>();
 
   const handleExport = (action: ExportAction) => {
     setExportMenuAnchorEl(undefined);
@@ -41,12 +39,8 @@ export const ExportMenu = ({ onExport }: ExportMenuProps) => {
         anchorEl={exportMenuAnchorEl}
         onClose={() => setExportMenuAnchorEl(undefined)}
       >
-        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_FILE)}>
-          Export to File
-        </MenuItem>
-        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_IPFS)}>
-          Export to IPFS
-        </MenuItem>
+        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_FILE)}>Export to File</MenuItem>
+        <MenuItem onClick={() => handleExport(ExportAction.EXPORT_IPFS)}>Export to IPFS</MenuItem>
       </Menu>
     </>
   );

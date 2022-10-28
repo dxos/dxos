@@ -37,19 +37,9 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                 darkMode: 'class',
                 theme: {
                   fontFamily: {
-                    body: [
-                      'Roboto FlexVariable',
-                      ...defaultConfig.theme.fontFamily.sans
-                    ],
-                    display: [
-                      'Space GroteskVariable',
-                      'Roboto FlexVariable',
-                      ...defaultConfig.theme.fontFamily.sans
-                    ],
-                    mono: [
-                      'Fira CodeVariable',
-                      ...defaultConfig.theme.fontFamily.mono
-                    ]
+                    body: ['Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
+                    display: ['Space GroteskVariable', 'Roboto FlexVariable', ...defaultConfig.theme.fontFamily.sans],
+                    mono: ['Fira CodeVariable', ...defaultConfig.theme.fontFamily.mono]
                   },
                   extend: {
                     colors: {
@@ -227,8 +217,7 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       },
                       'toast-swipe-out': {
                         '0%': {
-                          transform:
-                            'translateX(var(--radix-toast-swipe-end-x))'
+                          transform: 'translateX(var(--radix-toast-swipe-end-x))'
                         },
                         '100%': {
                           transform: 'translateX(calc(100% + 1rem))'
@@ -238,18 +227,13 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                     animation: {
                       // Dropdown menu
                       'scale-in': 'scale-in 0.2s ease-in-out',
-                      'slide-down':
-                        'slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-down': 'slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       'slide-up': 'slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                       // Tooltip
-                      'slide-up-fade':
-                        'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      'slide-right-fade':
-                        'slide-right-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      'slide-down-fade':
-                        'slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      'slide-left-fade':
-                        'slide-left-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-up-fade': 'slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-right-fade': 'slide-right-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-down-fade': 'slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                      'slide-left-fade': 'slide-left-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                       // Navigation menu
                       'enter-from-right': 'enter-from-right 0.25s ease',
                       'enter-from-left': 'enter-from-left 0.25s ease',
@@ -261,24 +245,15 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       'fade-out': 'fade-out 0.2s ease',
                       // Toast
                       'toast-hide': 'toast-hide 100ms ease-in forwards',
-                      'toast-slide-in-right':
-                        'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      'toast-slide-in-bottom':
-                        'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      'toast-swipe-out':
-                        'toast-swipe-out 100ms ease-out forwards'
+                      'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards'
                     }
                   }
                 },
                 plugins: [tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
-                content: [
-                  resolve(
-                    root || './',
-                    'node_modules/@dxos/react-ui/dist/**/*.js'
-                  ),
-                  ...config.content
-                ]
+                content: [resolve(root || './', 'node_modules/@dxos/react-ui/dist/**/*.js'), ...config.content]
               }),
               autoprefixer
             ]

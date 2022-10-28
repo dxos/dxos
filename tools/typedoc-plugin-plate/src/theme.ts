@@ -16,14 +16,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Theme as ThemeBase,
-  Renderer,
-  PageEvent,
-  RendererEvent,
-  Reflection,
-  ProjectReflection
-} from 'typedoc';
+import { Theme as ThemeBase, Renderer, PageEvent, RendererEvent, Reflection, ProjectReflection } from 'typedoc';
 
 export class Theme extends ThemeBase {
   private renderer: Renderer;
@@ -39,9 +32,7 @@ export class Theme extends ThemeBase {
 
   render(page: PageEvent<Reflection>): string {
     const content = (page.template(page) as string) ?? '';
-    return (
-      content.replace(/[\r\n]{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') + '\n'
-    );
+    return content.replace(/[\r\n]{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') + '\n';
   }
 
   onBeginRenderer(event: RendererEvent) {

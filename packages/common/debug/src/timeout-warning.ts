@@ -11,11 +11,7 @@ import { StackTrace } from './stack-trace';
  * @param context Context description that would be included in the printed message.
  * @param body Action which is timed.
  */
-export const warnAfterTimeout = async <T>(
-  timeout: number,
-  context: string,
-  body: () => Promise<T>
-): Promise<T> => {
+export const warnAfterTimeout = async <T>(timeout: number, context: string, body: () => Promise<T>): Promise<T> => {
   const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
     console.warn(
@@ -46,18 +42,10 @@ export const warnAfterTimeout = async <T>(
  * @param timeout Timeout in milliseconds after which the warning is printed.
  */
 export function timed(timeout: number) {
-  return (
-    target: any,
-    propertyName: string,
-    descriptor: TypedPropertyDescriptor<(...args: any) => any>
-  ) => {
+  return (target: any, propertyName: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
     descriptor.value = function (this: any, ...args: any) {
-      return warnAfterTimeout(
-        timeout,
-        `${target.constructor.name}.${propertyName}`,
-        () => method.apply(this, args)
-      );
+      return warnAfterTimeout(timeout, `${target.constructor.name}.${propertyName}`, () => method.apply(this, args));
     };
   };
 }

@@ -4,11 +4,7 @@
 
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import {
-  AdmittedFeed,
-  Credential,
-  PartyMember
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from './credential-factory';
 
@@ -27,10 +23,7 @@ export class CredentialGenerator {
   /**
    * Create genesis messages for new Space.
    */
-  async createSpaceGenesis(
-    partyKey: PublicKey,
-    controlKey: PublicKey
-  ): Promise<Credential[]> {
+  async createSpaceGenesis(partyKey: PublicKey, controlKey: PublicKey): Promise<Credential[]> {
     return [
       await createCredential({
         signer: this._keyring,
@@ -53,11 +46,7 @@ export class CredentialGenerator {
         }
       }),
 
-      await this.createFeedAdmission(
-        partyKey,
-        controlKey,
-        AdmittedFeed.Designation.CONTROL
-      )
+      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL)
     ];
   }
 
@@ -84,16 +73,8 @@ export class CredentialGenerator {
         }
       }),
 
-      await this.createFeedAdmission(
-        partyKey,
-        controlKey,
-        AdmittedFeed.Designation.CONTROL
-      ),
-      await this.createFeedAdmission(
-        partyKey,
-        dataKey,
-        AdmittedFeed.Designation.DATA
-      )
+      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL),
+      await this.createFeedAdmission(partyKey, dataKey, AdmittedFeed.Designation.DATA)
     ];
   }
 

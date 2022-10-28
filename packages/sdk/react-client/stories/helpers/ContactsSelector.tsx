@@ -4,13 +4,7 @@
 
 import React from 'react';
 
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent
-} from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 
 /**
  * Displays contact selector.
@@ -34,10 +28,7 @@ export const ContactsSelector = ({
     >
       <MenuItem value='' />
       {contacts.map((contact) => (
-        <MenuItem
-          key={contact.publicKey.toHex()}
-          value={contact.publicKey.toHex()}
-        >
+        <MenuItem key={contact.publicKey.toHex()} value={contact.publicKey.toHex()}>
           {contact.displayName}
         </MenuItem>
       ))}

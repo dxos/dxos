@@ -2,91 +2,51 @@
 // Copyright 2021 DXOS.org
 //
 
+import cx from 'classnames';
 import React, { FunctionComponent } from 'react';
-
-import {
-  Settings as SettingsIcon
-} from '@mui/icons-material';
-import {
-  List as MuiList,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  styled,
-  useTheme
-} from '@mui/material';
+import { Link } from 'react-router-dom';
 
 import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { HashIcon } from '@dxos/react-components';
+import { Avatar, defaultHover, defaultFocus } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
-// TODO(burdon): Factor out.
-const List = styled(MuiList)({
-  paddingTop: 0,
-  paddingBottom: 0,
-  '& .MuiListItemSecondaryAction-root': {
-    visibility: 'hidden'
-  },
-  '& .MuiListItem-root:hover': {
-    '& .MuiListItemSecondaryAction-root': {
-      visibility: 'visible'
-    }
-  }
-});
-
 export interface SpaceListProps {
-  spaces?: Array<Party>
-  selected?: PublicKey
-  actionIcon?: FunctionComponent<any>
-  onSelect?: (space: PublicKey) => void
-  onAction?: (space: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
+  spaces?: Array<Party>;
+  selected?: PublicKey;
+  actionIcon?: FunctionComponent<any>;
+  onSelect?: (space: PublicKey) => void;
+  onAction?: (
+    space: PublicKey,
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => void;
 }
 
-export const SpaceList = ({
-  spaces = [],
-  selected,
-  actionIcon: ActionIcon = SettingsIcon,
-  onSelect,
-  onAction
-}: SpaceListProps) => {
-  const theme = useTheme();
-
+export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
   return (
-    <List>
-      {spaces.map(space => {
-        const title = space.properties.get('title') ?? humanize(space.key.toHex());
+    <div role='none' className='m-0 flex flex-col gap-4'>
+      {spaces.map((space) => {
+        const keyHex = space.key.toHex();
+        const title = space.properties.get('title') ?? humanize(keyHex);
 
         return (
-          <ListItem
-            key={space.key.toString()}
-            selected={selected && selected.equals(space.key)}
-            secondaryAction={onAction && (
-              <IconButton
-                edge='end'
-                size='small'
-                title='Settings'
-                onClick={event => onAction(space.key, event)}
-              >
-                <ActionIcon />
-              </IconButton>
+          <Link
+            key={keyHex}
+            to={`/spaces/${keyHex}`}
+            className={cx(
+              'flex items-center gap-2 p-2 rounded',
+              defaultFocus,
+              defaultHover({})
             )}
-            disablePadding
           >
-            <ListItemButton onClick={() => onSelect?.(space.key)}>
-              <ListItemIcon sx={{ color: theme.palette.primary.dark }}>
-                {/* TODO(wittjosiah): Custom space icons */}
-                <HashIcon value={space.key.toHex()} />
-              </ListItemIcon>
-              <ListItemText
-                primary={title}
-              />
-            </ListItemButton>
-          </ListItem>
+            <Avatar
+              size={10}
+              fallbackValue={keyHex}
+              label={<p className='text-lg'>{title}</p>}
+            />
+          </Link>
         );
       })}
-    </List>
+    </div>
   );
 };

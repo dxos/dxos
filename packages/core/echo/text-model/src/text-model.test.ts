@@ -7,16 +7,13 @@ import faker from 'faker';
 
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory, TestRig } from '@dxos/model-factory';
+import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
 
 describe('TextModel', function () {
   it('insert', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(TextModel),
-      TextModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
@@ -33,10 +30,7 @@ describe('TextModel', function () {
   });
 
   it('insert a new text node', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(TextModel),
-      TextModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
     const text1 = faker.lorem.lines(1);
@@ -51,9 +45,7 @@ describe('TextModel', function () {
     peer1.model.insertTextNode(text2, lastCharPos);
     expect(peer1.model.content._length).toBe(2);
     const strigified2 = JSON.stringify(peer1.model.content);
-    expect(strigified2).toBe(
-      `"<paragraph>${text1}</paragraph><paragraph>${text2}</paragraph>"`
-    );
+    expect(strigified2).toBe(`"<paragraph>${text1}</paragraph><paragraph>${text2}</paragraph>"`);
   });
 
   it('snapshot', async function () {
@@ -81,10 +73,7 @@ describe('TextModel', function () {
   });
 
   it('conflict', async function () {
-    const rig = new TestRig(
-      new ModelFactory().registerModel(TextModel),
-      TextModel
-    );
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 

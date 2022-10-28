@@ -44,10 +44,7 @@ export const createCredential = async ({
   nonce
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
-  assert(
-    !!signingKey === !!chain,
-    'Chain must be provided if and only if the signing key differs from the issuer.'
-  );
+  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
   if (chain) {
     const result = await verifyChain(chain, issuer, signingKey!);
     assert(result.kind === 'pass', 'Invalid chain.');
@@ -72,10 +69,7 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getSignaturePayload(credential);
-  credential.proof.value = await signer.sign(
-    signingKey ?? issuer,
-    signedPayload
-  );
+  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
     credential.proof.chain = chain;
   }
@@ -93,18 +87,13 @@ export const createCredentialMessage = (credential: Credential) => {
 
 export interface CredentialSigner {
   getIssuer(): PublicKey;
-  createCredential: (
-    params: CreateCredentialSignerParams
-  ) => Promise<Credential>;
+  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>;
 }
 
 /**
  * Issue credentials directly signed by the issuer.
  */
-export const createCredentialSignerWithKey = (
-  signer: Signer,
-  issuer: PublicKey
-): CredentialSigner => ({
+export const createCredentialSignerWithKey = (signer: Signer, issuer: PublicKey): CredentialSigner => ({
   getIssuer: () => issuer,
   createCredential: ({ subject, assertion, nonce }) =>
     createCredential({

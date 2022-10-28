@@ -7,12 +7,8 @@ import assert from 'assert';
 import { definitions } from './definitions';
 
 export function ConfigPlugin(options = {}) {
-  const dynamic =
-    process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
-  assert(
-    typeof dynamic === 'boolean',
-    `dynamic: Expected boolean, got: ${typeof dynamic}`
-  );
+  const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : options.dynamic ?? false;
+  assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
   const contents = Object.entries(definitions({ ...options, dynamic }))
     .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)

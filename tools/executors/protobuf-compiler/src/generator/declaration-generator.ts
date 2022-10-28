@@ -42,9 +42,7 @@ export function* createDeclarations(
   }
 }
 
-function* getRegisteredTypes(
-  root: protobufjs.NamespaceBase
-): Generator<protobufjs.Enum | protobufjs.Type> {
+function* getRegisteredTypes(root: protobufjs.NamespaceBase): Generator<protobufjs.Enum | protobufjs.Type> {
   for (const obj of root.nestedArray) {
     if (obj instanceof protobufjs.Enum) {
       yield obj;

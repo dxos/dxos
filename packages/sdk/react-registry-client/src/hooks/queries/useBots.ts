@@ -23,10 +23,7 @@ export interface Result {
   error?: unknown;
 }
 
-const mergeResourceRecords = (
-  records: RegistryRecord[],
-  resources: ResourceSet[]
-) => {
+const mergeResourceRecords = (records: RegistryRecord[], resources: ResourceSet[]) => {
   const bots: BotData[] = [];
   for (const resource of resources) {
     for (const tag of Object.keys(resource.tags)) {

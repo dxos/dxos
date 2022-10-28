@@ -12,16 +12,13 @@ const error = log.extend('error');
 const checkForDXOS = () =>
   new Promise<boolean>((resolve, reject) => {
     // TODO(wittjosiah): Switch to using webextension-polyfill once types are improved.
-    chrome.devtools.inspectedWindow.eval(
-      '!!(window.__DXOS__);',
-      async (result, exception) => {
-        if (exception) {
-          reject(exception);
-        }
-
-        resolve(!!result);
+    chrome.devtools.inspectedWindow.eval('!!(window.__DXOS__);', async (result, exception) => {
+      if (exception) {
+        reject(exception);
       }
-    );
+
+      resolve(!!result);
+    });
   });
 
 /**

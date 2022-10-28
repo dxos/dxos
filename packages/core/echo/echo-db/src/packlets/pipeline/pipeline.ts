@@ -13,11 +13,7 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
-import {
-  mapFeedIndexesToTimeframe,
-  mapTimeframeToFeedIndexes,
-  TimeframeClock
-} from './timeframe-clock';
+import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
 
 /**
  * External state accessor.
@@ -25,6 +21,7 @@ import {
 export class PipelineState {
   public readonly timeframeUpdate = this._timeframeClock.updateTimeframe;
 
+  // prettier-ignore
   constructor(
     private _iterator: FeedSetIterator<any>,
     private _timeframeClock: TimeframeClock
@@ -92,30 +89,25 @@ export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
   // Inbound feed stream.
-  private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(
-    createMessageSelector(this._timeframeClock),
-    {
-      start: mapTimeframeToFeedIndexes(this._initialTimeframe),
-      stallTimeout: 1000
-    }
-  );
+  private readonly feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
+    start: mapTimeframeToFeedIndexes(this._initialTimeframe),
+    stallTimeout: 1000
+  });
 
   // External state accessor.
-  private readonly _state: PipelineState = new PipelineState(
-    this.feedSetIterator,
-    this._timeframeClock
-  );
+  private readonly _state: PipelineState = new PipelineState(this.feedSetIterator, this._timeframeClock);
 
   // Outbound feed writer.
   private _writer: FeedWriter<TypedMessage> | undefined;
 
   private _isOpen = false;
 
-  constructor(private readonly _initialTimeframe: Timeframe) {
+  // prettier-ignore
+  constructor(
+    private readonly _initialTimeframe: Timeframe = new Timeframe()
+  ) {
     this.feedSetIterator.stalled.on((iterator) => {
-      log.warn(
-        `Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`
-      );
+      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
     });
   }
 
@@ -168,10 +160,7 @@ export class Pipeline implements PipelineAccessor {
     for await (const block of this.feedSetIterator) {
       yield block;
 
-      this._timeframeClock.updateTimeframe(
-        PublicKey.from(block.feedKey),
-        block.seq
-      );
+      this._timeframeClock.updateTimeframe(PublicKey.from(block.feedKey), block.seq);
     }
 
     // TODO(burdon): Test re-entrant?

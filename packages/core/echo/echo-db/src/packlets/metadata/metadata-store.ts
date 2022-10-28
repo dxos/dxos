@@ -8,10 +8,7 @@ import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import {
-  EchoMetadata,
-  PartyMetadata
-} from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Directory } from '@dxos/random-access-storage';
 
@@ -37,7 +34,10 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
 
-  constructor(private readonly _directory: Directory) {}
+  // prettier-ignore
+  constructor(
+    private readonly _directory: Directory
+  ) {}
 
   get version(): number {
     return this._metadata.version ?? 0;
@@ -74,9 +74,7 @@ export class MetadataStore {
       }
 
       const data = await file.read(4, dataSize);
-      this._metadata = schema
-        .getCodecForType('dxos.echo.metadata.EchoMetadata')
-        .decode(data);
+      this._metadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata').decode(data);
     } catch (err: any) {
       log.error('failed to load metadata', { err });
       this._metadata = emptyEchoMetadata();
@@ -97,9 +95,7 @@ export class MetadataStore {
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {
-      const encoded = Buffer.from(
-        schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data)
-      );
+      const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
 
       // Saving file size at first 4 bytes.
       await file.write(0, toBytesInt32(encoded.length));
@@ -125,10 +121,7 @@ export class MetadataStore {
   }
 
   async setIdentityRecord(record: IdentityRecord) {
-    assert(
-      !this._metadata.identity,
-      'Cannot overwrite existing identity in metadata'
-    );
+    assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
     await this._save();
