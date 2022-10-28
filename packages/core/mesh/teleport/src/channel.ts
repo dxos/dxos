@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { Duplex } from 'stream';
+
 import type { CleanupCb } from './muxer';
 import { RpcPort } from './rpc-port';
 
@@ -14,12 +15,12 @@ export type CreateStreamOpts = {
 export type StreamHandle = {
   id: number;
   tag: string;
-  remoteId?: number
+  remoteId?: number;
   contentType?: string;
   channel: Channel;
   buffer: Uint8Array[];
   push?: (data: Uint8Array) => void;
-}
+};
 
 export class Channel {
   /**
@@ -30,8 +31,7 @@ export class Channel {
   /**
    * @internal
    */
-  public isOpen = false
-
+  public isOpen = false;
 
   /**
    * @internal
@@ -42,7 +42,7 @@ export class Channel {
     public readonly tag: string,
     private readonly _onOpen: (channel: Channel) => CleanupCb,
     private readonly _onStream: (tag: string, opts: CreateStreamOpts) => StreamHandle,
-    private readonly _sendData: (streamId: number, data: Uint8Array) => void,
+    private readonly _sendData: (streamId: number, data: Uint8Array) => void
   ) {}
 
   createStream(tag: string, opts: CreateStreamOpts = {}): NodeJS.ReadWriteStream {
@@ -55,17 +55,17 @@ export class Channel {
 
     return {
       send: (data: Uint8Array) => {
-        this._sendData(stream.id, data); 
+        this._sendData(stream.id, data);
       },
       subscribe: (cb: (data: Uint8Array) => void) => {
         assert(!stream.push, 'Only one subscriber is allowed');
-        for(const data of stream.buffer) {
+        for (const data of stream.buffer) {
           cb(data);
         }
         stream.buffer = [];
         stream.push = cb;
       }
-    }
+    };
   }
 
   /**
@@ -74,7 +74,7 @@ export class Channel {
   open() {
     this.isOpen = true;
 
-    const cleanup = this._onOpen(this)
+    const cleanup = this._onOpen(this);
     // TODO(dmaretskyi): .
   }
 }
