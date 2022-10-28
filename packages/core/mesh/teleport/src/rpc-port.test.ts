@@ -1,13 +1,17 @@
-import { RpcPort } from "./rpc-port"
-import * as rpc from '@dxos/rpc'
+//
+// Copyright 2022 DXOS.org
+//
 
+import * as rpc from '@dxos/rpc';
+
+import { RpcPort } from './rpc-port';
 
 // This test will break at compile time if the interface changes.
-it('RpcPort type is assignable to type from @dxos/rpc package', () => {
+it('RpcPort type is assignable to type from @dxos/rpc package', function () {
   {
-    const port: RpcPort = {} as rpc.RpcPort
+    const port: RpcPort = {} as rpc.RpcPort;
   }
   {
-    const port: rpc.RpcPort = {} as RpcPort
+    const port: rpc.RpcPort = {} as RpcPort;
   }
-})
+});

@@ -1,5 +1,10 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import { afterTest } from '@dxos/testutils';
+
 import { Muxer } from './muxer';
-import { afterTest } from '@dxos/testutils'
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -20,8 +25,8 @@ const setupPeers = () => {
   };
 };
 
-describe.skip('Muxer', () => {
-  it('1 channel with 1 stream', () => {
+describe.skip('Muxer', function () {
+  it('1 channel with 1 stream', function () {
     const { peer1, peer2 } = setupPeers();
     // peer1.createChannel('dxos.test.extension1', channel => {
     //   const stream = channel.

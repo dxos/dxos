@@ -1,15 +1,15 @@
-import { RpcPort } from "./rpc-port"
+//
+// Copyright 2022 DXOS.org
+//
+
+import { RpcPort } from './rpc-port';
 
 export type CreateStreamOpts = {
-  contentType?: string
-}
+  contentType?: string;
+};
 
 export class Channel {
-  createStream(tag: string, opts: CreateStreamOpts): NodeJS.ReadWriteStream {
+  createStream(tag: string, opts: CreateStreamOpts): NodeJS.ReadWriteStream {}
 
-  }
-
-  createPort(tag: string, opts: CreateStreamOpts): RpcPort {
-
-  }
+  createPort(tag: string, opts: CreateStreamOpts): RpcPort {}
 }

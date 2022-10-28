@@ -1,27 +1,25 @@
-import { Channel } from "./channel";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Channel } from './channel';
 
 export type CleanupCb = undefined | (() => void);
 
 export class Muxer {
-  public readonly stream: NodeJS.ReadWriteStream
+  public readonly stream: NodeJS.ReadWriteStream;
 
   constructor() {}
 
-  createChannel(tag: string, onOpen: (channel: Channel) => CleanupCb) {
-
-  }
+  createChannel(tag: string, onOpen: (channel: Channel) => CleanupCb) {}
 
   /**
    * Graceful close.
    */
-  finalize() {
-
-  }
+  finalize() {}
 
   /**
    * Force-close with optional error.
    */
-  destroy(err?: Error) {
-
-  }
+  destroy(err?: Error) {}
 }
