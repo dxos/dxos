@@ -9,9 +9,8 @@ import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
@@ -20,26 +19,25 @@ import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { SpaceProtocol } from './space-protocol';
 
+// TODO(burdon): Factor out types.
 export type DatabaseFactoryParams = {
   databaseBackend: DatabaseBackend;
 };
 
 type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
+type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
   spaceKey: PublicKey;
+  protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
   controlFeed: FeedWrapper<FeedMessage>;
   dataFeed: FeedWrapper<FeedMessage>;
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
-  initialTimeframe: Timeframe;
-  networkManager: NetworkManager;
-  networkPlugins: Plugin[];
-  swarmIdentity: SwarmIdentity;
+  feedProvider: FeedProvider;
   databaseFactory: DatabaseFactory;
+  initialTimeframe?: Timeframe;
 };
 
 /**
@@ -51,14 +49,12 @@ export class Space {
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+  private readonly _feedProvider: FeedProvider;
 
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;
-
   private readonly _controlPipeline: ControlPipeline;
-  private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
   private _isOpen = false;
@@ -68,15 +64,13 @@ export class Space {
 
   constructor({
     spaceKey,
+    protocol,
     genesisFeed,
     controlFeed,
     dataFeed,
     feedProvider,
-    initialTimeframe,
-    networkManager,
-    networkPlugins,
-    swarmIdentity,
-    databaseFactory
+    databaseFactory,
+    initialTimeframe
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -105,21 +99,15 @@ export class Space {
       }
 
       if (!info.key.equals(genesisFeed.key)) {
-        this._replicator.addFeed(await feedProvider(info.key));
+        this._protocol.addFeed(await feedProvider(info.key));
       }
     });
 
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
 
     // Start replicating the genesis feed.
-    this._replicator.addFeed(genesisFeed);
-
-    // Create the network protocol.
-    this._protocol = new SpaceProtocol(networkManager, spaceKey, swarmIdentity, [this._replicator, ...networkPlugins]);
-  }
-
-  get isOpen() {
-    return this._isOpen;
+    this._protocol = protocol;
+    this._protocol.addFeed(genesisFeed);
   }
 
   get key() {
@@ -130,11 +118,8 @@ export class Space {
     return this._database;
   }
 
-  /**
-   * @test-only
-   */
-  get controlPipeline(): PipelineAccessor {
-    return this._controlPipeline.pipeline;
+  get isOpen() {
+    return this._isOpen;
   }
 
   get genesisFeedKey(): PublicKey {
@@ -147,6 +132,13 @@ export class Space {
 
   get dataFeedKey() {
     return this._dataFeed.key;
+  }
+
+  /**
+   * @test-only
+   */
+  get controlPipeline(): PipelineAccessor {
+    return this._controlPipeline.pipeline;
   }
 
   @synchronized

@@ -16,7 +16,10 @@ export class PortMuxer {
 
   private readonly _rpcPorts = new Map<string, RpcPort>();
 
-  constructor(private readonly _messagePort?: MessagePort) {
+  // prettier-ignore
+  constructor(
+    private readonly _messagePort?: MessagePort
+  ) {
     if (this._messagePort) {
       this._messagePort.onmessage = (event) => this.onWorkerMessage(event);
     }

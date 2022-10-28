@@ -40,9 +40,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-testing"
-    },
-    {
       "path": "../../core/echo/object-model"
     },
     {

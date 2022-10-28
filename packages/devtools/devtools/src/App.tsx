@@ -20,13 +20,16 @@ export const App = () => {
   const [clientProvider, setClientProvider] = useState<Promise<Client>>();
 
   const handleRemoteSource = async (remoteSource?: string) => {
-    const remoteSourceConfig = remoteSource ? {
-      runtime: {
-        client: {
-          remoteSource
+    const remoteSourceConfig = remoteSource
+      ? {
+          runtime: {
+            client: {
+              remoteSource
+            }
+          }
         }
-      }
-    } : {};
+      : {};
+
     const config = new Config(await Dynamics(), Defaults(), remoteSourceConfig);
     const client = new Client(config);
     setClientProvider(async () => {

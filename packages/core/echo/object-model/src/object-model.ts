@@ -49,7 +49,10 @@ class ObjectModelStateMachine implements StateMachine<ObjectModelState, ObjectMu
 export class MutationBuilder {
   _mutations: ObjectMutation[] = [];
 
-  constructor(private readonly _model: ObjectModel) {}
+  // prettier-ignore
+  constructor(
+    private readonly _model: ObjectModel
+  ) {}
 
   set(key: string, value: any) {
     this._mutations.push(MutationUtil.createFieldMutation(key, value));

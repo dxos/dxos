@@ -27,7 +27,10 @@ export class WebRTCTransportService implements BridgeService {
     PublicKey.hash
   );
 
-  constructor(private readonly _webrtcConfig?: any) {}
+  // prettier-ignore
+  constructor(
+    private readonly _webrtcConfig?: any
+  ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {

@@ -6,7 +6,13 @@
  * Error that is reconstructed after being sent over the RPC boundary.
  */
 export class SerializedRpcError extends Error {
-  constructor(name: string, message: string, public readonly remoteStack: string, public readonly rpcMethod: string) {
+  // prettier-ignore
+  constructor(
+    name: string,
+    message: string,
+    public readonly remoteStack: string,
+    public readonly rpcMethod: string
+  ) {
     super(message);
     // Restore prototype chain.
     // https://stackoverflow.com/a/48342359

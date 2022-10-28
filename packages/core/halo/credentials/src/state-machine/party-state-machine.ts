@@ -33,7 +33,10 @@ export class PartyStateMachine implements PartyState {
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
 
-  constructor(private readonly _partyKey: PublicKey) {}
+  // prettier-ignore
+  constructor(
+    private readonly _partyKey: PublicKey
+  ) {}
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;

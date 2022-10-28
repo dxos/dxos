@@ -46,7 +46,12 @@ export class TextModel extends Model<Doc, Mutation> {
     snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
   };
 
-  constructor(meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
+  // prettier-ignore
+  constructor(
+    meta: ModelMeta,
+    itemId: ItemID,
+    getState: () => Doc, writeStream?: MutationWriter<Mutation>
+  ) {
     super(meta, itemId, getState, writeStream);
 
     let unsubscribe = this._subscribeToDocUpdates();

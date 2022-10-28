@@ -34,7 +34,10 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
 
-  constructor(private readonly _directory: Directory) {}
+  // prettier-ignore
+  constructor(
+    private readonly _directory: Directory
+  ) {}
 
   get version(): number {
     return this._metadata.version ?? 0;
