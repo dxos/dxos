@@ -45,6 +45,7 @@
     "log-hook": "tools/log-hook",
     "mesh-protocol": "packages/core/mesh/mesh-protocol",
     "messaging": "packages/core/mesh/messaging",
+    "teleport": "packages/core/mesh/teleport",
     "messenger-model": "packages/core/echo/messenger-model",
     "mocha": "tools/executors/mocha",
     "model-factory": "packages/core/echo/model-factory",

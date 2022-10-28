@@ -1625,6 +1625,17 @@ importers:
       '@types/node': 16.11.66
       '@types/node-fetch': 2.6.2
 
+  packages/core/mesh/teleport:
+    specifiers:
+      assert: ^2.0.0
+      debug: ^4.3.3
+      typescript: ^4.7.2
+    dependencies:
+      assert: 2.0.0
+      debug: 4.3.4
+    devDependencies:
+      typescript: 4.8.4
+
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
