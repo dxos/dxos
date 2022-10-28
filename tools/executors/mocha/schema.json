@@ -98,6 +98,11 @@
     "browserArgs": {
       "type": "array",
       "description": "Arguments to pass to browser runner"
+    },
+    "inspect": {
+      "type": "boolean",
+      "description": "Enable node inspector",
+      "default": false
     }
   },
   "required": [
