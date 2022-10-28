@@ -60,7 +60,7 @@ const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList:
   );
 };
 
-describe('OrderedList', function () {
+describe.skip('OrderedList', function () {
   it('reorders', async function () {
     const { party, items } = await createTestComponents();
     const list = await party.database.createItem({
