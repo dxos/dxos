@@ -15,7 +15,7 @@ import packageJson from './package.json';
 const env = (value?: string) => value ? `"${value}"` : undefined;
 const DX_RELEASE = process.env.NODE_ENV === 'production'
   ? `halo-app@${packageJson.version}`
-  : '"development"';
+  : 'development';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -26,7 +26,7 @@ export default defineConfig({
   },
   define: {
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
-    'process.env.DX_RELEASE': DX_RELEASE,
+    'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN),
     'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
   },
