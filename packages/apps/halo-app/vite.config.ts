@@ -10,12 +10,17 @@ import { defineConfig } from 'vite';
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+const env = (value?: string) => value ? `"${value}"` : undefined;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true,
     port: 3967
+  },
+  define: {
+    'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN)
   },
   optimizeDeps: {
     force: true,
@@ -34,6 +39,7 @@ export default defineConfig({
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/sentry',
       '@dxos/text-model',
       '@dxos/util'
     ],

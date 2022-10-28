@@ -2,15 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import { ErrorBoundary } from '@sentry/react';
+import React, { useEffect, useRef } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
+import * as Sentry from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
+import { ErrorsProvider, FatalError } from './components';
 import {
   AppLayout,
   AppsPage,
@@ -81,19 +84,34 @@ const Routes = () =>
 export const App = () => {
   const clientRef = useRef<Client>();
 
+  useEffect(() => {
+    if (process.env.SENTRY_DSN) {
+      Sentry.init({
+        destination: process.env.SENTRY_DSN,
+        // TODO(wittjosiah): Configure this.
+        sampleRate: 1.0
+      });
+    }
+  }, []);
+
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider
-        clientRef={clientRef}
-        config={configProvider}
-        onInitialize={async (client) => {
-          client.echo.registerModel(TextModel);
-        }}
-      >
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </ClientProvider>
+      <ErrorsProvider>
+        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+          <ClientProvider
+            clientRef={clientRef}
+            config={configProvider}
+            onInitialize={async (client) => {
+              client.echo.registerModel(TextModel);
+            }}
+          >
+            <HashRouter>
+              <Routes />
+            </HashRouter>
+          </ClientProvider>
+        </ErrorBoundary>
+      </ErrorsProvider>
     </UiKitProvider>
   );
 };
