@@ -10,7 +10,12 @@ import { defineConfig } from 'vite';
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+import packageJson from './package.json';
+
 const env = (value?: string) => value ? `"${value}"` : undefined;
+const DX_RELEASE = process.env.NODE_ENV === 'production'
+  ? `halo-app@${packageJson.version}`
+  : '"development"';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,7 +25,10 @@ export default defineConfig({
     port: 3967
   },
   define: {
-    'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN)
+    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+    'process.env.DX_RELEASE': DX_RELEASE,
+    'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN),
+    'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -40,6 +48,7 @@ export default defineConfig({
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
+      '@dxos/telemetry',
       '@dxos/text-model',
       '@dxos/util'
     ],

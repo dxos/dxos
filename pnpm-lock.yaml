@@ -280,6 +280,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
@@ -316,6 +317,7 @@ importers:
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       '@sentry/react': 7.17.2_react@18.2.0

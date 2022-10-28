@@ -26,6 +26,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/sentry": "workspace:*",
+    "@dxos/telemetry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "@sentry/react": "^7.17.2",
