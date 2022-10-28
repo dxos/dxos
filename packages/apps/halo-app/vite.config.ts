@@ -5,7 +5,7 @@
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
+// import { VitePWA } from 'vite-plugin-pwa';
 
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
@@ -73,33 +73,34 @@ export default defineConfig({
         resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
       ]
     }),
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      // TODO(wittjosiah): Bundle size is massive.
-      workbox: {
-        maximumFileSizeToCacheInBytes: 30000000
-      },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'HALO',
-        short_name: 'HALO',
-        description: 'DXOS HALO Application',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'icons/icon-32.png',
-            sizes: '32x32',
-            type: 'image/png'
-          },
-          {
-            src: 'icons/icon-256.png',
-            sizes: '256x256',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
+    react()
+    // TODO(wittjosiah): Re-enable.
+    // VitePWA({
+    //   registerType: 'autoUpdate',
+    //   // TODO(wittjosiah): Bundle size is massive.
+    //   workbox: {
+    //     maximumFileSizeToCacheInBytes: 30000000
+    //   },
+    //   includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+    //   manifest: {
+    //     name: 'HALO',
+    //     short_name: 'HALO',
+    //     description: 'DXOS HALO Application',
+    //     theme_color: '#ffffff',
+    //     icons: [
+    //       {
+    //         src: 'icons/icon-32.png',
+    //         sizes: '32x32',
+    //         type: 'image/png'
+    //       },
+    //       {
+    //         src: 'icons/icon-256.png',
+    //         sizes: '256x256',
+    //         type: 'image/png'
+    //       }
+    //     ]
+    //   }
+    // })
   ],
   worker: {
     format: 'es',
