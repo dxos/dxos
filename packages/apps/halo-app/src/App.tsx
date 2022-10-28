@@ -2,18 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from '@sentry/react';
+import React, { useRef, useState } from 'react';
 import { useRoutes, HashRouter, useLocation } from 'react-router-dom';
 
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
-import * as Telemetry from '@dxos/telemetry';
+import { useAsyncEffect } from '@dxos/react-async';
+import { ClientProvider, useClient } from '@dxos/react-client';
+import { FatalError, UiKitProvider } from '@dxos/react-uikit';
+// import * as Telemetry from '@dxos/telemetry';
 import { TextModel } from '@dxos/text-model';
 
-// TODO(wittjosiah): Shouldn't import non-hooks from hooks.
-import { isInternalUser, useTelemetry } from './hooks';
+import { useTelemetry } from './hooks';
 import {
   AppLayout,
   AppsPage,
@@ -30,23 +31,26 @@ import {
   SpacesPage
 } from './pages';
 import translationResources from './translations';
+// import { isInternalUser } from './util';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
 const Routes = () => {
   const location = useLocation();
+  const client = useClient();
 
-  useEffect(() => {
-    Telemetry.page({
-      machineId: 'default',
-      identityId: 'default',
-      name: location.pathname,
-      properties: {
-        environment: process.env.DX_ENVIRONMENT,
-        release: process.env.DX_RELEASE,
-        isInternalUser: isInternalUser()
-      }
-    });
+  (window as any).hello();
+
+  useAsyncEffect(async () => {
+    // const identityId = await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
+    // Telemetry.page({
+    //   identityId,
+    //   properties: {
+    //     environment: process.env.DX_ENVIRONMENT,
+    //     release: process.env.DX_RELEASE,
+    //     isInternalUser: isInternalUser()
+    //   }
+    // });
   }, [location]);
 
   return useRoutes([
@@ -105,18 +109,20 @@ export const App = () => {
   useTelemetry(disableTelemetry);
 
   return (
-    <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider
-        clientRef={clientRef}
-        config={configProvider}
-        onInitialize={async (client) => {
-          client.echo.registerModel(TextModel);
-        }}
-      >
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </ClientProvider>
-    </UiKitProvider>
+    <ErrorBoundary fallback={FatalError}>
+      <UiKitProvider resourceExtensions={translationResources}>
+        <ClientProvider
+          clientRef={clientRef}
+          config={configProvider}
+          onInitialize={async (client) => {
+            client.echo.registerModel(TextModel);
+          }}
+        >
+          <HashRouter>
+            <Routes />
+          </HashRouter>
+        </ClientProvider>
+      </UiKitProvider>
+    </ErrorBoundary>
   );
 };

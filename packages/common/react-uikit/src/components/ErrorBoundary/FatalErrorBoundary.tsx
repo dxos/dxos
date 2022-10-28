@@ -22,6 +22,6 @@ export class FatalErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBo
     const { children } = this.props;
     const { fatalError } = this.state;
 
-    return fatalError ? <FatalError error={fatalError} /> : children;
+    return fatalError ? <FatalError error={fatalError} resetError={() => location.reload()} /> : children;
   }
 }

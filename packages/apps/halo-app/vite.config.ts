@@ -14,7 +14,9 @@ import packageJson from './package.json';
 
 const DX_RELEASE = process.env.NODE_ENV === 'production'
   ? `halo-app@${packageJson.version}`
-  : 'development';
+  : '"development"';
+
+const env = (value: string) => value ? `"${value}"` : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,10 +26,9 @@ export default defineConfig({
     port: 3967
   },
   define: {
-    'process.env.DX_ENVIRONMENT': process.env.DX_ENVIRONMENT,
-    'process.env.DX_RELEASE': DX_RELEASE,
-    'process.env.SENTRY_DSN': process.env.SENTRY_DSN,
-    'process.env.SEGMENT_API_KEY': process.env.SEGMENT_API_KEY
+    'window.SENTRY_RELEASE': DX_RELEASE,
+    'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN),
+    'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -46,6 +47,7 @@ export default defineConfig({
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/sentry',
       '@dxos/text-model',
       '@dxos/util'
     ],

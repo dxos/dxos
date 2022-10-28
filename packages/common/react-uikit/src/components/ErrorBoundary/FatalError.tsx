@@ -10,9 +10,11 @@ import { Alert, Button, Dialog, Tooltip } from '@dxos/react-ui';
 
 export interface FatalErrorProps {
   error: Error;
+  resetError: () => void;
+  componentStack?: any;
 }
 
-export const FatalError = ({ error }: FatalErrorProps) => {
+export const FatalError = ({ error, componentStack, resetError }: FatalErrorProps) => {
   const { t } = useTranslation();
   const isDev = process.env.NODE_ENV === 'development';
 
@@ -37,7 +39,7 @@ export const FatalError = ({ error }: FatalErrorProps) => {
     <Dialog title={t('fatal error label')} initiallyOpen>
       {isDev ? (
         <Alert title={message} valence={'error'} className='my-4'>
-          <pre className='text-xs overflow-auto max-w-72 max-h-72'>{stack}</pre>
+          <pre className='text-xs overflow-auto max-w-72 max-h-72'>{componentStack ?? stack}</pre>
         </Alert>
       ) : (
         <p>{t('fatal error message')}</p>
@@ -49,7 +51,7 @@ export const FatalError = ({ error }: FatalErrorProps) => {
           </Button>
         </Tooltip>
         <div role='none' className='flex-grow' />
-        <Button variant='primary' onClick={() => location.reload()}>
+        <Button variant='primary' onClick={resetError}>
           {t('reload page label')}
         </Button>
       </div>

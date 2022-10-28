@@ -3,3 +3,5 @@
 //
 
 export * from './ErrorsBoundaryProvider';
+export * from './FatalError';
+export * from './FatalErrorBoundary';
