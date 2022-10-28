@@ -11,7 +11,7 @@ import { RpcPort } from './rpc-port';
 /**
  * Framer that turns a stream of binary messages into a framed RpcPort.
  *
- * Buffers are
+ * Buffers are written prefixed by their length encoded as a varint.
  */
 export class Framer {
   // private readonly _tagBuffer = Buffer.alloc(4)
