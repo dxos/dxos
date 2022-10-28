@@ -3,8 +3,13 @@
 //
 
 import { afterTest } from '@dxos/testutils';
+import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Muxer } from './muxer';
+import { schema } from '@dxos/protocols';
+import { TestService } from '@dxos/protocols/dist/src/proto/gen/example/testing/rpc';
+import { expect } from 'chai';
+import { latch } from '@dxos/async';
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -25,11 +30,40 @@ const setupPeers = () => {
   };
 };
 
-describe.skip('Muxer', function () {
-  it('1 channel with 1 stream', function () {
+describe('Muxer', function () {
+  it('Rpc', async function () {
     const { peer1, peer2 } = setupPeers();
-    peer1.createChannel('dxos.test.extension1', channel => {
-      const port = channel.createPort('messages')
-    })
+
+    const [wait, inc] = latch({ count: 2, timeout: 500 })
+
+    for (const peer of [peer1, peer2]) {
+      peer.createChannel('dxos.test.extension1', (channel) => {
+        const client = createProtoRpcPeer({
+          requested: {
+            TestService: schema.getService('example.testing.rpc.TestService')
+          },
+          exposed: {
+            TestService: schema.getService('example.testing.rpc.TestService')
+          },
+          handlers: {
+            TestService: {
+              testCall: async ({ data }) => {
+                return { data };
+              },
+              voidCall: async () => {}
+            }
+          },
+          port: channel.createPort('dxos.test.extension1', { contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"' })
+        });
+
+        setTimeout(async () => {
+          await client.open()
+          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
+          inc()
+        });
+      });
+    }
+
+    await wait();
   });
 });

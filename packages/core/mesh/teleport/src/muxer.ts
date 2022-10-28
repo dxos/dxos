@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, todo } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
 import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/teleport';
 import assert from 'assert';
@@ -23,38 +23,9 @@ export class Muxer {
 
   private _nextId = 0;
 
-  constructor() {}
-
-  open() {
+  constructor() {
     this._framer.port.subscribe(msg => {
-      const cmd = codec.decode(msg);
-
-      if(cmd.advertizeChannel) {
-        this._remoteChannels.add(cmd.advertizeChannel.tag);
-
-        const localChannel = this._channels.get(cmd.advertizeChannel.tag)
-        if(localChannel) {
-          this._openChannel(cmd.advertizeChannel.tag);
-        }
-      } else if(cmd.openChannel) {
-        this._openChannel(cmd.openChannel.tag);
-      } else if(cmd.openStream) {
-        const channel = this._channels.get(cmd.openStream.channel) ?? failUndefined();
-        const stream = this._getOrCreateStream(channel, cmd.openStream.tag, { contentType: cmd.openStream.contentType });
-        stream.remoteId = cmd.openStream.id;
-        this._streamsByRemoteId.set(cmd.openStream.id, stream);
-      } else if(cmd.data) {
-        const stream = this._streamsByRemoteId.get(cmd.data.streamId) ?? failUndefined();
-        if(stream.push) {
-          stream.push(cmd.data.data);
-        } else {
-          stream.buffer.push(cmd.data.data);
-        }
-      } else if(cmd.finalize) {
-
-      } else if(cmd.destroy) {
-
-      }
+      this._handleCommand(codec.decode(msg));
     })
   }
 
@@ -84,6 +55,35 @@ export class Muxer {
    */
   destroy(err?: Error) {}
 
+  private _handleCommand(cmd: Command) {
+    if(cmd.advertizeChannel) {
+      this._remoteChannels.add(cmd.advertizeChannel.tag);
+
+      const localChannel = this._channels.get(cmd.advertizeChannel.tag)
+      if(localChannel) {
+        this._openChannel(cmd.advertizeChannel.tag);
+      }
+    } else if(cmd.openChannel) {
+      this._openChannel(cmd.openChannel.tag);
+    } else if(cmd.openStream) {
+      const channel = this._channels.get(cmd.openStream.channel) ?? failUndefined();
+      const stream = this._getOrCreateStream(channel, cmd.openStream.tag, { contentType: cmd.openStream.contentType });
+      stream.remoteId = cmd.openStream.id;
+      this._streamsByRemoteId.set(cmd.openStream.id, stream);
+    } else if(cmd.data) {
+      const stream = this._streamsByRemoteId.get(cmd.data.streamId) ?? failUndefined();
+      if(stream.push) {
+        stream.push(cmd.data.data);
+      } else {
+        stream.buffer.push(cmd.data.data);
+      }
+    } else if(cmd.finalize) {
+      todo()
+    } else if(cmd.destroy) {
+      todo()
+    }
+  }
+
   private _sendCommand(cmd: Command) {
     this._framer.port.send(codec.encode(cmd));
   }
@@ -111,6 +111,12 @@ export class Muxer {
         buffer: [],
       }
       channel.streams.set(tag, stream);
+      this._sendCommand({ openStream: { 
+        id: stream.id,
+        tag: tag,
+        channel: channel.tag,
+        contentType: opts.contentType,
+      }})
     }
     return stream;
   }
