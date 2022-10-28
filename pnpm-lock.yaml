@@ -300,6 +300,7 @@ importers:
       url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -339,6 +340,7 @@ importers:
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
+      workbox-window: 6.5.4
 
   packages/apps/templates/bare-template:
     specifiers:

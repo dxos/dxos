@@ -5,11 +5,12 @@
 import { ErrorBoundary } from '@sentry/react';
 import React, { useRef } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { Button, UiKitProvider } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 import { ErrorsProvider, FatalError } from './components';
@@ -87,6 +88,23 @@ const Routes = () => {
 export const App = () => {
   const clientRef = useRef<Client>();
 
+  // TODO(wittjosiah): Factor out to notification component.
+  //   Example: https://github.com/vite-pwa/vite-plugin-pwa/blob/cd7992b0ac5b2845e97f02ae4eca04ca75ef2ff9/examples/react-router/src/ReloadPrompt.tsx.
+  const {
+    offlineReady: [offlineReady, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError: (err) => {
+      console.error(err);
+    }
+  });
+
+  const close = () => {
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
+
   return (
     <UiKitProvider resourceExtensions={translationResources}>
       <ErrorsProvider>
@@ -101,6 +119,9 @@ export const App = () => {
           >
             <HashRouter>
               <Routes />
+              {/* TODO(wittjosiah): Nice notification. */}
+              {needRefresh && <Button onClick={() => updateServiceWorker()}>Update</Button>}
+              {(needRefresh || offlineReady) && <Button onClick={() => close()}>Close</Button>}
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>

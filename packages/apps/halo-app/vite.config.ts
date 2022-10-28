@@ -69,7 +69,6 @@ export default defineConfig({
   build: {
     // TODO(wittjosiah): Remove.
     minify: false,
-    sourcemap: true,
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     },
