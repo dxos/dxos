@@ -10,10 +10,10 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { Button, UiKitProvider } from '@dxos/react-uikit';
+import { UiKitProvider } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
-import { ErrorsProvider, FatalError } from './components';
+import { ErrorsProvider, FatalError, ServiceWorkerToast } from './components';
 import { useTelemetry } from './hooks';
 import {
   AppLayout,
@@ -91,19 +91,14 @@ export const App = () => {
   // TODO(wittjosiah): Factor out to notification component.
   //   Example: https://github.com/vite-pwa/vite-plugin-pwa/blob/cd7992b0ac5b2845e97f02ae4eca04ca75ef2ff9/examples/react-router/src/ReloadPrompt.tsx.
   const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err) => {
       console.error(err);
     }
   });
-
-  const close = () => {
-    setOfflineReady(false);
-    setNeedRefresh(false);
-  };
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
@@ -119,9 +114,11 @@ export const App = () => {
           >
             <HashRouter>
               <Routes />
-              {/* TODO(wittjosiah): Nice notification. */}
-              {needRefresh && <Button onClick={() => updateServiceWorker()}>Update</Button>}
-              {(needRefresh || offlineReady) && <Button onClick={() => close()}>Close</Button>}
+              {needRefresh ? (
+                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+              ) : offlineReady ? (
+                <ServiceWorkerToast variant='offlineReady' />
+              ) : null}
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>
