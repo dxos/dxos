@@ -1,23 +1,16 @@
 //
 // Copyright 2020 DXOS.org
 //
-
 import React from 'react';
 
-import { useDevtools, useStream } from '@dxos/react-client';
+import { useParties } from '@dxos/react-client';
 
 import { PartyTable } from '../../components';
 
 export const PartiesPanel = () => {
-  const devtoolsHost = useDevtools();
-  const { parties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
+  const parties = useParties();
   if (parties === undefined) {
     return null;
   }
-
-  return (
-    <PartyTable
-      parties={parties}
-    />
-  );
+  return <PartyTable parties={parties} />;
 };

@@ -81,35 +81,35 @@ export const sections: Section[] = [
   //     }
   //   ]
   // },
-  // {
-  //   title: 'ECHO',
-  //   items: [
-  //     {
-  //       id: 'echo.parties',
-  //       title: 'Parties',
-  //       icon: <PartiesIcon />,
-  //       panel: <PartiesPanel />
-  //     },
-  //     {
-  //       id: 'echo.feeds',
-  //       title: 'Feeds',
-  //       icon: <FeedsIcon />,
-  //       panel: <FeedsPanel />
-  //     },
-  //     {
-  //       id: 'echo.items',
-  //       title: 'Items',
-  //       icon: <ItemsIcon />,
-  //       panel: <ItemsPanel />
-  //     },
-  //     {
-  //       id: 'echo.snapshots',
-  //       title: 'Snapshots',
-  //       icon: <SnapshotsIcon />,
-  //       panel: <SnapshotsPanel />
-  //     }
-  //   ]
-  // },
+  {
+    title: 'ECHO',
+    items: [
+      {
+        id: 'echo.parties',
+        title: 'Parties',
+        icon: <PartiesIcon />,
+        panel: <PartiesPanel />
+      }
+      // {
+      //   id: 'echo.feeds',
+      //   title: 'Feeds',
+      //   icon: <FeedsIcon />,
+      //   panel: <FeedsPanel />
+      // },
+      // {
+      //   id: 'echo.items',
+      //   title: 'Items',
+      //   icon: <ItemsIcon />,
+      //   panel: <ItemsPanel />
+      // },
+      // {
+      //   id: 'echo.snapshots',
+      //   title: 'Snapshots',
+      //   icon: <SnapshotsIcon />,
+      //   panel: <SnapshotsPanel />
+      // }
+    ]
+  },
   {
     title: 'MESH',
     items: [
