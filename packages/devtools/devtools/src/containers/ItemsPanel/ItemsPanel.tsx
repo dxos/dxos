@@ -4,7 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
+import {
+  ChevronRight as ExpandIcon,
+  ExpandMore as CollapseIcon
+} from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
@@ -38,17 +41,20 @@ export const ItemsPanel = () => {
 
   const parties = useParties();
   const party = useParty(selectedPartyKey);
-  const items = useSelection(party?.select().filter(item => !item.parent)) ?? [];
+  const items =
+    useSelection(party?.select().filter((item) => !item.parent)) ?? [];
 
   return (
-    <Panel controls={(
-      <KeySelect
-        label='Party'
-        keys={parties.map(({ key }) => key)}
-        selected={selectedPartyKey}
-        onChange={key => setSelectedPartyKey(key)}
-      />
-    )}>
+    <Panel
+      controls={
+        <KeySelect
+          label='Party'
+          keys={parties.map(({ key }) => key)}
+          selected={selectedPartyKey}
+          onChange={(key) => setSelectedPartyKey(key)}
+        />
+      }
+    >
       <Box display='flex' height='100%'>
         <TreeView
           defaultCollapseIcon={<CollapseIcon />}
@@ -60,12 +66,8 @@ export const ItemsPanel = () => {
             height: '100%'
           }}
         >
-          {items.map(item => (
-            <ItemNode
-              key={item.id}
-              item={item}
-              onSelect={setSelectedItem}
-            />
+          {items.map((item) => (
+            <ItemNode key={item.id} item={item} onSelect={setSelectedItem} />
           ))}
         </TreeView>
 
@@ -78,20 +80,22 @@ export const ItemsPanel = () => {
 };
 
 interface ItemNodeProps {
-  item: Item<any>
-  onSelect: (item: Item<any>) => void
+  item: Item<any>;
+  onSelect: (item: Item<any>) => void;
 }
 
 interface ItemDetailsProps {
-  item: Item<Model<any>>
+  item: Item<Model<any>>;
 }
 
 const ItemDetails = ({ item }: ItemDetailsProps) => (
-  <Box sx={{
-    '& td': {
-      verticalAlign: 'top'
-    }
-  }}>
+  <Box
+    sx={{
+      '& td': {
+        verticalAlign: 'top'
+      }
+    }}
+  >
     <table>
       <tbody>
         <tr>
