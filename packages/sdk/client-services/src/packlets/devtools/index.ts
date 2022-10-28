@@ -4,4 +4,5 @@
 
 export * from './devtools-context';
 export * from './devtools-host-events';
+export * from './feeds';
 export * from './network';

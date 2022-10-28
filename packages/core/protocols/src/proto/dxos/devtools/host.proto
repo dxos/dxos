@@ -175,8 +175,7 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.keys.PublicKey party_key = 1;
-  repeated dxos.keys.PublicKey feed_keys = 2;
+  repeated dxos.keys.PublicKey feed_keys = 1;
 }
 
 message SubscribeToFeedsResponse {

@@ -25,7 +25,8 @@ export const FeedsPanel = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
     () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
-    {}, [selectedPartyKey, selectedFeed]
+    {},
+    [selectedPartyKey, selectedFeed]
   );
 
   useEffect(() => {
@@ -46,27 +47,27 @@ export const FeedsPanel = () => {
   };
 
   return (
-    <Panel controls={(
-      <>
-        <KeySelect
-          id='party-select'
-          label='Party'
-          keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={handlePartyChange}
-        />
-        <KeySelect
-          id='feed-select'
-          label='Feed'
-          keys={partyFeeds}
-          selected={selectedFeed}
-          onChange={handleFeedChange}
-        />
-      </>
-    )}>
-      <MessageTable
-        messages={messages}
-      />
+    <Panel
+      controls={
+        <>
+          <KeySelect
+            id='party-select'
+            label='Party'
+            keys={parties.map(({ key }) => key)}
+            selected={selectedPartyKey}
+            onChange={handlePartyChange}
+          />
+          <KeySelect
+            id='feed-select'
+            label='Feed'
+            keys={partyFeeds}
+            selected={selectedFeed}
+            onChange={handleFeedChange}
+          />
+        </>
+      }
+    >
+      <MessageTable messages={messages} />
     </Panel>
   );
 };

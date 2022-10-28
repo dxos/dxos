@@ -13,9 +13,9 @@ import {
   TransportFactory
 } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import { DevtoolsHost, SubscribeToFeedBlocksRequest } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
+import { DevtoolsHostEvents, DevtoolsServiceDependencies, subscribeToFeedBlocks } from '../devtools';
 import {
   subscribeToNetworkStatus as subscribeToSignalStatus,
   subscribeToSignalTrace,
@@ -113,7 +113,8 @@ export class ClientServiceHost implements ClientServiceProvider {
    */
   private _createDevtoolsService(networkManager: NetworkManager): DevtoolsHost {
     const dependencies: DevtoolsServiceDependencies = {
-      networkManager
+      networkManager,
+      feedStore: this._context.feedStore
       //   config: this._config,
       //   echo: this._echo,
       //   feedStore: this._echo.feedStore,
@@ -126,7 +127,8 @@ export class ClientServiceHost implements ClientServiceProvider {
     return {
       subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
       subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
-      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies)
+      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies),
+      subscribeToFeedBlocks: (request: SubscribeToFeedBlocksRequest) => subscribeToFeedBlocks(dependencies, request)
     } as any;
   }
 }
