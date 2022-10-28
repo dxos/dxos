@@ -3,4 +3,5 @@
 
 HALO API.
 ## Properties
-### `info: object`
+### info 
+Type: `object`

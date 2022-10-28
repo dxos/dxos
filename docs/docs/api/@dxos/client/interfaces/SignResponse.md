@@ -4,4 +4,5 @@
 Defined in:
    file://./../../dxos/client.proto
 ## Properties
-### `signed: Uint8Array`
+### signed 
+Type: `Uint8Array`

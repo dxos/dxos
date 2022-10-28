@@ -1,20 +1,17 @@
-import { ReflectionKind, JSONOutput as S } from "typedoc";
+import { ReflectionKind, JSONOutput as S } from 'typedoc';
 import {
   Input,
   TemplateFunction,
   text,
-  sources,
+  Stringifier,
   File,
-  JSONFile,
-  comment,
   packagesInProject,
-  reflectionsOfKind,
-  stringifyType,
-  method
-} from "../..";
+  reflectionsOfKind
+} from '../..';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
+  const stringifier = new Stringifier(input);
   return packages
     .map((pkage) => {
       const funcs = reflectionsOfKind(
@@ -23,24 +20,19 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
       ) as S.DeclarationReflection[];
       return funcs
         .map((afunc) => {
-          
-          const dir = [outputDirectory, pkage.name ?? "", "functions"];
+          const dir = [outputDirectory, pkage.name ?? '', 'functions'];
           return [
             new File({
               path: [...dir, `${afunc.name}.md`],
               content: text`
                 # Function \`${afunc.name}\`
-                ${sources(afunc)}
+                ${stringifier.sources(afunc)}
 
-                ${comment(afunc.comment)}
+                ${stringifier.comment(afunc.comment)}
 
-                ${method(afunc)}
-                `,
-            }),
-            // new JSONFile({
-            //   path: [...dir, `${afunc.name}.json`],
-            //   content: afunc,
-            // }),
+                ${stringifier.method(afunc)}
+                `
+            })
           ];
         })
         .flat();

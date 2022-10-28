@@ -8,22 +8,18 @@ It works in non-interactive mode and requires no authentication.
 ## Constructors
 ### constructor
 ```ts
-(_descriptor: InvitationDescriptor, _invitationPromise: Promise<Party>, _onAuthenticate: function) => PartyInvitation
+(_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), _invitationPromise: Promise<[Party](/api/@dxos/client/interfaces/Party)>, _onAuthenticate: function) => [PartyInvitation](/api/@dxos/client/classes/PartyInvitation)
 ```
 
 ## Properties
 ### _descriptor 
-> Type: `InvitationDescriptor`
-<br/>
+Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ### _invitationPromise 
-> Type: `Promise<Party>`
-<br/>
+Type: Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ### _onAuthenticate 
-> Type: `function`
-<br/>
+Type: function
 ### descriptor
-> Type: `InvitationDescriptor`
-<br/>
+Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 
 ## Methods
 ### authenticate
@@ -32,7 +28,7 @@ It works in non-interactive mode and requires no authentication.
 ```
 ### getParty
 ```ts
-() => Promise<Party>
+() => Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 Wait for the invitation flow to complete and return the target party.
 ### toJSON
@@ -41,6 +37,6 @@ Wait for the invitation flow to complete and return the target party.
 ```
 ### wait
 ```ts
-() => Promise<Party>
+() => Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 Wait for the invitation flow to complete.

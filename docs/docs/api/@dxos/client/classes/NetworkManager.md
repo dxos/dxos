@@ -7,22 +7,18 @@ Manages connection to the swarm.
 ## Constructors
 ### constructor
 ```ts
-(__namedParameters: NetworkManagerOptions) => NetworkManager
+(__namedParameters: NetworkManagerOptions) => [NetworkManager](/api/@dxos/client/classes/NetworkManager)
 ```
 
 ## Properties
 ### topicsUpdated 
-> Type: `Event<void>`
-<br/>
+Type: Event<void>
 ### connectionLog
-> Type: `undefined | ConnectionLog`
-<br/>
+Type: undefined | ConnectionLog
 ### signal
-> Type: `SignalManager`
-<br/>
+Type: SignalManager
 ### topics
-> Type: `PublicKey[]`
-<br/>
+Type: [PublicKey](/api/@dxos/client/classes/PublicKey)[]
 
 ## Methods
 ### destroy
@@ -31,11 +27,11 @@ Manages connection to the swarm.
 ```
 ### getSwarm
 ```ts
-(topic: PublicKey) => undefined | Swarm
+(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => undefined | Swarm
 ```
 ### getSwarmMap
 ```ts
-(topic: PublicKey) => undefined | SwarmMapper
+(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => undefined | SwarmMapper
 ```
 ### joinProtocolSwarm
 ```ts
@@ -43,7 +39,7 @@ Manages connection to the swarm.
 ```
 ### leaveProtocolSwarm
 ```ts
-(topic: PublicKey) => Promise<void>
+(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => Promise<void>
 ```
 ### start
 ```ts

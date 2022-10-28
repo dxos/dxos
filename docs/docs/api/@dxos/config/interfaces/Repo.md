@@ -4,12 +4,18 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `name: string`
+### name 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `url: string`
+### url 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `version: string`
+### version 
+Type: `string`
+
 Options:
   - proto3_optional = true

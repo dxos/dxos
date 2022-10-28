@@ -1,6 +1,6 @@
 # DXOS API Documentation
 
-> Version hash <Badge type="tip" text="fe432c" vertical="middle" />
+> Version hash <Badge type="tip" text="cafebabe" vertical="middle" />
 
 This is reference documentation that was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
 

@@ -7,7 +7,7 @@ Import/export party.
 ## Constructors
 ### constructor
 ```ts
-(_client: Client) => PartySerializer
+(_client: [Client](/api/@dxos/client/classes/Client)) => [PartySerializer](/api/@dxos/client/classes/PartySerializer)
 ```
 
 ## Properties
@@ -16,9 +16,9 @@ Import/export party.
 ## Methods
 ### deserializeParty
 ```ts
-(data: Uint8Array) => Promise<Party>
+(data: Uint8Array) => Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 ### serializeParty
 ```ts
-(party: Party) => Promise<Blob>
+(party: [Party](/api/@dxos/client/interfaces/Party)) => Promise<Blob>
 ```

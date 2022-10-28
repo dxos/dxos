@@ -7,21 +7,18 @@ Reactive query results.
 ## Constructors
 ### constructor
 ```ts
-<T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => ResultSet<T>
+<T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => [ResultSet](/api/@dxos/client/classes/ResultSet)<T>
 ```
 
 ## Properties
 ### update 
-> Type: `ReadOnlyEvent<T[]>`
-<br/>
+Type: ReadOnlyEvent<T[]>
 
 Triggered when  `value`  updates.
 ### first
-> Type: `T`
-<br/>
+Type: T
 ### value
-> Type: `T[]`
-<br/>
+Type: T[]
 
 ## Methods
 ### subscribe

@@ -9,7 +9,7 @@ strings as late as possible (eg, to log/display).
 ## Constructors
 ### constructor
 ```ts
-(_value: Uint8Array) => PublicKey
+(_value: Uint8Array) => [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 
 ## Properties
@@ -57,7 +57,7 @@ Same as  `PublicKey.humanize()` .
 ```
 ### assertValidPublicKey
 ```ts
-(value: any) => asserts value is PublicKey
+(value: any) => asserts value is [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 Asserts that provided values is an instance of PublicKey.
 ### bufferize
@@ -71,28 +71,28 @@ Asserts that provided values is an instance of PublicKey.
 Tests two keys for equality.
 ### from
 ```ts
-(source: PublicKeyLike) => PublicKey
+(source: PublicKeyLike) => [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 Creates new instance of PublicKey automatically determining the input format.
 ### fromHex
 ```ts
-(hex: string) => PublicKey
+(hex: string) => [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 Creates new instance of PublicKey from hex string.
 ### hash
 ```ts
-(key: PublicKey) => string
+(key: [PublicKey](/api/@dxos/client/classes/PublicKey)) => string
 ```
 To be used with ComplexMap and ComplexSet.
 Returns a scalar representation for this key.
 ### isPublicKey
 ```ts
-(value: any) => value is PublicKey
+(value: any) => value is [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 Tests if provided values is an instance of PublicKey.
 ### random
 ```ts
-() => PublicKey
+() => [PublicKey](/api/@dxos/client/classes/PublicKey)
 ```
 Creates a new key.
 ### stringify

@@ -6,14 +6,21 @@ import { capitalCase } from 'change-case';
 import { promises as fs } from 'node:fs';
 import path from 'path';
 import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from 'vuepress';
-
-import { API_SECTIONS, PINNED_PACKAGES } from '../constants';
+import matter from 'gray-matter';
+import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
 
 const apiPath = path.resolve(__dirname, '../../docs/api');
 
 export const link = {
   package: (name: string) => `/api/${name}`,
+<<<<<<< HEAD
   sectionItem: (pkg: string, section: string, name: string) => `/api/${pkg}/${section}/${name}`
+=======
+  sectionItem: (pkg: string, section: string, name: string) =>
+    `${link.package(pkg)}/${section}/${name}`,
+  packageItem: (name: string, item: string) =>
+    path.join(link.package(name), item)
+>>>>>>> fee4ebd72 (wip docs generation)
 };
 
 type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;
@@ -58,7 +65,27 @@ const sidebarItem: {
               : null
           )
         )
-      ).filter((s) => s)
+      ).filter((s) => s),
+      ...(await Promise.all(
+        (
+          await fs.readdir(path.resolve(apiPath, pkg))
+        )
+          .filter((file) => {
+            if ([...API_SECTIONS, ...API_PACKAGE_IGNORE].indexOf(file) >= 0) return false;
+            
+            return /\.md$/.test(file);
+          })
+          .map(async (file) => {
+            const filecontents = (
+              await fs.readFile(path.resolve(apiPath, pkg, file))
+            ).toString();
+            const matters = matter(filecontents);
+            return {
+              text: matters?.data?.title ?? file,
+              link: link.packageItem(pkg, file)
+            };
+          })
+      ))
     ]
   })
 };

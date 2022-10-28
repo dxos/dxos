@@ -4,23 +4,37 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `alias: string[]`
-### `autoupdate: Autoupdate`
+### alias 
+Type: `string[]`
+### autoupdate 
+Type: `Autoupdate`
+
 Options:
   - proto3_optional = true
-### `confhost: string`
+### confhost 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `env: string[]`
-### `host: string`
+### env 
+Type: `string[]`
+### host 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `https: Https`
+### https 
+Type: `Https`
+
 Options:
   - proto3_optional = true
-### `p2p: P2P`
+### p2p 
+Type: `P2P`
+
 Options:
   - proto3_optional = true
-### `port: string`
+### port 
+Type: `string`
+
 Options:
   - proto3_optional = true

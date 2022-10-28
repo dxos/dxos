@@ -3,4 +3,5 @@
 
 
 ## Properties
-### `children: ReactNode`
+### children 
+Type: `ReactNode`

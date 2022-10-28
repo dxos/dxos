@@ -8,22 +8,18 @@ It works in non-interactive mode and requires no authentication.
 ## Constructors
 ### constructor
 ```ts
-<T> (_descriptor: InvitationDescriptor, _invitationPromise: Promise<T>, _onAuthenticate: function) => Invitation<T>
+<T> (_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), _invitationPromise: Promise<T>, _onAuthenticate: function) => [Invitation](/api/@dxos/client/classes/Invitation)<T>
 ```
 
 ## Properties
 ### _descriptor 
-> Type: `InvitationDescriptor`
-<br/>
+Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ### _invitationPromise 
-> Type: `Promise<T>`
-<br/>
+Type: Promise<T>
 ### _onAuthenticate 
-> Type: `function`
-<br/>
+Type: function
 ### descriptor
-> Type: `InvitationDescriptor`
-<br/>
+Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 
 ## Methods
 ### authenticate

@@ -31,7 +31,12 @@ const main = async () => {
       type: 'string'
     })
     .option('filter', {
-      description: 'Filter the input files by glob',
+      description: 'Filter the template files by regular expression string',
+      requiresArg: false,
+      type: 'string'
+    })
+    .option('glob', {
+      description: 'Filter the template files by glob expression string',
       requiresArg: false,
       type: 'string'
     })
@@ -43,13 +48,15 @@ const main = async () => {
         dry,
         input,
         output = process.cwd(),
-        filter
+        filter,
+        glob
       }: {
         _: string[];
         dry: boolean;
         input: string;
         output: string;
         filter: string;
+        glob: string;
       }) => {
         const tstart = Date.now();
         const [template] = _;
@@ -65,7 +72,8 @@ const main = async () => {
           outputDirectory: output,
           templateDirectory: template,
           input: input ? JSON.parse((await fs.readFile(input)).toString()) : {},
-          filterGlob: filter
+          filterGlob: glob,
+          filterRegEx: new RegExp(filter)
         });
         if (!dry) {
           console.log(`output folder: ${output}`);

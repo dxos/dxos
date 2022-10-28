@@ -7,40 +7,33 @@
 ## Constructors
 ### constructor
 ```ts
-(config: Config | Config, options: ClientOptions) => Client
+(config: Config | Config, options: [ClientOptions](/api/@dxos/client/interfaces/ClientOptions)) => [Client](/api/@dxos/client/classes/Client)
 ```
 Creates the client object based on supplied configuration.
 Requires initialization after creating by calling  `.initialize()` .
 
 ## Properties
 ### version 
-> Type: `"2.33.8"`
-<br/>
+Type: "2.33.8"
 ### config
-> Type: `Config`
-<br/>
+Type: Config
 ### echo
-> Type: `EchoProxy`
-<br/>
+Type: [EchoProxy](/api/@dxos/client/classes/EchoProxy)
 
 ECHO database.
 ### halo
-> Type: `HaloProxy`
-<br/>
+Type: [HaloProxy](/api/@dxos/client/classes/HaloProxy)
 
 HALO credentials.
 ### info
-> Type: `ClientInfo`
-<br/>
+Type: [ClientInfo](/api/@dxos/client/interfaces/ClientInfo)
 ### initialized
-> Type: `boolean`
-<br/>
+Type: boolean
 
 Has the Client been initialized?
 Initialize by calling  `.initialize()`
 ### services
-> Type: `ClientServices`
-<br/>
+Type: ClientServices
 
 Client services that can be proxied.
 
@@ -58,7 +51,7 @@ Initializes internal resources in an idempotent way.
 Required before using the Client instance.
 ### registerModel
 ```ts
-(constructor: ModelConstructor<any>) => Client
+(constructor: ModelConstructor<any>) => [Client](/api/@dxos/client/classes/Client)
 ```
 Registers a new ECHO model.
 ### reset

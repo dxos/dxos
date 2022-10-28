@@ -3,4 +3,5 @@
 
 
 ## Properties
-### `inviteeKey: PublicKey`
+### inviteeKey 
+Type: `PublicKey`

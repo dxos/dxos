@@ -3,6 +3,9 @@
 
 
 ## Properties
-### `echo: object`
-### `halo: HaloInfo`
-### `initialized: boolean`
+### echo 
+Type: `object`
+### halo 
+Type: `HaloInfo`
+### initialized 
+Type: `boolean`

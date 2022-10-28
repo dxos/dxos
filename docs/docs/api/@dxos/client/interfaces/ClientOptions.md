@@ -3,7 +3,11 @@
 
 
 ## Properties
-### `rpcPort: RpcPort`
+### rpcPort 
+Type: `RpcPort`
+
 Only used when remote=true.
-### `signer: HaloSigner`
-### `timeout: number`
+### signer 
+Type: `HaloSigner`
+### timeout 
+Type: `number`

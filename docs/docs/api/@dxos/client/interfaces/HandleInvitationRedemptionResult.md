@@ -3,5 +3,7 @@
 
 
 ## Properties
-### `authenticate: function`
-### `waitForFinish: function`
+### authenticate 
+Type: `function`
+### waitForFinish 
+Type: `function`

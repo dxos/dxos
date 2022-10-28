@@ -4,21 +4,33 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `certfile: string`
+### certfile 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `dnsprovider: string`
+### dnsprovider 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `email: string`
+### email 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `enabled: boolean`
+### enabled 
+Type: `boolean`
+
 Options:
   - proto3_optional = true
-### `keyfile: string`
+### keyfile 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `port: string`
+### port 
+Type: `string`
+
 Options:
   - proto3_optional = true

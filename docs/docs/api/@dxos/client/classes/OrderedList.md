@@ -7,19 +7,16 @@ Utility class that wraps an  `ObjectModel`  and implements a linked list via key
 ## Constructors
 ### constructor
 ```ts
-(_model: ObjectModel, _property: string) => OrderedList
+(_model: [ObjectModel](/api/@dxos/client/classes/ObjectModel), _property: string) => [OrderedList](/api/@dxos/client/classes/OrderedList)
 ```
 
 ## Properties
 ### update 
-> Type: `Event<string[]>`
-<br/>
+Type: Event<string[]>
 ### id
-> Type: `string`
-<br/>
+Type: string
 ### values
-> Type: `string[]`
-<br/>
+Type: string[]
 
 Get ordered values.
 
@@ -40,7 +37,7 @@ Clears the ordered set with the optional values.
 Links the ordered items, possibly linking them to existing items.
 ### refresh
 ```ts
-() => OrderedList
+() => [OrderedList](/api/@dxos/client/classes/OrderedList)
 ```
 Refresh list from properties.
 ### remove

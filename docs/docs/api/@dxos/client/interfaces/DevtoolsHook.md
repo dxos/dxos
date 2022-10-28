@@ -3,5 +3,7 @@
 
 A hook bound to window.__DXOS__.
 ## Properties
-### `client: Client`
-### `openClientRpcServer: function`
+### client 
+Type: `Client`
+### openClientRpcServer 
+Type: `function`

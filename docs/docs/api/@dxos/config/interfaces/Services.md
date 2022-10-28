@@ -4,28 +4,45 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `app: AppServer`
+### app 
+Type: `AppServer`
+
 Options:
   - proto3_optional = true
-### `bot: BotFactory`
+### bot 
+Type: `BotFactory`
+
 Options:
   - proto3_optional = true
-### `dxns: Dxns`
+### dxns 
+Type: `Dxns`
+
 Options:
   - proto3_optional = true
-### `ice: Ice[]`
-### `ipfs: Ipfs`
+### ice 
+Type: `Ice[]`
+### ipfs 
+Type: `Ipfs`
+
 Options:
   - proto3_optional = true
-### `kube: Kube`
+### kube 
+Type: `Kube`
+
 Options:
   - proto3_optional = true
-### `machine: Machine`
+### machine 
+Type: `Machine`
+
 Options:
   - proto3_optional = true
-### `publisher: Publisher`
+### publisher 
+Type: `Publisher`
+
 Options:
   - proto3_optional = true
-### `signal: Signal`
+### signal 
+Type: `Signal`
+
 Options:
   - proto3_optional = true

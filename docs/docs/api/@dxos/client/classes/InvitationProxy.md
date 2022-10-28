@@ -7,21 +7,19 @@
 ## Constructors
 ### constructor
 ```ts
-() => InvitationProxy
+() => [InvitationProxy](/api/@dxos/client/classes/InvitationProxy)
 ```
 
 ## Properties
 ### activeInvitations 
-> Type: `InvitationRequest[]`
-<br/>
+Type: [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)[]
 ### invitationsUpdate 
-> Type: `Event<void>`
-<br/>
+Type: Event<void>
 
 ## Methods
 ### _removeInvitation
 ```ts
-(invitation: InvitationRequest) => void
+(invitation: [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)) => void
 ```
 ### close
 ```ts
@@ -29,9 +27,9 @@
 ```
 ### createInvitationRequest
 ```ts
-(__namedParameters: CreateInvitationRequestOpts) => Promise<InvitationRequest>
+(__namedParameters: [CreateInvitationRequestOpts](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)) => Promise<[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)>
 ```
 ### handleInvitationRedemption
 ```ts
-(__namedParameters: HandleInvitationRedemptionOpts) => HandleInvitationRedemptionResult
+(__namedParameters: [HandleInvitationRedemptionOpts](/api/@dxos/client/interfaces/HandleInvitationRedemptionOpts)) => [HandleInvitationRedemptionResult](/api/@dxos/client/interfaces/HandleInvitationRedemptionResult)
 ```

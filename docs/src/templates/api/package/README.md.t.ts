@@ -2,9 +2,7 @@ import path from "path";
 import {
   Input,
   TemplateFunction,
-  text,
   File,
-  generic,
   packagesInProject,
 } from "..";
 

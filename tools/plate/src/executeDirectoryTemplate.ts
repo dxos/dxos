@@ -16,17 +16,24 @@ export type ExecuteDirectoryTemplateOptions<TInput> = {
   outputDirectory: string;
   input?: Partial<TInput>;
   filterGlob?: string;
+  filterRegEx?: RegExp;
 };
 
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateDirectory, outputDirectory, input, filterGlob } = options;
+  const { templateDirectory, filterRegEx, outputDirectory, input, filterGlob } =
+    options;
   const allFiles = (await readDir(templateDirectory)).filter(
     (file) =>
       !TEMPLATE_DIRECTORY_IGNORE.some((pattern) =>
         pattern.test(path.relative(templateDirectory, file))
-      ) && (!!filterGlob ? minimatch(file, filterGlob) : true)
+      ) &&
+      (!!filterGlob
+        ? minimatch(file, filterGlob)
+        : !!filterRegEx
+        ? filterRegEx.test(file)
+        : true)
   );
   const templateFiles = allFiles.filter(isTemplateFile);
   const regularFiles = allFiles.filter((file) => !isTemplateFile(file));

@@ -3,4 +3,5 @@
 
 
 ## Properties
-### `sortByKeywords: string[]`
+### sortByKeywords 
+Type: `string[]`

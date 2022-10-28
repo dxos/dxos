@@ -4,14 +4,22 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `license: string`
+### license 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `modules: Module[]`
-### `repos: Repo[]`nal = true
-### `config: string`
+### modules 
+Type: `Module[]`
+### repos 
+Type: `Repo[]` true
+### config 
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `package: string`
+### package 
+Type: `string`
+
 Options:
   - proto3_optional = true

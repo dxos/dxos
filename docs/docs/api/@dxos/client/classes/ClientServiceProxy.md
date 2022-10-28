@@ -8,13 +8,12 @@ For example, the services can be located in Wallet Extension.
 ## Constructors
 ### constructor
 ```ts
-(port: RpcPort, _timeout: number) => ClientServiceProxy
+(port: RpcPort, _timeout: number) => [ClientServiceProxy](/api/@dxos/client/classes/ClientServiceProxy)
 ```
 
 ## Properties
 ### services 
-> Type: `ClientServices`
-<br/>
+Type: ClientServices
 
 ## Methods
 ### close

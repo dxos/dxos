@@ -224,6 +224,7 @@ importers:
       change-case: ^4.1.2
       eslint: ^8.24.0
       front-matter: ^4.0.2
+      gray-matter: ^4.0.3
       markdown-it-container: ^3.0.0
       markdown-it-highlightjs: ^4.0.1
       prettier: ^2.7.1
@@ -252,6 +253,7 @@ importers:
       change-case: 4.1.2
       eslint: 8.25.0
       front-matter: 4.0.2
+      gray-matter: 4.0.3
       markdown-it-container: 3.0.0
       markdown-it-highlightjs: 4.0.1
       prettier: 2.7.1
@@ -343,7 +345,7 @@ importers:
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      vite-plugin-pwa: 0.12.8_vite@3.0.9
       workbox-window: 6.5.4
 
   packages/apps/patterns/react-appkit:
@@ -31616,29 +31618,10 @@ packages:
       replace-ext: 1.0.1
     dev: false
 
-  /vite-plugin-pwa/0.12.8_f7se6o6eqkwcix4u3svh6mkvda:
-    resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
-    peerDependencies:
-      vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
-    dependencies:
-      debug: 4.3.4
-      fast-glob: 3.2.12
-      pretty-bytes: 6.0.0
-      rollup: 2.79.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      workbox-build: 6.5.4
-      workbox-window: 6.5.4
-    transitivePeerDependencies:
-      - '@types/babel__core'
-      - supports-color
-    dev: true
-
   /vite-plugin-pwa/0.12.8_vite@3.0.9:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12

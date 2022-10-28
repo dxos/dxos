@@ -3,4 +3,5 @@
 
 
 ## Properties
-### `stream: Stream<InvitationRequest>`
+### stream 
+Type: `Stream<InvitationRequest>`

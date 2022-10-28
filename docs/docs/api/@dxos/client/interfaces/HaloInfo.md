@@ -3,4 +3,5 @@
 
 
 ## Properties
-### `key: PublicKey`
+### key 
+Type: `PublicKey`

@@ -4,9 +4,9 @@
 
 import { JSONOutput } from 'typedoc';
 
-export * from './util/partials.t';
-export * from './util/utils.t';
-export * from './util/stringifiers.t';
 export * from '@dxos/plate';
+export * from './util/utils.t';
+export * from './util/Stringifier.t';
+export * from './util/TypeStringifier.t';
 
 export type Input = JSONOutput.ProjectReflection;

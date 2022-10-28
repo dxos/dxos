@@ -7,46 +7,34 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 ## Constructors
 ### constructor
 ```ts
-<M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, link: LinkData) => Link<M, L, R>
+<M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, link: LinkData) => [Link](/api/@dxos/client/classes/Link)<M, L, R>
 ```
 
 ## Properties
 ### _itemManager 
-> Type: `ItemManager`
-<br/>
+Type: ItemManager
 ### _onUpdate 
-> Type: `Event<Entity<any>>`
-<br/>
+Type: Event<[Entity](/api/@dxos/client/classes/Entity)<any>>
 ### id
-> Type: `string`
-<br/>
+Type: string
 ### isLink
-> Type: `"true"`
-<br/>
+Type: "true"
 ### model
-> Type: `M`
-<br/>
+Type: M
 ### modelMeta
-> Type: `ModelMeta<any, any, any>`
-<br/>
+Type: ModelMeta<any, any, any>
 ### modelType
-> Type: `string`
-<br/>
+Type: string
 ### source
-> Type: `Item<L>`
-<br/>
+Type: [Item](/api/@dxos/client/classes/Item)<L>
 ### sourceId
-> Type: `string`
-<br/>
+Type: string
 ### target
-> Type: `Item<R>`
-<br/>
+Type: [Item](/api/@dxos/client/classes/Item)<R>
 ### targetId
-> Type: `string`
-<br/>
+Type: string
 ### type
-> Type: `undefined | string`
-<br/>
+Type: undefined | string
 
 ## Methods
 ### subscribe

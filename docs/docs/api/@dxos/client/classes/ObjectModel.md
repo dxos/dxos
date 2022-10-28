@@ -7,28 +7,22 @@ Object mutation model.
 ## Constructors
 ### constructor
 ```ts
-(_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => ObjectModel
+(_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => [ObjectModel](/api/@dxos/client/classes/ObjectModel)
 ```
 
 ## Properties
 ### _getState 
-> Type: `function`
-<br/>
+Type: function
 ### update 
-> Type: `Event<Model<ObjectModelState, ObjectMutationSet>>`
-<br/>
+Type: Event<Model<ObjectModelState, ObjectMutationSet>>
 ### meta 
-> Type: `ModelMeta<any, any, any>`
-<br/>
+Type: ModelMeta<any, any, any>
 ### itemId
-> Type: `string`
-<br/>
+Type: string
 ### modelMeta
-> Type: `ModelMeta<any, any, any>`
-<br/>
+Type: ModelMeta<any, any, any>
 ### readOnly
-> Type: `boolean`
-<br/>
+Type: boolean
 
 ## Methods
 ### addToSet

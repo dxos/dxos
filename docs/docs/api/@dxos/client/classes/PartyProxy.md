@@ -10,33 +10,25 @@ Proxies requests to local/remove services.
 
 ## Properties
 ### database
-> Type: `Database`
-<br/>
+Type: [Database](/api/@dxos/client/classes/Database)
 ### invitationProxy
-> Type: `InvitationProxy`
-<br/>
+Type: [InvitationProxy](/api/@dxos/client/classes/InvitationProxy)
 ### isActive
-> Type: `boolean`
-<br/>
+Type: boolean
 ### isOpen
-> Type: `boolean`
-<br/>
+Type: boolean
 ### key
-> Type: `PublicKey`
-<br/>
+Type: [PublicKey](/api/@dxos/client/classes/PublicKey)
 ### properties
-> Type: `ObjectProperties`
-<br/>
+Type: ObjectProperties
 
 TODO: Currently broken.
 ### reduce
-> Type: `function`
-<br/>
+Type: function
 
 Returns a selection context, which can be used to traverse the object graph.
 ### select
-> Type: `function`
-<br/>
+Type: function
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -51,7 +43,7 @@ Returns a selection context, which can be used to traverse the object graph.
 ```
 ### createInvitation
 ```ts
-(inviteeKey: CreationInvitationOptions) => Promise<InvitationRequest>
+(inviteeKey: [CreationInvitationOptions](/api/@dxos/client/interfaces/CreationInvitationOptions)) => Promise<[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)>
 ```
 Creates an invitation to a given party.
 The Invitation flow requires the inviter and invitee to be online at the same time.
@@ -92,7 +84,7 @@ Called by EchoProxy open.
 ```
 ### queryMembers
 ```ts
-() => ResultSet<PartyMember>
+() => [ResultSet](/api/@dxos/client/classes/ResultSet)<PartyMember>
 ```
 Return set of party members.
 ### setActive

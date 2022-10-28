@@ -9,31 +9,24 @@ Subclassed by Item and Link.
 ## Constructors
 ### constructor
 ```ts
-<M> (_itemManager: ItemManager, _id: string, _type: undefined | string, stateManager: StateManager<NonNullable<M>>) => Entity<M>
+<M> (_itemManager: ItemManager, _id: string, _type: undefined | string, stateManager: StateManager<NonNullable<M>>) => [Entity](/api/@dxos/client/classes/Entity)<M>
 ```
 
 ## Properties
 ### _itemManager 
-> Type: `ItemManager`
-<br/>
+Type: ItemManager
 ### _onUpdate 
-> Type: `Event<Entity<any>>`
-<br/>
+Type: Event<[Entity](/api/@dxos/client/classes/Entity)<any>>
 ### id
-> Type: `string`
-<br/>
+Type: string
 ### model
-> Type: `M`
-<br/>
+Type: M
 ### modelMeta
-> Type: `ModelMeta<any, any, any>`
-<br/>
+Type: ModelMeta<any, any, any>
 ### modelType
-> Type: `string`
-<br/>
+Type: string
 ### type
-> Type: `undefined | string`
-<br/>
+Type: undefined | string
 
 ## Methods
 ### subscribe

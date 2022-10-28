@@ -7,16 +7,14 @@ Remote service implementation.
 ## Constructors
 ### constructor
 ```ts
-(__namedParameters: ClientServiceHostParams) => ClientServiceHost
+(__namedParameters: ClientServiceHostParams) => [ClientServiceHost](/api/@dxos/client/classes/ClientServiceHost)
 ```
 
 ## Properties
 ### echo
-> Type: `never`
-<br/>
+Type: never
 ### services
-> Type: `ClientServices`
-<br/>
+Type: ClientServices
 
 ## Methods
 ### close

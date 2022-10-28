@@ -7,50 +7,47 @@ Client proxy to local/remote ECHO service.
 ## Constructors
 ### constructor
 ```ts
-(_serviceProvider: ClientServiceProvider, _modelFactory: ModelFactory, _haloProxy: HaloProxy) => EchoProxy
+(_serviceProvider: ClientServiceProvider, _modelFactory: ModelFactory, _haloProxy: [HaloProxy](/api/@dxos/client/classes/HaloProxy)) => [EchoProxy](/api/@dxos/client/classes/EchoProxy)
 ```
 
 ## Properties
 ### info
-> Type: `object`
-<br/>
+Type: object
 ### modelFactory
-> Type: `ModelFactory`
-<br/>
+Type: ModelFactory
 ### networkManager
-> Type: `any`
-<br/>
+Type: any
 
 ## Methods
 ### acceptInvitation
 ```ts
-(invitationDescriptor: InvitationDescriptor) => PartyInvitation
+(invitationDescriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)) => [PartyInvitation](/api/@dxos/client/classes/PartyInvitation)
 ```
 Joins an existing Party by invitation.
 
 To be used with  `party.createInvitation`  on the inviter side.
 ### cloneParty
 ```ts
-(snapshot: PartySnapshot) => Promise<Party>
+(snapshot: PartySnapshot) => Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 Clones the party from a snapshot.
 ### createParty
 ```ts
-() => Promise<Party>
+() => Promise<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 Creates a new party.
 ### getParty
 ```ts
-(partyKey: PublicKey) => undefined | Party
+(partyKey: [PublicKey](/api/@dxos/client/classes/PublicKey)) => undefined | [Party](/api/@dxos/client/interfaces/Party)
 ```
 Returns an individual party by its key.
 ### queryParties
 ```ts
-() => ResultSet<Party>
+() => [ResultSet](/api/@dxos/client/classes/ResultSet)<[Party](/api/@dxos/client/interfaces/Party)>
 ```
 ### registerModel
 ```ts
-(constructor: ModelConstructor<any>) => EchoProxy
+(constructor: ModelConstructor<any>) => [EchoProxy](/api/@dxos/client/classes/EchoProxy)
 ```
 ### toString
 ```ts

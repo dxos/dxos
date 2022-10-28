@@ -8,29 +8,25 @@ Represents a live-query (subscription) that can notify about future updates to t
 ## Constructors
 ### constructor
 ```ts
-<T, R> (_execute: function, _update: Event<Entity<Model<any, any>>[]>, _root: SelectionRoot, _reducer: boolean) => SelectionResult<T, R>
+<T, R> (_execute: function, _update: Event<[Entity](/api/@dxos/client/classes/Entity)<Model<any, any>>[]>, _root: SelectionRoot, _reducer: boolean) => [SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, R>
 ```
 
 ## Properties
 ### update 
-> Type: `Event<SelectionResult<T, any>>`
-<br/>
+Type: Event<[SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, any>>
 
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
 ### entities
-> Type: `T[]`
-<br/>
+Type: T[]
 
 Get the result of this selection.
 ### root
-> Type: `SelectionRoot`
-<br/>
+Type: SelectionRoot
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 ### value
-> Type: `[object Object] extends [object Object] ? [object Object] : [object Object]`
-<br/>
+Type: [object Object] extends [object Object] ? [object Object] : [object Object]
 
 Returns the selection or reducer result.
 
@@ -42,7 +38,7 @@ Returns the selection or reducer result.
 Return the first element if the set has exactly one element.
 ### refresh
 ```ts
-() => SelectionResult<T, R>
+() => [SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, R>
 ```
 Re-run query.
 ### toString

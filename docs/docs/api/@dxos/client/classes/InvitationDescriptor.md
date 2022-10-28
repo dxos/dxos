@@ -12,28 +12,22 @@ This descriptor might also have a bundled secret for authentication in interacti
 ## Constructors
 ### constructor
 ```ts
-(type: Type, swarmKey: PublicKey, invitation: Uint8Array, identityKey: PublicKey, secret: Uint8Array) => InvitationDescriptor
+(type: Type, swarmKey: [PublicKey](/api/@dxos/client/classes/PublicKey), invitation: Uint8Array, identityKey: [PublicKey](/api/@dxos/client/classes/PublicKey), secret: Uint8Array) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ```
 
 ## Properties
 ### identityKey 
-> Type: `PublicKey`
-<br/>
+Type: [PublicKey](/api/@dxos/client/classes/PublicKey)
 ### invitation 
-> Type: `Uint8Array`
-<br/>
+Type: Uint8Array
 ### secret 
-> Type: `Uint8Array`
-<br/>
+Type: Uint8Array
 ### swarmKey 
-> Type: `PublicKey`
-<br/>
+Type: [PublicKey](/api/@dxos/client/classes/PublicKey)
 ### type 
-> Type: `Type`
-<br/>
+Type: Type
 ### hash
-> Type: `string`
-<br/>
+Type: string
 
 ## Methods
 ### encode
@@ -51,13 +45,13 @@ This descriptor might also have a bundled secret for authentication in interacti
 Exports an InvitationDescriptor to an object suitable for use as query parameters.
 ### decode
 ```ts
-(code: string) => InvitationDescriptor
+(code: string) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ```
 ### fromProto
 ```ts
-(invitation: InvitationDescriptor) => InvitationDescriptor
+(invitation: InvitationDescriptor) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ```
 ### fromQueryParameters
 ```ts
-(queryParameters: InvitationQueryParameters) => InvitationDescriptor
+(queryParameters: InvitationQueryParameters) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ```

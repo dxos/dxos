@@ -3,6 +3,9 @@
 
 
 ## Properties
-### `invitationDescriptor: InvitationDescriptor`
-### `onAuthenticate: function`
-### `stream: Stream<RedeemedInvitation>`
+### invitationDescriptor 
+Type: `InvitationDescriptor`
+### onAuthenticate 
+Type: `function`
+### stream 
+Type: `Stream<RedeemedInvitation>`

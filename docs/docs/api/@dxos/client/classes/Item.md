@@ -9,50 +9,37 @@ The Item data structure is governed by a Model class, which implements data cons
 ## Constructors
 ### constructor
 ```ts
-<M> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, _writeStream: FeedWriter<EchoEnvelope>, parent: "null" | Item<any>) => Item<M>
+<M> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, _writeStream: FeedWriter<EchoEnvelope>, parent: "null" | [Item](/api/@dxos/client/classes/Item)<any>) => [Item](/api/@dxos/client/classes/Item)<M>
 ```
 Items are constructed by the  `Database`  object.
 
 ## Properties
 ### _itemManager 
-> Type: `ItemManager`
-<br/>
+Type: ItemManager
 ### _onUpdate 
-> Type: `Event<Entity<any>>`
-<br/>
+Type: Event<[Entity](/api/@dxos/client/classes/Entity)<any>>
 ### children
-> Type: `Item<any>[]`
-<br/>
+Type: [Item](/api/@dxos/client/classes/Item)<any>[]
 ### deleted
-> Type: `boolean`
-<br/>
+Type: boolean
 ### id
-> Type: `string`
-<br/>
+Type: string
 ### links
-> Type: `Link<any, any, any>[]`
-<br/>
+Type: [Link](/api/@dxos/client/classes/Link)<any, any, any>[]
 ### model
-> Type: `M`
-<br/>
+Type: M
 ### modelMeta
-> Type: `ModelMeta<any, any, any>`
-<br/>
+Type: ModelMeta<any, any, any>
 ### modelType
-> Type: `string`
-<br/>
+Type: string
 ### parent
-> Type: `"null" | Item<any>`
-<br/>
+Type: "null" | [Item](/api/@dxos/client/classes/Item)<any>
 ### readOnly
-> Type: `boolean`
-<br/>
+Type: boolean
 ### refs
-> Type: `Link<any, any, any>[]`
-<br/>
+Type: [Link](/api/@dxos/client/classes/Link)<any, any, any>[]
 ### type
-> Type: `undefined | string`
-<br/>
+Type: undefined | string
 
 ## Methods
 ### delete
@@ -67,7 +54,7 @@ Delete the item.
 Restore deleted item.
 ### select
 ```ts
-() => Selection<Item<any>, void>
+() => [Selection](/api/@dxos/client/classes/Selection)<[Item](/api/@dxos/client/classes/Item)<any>, void>
 ```
 Returns a selection context, which can be used to traverse the object graph starting from this item.
 ### setParent
