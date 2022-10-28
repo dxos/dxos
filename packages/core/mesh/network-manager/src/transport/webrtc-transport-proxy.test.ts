@@ -42,10 +42,9 @@ describe('WebRTCTransportProxy', function () {
   } = {}) => {
     const [port1, port2] = createLinkedPorts();
 
-    const webRTCTransportService: BridgeService = new WebRTCTransportService();
-
     // Starting BridgeService
-    const webRTCService = createProtoRpcPeer({
+    const webRTCTransportService: BridgeService = new WebRTCTransportService();
+    const rpcService = createProtoRpcPeer({
       requested: {},
       exposed: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
@@ -57,8 +56,8 @@ describe('WebRTCTransportProxy', function () {
         preserveAny: true
       }
     });
-    await webRTCService.open();
-    afterTest(() => webRTCService.close());
+    await rpcService.open();
+    afterTest(() => rpcService.close());
 
     // Starting RPC client
     const rpcClient = createProtoRpcPeer({
@@ -88,7 +87,7 @@ describe('WebRTCTransportProxy', function () {
     });
     afterTest(async () => await webRTCTransportProxy.close());
 
-    return { webRTCService, webRTCTransportProxy };
+    return { webRTCService: rpcService, webRTCTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
@@ -169,14 +168,12 @@ describe('WebRTCTransportProxy', function () {
     plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
-    console.log(1);
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('{"message": "Hello"}');
     });
-  })
-    .timeout(2_000);
+  }).timeout(2_000);
 
   describe('Multiplexing', function () {
     let service: any;

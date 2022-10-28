@@ -37,9 +37,10 @@ export class WebRTCTransport implements Transport {
   readonly errors = new ErrorStream();
 
   constructor(private readonly params: WebRTCTransportParams) {
-    log(`Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`);
+    console.log(
+      `Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`
+    );
 
-    log('Creating WebRTC connection', this.params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),

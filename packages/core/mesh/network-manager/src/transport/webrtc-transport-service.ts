@@ -33,29 +33,45 @@ export class WebRTCTransportService implements BridgeService {
   ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
+    const event = new Event<BridgeEvent>();
+
+    const duplex: Duplex = new Duplex({
+      read: () => {
+        console.log('Duplex read');
+      },
+      write: function (chunk) {
+        console.log('Duplex write:', chunk);
+        event.emit({ data: { payload: chunk } });
+      }
+    });
+
+    const transport = new WebRTCTransport({
+      initiator: request.initiator,
+      stream: duplex,
+      ownId: PublicKey.from(Buffer.from('')),
+      remoteId: PublicKey.from(Buffer.from('')),
+      sessionId: PublicKey.from(Buffer.from('')),
+      topic: PublicKey.from(Buffer.from('')),
+      sendSignal: (msg) => {
+        console.log('WebRTCTransport Signal');
+        event.emit({
+          signal: { payload: msg.data.signal }
+        });
+      }
+    });
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
       console.log(
         `Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
       );
-
       next({
         connection: {
           state: ConnectionState.CONNECTING
         }
       });
 
-      event.on((event) => next(event));
+      event.on((data) => next(data));
 
-      transport.peer.on('data', (chunk) => {
-        console.log('duplex data');
-        next({
-          data: {
-            payload: chunk
-          }
-        });
-      });
-
-      transport.connected.on(() => {
+      transport.connected.on(async () => {
         next({
           connection: {
             state: ConnectionState.CONNECTED
@@ -63,7 +79,7 @@ export class WebRTCTransportService implements BridgeService {
         });
       });
 
-      transport.errors.handle((err) => {
+      transport.errors.handle(async (err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
@@ -73,7 +89,7 @@ export class WebRTCTransportService implements BridgeService {
         close(err);
       });
 
-      transport.closed.on(() => {
+      transport.closed.on(async () => {
         next({
           connection: {
             state: ConnectionState.CLOSED
@@ -83,30 +99,6 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       ready();
-    });
-
-    const duplex: Duplex = new Duplex({
-      read: () => {},
-      write: function (chunk) {
-        console.log('Data duplex:', chunk);
-        event.emit({ data: { payload: chunk } });
-      }
-    });
-    const event = new Event<BridgeEvent>();
-
-    const transport = new WebRTCTransport({
-      initiator: request.initiator,
-      stream: duplex,
-      ownId: PublicKey.from(''),
-      remoteId: PublicKey.from(''),
-      sessionId: PublicKey.from(''),
-      topic: PublicKey.from(''),
-      sendSignal: (msg) => {
-        console.log('Signal');
-        event.emit({
-          signal: { payload: msg.data.signal }
-        });
-      }
     });
 
     this.transports.set(request.proxyId, { transport, stream: duplex });

@@ -43,7 +43,6 @@ export class WebRTCTransportProxy implements Transport {
       proxyId: this._proxyId,
       initiator: this._params.initiator
     });
-
     this._serviceStream.waitUntilReady().then(
       () => {
         this._serviceStream.subscribe(async (event: BridgeEvent) => {
