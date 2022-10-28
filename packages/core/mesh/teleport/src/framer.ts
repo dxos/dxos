@@ -82,7 +82,7 @@ export class Framer {
 
     if (offset < this._buffer!.length) {
       // Save the rest of the bytes for the next write call.
-      this._buffer = this._buffer!.slice(offset);
+      this._buffer = this._buffer!.subarray(offset);
     } else {
       this._buffer = undefined;
     }
@@ -102,7 +102,7 @@ export const readFrame = (buffer: Buffer, offset: number): { payload: Buffer; by
       return undefined;
     }
 
-    const payload = buffer.slice(offset + tagLength, offset + tagLength + frameLength);
+    const payload = buffer.subarray(offset + tagLength, offset + tagLength + frameLength);
 
     return {
       payload,
@@ -119,7 +119,7 @@ export const readFrame = (buffer: Buffer, offset: number): { payload: Buffer; by
 };
 
 const encodeLength = (length: number) => {
-  const res = varint.encode(length, Buffer.allocUnsafe(4)).slice(0, varint.encode.bytes);
+  const res = varint.encode(length, Buffer.allocUnsafe(4)).subarray(0, varint.encode.bytes);
   if (varint.encode.bytes > 4) {
     throw new Error('Frame too large');
   }
