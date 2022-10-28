@@ -11,42 +11,25 @@ import assert from "assert"
 export class Framer {
   // private readonly _tagBuffer = Buffer.alloc(4)
   private _messageCb?: (msg: Uint8Array) => void
-  // private _writeCb?: () => void
+  private _subscribeCb?: () => void
   private _buffer?: Buffer // The rest of the bytes from the previous write call.
 
   private readonly _stream = new Duplex({
     objectMode: false,
     read: () => {},
     write: (chunk, encoding, callback) => {
-      // assert(!this._writeCb, 'Internal Framer bug. Concurrent writes detected.')
-      assert(this._messageCb, 'TODO: Message CB buffering')
+      assert(!this._subscribeCb, 'Internal Framer bug. Concurrent writes detected.')
 
-      if(this._buffer && this._buffer.length > 0) {
-        this._buffer = Buffer.concat([this._buffer, chunk])
+      if(this._messageCb) {
+        this._process(chunk, callback)
       } else {
-        this._buffer = chunk
-      }
-
-      let offset = 0;
-      while (offset < this._buffer!.length) {
-        const frame = readFrame(this._buffer!, offset)
-        // console.log(`pop chunk=${this._buffer!.length} offset=${offset} consumed=${frame?.bytesConsumed} length=${frame?.payload.length}`)
-
-        if(!frame) {
-          break; // Couldn't read frame but there are still bytes left in the buffer.
+        this._subscribeCb = () => { // Schedule the processing of the chunk after the peer subscribes to the messages.
+          this._process(chunk, () => {
+            this._subscribeCb = undefined
+            callback()
+          })
         }
-        offset += frame.bytesConsumed
-        this._messageCb!(frame.payload)
       }
-
-      if(offset < this._buffer!.length) { // Save the rest of the bytes for the next write call.
-        this._buffer = this._buffer!.slice(offset)
-      } else {
-        this._buffer = undefined
-      }
-      // console.log('keep', this._buffer?.length ?? 0)
-
-      callback()
     }
   })
   
@@ -59,7 +42,7 @@ export class Framer {
       assert(!this._messageCb, 'Rpc port already has a message listener.');
       console.log('SUbbed')
       this._messageCb = callback
-      // this._writeCb?.()
+      this._subscribeCb?.()
       return () => {
         this._messageCb = undefined
       }
@@ -68,6 +51,36 @@ export class Framer {
 
   get stream (): NodeJS.ReadWriteStream {
     return this._stream
+  }
+
+  private _process(chunk: Buffer, callback: () => void) {
+    if(this._buffer && this._buffer.length > 0) {
+      this._buffer = Buffer.concat([this._buffer, chunk])
+    } else {
+      this._buffer = chunk
+    }
+
+    let offset = 0;
+    while (offset < this._buffer!.length) {
+      const frame = readFrame(this._buffer!, offset)
+      // console.log(`pop chunk=${this._buffer!.length} offset=${offset} consumed=${frame?.bytesConsumed} length=${frame?.payload.length}`)
+
+      if(!frame) {
+        break; // Couldn't read frame but there are still bytes left in the buffer.
+      }
+      offset += frame.bytesConsumed
+      // TODO(dmaretskyi): Possible bug if the peer unsubscribes while we're reading frames.
+      this._messageCb!(frame.payload)
+    }
+
+    if(offset < this._buffer!.length) { // Save the rest of the bytes for the next write call.
+      this._buffer = this._buffer!.slice(offset)
+    } else {
+      this._buffer = undefined
+    }
+    // console.log('keep', this._buffer?.length ?? 0)
+
+    callback()
   }
 }
 

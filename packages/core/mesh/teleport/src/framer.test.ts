@@ -84,16 +84,7 @@ describe('Framer', () => {
     const framesReceived: Buffer[] = []
     let subscribed = false
 
-    if(!subscribed) { // Simulate subscription delay
-      subscribed = true
-      console.log("subscribing")
-      peer2.port.subscribe(message => {
-
-        console.log('rcv', message.length)
-        framesReceived.push(Buffer.from(message))
-      })
-    }
-
+  
     console.log('Start sending frames\n=================\n')
 
     const TOTAL_FRAMES = 1000
@@ -103,8 +94,20 @@ describe('Framer', () => {
       peer2.port.send(frame)
       framesSent.push(frame)
 
-      if(Math.random() < 0.1) { // 10% chance to pause and check the list.
-        await sleep(40) // Must be longer the pipe's flush interval
+      if(Math.random() < 0.1) { // 10% chance to pause and check the messages.
+        await sleep(20)
+
+        if(!subscribed) { // Simulate subscription delay
+          subscribed = true
+          console.log("subscribing")
+          peer2.port.subscribe(message => {
+    
+            console.log('rcv', message.length)
+            framesReceived.push(Buffer.from(message))
+          })
+        }
+
+        await sleep(20) // Must be longer the pipe's flush interval
         expect(framesReceived.length).to.deep.eq(framesSent.length)
         for(const i in framesSent) {
           expect(framesReceived[i]).to.deep.eq(framesSent[i], `Frame ${i} does not match`)
