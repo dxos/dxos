@@ -12,8 +12,7 @@ message Command {
     OpenChannel open_channel = 2;
     OpenStream open_stream = 3;
     Data data = 4;
-    Finalize finalize = 5;
-    Destroy destroy = 6;
+    Destroy destroy = 5;
   }
 }
 
@@ -38,10 +37,6 @@ message OpenStream {
 message Data {
   int32 stream_id = 1;
   bytes data = 2;
-}
-
-// Request graceful shutdown. After this peers have some time to exchange extra messages and terminate the connection
-message Finalize {
 }
 
 // Terminate the connection. The other peer can expect the connection to be closed.

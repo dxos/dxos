@@ -87,6 +87,10 @@ export class Framer {
       this._buffer = undefined;
     }
   }
+
+  destroy() {
+    this._stream.destroy();
+  }
 }
 
 /**

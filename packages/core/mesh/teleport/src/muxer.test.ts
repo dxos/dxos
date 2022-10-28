@@ -4,12 +4,14 @@
 
 import { expect } from 'chai';
 
-import { latch } from '@dxos/async';
+import { latch, promiseTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Muxer } from './muxer';
+import { RpcPort } from './rpc-port';
+import { TestService } from '@dxos/protocols/dist/src/proto/gen/example/testing/rpc';
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -30,33 +32,37 @@ const setupPeers = () => {
   };
 };
 
+const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
+  createProtoRpcPeer({
+    requested: {
+      TestService: schema.getService('example.testing.rpc.TestService')
+    },
+    exposed: {
+      TestService: schema.getService('example.testing.rpc.TestService')
+    },
+    handlers: {
+      TestService: {
+        testCall: handler,
+        voidCall: async () => {}
+      }
+    },
+    port
+  });
+
 describe('Muxer', function () {
-  it('Rpc', async function () {
+  it('rpc calls on 1 port', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
     for (const peer of [peer1, peer2]) {
       peer.createChannel('dxos.test.extension1', (channel) => {
-        const client = createProtoRpcPeer({
-          requested: {
-            TestService: schema.getService('example.testing.rpc.TestService')
-          },
-          exposed: {
-            TestService: schema.getService('example.testing.rpc.TestService')
-          },
-          handlers: {
-            TestService: {
-              testCall: async ({ data }) => {
-                return { data };
-              },
-              voidCall: async () => {}
-            }
-          },
-          port: channel.createPort('rpc', {
+        const client = createRpc(
+          channel.createPort('rpc', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
-          })
-        });
+          }),
+          async ({ data }) => ({ data })
+        );
 
         setTimeout(async () => {
           await client.open();
@@ -68,4 +74,95 @@ describe('Muxer', function () {
 
     await wait();
   });
+
+  it('destroy releases other stream', async () => {
+    const { peer1, peer2 } = setupPeers();
+
+    const promise = promiseTimeout(peer1.close.waitForCount(1), 100);
+
+    peer2.destroy();
+
+    await promise;
+  });
+
+  it('two concurrent rpc ports', async () => {
+    const { peer1, peer2 } = setupPeers();
+
+    const [wait, inc] = latch({ count: 4, timeout: 500 });
+
+    for (const peer of [peer1, peer2]) {
+      peer.createChannel('dxos.test.extension', (channel) => {
+        {
+          const client = createRpc(
+            channel.createPort('rpc1', {
+              contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+            }),
+            async ({ data }) => ({ data: data + '-rpc1' })
+          );
+
+          setTimeout(async () => {
+            await client.open();
+            expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
+            inc();
+          });
+        }
+        {
+          const client = createRpc(
+            channel.createPort('rpc2', {
+              contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+            }),
+            async ({ data }) => ({ data: data + '-rpc2' })
+          );
+
+          setTimeout(async () => {
+            await client.open();
+            expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
+            inc();
+          });
+        }
+      });
+    }
+
+    await wait();
+  });
+
+  it('two extensions', async () => {
+    const { peer1, peer2 } = setupPeers();
+
+    const [wait, inc] = latch({ count: 4, timeout: 500 });
+
+    for (const peer of [peer1, peer2]) {
+      peer.createChannel('dxos.test.extension1', (channel) => {
+        const client = createRpc(
+          channel.createPort('rpc', {
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+          }),
+          async ({ data }) => ({ data: data + '-rpc1' })
+        );
+
+        setTimeout(async () => {
+          await client.open();
+          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
+          inc();
+        });
+      });
+
+      peer.createChannel('dxos.test.extension2', (channel) => {
+        const client = createRpc(
+          channel.createPort('rpc', {
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+          }),
+          async ({ data }) => ({ data: data + '-rpc2' })
+        );
+
+        setTimeout(async () => {
+          await client.open();
+          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
+          inc();
+        });
+      });
+    }
+
+    await wait();
+  })
 });
