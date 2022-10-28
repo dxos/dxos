@@ -8,7 +8,7 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
+import { MMSTTopology, NetworkManager, Plugin, SwarmConnection } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
@@ -46,6 +46,8 @@ export class SpaceProtocol {
 
   readonly authenticationFailed: Event;
 
+  private _connection?: SwarmConnection;
+
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
 
@@ -67,7 +69,10 @@ export class SpaceProtocol {
   }
 
   async start() {
-    log('starting...');
+    if (this._connection) {
+      return;
+    }
+
     // TODO(burdon): Document why empty buffer.
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
@@ -78,7 +83,8 @@ export class SpaceProtocol {
       sampleSize: 20
     };
 
-    await this._networkManager.joinProtocolSwarm({
+    log('starting...');
+    this._connection = await this._networkManager.openSwarmConnection({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
@@ -86,13 +92,16 @@ export class SpaceProtocol {
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._discoveryKey}`
     });
+
     log('started');
   }
 
   async stop() {
-    log('stopping...');
-    await this._networkManager.leaveProtocolSwarm(this._discoveryKey);
-    log('stopped');
+    if (this._connection) {
+      log('stopping...');
+      await this._connection.close();
+      log('stopped');
+    }
   }
 
   private _createProtocol(

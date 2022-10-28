@@ -15,6 +15,8 @@ import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/crede
 import { InvitationDescriptor, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
+// TODO(burdon): Create and builder.
+
 // TODO(burdon): Objective: Service impl pattern with clean open/close semantics.
 // TODO(burdon): Isolate deps on protocol throughout echo-db.
 
@@ -172,21 +174,14 @@ export class SpaceInvitations {
   //
 
   // TODO(burdon): Timeout.
-  // TODO(burdon): Integrate this handler into the network manager calls.
   private async _joinSwarm(topic: PublicKey, plugin: RpcPlugin) {
-    await this._networkManager.joinProtocolSwarm({
+    return await this._networkManager.openSwarmConnection({
       topic,
       peerId: PublicKey.random(),
       topology: new StarTopology(topic),
       // TODO(burdon): Second arg should be peerKey?
       protocol: createProtocolFactory(topic, topic, [plugin])
     });
-
-    return {
-      close: async () => {
-        await this._networkManager.leaveProtocolSwarm(topic);
-      }
-    };
   }
 }
 

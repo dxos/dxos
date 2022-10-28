@@ -126,7 +126,7 @@ export class RpcPeer {
   /**
    * Close the peer. Stop taking or making requests.
    */
-  close() {
+  async close() {
     this._unsubscribe?.();
     this._clearOpenInterval?.();
     for (const req of this._outgoingRequests.values()) {

@@ -36,7 +36,7 @@ export class HaloInvitations {
 
     // TODO(burdon): Use data-invitation's swarm abstraction.
     const swarmKey = PublicKey.random();
-    await this._networkManager.joinProtocolSwarm({
+    await this._networkManager.openSwarmConnection({
       topic: swarmKey,
       peerId: swarmKey,
       topology: new StarTopology(swarmKey),
@@ -98,7 +98,7 @@ export class HaloInvitations {
 
     let connected = false;
     const done = new Trigger();
-    await this._networkManager.joinProtocolSwarm({
+    await this._networkManager.openSwarmConnection({
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),

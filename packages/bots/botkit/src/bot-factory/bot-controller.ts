@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
@@ -21,12 +21,17 @@ export class BotController {
   private readonly _service: ServiceDescriptor<BotFactoryService> = schema.getService('dxos.bot.BotFactoryService');
 
   private readonly _peers: Map<string, RpcPeer> = new Map();
+  private _connection?: SwarmConnection;
 
-  constructor(private _botFactory: BotFactoryService, private _networkManager: NetworkManager) {}
+  // prettier-ignore
+  constructor(
+    private _botFactory: BotFactoryService,
+    private _networkManager: NetworkManager
+  ) {}
 
   async start(topic: PublicKey): Promise<void> {
     const plugin = new RpcPlugin(this._onPeerConnect.bind(this));
-    await this._networkManager.joinProtocolSwarm({
+    this._connection = await this._networkManager.openSwarmConnection({
       topic,
       peerId: topic,
       protocol: createProtocolFactory(topic, topic, [plugin]),
@@ -36,6 +41,10 @@ export class BotController {
     log(`Listening on topic: ${topic}`);
   }
 
+  async close() {
+    await this._connection?.close();
+  }
+
   private async _onPeerConnect(port: RpcPort, peerId: string) {
     log(`[${peerId}]: Peer connected`);
     const peer = createRpcServer({
@@ -43,8 +52,10 @@ export class BotController {
       handlers: this._botFactory,
       port
     });
+
     await peer.open();
     this._peers.set(peerId, peer);
+
     log(`[${peerId}]: Peer initialized`);
     return () => {
       this._peers.delete(peerId);

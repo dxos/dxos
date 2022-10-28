@@ -29,7 +29,7 @@ const createPeer = async (topic: PublicKey) => {
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   afterTest(() => presencePlugin.stop());
 
-  await networkManager.joinProtocolSwarm({
+  await networkManager.openSwarmConnection({
     peerId,
     protocol: createProtocolFactory(topic, peerId, [presencePlugin]),
     topic,
@@ -67,7 +67,7 @@ describe('Presence', function () {
       );
     });
 
-    await peer2.networkManager.leaveProtocolSwarm(topic);
+    await peer2.networkManager.closeSwarmConnection(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(

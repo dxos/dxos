@@ -27,8 +27,8 @@ export class ProtoRpcPeer<S> {
     await this.peer.open();
   }
 
-  close() {
-    this.peer.close();
+  async close() {
+    await this.peer.close();
   }
 }
 

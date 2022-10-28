@@ -65,7 +65,7 @@ const createPeer = async ({
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.openSwarmConnection({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -330,7 +330,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => !model.peers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.peers.add(this.peerId);
 
@@ -354,7 +353,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.peers.delete(this.peerId);
           model.joinedPeers.delete(this.peerId);
@@ -373,7 +371,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.joinedPeers.add(this.peerId);
 
@@ -383,7 +380,7 @@ describe('Network manager', function () {
           afterTest(() => presence.stop());
           const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-          await peer.networkManager.joinProtocolSwarm({
+          await peer.networkManager.openSwarmConnection({
             peerId: this.peerId, // TODO(burdon): `this`?
             topic: model.topic,
             protocol,
@@ -403,13 +400,12 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.joinedPeers.delete(this.peerId);
 
           const peer = real.peers.get(this.peerId)!;
 
-          await peer.networkManager.leaveProtocolSwarm(model.topic);
+          await peer.networkManager.closeSwarmConnection(model.topic);
           peer.presence = undefined;
 
           await assertState(model, real);
@@ -419,7 +415,6 @@ describe('Network manager', function () {
       }
 
       const peerIds = range(10).map(() => PublicKey.random());
-
       const aPeerId = fc.constantFrom(...peerIds);
 
       const allCommands = [
@@ -552,20 +547,17 @@ function sharedTests({
     });
 
     await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
-
     log('Connected');
 
     const promise1 = Event.wrap(plugin1, 'disconnect').waitForCount(1);
     const promise2 = Event.wrap(plugin2, 'disconnect').waitForCount(1);
 
-    await networkManager1.leaveProtocolSwarm(topic);
+    await networkManager1.closeSwarmConnection(topic);
 
     await promise1;
-
     log('Peer1 disconnected');
 
     await promise2;
-
     log('Peer2 disconnected');
 
     await networkManager1.destroy();
@@ -595,7 +587,6 @@ function sharedTests({
     });
 
     await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
-
     log('Connected');
 
     const disconnectPromises = Promise.all([
@@ -609,11 +600,11 @@ function sharedTests({
     ]);
 
     log('Disconnecting peer2');
-    await networkManager2.leaveProtocolSwarm(topic);
+    await networkManager2.closeSwarmConnection(topic);
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    await networkManager2.joinProtocolSwarm({
+    await networkManager2.openSwarmConnection({
       topic,
       peerId: newPeer2Id,
       protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
@@ -621,7 +612,6 @@ function sharedTests({
     });
 
     await disconnectPromises;
-
     await connectPromises;
 
     await networkManager1.destroy();
@@ -648,7 +638,7 @@ function sharedTests({
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
-      await networkManager.joinProtocolSwarm({
+      await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
@@ -667,7 +657,7 @@ function sharedTests({
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
-      await networkManager.joinProtocolSwarm({
+      await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
@@ -720,6 +710,7 @@ function sharedTests({
       return undefined;
     };
     pluginA1.on('receive', mockReceiveA);
+
     const receivedB: any[] = [];
     const mockReceiveB = (p: Protocol, s: string) => {
       receivedB.push(p, s);
@@ -728,19 +719,19 @@ function sharedTests({
     pluginB1.on('receive', mockReceiveB);
 
     pluginA2.on('connect', async () => {
-      await pluginA2.send(peerA1Id.asBuffer(), 'Foo A');
+      await pluginA2.send(peerA1Id.asBuffer(), 'Test A');
     });
     pluginB2.on('connect', async () => {
-      await pluginB2.send(peerB1Id.asBuffer(), 'Foo B');
+      await pluginB2.send(peerB1Id.asBuffer(), 'Test B');
     });
 
     await waitForExpect(() => {
       expect(receivedA.length).toBe(2);
       expect(receivedA[0]).toBeInstanceOf(Protocol);
-      expect(receivedA[1]).toBe('Foo A');
+      expect(receivedA[1]).toBe('Test A');
       expect(receivedB.length).toBe(2);
       expect(receivedB[0]).toBeInstanceOf(Protocol);
-      expect(receivedB[1]).toBe('Foo B');
+      expect(receivedB[1]).toBe('Test B');
     });
   });
 }
