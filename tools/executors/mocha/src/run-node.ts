@@ -26,7 +26,6 @@ export type NodeOptions = {
 };
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
-  console.log(options)
   const reporterArgs = await setupReporter(context, options);
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
   const setupArgs = getSetupArgs(context.root, options.domRequired);
