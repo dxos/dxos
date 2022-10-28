@@ -40,7 +40,6 @@ export class Framer {
     },
     subscribe: (callback) => {
       assert(!this._messageCb, 'Rpc port already has a message listener.');
-      console.log('SUbbed')
       this._messageCb = callback
       this._subscribeCb?.()
       return () => {
@@ -63,7 +62,6 @@ export class Framer {
     let offset = 0;
     while (offset < this._buffer!.length) {
       const frame = readFrame(this._buffer!, offset)
-      // console.log(`pop chunk=${this._buffer!.length} offset=${offset} consumed=${frame?.bytesConsumed} length=${frame?.payload.length}`)
 
       if(!frame) {
         break; // Couldn't read frame but there are still bytes left in the buffer.
@@ -78,7 +76,6 @@ export class Framer {
     } else {
       this._buffer = undefined
     }
-    // console.log('keep', this._buffer?.length ?? 0)
 
     callback()
   }
