@@ -28,8 +28,8 @@ const setupPeers = () => {
 describe.skip('Muxer', function () {
   it('1 channel with 1 stream', function () {
     const { peer1, peer2 } = setupPeers();
-    // peer1.createChannel('dxos.test.extension1', channel => {
-    //   const stream = channel.
-    // })
+    peer1.createChannel('dxos.test.extension1', channel => {
+      const port = channel.createPort('messages')
+    })
   });
 });
