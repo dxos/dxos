@@ -21,12 +21,12 @@ Returns an immutable config JSON object.
 ## Methods
 ### get
 ```ts
-<K> (key: K, defaultValue: [DeepIndex](/api/@dxos/config/types/DeepIndex)<[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)<K>, undefined>) => [DeepIndex](/api/@dxos/config/types/DeepIndex)<[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)<K>, undefined>
+<K> (key: K, defaultValue: [DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;) => [DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;
 ```
 Returns the given config property.
 ### getOrThrow
 ```ts
-<K> (key: K) => Exclude<[DeepIndex](/api/@dxos/config/types/DeepIndex)<[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)<K>, undefined>, undefined>
+<K> (key: K) => Exclude&lt;[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;, undefined&gt;
 ```
 Returns the given config property or throw if it doesn't exist.
 ### getUnchecked

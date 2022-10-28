@@ -40,23 +40,23 @@ Client services that can be proxied.
 ## Methods
 ### destroy
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 Cleanup, release resources.
 ### initialize
 ```ts
-(onProgressCallback: function) => Promise<void>
+(onProgressCallback: function) => Promise&lt;void&gt;
 ```
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
 ### registerModel
 ```ts
-(constructor: ModelConstructor<any>) => [Client](/api/@dxos/client/classes/Client)
+(constructor: ModelConstructor&lt;any&gt;) => [Client](/api/@dxos/client/classes/Client)
 ```
 Registers a new ECHO model.
 ### reset
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.

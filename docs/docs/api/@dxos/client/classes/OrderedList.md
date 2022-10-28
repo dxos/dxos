@@ -12,7 +12,7 @@ Utility class that wraps an  `ObjectModel`  and implements a linked list via key
 
 ## Properties
 ### update 
-Type: Event<string[]>
+Type: Event&lt;string[]&gt;
 ### id
 Type: string
 ### values
@@ -27,12 +27,12 @@ Get ordered values.
 ```
 ### init
 ```ts
-(values: string[]) => Promise<string[]>
+(values: string[]) => Promise&lt;string[]&gt;
 ```
 Clears the ordered set with the optional values.
 ### insert
 ```ts
-(left: string, right: string) => Promise<string[]>
+(left: string, right: string) => Promise&lt;string[]&gt;
 ```
 Links the ordered items, possibly linking them to existing items.
 ### refresh
@@ -42,6 +42,6 @@ Links the ordered items, possibly linking them to existing items.
 Refresh list from properties.
 ### remove
 ```ts
-(values: string[]) => Promise<string[]>
+(values: string[]) => Promise&lt;string[]&gt;
 ```
 Removes the given element, possibly linked currently connected items.

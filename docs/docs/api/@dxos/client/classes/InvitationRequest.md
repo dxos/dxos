@@ -7,22 +7,22 @@ Invitation created by sender.
 ## Constructors
 ### constructor
 ```ts
-(_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), connected: Event<void>, finished: Event<void>, error: Event<Error>) => [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)
+(_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), connected: Event&lt;void&gt;, finished: Event&lt;void&gt;, error: Event&lt;Error&gt;) => [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)
 ```
 
 ## Properties
 ### canceled 
-Type: Event<void>
+Type: Event&lt;void&gt;
 ### connected 
-Type: Event<void>
+Type: Event&lt;void&gt;
 
 Fired when the remote peer connects.
 ### error 
-Type: Event<Error>
+Type: Event&lt;Error&gt;
 
 Fired when there's an error in the invitation process.
 ### finished 
-Type: Event<void>
+Type: Event&lt;void&gt;
 
 Fired when the invitation process completes successfully.
 ### descriptor
@@ -46,6 +46,6 @@ Cancel the invitation.
 ```
 ### wait
 ```ts
-(timeout: number) => Promise<void>
+(timeout: number) => Promise&lt;void&gt;
 ```
 Wait until connected.

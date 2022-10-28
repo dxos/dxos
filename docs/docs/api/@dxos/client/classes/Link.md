@@ -7,14 +7,14 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 ## Constructors
 ### constructor
 ```ts
-<M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager<NonNullable<M>>, link: LinkData) => [Link](/api/@dxos/client/classes/Link)<M, L, R>
+<M, L, R> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager&lt;NonNullable&lt;M&gt;&gt;, link: LinkData) => [Link](/api/@dxos/client/classes/Link)&lt;M, L, R&gt;
 ```
 
 ## Properties
 ### _itemManager 
 Type: ItemManager
 ### _onUpdate 
-Type: Event<[Entity](/api/@dxos/client/classes/Entity)<any>>
+Type: Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;&gt;
 ### id
 Type: string
 ### isLink
@@ -22,15 +22,15 @@ Type: "true"
 ### model
 Type: M
 ### modelMeta
-Type: ModelMeta<any, any, any>
+Type: ModelMeta&lt;any, any, any&gt;
 ### modelType
 Type: string
 ### source
-Type: [Item](/api/@dxos/client/classes/Item)<L>
+Type: [Item](/api/@dxos/client/classes/Item)&lt;L&gt;
 ### sourceId
 Type: string
 ### target
-Type: [Item](/api/@dxos/client/classes/Item)<R>
+Type: [Item](/api/@dxos/client/classes/Item)&lt;R&gt;
 ### targetId
 Type: string
 ### type

@@ -12,7 +12,7 @@ Client proxy to local/remote HALO service.
 
 ## Properties
 ### profileChanged 
-Type: Event<void>
+Type: Event&lt;void&gt;
 ### info
 Type: [HaloInfo](/api/@dxos/client/interfaces/HaloInfo)
 ### invitationProxy
@@ -25,7 +25,7 @@ User profile info.
 ## Methods
 ### acceptInvitation
 ```ts
-(invitationDescriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)) => [Invitation](/api/@dxos/client/classes/Invitation)<void>
+(invitationDescriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)) => [Invitation](/api/@dxos/client/classes/Invitation)&lt;void&gt;
 ```
 Joins an existing identity HALO by invitation.
 Used to authorize another device of the same user.
@@ -35,11 +35,11 @@ The invitation flow is protected by a generated pin code.
 To be used with  `client.halo.createHaloInvitation`  on the inviter side.
 ### addKeyRecord
 ```ts
-(keyRecord: [KeyRecord](/api/@dxos/client/interfaces/KeyRecord)) => Promise<void>
+(keyRecord: [KeyRecord](/api/@dxos/client/interfaces/KeyRecord)) => Promise&lt;void&gt;
 ```
 ### createInvitation
 ```ts
-() => Promise<[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)>
+() => Promise&lt;[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)&gt;
 ```
 Creates an invitation to an existing HALO party.
 Used to authorize another device of the same user.
@@ -49,7 +49,7 @@ The invitation flow is protected by a generated pin code.
 To be used with  `client.halo.joinHaloInvitation`  on the invitee side.
 ### createProfile
 ```ts
-(__namedParameters: any) => Promise<[Profile](/api/@dxos/client/interfaces/Profile)>
+(__namedParameters: any) => Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;
 ```
 Create Profile.
 Add Identity key if public and secret key are provided.
@@ -58,37 +58,37 @@ If no public and secret key or seedphrase are provided it relies on keyring to c
 Seedphrase must not be specified with existing keys.
 ### getDevicePreference
 ```ts
-(key: string) => Promise<undefined | string>
+(key: string) => Promise&lt;undefined | string&gt;
 ```
 ### getGlobalPreference
 ```ts
-(key: string) => Promise<undefined | string>
+(key: string) => Promise&lt;undefined | string&gt;
 ```
 ### queryContacts
 ```ts
-() => [ResultSet](/api/@dxos/client/classes/ResultSet)<any>
+() => [ResultSet](/api/@dxos/client/classes/ResultSet)&lt;any&gt;
 ```
 Query for contacts. Contacts represent member keys across all known Parties.
 ### queryDevices
 ```ts
-() => Promise<DeviceInfo[]>
+() => Promise&lt;DeviceInfo[]&gt;
 ```
 ### recoverProfile
 ```ts
-(seedPhrase: string) => Promise<[Profile](/api/@dxos/client/interfaces/Profile)>
+(seedPhrase: string) => Promise&lt;[Profile](/api/@dxos/client/interfaces/Profile)&gt;
 ```
 Joins an existing identity HALO from a recovery seed phrase.
 ### setDevicePreference
 ```ts
-(key: string, value: string) => Promise<void>
+(key: string, value: string) => Promise&lt;void&gt;
 ```
 ### setGlobalPreference
 ```ts
-(key: string, value: string) => Promise<void>
+(key: string, value: string) => Promise&lt;void&gt;
 ```
 ### sign
 ```ts
-(request: [SignRequest](/api/@dxos/client/interfaces/SignRequest)) => Promise<[SignResponse](/api/@dxos/client/interfaces/SignResponse)>
+(request: [SignRequest](/api/@dxos/client/interfaces/SignRequest)) => Promise&lt;[SignResponse](/api/@dxos/client/interfaces/SignResponse)&gt;
 ```
 ### subscribeToProfile
 ```ts

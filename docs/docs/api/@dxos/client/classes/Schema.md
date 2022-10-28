@@ -19,15 +19,15 @@ Type: string
 ## Methods
 ### addField
 ```ts
-(newField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise<void>
+(newField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise&lt;void&gt;
 ```
 ### deleteField
 ```ts
-(key: string) => Promise<void>
+(key: string) => Promise&lt;void&gt;
 ```
 ### editField
 ```ts
-(currentKey: string, editedField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise<void>
+(currentKey: string, editedField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise&lt;void&gt;
 ```
 ### getField
 ```ts

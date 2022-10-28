@@ -7,27 +7,27 @@ Object mutation model.
 ## Constructors
 ### constructor
 ```ts
-(_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => [ObjectModel](/api/@dxos/client/classes/ObjectModel)
+(_meta: ModelMeta&lt;any, any, any&gt;, _itemId: string, _getState: function, _mutationWriter: MutationWriter&lt;ObjectMutationSet&gt;) => [ObjectModel](/api/@dxos/client/classes/ObjectModel)
 ```
 
 ## Properties
 ### _getState 
 Type: function
 ### update 
-Type: Event<Model<ObjectModelState, ObjectMutationSet>>
+Type: Event&lt;Model&lt;ObjectModelState, ObjectMutationSet&gt;&gt;
 ### meta 
-Type: ModelMeta<any, any, any>
+Type: ModelMeta&lt;any, any, any&gt;
 ### itemId
 Type: string
 ### modelMeta
-Type: ModelMeta<any, any, any>
+Type: ModelMeta&lt;any, any, any&gt;
 ### readOnly
 Type: boolean
 
 ## Methods
 ### addToSet
 ```ts
-(key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise&lt;void&gt;
 ```
 ### builder
 ```ts
@@ -43,23 +43,23 @@ Type: boolean
 ```
 ### pushToArray
 ```ts
-(key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise&lt;void&gt;
 ```
 ### removeFromSet
 ```ts
-(key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise&lt;void&gt;
 ```
 ### set
 ```ts
-(key: string, value: unknown) => Promise<void>
+(key: string, value: unknown) => Promise&lt;void&gt;
 ```
 ### setProperties
 ```ts
-(properties: any) => Promise<void>
+(properties: any) => Promise&lt;void&gt;
 ```
 ### setProperty
 ```ts
-(key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise&lt;void&gt;
 ```
 ### subscribe
 ```ts
@@ -80,6 +80,6 @@ Returns an immutable object.
 ```
 ### write
 ```ts
-(mutation: ObjectMutationSet) => Promise<MutationWriteReceipt>
+(mutation: ObjectMutationSet) => Promise&lt;MutationWriteReceipt&gt;
 ```
 Writes the raw mutation to the output stream.

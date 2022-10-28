@@ -1,3 +1,4 @@
+import { escapeHtml } from 'markdown-it/lib/common/utils';
 import { JSONOutput as Schema, ReflectionKind } from 'typedoc';
 import {
   packageOfReflectionId,
@@ -74,9 +75,9 @@ export class TypeStringifier implements AllStringifiers {
     const name = node.name;
     let typeArgs = '';
     if (node.typeArguments) {
-      typeArgs += '<';
+      typeArgs += escapeHtml('<');
       typeArgs += this.list(node.typeArguments, ', ');
-      typeArgs += '>';
+      typeArgs += escapeHtml('>');
     }
     let href = '';
     if (node.id) {

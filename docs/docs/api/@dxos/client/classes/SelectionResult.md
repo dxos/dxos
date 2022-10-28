@@ -8,12 +8,12 @@ Represents a live-query (subscription) that can notify about future updates to t
 ## Constructors
 ### constructor
 ```ts
-<T, R> (_execute: function, _update: Event<[Entity](/api/@dxos/client/classes/Entity)<Model<any, any>>[]>, _root: SelectionRoot, _reducer: boolean) => [SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, R>
+<T, R> (_execute: function, _update: Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;Model&lt;any, any&gt;&gt;[]&gt;, _root: SelectionRoot, _reducer: boolean) => [SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;
 ```
 
 ## Properties
 ### update 
-Type: Event<[SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, any>>
+Type: Event&lt;[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, any&gt;&gt;
 
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
@@ -38,7 +38,7 @@ Returns the selection or reducer result.
 Return the first element if the set has exactly one element.
 ### refresh
 ```ts
-() => [SelectionResult](/api/@dxos/client/classes/SelectionResult)<T, R>
+() => [SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;
 ```
 Re-run query.
 ### toString

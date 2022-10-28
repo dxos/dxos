@@ -16,9 +16,9 @@ Import/export party.
 ## Methods
 ### deserializeParty
 ```ts
-(data: Uint8Array) => Promise<[Party](/api/@dxos/client/interfaces/Party)>
+(data: Uint8Array) => Promise&lt;[Party](/api/@dxos/client/interfaces/Party)&gt;
 ```
 ### serializeParty
 ```ts
-(party: [Party](/api/@dxos/client/interfaces/Party)) => Promise<Blob>
+(party: [Party](/api/@dxos/client/interfaces/Party)) => Promise&lt;Blob&gt;
 ```

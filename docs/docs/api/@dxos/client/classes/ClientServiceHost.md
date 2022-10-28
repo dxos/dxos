@@ -19,9 +19,9 @@ Type: ClientServices
 ## Methods
 ### close
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 ### open
 ```ts
-(onProgressCallback: function) => Promise<void>
+(onProgressCallback: function) => Promise&lt;void&gt;
 ```

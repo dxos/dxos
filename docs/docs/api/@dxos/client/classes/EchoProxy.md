@@ -28,12 +28,12 @@ Joins an existing Party by invitation.
 To be used with  `party.createInvitation`  on the inviter side.
 ### cloneParty
 ```ts
-(snapshot: PartySnapshot) => Promise<[Party](/api/@dxos/client/interfaces/Party)>
+(snapshot: PartySnapshot) => Promise&lt;[Party](/api/@dxos/client/interfaces/Party)&gt;
 ```
 Clones the party from a snapshot.
 ### createParty
 ```ts
-() => Promise<[Party](/api/@dxos/client/interfaces/Party)>
+() => Promise&lt;[Party](/api/@dxos/client/interfaces/Party)&gt;
 ```
 Creates a new party.
 ### getParty
@@ -43,11 +43,11 @@ Creates a new party.
 Returns an individual party by its key.
 ### queryParties
 ```ts
-() => [ResultSet](/api/@dxos/client/classes/ResultSet)<[Party](/api/@dxos/client/interfaces/Party)>
+() => [ResultSet](/api/@dxos/client/classes/ResultSet)&lt;[Party](/api/@dxos/client/interfaces/Party)&gt;
 ```
 ### registerModel
 ```ts
-(constructor: ModelConstructor<any>) => [EchoProxy](/api/@dxos/client/classes/EchoProxy)
+(constructor: ModelConstructor&lt;any&gt;) => [EchoProxy](/api/@dxos/client/classes/EchoProxy)
 ```
 ### toString
 ```ts

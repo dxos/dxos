@@ -35,15 +35,15 @@ Returns a selection context, which can be used to traverse the object graph.
 ## Methods
 ### _setOpen
 ```ts
-(open: boolean) => Promise<void>
+(open: boolean) => Promise&lt;void&gt;
 ```
 ### close
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 ### createInvitation
 ```ts
-(inviteeKey: [CreationInvitationOptions](/api/@dxos/client/interfaces/CreationInvitationOptions)) => Promise<[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)>
+(inviteeKey: [CreationInvitationOptions](/api/@dxos/client/interfaces/CreationInvitationOptions)) => Promise&lt;[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)&gt;
 ```
 Creates an invitation to a given party.
 The Invitation flow requires the inviter and invitee to be online at the same time.
@@ -53,17 +53,17 @@ The invitation flow is protected by a generated pin code.
 To be used with  `client.echo.acceptInvitation`  on the invitee side.
 ### createSnapshot
 ```ts
-() => Promise<PartySnapshot>
+() => Promise&lt;PartySnapshot&gt;
 ```
 Implementation method.
 ### destroy
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 Called by EchoProxy close.
 ### getDetails
 ```ts
-() => Promise<PartyDetails>
+() => Promise&lt;PartyDetails&gt;
 ```
 ### getProperty
 ```ts
@@ -75,27 +75,27 @@ Called by EchoProxy close.
 ```
 ### initialize
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 Called by EchoProxy open.
 ### open
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 ### queryMembers
 ```ts
-() => [ResultSet](/api/@dxos/client/classes/ResultSet)<PartyMember>
+() => [ResultSet](/api/@dxos/client/classes/ResultSet)&lt;PartyMember&gt;
 ```
 Return set of party members.
 ### setActive
 ```ts
-(active: boolean, options: any) => Promise<void>
+(active: boolean, options: any) => Promise&lt;void&gt;
 ```
 ### setProperty
 ```ts
-(key: string, value: any) => Promise<void>
+(key: string, value: any) => Promise&lt;void&gt;
 ```
 ### setTitle
 ```ts
-(title: string) => Promise<void>
+(title: string) => Promise&lt;void&gt;
 ```

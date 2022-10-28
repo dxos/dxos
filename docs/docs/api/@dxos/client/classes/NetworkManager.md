@@ -12,7 +12,7 @@ Manages connection to the swarm.
 
 ## Properties
 ### topicsUpdated 
-Type: Event<void>
+Type: Event&lt;void&gt;
 ### connectionLog
 Type: undefined | ConnectionLog
 ### signal
@@ -23,7 +23,7 @@ Type: [PublicKey](/api/@dxos/client/classes/PublicKey)[]
 ## Methods
 ### destroy
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```
 ### getSwarm
 ```ts
@@ -35,13 +35,13 @@ Type: [PublicKey](/api/@dxos/client/classes/PublicKey)[]
 ```
 ### joinProtocolSwarm
 ```ts
-(options: SwarmOptions) => Promise<function>
+(options: SwarmOptions) => Promise&lt;function&gt;
 ```
 ### leaveProtocolSwarm
 ```ts
-(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => Promise<void>
+(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => Promise&lt;void&gt;
 ```
 ### start
 ```ts
-() => Promise<void>
+() => Promise&lt;void&gt;
 ```

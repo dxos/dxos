@@ -8,14 +8,14 @@ It works in non-interactive mode and requires no authentication.
 ## Constructors
 ### constructor
 ```ts
-<T> (_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), _invitationPromise: Promise<T>, _onAuthenticate: function) => [Invitation](/api/@dxos/client/classes/Invitation)<T>
+<T> (_descriptor: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor), _invitationPromise: Promise&lt;T&gt;, _onAuthenticate: function) => [Invitation](/api/@dxos/client/classes/Invitation)&lt;T&gt;
 ```
 
 ## Properties
 ### _descriptor 
 Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ### _invitationPromise 
-Type: Promise<T>
+Type: Promise&lt;T&gt;
 ### _onAuthenticate 
 Type: function
 ### descriptor
@@ -32,6 +32,6 @@ Type: [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
 ```
 ### wait
 ```ts
-() => Promise<T>
+() => Promise&lt;T&gt;
 ```
 Wait for the invitation flow to complete.

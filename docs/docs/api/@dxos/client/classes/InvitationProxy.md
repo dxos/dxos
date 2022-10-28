@@ -14,7 +14,7 @@
 ### activeInvitations 
 Type: [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)[]
 ### invitationsUpdate 
-Type: Event<void>
+Type: Event&lt;void&gt;
 
 ## Methods
 ### _removeInvitation
@@ -27,7 +27,7 @@ Type: Event<void>
 ```
 ### createInvitationRequest
 ```ts
-(__namedParameters: [CreateInvitationRequestOpts](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)) => Promise<[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)>
+(__namedParameters: [CreateInvitationRequestOpts](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)) => Promise&lt;[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)&gt;
 ```
 ### handleInvitationRedemption
 ```ts
