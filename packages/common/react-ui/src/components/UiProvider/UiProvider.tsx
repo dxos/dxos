@@ -12,6 +12,8 @@ import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/rea
 import cx from 'classnames';
 import React, { PropsWithChildren } from 'react';
 
+import { defaultFocus } from '../../styles';
+
 export type UiProviderProps = PropsWithChildren<{
   tooltipProviderProps?: TooltipProviderProps;
   toastProviderProps?: ToastProviderProps;
@@ -32,7 +34,8 @@ export const UiProvider = ({
       <ToastViewport
         {...toastViewportProps}
         className={cx(
-          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm',
+          'z-50 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg',
+          defaultFocus,
           toastViewportProps?.className
         )}
       />

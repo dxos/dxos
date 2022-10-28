@@ -9,9 +9,10 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { Button, UiKitProvider } from '@dxos/react-uikit';
+import { UiKitProvider } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
+import { ServiceWorkerToast } from './components/ServiceWorkerToast/ServiceWorkerToast';
 import {
   AppLayout,
   AppsPage,
@@ -85,8 +86,8 @@ export const App = () => {
   // TODO(wittjosiah): Factor out to notification component.
   //   Example: https://github.com/vite-pwa/vite-plugin-pwa/blob/cd7992b0ac5b2845e97f02ae4eca04ca75ef2ff9/examples/react-router/src/ReloadPrompt.tsx.
   const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
+    offlineReady: [_offlineReady, _setOfflineReady],
+    needRefresh: [_needRefresh, _setNeedRefresh],
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err) => {
@@ -94,10 +95,8 @@ export const App = () => {
     }
   });
 
-  const close = () => {
-    setOfflineReady(false);
-    setNeedRefresh(false);
-  };
+  const needRefresh = false;
+  const offlineReady = true;
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
@@ -110,9 +109,11 @@ export const App = () => {
       >
         <HashRouter>
           <Routes />
-          {/* TODO(wittjosiah): Nice notification. */}
-          {needRefresh && <Button onClick={() => updateServiceWorker()}>Update</Button>}
-          {(needRefresh || offlineReady) && <Button onClick={() => close()}>Close</Button>}
+          {needRefresh ? (
+            <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+          ) : offlineReady ? (
+            <ServiceWorkerToast variant='offlineReady' />
+          ) : null}
         </HashRouter>
       </ClientProvider>
     </UiKitProvider>
