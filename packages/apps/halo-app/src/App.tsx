@@ -3,11 +3,10 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React, { useRef } from 'react';
+import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
@@ -86,10 +85,6 @@ const Routes = () => {
 };
 
 export const App = () => {
-  const clientRef = useRef<Client>();
-
-  // TODO(wittjosiah): Factor out to notification component.
-  //   Example: https://github.com/vite-pwa/vite-plugin-pwa/blob/cd7992b0ac5b2845e97f02ae4eca04ca75ef2ff9/examples/react-router/src/ReloadPrompt.tsx.
   const {
     offlineReady: [offlineReady, _setOfflineReady],
     needRefresh: [needRefresh, _setNeedRefresh],
@@ -106,7 +101,6 @@ export const App = () => {
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider
-            clientRef={clientRef}
             config={configProvider}
             onInitialize={async (client) => {
               client.echo.registerModel(TextModel);
