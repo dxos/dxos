@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { sleep } from './async';
 import { Lock, synchronized } from './lock';
+import { sleep } from './timeout';
 
 describe('Lock', function () {
   it('single execution', async function () {

@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
@@ -244,7 +244,7 @@ describe('Database', function () {
             model: ObjectModel,
             type: 'example:type/test-1'
           });
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+          expect(await asyncTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
 
         {
@@ -253,7 +253,7 @@ describe('Database', function () {
             type: 'example:type/test-2'
           });
           const waiting = database.waitForItem({ type: 'example:type/test-2' });
-          expect(await promiseTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
+          expect(await asyncTimeout(waiting, 100, new Error('timeout'))).toEqual(item);
         }
       });
 
@@ -308,7 +308,7 @@ describe('Database', function () {
         expect(item2.refs.length).toEqual(1);
 
         // 3. Expect an update
-        await promiseTimeout(update, 100, new Error('timeout'));
+        await asyncTimeout(update, 100, new Error('timeout'));
       });
 
       it('adding an item emits update for parent', async function () {
@@ -325,7 +325,7 @@ describe('Database', function () {
           parent: parentItem.id
         });
         expect(childItem.parent?.id).toEqual(parentItem.id);
-        await promiseTimeout(update, 100, new Error('timeout'));
+        await asyncTimeout(update, 100, new Error('timeout'));
       });
     });
 

@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 import EventEmitter from 'node:events';
 
-import { promiseTimeout } from './async';
 import { onEvent, waitForEvent } from './events';
 import { latch } from './latch';
+import { asyncTimeout } from './timeout';
 
 it('onEvent', async function () {
   const emitter = new EventEmitter();
@@ -45,12 +45,12 @@ it('waitForEvent (with test)', async function () {
   setTimeout(() => emitter.emit('test', 200), 20);
   setTimeout(() => emitter.emit('test', 300), 30);
 
-  const value = await promiseTimeout(waiting, 100);
+  const value = await asyncTimeout(waiting, 100);
   expect(value).to.equal(300);
   expect(emitter.listenerCount('test')).to.equal(0);
 });
 
-it('waitForEvent (exipred)', async function () {
+it('waitForEvent (expired)', async function () {
   const emitter = new EventEmitter();
 
   await expect(() => waitForEvent(emitter, 'test', undefined, 100)).to.throw;

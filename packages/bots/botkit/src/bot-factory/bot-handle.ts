@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout, sleep } from '@dxos/async';
+import { Event, asyncTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
@@ -198,7 +198,7 @@ export class BotHandle {
 
     this._reportingStream = undefined;
     try {
-      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
+      await asyncTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (err: any) {
       this._log(`Failed to stop bot: ${err}`);
     }

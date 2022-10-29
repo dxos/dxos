@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -56,10 +56,10 @@ export class BotFactoryClient {
     log('connecting...', { topic });
 
     // TODO(burdon): Retry?
-    // TODO(yivlad): Convert promiseTimeout to typescript.
+    // TODO(yivlad): Convert asyncTimeout to typescript.
     this._topic = topic;
     const peerId = PublicKey.random();
-    const port = await promiseTimeout(
+    const port = await asyncTimeout(
       new Promise<RpcPort>((resolve) => {
         this._networkManager.openSwarmConnection({
           topic,

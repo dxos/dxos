@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 
 import { throwUnhandledRejection } from '@dxos/debug';
 
-import { promiseTimeout } from './async';
+import { asyncTimeout } from './timeout';
 
 type UnsubscribeCallback = () => void;
 
@@ -439,5 +439,5 @@ export const waitForEvent = (
     });
   });
 
-  return timeout ? promiseTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
+  return timeout ? asyncTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
 };

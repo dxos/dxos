@@ -11,19 +11,21 @@ Staging area for internal work-in-progress (written-up into GH issues).
 - [ ] Basic hypercore multiplexer prototype/tests (dynamically add plug-ins).
 - [ ] Hypercore v10.
 
-## Invitations
+## Invitations (https://github.com/dxos/dxos/issues/1745)
 
-- [ ] https://github.com/dxos/dxos/issues/1745
 - [ ] Observer pattern (pending, connected, verified, done, error, fatal, timed-out, etc.)
-- [ ] Reconcile Signer/CredentialsSigner
-- [ ] Client API (class names)
-- [ ] Client services API
-- [ ] Client services normalized invitation flows
+  - [ ] Remove callbacks (see profile.createInvitation).
+- [ ] Reconcile Signer/CredentialsSigner.
+- [ ] Remove `invitation` field from proto and wrappers.
+- [ ] Client API (class names).
+- [ ] Remove InvitationWrapper.
+- [ ] Bidirectional requests.
 - [x] Clean-up protobuf defs (incl. service defs).
 
 ## Protocols
 
 - [ ] Clean-up defs; remove "party".
+- [ ] ProtoRpcPeerOptions (rename requested/exposed options).
 
 ## Tools
 

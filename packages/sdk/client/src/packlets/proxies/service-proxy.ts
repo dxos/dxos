@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import {
   clientServiceBundle,
   ClientServiceProvider,
@@ -32,7 +32,7 @@ export class ClientServiceProxy implements ClientServiceProvider {
   readonly services: ClientServices;
 
   async open(onProgressCallback?: ((progress: any) => void) | undefined) {
-    await promiseTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
+    await asyncTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 
   async close() {

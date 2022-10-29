@@ -73,6 +73,7 @@ export class HaloInvitations {
 
           onFinish?.();
         },
+
         onClose: async () => {
           await connection.close();
         }
@@ -141,6 +142,7 @@ export class HaloInvitations {
           await this._onInitialize();
           admitted.wake(identity);
         },
+
         onClose: async () => {
           await connection.close();
         }
