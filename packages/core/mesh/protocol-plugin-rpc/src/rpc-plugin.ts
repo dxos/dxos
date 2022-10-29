@@ -105,6 +105,7 @@ export const createPort = async (peer: Protocol, receive: Event<SerializedObject
 type CreateRpcPluginOptions<Client> = {
   onOpen?: (peer: ProtoRpcPeer<Client>) => Promise<void>;
   onClose?: () => Promise<void>;
+  onError?: (err: Error) => void;
 };
 
 /**
@@ -116,7 +117,7 @@ export const createRpcPlugin = <Client, Server>(
   rpcOptions: Omit<ProtoRpcPeerOptions<Client, Server>, 'port'>,
   pluginOptions?: CreateRpcPluginOptions<Client>
 ) => {
-  const { onOpen, onClose } = pluginOptions ?? {};
+  const { onOpen, onClose, onError } = pluginOptions ?? {};
   return new RpcPlugin(async (port) => {
     // TODO(burdon): What does connection mean? Just one peer?
     //  See original comment re handling multiple connections.
@@ -127,7 +128,11 @@ export const createRpcPlugin = <Client, Server>(
       await peer.open();
       await onOpen?.(peer);
     } catch (err: any) {
-      log.error('RPC handler failed', err);
+      if (onError) {
+        onError(err)
+      } else {
+        log.error('RPC failed', err);
+      }
     } finally {
       log('closing peer');
       await peer.close();

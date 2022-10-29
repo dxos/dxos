@@ -30,7 +30,7 @@ import { HaloInvitations, InvitationWrapper, SpaceInvitations } from '../invitat
 /**
  * Shared backend for all client services.
  */
-// TODO(burdon): Rename/break-up into smaller components.
+// TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
 
@@ -105,6 +105,21 @@ export class ServiceContext {
     return identity;
   }
 
+  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
+    assert(this.spaceManager);
+    assert(this.spaceInvitations);
+
+    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
+    const invitation = await this.spaceInvitations.createInvitation(space, { onFinish });
+    return InvitationWrapper.fromProto(invitation);
+  }
+
+  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
+    assert(this.spaceInvitations);
+
+    return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
+  }
+
   private async _initialize() {
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
@@ -127,25 +142,10 @@ export class ServiceContext {
     });
 
     await spaceManager.open();
-    this.spaceManager = spaceManager;
 
+    this.spaceManager = spaceManager;
     this.spaceInvitations = new SpaceInvitations(this.spaceManager, this.networkManager, signingContext);
 
     this.initialized.wake();
-  }
-
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
-    assert(this.spaceManager);
-    assert(this.spaceInvitations);
-
-    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    const invitation = await this.spaceInvitations.createInvitation(space, { onFinish });
-    return InvitationWrapper.fromProto(invitation);
-  }
-
-  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
-    assert(this.spaceInvitations);
-
-    return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
   }
 }

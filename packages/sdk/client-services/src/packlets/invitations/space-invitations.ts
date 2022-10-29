@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { asyncCatch, AsyncCallbacks, Observable, ObservableImpl, Trigger } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
@@ -16,6 +16,50 @@ import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitation
 // TODO(burdon): Timeout.
 // TODO(burdon): Objective: Service impl pattern with clean open/close semantics.
 // TODO(burdon): Isolate deps on protocol throughout echo-db.
+
+interface InvitationEvents extends AsyncCallbacks {
+  onConnect(invitation: InvitationDescriptor): void;
+  onComplete(): void;
+  onReject(): void
+}
+
+type InvitationObservable = Observable<InvitationEvents>;
+
+const _ = async (space: Space, spaceInvitations: SpaceInvitations) => {
+  // Impl.
+  const f = (): InvitationObservable => {
+    const observable = new ObservableImpl<InvitationEvents>();
+
+    asyncCatch(
+      async () => {
+        setTimeout(() => {
+          observable.callbacks?.onConnect({} as InvitationDescriptor)
+        }, 100);
+      },
+      observable,
+      30_000
+    );
+
+    return observable;
+  };
+
+  // Caller.
+  // TODO(burdon): Cancel/reset?
+  const observable = f();
+  observable.observe({
+    onConnect: (invitation) => {
+      console.log(invitation);
+    },
+    onComplete: () => {},
+    onReject: () => {},
+    onTimeout (err): void {
+      console.log(err);
+    },
+    onError: (err: Error) => {
+      console.log(err);
+    }
+  });
+};
 
 /**
  * Manages the life-cycle of Space invitations between peers.
@@ -150,6 +194,10 @@ export class SpaceInvitations {
 
         onClose: async () => {
           await connection.close();
+        },
+
+        onError: (err: Error) => {
+          log.error('connection failed', err);
         }
       }
     );

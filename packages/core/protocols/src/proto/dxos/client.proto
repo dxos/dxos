@@ -97,9 +97,9 @@ message Contacts {
 }
 
 service ProfileService {
-  rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
+  rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
 
   rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
   rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
@@ -137,7 +137,6 @@ message GetPreferenceResponse {
 }
 
 service HaloService {
-  // TODO(burdon): Comments.
   rpc Sign(SignRequest) returns (SignResponse);
   rpc AddKeyRecord(AddKeyRecordRequest) returns (google.protobuf.Empty);
 
@@ -151,9 +150,10 @@ service HaloService {
 }
 
 //
-// ECHO
+// Spaces
 //
 
+// TODO(burdon): Rename Space.
 message Party {
   message Member {
     dxos.keys.PublicKey public_key = 1;
@@ -214,20 +214,23 @@ message SubscribeMembersRequest {
 
 message SubscribeMembersResponse {
   message PartyMember {
-    dxos.keys.PublicKey public_key = 1; // TODO(burdon): Rename key (replace all "public_key").
+    dxos.keys.PublicKey public_key = 1; // TODO(burdon): Rename xxx_key.
     optional string display_name = 2;
   }
 
   repeated PartyMember members = 1;
 }
 
-message CreateSnaspotRequest {
+message CreateSnapshotRequest {
   dxos.keys.PublicKey party_key = 1;
 }
 
+//
+// Service definition
+//
+
 // TODO(burdon): Rename SpaceService.
 service PartyService {
-  // TODO(rzadp): Combine the two into one?
   rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
   rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
 
@@ -247,5 +250,5 @@ service PartyService {
   // TODO(rzadp): Remove and join with Subscribing to Party.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
-  rpc CreateSnapshot(CreateSnaspotRequest) returns (echo.snapshot.PartySnapshot);
+  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.PartySnapshot);
 }

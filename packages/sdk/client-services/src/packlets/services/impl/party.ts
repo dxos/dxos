@@ -11,7 +11,7 @@ import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
-  CreateSnaspotRequest,
+  CreateSnapshotRequest,
   GetPartyDetailsRequest,
   InvitationRequest,
   InvitationState,
@@ -202,6 +202,7 @@ export class PartyService implements PartyServiceRpc {
             // invitation = await party.invitationManager.createOfflineInvitation(request.invitee_key);
           }
 
+          // TODO(burdon): Change stream type.
           next({
             state: InvitationState.WAITING_FOR_CONNECTION,
             descriptor: invitation!.toProto()
@@ -295,7 +296,7 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  async createSnapshot(request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async createSnapshot(request: CreateSnapshotRequest): Promise<PartySnapshot> {
     return todo();
     // assert(request.party_key);
     // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
