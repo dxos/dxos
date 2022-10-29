@@ -16,8 +16,8 @@
     "src"
   ],
   "dependencies": {
-    "@sentry/node": "^7.16.0",
-    "@sentry/browser": "^7.16.0"
+    "@sentry/node": "^7.17.2",
+    "@sentry/browser": "^7.17.2"
   },
   "devDependencies": {
     "@sentry/types": "^7.16.0",
