@@ -3,16 +3,17 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React, { useRef } from 'react';
+import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
+import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
-import { ErrorsProvider, FatalError } from './components';
+import { ErrorsProvider, FatalError, ServiceWorkerToast } from './components';
 import { useTelemetry } from './hooks';
 import {
   AppLayout,
@@ -85,7 +86,16 @@ const Routes = () => {
 };
 
 export const App = () => {
-  const clientRef = useRef<Client>();
+  const {
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError: (err) => {
+      captureException(err);
+      console.error(err);
+    }
+  });
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
@@ -93,7 +103,6 @@ export const App = () => {
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider
-            clientRef={clientRef}
             config={configProvider}
             onInitialize={async (client) => {
               client.echo.registerModel(TextModel);
@@ -101,6 +110,11 @@ export const App = () => {
           >
             <HashRouter>
               <Routes />
+              {needRefresh ? (
+                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+              ) : offlineReady ? (
+                <ServiceWorkerToast variant='offlineReady' />
+              ) : null}
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>
