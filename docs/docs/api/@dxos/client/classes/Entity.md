@@ -1,5 +1,5 @@
 # Class `Entity`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:10`]()
+Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:10`]()
 
 
 Base class for all ECHO entitities.
@@ -7,30 +7,45 @@ Base class for all ECHO entitities.
 Subclassed by Item and Link.
 
 ## Constructors
-### constructor
-```ts
-<M> (_itemManager: ItemManager, _id: string, _type: undefined | string, stateManager: StateManager&lt;NonNullable&lt;M&gt;&gt;) => [Entity](/api/@dxos/client/classes/Entity)&lt;M&gt;
-```
+### [`constructor`]()
+
+
+Returns: [`Entity`](/api/@dxos/client/classes/Entity)`<M>`
+
+Arguments: 
+
+`_itemManager`: `ItemManager`
+
+`_id`: `string`
+
+`_type`: `undefined | string`
+
+`stateManager`: `StateManager<NonNullable<M>>`
 
 ## Properties
-### _itemManager 
-Type: ItemManager
-### _onUpdate 
-Type: Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;&gt;
-### id
-Type: string
-### model
-Type: M
-### modelMeta
-Type: ModelMeta&lt;any, any, any&gt;
-### modelType
-Type: string
-### type
-Type: undefined | string
+### [`_itemManager`]()
+Type: `ItemManager`
+### [`_onUpdate`]()
+Type: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<any>>`
+### [`id`]()
+Type: `string`
+### [`model`]()
+Type: `M`
+### [`modelMeta`]()
+Type: `ModelMeta<any, any, any>`
+### [`modelType`]()
+Type: `string`
+### [`type`]()
+Type: `undefined | string`
 
 ## Methods
-### subscribe
-```ts
-(listener: function) => function
-```
+### [`subscribe`]()
+
+
 Subscribe for updates.
+
+Returns: `function`
+
+Arguments: 
+
+`listener`: `function`

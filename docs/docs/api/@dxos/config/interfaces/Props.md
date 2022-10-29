@@ -4,7 +4,7 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### title 
+### [`title`]()
 Type: `string`
 
 Options:

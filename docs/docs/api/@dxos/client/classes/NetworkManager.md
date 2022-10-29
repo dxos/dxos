@@ -1,47 +1,71 @@
 # Class `NetworkManager`
-> Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:25`]()
+Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:25`]()
 
 
 Manages connection to the swarm.
 
 ## Constructors
-### constructor
-```ts
-(__namedParameters: NetworkManagerOptions) => [NetworkManager](/api/@dxos/client/classes/NetworkManager)
-```
+### [`constructor`]()
+
+
+Returns: [`NetworkManager`](/api/@dxos/client/classes/NetworkManager)
+
+Arguments: 
+
+`__namedParameters`: `NetworkManagerOptions`
 
 ## Properties
-### topicsUpdated 
-Type: Event&lt;void&gt;
-### connectionLog
-Type: undefined | ConnectionLog
-### signal
-Type: SignalManager
-### topics
-Type: [PublicKey](/api/@dxos/client/classes/PublicKey)[]
+### [`topicsUpdated`]()
+Type: `Event<void>`
+### [`connectionLog`]()
+Type: `undefined | ConnectionLog`
+### [`signal`]()
+Type: `SignalManager`
+### [`topics`]()
+Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)`[]`
 
 ## Methods
-### destroy
-```ts
-() => Promise&lt;void&gt;
-```
-### getSwarm
-```ts
-(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => undefined | Swarm
-```
-### getSwarmMap
-```ts
-(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => undefined | SwarmMapper
-```
-### joinProtocolSwarm
-```ts
-(options: SwarmOptions) => Promise&lt;function&gt;
-```
-### leaveProtocolSwarm
-```ts
-(topic: [PublicKey](/api/@dxos/client/classes/PublicKey)) => Promise&lt;void&gt;
-```
-### start
-```ts
-() => Promise&lt;void&gt;
-```
+### [`destroy`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`getSwarm`]()
+
+
+Returns: `undefined | Swarm`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`getSwarmMap`]()
+
+
+Returns: `undefined | SwarmMapper`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`joinProtocolSwarm`]()
+
+
+Returns: `Promise<function>`
+
+Arguments: 
+
+`options`: `SwarmOptions`
+### [`leaveProtocolSwarm`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`start`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: none

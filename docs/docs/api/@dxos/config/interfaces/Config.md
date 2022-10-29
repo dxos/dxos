@@ -4,17 +4,17 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### package 
-Type: `Package`
+### [`package`]()
+Type: [`Package`](/api/@dxos/config/interfaces/Package)
 
 Options:
   - proto3_optional = true
-### runtime 
-Type: `Runtime`
+### [`runtime`]()
+Type: [`Runtime`](/api/@dxos/config/interfaces/Runtime)
 
 Options:
   - proto3_optional = true
-### version 
+### [`version`]()
 Type: `number`
 
 Options:

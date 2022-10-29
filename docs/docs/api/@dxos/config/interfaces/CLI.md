@@ -4,38 +4,38 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### app 
-Type: `AppServe`
+### [`app`]()
+Type: [`AppServe`](/api/@dxos/config/interfaces/AppServe)
 
 Options:
   - proto3_optional = true
-### channel 
+### [`channel`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### console 
-Type: `Package`
+### [`console`]()
+Type: [`Package`](/api/@dxos/config/interfaces/Package)
 
 Options:
   - proto3_optional = true
-### mdns 
-Type: `Package`
+### [`mdns`]()
+Type: [`Package`](/api/@dxos/config/interfaces/Package)
 
 Options:
   - proto3_optional = true
-### nodePath 
+### [`nodePath`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### npmClient 
+### [`npmClient`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### signal 
-Type: `Package`
+### [`signal`]()
+Type: [`Package`](/api/@dxos/config/interfaces/Package)
 
 Options:
   - proto3_optional = true

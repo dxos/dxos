@@ -10,7 +10,7 @@ import {
 } from 'typedoc';
 import { text, ts } from '@dxos/plate';
 import { reflectionsOfKind } from './utils.t';
-import { TypeStringifier } from './TypeStringifier.t';
+import { TypeStringifier } from './MdTypeStringifier.t';
 
 const tabs = (i: number = 0) => new Array(i).fill('  ').join('');
 
@@ -30,7 +30,7 @@ export class Stringifier {
   sources(ref: Schema.ContainerReflection) {
     const { sources } = ref;
     return sources?.length
-      ? `> Declared in ` +
+      ? `Declared in ` +
           sources
             ?.map(
               (source) =>
@@ -43,17 +43,6 @@ export class Stringifier {
   comment(comment?: Schema.Comment) {
     return text`${comment?.summary?.map((s) => s.text).join(' ')}`;
   }
-  signature(ref: Schema.SignatureReflection): string {
-    // ${ts`const ${camelCase(ref.name)} = ${ref.name} (
-    //   ${ref.parameters?.map(param).join("," + os.EOL)}
-    // )`}
-    return text`
-    \`\`\`ts
-    ${this.types.callSignature(ref)}
-    \`\`\`
-    ${this.comment(ref.comment)}
-    `;
-  }
   json(val: any) {
     return text`
     \`\`\`json
@@ -61,37 +50,49 @@ export class Stringifier {
     \`\`\`
     `;
   }
+  signature(ref: Schema.SignatureReflection): string {
+    const { name, type, parameters } = ref;
+    return text`
+    ${this.comment(ref.comment)}
+    
+    Returns: ${this.types.stringify(type!)}
+
+    Arguments: ${!parameters?.length && 'none'}
+
+    ${parameters?.map((p) => this.param(p)).join(os.EOL + os.EOL)}
+    `;
+  }
   param(ref: Schema.ParameterReflection) {
-    return `${ref.name}: ${ref.type?.type}`;
+    return `\`${ref.name}\`: ${this.types.stringify(ref.type!)}`;
   }
   method(ref: Schema.DeclarationReflection): string {
     return text`
-    ### ${ref.name}
-    ${ref.signatures?.map(s => this.signature(s))}
+    ### [\`${ref.name}\`](${ref.sources?.[0]?.url})
+    ${this.comment(ref.comment)}
+
+    ${ref.signatures?.map((s) => this.signature(s))}
     `;
   }
   property(ref: Schema.DeclarationReflection): string {
-    const { types } = this;
-    const accessor = (ref: Schema.DeclarationReflection): string => {
+    const template = (nodes: Schema.DeclarationReflection[]): string => {
       return text`
-      ### ${ref.name}
-      Type: ${ref.getSignature ? types.type(ref.getSignature.type!) : ''}${
-        ref.setSignature ? `, ${types.type(ref.setSignature.type!)}` : ''
-      }
+      ### [\`${ref.name}\`](${ref.sources?.[0]?.url})
+      Type: ${nodes
+        .filter(Boolean)
+        .map((t) => this.types.stringify(t.type!))
+        .join(', ')}
       
-      ${this.comment(ref.getSignature?.comment)}
-      ${this.comment(ref.setSignature?.comment)}
+      ${nodes
+        .filter(Boolean)
+        .map((node) => this.comment(node.comment))
+        .join(os.EOL + os.EOL)}
       `;
     };
-    const field = (ref: Schema.DeclarationReflection): string => {
-      return text`
-      ### ${ref.name} 
-      Type: ${types.type(ref.type!)}
-      
-      ${this.comment(ref.comment)}
-      `;
-    };
-    return ref.kind == ReflectionKind.Accessor ? accessor(ref) : field(ref);
+    return template(
+      ref.kind == ReflectionKind.Accessor
+        ? [ref.getSignature!, ref.setSignature!]
+        : [ref]
+    );
   }
   href(ref: Reflection): string {
     if (ref.kind == ReflectionKind.Class) {

@@ -25,6 +25,9 @@ export class TypeStringifier implements AllStringifiers {
   /**
    * Return a string representation of the given type.
    */
+  stringify(node: Schema.SomeType): string {
+    return `\`${this.type(node)}\``.replace(/`\s*`/gi, '');
+  }
   type(node: Schema.SomeType): string {
     if (!(node?.type in this)) {
       throw new TypeError(`Cannot stringify type '${node.type}'`);
@@ -65,7 +68,6 @@ export class TypeStringifier implements AllStringifiers {
     if (node.targetType) {
       out.push('is', this.type(node.targetType));
     }
-
     return out.join(' ');
   }
   query(node: Schema.QueryType): string {
@@ -75,11 +77,37 @@ export class TypeStringifier implements AllStringifiers {
     const name = node.name;
     let typeArgs = '';
     if (node.typeArguments) {
-      typeArgs += escapeHtml('<');
+      typeArgs += '<';
       typeArgs += this.list(node.typeArguments, ', ');
-      typeArgs += escapeHtml('>');
+      typeArgs += '>';
     }
-    return name + typeArgs;
+    let href = '';
+    if (node.id) {
+      const referencedNode = reflectionById(this.root, node.id);
+      const referencedPackage = packageOfReflectionId(this.root, node.id);
+      if (referencedNode?.kind == ReflectionKind.Class) {
+        href = `/api/${referencedPackage?.name}/classes/${referencedNode?.name}`;
+      } else if (referencedNode?.kind == ReflectionKind.TypeAlias) {
+        href = `/api/${referencedPackage?.name}/types/${referencedNode?.name}`;
+      } else if (referencedNode?.kind == ReflectionKind.Function) {
+        href = `/api/${referencedPackage?.name}/functions/${referencedNode?.name}`;
+      } else if (referencedNode?.kind == ReflectionKind.Interface) {
+        href = `/api/${referencedPackage?.name}/interfaces/${referencedNode?.name}`;
+      } else if (referencedNode?.kind == ReflectionKind.Enum) {
+        href = `/api/${referencedPackage?.name}/enums#${referencedNode.name}`;
+      } else if (referencedNode?.kind == ReflectionKind.Variable) {
+        href = `/api/${referencedPackage?.name}/values#${referencedNode.name}`;
+      }
+      if (!!referencedNode && !!referencedPackage)
+        console.log(
+          referencedNode.kind,
+          referencedNode.kindString,
+          referencedNode.name,
+          referencedPackage.name,
+          { href }
+        );
+    }
+    return (href ? `\`[\`${name}\`](${href})\`` : `${name}`) + typeArgs;
   }
   reflection(node: Schema.ReflectionType): string {
     if (!node.declaration?.children && node.declaration?.signatures) {
@@ -106,7 +134,7 @@ export class TypeStringifier implements AllStringifiers {
   }
 
   unknown(node: Schema.UnknownType): string {
-    return node.name;
+    return `${node.name}`;
   }
 
   void(): string {
@@ -126,12 +154,10 @@ export class TypeStringifier implements AllStringifiers {
   'template-literal'(node: Schema.TemplateLiteralType): string {
     const { head, tail } = node;
     return [
-      '`',
       head,
       ...tail.map(([type, text]) => {
         return '${' + this.type(type) + '}' + text;
-      }),
-      '`'
+      })
     ].join('');
   }
 

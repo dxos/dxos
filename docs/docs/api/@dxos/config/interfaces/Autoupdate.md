@@ -4,12 +4,12 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### enabled 
+### [`enabled`]()
 Type: `boolean`
 
 Options:
   - proto3_optional = true
-### interval 
+### [`interval`]()
 Type: `string`
 
 Seconds

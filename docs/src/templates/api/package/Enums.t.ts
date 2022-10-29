@@ -22,15 +22,14 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
         # Enumerations
         ${enums.map(
           (aenum) => text`
-          ## ${aenum.name}
-          ${stringifier.sources(aenum)}
+          ### [\`${aenum.name}\`](${aenum.sources?.[0]?.url})
+
           ${stringifier.comment(aenum.comment)}
 
-          ### Values:
+          Values:
           ${reflectionsOfKind(aenum, ReflectionKind.EnumMember).map(
             (member) => text`
-            #### \`${member.name}\`
-            ${stringifier.comment(member.comment)}
+            - \`${member.name}\` ${stringifier.comment(member.comment)}
             `
           )}
           `

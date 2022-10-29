@@ -4,14 +4,14 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### bootstrap 
+### [`bootstrap`]()
 Type: `string[]`
-### port 
+### [`port`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### privateKey 
+### [`privateKey`]()
 Type: `string`
 
 Options:

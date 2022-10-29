@@ -3,9 +3,9 @@
 
 
 ## Properties
-### invitationDescriptor 
-Type: `InvitationDescriptor`
-### onAuthenticate 
+### [`invitationDescriptor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L28)
+Type: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+### [`onAuthenticate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L29)
 Type: `function`
-### stream 
+### [`stream`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L27)
 Type: `Stream<RedeemedInvitation>`

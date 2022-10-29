@@ -4,14 +4,14 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### account 
+### [`account`]()
 Type: `string`
 
 Public address of a DXNS Account.
 
 Options:
   - proto3_optional = true
-### accountUri 
+### [`accountUri`]()
 Type: `string`
 
 Substrate account URI. This is a secret.
@@ -21,19 +21,19 @@ TODO(dmaretskyi): Deprecate this and move it to keyring.
 
 Options:
   - proto3_optional = true
-### address 
+### [`address`]()
 Type: `string`
 
 Public Polkadot Address.
 
 Options:
   - proto3_optional = true
-### faucet 
+### [`faucet`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### server 
+### [`server`]()
 Type: `string`
 
 DXNS endpoint.

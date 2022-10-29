@@ -2,29 +2,27 @@
 title: Enumerations
 ---
 # Enumerations
-## StorageDriver
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:261`]()
+### [`StorageDriver`]()
 
 Defined in:
    file://./../../dxos/config.proto
 
-### Values:
-#### `CHROME`
-#### `FIREFOX`
-#### `IDB`
-#### `JSONDOWN`
-#### `LEVELJS`
-#### `NODE`
-#### `RAM`
-## Mode
-> Declared in [`packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:225`]()
+Values:
+- `CHROME`
+- `FIREFOX`
+- `IDB`
+- `JSONDOWN`
+- `LEVELJS`
+- `NODE`
+- `RAM`
+### [`Mode`]()
 
 Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy. Defaults to AUTOMATIC.
 
 Defined in:
    file://./../../dxos/config.proto
 
-### Values:
-#### `AUTOMATIC`
-#### `LOCAL`
-#### `REMOTE`
+Values:
+- `AUTOMATIC`
+- `LOCAL`
+- `REMOTE`

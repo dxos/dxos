@@ -25,7 +25,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
             new File({
               path: [...dir, `${atype.name}.md`],
               content: text`
-                # Type alias \`${atype.name}\`
+                # Type \`${atype.name}\`
                 ${stringifier.sources(atype)}
 
                 ${stringifier.comment(atype.comment)}

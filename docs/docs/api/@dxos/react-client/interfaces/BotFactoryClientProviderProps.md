@@ -3,5 +3,5 @@
 
 
 ## Properties
-### children 
+### [`children`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L15)
 Type: `ReactNode`

@@ -1,39 +1,65 @@
 # Class `Schema`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21`]()
+Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21`]()
 
 
 Wrapper for ECHO Item that represents an  `ObjectModel`  schema.
 
 ## Constructors
-### constructor
-```ts
-(_schema: [ObjectModel](/api/@dxos/client/classes/ObjectModel)) => [Schema](/api/@dxos/client/classes/Schema)
-```
+### [`constructor`]()
+
+
+Returns: [`Schema`](/api/@dxos/client/classes/Schema)
+
+Arguments: 
+
+`_schema`: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
 
 ## Properties
-### fields
-Type: [SchemaField](/api/@dxos/client/types/SchemaField)[]
-### name
-Type: string
+### [`fields`]()
+Type: [`SchemaField`](/api/@dxos/client/types/SchemaField)`[]`
+### [`name`]()
+Type: `string`
 
 ## Methods
-### addField
-```ts
-(newField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise&lt;void&gt;
-```
-### deleteField
-```ts
-(key: string) => Promise&lt;void&gt;
-```
-### editField
-```ts
-(currentKey: string, editedField: [SchemaField](/api/@dxos/client/types/SchemaField)) => Promise&lt;void&gt;
-```
-### getField
-```ts
-(key: string) => undefined | [SchemaField](/api/@dxos/client/types/SchemaField)
-```
-### validate
-```ts
-(model: [ObjectModel](/api/@dxos/client/classes/ObjectModel)) => boolean
-```
+### [`addField`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`newField`: [`SchemaField`](/api/@dxos/client/types/SchemaField)
+### [`deleteField`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+### [`editField`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`currentKey`: `string`
+
+`editedField`: [`SchemaField`](/api/@dxos/client/types/SchemaField)
+### [`getField`]()
+
+
+Returns: `undefined | `[`SchemaField`](/api/@dxos/client/types/SchemaField)
+
+Arguments: 
+
+`key`: `string`
+### [`validate`]()
+
+
+Returns: `boolean`
+
+Arguments: 
+
+`model`: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)

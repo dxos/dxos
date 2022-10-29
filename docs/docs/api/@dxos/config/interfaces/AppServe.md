@@ -4,8 +4,8 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### serve 
-Type: `Serve`
+### [`serve`]()
+Type: [`Serve`](/api/@dxos/config/interfaces/Serve)
 
 Options:
   - proto3_optional = true

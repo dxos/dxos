@@ -1,5 +1,5 @@
 # Class `InvitationDescriptor`
-> Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:21`]()
+Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:21`]()
 
 
 Describes an issued invitation.
@@ -10,48 +10,79 @@ Invitations can be interactive or offline.
 This descriptor might also have a bundled secret for authentication in interactive mode.
 
 ## Constructors
-### constructor
-```ts
-(type: Type, swarmKey: [PublicKey](/api/@dxos/client/classes/PublicKey), invitation: Uint8Array, identityKey: [PublicKey](/api/@dxos/client/classes/PublicKey), secret: Uint8Array) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
-```
+### [`constructor`]()
+
+
+Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+
+Arguments: 
+
+`type`: `Type`
+
+`swarmKey`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+`invitation`: `Uint8Array`
+
+`identityKey`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+`secret`: `Uint8Array`
 
 ## Properties
-### identityKey 
-Type: [PublicKey](/api/@dxos/client/classes/PublicKey)
-### invitation 
-Type: Uint8Array
-### secret 
-Type: Uint8Array
-### swarmKey 
-Type: [PublicKey](/api/@dxos/client/classes/PublicKey)
-### type 
-Type: Type
-### hash
-Type: string
+### [`identityKey`]()
+Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`invitation`]()
+Type: `Uint8Array`
+### [`secret`]()
+Type: `Uint8Array`
+### [`swarmKey`]()
+Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`type`]()
+Type: `Type`
+### [`hash`]()
+Type: `string`
 
 ## Methods
-### encode
-```ts
-() => string
-```
-### toProto
-```ts
-() => InvitationDescriptor
-```
-### toQueryParameters
-```ts
-() => InvitationQueryParameters
-```
+### [`encode`]()
+
+
+Returns: `string`
+
+Arguments: none
+### [`toProto`]()
+
+
+Returns: `InvitationDescriptor`
+
+Arguments: none
+### [`toQueryParameters`]()
+
+
 Exports an InvitationDescriptor to an object suitable for use as query parameters.
-### decode
-```ts
-(code: string) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
-```
-### fromProto
-```ts
-(invitation: InvitationDescriptor) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
-```
-### fromQueryParameters
-```ts
-(queryParameters: InvitationQueryParameters) => [InvitationDescriptor](/api/@dxos/client/classes/InvitationDescriptor)
-```
+
+Returns: `InvitationQueryParameters`
+
+Arguments: none
+### [`decode`]()
+
+
+Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+
+Arguments: 
+
+`code`: `string`
+### [`fromProto`]()
+
+
+Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+
+Arguments: 
+
+`invitation`: `InvitationDescriptor`
+### [`fromQueryParameters`]()
+
+
+Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+
+Arguments: 
+
+`queryParameters`: `InvitationQueryParameters`

@@ -1,35 +1,51 @@
 # Class `InvitationProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:37`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L37)
+Declared in [`packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:37`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L37)
 
 
 
 
 ## Constructors
-### constructor
-```ts
-() => [InvitationProxy](/api/@dxos/client/classes/InvitationProxy)
-```
+### [`constructor`]()
+
+
+Returns: [`InvitationProxy`](/api/@dxos/client/classes/InvitationProxy)
+
+Arguments: none
 
 ## Properties
-### activeInvitations 
-Type: [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)[]
-### invitationsUpdate 
-Type: Event&lt;void&gt;
+### [`activeInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L38)
+Type: [`InvitationRequest`](/api/@dxos/client/classes/InvitationRequest)`[]`
+### [`invitationsUpdate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L39)
+Type: `Event<void>`
 
 ## Methods
-### _removeInvitation
-```ts
-(invitation: [InvitationRequest](/api/@dxos/client/classes/InvitationRequest)) => void
-```
-### close
-```ts
-() => void
-```
-### createInvitationRequest
-```ts
-(__namedParameters: [CreateInvitationRequestOpts](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)) => Promise&lt;[InvitationRequest](/api/@dxos/client/classes/InvitationRequest)&gt;
-```
-### handleInvitationRedemption
-```ts
-(__namedParameters: [HandleInvitationRedemptionOpts](/api/@dxos/client/interfaces/HandleInvitationRedemptionOpts)) => [HandleInvitationRedemptionResult](/api/@dxos/client/interfaces/HandleInvitationRedemptionResult)
-```
+### [`_removeInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L94)
+
+
+Returns: `void`
+
+Arguments: 
+
+`invitation`: [`InvitationRequest`](/api/@dxos/client/classes/InvitationRequest)
+### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L43)
+
+
+Returns: `void`
+
+Arguments: none
+### [`createInvitationRequest`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L47)
+
+
+Returns: `Promise<`[`InvitationRequest`](/api/@dxos/client/classes/InvitationRequest)`>`
+
+Arguments: 
+
+`__namedParameters`: [`CreateInvitationRequestOpts`](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)
+### [`handleInvitationRedemption`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L100)
+
+
+Returns: [`HandleInvitationRedemptionResult`](/api/@dxos/client/interfaces/HandleInvitationRedemptionResult)
+
+Arguments: 
+
+`__namedParameters`: [`HandleInvitationRedemptionOpts`](/api/@dxos/client/interfaces/HandleInvitationRedemptionOpts)

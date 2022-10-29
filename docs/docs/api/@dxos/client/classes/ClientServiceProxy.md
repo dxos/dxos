@@ -1,26 +1,38 @@
 # Class `ClientServiceProxy`
-> Declared in [`packages/sdk/client/src/packlets/proxies/service-proxy.ts:13`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L13)
+Declared in [`packages/sdk/client/src/packlets/proxies/service-proxy.ts:13`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L13)
 
 
 Implements services that are not local to the app.
 For example, the services can be located in Wallet Extension.
 
 ## Constructors
-### constructor
-```ts
-(port: RpcPort, _timeout: number) => [ClientServiceProxy](/api/@dxos/client/classes/ClientServiceProxy)
-```
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L16)
+
+
+Returns: [`ClientServiceProxy`](/api/@dxos/client/classes/ClientServiceProxy)
+
+Arguments: 
+
+`port`: `RpcPort`
+
+`_timeout`: `number`
 
 ## Properties
-### services 
-Type: ClientServices
+### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L27)
+Type: `ClientServices`
 
 ## Methods
-### close
-```ts
-() => Promise&lt;void&gt;
-```
-### open
-```ts
-(onProgressCallback: function) => Promise&lt;void&gt;
-```
+### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L33)
+
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`open`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L29)
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`onProgressCallback`: `function`

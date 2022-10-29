@@ -4,22 +4,22 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### persistent 
+### [`persistent`]()
 Type: `boolean`
 
 Options:
   - proto3_optional = true
-### retryAttempts 
+### [`retryAttempts`]()
 Type: `number`
 
 Options:
   - proto3_optional = true
-### retryInterval 
+### [`retryInterval`]()
 Type: `number`
 
 Options:
   - proto3_optional = true
-### topic 
+### [`topic`]()
 Type: `string`
 
 Options:

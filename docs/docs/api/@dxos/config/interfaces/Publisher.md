@@ -4,7 +4,7 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### server 
+### [`server`]()
 Type: `string`
 
 Options:

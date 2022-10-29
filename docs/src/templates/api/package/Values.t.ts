@@ -31,9 +31,9 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
         
         ${values.map(
           (avalue) => text`
-          ## ${avalue.name}
-          ${stringifier.sources(avalue)}
-          Type: \`${stringifier.types.type(avalue.type!)}\`
+          ### [\`${avalue.name}\`](${avalue.sources?.[0]?.url})
+          Type: ${stringifier.types.stringify(avalue.type!)}
+          
           ${stringifier.comment(avalue.comment)}
           `
           )}

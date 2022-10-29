@@ -1,5 +1,5 @@
 # Class `Item`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14`]()
+Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14`]()
 
 
 A globally addressable data item.
@@ -7,66 +7,101 @@ Items are hermetic data structures contained within a Party. They may be hierarc
 The Item data structure is governed by a Model class, which implements data consistency.
 
 ## Constructors
-### constructor
-```ts
-<M> (itemManager: ItemManager, itemId: string, itemType: undefined | string, stateManager: StateManager&lt;NonNullable&lt;M&gt;&gt;, _writeStream: FeedWriter&lt;EchoEnvelope&gt;, parent: "null" | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;) => [Item](/api/@dxos/client/classes/Item)&lt;M&gt;
-```
+### [`constructor`]()
+
+
 Items are constructed by the  `Database`  object.
 
+Returns: [`Item`](/api/@dxos/client/classes/Item)`<M>`
+
+Arguments: 
+
+`itemManager`: `ItemManager`
+
+`itemId`: `string`
+
+`itemType`: `undefined | string`
+
+`stateManager`: `StateManager<NonNullable<M>>`
+
+`_writeStream`: `FeedWriter<EchoEnvelope>`
+
+`parent`: `"null" | `[`Item`](/api/@dxos/client/classes/Item)`<any>`
+
 ## Properties
-### _itemManager 
-Type: ItemManager
-### _onUpdate 
-Type: Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;&gt;
-### children
-Type: [Item](/api/@dxos/client/classes/Item)&lt;any&gt;[]
-### deleted
-Type: boolean
-### id
-Type: string
-### links
-Type: [Link](/api/@dxos/client/classes/Link)&lt;any, any, any&gt;[]
-### model
-Type: M
-### modelMeta
-Type: ModelMeta&lt;any, any, any&gt;
-### modelType
-Type: string
-### parent
-Type: "null" | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;
-### readOnly
-Type: boolean
-### refs
-Type: [Link](/api/@dxos/client/classes/Link)&lt;any, any, any&gt;[]
-### type
-Type: undefined | string
+### [`_itemManager`]()
+Type: `ItemManager`
+### [`_onUpdate`]()
+Type: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<any>>`
+### [`children`]()
+Type: [`Item`](/api/@dxos/client/classes/Item)`<any>[]`
+### [`deleted`]()
+Type: `boolean`
+### [`id`]()
+Type: `string`
+### [`links`]()
+Type: [`Link`](/api/@dxos/client/classes/Link)`<any, any, any>[]`
+### [`model`]()
+Type: `M`
+### [`modelMeta`]()
+Type: `ModelMeta<any, any, any>`
+### [`modelType`]()
+Type: `string`
+### [`parent`]()
+Type: `"null" | `[`Item`](/api/@dxos/client/classes/Item)`<any>`
+### [`readOnly`]()
+Type: `boolean`
+### [`refs`]()
+Type: [`Link`](/api/@dxos/client/classes/Link)`<any, any, any>[]`
+### [`type`]()
+Type: `undefined | string`
 
 ## Methods
-### delete
-```ts
-() => Promise&lt;void&gt;
-```
+### [`delete`]()
+
+
 Delete the item.
-### restore
-```ts
-() => Promise&lt;void&gt;
-```
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`restore`]()
+
+
 Restore deleted item.
-### select
-```ts
-() => [Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, void&gt;
-```
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`select`]()
+
+
 Returns a selection context, which can be used to traverse the object graph starting from this item.
-### setParent
-```ts
-(parentId: string) => Promise&lt;void&gt;
-```
-### subscribe
-```ts
-(listener: function) => function
-```
+
+Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, void>`
+
+Arguments: none
+### [`setParent`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`parentId`: `string`
+### [`subscribe`]()
+
+
 Subscribe for updates.
-### toString
-```ts
-() => string
-```
+
+Returns: `function`
+
+Arguments: 
+
+`listener`: `function`
+### [`toString`]()
+
+
+Returns: `string`
+
+Arguments: none

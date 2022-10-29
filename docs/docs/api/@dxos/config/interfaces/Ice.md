@@ -4,17 +4,17 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### credential 
+### [`credential`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### urls 
+### [`urls`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### username 
+### [`username`]()
 Type: `string`
 
 Options:

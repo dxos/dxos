@@ -1,5 +1,5 @@
 # Class `PublicKey`
-> Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
+Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -7,95 +7,173 @@ Keys should be maintained as buffers in objects and proto definitions, and conve
 strings as late as possible (eg, to log/display).
 
 ## Constructors
-### constructor
-```ts
-(_value: Uint8Array) => [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+### [`constructor`]()
+
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`_value`: `Uint8Array`
 
 ## Properties
 
 
 ## Methods
-### [custom]
-```ts
-(depth: number, options: InspectOptionsStylized) => string
-```
+### [`[custom]`]()
+
+
 Used by NodeJS to get textual representation of this object when it's printed with a  `console.log`  statement.
-### asBuffer
-```ts
-() => Buffer
-```
+
+Returns: `string`
+
+Arguments: 
+
+`depth`: `number`
+
+`options`: `InspectOptionsStylized`
+### [`asBuffer`]()
+
+
 Covert this key to buffer.
-### asUint8Array
-```ts
-() => Uint8Array
-```
+
+Returns: `Buffer`
+
+Arguments: none
+### [`asUint8Array`]()
+
+
 Return underlying Uint8Array representation.
-### equals
-```ts
-(other: PublicKeyLike) => boolean
-```
+
+Returns: `Uint8Array`
+
+Arguments: none
+### [`equals`]()
+
+
 Test this key for equality with some other key.
-### toHex
-```ts
-() => string
-```
+
+Returns: `boolean`
+
+Arguments: 
+
+`other`: `PublicKeyLike`
+### [`toHex`]()
+
+
 Convert this key to hex-encoded string.
-### toJSON
-```ts
-() => string
-```
+
+Returns: `string`
+
+Arguments: none
+### [`toJSON`]()
+
+
 Same as  `PublicKey.humanize()` .
-### toString
-```ts
-() => string
-```
+
+Returns: `string`
+
+Arguments: none
+### [`toString`]()
+
+
 Same as  `PublicKey.humanize()` .
-### truncate
-```ts
-(n: number) => string
-```
-### assertValidPublicKey
-```ts
-(value: any) => asserts value is [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+
+Returns: `string`
+
+Arguments: none
+### [`truncate`]()
+
+
+Returns: `string`
+
+Arguments: 
+
+`n`: `number`
+### [`assertValidPublicKey`]()
+
+
 Asserts that provided values is an instance of PublicKey.
-### bufferize
-```ts
-(str: string) => Buffer
-```
-### equals
-```ts
-(left: PublicKeyLike, right: PublicKeyLike) => boolean
-```
+
+Returns: `asserts value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`value`: `any`
+### [`bufferize`]()
+
+
+Returns: `Buffer`
+
+Arguments: 
+
+`str`: `string`
+### [`equals`]()
+
+
 Tests two keys for equality.
-### from
-```ts
-(source: PublicKeyLike) => [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+
+Returns: `boolean`
+
+Arguments: 
+
+`left`: `PublicKeyLike`
+
+`right`: `PublicKeyLike`
+### [`from`]()
+
+
 Creates new instance of PublicKey automatically determining the input format.
-### fromHex
-```ts
-(hex: string) => [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`source`: `PublicKeyLike`
+### [`fromHex`]()
+
+
 Creates new instance of PublicKey from hex string.
-### hash
-```ts
-(key: [PublicKey](/api/@dxos/client/classes/PublicKey)) => string
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`hex`: `string`
+### [`hash`]()
+
+
 To be used with ComplexMap and ComplexSet.
 Returns a scalar representation for this key.
-### isPublicKey
-```ts
-(value: any) => value is [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+
+Returns: `string`
+
+Arguments: 
+
+`key`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`isPublicKey`]()
+
+
 Tests if provided values is an instance of PublicKey.
-### random
-```ts
-() => [PublicKey](/api/@dxos/client/classes/PublicKey)
-```
+
+Returns: `value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`value`: `any`
+### [`random`]()
+
+
 Creates a new key.
-### stringify
-```ts
-(key: Buffer | Uint8Array) => string
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: none
+### [`stringify`]()
+
+
+Returns: `string`
+
+Arguments: 
+
+`key`: `Buffer | Uint8Array`

@@ -1,66 +1,91 @@
 # Class `Client`
-> Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:78`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L78)
+Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:78`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L78)
 
 
 
 
 ## Constructors
-### constructor
-```ts
-(config: Config | Config, options: [ClientOptions](/api/@dxos/client/interfaces/ClientOptions)) => [Client](/api/@dxos/client/classes/Client)
-```
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L100)
+
+
 Creates the client object based on supplied configuration.
 Requires initialization after creating by calling  `.initialize()` .
 
+Returns: [`Client`](/api/@dxos/client/classes/Client)
+
+Arguments: 
+
+`config`: `Config | Config`
+
+`options`: [`ClientOptions`](/api/@dxos/client/interfaces/ClientOptions)
+
 ## Properties
-### version 
-Type: "2.33.8"
-### config
-Type: Config
-### echo
-Type: [EchoProxy](/api/@dxos/client/classes/EchoProxy)
+### [`version`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L79)
+Type: `"2.33.8"`
+### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L132)
+Type: `Config`
+### [`echo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L147)
+Type: [`EchoProxy`](/api/@dxos/client/classes/EchoProxy)
 
 ECHO database.
-### halo
-Type: [HaloProxy](/api/@dxos/client/classes/HaloProxy)
+### [`halo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L155)
+Type: [`HaloProxy`](/api/@dxos/client/classes/HaloProxy)
 
 HALO credentials.
-### info
-Type: [ClientInfo](/api/@dxos/client/interfaces/ClientInfo)
-### initialized
-Type: boolean
+### [`info`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L124)
+Type: [`ClientInfo`](/api/@dxos/client/interfaces/ClientInfo)
+### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L140)
+Type: `boolean`
 
 Has the Client been initialized?
 Initialize by calling  `.initialize()`
-### services
-Type: ClientServices
+### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L166)
+Type: `ClientServices`
 
 Client services that can be proxied.
 
 ## Methods
-### destroy
-```ts
-() => Promise&lt;void&gt;
-```
+### [`destroy`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L265)
+
+
 Cleanup, release resources.
-### initialize
-```ts
-(onProgressCallback: function) => Promise&lt;void&gt;
-```
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`initialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179)
+
+
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
-### registerModel
-```ts
-(constructor: ModelConstructor&lt;any&gt;) => [Client](/api/@dxos/client/classes/Client)
-```
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`onProgressCallback`: `function`
+### [`registerModel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L295)
+
+
 Registers a new ECHO model.
-### reset
-```ts
-() => Promise&lt;void&gt;
-```
+
+Returns: [`Client`](/api/@dxos/client/classes/Client)
+
+Arguments: 
+
+`constructor`: `ModelConstructor<any>`
+### [`reset`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L284)
+
+
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
-### toString
-```ts
-() => string
-```
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`toString`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L120)
+
+
+Returns: `string`
+
+Arguments: none

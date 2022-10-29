@@ -4,17 +4,17 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### cert 
+### [`cert`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### logs 
+### [`logs`]()
 Type: `string`
 
 Options:
   - proto3_optional = true
-### services 
+### [`services`]()
 Type: `string`
 
 Options:

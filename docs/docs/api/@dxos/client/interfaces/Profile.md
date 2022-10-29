@@ -4,9 +4,9 @@
 Defined in:
    file://./../../dxos/client.proto
 ## Properties
-### publicKey 
-Type: `PublicKey`
-### username 
+### [`publicKey`]()
+Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`username`]()
 Type: `string`
 
 Options:

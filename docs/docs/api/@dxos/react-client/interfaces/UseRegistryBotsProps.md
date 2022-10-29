@@ -3,5 +3,5 @@
 
 
 ## Properties
-### sortByKeywords 
+### [`sortByKeywords`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L21)
 Type: `string[]`
