@@ -27,6 +27,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocols": "workspace:*",

@@ -32,7 +32,7 @@ export type FormatParts = {
 
 export type Format = (parts: FormatParts, options: ConfigOptions) => (string | undefined)[];
 
-// TODO(burdon): File path must come fist for console hyperlinks?
+// NOTE: File path must come fist for console hyperlinks.
 export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context }, { column } = {}) => {
   const filepath = `${path}:${line}`;
   return [
@@ -40,6 +40,8 @@ export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context 
     column ? ''.padStart(column - filepath.length) : undefined,
     chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
     message,
+    // NOTE: Must not stringify.
+    // TODO(burdon): Substitute buffer contents with length?
     context
   ];
 };

@@ -87,7 +87,8 @@ export class SpaceInvitations {
     const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
     const connection = await this._networkManager.openSwarmConnection({
       topic,
-      peerId,
+      peerId: topic, // TODO(burdon): Why???
+      // peerId,
       protocol: createProtocolFactory(topic, peerId, [plugin]),
       topology: new StarTopology(topic)
     });
@@ -157,7 +158,8 @@ export class SpaceInvitations {
     const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
     const connection = await this._networkManager.openSwarmConnection({
       topic,
-      peerId,
+      peerId: PublicKey.random(), // TODO(burdon): Why???
+      // peerId,
       protocol: createProtocolFactory(topic, peerId, [plugin]),
       topology: new StarTopology(topic)
     });

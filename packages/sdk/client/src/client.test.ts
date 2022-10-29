@@ -13,6 +13,7 @@ import { clientServiceBundle, ClientServiceHost, InvitationWrapper } from '@dxos
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -56,9 +57,7 @@ describe('Client', function () {
         await client.initialize();
         afterTest(() => client.destroy());
 
-        const profile = await client.halo.createProfile({
-          username: 'test-user'
-        });
+        const profile = await client.halo.createProfile({ username: 'test-user' });
         expect(profile).toBeDefined();
         // expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -84,10 +83,7 @@ describe('Client', function () {
         const seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
-        const profile = await client.halo.createProfile({
-          ...keyPair,
-          username: 'test-user'
-        });
+        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -104,6 +100,10 @@ describe('Client', function () {
         expect(recoveredClient.halo.profile!.username).toEqual('test-user');
       }).timeout(2000);
     });
+
+    //
+    // TODO(burdon): Factor out invitation tests.
+    //
 
     describe('party invitations', function () {
       const prepareInvitations = async () => {
@@ -127,6 +127,8 @@ describe('Client', function () {
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
         invitation.error.on(throwUnhandledRejection);
+        log('created invitation', { invitation: invitation.descriptor });
+
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
         expect(inviteeParty.key).toEqual(party.key);
 
@@ -139,6 +141,7 @@ describe('Client', function () {
 
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
+        log('created invitation', { invitation: invitation.descriptor });
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
@@ -384,7 +387,7 @@ describe('Client', function () {
     });
   });
 
-  describe('remote - wrtc proxy', function () {
+  describe('remote - WebRTC proxy', function () {
     testSuite(async () => {
       const transportFactory = new WebRTCTransportProxyFactory();
       transportFactory.setBridgeService(new WebRTCTransportService());
