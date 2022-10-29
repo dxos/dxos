@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ErrorBoundary } from '@sentry/react';
 import React, { useRef } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 
@@ -11,6 +12,8 @@ import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
+import { ErrorsProvider, FatalError } from './components';
+import { useTelemetry } from './hooks';
 import {
   AppLayout,
   AppsPage,
@@ -30,8 +33,10 @@ import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
-const Routes = () =>
-  useRoutes([
+const Routes = () => {
+  useTelemetry();
+
+  return useRoutes([
     {
       path: '/',
       element: <LockPage />
@@ -77,23 +82,29 @@ const Routes = () =>
       ]
     }
   ]);
+};
 
 export const App = () => {
   const clientRef = useRef<Client>();
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider
-        clientRef={clientRef}
-        config={configProvider}
-        onInitialize={async (client) => {
-          client.echo.registerModel(TextModel);
-        }}
-      >
-        <HashRouter>
-          <Routes />
-        </HashRouter>
-      </ClientProvider>
+      <ErrorsProvider>
+        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+          <ClientProvider
+            clientRef={clientRef}
+            config={configProvider}
+            onInitialize={async (client) => {
+              client.echo.registerModel(TextModel);
+            }}
+          >
+            <HashRouter>
+              <Routes />
+            </HashRouter>
+          </ClientProvider>
+        </ErrorBoundary>
+      </ErrorsProvider>
     </UiKitProvider>
   );
 };
