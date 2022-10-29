@@ -681,6 +681,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/randombytes': ^2.0.0
@@ -709,6 +710,7 @@ importers:
       util: 0.12.5
     devDependencies:
       '@dxos/log': link:../log
+      '@dxos/util': link:../util
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/randombytes': 2.0.0
