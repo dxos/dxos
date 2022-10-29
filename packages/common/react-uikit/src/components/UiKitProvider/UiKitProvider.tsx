@@ -7,7 +7,6 @@ import React, { ReactNode } from 'react';
 import { UiProvider, UiProviderProps } from '@dxos/react-ui';
 
 import { TranslationsProvider, TranslationsProviderProps } from '../../translations';
-import { ErrorsBoundaryProvider } from '../ErrorBoundary';
 
 interface UiKitProviderProps extends Omit<UiProviderProps, 'children'>, Omit<TranslationsProviderProps, 'children'> {
   children?: ReactNode;
@@ -22,7 +21,7 @@ export const UiKitProvider = ({ children, fallback, resourceExtensions, ...uiPro
           resourceExtensions
         }}
       >
-        <ErrorsBoundaryProvider>{children}</ErrorsBoundaryProvider>
+        {children}
       </TranslationsProvider>
     </UiProvider>
   );
