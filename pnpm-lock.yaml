@@ -279,9 +279,12 @@ importers:
       '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@sentry/react': ^7.17.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
@@ -297,6 +300,7 @@ importers:
       url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -313,8 +317,11 @@ importers:
       '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
+      '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
       phosphor-react: 1.4.1_react@18.2.0
@@ -333,6 +340,7 @@ importers:
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
+      workbox-window: 6.5.4
 
   packages/apps/templates/bare-template:
     specifiers:
@@ -816,6 +824,7 @@ importers:
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
       '@radix-ui/react-popover': ^1.0.2
+      '@radix-ui/react-toast': ^1.1.1
       '@radix-ui/react-tooltip': ^1.0.2
       '@tailwindcss/forms': ^0.5.3
       '@types/react': ^18.0.21
@@ -843,6 +852,7 @@ importers:
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-popover': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-toast': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
@@ -913,13 +923,13 @@ importers:
 
   packages/common/sentry:
     specifiers:
-      '@sentry/browser': ^7.16.0
-      '@sentry/node': ^7.16.0
+      '@sentry/browser': ^7.17.2
+      '@sentry/node': ^7.17.2
       '@sentry/types': ^7.16.0
       sentry-testkit: ^4.1.0
     dependencies:
-      '@sentry/browser': 7.16.0
-      '@sentry/node': 7.16.0
+      '@sentry/browser': 7.17.2
+      '@sentry/node': 7.17.2
     devDependencies:
       '@sentry/types': 7.16.0
       sentry-testkit: 4.1.0
@@ -8414,6 +8424,29 @@ packages:
       react: 18.2.0
     dev: false
 
+  /@radix-ui/react-toast/1.1.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-0wNOO9/O1jNvJQOVJD62HoquYqsC8KhWvRgmZ2vlw/5PW/K88mcS2G0gKCrWtcAC33rLttPU1JPd4SF+qzCZ6A==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-dismissable-layer': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-portal': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
+      '@radix-ui/react-visually-hidden': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@radix-ui/react-tooltip/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
     resolution: {integrity: sha512-11gUlok2rv5mu+KBtxniOKKNKjqC/uTbgFHWoQdbF46vMV+zjDaBvCtVDK9+MTddlpmlisGPGvvojX7Qm0yr+g==}
     peerDependencies:
@@ -8686,32 +8719,32 @@ packages:
       '@ndhoule/map': 2.0.1
     dev: false
 
-  /@sentry/browser/7.16.0:
-    resolution: {integrity: sha512-tJ063zvoF8Raw7mzQEXupOFPSN6v36WIbsDVGeFdToPCwViaBuATaxvWCrudGzsnBkMyItmTLJkzn9SEIXUOiw==}
+  /@sentry/browser/7.17.2:
+    resolution: {integrity: sha512-LICJvwnES+Jp7ShN7zkmTFYIQB9jWOg/s9U58CQWfwrkMTwE4zKylojF3OTtyNaMmekVv/y/1JjeS5KAK3IrHQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.16.0
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/core/7.16.0:
-    resolution: {integrity: sha512-vq6H1b/IPTvzDD9coQ3wIudvSjkAYuUlXb1dv69dRlq4v3st9dcKBps1Zf0lQ1i4TVlDLoe1iGMmNFglMF1Q5w==}
+  /@sentry/core/7.17.2:
+    resolution: {integrity: sha512-mBFjngWJPN3V1A/tz/qa1jkQvmZtU07hhlWg+kmajD0nFulPHUWEvZhsi8NFveGcxMxc/wmaSSLcEOpKq5L29g==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/node/7.16.0:
-    resolution: {integrity: sha512-OC0TO6UTetv8IsX3zNhdeui7YVIQCnhkbfi+CMrB6YsHaMP2A9qH5gNyu/hKbaY9+4xci7e4rxyRmI65aKS9ow==}
+  /@sentry/node/7.17.2:
+    resolution: {integrity: sha512-dMHff7C3MgKpIlbLkrEEtq1nX8o1Tiax/DWOtj5dLrPMsjQyivMs906GeS3GJkX7YeMMfy93j8gC+qIK54gqFw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.16.0
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       cookie: 0.4.2
       https-proxy-agent: 5.0.1
       lru_map: 0.3.3
@@ -8720,15 +8753,35 @@ packages:
       - supports-color
     dev: false
 
+  /@sentry/react/7.17.2_react@18.2.0:
+    resolution: {integrity: sha512-vE3JND7yPVWQkrFXxbzz6nfq+jn8YZL7kitr/ioTqWBvZJyxveIl8qg7w6dN0JpMmbV52dEumSSXk8rHLtCTyw==}
+    engines: {node: '>=8'}
+    peerDependencies:
+      react: 15.x || 16.x || 17.x || 18.x
+    dependencies:
+      '@sentry/browser': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
+      hoist-non-react-statics: 3.3.2
+      react: 18.2.0
+      tslib: 1.14.1
+    dev: false
+
   /@sentry/types/7.16.0:
     resolution: {integrity: sha512-i6D+OK6d0l/k+VQvRp/Pt21WkDEgVBUIZq+sOkEZJczbcfexVdXKeXXoYTD2vYuFq8Yy28fzlsZaKI+NoH94yQ==}
     engines: {node: '>=8'}
+    dev: true
 
-  /@sentry/utils/7.16.0:
-    resolution: {integrity: sha512-3Zh1txg7IRp4kZAdG27YF7K6lD1IZyuAo9KjoPg1Xzqa4DOZyASJuEkbf+rK2a9T4HrtVHHXJUsNbKg8WM3VHg==}
+  /@sentry/types/7.17.2:
+    resolution: {integrity: sha512-zxhNQ8Xt/hfP8bFZEV66ovJZK7aUqok5w1wjsHgkUz/S6/gkiMrDYT3OtRCRuY3mfQu9KmeBniM0xZkaxREJ1w==}
+    engines: {node: '>=8'}
+    dev: false
+
+  /@sentry/utils/7.17.2:
+    resolution: {integrity: sha512-l8t6qzyi+UUzD0a/oOYn4i+Eii+Ei29/TVwj/+9ogfJzBk6dSwSLvXievsyCRpcN3tftpWP0cHREcbZN64ZOWw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.16.0
+      '@sentry/types': 7.17.2
       tslib: 1.14.1
     dev: false
 

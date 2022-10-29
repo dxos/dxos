@@ -15,13 +15,12 @@ let analytics: Analytics | undefined;
 /**
  *
  */
-export const init = (options: InitOptions) => {
-  const apiKey = options.apiKey ?? process.env.DXOS_TELEMETRY_KEY;
+export const init = ({ apiKey, batchSize, enable }: InitOptions) => {
   assert(apiKey, 'Key required to send telemetry');
 
   analytics = new Analytics(apiKey, {
-    flushAt: options.batchSize,
-    enable: options.enable
+    flushAt: batchSize,
+    enable
   });
 };
 
