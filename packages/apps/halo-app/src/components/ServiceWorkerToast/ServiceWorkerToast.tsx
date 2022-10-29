@@ -19,7 +19,7 @@ interface OfflineReadyToastProps {
 
 export type ServiceWorkerToastProps = NeedRefreshToastProps | OfflineReadyToastProps;
 
-const isNeedRefreshToast = (o: any): o is NeedRefreshToastProps => o.variant === 'needRefresh';
+const isNeedRefreshToast = (props: any): props is NeedRefreshToastProps => props.variant === 'needRefresh';
 
 export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
   const { t } = useTranslation('halo');
