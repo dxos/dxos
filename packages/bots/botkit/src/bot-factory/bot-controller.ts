@@ -57,9 +57,9 @@ export class BotController {
     this._peers.set(peerId, peer);
 
     log(`[${peerId}]: Peer initialized`);
-    return () => {
+    return async () => {
       this._peers.delete(peerId);
-      peer.close();
+      await peer.close();
       log(`[${peerId}]: Peer disconnected`);
     };
   }

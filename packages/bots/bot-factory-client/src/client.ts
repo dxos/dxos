@@ -61,7 +61,7 @@ export class BotFactoryClient {
     const peerId = PublicKey.random();
     const port = await asyncTimeout(
       new Promise<RpcPort>((resolve) => {
-        this._networkManager.openSwarmConnection({
+        void this._networkManager.openSwarmConnection({
           topic,
           peerId,
           topology: new StarTopology(topic),
@@ -88,7 +88,7 @@ export class BotFactoryClient {
     if (this._rpcClient) {
       log('stopping...');
       await this._rpcClient.close();
-      this._networkManager.closeSwarmConnection(this._topic!);
+      await this._networkManager.closeSwarmConnection(this._topic!);
       this._rpcClient = undefined;
       this._topic = undefined;
       this._isReady = false;

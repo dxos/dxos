@@ -129,7 +129,7 @@ export const createRpcPlugin = <Client, Server>(
       await onOpen?.(peer);
     } catch (err: any) {
       if (onError) {
-        onError(err)
+        onError(err);
       } else {
         log.error('RPC failed', err);
       }

@@ -64,7 +64,7 @@ export const asyncTimeout = <T>(
 };
 
 export interface AsyncCallbacks<T = any> {
-  onSuccess?(result: T): T
+  onSuccess?(result: T): T;
   onTimeout(err: TimeoutError): void;
   onError(err: Error): void;
 }
@@ -83,7 +83,7 @@ export const asyncCatch = <T = any> (
     setTimeout(async () => {
       const result = await asyncTimeout<T>(promise, timeout);
       observable.callbacks?.onSuccess?.(result);
-    })
+    });
   } catch (err) {
     if (!observable.callbacks) {
       throw err;

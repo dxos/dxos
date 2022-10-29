@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-
 /**
  * Observable interface returned to caller.
  */

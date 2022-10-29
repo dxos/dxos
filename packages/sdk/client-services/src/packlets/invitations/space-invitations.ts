@@ -17,14 +17,15 @@ import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitation
 // TODO(burdon): Objective: Service impl pattern with clean open/close semantics.
 // TODO(burdon): Isolate deps on protocol throughout echo-db.
 
-interface InvitationEvents extends AsyncCallbacks {
+export interface InvitationEvents extends AsyncCallbacks {
   onConnect(invitation: InvitationDescriptor): void;
   onComplete(): void;
-  onReject(): void
+  onReject(): void;
 }
 
-type InvitationObservable = Observable<InvitationEvents>;
+export type InvitationObservable = Observable<InvitationEvents>;
 
+// TODO(burdon): Testing.
 const _ = async (space: Space, spaceInvitations: SpaceInvitations) => {
   // Impl.
   const f = (): InvitationObservable => {
@@ -33,7 +34,7 @@ const _ = async (space: Space, spaceInvitations: SpaceInvitations) => {
     asyncCatch(
       async () => {
         setTimeout(() => {
-          observable.callbacks?.onConnect({} as InvitationDescriptor)
+          observable.callbacks?.onConnect({} as InvitationDescriptor);
         }, 100);
       },
       observable,
@@ -44,7 +45,6 @@ const _ = async (space: Space, spaceInvitations: SpaceInvitations) => {
   };
 
   // Caller.
-  // TODO(burdon): Cancel/reset?
   const observable = f();
   observable.observe({
     onConnect: (invitation) => {
@@ -52,7 +52,7 @@ const _ = async (space: Space, spaceInvitations: SpaceInvitations) => {
     },
     onComplete: () => {},
     onReject: () => {},
-    onTimeout (err): void {
+    onTimeout: (err) => {
       console.log(err);
     },
     onError: (err: Error) => {

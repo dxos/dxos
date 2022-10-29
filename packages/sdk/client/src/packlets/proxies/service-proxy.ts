@@ -36,6 +36,6 @@ export class ClientServiceProxy implements ClientServiceProvider {
   }
 
   async close() {
-    this._client.close();
+    await this._client.close();
   }
 }
