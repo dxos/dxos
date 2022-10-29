@@ -10,6 +10,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
+import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
 import { ErrorsProvider, FatalError, ServiceWorkerToast } from './components';
@@ -91,6 +92,7 @@ export const App = () => {
     updateServiceWorker
   } = useRegisterSW({
     onRegisterError: (err) => {
+      captureException(err);
       console.error(err);
     }
   });
