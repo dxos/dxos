@@ -3,9 +3,9 @@
 //
 
 import { expect } from 'chai';
-import EventEmitter from 'node:events';
+import { EventEmitter } from 'node:events';
 
-import { onEvent, waitForEvent } from './events';
+import { onEvent, waitForEvent } from './event-emitter';
 import { latch } from './latch';
 import { asyncTimeout } from './timeout';
 
