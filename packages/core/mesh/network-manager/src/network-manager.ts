@@ -36,14 +36,14 @@ export type SwarmOptions = {
   peerId: PublicKey;
 
   /**
-   * Requested topology. Must be a new instance for every swarm.
-   */
-  topology: Topology;
-
-  /**
    * Protocol to use for every connection.
    */
   protocol: ProtocolProvider;
+
+  /**
+   * Requested topology. Must be a new instance for every swarm.
+   */
+  topology?: Topology;
 
   /**
    * Presence plugin for network mapping, if exists.

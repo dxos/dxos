@@ -25,17 +25,34 @@ export const sleep = (ms: number) =>
   });
 
 /**
+ *
+ */
+export const timeout = <T>(cb: () => Promise<T>, timeout: number, err?: string): Promise<T> => {
+  return cb();
+};
+
+/**
  * Wait for promise or throw error on timeout.
  * @param promise
  * @param [timeout] How long to wait, in milliseconds.
  * @param [error]
  */
-export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: Error | string): Promise<T> => {
+// prettier-ignore
+export const promiseTimeout = <T>(
+  promise: Promise<T>,
+  timeout: number,
+  err?: Error | string
+): Promise<T> => {
   let cancelTimeout: any;
 
   const timeoutPromise = new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(error ?? new Error(`Timed out after ${timeout}ms`));
+      if (typeof err === 'string') {
+        // TODO(burdon): Custom exception for async methods.
+        reject(new Error(`Timed out ]${timeout}ms: ${err}`));
+      } else {
+        reject(err);
+      }
     }, timeout);
 
     cancelTimeout = () => {

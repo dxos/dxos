@@ -37,48 +37,54 @@ message InvitationDescriptor {
 // HALO device invitations.
 //
 
-message AdmitDeviceRequest {
+// TODO(burdon): ALL invitation messages should be handled over encrypted sessions.
+// TODO(burdon): Or contain some form of signed credential.
+// TODO(burdon): Calls should include some request context (e.g., halo/space key).
+
+message HaloAdmissionCredentials {
   dxos.keys.PublicKey device_key = 1;
   dxos.keys.PublicKey control_feed_key = 2;
   dxos.keys.PublicKey data_feed_key = 3;
 }
 
-message AcceptDeviceRequest {
+message HaloAdmissionOffer {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey halo_space_key = 2;
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
-// TODO(burdon): Rename methods (less terse).
-service HaloInvitationsService {
-  ///
-  rpc AdmitDevice(AdmitDeviceRequest) returns (google.protobuf.Empty);
+service HaloHostService {
+  /// Process admission request from guest.
+  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
+}
 
-  ///
-  rpc AcceptDevice(AcceptDeviceRequest) returns (google.protobuf.Empty);
+service HaloGuestService {
+  /// Process admission offer from host.
+  rpc PresentAdmissionOffer(HaloAdmissionOffer) returns (google.protobuf.Empty);
 }
 
 //
 // Space agent invitations.
 //
 
-message AdmitAgentRequest {
+message SpaceAdmissionCredentials {
   dxos.keys.PublicKey identity_key = 1;
   dxos.keys.PublicKey device_key = 2;
   dxos.keys.PublicKey control_feed_key = 3;
   dxos.keys.PublicKey data_feed_key = 4;
 }
 
-message AcceptAgentRequest {
+message SpaceAdmissionOffer {
   dxos.keys.PublicKey space_key = 1;
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
-// TODO(burdon): Rename methods (less terse).
-service SpaceInvitationsService {
-  ///
-  rpc AdmitAgent(AdmitAgentRequest) returns (google.protobuf.Empty);
+service SpaceHostService {
+  /// Process admission request from guest.
+  rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
+}
 
-  ///
-  rpc AcceptAgent(AcceptAgentRequest) returns (google.protobuf.Empty);
+service SpaceGuestService {
+  /// Process admission offer from host.
+  rpc PresentAdmissionOffer(SpaceAdmissionOffer) returns (google.protobuf.Empty);
 }

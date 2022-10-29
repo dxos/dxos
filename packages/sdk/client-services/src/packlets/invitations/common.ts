@@ -32,13 +32,13 @@ export interface InvitationOptions {
   expiration?: number;
 }
 
-// TODO(burdon): Remove/rename.
+// TODO(burdon): Remove/move to API.
 export type InviterInvitation = {
   invitationCode: string;
   secret: Uint8Array | undefined;
 };
 
-// TODO(burdon): Remove/rename.
+// TODO(burdon): Remove/move to API.
 export type InviteeInvitation = {
   secret?: Uint8Array | undefined; // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void; // Is triggered after supplying the secret.

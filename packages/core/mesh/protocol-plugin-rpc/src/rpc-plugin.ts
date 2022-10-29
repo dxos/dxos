@@ -5,8 +5,9 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { RpcPort } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions, RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
 type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>;
@@ -22,7 +23,7 @@ type Connection = {
 };
 
 /**
- *
+ * Protocol plug-in to handle direct RPC connections.
  */
 export class RpcPlugin {
   static readonly EXTENSION = 'dxos.mesh.protocol.rpc';
@@ -88,9 +89,10 @@ export const getPeerId = (peer: Protocol) => {
 export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
   send: async (msg) => {
     const extension = peer.getExtension(RpcPlugin.EXTENSION);
-    assert(extension, 'Extension is not set');
+    assert(extension, 'Extension is not set.');
     await extension.send(msg);
   },
+
   subscribe: (cb) => {
     const adapterCallback = (obj: SerializedObject) => {
       cb(obj.data);
@@ -99,3 +101,37 @@ export const createPort = async (peer: Protocol, receive: Event<SerializedObject
     return () => receive.off(adapterCallback);
   }
 });
+
+type CreateRpcPluginOptions<Client> = {
+  onOpen?: (peer: ProtoRpcPeer<Client>) => Promise<void>;
+  onClose?: () => Promise<void>;
+};
+
+/**
+ * Creates an RPC plugin with the given handlers.
+ * Calls the callback once the connection is established?
+ */
+// prettier-ignore
+export const createRpcPlugin = <Client, Server>(
+  rpcOptions: Omit<ProtoRpcPeerOptions<Client, Server>, 'port'>,
+  pluginOptions?: CreateRpcPluginOptions<Client>
+) => {
+  const { onOpen, onClose } = pluginOptions ?? {};
+  return new RpcPlugin(async (port) => {
+    // TODO(burdon): What does connection mean? Just one peer?
+    //  See original comment re handling multiple connections.
+    const peer = createProtoRpcPeer({ ...rpcOptions, port });
+
+    try {
+      log('opening peer');
+      await peer.open();
+      await onOpen?.(peer);
+    } catch (err: any) {
+      log.error('RPC handler failed', err);
+    } finally {
+      log('closing peer');
+      await peer.close();
+      await onClose?.();
+    }
+  });
+};

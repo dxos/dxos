@@ -34,18 +34,18 @@ export class ProtoRpcPeer<S> {
 
 export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'> {
   /**
-   * Services that are expected to be serviced by the counter-party.
+   * Services that are expected to be implemented by the counter-party.
    */
-  requested: ServiceBundle<Client>;
+  requested: ServiceBundle<Client>; // TODO(burdon): Rename proxy.
 
   /**
    * Services exposed to the counter-party.
    */
-  exposed: ServiceBundle<Server>;
+  exposed: ServiceBundle<Server>; // TODO(burdon): Rename service/impl.
 
   /**
    * Handlers for the exposed services
-   * */
+   */
   handlers: Server;
 
   /**

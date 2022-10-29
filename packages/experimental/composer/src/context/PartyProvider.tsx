@@ -79,7 +79,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
           {props.children}
           <div className='fixed bottom-2 right-2 flex gap-4'>
             {partyInvitations && (
-              <Button onClick={() => navigator.clipboard.writeText(partyInvitations[0].descriptor.encode().toString())}>
+              <Button onClick={() => navigator.clipboard.writeText(partyInvitations[0].encode())}>
                 Copy invite code
               </Button>
             )}
