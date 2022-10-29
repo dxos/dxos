@@ -5,5 +5,5 @@ Declared in [`packages/sdk/config/src/types.ts:56`](https://github.com/dxos/prot
 Any nested dot separated key that can be in config.
 
 ```ts
-type ConfigKey = DotNestedKeys<`[`ConfigProto`](/api/@dxos/config/interfaces/Config)`>
+type ConfigKey = DotNestedKeys<ConfigProto>
 ```

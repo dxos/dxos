@@ -31,7 +31,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ${stringifier.comment(atype.comment)}
 
                 \`\`\`ts
-                type ${atype.name} = ${stringifier.types.type(atype.type!)}
+                type ${atype.name} = ${stringifier.txt.type(atype.type!)}
                 \`\`\`
                 `
             })

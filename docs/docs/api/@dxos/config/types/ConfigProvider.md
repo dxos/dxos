@@ -5,5 +5,5 @@ Declared in [`packages/sdk/config/src/types.ts:10`](https://github.com/dxos/prot
 
 
 ```ts
-type ConfigProvider = MaybeFunction<MaybePromise<`[`Config`](/api/@dxos/config/classes/Config)` | `[`ConfigProto`](/api/@dxos/config/interfaces/Config)`>>
+type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigProto>>
 ```

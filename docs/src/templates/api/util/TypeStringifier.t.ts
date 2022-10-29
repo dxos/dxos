@@ -1,4 +1,5 @@
 import { escapeHtml } from 'markdown-it/lib/common/utils';
+import { stringify } from 'querystring';
 import { JSONOutput as Schema, ReflectionKind } from 'typedoc';
 import {
   packageOfReflectionId,
@@ -22,6 +23,9 @@ export type AllStringifiers = {
 
 export class TypeStringifier implements AllStringifiers {
   constructor(public readonly root: Schema.Reflection) {}
+  stringify(node: Schema.SomeType): string {
+    return this.type(node);
+  }
   /**
    * Return a string representation of the given type.
    */
@@ -75,9 +79,9 @@ export class TypeStringifier implements AllStringifiers {
     const name = node.name;
     let typeArgs = '';
     if (node.typeArguments) {
-      typeArgs += escapeHtml('<');
+      typeArgs += '<';
       typeArgs += this.list(node.typeArguments, ', ');
-      typeArgs += escapeHtml('>');
+      typeArgs += '>';
     }
     return name + typeArgs;
   }

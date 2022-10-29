@@ -20,7 +20,7 @@ export type AllStringifiers = {
   [K in keyof Schema.TypeKindMap]: (node: Schema.TypeKindMap[K]) => string;
 };
 
-export class TypeStringifier implements AllStringifiers {
+export class MdTypeStringifier implements AllStringifiers {
   constructor(public readonly root: Schema.Reflection) {}
   /**
    * Return a string representation of the given type.

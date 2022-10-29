@@ -10,12 +10,15 @@ import {
 } from 'typedoc';
 import { text, ts } from '@dxos/plate';
 import { reflectionsOfKind } from './utils.t';
-import { TypeStringifier } from './MdTypeStringifier.t';
+import { MdTypeStringifier } from './MdTypeStringifier.t';
+import { TypeStringifier } from './TypeStringifier.t';
 
 const tabs = (i: number = 0) => new Array(i).fill('  ').join('');
 
 export class Stringifier {
-  public readonly types = new TypeStringifier(this.root);
+  public readonly md = new MdTypeStringifier(this.root);
+  public readonly txt = new TypeStringifier(this.root);
+
   constructor(public readonly root: Schema.Reflection) {}
 
   children(ref: Schema.ContainerReflection, kind?: ReflectionKind) {
@@ -55,7 +58,7 @@ export class Stringifier {
     return text`
     ${this.comment(ref.comment)}
     
-    Returns: ${this.types.stringify(type!)}
+    Returns: ${this.md.stringify(type!)}
 
     Arguments: ${!parameters?.length && 'none'}
 
@@ -63,7 +66,7 @@ export class Stringifier {
     `;
   }
   param(ref: Schema.ParameterReflection) {
-    return `\`${ref.name}\`: ${this.types.stringify(ref.type!)}`;
+    return `\`${ref.name}\`: ${this.md.stringify(ref.type!)}`;
   }
   method(ref: Schema.DeclarationReflection): string {
     return text`
@@ -79,7 +82,7 @@ export class Stringifier {
       ### [\`${ref.name}\`](${ref.sources?.[0]?.url})
       Type: ${nodes
         .filter(Boolean)
-        .map((t) => this.types.stringify(t.type!))
+        .map((t) => this.md.stringify(t.type!))
         .join(', ')}
       
       ${nodes
