@@ -59,6 +59,7 @@ export class Multiplexer {
         })
       )
       .pipe(this.output, () => {
+        log('closed');
         this._isOpen = false;
       });
 
@@ -75,7 +76,7 @@ export class Multiplexer {
         write: (data: any, next: () => void) => {
           const { feedKey, payload } = data;
           const feedStream = this._streams.get(PublicKey.from(feedKey));
-          assert(feedStream);
+          assert(feedStream, `invalid stream: ${PublicKey.from(feedKey).truncate()}`);
           log('recv', { id: this._id, feedKey: PublicKey.from(feedKey), payload: (payload as Buffer).length });
           feedStream.write(payload);
           next();
@@ -83,6 +84,7 @@ export class Multiplexer {
       })
     );
 
+    log('opened');
     this._isOpen = true;
   }
 
@@ -92,9 +94,11 @@ export class Multiplexer {
       return;
     }
 
+    log('closing...');
     const [closed, setClosed] = latch({ count: this._streams.size });
     Array.from(this._streams.values()).forEach((stream) => {
       stream.once('end', () => {
+        log('stream closed');
         setClosed();
       });
 
@@ -102,9 +106,8 @@ export class Multiplexer {
     });
 
     await closed();
-    this.output.destroy();
-
     this._feeds.clear();
     this._streams.clear();
+    log('closed');
   }
 }

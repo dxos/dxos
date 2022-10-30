@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import assert from 'assert';
 
 type LatchProps = {
   count?: number;
@@ -16,7 +16,7 @@ type LatchResult = [() => Promise<number>, () => number, (err: Error) => void];
  */
 // TODO(burdon): Reconcile with until/trigger.
 export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
-  assert(count > 0);
+  assert(count >= 0);
 
   let t: ReturnType<typeof setTimeout>;
   let doResolve: (value: number) => void;
@@ -33,10 +33,16 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
     };
   });
 
-  if (timeout) {
-    t = setTimeout(() => {
-      doReject(new Error(`Timed out after ${timeout}ms`));
-    }, timeout);
+  if (count === 0) {
+    setTimeout(() => {
+      doResolve(0);
+    });
+  } else {
+    if (timeout) {
+      t = setTimeout(() => {
+        doReject(new Error(`Timed out after ${timeout}ms`));
+      }, timeout);
+    }
   }
 
   let i = 0;
