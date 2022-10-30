@@ -10,10 +10,10 @@ declare module 'hypercore-streams' {
   import { Readable, Writable } from 'streamx';
 
   export class WriteStream extends Writable {
-    constructor (feed: Hypercore, opts: any);
+    constructor(feed: Hypercore, opts: any);
   }
 
   export class ReadStream extends Readable {
-    constructor (feed: Hypercore, opts: any = {});
+    constructor(feed: Hypercore, opts: any = {});
   }
 }
