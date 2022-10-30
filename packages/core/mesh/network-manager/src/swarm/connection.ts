@@ -88,6 +88,7 @@ export class Connection {
     return this._protocol;
   }
 
+  // TODO(burdon): Make async.
   initiate() {
     this._signalMessaging
       .offer({
@@ -102,13 +103,13 @@ export class Connection {
           `Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`
         );
         if (this.state !== ConnectionState.INITIAL) {
-          log('Ignoring answer.');
+          log('ignoring response');
           return;
         }
 
         if (answer.accept) {
           try {
-            this.connect();
+            void this.open(); // TODO(burdon): Make async.
           } catch (err: any) {
             this.errors.raise(err);
           }
@@ -116,6 +117,7 @@ export class Connection {
           // If the peer rejected our connection remove it from the set of candidates.
           this._changeState(ConnectionState.REJECTED);
         }
+
         this._changeState(ConnectionState.ACCEPTED);
       })
       .catch((err) => {
@@ -123,7 +125,7 @@ export class Connection {
       });
   }
 
-  connect() {
+  async open() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
@@ -157,40 +159,14 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal(msg: SignalMessage) {
-    assert(msg.sessionId);
-    if (!msg.sessionId.equals(this.sessionId)) {
-      log('Dropping signal for incorrect session id.');
-      return;
-    }
-    assert(msg.data.signal);
-    assert(msg.author?.equals(this.remoteId));
-    assert(msg.recipient?.equals(this.ownId));
-
-    if (this._state === ConnectionState.INITIAL) {
-      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data}`);
-      this._bufferedSignals.push(msg.data.signal);
-      return;
-    }
-
-    assert(this._transport, 'Connection not ready to accept signals.');
-    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data}`);
-    await this._transport.signal(msg.data.signal);
-  }
-
-  private _changeState(state: ConnectionState): void {
-    this._state = state;
-    this.stateChanged.emit(state);
-  }
-
   @synchronized
   async close() {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
-    // TODO(dmaretskyi): CLOSING state.
 
-    log(`Closing ${this.ownId}`);
+    // TODO(dmaretskyi): CLOSING state.
+    log('closing', { peerId: this.ownId });
 
     // This will try to gracefull close the stream flushing any unsent data packets.
     await this._protocol.close();
@@ -198,8 +174,33 @@ export class Connection {
     // After the transport is closed streams are disconnected.
     await this._transport?.close();
 
-    log(`Closed ${this.ownId}`);
-
     this._changeState(ConnectionState.CLOSED);
+    log('closed', { peerId: this.ownId });
+  }
+
+  async signal(msg: SignalMessage) {
+    assert(msg.sessionId);
+    if (!msg.sessionId.equals(this.sessionId)) {
+      log('dropping signal for incorrect session id');
+      return;
+    }
+    assert(msg.data.signal);
+    assert(msg.author?.equals(this.remoteId));
+    assert(msg.recipient?.equals(this.ownId));
+
+    if (this._state === ConnectionState.INITIAL) {
+      log('buffered signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+      this._bufferedSignals.push(msg.data.signal);
+      return;
+    }
+
+    assert(this._transport, 'Connection not ready to accept signals.');
+    log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
+    await this._transport.signal(msg.data.signal);
+  }
+
+  private _changeState(state: ConnectionState): void {
+    this._state = state;
+    this.stateChanged.emit(state);
   }
 }

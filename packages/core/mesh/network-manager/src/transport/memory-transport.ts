@@ -20,6 +20,17 @@ type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
 const MEMORY_TRANSPORT_DELAY = 1;
 
 /**
+ * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
+ */
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
+  new Transform({
+    objectMode: true,
+    transform: (chunk, enc, cb) => {
+      setTimeout(() => cb(null, chunk), delay);
+    }
+  });
+
+/**
  * Fake transport.
  */
 // TODO(burdon): Remove static variables.
@@ -48,7 +59,7 @@ export class MemoryTransport implements Transport {
     private readonly _topic: PublicKey,
     private readonly _stream: NodeJS.ReadWriteStream
   ) {
-    log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+    log('creating', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
 
     this._ownKey = [this._topic, this._ownId, this._remoteId];
     this._remoteKey = [this._topic, this._remoteId, this._ownId];
@@ -60,7 +71,7 @@ export class MemoryTransport implements Transport {
     if (this._remoteConnection) {
       this._remoteConnection._remoteConnection = this;
 
-      log(`Connecting to existing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+      log('connected', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
       this._stream
         .pipe(this._outgoingDelay)
         .pipe(this._remoteConnection._stream)
@@ -85,10 +96,9 @@ export class MemoryTransport implements Transport {
   }
 
   async close(): Promise<void> {
-    log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+    log('closing', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
 
     MemoryTransport._connections.delete(this._ownKey);
-
     if (this._remoteConnection) {
       MemoryTransport._connections.delete(this._remoteKey);
 
@@ -109,7 +119,7 @@ export class MemoryTransport implements Transport {
     }
 
     this.closed.emit();
-    log('Closed.');
+    log('closed', { topic: this._topic });
   }
 }
 
@@ -117,14 +127,3 @@ export class MemoryTransport implements Transport {
 export const MemoryTransportFactory: TransportFactory = {
   create: (opts) => new MemoryTransport(opts.ownId, opts.remoteId, opts.sessionId, opts.topic, opts.stream)
 };
-
-/**
- * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
- */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
-  new Transform({
-    objectMode: true,
-    transform: (chunk, enc, cb) => {
-      setTimeout(() => cb(null, chunk), delay);
-    }
-  });

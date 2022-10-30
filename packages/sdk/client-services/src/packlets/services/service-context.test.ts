@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { expect } from 'chai';
 
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -13,8 +14,10 @@ import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from './service-context';
 
+// TODO(burdon): Split out tests.
 describe('ServiceContext', function () {
-  const setupPeer = async ({
+  // TODO(burdon): Create test builder.
+  const createServiceContext = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
@@ -26,74 +29,69 @@ describe('ServiceContext', function () {
       transportFactory: MemoryTransportFactory
     });
 
-    return new ServiceContext(storage, networkManager, new ModelFactory().registerModel(ObjectModel));
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const serviceContext = new ServiceContext(storage, networkManager, modelFactory);
+    await serviceContext.open();
+    return serviceContext;
   };
 
   describe('Identity management', function () {
     it('creates identity', async function () {
-      const peer = await setupPeer();
-      await peer.open();
+      const peer = await createServiceContext();
       afterTest(() => peer.close());
 
       const identity = await peer.createIdentity();
-      expect(identity).toBeTruthy();
+      expect(identity).not.to.be.undefined;
     });
 
-    it('device invitations', async function () {
+    it.only('device invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
-      const peer1 = await setupPeer({ signalContext });
-      await peer1.open();
+      const peer1 = await createServiceContext({ signalContext });
+      const peer2 = await createServiceContext({ signalContext });
       afterTest(() => peer1.close());
-      const identity1 = await peer1.createIdentity();
-      expect(identity1).toBeTruthy();
-
-      const peer2 = await setupPeer({ signalContext });
-      await peer2.open();
       afterTest(() => peer2.close());
 
-      expect(peer2.identityManager.identity).toBeFalsy();
+      const identity1 = await peer1.createIdentity();
+
+      expect(peer1.identityManager.identity).to.eq(identity1);
+      expect(peer2.identityManager.identity).to.be.undefined;
 
       const invitation = await peer1.haloInvitations.createInvitation();
       const identity2 = await peer2.haloInvitations.acceptInvitation(invitation);
-
-      expect(identity2.identityKey).toEqual(identity1.identityKey);
+      // TODO(burdon): Need key eq.
+      expect(identity2.identityKey.toHex()).to.eq(identity1.identityKey.toHex());
     });
   });
 
   describe('Data spaces', function () {
     it('space genesis', async function () {
-      const serviceContext = await setupPeer();
-      await serviceContext.open();
+      const serviceContext = await createServiceContext();
       afterTest(() => serviceContext.close());
 
       await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
-      expect(space.database).toBeTruthy();
-      expect(serviceContext.spaceManager!.spaces.has(space.key)).toBeTruthy();
+      expect(space.database).to.be.true;
+      expect(serviceContext.spaceManager!.spaces.has(space.key)).to.be.true;
       await space.close();
     });
 
     it('space genesis with database', async function () {
-      const serviceContext = await setupPeer();
-      await serviceContext.open();
+      const serviceContext = await createServiceContext();
       afterTest(() => serviceContext.close());
 
       await serviceContext.createIdentity();
-
       const space = await serviceContext.spaceManager!.createSpace();
 
       {
-        const item = await space.database!.createItem<ObjectModel>({
-          type: 'test'
-        });
+        const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
         void item.model.set('name', 'test');
       }
 
       {
         const [item] = space.database!.select({ type: 'test' }).exec().entities;
-        expect(item.model.get('name')).toEqual('test');
+        expect(item.model.get('name')).to.eq('test');
       }
 
       await space.close();
@@ -102,43 +100,34 @@ describe('ServiceContext', function () {
     it('create and accepts space invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
-      const peer1 = await setupPeer({ signalContext });
-      await peer1.open();
+      const peer1 = await createServiceContext({ signalContext });
+      const peer2 = await createServiceContext({ signalContext });
       afterTest(() => peer1.close());
-      await peer1.createIdentity();
-
-      const peer2 = await setupPeer({ signalContext });
-      await peer2.open();
       afterTest(() => peer2.close());
+
+      await peer1.createIdentity();
       await peer2.createIdentity();
 
       const space1 = await peer1.spaceManager!.createSpace();
       const invitation = await peer1.createInvitation(space1.key);
+
       const space2 = await peer2.acceptInvitation(invitation);
-      expect(space1.key).toEqual(space2.key);
+      expect(space1.key).to.eq(space2.key);
 
       // TODO(burdon): Write multiple items.
 
       {
         // Check item replicated from 1 => 2.
-        const item1 = await space1.database!.createItem({
-          type: 'dxos.example.1'
-        });
-        const item2 = await space2.database!.waitForItem({
-          type: 'dxos.example.1'
-        });
-        expect(item1.id).toEqual(item2.id);
+        const item1 = await space1.database!.createItem({ type: 'dxos.example.1' });
+        const item2 = await space2.database!.waitForItem({ type: 'dxos.example.1' });
+        expect(item1.id).to.eq(item2.id);
       }
 
       {
         // Check item replicated from 2 => 1.
-        const item1 = await space2.database!.createItem({
-          type: 'dxos.example.2'
-        });
-        const item2 = await space1.database!.waitForItem({
-          type: 'dxos.example.2'
-        });
-        expect(item1.id).toEqual(item2.id);
+        const item1 = await space2.database!.createItem({ type: 'dxos.example.2' });
+        const item2 = await space1.database!.waitForItem({ type: 'dxos.example.2' });
+        expect(item1.id).to.eq(item2.id);
       }
 
       await space1.close();

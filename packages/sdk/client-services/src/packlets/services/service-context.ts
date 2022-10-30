@@ -74,7 +74,7 @@ export class ServiceContext {
       modelFactory
     );
 
-    // TODO(burdon): Rename.
+    // TODO(burdon): _initialize called in multiple places.
     this.haloInvitations = new HaloInvitations(this.identityManager, this.networkManager, async () => {
       await this._initialize();
     });

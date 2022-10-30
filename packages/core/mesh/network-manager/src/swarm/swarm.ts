@@ -161,10 +161,11 @@ export class Swarm {
         assert(message.sessionId);
         const connection = this._createConnection(false, message.author, message.sessionId);
         try {
-          connection.connect();
+          await connection.open();
         } catch (err: any) {
           this.errors.raise(err);
         }
+
         accept = true;
       }
     }

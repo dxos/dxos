@@ -115,6 +115,7 @@ export class HaloInvitations {
         handlers: {
           HaloGuestService: {
             presentAdmissionOffer: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
+              console.log('!!!!!!!!!!!!!!!!!!!');
               log('processing admission offer', { identityKey });
               const identity = await this._identityManager.acceptIdentity({
                 identityKey,
