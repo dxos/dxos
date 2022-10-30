@@ -32,7 +32,9 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "testPatterns": [
           "packages/core/mesh/protocol-network-generator/src/**/*.test.{ts,js}"
         ],
@@ -43,6 +45,9 @@
         "resultsPath": "test-results/packages/core/mesh/protocol-network-generator",
         "coveragePath": "coverage/packages/core/mesh/protocol-network-generator"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -40,6 +40,9 @@
           "quiet": true
         }
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

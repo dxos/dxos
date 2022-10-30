@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/log",
         "coveragePath": "coverage/packages/common/log"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

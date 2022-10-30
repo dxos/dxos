@@ -12,6 +12,9 @@
         "tsConfig": "packages/experimental/spyglass/tsconfig.json",
         "main": "packages/experimental/spyglass/src/index.ts"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

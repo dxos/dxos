@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/random-access-storage",
         "coveragePath": "coverage/packages/common/random-access-storage"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

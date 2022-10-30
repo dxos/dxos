@@ -23,6 +23,9 @@
           "packages/bots/bender-bot/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

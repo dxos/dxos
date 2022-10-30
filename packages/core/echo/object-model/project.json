@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/core/echo/object-model",
         "coveragePath": "coverage/packages/core/echo/object-model"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

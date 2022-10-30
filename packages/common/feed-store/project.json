@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/feed-store",
         "coveragePath": "coverage/packages/common/feed-store"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

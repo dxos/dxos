@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/crypto",
         "coveragePath": "coverage/packages/common/crypto"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

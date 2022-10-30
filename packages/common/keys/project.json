@@ -17,7 +17,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": [
         "{options.outputFile}"
-    ],
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/keys/**/*.{ts,js}"
@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/keys",
         "coveragePath": "coverage/packages/common/keys"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

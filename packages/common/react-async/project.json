@@ -44,6 +44,9 @@
         "domRequired": true,
         "forceExit": true
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -45,6 +45,9 @@
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "forceExit": true
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

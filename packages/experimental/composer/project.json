@@ -30,6 +30,9 @@
           "packages/experimental/composer/src/**/*.{js,jsx,ts,tsx}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

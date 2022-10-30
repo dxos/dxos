@@ -10,7 +10,7 @@ import { loadJson } from './util';
 /**
  * Add executor to each project configuration.
  */
-const install = async () => {
+const update = async () => {
   const root = path.join(__dirname, '../../../..');
   const workspace = loadJson(path.join(root, 'workspace.json'));
   Object.values(workspace.projects).forEach((baseDir) => {
@@ -27,4 +27,4 @@ const install = async () => {
   });
 };
 
-void install();
+void update();

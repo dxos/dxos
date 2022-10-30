@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/sentry",
         "coveragePath": "coverage/packages/common/sentry"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/async",
         "coveragePath": "coverage/packages/common/async"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

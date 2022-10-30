@@ -63,6 +63,9 @@
         "resultsPath": "test-results/packages/sdk/registry-client",
         "coveragePath": "coverage/packages/sdk/registry-client"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

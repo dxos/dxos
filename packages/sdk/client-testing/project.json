@@ -32,7 +32,9 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "testPatterns": [
           "packages/sdk/client-testing/src/**/*.test.{ts,js}"
         ],
@@ -43,6 +45,9 @@
         "resultsPath": "test-results/packages/sdk/client-testing",
         "coveragePath": "coverage/packages/sdk/client-testing"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

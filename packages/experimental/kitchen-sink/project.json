@@ -4,7 +4,9 @@
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/experimental/kitchen-sink/**/*.{ts,tsx,js,jsx}"
@@ -19,6 +21,9 @@
         ],
         "config": "packages/experimental/kitchen-sink/playwright/config.ts"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

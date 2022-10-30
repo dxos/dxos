@@ -4,7 +4,7 @@
   "main": "dist/src/main.js",
   "executors": "./executors.json",
   "scripts":{
-    "install": "ts-node ./src/install.ts"
+    "update": "ts-node ./src/update.ts"
   },
   "dependencies": {
     "chalk": "^4.1.0",

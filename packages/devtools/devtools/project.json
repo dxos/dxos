@@ -15,7 +15,9 @@
     },
     "build-storybook": {
       "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "uiFramework": "@storybook/react",
         "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
@@ -70,6 +72,9 @@
           "quiet": true
         }
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

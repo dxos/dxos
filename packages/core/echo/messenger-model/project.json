@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/core/echo/messenger-model",
         "coveragePath": "coverage/packages/core/echo/messenger-model"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

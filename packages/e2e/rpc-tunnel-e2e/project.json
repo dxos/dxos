@@ -39,6 +39,9 @@
         ],
         "config": "packages/e2e/rpc-tunnel-e2e/playwright/config.ts"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

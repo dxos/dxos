@@ -23,6 +23,9 @@
           "tools/vite-plugin/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

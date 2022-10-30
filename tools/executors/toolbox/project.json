@@ -16,7 +16,9 @@
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "tools/executors/toolbox/**/*.{ts,js}"
@@ -31,6 +33,9 @@
       "dependsOn": [
         "prebuild"
       ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

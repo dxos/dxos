@@ -23,6 +23,9 @@
           "packages/core/mesh/signal/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

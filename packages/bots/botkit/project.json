@@ -23,6 +23,9 @@
           "packages/bots/botkit/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

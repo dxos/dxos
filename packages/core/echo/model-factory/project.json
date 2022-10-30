@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/core/echo/model-factory",
         "coveragePath": "coverage/packages/core/echo/model-factory"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

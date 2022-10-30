@@ -4,7 +4,9 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "tools/beast/dist",
         "tsConfig": "tools/beast/tsconfig.json",
@@ -13,7 +15,9 @@
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "tools/beast/**/*.{ts,js}"
@@ -28,7 +32,9 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "testPatterns": [
           "tools/beast/src/**/*.test.{ts,js}"
         ],
@@ -39,6 +45,9 @@
         "resultsPath": "test-results/tools/beast",
         "coveragePath": "coverage/tools/beast"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

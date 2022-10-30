@@ -38,6 +38,9 @@
           "packages/common/telemetry/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

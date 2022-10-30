@@ -12,6 +12,9 @@
           "packages/devtools/devtools-extension/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

@@ -38,6 +38,9 @@
           "packages/bots/bot-factory-client/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

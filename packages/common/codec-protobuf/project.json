@@ -57,6 +57,9 @@
         "resultsPath": "test-results/packages/common/codec-protobuf",
         "coveragePath": "coverage/packages/common/codec-protobuf"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

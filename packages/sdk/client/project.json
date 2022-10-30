@@ -66,6 +66,9 @@
         "checkLeaks": false,
         "forceExit": true
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

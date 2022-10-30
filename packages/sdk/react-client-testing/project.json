@@ -23,6 +23,9 @@
           "packages/sdk/react-client-testing/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

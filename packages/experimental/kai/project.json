@@ -4,7 +4,9 @@
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
@@ -19,7 +21,9 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "testPatterns": [
           "packages/experimental/kai/src/**/*.test.{ts,js}"
         ],
@@ -30,6 +34,9 @@
         "resultsPath": "test-results/packages/experimental/kai",
         "coveragePath": "coverage/packages/experimental/kai"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

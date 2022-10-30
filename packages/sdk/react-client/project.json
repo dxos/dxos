@@ -32,7 +32,9 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "testPatterns": [
           "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
         ],
@@ -54,6 +56,9 @@
         ],
         "config": "packages/sdk/react-client/playwright/config.ts"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

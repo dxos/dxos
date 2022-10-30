@@ -17,7 +17,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": [
         "{options.outputFile}"
-    ],
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/hypercore/**/*.{ts,js}"
@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/common/hypercore",
         "coveragePath": "coverage/packages/common/hypercore"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

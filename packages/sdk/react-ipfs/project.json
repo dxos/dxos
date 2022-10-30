@@ -23,6 +23,9 @@
           "packages/sdk/react-ipfs/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

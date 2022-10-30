@@ -32,7 +32,11 @@
         "{options.coveragePath}"
       ],
       "options": {
-        "ciEnvironments": ["nodejs", "chromium", "firefox"],
+        "ciEnvironments": [
+          "nodejs",
+          "chromium",
+          "firefox"
+        ],
         "testPatterns": [
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
         ],
@@ -45,6 +49,9 @@
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "forceExit": true
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

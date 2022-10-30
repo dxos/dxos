@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/core/halo/keyring",
         "coveragePath": "coverage/packages/core/halo/keyring"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

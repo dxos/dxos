@@ -10,6 +10,9 @@
       "options": {
         "script": "build"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

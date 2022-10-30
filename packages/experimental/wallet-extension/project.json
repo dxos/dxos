@@ -27,6 +27,9 @@
           "packages/experimental/wallet-extension/**/*.{ts,js}"
         ]
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

@@ -42,6 +42,9 @@
         "resultsPath": "test-results/packages/core/echo/text-model",
         "coveragePath": "coverage/packages/core/echo/text-model"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [
