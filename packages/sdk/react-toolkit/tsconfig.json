@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
       "path": "../../bots/bot-factory-client"
     },
     {
@@ -26,19 +29,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/object-model"
-    },
-    {
       "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../client"

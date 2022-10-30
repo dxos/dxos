@@ -3,21 +3,28 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
+        "main": "tools/executors/esbuild/src/index.ts",
         "outputPath": "tools/executors/esbuild/dist",
-        "tsConfig": "tools/executors/esbuild/tsconfig.json",
-        "main": "tools/executors/esbuild/src/index.ts"
-      }
+        "tsConfig": "tools/executors/esbuild/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "tools/executors/esbuild/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

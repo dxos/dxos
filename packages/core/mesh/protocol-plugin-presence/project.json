@@ -4,45 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts",
+        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
+        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
-        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json",
-        "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/protocol-plugin-presence/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/protocol-plugin-presence",
+        "outputPath": "tmp/mocha/packages/core/mesh/protocol-plugin-presence",
+        "resultsPath": "test-results/packages/core/mesh/protocol-plugin-presence",
         "testPatterns": [
           "packages/core/mesh/protocol-plugin-presence/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/protocol-plugin-presence/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/protocol-plugin-presence",
-        "resultsPath": "test-results/packages/core/mesh/protocol-plugin-presence",
-        "coveragePath": "coverage/packages/core/mesh/protocol-plugin-presence"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

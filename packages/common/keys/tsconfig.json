@@ -8,7 +8,7 @@
   ],
   "references": [
     {
-      "path": "../codec-protobuf"
+      "path": "../debug"
     }
   ]
 }

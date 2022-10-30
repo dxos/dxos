@@ -4,45 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/client-testing/src/index.ts",
+        "outputPath": "packages/sdk/client-testing/dist",
+        "tsConfig": "packages/sdk/client-testing/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/client-testing/dist",
-        "tsConfig": "packages/sdk/client-testing/tsconfig.json",
-        "main": "packages/sdk/client-testing/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client-testing/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/sdk/client-testing",
+        "outputPath": "tmp/mocha/packages/sdk/client-testing",
+        "resultsPath": "test-results/packages/sdk/client-testing",
         "testPatterns": [
           "packages/sdk/client-testing/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client-testing/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/sdk/client-testing",
-        "resultsPath": "test-results/packages/sdk/client-testing",
-        "coveragePath": "coverage/packages/sdk/client-testing"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

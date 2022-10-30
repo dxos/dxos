@@ -18,10 +18,10 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../common/keys"
     },
     {
-      "path": "../../core/halo/credentials"
+      "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"

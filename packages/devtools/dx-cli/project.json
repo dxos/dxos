@@ -4,66 +4,73 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/dx-cli/src/index.ts",
+        "outputPath": "packages/devtools/dx-cli/dist",
+        "tsConfig": "packages/devtools/dx-cli/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/devtools/dx-cli/dist",
-        "tsConfig": "packages/devtools/dx-cli/tsconfig.json",
-        "main": "packages/devtools/dx-cli/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/devtools/dx-cli/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "prerelease": {
       "executor": "nx:run-script",
       "inputs": [
-        "default",
-        "^production",
         {
           "env": "SENTRY_DSN"
         },
         {
           "env": "SEGMENT_API_KEY"
-        }
-      ],
-      "outputs": [
-        "packages/devtools/dx-cli/dist/src/util/telemetry.js"
+        },
+        "^production",
+        "default"
       ],
       "options": {
         "script": "api-keys"
-      }
+      },
+      "outputs": [
+        "packages/devtools/dx-cli/dist/src/util/telemetry.js"
+      ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
+      "dependsOn": [
+        "build"
       ],
+      "executor": "@dxos/mocha:mocha",
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/devtools/dx-cli",
+        "outputPath": "tmp/mocha/packages/devtools/dx-cli",
+        "resultsPath": "test-results/packages/devtools/dx-cli",
         "testPatterns": [
           "packages/devtools/dx-cli/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/devtools/dx-cli/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/devtools/dx-cli",
-        "resultsPath": "test-results/packages/devtools/dx-cli",
-        "coveragePath": "coverage/packages/devtools/dx-cli",
-        "checkLeaks": false
+        ]
       },
-      "dependsOn": [
-        "build"
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

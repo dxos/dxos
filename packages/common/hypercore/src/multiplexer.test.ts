@@ -16,7 +16,7 @@ import { Multiplexer } from './multiplexer';
 import { noop, py } from './testing';
 
 describe('Multiplexing', function () {
-  it('multiplexes feeds', async function () {
+  it.only('multiplexes feeds', async function () {
     const plex1 = new Multiplexer('A');
     const plex2 = new Multiplexer('B');
 
@@ -46,10 +46,12 @@ describe('Multiplexing', function () {
     });
 
     const [closed, setClosed] = latch({ count: 2 });
+
+    // TODO(burdon): Test with additional PassThrough.
     plex1.output.pipe(plex2.input, setClosed);
     plex2.output.pipe(plex1.input, setClosed);
 
-    const numMessages = 10;
+    const numMessages = 1;
     const written = new Set<string>();
     Array.from(Array(numMessages)).forEach((_, i) => {
       const [core] = faker.random.arrayElement(feeds);

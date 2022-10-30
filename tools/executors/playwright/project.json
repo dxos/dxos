@@ -4,21 +4,28 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
+        "main": "tools/executors/playwright/src/main.ts",
         "outputPath": "tools/executors/playwright/dist",
-        "tsConfig": "tools/executors/playwright/tsconfig.json",
-        "main": "tools/executors/playwright/src/main.ts"
-      }
+        "tsConfig": "tools/executors/playwright/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "tools/executors/playwright/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

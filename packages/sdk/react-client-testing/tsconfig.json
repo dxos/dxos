@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -27,12 +30,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/object-model"
     },
     {
       "path": "../client"

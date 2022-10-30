@@ -8,9 +8,12 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
+    {
+      "path": "../../../tools/vite-plugin"
+    },
     {
       "path": "../../common/async"
     },
@@ -21,10 +24,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/feed-store"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/timeframe"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -45,10 +54,16 @@
       "path": "../../core/halo/credentials"
     },
     {
+      "path": "../../core/mesh/messaging"
+    },
+    {
       "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"
@@ -66,13 +81,16 @@
       "path": "../../sdk/react-components"
     },
     {
+      "path": "../../sdk/react-registry-client"
+    },
+    {
       "path": "../../sdk/react-toolkit"
     },
     {
-      "path": "../devtools-mesh"
+      "path": "../../sdk/registry-client"
     },
     {
-      "path": "./tsconfig.node.json"
+      "path": "../devtools-mesh"
     }
   ]
 }
