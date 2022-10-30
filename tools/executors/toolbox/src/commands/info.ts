@@ -11,7 +11,7 @@ import { Command } from '../command';
  * Log info about each project.
  */
 export class InfoCommand extends Command {
-  async exec () {
+  async exec() {
     const table = new Table({
       columns: [
         { name: 'package', alignment: 'left' },

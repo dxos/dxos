@@ -4,6 +4,12 @@
 
 Patches all `package.json` files.
 
-'''bash
+```bash
 pnpm run update
-'''
+```
+
+## Clean-up projects.
+
+```bash
+pnpm nx
+```
