@@ -11,11 +11,11 @@ declare module 'nanoerror' {
 
     constructor(...args: any[]);
 
-    static equals (error: any): boolean
-    static from (error: any): this
+    static equals(error: any): boolean;
+    static from(error: any): this;
   }
 
-  declare function nanoerror (type: string, format: string): typeof Nanoerror
+  declare function nanoerror(type: string, format: string): typeof Nanoerror;
 
-  export = nanoerror
+  export = nanoerror;
 }
