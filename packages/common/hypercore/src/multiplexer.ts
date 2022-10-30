@@ -59,7 +59,7 @@ export class Multiplexer {
         })
       )
       .pipe(this.output, () => {
-        log('closed');
+        log('pipeline closed', { id: this._id });
         this._isOpen = false;
       });
 
@@ -95,6 +95,7 @@ export class Multiplexer {
     }
 
     log('closing...');
+    // NOTE: Pipeline closes after stream above, so should strictly wait for that.
     const [closed, setClosed] = latch({ count: this._streams.size });
     Array.from(this._streams.values()).forEach((stream) => {
       stream.once('end', () => {
@@ -106,6 +107,8 @@ export class Multiplexer {
     });
 
     await closed();
+    assert(!this._isOpen);
+
     this._feeds.clear();
     this._streams.clear();
     log('closed');
