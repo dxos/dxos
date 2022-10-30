@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import fs from 'fs';
 import path from 'path';
 
 import { loadJson } from './util';
@@ -9,7 +10,6 @@ import { loadJson } from './util';
 /**
  * Add executor to each project configuration.
  */
-// TODO(burdon): Warn of comments.
 const install = async () => {
   const root = path.join(__dirname, '../../../..');
   const workspace = loadJson(path.join(root, 'workspace.json'));
@@ -20,7 +20,9 @@ const install = async () => {
       projectJson.targets.toolbox = {
         executor: '@dxos/toolbox:exec'
       };
-      console.log(projectJson);
+
+      fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2), 'utf-8');
+      console.log(`Updated: ${filename}`);
     }
   });
 };
