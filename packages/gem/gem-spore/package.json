@@ -2,11 +2,11 @@
   "name": "@dxos/gem-spore",
   "version": "2.2.1-beta.11",
   "description": "Gem spore.",
-  "license": "MIT",
-  "author": "DXOS.org",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": "https://github.com/dxos/gem/issues",
   "repository": "dxos/gem.git",
+  "license": "MIT",
+  "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -16,6 +16,9 @@
   "scripts": {
     "book": "esbuild-server book"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
     "clsx": "^1.1.1",
@@ -48,9 +51,6 @@
     "react": "*",
     "react-dom": "*"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "publishConfig": {
     "access": "public"
   }

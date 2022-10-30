@@ -12,5 +12,6 @@
   "include": [
     "src",
     "test"
-  ]
+  ],
+  "references": []
 }

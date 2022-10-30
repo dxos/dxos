@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/hypercore/src/index.ts",
+        "outputPath": "packages/common/hypercore/dist",
+        "tsConfig": "packages/common/hypercore/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/hypercore/dist",
-        "tsConfig": "packages/common/hypercore/tsconfig.json",
-        "main": "packages/common/hypercore/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-    ],
       "options": {
         "lintFilePatterns": [
           "packages/common/hypercore/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/hypercore",
+        "outputPath": "tmp/mocha/packages/common/hypercore",
+        "resultsPath": "test-results/packages/common/hypercore",
         "testPatterns": [
           "packages/common/hypercore/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/hypercore/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/hypercore",
-        "resultsPath": "test-results/packages/common/hypercore",
-        "coveragePath": "coverage/packages/common/hypercore"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

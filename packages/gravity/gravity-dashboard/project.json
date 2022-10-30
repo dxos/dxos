@@ -4,23 +4,28 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gravity/gravity-dashboard/src/index.ts",
+        "outputPath": "packages/gravity/gravity-dashboard/dist",
+        "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/gravity/gravity-dashboard/dist",
-        "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json",
-        "main": "packages/gravity/gravity-dashboard/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/gravity/gravity-dashboard/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

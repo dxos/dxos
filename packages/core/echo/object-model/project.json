@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/echo/object-model/src/index.ts",
+        "outputPath": "packages/core/echo/object-model/dist",
+        "tsConfig": "packages/core/echo/object-model/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/core/echo/object-model/dist",
-        "tsConfig": "packages/core/echo/object-model/tsconfig.json",
-        "main": "packages/core/echo/object-model/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/echo/object-model/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/core/echo/object-model",
+        "outputPath": "tmp/mocha/packages/core/echo/object-model",
+        "resultsPath": "test-results/packages/core/echo/object-model",
         "testPatterns": [
           "packages/core/echo/object-model/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/object-model/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/echo/object-model",
-        "resultsPath": "test-results/packages/core/echo/object-model",
-        "coveragePath": "coverage/packages/core/echo/object-model"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

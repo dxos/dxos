@@ -11,6 +11,12 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../protocols"
     },
     {

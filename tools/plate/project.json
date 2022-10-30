@@ -3,30 +3,37 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
+        "main": "tools/plate/src/index.ts",
         "outputPath": "tools/plate/dist",
-        "tsConfig": "tools/plate/tsconfig.json",
-        "main": "tools/plate/src/index.ts"
+        "tsConfig": "tools/plate/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "dev": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "dev"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "tools/plate/**/*.{ts,js}"
         ]
-      }
-    },
-    "dev": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "dev"
       },
-      "dependsOn": [
-        "^build"
+      "outputs": [
+        "{options.outputFile}"
       ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

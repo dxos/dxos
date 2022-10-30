@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/crypto/src/index.ts",
+        "outputPath": "packages/common/crypto/dist",
+        "tsConfig": "packages/common/crypto/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/crypto/dist",
-        "tsConfig": "packages/common/crypto/tsconfig.json",
-        "main": "packages/common/crypto/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/crypto/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/crypto",
+        "outputPath": "tmp/mocha/packages/common/crypto",
+        "resultsPath": "test-results/packages/common/crypto",
         "testPatterns": [
           "packages/common/crypto/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/crypto/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/crypto",
-        "resultsPath": "test-results/packages/common/crypto",
-        "coveragePath": "coverage/packages/common/crypto"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

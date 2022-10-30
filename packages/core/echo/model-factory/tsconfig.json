@@ -14,16 +14,19 @@
       "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/crypto"
-    },
-    {
-      "path": "../../../common/util"
+      "path": "../../../common/debug"
     },
     {
       "path": "../../../common/feed-store"
     },
     {
-      "path": "../../../common/debug"
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/timeframe"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"

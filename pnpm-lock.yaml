@@ -36,6 +36,7 @@ importers:
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/toolbox': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
       '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
@@ -128,6 +129,7 @@ importers:
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
+      '@dxos/toolbox': link:tools/executors/toolbox
       '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
       '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
@@ -3661,6 +3663,35 @@ importers:
       '@types/node': 16.11.66
       mocha: 8.4.0
       ts-node: 10.9.1_ee7ozjix4gtbq7xqorjokx6z5u
+      typescript: 4.8.4
+
+  tools/executors/toolbox:
+    specifiers:
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.pick': ^4.4.7
+      '@types/lodash.sortby': ^4.7.7
+      chalk: ^4.1.0
+      comment-json: ^4.2.3
+      console-table-printer: ^2.11.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.pick: ^4.4.0
+      lodash.sortby: ^4.7.0
+      sort-package-json: ^1.57.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+    dependencies:
+      chalk: 4.1.2
+      comment-json: 4.2.3
+      console-table-printer: 2.11.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.pick: 4.4.0
+      lodash.sortby: 4.7.0
+      sort-package-json: 1.57.0
+    devDependencies:
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.pick': 4.4.7
+      '@types/lodash.sortby': 4.7.7
+      ts-node: 10.9.1_typescript@4.8.4
       typescript: 4.8.4
 
   tools/log-hook:
@@ -12271,6 +12302,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.sortby/4.7.7:
+    resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
+    dependencies:
+      '@types/lodash': 4.14.186
+    dev: true
+
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -14120,6 +14157,10 @@ packages:
     resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
     dev: false
 
+  /array-timsort/1.0.3:
+    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
+    dev: false
+
   /array-union/1.0.2:
     resolution: {integrity: sha512-Dxr6QJj/RdU/hCaBjOfxW+q6lyuVE6JFWIrAUpuOOhoJJoQ99cUn3igRaHVB5P9WrgFVN0FfArM3x0cueOU8ng==}
     engines: {node: '>=0.10.0'}
@@ -15920,6 +15961,17 @@ packages:
     engines: {node: ^12.20.0 || >=14}
     dev: true
 
+  /comment-json/4.2.3:
+    resolution: {integrity: sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==}
+    engines: {node: '>= 6'}
+    dependencies:
+      array-timsort: 1.0.3
+      core-util-is: 1.0.3
+      esprima: 4.0.1
+      has-own-prop: 2.0.0
+      repeat-string: 1.6.1
+    dev: false
+
   /common-ancestor-path/1.0.1:
     resolution: {integrity: sha512-L3sHRo1pXXEqX8VU28kfgUY+YGsk09hPqZiZmLacNib6XNTCM8ubYeT7ryXQw8asB1sKgcU5lkB7ONug08aB8w==}
     dev: false
@@ -16065,6 +16117,12 @@ packages:
 
   /console-control-strings/1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
+
+  /console-table-printer/2.11.1:
+    resolution: {integrity: sha512-8LfFpbF/BczoxPwo2oltto5bph8bJkGOATXsg3E9ddMJOGnWJciKHldx2zDj5XIBflaKzPfVCjOTl6tMh7lErg==}
+    dependencies:
+      simple-wcswidth: 1.0.1
+    dev: false
 
   /constant-case/3.0.4:
     resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
@@ -20109,6 +20167,10 @@ packages:
       assert-plus: 1.0.0
     dev: true
 
+  /git-hooks-list/1.0.3:
+    resolution: {integrity: sha512-Y7wLWcrLUXwk2noSka166byGCvhMtDRpgHdzCno1UQv/n/Hegp++a2xBWJL1lJarnKD3SWaljD+0z1ztqxuKyQ==}
+    dev: false
+
   /github-from-package/0.0.0:
     resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
     dev: true
@@ -20326,6 +20388,20 @@ packages:
       define-properties: 1.1.4
     dev: true
 
+  /globby/10.0.0:
+    resolution: {integrity: sha512-3LifW9M4joGZasyYPz2A1U74zbC/45fvpXUvO/9KbSa+VV0aGZarWkfdgKyR9sExNP0t0x0ss/UMJpNpcaTspw==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@types/glob': 7.2.0
+      array-union: 2.1.0
+      dir-glob: 3.0.1
+      fast-glob: 3.2.12
+      glob: 7.2.3
+      ignore: 5.2.0
+      merge2: 1.4.1
+      slash: 3.0.0
+    dev: false
+
   /globby/10.0.2:
     resolution: {integrity: sha512-7dUi7RvCoT/xast/o/dLN53oqND4yk0nsHkhRgn9w65C4PofCLOoJ39iSOg+qVDdWQPIEj+eszMHQ+aLVwwQSg==}
     engines: {node: '>=8'}
@@ -20520,6 +20596,11 @@ packages:
     dependencies:
       is-glob: 3.1.0
     dev: true
+
+  /has-own-prop/2.0.0:
+    resolution: {integrity: sha512-Pq0h+hvsVm6dDEa8x82GnLSYHOzNDt7f0ddFa3FqcQlgzEiptPqL+XrOJNavjOzSYiYWIrgeVYYgGlLmnxwilQ==}
+    engines: {node: '>=8'}
+    dev: false
 
   /has-property-descriptors/1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
@@ -23655,7 +23736,6 @@ packages:
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
-    dev: true
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -29119,6 +29199,10 @@ packages:
       - supports-color
     dev: false
 
+  /simple-wcswidth/1.0.1:
+    resolution: {integrity: sha512-xMO/8eNREtaROt7tJvWJqHBDTMFN4eiQ5I4JRMuilwfnFcV5W9u7RUkueNkdw0jPqGMX36iCywelS5yilTuOxg==}
+    dev: false
+
   /siphash24/1.3.1:
     resolution: {integrity: sha512-moemC3ZKiTzH29nbFo3Iw8fbemWWod4vNs/WgKbQ54oEs6mE6XVlguxvinYjB+UmaE0PThgyED9fUkWvirT8hA==}
     dependencies:
@@ -29290,6 +29374,22 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-plain-obj: 2.1.0
+    dev: false
+
+  /sort-object-keys/1.1.3:
+    resolution: {integrity: sha512-855pvK+VkU7PaKYPc+Jjnmt4EzejQHyhhF33q31qG8x7maDzkeFhAAThdCYay11CISO+qAMwjOBP+fPZe0IPyg==}
+    dev: false
+
+  /sort-package-json/1.57.0:
+    resolution: {integrity: sha512-FYsjYn2dHTRb41wqnv+uEqCUvBpK3jZcTp9rbz2qDTmel7Pmdtf+i2rLaaPMRZeSVM60V3Se31GyWFpmKs4Q5Q==}
+    hasBin: true
+    dependencies:
+      detect-indent: 6.1.0
+      detect-newline: 3.1.0
+      git-hooks-list: 1.0.3
+      globby: 10.0.0
+      is-plain-obj: 2.1.0
+      sort-object-keys: 1.1.3
     dev: false
 
   /source-list-map/2.0.1:
@@ -30697,6 +30797,36 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 16.11.66
+      acorn: 8.8.0
+      acorn-walk: 8.2.0
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 4.8.4
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+
+  /ts-node/10.9.1_typescript@4.8.4:
+    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.9
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.3
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3

@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/debug/src/index.ts",
+        "outputPath": "packages/common/debug/dist",
+        "tsConfig": "packages/common/debug/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/debug/dist",
-        "tsConfig": "packages/common/debug/tsconfig.json",
-        "main": "packages/common/debug/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/debug/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/debug",
+        "outputPath": "tmp/mocha/packages/common/debug",
+        "resultsPath": "test-results/packages/common/debug",
         "testPatterns": [
           "packages/common/debug/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/debug/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/debug",
-        "resultsPath": "test-results/packages/common/debug",
-        "coveragePath": "coverage/packages/common/debug"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

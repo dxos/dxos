@@ -8,16 +8,31 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/crypto"
     },
     {
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/random-access-storage"
+    },
+    {
       "path": "../../../common/util"
     },
     {
-      "path": "../credentials"
-    },
+      "path": "../../protocols"
+    }
   ]
 }

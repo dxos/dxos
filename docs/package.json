@@ -2,18 +2,22 @@
   "name": "@dxos/docs",
   "version": "0.0.0",
   "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "scripts": {
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
     "clean:plate": "rm -rf docs/api",
     "docs:build": "vuepress build docs",
-    "typedoc": "typedoc",
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
     "prerelease": "pnpm run typedoc && pnpm run clean:plate && pnpm run plate && pnpm run docs:build",
-    "serve": "vuepress dev docs"
+    "serve": "vuepress dev docs",
+    "typedoc": "typedoc"
   },
   "devDependencies": {
-    "@dxos/react-components": "workspace:*",
     "@dxos/plate": "workspace:*",
+    "@dxos/react-components": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/typedoc-plugin-plate": "workspace:*",
     "@types/eslint": "^8.4.6",
@@ -26,6 +30,7 @@
     "@vuepress/client": "^2.0.0-beta.51",
     "@vuepress/plugin-register-components": "^2.0.0-beta.51",
     "@vuepress/plugin-search": "^2.0.0-beta.51",
+    "change-case": "^4.1.2",
     "eslint": "^8.24.0",
     "front-matter": "^4.0.2",
     "markdown-it-container": "^3.0.0",
@@ -36,8 +41,7 @@
     "typedoc": "0.23.15",
     "typescript": "^4.7.2",
     "vue": "^3.2.40",
-    "vuepress": "^2.0.0-beta.51",
     "vue-router": "^4.1.6",
-    "change-case": "^4.1.2"
+    "vuepress": "^2.0.0-beta.51"
   }
 }

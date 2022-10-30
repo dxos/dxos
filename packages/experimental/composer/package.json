@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "description": "Document editing experience within a DXOS shell.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -11,9 +13,6 @@
     "dist",
     "src"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -41,5 +40,8 @@
     "@vitejs/plugin-react": "^2.0.1",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

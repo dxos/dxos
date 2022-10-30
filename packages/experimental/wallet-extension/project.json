@@ -4,29 +4,32 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
-        "outputPath": "packages/experimental/wallet-extension/dist",
-        "tsConfig": "packages/experimental/wallet-extension/tsconfig.json",
-        "main": "packages/experimental/wallet-extension/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/experimental/wallet-extension/*.md"
-        ]
-      }
+        ],
+        "main": "packages/experimental/wallet-extension/src/index.ts",
+        "outputPath": "packages/experimental/wallet-extension/dist",
+        "tsConfig": "packages/experimental/wallet-extension/tsconfig.json",
+        "updateBuildableProjectDepsInPackageJson": false
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/experimental/wallet-extension/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

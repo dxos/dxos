@@ -1,11 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     "types": [
       "mocha"
     ]
@@ -16,13 +16,34 @@
   ],
   "references": [
     {
+      "path": "../../../tools/plate"
+    },
+    {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/telemetry"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     }
   ]
 }
