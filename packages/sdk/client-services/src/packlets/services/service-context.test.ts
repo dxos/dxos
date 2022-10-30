@@ -35,7 +35,7 @@ describe('ServiceContext', function () {
     return serviceContext;
   };
 
-  describe('Identity management', function () {
+  describe('Halo invitations', function () {
     it('creates identity', async function () {
       const peer = await createServiceContext();
       afterTest(() => peer.close());
@@ -53,18 +53,16 @@ describe('ServiceContext', function () {
       afterTest(() => peer2.close());
 
       const identity1 = await peer1.createIdentity();
-
       expect(peer1.identityManager.identity).to.eq(identity1);
       expect(peer2.identityManager.identity).to.be.undefined;
 
       const invitation = await peer1.haloInvitations.createInvitation();
       const identity2 = await peer2.haloInvitations.acceptInvitation(invitation);
-      // TODO(burdon): Need key eq.
-      expect(identity2.identityKey.toHex()).to.eq(identity1.identityKey.toHex());
+      expect(identity2.identityKey).to.deep.eq(identity1.identityKey);
     });
   });
 
-  describe('Data spaces', function () {
+  describe('Space invitations', function () {
     it('space genesis', async function () {
       const serviceContext = await createServiceContext();
       afterTest(() => serviceContext.close());

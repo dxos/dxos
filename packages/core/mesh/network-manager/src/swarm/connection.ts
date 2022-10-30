@@ -19,7 +19,8 @@ import { Transport, TransportFactory } from '../transport';
  */
 export enum ConnectionState {
   /**
-   * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed. Might mean that we are waiting for the answer signal from the remote peer.
+   * Initial state. Connection is registered but no attempt to connect to the remote peer has been performed.
+   * Might mean that we are waiting for the answer signal from the remote peer.
    */
   INITIAL = 'INITIAL',
 
@@ -99,9 +100,7 @@ export class Connection {
         data: { offer: {} }
       })
       .then((answer) => {
-        log(
-          `Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`
-        );
+        log('received', { answer, topic: this.topic, ownId: this.ownId, remoteId: this.remoteId });
         if (this.state !== ConnectionState.INITIAL) {
           log('ignoring response');
           return;
