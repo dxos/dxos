@@ -13,10 +13,28 @@
   ],
   "references": [
     {
+      "path": "../async"
+    },
+    {
       "path": "../codec-protobuf"
     },
     {
+      "path": "../crypto"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../log"
+    },
+    {
       "path": "../random-access-storage"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

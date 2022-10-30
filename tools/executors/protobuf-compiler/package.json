@@ -1,13 +1,15 @@
 {
   "name": "@dxos/protobuf-compiler",
   "version": "2.33.8",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "build-protobuf": "./bin/main.js"
   },
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -28,8 +30,8 @@
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
-    "@swc/core": "^1.3.9",
     "@swc-node/register": "^1.5.4",
+    "@swc/core": "^1.3.9",
     "@types/argparse": "^2.0.0",
     "@types/glob": "~7.1.3",
     "@types/mocha": "^8.2.2",
@@ -41,8 +43,8 @@
   "peerDependencies": {
     "typescript": "^4.7.2"
   },
-  "executors": "./executors.json",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "executors": "./executors.json"
 }

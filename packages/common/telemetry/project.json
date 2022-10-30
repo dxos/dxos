@@ -4,40 +4,43 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/telemetry/src/index.ts",
+        "outputPath": "packages/common/telemetry/dist",
+        "tsConfig": "packages/common/telemetry/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/telemetry/dist",
-        "tsConfig": "packages/common/telemetry/tsconfig.json",
-        "main": "packages/common/telemetry/src/index.ts"
-      }
+      ]
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outfile}"
-      ],
       "options": {
+        "bundlePackages": [
+          "@segment/snippet"
+        ],
         "entryPoints": [
           "packages/common/telemetry/src/index.ts"
         ],
-        "outfile": "packages/common/telemetry/dist/browser.js",
-        "bundlePackages": [
-          "@segment/snippet"
-        ]
-      }
+        "outfile": "packages/common/telemetry/dist/browser.js"
+      },
+      "outputs": [
+        "{options.outfile}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/telemetry/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

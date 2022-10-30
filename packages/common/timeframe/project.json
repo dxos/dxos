@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/timeframe/src/index.ts",
+        "outputPath": "packages/common/timeframe/dist",
+        "tsConfig": "packages/common/timeframe/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/timeframe/dist",
-        "tsConfig": "packages/common/timeframe/tsconfig.json",
-        "main": "packages/common/timeframe/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-    ],
       "options": {
         "lintFilePatterns": [
           "packages/common/timeframe/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/timeframe",
+        "outputPath": "tmp/mocha/packages/common/timeframe",
+        "resultsPath": "test-results/packages/common/timeframe",
         "testPatterns": [
           "packages/common/timeframe/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/timeframe/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/timeframe",
-        "resultsPath": "test-results/packages/common/timeframe",
-        "coveragePath": "coverage/packages/common/timeframe"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -4,27 +4,32 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
-        "outputPath": "packages/gravity/orchestrator/dist",
-        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
-        "main": "packages/gravity/orchestrator/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           "packages/gravity/orchestrator/*.md"
-        ]
-      }
+        ],
+        "main": "packages/gravity/orchestrator/src/index.ts",
+        "outputPath": "packages/gravity/orchestrator/dist",
+        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
+        "updateBuildableProjectDepsInPackageJson": false
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/gravity/orchestrator/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -7,5 +7,26 @@
     "src"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    }
   ]
 }

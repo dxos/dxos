@@ -17,16 +17,19 @@
   ],
   "references": [
     {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
       "path": "../../common/async"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../gem/gem-core"
     },
     {
-      "path": "../../core/echo/object-model"
+      "path": "../../gem/gem-spore"
     },
     {
       "path": "../client"

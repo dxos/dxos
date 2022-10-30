@@ -4,25 +4,28 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/bots/bender-bot/src/index.ts",
+        "outputPath": "packages/bots/bender-bot/dist",
+        "tsConfig": "packages/bots/bender-bot/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/bots/bender-bot/dist",
-        "tsConfig": "packages/bots/bender-bot/tsconfig.json",
-        "main": "packages/bots/bender-bot/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/bots/bender-bot/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

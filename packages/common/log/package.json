@@ -2,13 +2,15 @@
   "name": "@dxos/log",
   "version": "2.33.4",
   "description": "Logger",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:util": "util"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"

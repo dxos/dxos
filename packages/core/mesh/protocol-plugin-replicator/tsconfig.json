@@ -23,19 +23,28 @@
       "path": "../../../common/crypto"
     },
     {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/random-access-storage"
     },
     {
       "path": "../../../common/util"
     },
     {
-      "path": "../../../common/feed-store"
+      "path": "../../halo/keyring"
     },
     {
       "path": "../../protocols"
     },
     {
       "path": "../mesh-protocol"
+    },
+    {
+      "path": "../network-generator"
     },
     {
       "path": "../protocol-network-generator"

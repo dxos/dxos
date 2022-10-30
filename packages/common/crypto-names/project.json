@@ -4,44 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/crypto-names/src/index.ts",
+        "outputPath": "packages/common/crypto-names/dist",
+        "tsConfig": "packages/common/crypto-names/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/crypto-names/dist",
-        "tsConfig": "packages/common/crypto-names/tsconfig.json",
-        "main": "packages/common/crypto-names/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/crypto-names/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/crypto-names",
+        "outputPath": "tmp/mocha/packages/common/crypto-names",
+        "resultsPath": "test-results/packages/common/crypto-names",
         "testPatterns": [
           "packages/common/crypto-names/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/crypto-names/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/crypto-names",
-        "resultsPath": "test-results/packages/common/crypto-names",
-        "coveragePath": "coverage/packages/common/crypto-names"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

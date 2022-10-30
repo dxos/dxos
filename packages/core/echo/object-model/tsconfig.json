@@ -17,6 +17,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../protocols"
+    },
+    {
       "path": "../model-factory"
     }
   ]
