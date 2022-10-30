@@ -4,6 +4,9 @@
 
 export const rtf = new Intl.RelativeTimeFormat('en', { style: 'narrow' });
 
+/**
+ * Create relative time string.
+ */
 export const rt = (since: number, now: number) => {
   const seconds = Math.round((now - since) / 1000);
   const minutes = Math.round(seconds / 60);

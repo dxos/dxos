@@ -62,6 +62,7 @@ export class FixCommand extends Command {
    * Process `package.json` and patch common fields from the root.
    */
   async fixPackage() {
+    // TODO(burdon): Investigate: https://github.com/JamieMason/syncpack
     const rootPackage = await loadJson(path.join(this.context.root, 'package.json'));
     const commonKeys = pick(rootPackage, this.config.config?.package.common ?? []);
     const updated = sortPackageJson(defaultsDeep(this._packageJson, commonKeys));

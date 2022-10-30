@@ -10,6 +10,7 @@ import { loadJson } from './util';
 /**
  * Add executor to each project configuration.
  */
+// TODO(burdon): Explore generators.
 const update = async () => {
   const root = path.join(__dirname, '../../../..');
   const workspace = await loadJson<any>(path.join(root, 'workspace.json'));
