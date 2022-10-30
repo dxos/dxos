@@ -7,7 +7,7 @@ import { Hypercore } from 'hypercore';
 import { ProtocolStream } from 'hypercore-protocol';
 import { PassThrough, Transform, Writable } from 'streamx';
 
-import { latch } from '@dxos/async';
+import { latch, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -21,6 +21,7 @@ export class Multiplexer {
   private readonly _streams = new ComplexMap<PublicKey, ProtocolStream>(PublicKey.hash);
 
   private _isOpen = false;
+  private _closedTrigger = new Trigger({ autoReset: true });
 
   public readonly input = new PassThrough();
   public readonly output = new PassThrough();
@@ -61,6 +62,7 @@ export class Multiplexer {
       .pipe(this.output, () => {
         log('pipeline closed', { id: this._id });
         this._isOpen = false;
+        this._closedTrigger.wake();
       });
 
     return this;
@@ -95,7 +97,6 @@ export class Multiplexer {
     }
 
     log('closing...');
-    // NOTE: Pipeline closes after stream above, so should strictly wait for that.
     const [closed, setClosed] = latch({ count: this._streams.size });
     Array.from(this._streams.values()).forEach((stream) => {
       stream.once('end', () => {
@@ -107,7 +108,12 @@ export class Multiplexer {
     });
 
     await closed();
-    assert(!this._isOpen);
+
+    // NOTE: Depending on environment, pipeline may close before or after the stream above.
+    if (this._isOpen) {
+      await this._closedTrigger.wait();
+      assert(!this._isOpen);
+    }
 
     this._feeds.clear();
     this._streams.clear();

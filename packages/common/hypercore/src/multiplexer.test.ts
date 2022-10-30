@@ -16,7 +16,7 @@ import { Multiplexer } from './multiplexer';
 import { noop, py } from './testing';
 
 describe('Multiplexing', function () {
-  it('multiplexes feeds', async function () {
+  it.only('multiplexes feeds', async function () {
     const plex1 = new Multiplexer('A');
     const plex2 = new Multiplexer('B');
 
