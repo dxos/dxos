@@ -11,7 +11,11 @@ import { Command } from '../command';
  * Log info about each project.
  */
 export class InfoCommand extends Command {
-  async exec() {
+  override async init() {
+    return true;
+  }
+
+  override async exec() {
     const table = new Table({
       columns: [
         { name: 'package', alignment: 'left' },
@@ -22,8 +26,8 @@ export class InfoCommand extends Command {
     });
 
     // TODO(burdon): Sort by tools, packages.
-    await this.workspace.visitProjects((packageName, name, project) => {
-      const { private: isPrivate } = this.workspace.getPackage(packageName);
+    await this.workspace.visitProjects(async (packageName, name, project) => {
+      const { private: isPrivate } = await this.workspace.getPackage(packageName);
       table.addRow({
         package: chalk.green(packageName),
         name: chalk.blue(name),

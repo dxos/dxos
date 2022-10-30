@@ -9,15 +9,15 @@ const isPlainObject = (obj: any) => {
 };
 
 // Custom key sorter, or array of fixed keys to prefix the naturally sorted list.
-type Sorter = string[] | ((value: any) => any)
+type Sorter = string[] | ((value: any) => any);
 
 type SortOptions = {
   // Fixed depth or -1.
-  depth?: number
+  depth?: number;
 
   // Define custom sorters for given dot-path positions. Set null to prevent sort.
-  map?: { [key: string]: Sorter }
-}
+  map?: { [key: string]: Sorter };
+};
 
 const createKeySorter = (key: string, { depth = -1, map }: SortOptions) => {
   // TODO(burdon): Allow for wildcard paths (e.g., `targets.**`; meaning grandchildren of targets.)
@@ -96,7 +96,7 @@ export const sortJson = (src: any, options: SortOptions = {}, key = '.'): any =>
       keys = sorter(keys);
     }
 
-    keys.forEach(subkey => {
+    keys.forEach((subkey) => {
       const value = src[subkey];
       out[subkey] = sortJson(value, options, `${key === '.' ? '' : key}.${subkey}`);
     });

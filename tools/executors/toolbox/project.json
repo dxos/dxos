@@ -25,13 +25,23 @@
       ]
     },
     "test": {
-      "dependsOn": [
-        "prebuild"
-      ],
-      "executor": "nx:run-script",
+      "executor": "@dxos/mocha:mocha",
       "options": {
-        "script": "test"
-      }
+        "coveragePath": "coverage/tools/executors/toolbox",
+        "outputPath": "tmp/mocha/tools/executors/toolbox",
+        "resultsPath": "test-results/tools/executors/toolbox",
+        "testPatterns": [
+          "tools/executors/toolbox/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "tools/executors/toolbox/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

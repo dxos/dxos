@@ -6,7 +6,9 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
+    "check": "true",
     "update": "ts-node ./src/update.ts"
   },
   "dependencies": {

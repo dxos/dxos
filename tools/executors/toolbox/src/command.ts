@@ -28,9 +28,7 @@ export abstract class Command {
     public readonly options: ToolkitOptions,
     public readonly context: ExecutorContext,
     public readonly workspace: Workspace
-  ) {
-    this.onInit();
-  }
+  ) {}
 
   get path() {
     const { workspace, projectName } = this.context;
@@ -38,7 +36,6 @@ export abstract class Command {
     return path.join(this.context.root, project.root);
   }
 
+  abstract init(): Promise<boolean>;
   abstract exec(): Promise<boolean>;
-
-  onInit() {}
 }

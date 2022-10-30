@@ -12,19 +12,22 @@ import { loadJson } from './util';
  */
 const update = async () => {
   const root = path.join(__dirname, '../../../..');
-  const workspace = loadJson(path.join(root, 'workspace.json'));
-  Object.values(workspace.projects).forEach((baseDir) => {
-    const filename = path.join(root, baseDir as string, 'project.json');
-    const projectJson = loadJson(filename);
-    if (projectJson) {
-      projectJson.targets.toolbox = {
-        executor: '@dxos/toolbox:exec'
-      };
+  const workspace = await loadJson<any>(path.join(root, 'workspace.json'));
 
-      fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2), 'utf-8');
-      console.log(`Updated: ${filename}`);
-    }
-  });
+  await Promise.all(
+    Object.values(workspace.projects).map(async (baseDir) => {
+      const filename = path.join(root, baseDir as string, 'project.json');
+      const projectJson = await loadJson<any>(filename);
+      if (projectJson) {
+        projectJson.targets.toolbox = {
+          executor: '@dxos/toolbox:exec'
+        };
+
+        fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2), 'utf-8');
+        console.log(`Updated: ${filename}`);
+      }
+    })
+  );
 };
 
 void update();

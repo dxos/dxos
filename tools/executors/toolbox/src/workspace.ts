@@ -17,13 +17,23 @@ export class Workspace {
   private readonly _projectsByPackage = new Map<string, [string, ProjectConfiguration]>();
   private readonly _packageNamesByProject = new Map<string, string>();
 
-  constructor(public readonly root: string, public readonly workspace: WorkspaceJsonConfiguration) {
-    Object.entries(workspace.projects).forEach(([name, project]) => {
-      const packagePath = path.join(root, project.root!, 'package.json');
-      const packageJson = loadJson(packagePath);
-      this._projectsByPackage.set(packageJson.name, [name, project]);
-      this._packageNamesByProject.set(name, packageJson.name);
-    });
+  // prettier-ignore
+  constructor(
+    public readonly root: string,
+    public readonly workspace: WorkspaceJsonConfiguration
+  ) {}
+
+  async init() {
+    await Promise.all(
+      Object.entries(this.workspace.projects).map(async ([name, project]) => {
+        const packagePath = path.join(this.root, project.root!, 'package.json');
+        const packageJson = await loadJson<any>(packagePath);
+        this._projectsByPackage.set(packageJson.name, [name, project]);
+        this._packageNamesByProject.set(name, packageJson.name);
+      })
+    );
+
+    return this;
   }
 
   getProject(packageName: string): ProjectConfiguration {
@@ -32,10 +42,10 @@ export class Workspace {
     return project;
   }
 
-  getPackage(packageName: string): any {
+  async getPackage(packageName: string): Promise<any> {
     const [, project] = this._projectsByPackage.get(packageName) ?? [];
     assert(project && project.root, `Invalid package: ${packageName}`);
-    return loadJson(path.join(this.root, project.root, 'package.json'));
+    return await loadJson(path.join(this.root, project.root, 'package.json'));
   }
 
   async visitProjects(cb: ProjectVisitor) {

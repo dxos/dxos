@@ -5,7 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import path from 'path';
 
-import { Command, ToolkitOptions } from './command.js';
+import { Command, Config, ToolkitOptions } from './command.js';
 import { FixCommand, InfoCommand } from './commands';
 import { loadJson } from './util';
 import { Workspace } from './workspace';
@@ -40,10 +40,11 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   // TODO(burdon): Caching?
   const workspace = new Workspace(context.root, context.workspace);
+  await workspace.init();
 
   // Load config.
   const configPath = path.join(context.root, 'toolbox.json');
-  const config = loadJson(configPath) ?? {};
+  const config = await loadJson<Config>(configPath, {} as Config);
 
   // TODO(burdon): Enum.
   let command: Command;
@@ -69,8 +70,10 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   try {
     // TODO(burdon): Pass in custom options.
-    await command.exec();
-    return { success: true };
+    let success = true;
+    success = success && (await command.init());
+    success = success && (await command.exec());
+    return { success };
   } catch (err) {
     console.error('Command failed:', err);
     return { success: false };
