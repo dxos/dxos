@@ -18,12 +18,12 @@ const tsConfigFixedKeys = ['extends', 'compilerOptions'];
 const projectFixedKeys = ['sourceRoot', 'projectType', 'targets'];
 
 /**
- * Manage package config files.
- * - package.json
- * - project.json
- * - tsconfig.json
+ * Clean-up package config files:
+ * - `package.json`
+ * - `project.json`
+ * - `tsconfig.json`
  */
-export class ConfigCommand extends Command {
+export class FixCommand extends Command {
   _packagePath?: string;
   _packageJson?: any;
 

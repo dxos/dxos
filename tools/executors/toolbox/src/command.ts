@@ -10,20 +10,20 @@ import { Workspace } from './workspace';
 export interface Config {
   config: {
     package: {
-      common: string[]
-    }
-  }
+      common: string[];
+    };
+  };
 }
 
 export interface ToolkitOptions {
-  _: string[]
+  args: string;
 }
 
 /**
  * Base command for toolbox.
  */
 export abstract class Command {
-  constructor (
+  constructor(
     public readonly config: Config,
     public readonly options: ToolkitOptions,
     public readonly context: ExecutorContext,
@@ -32,13 +32,13 @@ export abstract class Command {
     this.onInit();
   }
 
-  get path () {
+  get path() {
     const { workspace, projectName } = this.context;
     const project = workspace.projects[projectName!];
     return path.join(this.context.root, project.root);
   }
 
-  abstract exec (): Promise<boolean>;
+  abstract exec(): Promise<boolean>;
 
-  onInit () {}
+  onInit() {}
 }

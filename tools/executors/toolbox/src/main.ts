@@ -6,7 +6,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import path from 'path';
 
 import { Command, ToolkitOptions } from './command.js';
-import { ConfigCommand, InfoCommand } from './commands';
+import { FixCommand, InfoCommand } from './commands';
 import { loadJson } from './util';
 import { Workspace } from './workspace';
 
@@ -31,10 +31,11 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
-  // TODO(burdon): No options passed if run_many (and nothing logged).
   // TODO(burdon): No output if succeeds.
-  const { _ = [] } = options;
-  const [cmd] = _;
+  const { args } = options;
+
+  // TODO(burdon): Parse args.
+  const cmd = args.split(' ')[0] ?? 'info';
 
   // TODO(burdon): Caching?
   const workspace = new Workspace(context.root, context.workspace);
@@ -45,9 +46,9 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   // TODO(burdon): Enum.
   let command: Command;
-  switch (cmd ?? 'info') {
-    case 'config': {
-      command = new ConfigCommand(config, options, context, workspace);
+  switch (cmd) {
+    case 'fix': {
+      command = new FixCommand(config, options, context, workspace);
       break;
     }
 

@@ -1,15 +1,18 @@
 # NX Toolbox
 
-## Update all projects in the workspace.
+## Update all project to use toolbox.
 
-Patches all `package.json` files.
+The script patches all `package.json` files with the `@dxos/toolbox` executor.
 
 ```bash
 pnpm run update
 ```
 
-## Clean-up projects.
+## Usage
+
+Examples:
 
 ```bash
-pnpm nx
+pnpm nx run-many --target=toolbox --args=fix
+pnpm nx run-many --target=toolbox --args=info --projects=async,util
 ```
