@@ -12,7 +12,8 @@ import {
   valueEncoding,
   DataService,
   MetadataStore,
-  SpaceManager, SigningContext
+  SpaceManager,
+  SigningContext
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -26,6 +27,9 @@ import { Storage } from '@dxos/random-access-storage';
 import { IdentityManager } from '../identity';
 import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -41,9 +45,10 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public dataInvitations?: DataInvitations; // TOOD(burdon): Move.
+  public dataInvitations?: DataInvitations; // TODO(burdon): Move.
 
-  constructor (
+  // prettier-ignore
+  constructor(
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
     public readonly modelFactory: ModelFactory
@@ -74,7 +79,7 @@ export class ServiceContext {
     });
   }
 
-  async open () {
+  async open() {
     log('opening...');
     await this.identityManager.open();
     if (this.identityManager.identity) {
@@ -83,7 +88,7 @@ export class ServiceContext {
     log('opened');
   }
 
-  async close () {
+  async close() {
     log('closing...');
     await this.identityManager.close();
     await this.spaceManager?.close();
@@ -92,14 +97,14 @@ export class ServiceContext {
     log('closed');
   }
 
-  async createIdentity () {
+  async createIdentity() {
     const identity = await this.identityManager.createIdentity();
     this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
 
-  private async _initialize () {
+  private async _initialize() {
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
       credentialProvider: MOCK_AUTH_PROVIDER,
@@ -109,15 +114,16 @@ export class ServiceContext {
       deviceKey: identity.deviceKey
     };
 
-    const spaceManager = new SpaceManager(
-      this.metadataStore,
-      this.feedStore,
-      this.networkManager,
-      this.keyring,
-      this.dataService,
-      this.modelFactory,
+    // Create in constructor (avoid all of these private variables).
+    const spaceManager = new SpaceManager({
+      metadataStore: this.metadataStore,
+      feedStore: this.feedStore,
+      networkManager: this.networkManager,
+      keyring: this.keyring,
+      dataService: this.dataService,
+      modelFactory: this.modelFactory,
       signingContext
-    );
+    });
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
@@ -127,7 +133,7 @@ export class ServiceContext {
     this.initialized.wake();
   }
 
-  async createInvitation (spaceKey: PublicKey, onFinish?: () => void) {
+  async createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
     assert(this.spaceManager);
     assert(this.dataInvitations);
 
@@ -135,7 +141,7 @@ export class ServiceContext {
     return this.dataInvitations.createInvitation(space, { onFinish });
   }
 
-  async joinSpace (invitationDescriptor: InvitationDescriptor) {
+  async joinSpace(invitationDescriptor: InvitationDescriptor) {
     assert(this.dataInvitations);
     return this.dataInvitations.acceptInvitation(invitationDescriptor);
   }

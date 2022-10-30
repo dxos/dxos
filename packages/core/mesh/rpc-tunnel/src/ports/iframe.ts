@@ -22,11 +22,11 @@ const sendToParentWindow = (origin: string, message: MessageData) => {
 };
 
 export type IFramePortOptions = {
-  channel: string
-  iframe?: HTMLIFrameElement
-  origin?: string
-  onOrigin?: (origin: string) => void
-}
+  channel: string;
+  iframe?: HTMLIFrameElement;
+  origin?: string;
+  onOrigin?: (origin: string) => void;
+};
 
 /**
  * Create a RPC port with an iframe over window messaging.
@@ -36,14 +36,9 @@ export type IFramePortOptions = {
  * @param options.onOrigin Callback triggered when origin of destination window is verified.
  * @returns RPC port for messaging.
  */
-export const createIFramePort = ({
-  channel,
-  iframe,
-  origin,
-  onOrigin
-}: IFramePortOptions): RpcPort => {
+export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePortOptions): RpcPort => {
   return {
-    send: async data => {
+    send: async (data) => {
       if (!origin) {
         log.warn('No origin set yet', { channel });
         return;
@@ -57,7 +52,7 @@ export const createIFramePort = ({
         sendToParentWindow(origin, message);
       }
     },
-    subscribe: callback => {
+    subscribe: (callback) => {
       const handler = (event: MessageEvent<unknown>) => {
         if (!iframe && event.source !== window.parent) {
           // Not from parent window.
@@ -67,11 +62,9 @@ export const createIFramePort = ({
           return;
         }
 
-        const isMessageData = event.data &&
-          typeof event.data === 'object' &&
-          'channel' in event.data &&
-          'payload' in event.data;
-        const message = isMessageData ? event.data as MessageData : undefined;
+        const isMessageData =
+          event.data && typeof event.data === 'object' && 'channel' in event.data && 'payload' in event.data;
+        const message = isMessageData ? (event.data as MessageData) : undefined;
         if (message?.channel !== channel) {
           return;
         }
@@ -108,5 +101,5 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
-  return document.getElementById(id) as HTMLIFrameElement ?? create();
+  return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

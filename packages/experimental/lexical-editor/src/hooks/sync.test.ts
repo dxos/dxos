@@ -25,7 +25,7 @@ describe('YJS sync', function () {
       // https://docs.yjs.dev/api/document-updates
       doc.on('update', (update: Uint8Array, origin: any, doc: Doc) => {
         const clientId = doc.clientID;
-        docs.forEach(doc => {
+        docs.forEach((doc) => {
           if (doc.clientID !== clientId) {
             applyUpdate(doc, update);
             count++;
@@ -43,7 +43,7 @@ describe('YJS sync', function () {
 
     const expected = 'Hello World!';
     await waitForExpect(() => {
-      const match = docs.every(doc => doc.getText().toString() === expected);
+      const match = docs.every((doc) => doc.getText().toString() === expected);
       expect(match).toBeTruthy();
     });
 
@@ -94,7 +94,10 @@ describe('YJS sync', function () {
       const client = inviter;
       const { value: parties } = client.echo.queryParties();
       const [party] = parties;
-      const item = await party.database.createItem({ model: TextModel, type: TEST_TYPE });
+      const item = await party.database.createItem({
+        model: TextModel,
+        type: TEST_TYPE
+      });
       log(`Created item: ${item.id}`);
 
       const text = item.model.doc.getText();

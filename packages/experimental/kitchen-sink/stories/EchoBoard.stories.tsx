@@ -34,11 +34,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoBoard
-        itemAdapter={itemAdapter}
-        items={items}
-        onCreateItem={handleCreateItem}
-      />
+      <EchoBoard itemAdapter={itemAdapter} items={items} onCreateItem={handleCreateItem} />
     </FullScreen>
   );
 };

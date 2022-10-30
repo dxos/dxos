@@ -13,8 +13,7 @@ const apiPath = path.resolve(__dirname, '../../docs/api');
 
 export const link = {
   package: (name: string) => `/api/${name}`,
-  sectionItem: (pkg: string, section: string, name: string) =>
-    `/api/${pkg}/${section}/${name}`
+  sectionItem: (pkg: string, section: string, name: string) => `/api/${pkg}/${section}/${name}`
 };
 
 type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;
@@ -37,7 +36,7 @@ const dirExists = async (path: string) => {
 const fileName = (name: string) => path.parse(name)?.name;
 
 const sidebarItem: {
-  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>
+  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>;
 } = {
   package: async (pkg: string) => ({
     text: pkg,
@@ -51,14 +50,10 @@ const sidebarItem: {
               ? ({
                   text: capitalCase(section),
                   collapsible: true,
-                  children: (
-                    await fs.readdir(path.resolve(apiPath, pkg, section))
-                  )
-                    .filter(isMarkdown)
-                    .map((file) => ({
-                      text: fileName(file),
-                      link: link.sectionItem(pkg, section, fileName(file))
-                    }))
+                  children: (await fs.readdir(path.resolve(apiPath, pkg, section))).filter(isMarkdown).map((file) => ({
+                    text: fileName(file),
+                    link: link.sectionItem(pkg, section, fileName(file))
+                  }))
                 } as AnySidebarItem)
               : null
           )
@@ -82,15 +77,17 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
     })
   );
   const flatPackages = packagesByScope.flat();
-  const otherPackages = flatPackages.filter(
-    (p) => !!p && !PINNED_PACKAGES.includes(p)
-  );
+  const otherPackages = flatPackages.filter((p) => !!p && !PINNED_PACKAGES.includes(p));
   return [
     ...(await Promise.all(PINNED_PACKAGES.map(sidebarItem.package))),
-    ...(otherPackages?.length ? [{
-      text: 'Other packages',
-      collapsible: true,
-      children: await Promise.all(otherPackages.map(sidebarItem.package))
-    }] : [])
+    ...(otherPackages?.length
+      ? [
+          {
+            text: 'Other packages',
+            collapsible: true,
+            children: await Promise.all(otherPackages.map(sidebarItem.package))
+          }
+        ]
+      : [])
   ];
 };

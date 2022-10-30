@@ -18,10 +18,10 @@ export const createServices = ({
   echo, // TODO(burdon): Remove (legacy?)
   signer // TODO(burdon): Remove (legacy?)
 }: {
-  config: Config
-  context: ServiceContext
-  echo: any
-  signer?: HaloSigner
+  config: Config;
+  context: ServiceContext;
+  echo: any;
+  signer?: HaloSigner;
 }): Omit<ClientServices, 'DevtoolsHost'> => ({
   DataService: context.dataService,
   HaloService: new HaloService(echo, signer), // TODO(burdon): Remove.

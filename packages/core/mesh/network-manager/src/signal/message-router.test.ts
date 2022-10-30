@@ -41,10 +41,10 @@ describe('MessageRouter', function () {
     onOffer = async () => ({ accept: true }),
     topic
   }: {
-    signalApiUrl: string
-    onSignal?: (msg: SignalMessage) => Promise<void>
-    onOffer?: (msg: OfferMessage) => Promise<Answer>
-    topic: PublicKey
+    signalApiUrl: string;
+    onSignal?: (msg: SignalMessage) => Promise<void>;
+    onOffer?: (msg: OfferMessage) => Promise<Answer>;
+    topic: PublicKey;
   }) => {
     const peerId = PublicKey.random();
     const signalManager = new WebsocketSignalManager([signalApiUrl]);
@@ -77,17 +77,19 @@ describe('MessageRouter', function () {
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
     };
-    const { signalManager: signalManager1, peerId: peer1 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: signalMock1,
-        topic
-      });
-    const { signalManager: signalManager2, router: router2, peerId: peer2 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        topic
-      });
+    const { signalManager: signalManager1, peerId: peer1 } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: signalMock1,
+      topic
+    });
+    const {
+      signalManager: signalManager2,
+      router: router2,
+      peerId: peer2
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      topic
+    });
 
     await signalManager1.join({ topic, peerId: peer1 });
     await signalManager2.join({ topic, peerId: peer2 });
@@ -107,13 +109,16 @@ describe('MessageRouter', function () {
   }).timeout(5_000);
 
   it('offer/answer', async () => {
-    const { signalManager: signalManager1, router: router1, peerId: peer1 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const {
+      signalManager: signalManager1,
+      router: router1,
+      peerId: peer1
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: (async () => {}) as any,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
     const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
@@ -138,35 +143,44 @@ describe('MessageRouter', function () {
     const signalMock1 = async (msg: SignalMessage) => {
       received1.push(msg);
     };
-    const { signalManager: signalManager1, router: router1, peerId: peer1 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: signalMock1,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const {
+      signalManager: signalManager1,
+      router: router1,
+      peerId: peer1
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: signalMock1,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
     const received2: SignalMessage[] = [];
     const signalMock2 = async (msg: SignalMessage) => {
       received2.push(msg);
     };
-    const { signalManager: signalManager2, router: router2, peerId: peer2 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: signalMock2,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const {
+      signalManager: signalManager2,
+      router: router2,
+      peerId: peer2
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: signalMock2,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
     const received3: SignalMessage[] = [];
     const signalMock3 = async (msg: SignalMessage) => {
       received3.push(msg);
     };
-    const { signalManager: signalManager3, router: router3, peerId: peer3 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: signalMock3,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const {
+      signalManager: signalManager3,
+      router: router3,
+      peerId: peer3
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: signalMock3,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
 
     await signalManager1.join({ topic, peerId: peer1 });
     await signalManager2.join({ topic, peerId: peer2 });
@@ -213,20 +227,26 @@ describe('MessageRouter', function () {
   }).timeout(5_000);
 
   it('two offers', async () => {
-    const { signalManager: signalManager1, router: router1, peerId: peer1 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
-    const { signalManager: signalManager2, router: router2, peerId: peer2 } =
-      await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
-        onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
-        topic
-      });
+    const {
+      signalManager: signalManager1,
+      router: router1,
+      peerId: peer1
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: (async () => {}) as any,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
+    const {
+      signalManager: signalManager2,
+      router: router2,
+      peerId: peer2
+    } = await createSignalClientAndMessageRouter({
+      signalApiUrl: broker1.url(),
+      onSignal: (async () => {}) as any,
+      onOffer: async () => ({ accept: true }),
+      topic
+    });
 
     await signalManager1.join({ topic, peerId: peer1 });
     await signalManager2.join({ topic, peerId: peer2 });

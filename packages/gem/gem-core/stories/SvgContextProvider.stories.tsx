@@ -31,9 +31,9 @@ export default {
 
 interface ComponentProps {
   options?: {
-    grid?: boolean
-    zoom?: boolean
-  }
+    grid?: boolean;
+    zoom?: boolean;
+  };
 }
 
 const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => {
@@ -50,7 +50,8 @@ const Component = ({ options = { grid: true, zoom: true } }: ComponentProps) => 
       xmlns='http://www.w3.org/2000/svg'
       ref={context.ref}
       className={css`
-        rect, circle {
+        rect,
+        circle {
           stroke: darkblue;
           stroke-width: 2px;
           fill: none;

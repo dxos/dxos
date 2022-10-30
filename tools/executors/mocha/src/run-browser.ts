@@ -10,23 +10,19 @@ import { BrowserType, buildTests, getNewBrowserContext, outputResults, runTests 
 import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {
-  testPatterns: string[]
-  outputPath: string
-  resultsPath: string
-  xmlReport: boolean
-  timeout: number
-  checkLeaks: boolean
-  stayOpen: boolean
-  headless: boolean
-  debug: boolean
-  browserArgs?: string[]
-}
+  testPatterns: string[];
+  outputPath: string;
+  resultsPath: string;
+  xmlReport: boolean;
+  timeout: number;
+  checkLeaks: boolean;
+  stayOpen: boolean;
+  headless: boolean;
+  debug: boolean;
+  browserArgs?: string[];
+};
 
-export const runBrowser = async (
-  name: string,
-  browserType: BrowserType,
-  options: BrowserOptions
-) => {
+export const runBrowser = async (name: string, browserType: BrowserType, options: BrowserOptions) => {
   console.log(chalk`\nRunning in {blue {bold ${browserType}}}\n`);
 
   const { page } = await getNewBrowserContext(browserType, options);
@@ -47,7 +43,7 @@ export const runBrowser = async (
   if (options.stayOpen) {
     console.log(`\nCompleted with ${success ? 'success' : 'failure'}. Browser window stays open.`);
 
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       page.on('close', resolve);
     });
   }

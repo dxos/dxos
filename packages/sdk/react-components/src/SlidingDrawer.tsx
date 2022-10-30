@@ -4,10 +4,7 @@
 
 import React, { FunctionComponent, PropsWithChildren } from 'react';
 
-import {
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
-} from '@mui/icons-material';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import {
   AppBar as MuiAppBar,
   AppBarProps as MuiAppBarProps,
@@ -19,7 +16,7 @@ import {
 
 // TODO(zarco): Add mobile adjustments so the drawer goes on top of the content.
 
-type Direction = 'left' | 'right'
+type Direction = 'left' | 'right';
 
 // ----------------------------------------------------------------------------.
 // Drawer.
@@ -27,27 +24,27 @@ type Direction = 'left' | 'right'
 // ----------------------------------------------------------------------------.
 
 interface SlidingDrawerProps extends MuiDrawerProps {
-  direction?: Direction
-  drawerWidth: number
+  direction?: Direction;
+  drawerWidth: number;
 }
 
 const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerWidth'
 })<SlidingDrawerProps>(({ theme, direction, drawerWidth, open }) => ({
-  'width': drawerWidth,
-  'flexShrink': 0,
-  'position': 'absolute',
-  'top': 0,
-  'bottom': 0,
-  'overflow': 'hidden',
-  'pointerEvents': open ? 'auto' : 'none',
+  width: drawerWidth,
+  flexShrink: 0,
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  overflow: 'hidden',
+  pointerEvents: open ? 'auto' : 'none',
   '& .MuiDrawer-paper': {
     width: drawerWidth,
     boxSizing: 'content-box',
     overflow: 'hidden',
     border: 'none',
-    borderRight: (direction === 'left') ? `1px solid ${theme.palette.divider}` : undefined,
-    borderLeft: (direction === 'right') ? `1px solid ${theme.palette.divider}` : undefined
+    borderRight: direction === 'left' ? `1px solid ${theme.palette.divider}` : undefined,
+    borderLeft: direction === 'right' ? `1px solid ${theme.palette.divider}` : undefined
   }
 }));
 
@@ -59,13 +56,13 @@ export const SlidingDrawer: FunctionComponent<SlidingDrawerProps> = Drawer;
 // ----------------------------------------------------------------------------.
 
 export interface AppBarProps extends MuiAppBarProps {
-  direction?: Direction
-  drawerOpen: boolean
-  drawerWidth: number
+  direction?: Direction;
+  drawerOpen: boolean;
+  drawerWidth: number;
 }
 
 const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<AppBarProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
@@ -75,8 +72,8 @@ const AppBar = styled(MuiAppBar, {
   marginRight: 0,
   ...(drawerOpen && {
     width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-    marginRight: (direction === 'right') ? drawerWidth : undefined,
+    marginLeft: direction === 'left' ? `${drawerWidth}px` : undefined,
+    marginRight: direction === 'right' ? drawerWidth : undefined,
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen
@@ -92,13 +89,13 @@ export const SlidingAppBar: FunctionComponent<AppBarProps> = AppBar;
 // ----------------------------------------------------------------------------.
 
 interface ContentProps {
-  direction?: Direction
-  drawerOpen: boolean
-  drawerWidth: number
+  direction?: Direction;
+  drawerOpen: boolean;
+  drawerWidth: number;
 }
 
 const Content = styled('main', {
-  shouldForwardProp: (prop) => (prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth')
+  shouldForwardProp: (prop) => prop !== 'direction' && prop !== 'drawerOpen' && prop !== 'drawerWidth'
 })<ContentProps>(({ theme, direction = 'left', drawerOpen, drawerWidth }) => ({
   display: 'flex',
   overflow: 'hidden',
@@ -111,8 +108,8 @@ const Content = styled('main', {
   marginLeft: 0,
   marginRight: 0,
   ...(drawerOpen && {
-    marginLeft: (direction === 'left') ? `${drawerWidth}px` : undefined,
-    marginRight: (direction === 'right') ? `${drawerWidth}px` : undefined,
+    marginLeft: direction === 'left' ? `${drawerWidth}px` : undefined,
+    marginRight: direction === 'right' ? `${drawerWidth}px` : undefined,
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen
@@ -127,42 +124,24 @@ export const SlidingContent: FunctionComponent<PropsWithChildren<ContentProps>> 
 // ----------------------------------------------------------------------------.
 
 interface CloseButtonProps {
-  direction?: Direction
-  onClose: () => void
+  direction?: Direction;
+  onClose: () => void;
 }
 
-export const CloseButton = ({
-  direction = 'left',
-  onClose,
-  ...props
-}: CloseButtonProps) => (
-  <IconButton
-    size='small'
-    aria-label='close drawer'
-    onClick={() => onClose()}
-    {...props}
-  >
+export const CloseButton = ({ direction = 'left', onClose, ...props }: CloseButtonProps) => (
+  <IconButton size='small' aria-label='close drawer' onClick={() => onClose()} {...props}>
     {direction === 'left' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
   </IconButton>
 );
 
 export interface OpenButtonProps {
-  direction?: Direction
-  onOpen: () => void
-  sx?: any
+  direction?: Direction;
+  onOpen: () => void;
+  sx?: any;
 }
 
-export const OpenButton = ({
-  direction = 'left',
-  onOpen,
-  ...props
-}: OpenButtonProps) => (
-  <IconButton
-    size='small'
-    aria-label='open drawer'
-    onClick={() => onOpen()}
-    {...props}
-  >
+export const OpenButton = ({ direction = 'left', onOpen, ...props }: OpenButtonProps) => (
+  <IconButton size='small' aria-label='open drawer' onClick={() => onOpen()} {...props}>
     {direction === 'left' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
   </IconButton>
 );

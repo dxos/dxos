@@ -14,14 +14,14 @@ import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
 
 export type FeedFactoryOptions = {
-  root: Directory
-  signer?: Signer
-  hypercore?: HypercoreOptions
-}
+  root: Directory;
+  signer?: Signer;
+  hypercore?: HypercoreOptions;
+};
 
 export type FeedOptions = HypercoreOptions & {
-  writable?: boolean
-}
+  writable?: boolean;
+};
 
 /**
  * Hypercore factory.
@@ -35,11 +35,7 @@ export class FeedFactory<T extends {}> {
 
   // TODO(burdon): Must patch codec here createCodecEncoding.
 
-  constructor ({
-    root,
-    signer,
-    hypercore
-  }: FeedFactoryOptions) {
+  constructor({ root, signer, hypercore }: FeedFactoryOptions) {
     this._root = root ?? failUndefined();
     this._signer = signer;
     this._hypercoreOptions = hypercore;
@@ -47,12 +43,15 @@ export class FeedFactory<T extends {}> {
     this._storage = (publicKey: PublicKey) => (filename) => {
       const dir = this._root.createDirectory(publicKey.toHex());
       const { type, native } = dir.getOrCreateFile(filename);
-      log('created', { path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}` });
+      log('created', {
+        path: `${type}:${this._root.path}/${publicKey.truncate()}/${filename}`
+      });
+
       return native;
     };
   }
 
-  createFeed (publicKey: PublicKey, options?: FeedOptions): Hypercore<T> {
+  createFeed(publicKey: PublicKey, options?: FeedOptions): Hypercore<T> {
     if (options?.writable && !this._signer) {
       throw new Error('Signer required to create writable feeds.');
     }
@@ -64,11 +63,15 @@ export class FeedFactory<T extends {}> {
     // TODO(burdon): Add details.
     const key = sha256(publicKey.toHex());
 
-    const opts = Object.assign({}, this._hypercoreOptions, {
-      // TODO(burdon): Test if can omit (given crypto signer) in v10.
-      secretKey: (this._signer && options?.writable) ? Buffer.from('secret') : undefined,
-      crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
-    }, options);
+    const opts = Object.assign(
+      {},
+      this._hypercoreOptions,
+      {
+        secretKey: this._signer && options?.writable ? Buffer.from('secret') : undefined,
+        crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
+      },
+      options
+    );
 
     return hypercore(this._storage(publicKey), key, opts);
   }

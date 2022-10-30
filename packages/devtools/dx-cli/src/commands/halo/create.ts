@@ -15,7 +15,7 @@ export default class Create extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args } = await this.parse(Create);
     const { username } = args; // TODO(burdon): Prompt.
 

@@ -12,7 +12,7 @@ import { FeedFactory, FeedOptions } from './feed-factory';
 import { FeedWrapper } from './feed-wrapper';
 
 export interface FeedStoreOptions<T extends {}> {
-  factory: FeedFactory<T>
+  factory: FeedFactory<T>;
 }
 
 /**
@@ -25,24 +25,22 @@ export class FeedStore<T extends {}> {
 
   readonly feedOpened = new Event<FeedWrapper<T>>();
 
-  constructor ({
-    factory
-  }: FeedStoreOptions<T>) {
+  constructor({ factory }: FeedStoreOptions<T>) {
     this._factory = factory ?? failUndefined();
   }
 
-  get size () {
+  get size() {
     return this._feeds.size;
   }
 
-  get feeds () {
+  get feeds() {
     return Array.from(this._feeds.values());
   }
 
   /**
    * Get the an open feed if it exists.
    */
-  getFeed (publicKey: PublicKey): FeedWrapper<T> | undefined {
+  getFeed(publicKey: PublicKey): FeedWrapper<T> | undefined {
     return this._feeds.get(publicKey);
   }
 
@@ -50,7 +48,7 @@ export class FeedStore<T extends {}> {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  async openFeed (feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
+  async openFeed(feedKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper<T>> {
     log('opening feed', { feedKey });
 
     let feed = this.getFeed(feedKey);
@@ -79,9 +77,9 @@ export class FeedStore<T extends {}> {
   /**
    * Close all feeds.
    */
-  async close () {
+  async close() {
     log('closing...');
-    await Promise.all(Array.from(this._feeds.values()).map(feed => feed.close()));
+    await Promise.all(Array.from(this._feeds.values()).map((feed) => feed.close()));
     this._feeds.clear();
     log('closed');
   }

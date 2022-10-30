@@ -68,10 +68,13 @@ describe('FeedWrapper', function () {
     const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
-    const feed = new FeedWrapper<TestItem>(feedFactory.createFeed(key, {
-      writable: true,
-      valueEncoding: defaultValueEncoding
-    }), key);
+    const feed = new FeedWrapper<TestItem>(
+      feedFactory.createFeed(key, {
+        writable: true,
+        valueEncoding: defaultValueEncoding
+      }),
+      key
+    );
 
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await feed.append({
@@ -90,10 +93,13 @@ describe('FeedWrapper', function () {
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(factory.createFeed(key, {
-      writable: true,
-      valueEncoding: defaultValueEncoding
-    }), key);
+    const feed = new FeedWrapper(
+      factory.createFeed(key, {
+        writable: true,
+        valueEncoding: defaultValueEncoding
+      }),
+      key
+    );
 
     // TODO(burdon): Use generator.
     for (const i of Array.from(Array(numBlocks)).keys()) {

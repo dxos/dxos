@@ -17,9 +17,9 @@ import { ThemeProvider } from '../Theme';
 import { ViewContainer, ViewType } from '../View';
 
 interface AppProps {
-  party: Party
-  onInvite?: () => void
-  onExport?: (action: ExportAction) => void
+  party: Party;
+  onInvite?: () => void;
+  onExport?: (action: ExportAction) => void;
 }
 
 /**
@@ -29,11 +29,7 @@ interface AppProps {
  * @param onExport
  * @constructor
  */
-export const App = ({
-  party,
-  onInvite,
-  onExport
-}: AppProps) => {
+export const App = ({ party, onInvite, onExport }: AppProps) => {
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
@@ -45,7 +41,7 @@ export const App = ({
   useEffect(() => {
     const selected = new Set<ItemID>();
     if (search.length) {
-      items.forEach(item => selected.add(item.id));
+      items.forEach((item) => selected.add(item.id));
     }
 
     setSelected(selected);
@@ -80,7 +76,7 @@ export const App = ({
     const selection = execSelection(party, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
-    result?.entities.forEach(item => selected.add(item.id));
+    result?.entities.forEach((item) => selected.add(item.id));
     setSelected(selected);
     model.refresh();
   };
@@ -106,9 +102,7 @@ export const App = ({
           onCreateItem={handleCreateItem}
         />
 
-        <CreateItemButton
-          onCreate={handleCreateItem}
-        />
+        <CreateItemButton onCreate={handleCreateItem} />
       </ThemeProvider>
     </FullScreen>
   );

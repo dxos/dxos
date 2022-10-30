@@ -17,7 +17,7 @@ class Peer extends EventEmitter {
   public _messages: any;
   public _broadcast: Broadcast;
 
-  constructor (id: any, opts = {}) {
+  constructor(id: any, opts = {}) {
     super();
     this.id = id;
 
@@ -46,7 +46,7 @@ class Peer extends EventEmitter {
       ...opts
     });
 
-    this._broadcast.packet.on(packet => {
+    this._broadcast.packet.on((packet) => {
       this._messages.set(packetId(packet), Buffer.from(packet.data!).toString('utf8'));
       this.emit('packet', packet);
     });
@@ -54,39 +54,41 @@ class Peer extends EventEmitter {
     this._broadcast.open();
   }
 
-  get messages () {
+  get messages() {
     return this._messages;
   }
 
-  get seenMessagesSize () {
+  get seenMessagesSize() {
     return (this._broadcast as any)._seenSeqs.size;
   }
 
-  send (message: any) {
+  send(message: any) {
     this.emit('message', message);
   }
 
-  connect (peer: any) {
+  connect(peer: any) {
     this._peers.set(peer.id.toString('hex'), peer);
     this.emit('peer-added', peer);
   }
 
-  publish (message: any, options: any) {
+  publish(message: any, options: any) {
     return this._broadcast.publish(message, options);
   }
 
-  prune () {
+  prune() {
     return this._broadcast.pruneCache();
   }
 
-  close () {
+  close() {
     this._broadcast.close();
   }
 }
 
 const publishAndSync = async (peers: any, message: any, opts?: any) => {
   const [peerOrigin, ...peersTarget] = peers;
-  const sync = Promise.all(peersTarget.map((peer: any) => new Promise<void>(resolve => peer.once('packet', () => resolve()))));
+  const sync = Promise.all(
+    peersTarget.map((peer: any) => new Promise<void>((resolve) => peer.once('packet', () => resolve())))
+  );
   const packet = await peerOrigin.publish(message, opts);
   await sync;
   expect(peersTarget.reduce((prev: any, curr: any) => prev && curr.messages.has(packetId(packet)), true)).to.be.true;
@@ -108,7 +110,9 @@ it('balancedBinTree: broadcast a message.', async function () {
   const network = await generator.balancedBinTree(2);
   await publishAndSync(network.peers, Buffer.from('message1'));
 
-  const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seq: Buffer.from('custom-seqno') });
+  const packet = await publishAndSync(network.peers, Buffer.from('message1'), {
+    seq: Buffer.from('custom-seqno')
+  });
   expect(packet.seq.toString()).to.equal('custom-seqno');
 
   network.peers.forEach((peer: any) => peer.close());
@@ -139,7 +143,7 @@ it('complete: broadcast a message.', async function () {
 
   time = Date.now() - time;
   if (time < 2000) {
-    await new Promise(resolve => setTimeout(resolve, 2000 - time));
+    await new Promise((resolve) => setTimeout(resolve, 2000 - time));
   }
 
   network.peers.forEach((peer: any) => peer.prune());

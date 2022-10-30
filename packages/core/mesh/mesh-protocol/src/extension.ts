@@ -32,16 +32,16 @@ export interface ExtensionOptions {
   /**
    * Protobuf schema json.
    */
-  schema?: Record<string, any>
+  schema?: Record<string, any>;
 
-  [key: string]: any
+  [key: string]: any;
 }
 
-export type InitHandler = (protocol: Protocol) => Promise<void> | void
-export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void
-export type CloseHandler = (protocol: Protocol) => Promise<void> | void
-export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void
-export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void
+export type InitHandler = (protocol: Protocol) => Promise<void> | void;
+export type HandshakeHandler = (protocol: Protocol) => Promise<void> | void;
+export type CloseHandler = (protocol: Protocol) => Promise<void> | void;
+export type MessageHandler = (protocol: Protocol, message: any) => Promise<any> | void;
+export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<void> | void;
 
 /**
  * Reliable message passing via using Dat protocol extensions.
@@ -91,7 +91,7 @@ export class Extension extends Nanomessage {
    * @param {Object} options
    * @param {Number} options.timeout
    */
-  constructor (name: string, { schema: userSchema, ...nmOptions }: ExtensionOptions = {}) {
+  constructor(name: string, { schema: userSchema, ...nmOptions }: ExtensionOptions = {}) {
     super(nmOptions);
 
     assert(typeof name === 'string' && name.length > 0, 'name is required.');
@@ -108,11 +108,11 @@ export class Extension extends Nanomessage {
     this.on('error', (err: any) => log(err));
   }
 
-  get name () {
+  get name() {
     return this._name;
   }
 
-  setInitHandler (initHandler: InitHandler) {
+  setInitHandler(initHandler: InitHandler) {
     this._initHandler = initHandler;
     return this;
   }
@@ -122,7 +122,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol}>} handshakeHandler - Async handshake handler.
    * @returns {Extension}
    */
-  setHandshakeHandler (handshakeHandler: HandshakeHandler) {
+  setHandshakeHandler(handshakeHandler: HandshakeHandler) {
     this._handshakeHandler = handshakeHandler;
 
     return this;
@@ -133,7 +133,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol}>} closeHandler - Close handler.
    * @returns {Extension}
    */
-  setCloseHandler (closeHandler: CloseHandler) {
+  setCloseHandler(closeHandler: CloseHandler) {
     this._closeHandler = closeHandler;
 
     return this;
@@ -144,7 +144,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol, message}>} messageHandler - Async message handler.
    * @returns {Extension}
    */
-  setMessageHandler (messageHandler: MessageHandler) {
+  setMessageHandler(messageHandler: MessageHandler) {
     this._messageHandler = messageHandler;
 
     return this;
@@ -155,7 +155,7 @@ export class Extension extends Nanomessage {
    * @param {Function<{protocol, discovery_key}>} feedHandler - Async feed handler.
    * @returns {Extension}
    */
-  setFeedHandler (feedHandler: FeedHandler) {
+  setFeedHandler(feedHandler: FeedHandler) {
     this._feedHandler = feedHandler;
 
     return this;
@@ -166,7 +166,7 @@ export class Extension extends Nanomessage {
    *
    * @param {Protocol} protocol
    */
-  async openWithProtocol (protocol: Protocol) {
+  async openWithProtocol(protocol: Protocol) {
     assert(!this._protocol);
     log(`init[${this._name}]: ${keyToHuman(protocol.id)}`);
 
@@ -184,7 +184,7 @@ export class Extension extends Nanomessage {
     await this.open();
   }
 
-  async onInit () {
+  async onInit() {
     try {
       await this.open();
 
@@ -204,7 +204,7 @@ export class Extension extends Nanomessage {
   /**
    * Handshake event.
    */
-  async onHandshake () {
+  async onHandshake() {
     try {
       await this.open();
       assert(this._protocol);
@@ -225,7 +225,7 @@ export class Extension extends Nanomessage {
    *
    * @param {Buffer} discoveryKey
    */
-  async onFeed (discoveryKey: Buffer) {
+  async onFeed(discoveryKey: Buffer) {
     try {
       await this.open();
       assert(this._protocol);
@@ -248,7 +248,7 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send (message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
+  async send(message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -281,7 +281,7 @@ export class Extension extends Nanomessage {
   }
 
   // Nanomesssage interface.
-  private async _open () {
+  private async _open() {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -293,7 +293,7 @@ export class Extension extends Nanomessage {
   }
 
   // code @override
-  private async _close () {
+  private async _close() {
     try {
       await super._close();
       if (this._closeHandler) {
@@ -305,27 +305,27 @@ export class Extension extends Nanomessage {
     }
   }
 
-  private _subscribe (next: (msg: any) => Promise<void>) {
+  private _subscribe(next: (msg: any) => Promise<void>) {
     this._subscribeCb = next;
   }
 
   /**
    * @overrides _send in Nanomessage
    */
-  private _send (chunk: Uint8Array) {
+  private _send(msg: Buffer) {
     assert(this._protocol);
     assert(this._protocolExtension);
     if (this._protocol.stream.destroyed) {
       return;
     }
 
-    this._protocolExtension.send(chunk);
+    this._protocolExtension.send(msg);
   }
 
   /**
    * @override _onMessage from Nanomessagerpc
    */
-  private async _onMessage (msg: any) {
+  private async _onMessage(msg: Buffer) {
     try {
       await this.open();
       if (this._messageHandler) {
@@ -347,14 +347,19 @@ export class Extension extends Nanomessage {
   /**
    * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
    */
-  private _buildMessage (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
-    if (typeof message === 'string') { // Backwards compatibility.
+  private _buildMessage(message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
+    if (typeof message === 'string') {
+      // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
     } else if (Buffer.isBuffer(message)) {
       return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
     } else if (message instanceof Uint8Array) {
-      return { '@type': 'dxos.mesh.protocol.Buffer', data: Buffer.from(message) };
-    } else if (message == null) { // Apparently this is a use-case.
+      return {
+        '@type': 'dxos.mesh.protocol.Buffer',
+        data: Buffer.from(message)
+      };
+    } else if (message == null) {
+      // Apparently this is a use-case.
       return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
     } else {
       assert(message['@type'], 'Message does not have a type URL.');

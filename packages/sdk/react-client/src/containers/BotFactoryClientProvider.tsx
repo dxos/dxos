@@ -12,15 +12,13 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';
 
 export interface BotFactoryClientProviderProps {
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 /**
  * BotFactoryClientProvider
  */
-export const BotFactoryClientProvider = ({
-  children
-}: BotFactoryClientProviderProps) => {
+export const BotFactoryClientProvider = ({ children }: BotFactoryClientProviderProps) => {
   const config = useConfig();
   const [botFactoryClient, setBotFactoryClient] = useState<BotFactoryClient>();
 
@@ -41,9 +39,5 @@ export const BotFactoryClientProvider = ({
     return null;
   }
 
-  return (
-    <BotFactoryClientContext.Provider value={botFactoryClient}>
-      {children}
-    </BotFactoryClientContext.Provider>
-  );
+  return <BotFactoryClientContext.Provider value={botFactoryClient}>{children}</BotFactoryClientContext.Provider>;
 };

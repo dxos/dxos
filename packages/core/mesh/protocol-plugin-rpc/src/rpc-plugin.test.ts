@@ -19,11 +19,7 @@ import { RpcPlugin } from './rpc-plugin';
 
 const signalContext = new MemorySignalManagerContext();
 
-const createPeer = async (
-  topic: PublicKey,
-  peerId: PublicKey,
-  onConnect: (port: RpcPort, peerId: string) => void
-) => {
+const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port: RpcPort, peerId: string) => void) => {
   const networkManager = new NetworkManager({
     signalManager: new MemorySignalManager(signalContext),
     transportFactory: MemoryTransportFactory
@@ -107,16 +103,10 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      serverConnected,
-      clientConnected
-    ]);
+    await Promise.all([serverConnected, clientConnected]);
     assert(client);
     assert(server);
-    await Promise.all([
-      server.open(),
-      client.open()
-    ]);
+    await Promise.all([server.open(), client.open()]);
 
     const response = await client.rpc.testCall({ data: 'requestData' });
     expect(response.data).toEqual('responseData');
@@ -160,10 +150,7 @@ describe('Protocol plugin rpc', function () {
       connected.emit();
     });
 
-    await Promise.all([
-      client1Connected,
-      client2Connected
-    ]);
+    await Promise.all([client1Connected, client2Connected]);
     assert(client1);
     assert(client2);
 
@@ -174,10 +161,6 @@ describe('Protocol plugin rpc', function () {
     ]);
 
     const peerIds = responses.map((response) => response.data);
-    expect(peerIds).toEqual([
-      client1Id.toHex(),
-      client2Id.toHex(),
-      client1Id.toHex()
-    ]);
+    expect(peerIds).toEqual([client1Id.toHex(), client2Id.toHex(), client1Id.toHex()]);
   });
 });

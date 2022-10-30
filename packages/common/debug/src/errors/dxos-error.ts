@@ -8,10 +8,7 @@
  * @param code Error code should be formatted in SCREAMING_SNAKE_CASE. Must be prefixed with 'DXOS_.
  */
 export class DXOSError extends Error {
-  constructor (
-    readonly code: string,
-    readonly dxosErrorMessage?: string
-  ) {
+  constructor(readonly code: string, readonly dxosErrorMessage?: string) {
     super(dxosErrorMessage ? `${code}: ${dxosErrorMessage}` : code.toString());
     // Restore prototype chain.
     // https://stackoverflow.com/a/48342359
@@ -27,11 +24,7 @@ export class DXOSError extends Error {
  * @param userErrorMessage Minimal error message that can be displayed as-is in the UI.
  */
 export class DXOSUserError extends DXOSError {
-  constructor (
-    code: string,
-    dxosErrorMessage?: string,
-    readonly userErrorMessage = dxosErrorMessage
-  ) {
+  constructor(code: string, dxosErrorMessage?: string, readonly userErrorMessage = dxosErrorMessage) {
     super(code, dxosErrorMessage);
   }
 }

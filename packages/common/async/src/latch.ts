@@ -2,45 +2,47 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
+import assert from 'assert';
 
 type LatchProps = {
-  count?: number
-  timeout?: number
-}
+  count?: number;
+  timeout?: number;
+};
 
-type LatchResult = [
-  () => Promise<number>,
-  () => number,
-  (err: Error) => void
-]
+type LatchResult = [() => Promise<number>, () => number, (err: Error) => void];
 
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
  */
 // TODO(burdon): Reconcile with until/trigger.
 export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
-  assert(count > 0);
+  assert(count >= 0);
 
   let t: ReturnType<typeof setTimeout>;
   let doResolve: (value: number) => void;
   let doReject: (err: Error) => void;
   const promise = new Promise<number>((resolve, reject) => {
-    doResolve = value => {
+    doResolve = (value) => {
       clearTimeout(t);
       resolve(value);
     };
 
-    doReject = err => {
+    doReject = (err) => {
       clearTimeout(t);
       reject(err);
     };
   });
 
-  if (timeout) {
-    t = setTimeout(() => {
-      doReject(new Error(`Timed out after ${timeout}ms`));
-    }, timeout);
+  if (count === 0) {
+    setTimeout(() => {
+      doResolve(0);
+    });
+  } else {
+    if (timeout) {
+      t = setTimeout(() => {
+        doReject(new Error(`Timed out after ${timeout}ms`));
+      }, timeout);
+    }
   }
 
   let i = 0;

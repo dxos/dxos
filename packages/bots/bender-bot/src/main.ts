@@ -16,8 +16,7 @@ const main = async () => {
       return raise(new Error('Not implemented'));
     },
 
-    healthcheck: async () => {
-    }
+    healthcheck: async () => {}
   };
 
   const rpc = new BotRPCPeer(wsEndpoint, botService);
@@ -53,7 +52,7 @@ const main = async () => {
   });
 };
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

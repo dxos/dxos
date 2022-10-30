@@ -37,7 +37,7 @@ export default class Create extends BaseCommand {
     })
   };
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
     const { tag, template } = flags;
@@ -58,10 +58,7 @@ export default class Create extends BaseCommand {
 
       // Copy vite patch.
       await mkdir(`${templateDirectory}/patches`);
-      await copyFile(
-        `${tmpDirectory}/patches/vite@3.0.9.patch`,
-        `${templateDirectory}/patches/vite@3.0.9.patch`
-      );
+      await copyFile(`${tmpDirectory}/patches/vite@3.0.9.patch`, `${templateDirectory}/patches/vite@3.0.9.patch`);
 
       // Remove unneccessary files.
       await rm(`${templateDirectory}/project.json`);
@@ -76,7 +73,7 @@ export default class Create extends BaseCommand {
           name
         }
       });
-      await Promise.all(result.map(file => file.save()));
+      await Promise.all(result.map((file) => file.save()));
     } catch (err: any) {
       this.log(`Unable to create: ${err.message}`);
       this.error(err, { exit: 1 });

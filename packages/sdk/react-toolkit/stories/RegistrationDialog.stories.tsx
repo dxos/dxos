@@ -23,10 +23,12 @@ export const Primary = () => {
       <Button onClick={() => setOpen(true)}>Open</Button>
       <RegistrationDialog
         open={open}
-        onComplete={() => sleep(1000).then(() => setOpen(false)) }
-        onRestore={() => sleep(1000).then(() => {
-          throw new Error('Corrupt seed phrase.');
-        })}
+        onComplete={() => sleep(1000).then(() => setOpen(false))}
+        onRestore={() =>
+          sleep(1000).then(() => {
+            throw new Error('Corrupt seed phrase.');
+          })
+        }
       />
     </Box>
   );

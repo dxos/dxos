@@ -6,16 +6,13 @@ import { Row as RowDef } from '@tanstack/react-table';
 import React, { CSSProperties } from 'react';
 
 export interface RowProps {
-  row: RowDef<any>
-  style?: CSSProperties
+  row: RowDef<any>;
+  style?: CSSProperties;
 }
 
-export const Row = ({
-  row,
-  style
-}: RowProps) => (
+export const Row = ({ row, style }: RowProps) => (
   <div style={style}>
-    {row.getVisibleCells().map(cell => (
+    {row.getVisibleCells().map((cell) => (
       <div
         key={cell.id}
         style={{

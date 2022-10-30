@@ -5,20 +5,13 @@
 import React, { CSSProperties } from 'react';
 
 export type ListItemDef = {
-  id: string
-  title: string
-}
+  id: string;
+  title: string;
+};
 
 interface ListItemProps {
-  item: ListItemDef
-  style?: CSSProperties
+  item: ListItemDef;
+  style?: CSSProperties;
 }
 
-export const ListItem = ({
-  item,
-  style = {}
-}: ListItemProps) => (
-  <div style={style}>
-    {item.title}
-  </div>
-);
+export const ListItem = ({ item, style = {} }: ListItemProps) => <div style={style}>{item.title}</div>;

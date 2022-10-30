@@ -26,7 +26,7 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map(party => (
+      {parties.map((party) => (
         <Box key={party.key.toHex()}>
           <CopyText value={party.key.toHex()} />
         </Box>
@@ -60,12 +60,7 @@ const Sender = () => {
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
 
-      <PartySharingDialog
-        open={open}
-        partyKey={partyKey}
-        onClose={() => setOpen(false)}
-        modal={false}
-      />
+      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={false} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
@@ -114,10 +109,12 @@ export const Primary = () => {
   return (
     <FullScreen>
       <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}
+        >
           <ClientProvider>
             <RegistryProvider registry={mockRegistry}>
               <ProfileInitializer>
@@ -144,11 +141,7 @@ export const Primary = () => {
 /**
  * Headless sender.
  */
-const AutoInvitationGenerator = ({
-  onInvite
-}: {
-  onInvite: (invitationCode: string) => void
-}) => {
+const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: string) => void }) => {
   const client = useClient();
   const [pin, setPin] = useState('');
 
@@ -163,13 +156,7 @@ const AutoInvitationGenerator = ({
     });
   }, []);
 
-  return (
-    <Box>
-      {pin && (
-        <Passcode value={pin} />
-      )}
-    </Box>
-  );
+  return <Box>{pin && <Passcode value={pin} />}</Box>;
 };
 
 export const Secondary = () => {
@@ -178,29 +165,23 @@ export const Secondary = () => {
   return (
     <FullScreen>
       <ErrorBoundary>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-around'
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-around'
+          }}
+        >
           <ClientProvider>
             <ProfileInitializer>
               <Column>
-                <AutoInvitationGenerator
-                  onInvite={invitationCode => setInvitationCode(invitationCode)}
-                />
+                <AutoInvitationGenerator onInvite={(invitationCode) => setInvitationCode(invitationCode)} />
               </Column>
             </ProfileInitializer>
           </ClientProvider>
 
           <ClientProvider>
             <ProfileInitializer>
-              <Column>
-                {invitationCode && (
-                  <Receiver
-                    invitationCode={invitationCode}
-                  />
-                )}
-              </Column>
+              <Column>{invitationCode && <Receiver invitationCode={invitationCode} />}</Column>
             </ProfileInitializer>
           </ClientProvider>
         </Box>

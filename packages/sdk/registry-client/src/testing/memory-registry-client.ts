@@ -10,15 +10,7 @@ import { schema } from '@dxos/protocols';
 import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap } from '@dxos/util';
 
-import {
-  AccountKey,
-  Authority,
-  CID,
-  DomainKey,
-  DXN,
-  RecordWithCid,
-  RegistryClientBackend
-} from '../api';
+import { AccountKey, Authority, CID, DomainKey, DXN, RecordWithCid, RegistryClientBackend } from '../api';
 
 /**
  * In-memory implementation of the registry client with statically specified records.
@@ -27,14 +19,14 @@ import {
 // TODO(wittjosiah): Support accounts and auctions in the memory registry.
 export class MemoryRegistryClientBackend implements RegistryClientBackend {
   readonly authorities = new Map<string, Authority>();
-  readonly resources = new ComplexMap<DXN, CID>(dxn => dxn.toString());
-  readonly records = new ComplexMap<CID, RawRecord>(cid => cid.toB58String());
+  readonly resources = new ComplexMap<DXN, CID>((dxn) => dxn.toString());
+  readonly records = new ComplexMap<CID, RawRecord>((cid) => cid.toB58String());
 
   //
   // Domains
   //
 
-  async getDomainKey (domainName: string): Promise<DomainKey> {
+  async getDomainKey(domainName: string): Promise<DomainKey> {
     const authority = this.authorities.get(domainName);
     if (!authority) {
       throw new Error('Authority not found');
@@ -43,11 +35,11 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return authority.key;
   }
 
-  async listAuthorities (): Promise<Authority[]> {
+  async listAuthorities(): Promise<Authority[]> {
     return Array.from(this.authorities.values());
   }
 
-  async registerAuthority (owner: AccountKey): Promise<DomainKey> {
+  async registerAuthority(owner: AccountKey): Promise<DomainKey> {
     const key = DomainKey.random();
     this.authorities.set(key.toString(), {
       key,
@@ -57,7 +49,7 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
     return key;
   }
 
-  async registerDomainName (domainName: string, owner: AccountKey): Promise<Authority> {
+  async registerDomainName(domainName: string, owner: AccountKey): Promise<Authority> {
     const key = DomainKey.random();
     const authority = {
       key,
@@ -73,19 +65,15 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Resources
   //
 
-  async getResource (name: DXN): Promise<CID | undefined> {
+  async getResource(name: DXN): Promise<CID | undefined> {
     return this.resources.get(name);
   }
 
-  async listResources (): Promise<[DXN, CID][]> {
+  async listResources(): Promise<[DXN, CID][]> {
     return Array.from(this.resources.entries());
   }
 
-  async registerResource (
-    name: DXN,
-    cid: CID | undefined,
-    owner: AccountKey
-  ): Promise<void> {
+  async registerResource(name: DXN, cid: CID | undefined, owner: AccountKey): Promise<void> {
     assert(name.tag, 'Tag is required');
     const domainName = typeof name.authority === 'string' ? name.authority : name.authority.toHex();
     const domain = this.authorities.get(domainName);
@@ -104,19 +92,19 @@ export class MemoryRegistryClientBackend implements RegistryClientBackend {
   // Records
   //
 
-  async getRecord (cid: CID): Promise<RecordWithCid | undefined> {
+  async getRecord(cid: CID): Promise<RecordWithCid | undefined> {
     return { cid, ...this.records.get(cid) };
   }
 
-  async listRecords (): Promise<RecordWithCid[]> {
-    return Array.from(this.records.entries()).map(([cid, record]) => ({ cid, ...record }));
+  async listRecords(): Promise<RecordWithCid[]> {
+    return Array.from(this.records.entries()).map(([cid, record]) => ({
+      cid,
+      ...record
+    }));
   }
 
-  async registerRecord (record: RawRecord): Promise<CID> {
-    const data = compactAddLength(schema
-      .getCodecForType('dxos.registry.Record')
-      .encode(record)
-    );
+  async registerRecord(record: RawRecord): Promise<CID> {
+    const data = compactAddLength(schema.getCodecForType('dxos.registry.Record').encode(record));
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

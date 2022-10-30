@@ -6,17 +6,17 @@ export interface ConfigPluginOpts {
   /**
    * Path to the DX config files, defaults to current working directory.
    */
-  configPath?: string
+  configPath?: string;
 
   /**
    * Path to the environment variable overrides for DX config.
    */
-  envPath?: string
+  envPath?: string;
 
   /**
    * Path to the development overrides for DX config.
    */
-  devPath?: string
+  devPath?: string;
 
   /**
    * The Dynamics() config.yml file is special, it will be loaded if the dynamic property is set to false.
@@ -29,12 +29,12 @@ export interface ConfigPluginOpts {
    *
    * @default false
    */
-  dynamic?: boolean
+  dynamic?: boolean;
 
   /**
    * Public URL of the published app. Also used to load the dynamic config.
    *
    * @default ''
    */
-  publicUrl?: string
+  publicUrl?: string;
 }

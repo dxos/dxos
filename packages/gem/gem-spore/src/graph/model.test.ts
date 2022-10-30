@@ -17,18 +17,9 @@ it('GraphBuilder', function () {
 
   expect(model.graph.nodes).to.be.lengthOf(4);
 
-  model.createLink(
-    model.getNode(model.graph.nodes[0].id),
-    model.getNode(model.graph.nodes[1].id)
-  );
-  model.createLink(
-    model.getNode(model.graph.nodes[0].id),
-    model.getNode(model.graph.nodes[2].id)
-  );
-  model.createLink(
-    model.getNode(model.graph.nodes[2].id),
-    model.getNode(model.graph.nodes[3].id)
-  );
+  model.createLink(model.getNode(model.graph.nodes[0].id), model.getNode(model.graph.nodes[1].id));
+  model.createLink(model.getNode(model.graph.nodes[0].id), model.getNode(model.graph.nodes[2].id));
+  model.createLink(model.getNode(model.graph.nodes[2].id), model.getNode(model.graph.nodes[3].id));
 
   expect(model.graph.links).to.be.lengthOf(3);
 

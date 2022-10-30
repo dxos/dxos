@@ -14,11 +14,9 @@ const VALID_TAG = 'valid-tag';
 describe('DXN', function () {
   it('validates domain name', function () {
     // Valid.
-    [
-      'dxos',
-      'dxos-prime',
-      'a-b-c-d'
-    ].forEach(domainName => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.not.throw());
+    ['dxos', 'dxos-prime', 'a-b-c-d'].forEach((domainName) =>
+      expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.not.throw()
+    );
 
     // Invalid.
     [
@@ -30,7 +28,7 @@ describe('DXN', function () {
       'dxos-',
       'foo--bar',
       'c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5'
-    ].forEach(domainName => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw());
+    ].forEach((domainName) => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw());
   });
 
   it('validates path', function () {
@@ -41,7 +39,7 @@ describe('DXN', function () {
       'foo/bar',
       'a/b/c/d',
       'A23456789-A23456789-A23456789-A23456789-A23456789-A23456789-A123' // Max length.
-    ].forEach(path => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.not.throw());
+    ].forEach((path) => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.not.throw());
 
     // Invalid.
     [
@@ -60,7 +58,7 @@ describe('DXN', function () {
       'foo//bar',
       'A23456789.A23456789.A23456789.A23456789.A23456789.A23456789.A1234', // Max length.
       '~c54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5' // TODO(burdon): ???
-    ].forEach(path => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw());
+    ].forEach((path) => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw());
   });
 
   it('fromDomainKey', function () {
@@ -74,16 +72,12 @@ describe('DXN', function () {
       `${VALID_AUTHORITY}:${VALID_PATH}@${VALID_TAG}`,
       'example:foo/bar',
       '0xc54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
-    ].forEach(dxn => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
+    ].forEach((dxn) => expect(String(DXN.parse(dxn)), dxn).to.equal(dxn));
 
     // Invalid.
-    [
-      '',
-      'dxos',
-      'dxos:',
-      'example::foo/bar',
-      'example:path@'
-    ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
+    ['', 'dxos', 'dxos:', 'example::foo/bar', 'example:path@'].forEach((dxn) =>
+      expect(() => DXN.parse(dxn), dxn).to.throw()
+    );
   });
 
   it('urlencode/urldecode', function () {
@@ -92,8 +86,8 @@ describe('DXN', function () {
       'example:app/path@2-alpha',
       'dxos:foo/bar',
       '0xc54fafc3888e5e864bb86c7ed2206dd86e542bab91fd3ed0160c8ccad50995f5:foo/bar'
-    ].map(DXN.parse).forEach(name =>
-      expect(DXN.urldecode(DXN.urlencode(name)).toString()).to.equal(name.toString())
-    );
+    ]
+      .map(DXN.parse)
+      .forEach((name) => expect(DXN.urldecode(DXN.urlencode(name)).toString()).to.equal(name.toString()));
   });
 });

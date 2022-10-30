@@ -13,7 +13,7 @@ export enum SnoopLevel {
  */
 // TODO(burdon): Integrate with log/spyglass.
 export class Snoop {
-  static stackFunction (err: Error) {
+  static stackFunction(err: Error) {
     const stack = err.stack!.split('\n');
     const match = stack[2].match(/.+\((.+)\).*/);
     if (match) {
@@ -22,34 +22,32 @@ export class Snoop {
     }
   }
 
-  constructor (
-    private readonly _context?: string
-  ) {}
+  constructor(private readonly _context?: string) {}
 
-  get verbose () {
+  get verbose() {
     return SnoopLevel.VERBOSE;
   }
 
-  get bold () {
+  get bold() {
     return SnoopLevel.BOLD;
   }
 
-  format (prefix: string, name: string, args: string, level: SnoopLevel) {
+  format(prefix: string, name: string, args: string, level: SnoopLevel) {
     const pre = prefix.repeat(level === SnoopLevel.BOLD ? 8 : 2);
     const label = this._context ? `${this._context}.${name}` : name;
     const line = `${pre} ${label}${args}`;
     return level === SnoopLevel.BOLD ? [pre, line, pre].join('\n') : line;
   }
 
-  in (label: string, level: SnoopLevel, ...args: any[]) {
+  in(label: string, level: SnoopLevel, ...args: any[]) {
     return this.format('<', label, level === SnoopLevel.DEFAULT ? '' : `(${String(...args)})`, level);
   }
 
-  out (label: string, level: SnoopLevel, result: any) {
+  out(label: string, level: SnoopLevel, result: any) {
     return this.format('>', label, level === SnoopLevel.DEFAULT ? '' : ` = ${String(result)}`, level);
   }
 
-  sync (f: any, label?: string, level: SnoopLevel = SnoopLevel.VERBOSE) {
+  sync(f: any, label?: string, level: SnoopLevel = SnoopLevel.VERBOSE) {
     label = label ?? Snoop.stackFunction(new Error());
     return (...args: any[]) => {
       console.log(this.in(label ?? '', level, ...args));
@@ -59,7 +57,7 @@ export class Snoop {
     };
   }
 
-  async (f: any, label?: string, level: SnoopLevel = SnoopLevel.VERBOSE) {
+  async(f: any, label?: string, level: SnoopLevel = SnoopLevel.VERBOSE) {
     label = label ?? Snoop.stackFunction(new Error());
     return async (...args: any[]) => {
       console.log(this.in(label ?? '', level, ...args));

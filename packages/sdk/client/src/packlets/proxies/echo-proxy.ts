@@ -24,24 +24,25 @@ import { ClientServiceProxy } from './service-proxy';
  */
 export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
+
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new EventSubscriptions();
 
-  constructor (
+  constructor(
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _haloProxy: HaloProxy
   ) {}
 
-  toString () {
+  toString() {
     return `EchoProxy(${JSON.stringify(this.info)})`;
   }
 
-  get modelFactory (): ModelFactory {
+  get modelFactory(): ModelFactory {
     return this._modelFactory;
   }
 
-  get networkManager () {
+  get networkManager() {
     if (this._serviceProvider instanceof ClientServiceProxy) {
       throw new Error('Network Manager not available in service proxy.');
     }
@@ -51,13 +52,13 @@ export class EchoProxy implements Echo {
   }
 
   // TODO(burdon): Client ID?
-  get info () {
+  get info() {
     return {
       parties: this._parties.size
     };
   }
 
-  registerModel (constructor: ModelConstructor<any>): this {
+  registerModel(constructor: ModelConstructor<any>): this {
     this._modelFactory.registerModel(constructor);
     return this;
   }
@@ -65,16 +66,21 @@ export class EchoProxy implements Echo {
   /**
    * @internal
    */
-  async _open () {
+  async _open() {
     const gotParties = this._partiesChanged.waitForCount(1);
 
     const partiesStream = this._serviceProvider.services.PartyService.subscribeParties();
-    partiesStream.subscribe(async data => {
+    partiesStream.subscribe(async (data) => {
       for (const party of data.parties ?? []) {
         if (!this._parties.has(party.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
-          const partyProxy = new PartyProxy(this._serviceProvider, this._modelFactory, party, this._haloProxy.profile!.publicKey);
+          const partyProxy = new PartyProxy(
+            this._serviceProvider,
+            this._modelFactory,
+            party,
+            this._haloProxy.profile!.publicKey
+          );
           await partyProxy.initialize();
           this._parties.set(partyProxy.key, partyProxy);
 
@@ -110,7 +116,7 @@ export class EchoProxy implements Echo {
   /**
    * @internal
    */
-  async _close () {
+  async _close() {
     for (const party of this._parties.values()) {
       await party.destroy();
     }
@@ -125,7 +131,7 @@ export class EchoProxy implements Echo {
   /**
    * Creates a new party.
    */
-  async createParty (): Promise<Party> {
+  async createParty(): Promise<Party> {
     const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.createParty();
@@ -146,7 +152,7 @@ export class EchoProxy implements Echo {
   /**
    * Clones the party from a snapshot.
    */
-  async cloneParty (snapshot: PartySnapshot): Promise<Party> {
+  async cloneParty(snapshot: PartySnapshot): Promise<Party> {
     const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
@@ -167,14 +173,14 @@ export class EchoProxy implements Echo {
   /**
    * Returns an individual party by its key.
    */
-  getParty (partyKey: PublicKey): Party | undefined {
+  getParty(partyKey: PublicKey): Party | undefined {
     return this._parties.get(partyKey);
   }
 
   /**
    *
    */
-  queryParties (): ResultSet<Party> {
+  queryParties(): ResultSet<Party> {
     return new ResultSet<Party>(this._partiesChanged, () => Array.from(this._parties.values()));
   }
 
@@ -183,9 +189,10 @@ export class EchoProxy implements Echo {
    *
    * To be used with `party.createInvitation` on the inviter side.
    */
-  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation {
+  acceptInvitation(invitationDescriptor: InvitationDescriptor): PartyInvitation {
     const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
-      invitationDescriptor.toProto());
+      invitationDescriptor.toProto()
+    );
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
       invitationDescriptor,
@@ -201,10 +208,6 @@ export class EchoProxy implements Echo {
       return this.getParty(process.partyKey) ?? failUndefined();
     };
 
-    return new PartyInvitation(
-      invitationDescriptor,
-      waitForParty(),
-      authenticate
-    );
+    return new PartyInvitation(invitationDescriptor, waitForParty(), authenticate);
   }
 }

@@ -11,10 +11,10 @@ import { resolve } from 'path';
 import { build } from './build';
 
 export interface GenerateExecutorOptions {
-  basePath: string
-  srcPath: string
-  outputPath: string
-  substitutionsPath: string
+  basePath: string;
+  srcPath: string;
+  outputPath: string;
+  substitutionsPath: string;
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {

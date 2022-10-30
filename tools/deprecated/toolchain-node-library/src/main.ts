@@ -21,7 +21,7 @@ const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 const log = (str: string) => process.stdout.write(str);
 const err = (str: string) => process.stderr.write(str);
 
-export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
+export type Handler<T> = (argv: Arguments<T>) => Promise<void>;
 
 /**
  * Wraps yargs handler.
@@ -30,24 +30,28 @@ export type Handler <T> = (argv: Arguments<T>) => Promise<void>;
  * @param timeout
  * @param verbose
  */
-export const handler = <T>(title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> => async (argv: Arguments<T>) => {
-  const t = timeout && setTimeout(() => {
-    err(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
-    process.exit(1);
-  }, PACKAGE_TIMEOUT);
+export const handler =
+  <T>(title: string, handler: Handler<T>, timeout = false, verbose = true): Handler<T> =>
+  async (argv: Arguments<T>) => {
+    const t =
+      timeout &&
+      setTimeout(() => {
+        err(chalk`{red error}: Timed out in ${PACKAGE_TIMEOUT / 1000}s\n`);
+        process.exit(1);
+      }, PACKAGE_TIMEOUT);
 
-  const start = Date.now();
-  verbose && log(chalk`\n{green.bold ${title} started}`);
-  await handler(argv);
-  verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
+    const start = Date.now();
+    verbose && log(chalk`\n{green.bold ${title} started}`);
+    await handler(argv);
+    verbose && log(chalk`\n{green.bold ${title} complete} in {bold ${Date.now() - start}} ms\n`);
 
-  t && clearTimeout(t);
-};
+    t && clearTimeout(t);
+  };
 
 export interface BuildOptions {
-  minify?: boolean
-  verbose?: boolean
-  watch?: boolean
+  minify?: boolean;
+  verbose?: boolean;
+  watch?: boolean;
 }
 
 const buildProto = async (config: Config, project: Project) => {
@@ -68,7 +72,8 @@ const buildProto = async (config: Config, project: Project) => {
     process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
 
     await execTool('build-protobuf', [
-      '-o', output,
+      '-o',
+      output,
       // Substitution classes for protobuf parsing.
       ...(fs.existsSync(substitutions) ? ['-s', substitutions] : []),
       ...protoFiles
@@ -83,7 +88,10 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
   const project = Project.load(config);
 
   try {
-    fs.rmSync(join(project.packageRoot, config.tsc.output), { recursive: true, force: true });
+    fs.rmSync(join(project.packageRoot, config.tsc.output), {
+      recursive: true,
+      force: true
+    });
   } catch (err: any) {
     err(err.message);
   }
@@ -98,7 +106,7 @@ export const execBuild = async (config: Config, options: BuildOptions = {}) => {
 };
 
 export interface BundleOptions {
-  polyfill?: boolean
+  polyfill?: boolean;
 }
 
 export const execLibraryBundle = async (config: Config, options: BundleOptions = {}) => {
@@ -106,7 +114,10 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
   const outdir = 'dist';
   const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
 
-  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+  fs.rmSync(join(project.packageRoot, outdir), {
+    recursive: true,
+    force: true
+  });
 
   await buildProto(config, project);
   await execTool('tsc', []);
@@ -141,7 +152,10 @@ export const execBuildBundle = async (config: Config, options: BuildOptions = {}
   const project = Project.load(config);
   const outdir = project.esbuildConfig.outdir ?? defaults.esbuild.outdir;
 
-  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+  fs.rmSync(join(project.packageRoot, outdir), {
+    recursive: true,
+    force: true
+  });
 
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['build']);
@@ -164,7 +178,10 @@ export const execBuildBook = async (config: Config, options: BuildOptions = {}) 
   const project = Project.load(config);
   const outdir = project.esbuildConfig.book?.outdir ?? defaults.esbuild.book.outdir;
 
-  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+  fs.rmSync(join(project.packageRoot, outdir), {
+    recursive: true,
+    force: true
+  });
 
   await execTool('tsc', ['--noEmit']);
   await execTool('esbuild-server', ['book', '--build']);
@@ -217,7 +234,7 @@ export const execTest = async (config: Config, userArgs?: string[]) => {
  * Builds core yargs commands for toolchain.
  * Returns yargs so it can be chained with custom commands.
  */
-export const setupCoreCommands = (yargs: Argv) => (
+export const setupCoreCommands = (yargs: Argv) =>
   yargs
     .option('verbose', {
       alias: 'v',
@@ -225,20 +242,21 @@ export const setupCoreCommands = (yargs: Argv) => (
       default: false
     })
 
-  //
-  // Build
-  //
+    //
+    // Build
+    //
 
-    .command<{ verbose?: boolean, watch?: boolean }>(
+    .command<{ verbose?: boolean; watch?: boolean }>(
       'build',
       'Build the package.',
-      yargs => yargs
-        .option('watch', {
-          alias: 'w',
-          type: 'boolean',
-          default: false
-        })
-        .strict(),
+      (yargs) =>
+        yargs
+          .option('watch', {
+            alias: 'w',
+            type: 'boolean',
+            default: false
+          })
+          .strict(),
       async (argv) => {
         await execBuild(defaults, { verbose: argv.verbose, watch: argv.watch });
       }
@@ -247,12 +265,13 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'bundle:library',
       'Build the library package.',
-      yargs => yargs
-        .option('polyfill', {
-          type: 'boolean',
-          default: false
-        })
-        .strict(),
+      (yargs) =>
+        yargs
+          .option('polyfill', {
+            type: 'boolean',
+            default: false
+          })
+          .strict(),
       handler<{ polyfill: boolean }>('Bundle', async (argv) => {
         await execLibraryBundle(defaults, { polyfill: argv.polyfill });
       })
@@ -261,12 +280,13 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'bundle:app',
       'Bundle the app package.',
-      yargs => yargs
-        .option('minify', {
-          type: 'boolean',
-          default: false
-        })
-        .strict(),
+      (yargs) =>
+        yargs
+          .option('minify', {
+            type: 'boolean',
+            default: false
+          })
+          .strict(),
       handler<{ minify: boolean }>('Bundle', async (argv) => {
         await execBuildBundle(defaults, { minify: argv.minify });
       })
@@ -275,42 +295,48 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'check',
       'lint and test the package',
-      yargs => yargs
-        .options('additional', {
-          type: 'boolean',
-          default: true
-        })
-        .strict(),
-      handler<{ additional: boolean }>('Tests', async (argv) => {
-        const project = Project.load(defaults);
-        await execLint(project); // TODO(burdon): Make optional.
-        await execTest(defaults);
+      (yargs) =>
+        yargs
+          .options('additional', {
+            type: 'boolean',
+            default: true
+          })
+          .strict(),
+      handler<{ additional: boolean }>(
+        'Tests',
+        async (argv) => {
+          const project = Project.load(defaults);
+          await execLint(project); // TODO(burdon): Make optional.
+          await execTest(defaults);
 
-        // Additional test steps execution placed here to allow to run tests without additional steps.
-        // Additional test steps are executed by default only when build:test is run.
-        if (argv.additional) {
-          for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-            log(chalk`\n{green.bold ${step}}`);
-            await execScript(project, step, []);
+          // Additional test steps execution placed here to allow to run tests without additional steps.
+          // Additional test steps are executed by default only when build:test is run.
+          if (argv.additional) {
+            for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+              log(chalk`\n{green.bold ${step}}`);
+              await execScript(project, step, []);
+            }
           }
-        }
-      }, true)
+        },
+        true
+      )
     )
 
-  //
-  // ESBuild server/book
-  // TODO(burdon): Out directory's index.html overwritten build build:bundle
-  //
+    //
+    // ESBuild server/book
+    // TODO(burdon): Out directory's index.html overwritten build build:bundle
+    //
 
     .command(
       'build:book',
       'Build the storybook for the package.',
-      yargs => yargs
-        .option('minify', {
-          type: 'boolean',
-          default: false
-        })
-        .strict(),
+      (yargs) =>
+        yargs
+          .option('minify', {
+            type: 'boolean',
+            default: false
+          })
+          .strict(),
       handler<{ minify: boolean }>('Build book', async (argv) => {
         await execBuildBook(defaults, { minify: argv.minify });
       })
@@ -319,7 +345,7 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'book',
       'Run the storybook for the package.',
-      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      (yargs) => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ _ }) => {
         await execBook(_.slice(1).map(String));
       }
@@ -328,47 +354,51 @@ export const setupCoreCommands = (yargs: Argv) => (
     .command(
       'start', // TODO(burdon): Rename server (or alias).
       'Run a dev server for the package.',
-      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      (yargs) => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ _ }) => {
         await execServer(_.slice(1).map(String));
       }
     )
 
-  //
-  // Testing
-  //
+    //
+    // Testing
+    //
 
     .command(
       'test',
       'run tests',
-      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
-      handler('Tests', async ({ _ }) => {
-        await execTest(defaults, _.slice(1).map(String));
-      }, true)
+      (yargs) => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      handler(
+        'Tests',
+        async ({ _ }) => {
+          await execTest(defaults, _.slice(1).map(String));
+        },
+        true
+      )
     )
 
-  //
-  // Lint
-  //
+    //
+    // Lint
+    //
 
     .command(
       'lint',
       'run linter',
-      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      (yargs) => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ _ }) => {
         const project = Project.load(defaults);
         await execLint(project, _.slice(1).map(String));
       }
     )
 
-  //
-  // Run scripts.
-  //
+    //
+    // Run scripts.
+    //
 
     .command<{ command: string }>(
       ['* <command>', 'run <command>'],
       'run script or a tool',
-      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
+      (yargs) => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ command, _ }) => {
         const project = Project.load(defaults);
         if (project.packageJsonContents.scripts?.[command]) {
@@ -377,5 +407,4 @@ export const setupCoreCommands = (yargs: Argv) => (
           await execCommand(command, _.map(String));
         }
       }
-    )
-);
+    );

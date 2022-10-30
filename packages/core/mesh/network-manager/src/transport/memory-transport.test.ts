@@ -50,7 +50,15 @@ const createPair = () => {
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
-  return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
+  return {
+    connection1,
+    connection2,
+    plugin1,
+    plugin2,
+    peer1Id,
+    peer2Id,
+    topic
+  };
 };
 
 describe('MemoryTransport', function () {
@@ -76,25 +84,27 @@ describe('MemoryTransport', function () {
   });
 
   it('10 pairs of peers connecting at the same time', async function () {
-    await Promise.all(range(10).map(async () => {
-      const { plugin1, plugin2, peer1Id } = createPair();
+    await Promise.all(
+      range(10).map(async () => {
+        const { plugin1, plugin2, peer1Id } = createPair();
 
-      const received: any[] = [];
-      const mockReceive = (p: Protocol, s: string) => {
-        received.push(p, s);
-        return undefined;
-      };
-      plugin1.on('receive', mockReceive);
+        const received: any[] = [];
+        const mockReceive = (p: Protocol, s: string) => {
+          received.push(p, s);
+          return undefined;
+        };
+        plugin1.on('receive', mockReceive);
 
-      plugin2.on('connect', async (protocol) => {
-        await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-      });
+        plugin2.on('connect', async (protocol) => {
+          await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
+        });
 
-      await waitForExpect(() => {
-        expect(received.length).toBe(2);
-        expect(received[0]).toBeInstanceOf(Protocol);
-        expect(received[1]).toBe('{"message": "Hello"}');
-      });
-    }));
+        await waitForExpect(() => {
+          expect(received.length).toBe(2);
+          expect(received[0]).toBeInstanceOf(Protocol);
+          expect(received[1]).toBe('{"message": "Hello"}');
+        });
+      })
+    );
   });
 });

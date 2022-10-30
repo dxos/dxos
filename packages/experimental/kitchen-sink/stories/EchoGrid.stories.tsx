@@ -23,11 +23,7 @@ const App = () => {
 
   return (
     <FullScreen>
-      <EchoGrid
-        items={items}
-        itemAdapter={itemAdapter}
-        styles={tableStyles}
-      />
+      <EchoGrid items={items} itemAdapter={itemAdapter} styles={tableStyles} />
     </FullScreen>
   );
 };

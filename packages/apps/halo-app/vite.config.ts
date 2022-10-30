@@ -7,7 +7,15 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
+
+import packageJson from './package.json';
+
+const env = (value?: string) => value ? `"${value}"` : undefined;
+const DX_RELEASE = process.env.NODE_ENV === 'production'
+  ? `halo-app@${packageJson.version}`
+  : 'development';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,31 +24,53 @@ export default defineConfig({
     host: true,
     port: 3967
   },
+  define: {
+    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+    'process.env.DX_RELEASE': env(DX_RELEASE),
+    'process.env.SENTRY_DSN': env(process.env.SENTRY_DSN),
+    'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
+  },
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/async',
       '@dxos/client',
+      '@dxos/client-services',
       '@dxos/keys',
       '@dxos/log',
+      '@dxos/composer',
       '@dxos/config',
       '@dxos/protocols',
       '@dxos/react-async',
       '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/react-toolkit',
+      '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/sentry',
+      '@dxos/telemetry',
+      '@dxos/text-model',
       '@dxos/util'
-    ]
+    ],
+    esbuildOptions: {
+      // TODO(wittjosiah): Remove.
+      plugins: [
+        {
+          name: 'yjs',
+          setup: ({ onResolve }) => {
+            onResolve({ filter: /yjs/ }, () => {
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+            })
+          }
+        }
+      ]
+    }
   },
   build: {
+    // TODO(wittjosiah): Remove.
+    minify: false,
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     },
     rollupOptions: {
       input: {
@@ -51,9 +81,15 @@ export default defineConfig({
   },
   plugins: [
     dxosPlugin(),
+    themePlugin({
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
+      ]
+    }),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000

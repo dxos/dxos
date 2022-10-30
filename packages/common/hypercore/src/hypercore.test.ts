@@ -13,9 +13,9 @@ import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';
 
 type TestItem = {
-  key: string
-  value: string
-}
+  key: string;
+  value: string;
+};
 
 const codec: Codec<TestItem> = {
   encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),

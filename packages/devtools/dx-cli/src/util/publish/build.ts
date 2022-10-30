@@ -7,12 +7,12 @@ import { spawnSync } from 'child_process';
 import type { PackageModule, Logger } from './common';
 
 export interface BuildParams {
-  log: Logger
-  module: PackageModule
+  log: Logger;
+  module: PackageModule;
 }
 
 interface BuildArgs {
-  verbose?: boolean
+  verbose?: boolean;
 }
 
 export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {

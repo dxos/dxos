@@ -44,7 +44,7 @@ export const setupRegistryClient = async () => {
   });
 
   const signer = new ClientSigner(client, apiPromise.registry, alice.address);
-  const signTx: SignTxFunction = tx => tx.signAsync(alice.address, { signer });
+  const signTx: SignTxFunction = (tx) => tx.signAsync(alice.address, { signer });
 
   const accountsBackend = new PolkadotAccounts(apiPromise, signTx);
   const accountsClient = new AccountsClient(accountsBackend);

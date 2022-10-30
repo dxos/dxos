@@ -4,85 +4,88 @@
 
 import type { ValueEncoding } from 'hypercore';
 
-import { Codec } from '@dxos/codec-protobuf';
-import { createCodecEncoding } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import {
-  defaultCodec,
-  defaultTestGenerator,
-  defaultValueEncoding,
-  TestGenerator,
-  TestItem
-} from './test-generator';
+import { defaultTestGenerator, defaultValueEncoding, TestGenerator, TestItem } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
-  codec?: Codec<T>
-  storage?: Storage
-  directory?: Directory
-  keyring?: Keyring
-  valueEncoding?: ValueEncoding<T>
-  generator?: TestGenerator<T>
-}
+  storage?: Storage;
+  root?: Directory;
+  keyring?: Keyring;
+  valueEncoding?: ValueEncoding<T>;
+  generator?: TestGenerator<T>;
+};
+
+type PropertyProvider<T extends {}, P> = (cb: TestBuilder<T>) => P;
+
+const evaluate = <T extends {}, P>(builder: TestBuilder<T>, arg: P | PropertyProvider<T, P>) =>
+  arg === 'function' ? (arg as Function)(builder) : arg;
 
 /**
  * The builder provides building blocks for tests with sensible defaults.
  * - Factory methods trigger the automatic generation of unset required properties.
  * - Avoids explosion of overly specific test functions that require and return large bags of properties.
  */
-// TODO(burdon): Apply this pattern elsewhere.
 export class TestBuilder<T extends {}> {
-  static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
+  static readonly ROOT_DIR = 'feeds';
 
-  constructor (
+  // prettier-ignore
+  constructor(
     protected readonly _properties: TestBuilderOptions<T> = {}
   ) {}
 
-  clone (): TestBuilder<T> {
+  /**
+   * Creates a new builder with the current builder's properties.
+   */
+  clone(): TestBuilder<T> {
     return new TestBuilder<T>(Object.assign({}, this._properties));
   }
 
-  get storage (): Storage {
-    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
-  }
-
-  get directory (): Directory {
-    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
-  }
-
-  get keyring (): Keyring {
+  get keyring(): Keyring {
     return (this._properties.keyring ??= new Keyring());
   }
 
-  setStorage (type: StorageType, root = TestBuilder.ROOT_DIR) {
-    this._properties.storage = createStorage({ type, root });
-    this._properties.directory = this.storage.createDirectory('feeds');
+  get storage(): Storage {
+    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
+  }
+
+  get root(): Directory {
+    return (this._properties.root ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
+  }
+
+  setKeyring(keyring: Keyring | PropertyProvider<T, Keyring>) {
+    this._properties.keyring = evaluate(this, keyring);
     return this;
   }
 
-  setKeyring (keyring: Keyring) {
-    this._properties.keyring = keyring;
+  setStorage(storage: Storage, root?: string) {
+    this._properties.storage = evaluate(this, storage);
+    if (root) {
+      this._properties.root = this.storage.createDirectory(root);
+    }
+
     return this;
   }
 
-  createFeedFactory () {
-    const codec = this._properties.codec;
-    const valueEncoding = this._properties.valueEncoding ??
-      (codec !== undefined) ? createCodecEncoding(codec!) : undefined;
+  setRoot(root: Directory) {
+    this._properties.root = evaluate(this, root);
+    return this;
+  }
 
+  createFeedFactory() {
     return new FeedFactory<T>({
-      root: this.directory,
+      root: this.root,
       signer: this.keyring,
       hypercore: {
-        valueEncoding
+        valueEncoding: this._properties.valueEncoding
       }
     });
   }
 
-  createFeedStore () {
+  createFeedStore() {
     return new FeedStore<T>({
       factory: this.createFeedFactory()
     });
@@ -93,23 +96,18 @@ export class TestBuilder<T extends {}> {
  * Builder with default encoder and generator.
  */
 export class TestItemBuilder extends TestBuilder<TestItem> {
-  constructor () {
+  constructor() {
     super({
-      codec: defaultCodec,
       valueEncoding: defaultValueEncoding,
       generator: defaultTestGenerator
     });
   }
 
-  get codec () {
-    return this._properties.codec!;
-  }
-
-  get valueEncoding () {
+  get valueEncoding() {
     return this._properties.valueEncoding!;
   }
 
-  get generator () {
+  get generator() {
     return this._properties.generator!;
   }
 }

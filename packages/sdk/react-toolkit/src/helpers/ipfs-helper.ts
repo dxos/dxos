@@ -11,16 +11,16 @@ import urlJoin from 'url-join';
 export class IpfsHelper {
   _ipfsGateway: string;
 
-  constructor (ipfsGateway: string | any) {
+  constructor(ipfsGateway: string | any) {
     console.assert(ipfsGateway);
     this._ipfsGateway = ipfsGateway.endsWith('/') ? ipfsGateway : `${ipfsGateway}/`;
   }
 
-  url (cid: string) {
+  url(cid: string) {
     return cid ? urlJoin(this._ipfsGateway, cid) : this._ipfsGateway;
   }
 
-  async upload (body: any, contentType = 'text/plain'): Promise<string> {
+  async upload(body: any, contentType = 'text/plain'): Promise<string> {
     const response: any = await this._fetch({
       method: 'POST',
       mode: 'cors',
@@ -35,21 +35,24 @@ export class IpfsHelper {
     return response.headers.get('Ipfs-Hash');
   }
 
-  async download (cid: string): Promise<string> {
-    const response: any = await this._fetch({
-      method: 'GET',
-      mode: 'cors',
-      cache: 'no-cache',
-      headers: {
-        'Content-Type': 'text/plain'
+  async download(cid: string): Promise<string> {
+    const response: any = await this._fetch(
+      {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        referrer: 'no-referrer'
       },
-      referrer: 'no-referrer'
-    }, cid);
+      cid
+    );
 
     return response.text();
   }
 
-  async _fetch (request: any, cid = ''): Promise<{}> {
+  async _fetch(request: any, cid = ''): Promise<{}> {
     let response: any;
     const gateway = this._ipfsGateway;
     try {

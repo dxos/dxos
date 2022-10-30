@@ -10,20 +10,15 @@ import { DroppableContainer } from '../DroppableContainer';
 import { ListItem, ListItemDef } from './ListItem';
 
 interface DroppableListProps {
-  id: string
-  items: ListItemDef[]
-  horizontal?: boolean
-  style?: CSSProperties
-  activeId?: string
+  id: string;
+  items: ListItemDef[];
+  horizontal?: boolean;
+  style?: CSSProperties;
+  activeId?: string;
 }
 
-export const DroppableList = ({
-  id,
-  items,
-  horizontal = false,
-  style = {}
-}: DroppableListProps) => {
-  const itemIds = items.map(item => item.id);
+export const DroppableList = ({ id, items, horizontal = false, style = {} }: DroppableListProps) => {
+  const itemIds = items.map((item) => item.id);
 
   return (
     <DroppableContainer
@@ -43,16 +38,9 @@ export const DroppableList = ({
         items={itemIds}
         strategy={horizontal ? horizontalListSortingStrategy : verticalListSortingStrategy}
       >
-        {items.map(item => (
-          <DraggableContainer
-            key={item.id}
-            id={item.id}
-            placeholderStyles={{ opacity: 0.5 }}
-          >
-            <ListItem
-              item={item}
-              style={{ padding: 8 }}
-            />
+        {items.map((item) => (
+          <DraggableContainer key={item.id} id={item.id} placeholderStyles={{ opacity: 0.5 }}>
+            <ListItem item={item} style={{ padding: 8 }} />
           </DraggableContainer>
         ))}
       </SortableContext>

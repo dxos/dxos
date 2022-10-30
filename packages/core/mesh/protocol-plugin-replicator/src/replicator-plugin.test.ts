@@ -17,7 +17,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
+import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
@@ -26,12 +26,16 @@ import { ReplicatorPlugin, ReplicatorMiddleware } from './replicator-plugin';
 const noop = () => {};
 
 interface MiddlewareOptions {
-  feedStore: FeedStore<FeedMessage>
-  onUnsubscribe?: (feedStore: FeedStore<FeedMessage>) => void
-  onLoad?: (feedStore: FeedStore<FeedMessage>) => FeedWrapper<FeedMessage>[]
+  feedStore: FeedStore<FeedMessage>;
+  onUnsubscribe?: (feedStore: FeedStore<FeedMessage>) => void;
+  onLoad?: (feedStore: FeedStore<FeedMessage>) => FeedWrapper<FeedMessage>[];
 }
 
-const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
+const middleware = ({
+  feedStore,
+  onUnsubscribe = noop,
+  onLoad = () => []
+}: MiddlewareOptions): ReplicatorMiddleware => {
   const encodeFeed = (feed: FeedWrapper<FeedMessage>): FeedData => ({
     key: feed.key.asBuffer(), // TODO(dmaretskyi): Has to be buffer because of broken encoding.
     discoveryKey: feed.properties.discoveryKey
@@ -48,19 +52,19 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
     load: async () => {
       const feeds = onLoad(feedStore);
-      return feeds.map(
-        feed => encodeFeed(feed)
-      );
+      return feeds.map((feed) => encodeFeed(feed));
     },
 
     replicate: async (feeds: FeedData[]) => {
-      const feedDescriptors = await Promise.all(feeds.map(async (feedData) => {
-        if (feedData.key) {
-          return await feedStore.openFeed(PublicKey.from(feedData.key));
-        }
+      const feedDescriptors = await Promise.all(
+        feeds.map(async (feedData) => {
+          if (feedData.key) {
+            return await feedStore.openFeed(PublicKey.from(feedData.key));
+          }
 
-        return null;
-      }));
+          return null;
+        })
+      );
 
       return feedDescriptors.filter(boolGuard);
     }
@@ -69,39 +73,43 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const keyring = new Keyring();
-  const feedFactory = new FeedFactory<FeedMessage>({
-    root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
-    signer: keyring,
-    hypercore: {
-      valueEncoding: 'utf-8'
-    }
+  const feedStore = new FeedStore<FeedMessage>({
+    factory: new FeedFactory<FeedMessage>({
+      root: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      signer: keyring,
+      hypercore: {
+        valueEncoding: 'utf-8'
+      }
+    })
   });
-  const feedStore = new FeedStore<FeedMessage>({ factory: feedFactory });
+
   const feed = await feedStore.openFeed(await keyring.createKey());
 
   let closed = false;
-  const replicator = new ReplicatorPlugin(middleware({
-    feedStore,
-    onLoad: () => [feed],
-    onUnsubscribe: () => {
-      closed = true;
-    }
-  }));
+  const replicator = new ReplicatorPlugin(
+    middleware({
+      feedStore,
+      onLoad: () => [feed],
+      onUnsubscribe: () => {
+        closed = true;
+      }
+    })
+  );
 
   const peer: Peer = {
     id: peerId,
-    createStream: ({ initiator }: CreateStreamOptions) => new Protocol({
-      initiator: !!initiator,
-      discoveryKey: discoveryKey(topic),
-      streamOptions: {
-        live: true
-      },
-      userSession: { peerId: 'session1' }
-    })
-      .setContext({ name: 'test' })
-      .setExtensions([replicator.createExtension()])
-      .init()
-      .stream as Stream // TODO(burdon): See network.ts which uses a different Stream interface.
+    createStream: ({ initiator }: CreateStreamOptions) =>
+      new Protocol({
+        initiator: !!initiator,
+        discoveryKey: discoveryKey(topic),
+        streamOptions: {
+          live: true
+        },
+        userSession: { peerId: 'session1' }
+      })
+        .setContext({ name: 'test' })
+        .setExtensions([replicator.createExtension()])
+        .init().stream as Stream // TODO(burdon): See network.ts which uses a different Stream interface.
   };
 
   return {
@@ -149,10 +157,17 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
 
   it('feed synchronization', async function () {
     expect(network.peers.length).to.equal(15);
-    await waitForExpect(() => {
-      const result = network.peers.reduce((prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length, true);
-      expect(result).to.be.true;
-    }, 4500, 1000);
+    await waitForExpect(
+      () => {
+        const result = network.peers.reduce(
+          (prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length,
+          true
+        );
+        expect(result).to.be.true;
+      },
+      4500,
+      1000
+    );
   });
 
   it('message synchronization', async function () {
@@ -167,15 +182,19 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
     messages.sort();
     await Promise.all(wait);
 
-    await waitForExpect(async () => {
-      const results: any = [];
-      network.peers.forEach((peer: any) => {
-        results.push(peer.getMessages());
-      });
-      for await (const nodeMessages of results) {
-        expect(nodeMessages).to.deep.equal(messages);
-      }
-    }, 15 * 1000, 5 * 1000);
+    await waitForExpect(
+      async () => {
+        const results: any = [];
+        network.peers.forEach((peer: any) => {
+          results.push(peer.getMessages());
+        });
+        for await (const nodeMessages of results) {
+          expect(nodeMessages).to.deep.equal(messages);
+        }
+      },
+      15 * 1000,
+      5 * 1000
+    );
 
     const end = network.destroy();
 

@@ -4,12 +4,7 @@
 
 import React, { ReactNode } from 'react';
 
-import {
-  colors,
-  createTheme,
-  CssBaseline,
-  ThemeProvider as MuiThemeProvider
-} from '@mui/material';
+import { colors, createTheme, CssBaseline, ThemeProvider as MuiThemeProvider } from '@mui/material';
 
 // https://material-ui.com/customization/theming
 export const defaultTheme = {

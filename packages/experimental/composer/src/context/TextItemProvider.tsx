@@ -2,14 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, {
-  createContext,
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useMemo,
-  useState
-} from 'react';
+import React, { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
 import type { Item } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
@@ -21,7 +14,7 @@ import { useParty } from './PartyProvider';
 export const DOCUMENT_TYPE = 'experimental:type/document';
 
 export interface TextItemContextValue {
-  item?: Item<TextModel>
+  item?: Item<TextModel>;
 }
 
 export const TextItemContext = createContext<TextItemContextValue>({});
@@ -30,16 +23,12 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
   const { party } = useParty();
 
   const [item, setItem] = useState<Item<TextModel>>();
-  const itemSelect = useSelection<Item<TextModel>>(
-    party!.database.select({ type: DOCUMENT_TYPE })
-  );
+  const itemSelect = useSelection<Item<TextModel>>(party!.database.select({ type: DOCUMENT_TYPE }));
 
   const textModelDocumentContextValue = useMemo(() => ({ item }), [item]);
 
   const onCreate = useCallback(() => {
-    void party!.database
-      .createItem({ model: TextModel, type: DOCUMENT_TYPE })
-      .then((item) => setItem(item));
+    void party!.database.createItem({ model: TextModel, type: DOCUMENT_TYPE }).then((item) => setItem(item));
   }, [party]);
 
   const onClose = useCallback(() => setItem(undefined), []);
@@ -49,8 +38,9 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
       {item ? (
         <>
           {props.children}
-          <Button onClick={onClose} className='fixed bottom-2 left-2'>Close
-            document</Button>
+          <Button onClick={onClose} className='fixed bottom-2 left-2'>
+            Close document
+          </Button>
         </>
       ) : (
         <Group
@@ -68,11 +58,7 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
           {itemSelect?.map((item: Item<TextModel>) => {
             const id = item.id;
             return (
-              <Button
-                key={id}
-                className='width-full truncate'
-                onClick={() => setItem(item)}
-              >
+              <Button key={id} className='width-full truncate' onClick={() => setItem(item)}>
                 {`${id.substring(0, 4)}..${id.substring(id.length - 4, id.length)}`}
               </Button>
             );

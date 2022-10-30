@@ -10,10 +10,10 @@ export const filterConsole = (filters = {}) => {
     return;
   }
 
-  Object.keys(filters).forEach(key => {
+  Object.keys(filters).forEach((key) => {
     const f = console[key];
     console[key] = (...args) => {
-      const match = filters[key].find(str => args[0].indexOf(str) !== -1);
+      const match = filters[key].find((str) => args[0].indexOf(str) !== -1);
 
       if (!match) {
         f.apply(this, Array.prototype.slice.call(args));

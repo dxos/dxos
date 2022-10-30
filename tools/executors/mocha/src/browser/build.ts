@@ -7,14 +7,17 @@ import { writeFile } from 'node:fs/promises';
 import { join, resolve, relative } from 'node:path';
 
 import {
-  NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin
+  NodeGlobalsPolyfillPlugin,
+  FixMemdownPlugin,
+  FixGracefulFsPlugin,
+  NodeModulesPlugin
 } from '@dxos/esbuild-plugins';
 
 export interface BuildTestsOpts {
-  outDir: string
-  debug: boolean
-  timeout: number
-  checkLeaks: boolean
+  outDir: string;
+  debug: boolean;
+  timeout: number;
+  checkLeaks: boolean;
 }
 
 export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
@@ -40,7 +43,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
       mocha.timeout(${opts.timeout})
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
-      ${files.map(file => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
+      ${files.map((file) => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
 
       window.browserMocha__initFinished()
       
@@ -60,11 +63,6 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     format: 'iife',
     sourcemap: 'inline',
     outfile: join(opts.outDir, 'bundle.js'),
-    plugins: [
-      FixGracefulFsPlugin(),
-      FixMemdownPlugin(),
-      NodeGlobalsPolyfillPlugin(),
-      NodeModulesPlugin()
-    ]
+    plugins: [FixGracefulFsPlugin(), FixMemdownPlugin(), NodeGlobalsPolyfillPlugin(), NodeModulesPlugin()]
   });
 };

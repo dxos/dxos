@@ -2,6 +2,17 @@
   "sourceRoot": "packages/experimental/composer/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/experimental/composer/dist",
+        "tsConfig": "packages/experimental/composer/tsconfig.json",
+        "main": "packages/experimental/composer/src/index.ts"
+      }
+    },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {

@@ -16,27 +16,27 @@ const error = log.extend('error');
  * A hook bound to window.__DXOS__.
  */
 export interface DevtoolsHook {
-  client: Client
-  openClientRpcServer: () => Promise<boolean>
+  client: Client;
+  openClientRpcServer: () => Promise<boolean>;
 }
 
 const port: RpcPort = {
-  send: async message => window.postMessage({
-    data: Array.from(message),
-    source: 'dxos-client'
-  }, '*'),
-  subscribe: callback => {
+  send: async (message) =>
+    window.postMessage(
+      {
+        data: Array.from(message),
+        source: 'dxos-client'
+      },
+      '*'
+    ),
+  subscribe: (callback) => {
     const handler = (event: MessageEvent<any>) => {
       if (event.source !== window) {
         return;
       }
 
       const message = event.data;
-      if (
-        typeof message !== 'object' ||
-        message === null ||
-        message.source !== 'content-script'
-      ) {
+      if (typeof message !== 'object' || message === null || message.source !== 'content-script') {
         return;
       }
 
@@ -67,7 +67,7 @@ export const createDevtoolsRpcServer = async (client: Client, serviceHost: Clien
         port
       });
 
-      await server.open().catch(err => {
+      await server.open().catch((err) => {
         error(`Failed to open RPC server: ${err}`);
         return false;
       });

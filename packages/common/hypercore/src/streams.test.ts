@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';
 
-describe('Hypercore', function () {
+describe('Streams', function () {
   it('reads from stream', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
@@ -22,13 +22,15 @@ describe('Hypercore', function () {
     const [processed, incProcessed] = latch({ count: numBlocks });
 
     const stream = core.createReadStream({ live: true });
-    const consumer: Writable = stream.pipe(new Writable({
-      write: (data: any, next: () => void) => {
-        log('received', { data: String(data) });
-        incProcessed();
-        next();
-      }
-    }));
+    const consumer: Writable = stream.pipe(
+      new Writable({
+        write: (data: any, next: () => void) => {
+          log('received', { data: String(data) });
+          incProcessed();
+          next();
+        }
+      })
+    );
 
     {
       const append = util.promisify(core.append.bind(core));

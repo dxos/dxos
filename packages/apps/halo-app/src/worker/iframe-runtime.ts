@@ -9,9 +9,9 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 
 export type IframeRuntimeParams = {
-  systemPort: RpcPort
-  appOrigin: string
-}
+  systemPort: RpcPort;
+  appOrigin: string;
+};
 
 /**
  * Manages the client connection to the shared worker.
@@ -21,10 +21,7 @@ export class IframeRuntime {
   private readonly _transportService = new WebRTCTransportService();
   private readonly _appOrigin: string;
 
-  constructor ({
-    systemPort,
-    appOrigin
-  }: IframeRuntimeParams) {
+  constructor({ systemPort, appOrigin }: IframeRuntimeParams) {
     this._appOrigin = appOrigin;
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,
@@ -32,7 +29,7 @@ export class IframeRuntime {
       handlers: {
         BridgeService: this._transportService as BridgeService,
         IframeService: {
-          async heartbeat () {
+          async heartbeat() {
             // Ok.
           }
         }
@@ -42,14 +39,14 @@ export class IframeRuntime {
     });
   }
 
-  async open () {
+  async open() {
     await this._systemRpc.open();
     await this._systemRpc.rpc.WorkerService.start({
       origin: this._appOrigin
     });
   }
 
-  async close () {
+  async close() {
     await this._systemRpc.rpc.WorkerService.stop();
     await this._systemRpc.close();
   }

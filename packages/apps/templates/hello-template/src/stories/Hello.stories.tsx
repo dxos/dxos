@@ -19,12 +19,8 @@ const App = () => {
 
   return (
     <div style={{ padding: 8 }}>
-      <pre>
-        {JSON.stringify(profile, undefined, 2)}
-      </pre>
-      <pre>
-        {JSON.stringify(client.config, undefined, 2)}
-      </pre>
+      <pre>{JSON.stringify(profile, undefined, 2)}</pre>
+      <pre>{JSON.stringify(client.config, undefined, 2)}</pre>
     </div>
   );
 };

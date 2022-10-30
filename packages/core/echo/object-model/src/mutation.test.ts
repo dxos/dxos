@@ -155,70 +155,70 @@ describe('Mutations', function () {
   });
 
   it('MutationUtil', function () {
-    const data1 = MutationUtil.applyMutationSet({}, {
-      mutations: [
-        {
-          operation: ObjectMutation.Operation.SET,
-          key: 'name',
-          value: {
-            string: 'DXOS'
-          }
-        },
-        {
-          operation: ObjectMutation.Operation.SET_ADD,
-          key: 'labels',
-          value: {
-            string: 'red'
-          }
-        },
-        {
-          operation: ObjectMutation.Operation.SET_ADD,
-          key: 'labels',
-          value: {
-            string: 'green'
-          }
-        },
-        {
-          operation: ObjectMutation.Operation.ARRAY_PUSH,
-          key: 'contact',
-          value: {
-            object: {
-              properties: [
-                {
-                  key: 'email',
-                  value: {
-                    string: 'admin@dxos.org'
+    const data1 = MutationUtil.applyMutationSet(
+      {},
+      {
+        mutations: [
+          {
+            operation: ObjectMutation.Operation.SET,
+            key: 'name',
+            value: {
+              string: 'DXOS'
+            }
+          },
+          {
+            operation: ObjectMutation.Operation.SET_ADD,
+            key: 'labels',
+            value: {
+              string: 'red'
+            }
+          },
+          {
+            operation: ObjectMutation.Operation.SET_ADD,
+            key: 'labels',
+            value: {
+              string: 'green'
+            }
+          },
+          {
+            operation: ObjectMutation.Operation.ARRAY_PUSH,
+            key: 'contact',
+            value: {
+              object: {
+                properties: [
+                  {
+                    key: 'email',
+                    value: {
+                      string: 'admin@dxos.org'
+                    }
                   }
-                }
-              ]
+                ]
+              }
+            }
+          },
+          {
+            operation: ObjectMutation.Operation.ARRAY_PUSH,
+            key: 'contact',
+            value: {
+              object: {
+                properties: [
+                  {
+                    key: 'email',
+                    value: {
+                      string: 'info@dxos.org'
+                    }
+                  }
+                ]
+              }
             }
           }
-        },
-        {
-          operation: ObjectMutation.Operation.ARRAY_PUSH,
-          key: 'contact',
-          value: {
-            object: {
-              properties: [
-                {
-                  key: 'email',
-                  value: {
-                    string: 'info@dxos.org'
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    });
+        ]
+      }
+    );
 
     expect(data1).toEqual({
       name: 'DXOS',
-      labels: [
-        'red',
-        'green'
-      ],
+      labels: ['red', 'green'],
       contact: [
         {
           email: 'admin@dxos.org'
@@ -254,9 +254,7 @@ describe('Mutations', function () {
 
     expect(data2).toEqual({
       name: 'DXOS',
-      labels: [
-        'green'
-      ]
+      labels: ['green']
     });
   });
 });

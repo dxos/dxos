@@ -16,20 +16,17 @@ const Main = () => {
     return null;
   }
 
-  return (
-    <App party={party} />
-  );
+  return <App party={party} />;
 };
 
 const start = () => {
-  createRoot(document.getElementById('root')!)
-    .render(
-      <ClientProvider>
-        <ProfileInitializer>
-          <Main />
-        </ProfileInitializer>
-      </ClientProvider>
-    );
+  createRoot(document.getElementById('root')!).render(
+    <ClientProvider>
+      <ProfileInitializer>
+        <Main />
+      </ProfileInitializer>
+    </ClientProvider>
+  );
 };
 
 start();

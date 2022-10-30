@@ -4,17 +4,17 @@
 
 import React from 'react';
 
-import { Device } from './Device';
+import { Device, DeviceProps } from './Device';
 
 export interface DeviceListProps {
-  devices: any[]
+  items: DeviceProps[]
 }
 
-export const DeviceList = ({ devices }: DeviceListProps) => {
+export const DeviceList = ({ items }: DeviceListProps) => {
   return (
     <>
-      {devices.map(device => (
-        <Device key={device.publicKey} device={device} />
+      {items.map((item) => (
+        <Device key={item.publicKey.toHex()} {...item} />
       ))}
     </>
   );

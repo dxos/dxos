@@ -12,11 +12,9 @@ import { TextInput } from '../../components';
 import { copyToClipboard } from '../../util';
 import { Panel } from '../util';
 
-export const CreateProfile:FC<{
-  onCreate: (profile: Profile) => void
-}> = ({
-  onCreate
-}) => {
+export const CreateProfile: FC<{
+  onCreate: (profile: Profile) => void;
+}> = ({ onCreate }) => {
   const client = useClient();
   const [username, setUsername] = useState<string>();
   const [focused, setFocused] = useState(false);

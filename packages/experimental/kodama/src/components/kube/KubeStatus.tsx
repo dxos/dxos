@@ -22,7 +22,8 @@ const useStatus = () => {
       const status = await result.json();
       const { services = [] } = status;
       await sleep(3000);
-      if (!isMounted()) { // TODO(burdon): Partern?
+      if (!isMounted()) {
+        // TODO(burdon): Partern?
         return;
       }
 
@@ -55,10 +56,7 @@ export const KubeStatus = () => {
 
   return (
     <Box flexDirection='column'>
-      <SyntaxHighlight
-        language='json'
-        code={JSON.stringify(status, undefined, 2)}
-      />
+      <SyntaxHighlight language='json' code={JSON.stringify(status, undefined, 2)} />
     </Box>
   );
 };

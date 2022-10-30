@@ -19,10 +19,7 @@ describe('Lock', function () {
     });
     events.push('after');
 
-    expect(events).to.deep.equal([
-      'lock',
-      'after'
-    ]);
+    expect(events).to.deep.equal(['lock', 'after']);
   });
 
   it('return value', async function () {
@@ -37,39 +34,38 @@ describe('Lock', function () {
     const events = [];
     const lock = new Lock();
 
-    const p1 = lock.executeSynchronized(async () => {
-      events.push('lock1');
-      await sleep(10);
-      events.push('lock2');
-    }).then(() => {
-      events.push('p1 resolve');
-    });
+    const p1 = lock
+      .executeSynchronized(async () => {
+        events.push('lock1');
+        await sleep(10);
+        events.push('lock2');
+      })
+      .then(() => {
+        events.push('p1 resolve');
+      });
 
-    const p2 = lock.executeSynchronized(async () => {
-      events.push('lock3');
-    }).then(() => {
-      events.push('p2 resolve');
-    });
+    const p2 = lock
+      .executeSynchronized(async () => {
+        events.push('lock3');
+      })
+      .then(() => {
+        events.push('p2 resolve');
+      });
 
     await p1;
     await p2;
     events.push('after');
 
-    expect(events).to.deep.equal([
-      'lock1',
-      'lock2',
-      'lock3',
-      'p1 resolve',
-      'p2 resolve',
-      'after'
-    ]);
+    expect(events).to.deep.equal(['lock1', 'lock2', 'lock3', 'p1 resolve', 'p2 resolve', 'after']);
   });
 
   it('deadlock', async function () {
     const lock = new Lock();
 
     const promise = lock.executeSynchronized(async () => {
-      await lock.executeSynchronized(async () => { /* No-op. */ });
+      await lock.executeSynchronized(async () => {
+        /* No-op. */
+      });
     });
 
     let resolved = false;
@@ -87,18 +83,23 @@ describe('Lock', function () {
 
     let p1Status, p2Status;
 
-    const p1 = lock.executeSynchronized(async () => {
-      throw new Error();
-    }).then(
-      () => {
-        p1Status = 'resolved';
-      },
-      () => {
-        p1Status = 'rejected';
-      }
-    );
+    const p1 = lock
+      .executeSynchronized(async () => {
+        throw new Error();
+      })
+      .then(
+        () => {
+          p1Status = 'resolved';
+        },
+        () => {
+          p1Status = 'rejected';
+        }
+      );
 
-    const p2 = lock.executeSynchronized(async () => { /* No-op. */ })
+    const p2 = lock
+      .executeSynchronized(async () => {
+        /* No-op. */
+      })
       .then(
         () => {
           p2Status = 'resolved';
@@ -146,17 +147,17 @@ describe('Lock', function () {
 });
 
 class TestClass {
-  constructor (private events: string[]) {}
+  constructor(private events: string[]) {}
 
   @synchronized
-  async foo () {
+  async foo() {
     this.events.push('foo start');
     await sleep(10);
     this.events.push('foo end');
   }
 
   @synchronized
-  async bar () {
+  async bar() {
     this.events.push('bar start');
     await sleep(30);
     this.events.push('bar end');
@@ -174,12 +175,7 @@ describe('synchronized decorator', function () {
     await p1;
     await p2;
 
-    expect(events).to.deep.equal([
-      'foo start',
-      'foo end',
-      'bar start',
-      'bar end'
-    ]);
+    expect(events).to.deep.equal(['foo start', 'foo end', 'bar start', 'bar end']);
   });
 
   it('methods on different instances', async function () {
@@ -193,11 +189,6 @@ describe('synchronized decorator', function () {
     await p1;
     await p2;
 
-    expect(events).to.deep.equal([
-      'foo start',
-      'bar start',
-      'foo end',
-      'bar end'
-    ]);
+    expect(events).to.deep.equal(['foo start', 'bar start', 'foo end', 'bar end']);
   });
 });

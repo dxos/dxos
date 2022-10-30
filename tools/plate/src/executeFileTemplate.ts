@@ -14,8 +14,7 @@ export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
 export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.map$/];
 
 export const isTemplateFile = (file: string): boolean =>
-  TEMPLATE_FILE_INCLUDE.test(file) &&
-  !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
+  TEMPLATE_FILE_INCLUDE.test(file) && !TEMPLATE_FILE_IGNORE.some((pattern) => pattern.test(file));
 
 export const getOutputNameFromTemplateName = (s: string): string => {
   const e = TEMPLATE_FILE_INCLUDE.exec(s);
@@ -23,13 +22,9 @@ export const getOutputNameFromTemplateName = (s: string): string => {
   return out ?? s;
 };
 
-const loadTemplate = async <I = any>(
-  p: string
-): Promise<TemplateFunction<I>> => {
+const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> => {
   if (!isTemplateFile(p)) {
-    throw new Error(
-      `only *.t.ts or *.t.js template files are supported. attempted file: ${p}`
-    );
+    throw new Error(`only *.t.ts or *.t.js template files are supported. attempted file: ${p}`);
   }
   // const outpath = p.replace(/\.t\.ts$/, ".t.js");
   tsnode.register({
@@ -46,11 +41,7 @@ const loadTemplate = async <I = any>(
   try {
     mod = await import(p);
     const fn = mod?.default ?? mod;
-    return typeof fn === 'function'
-      ? fn
-      : typeof fn === 'string'
-        ? () => fn
-        : null;
+    return typeof fn === 'function' ? fn : typeof fn === 'string' ? () => fn : null;
   } catch (err) {
     console.error(`problem while loading template ${p}`);
     console.error(err);
@@ -59,31 +50,25 @@ const loadTemplate = async <I = any>(
 };
 
 export type ExecuteFileTemplateOptions<TInput = {}> = {
-  templateFile: string
-  templateRelativeTo?: string
-  outputDirectory: string
-  input?: TInput
+  templateFile: string;
+  templateRelativeTo?: string;
+  outputDirectory: string;
+  input?: TInput;
 };
 
-export type TemplateContext<TInput = {}> =
-  ExecuteFileTemplateOptions<TInput> & {
-    input: TInput
-    defaultOutputFile: string
-  };
+export type TemplateContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
+  input: TInput;
+  defaultOutputFile: string;
+};
 
 export type TemplatingResult<R = any> = File<R>[];
 
 export type TemplateFunctionResult<R = any> = string | File<R>[];
 
-export type Functor<TInput = void, TOutput = void> = (
-  input: TInput
-) => MaybePromise<TOutput>;
+export type Functor<TInput = void, TOutput = void> = (input: TInput) => MaybePromise<TOutput>;
 
 // a template file .t.ts exports this as default:
-export type TemplateFunction<TInput = void> = Functor<
-  TemplateContext<TInput>,
-  TemplateFunctionResult
->;
+export type TemplateFunction<TInput = void> = Functor<TemplateContext<TInput>, TemplateFunctionResult>;
 
 export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
@@ -97,9 +82,7 @@ export const executeFileTemplate = async <TInput>(
   }
   const nominalOutputPath = path.join(
     outputDirectory,
-    getOutputNameFromTemplateName(templateFullPath).slice(
-      absoluteTemplateRelativeTo.length
-    )
+    getOutputNameFromTemplateName(templateFullPath).slice(absoluteTemplateRelativeTo.length)
   );
   try {
     const result = await promise(

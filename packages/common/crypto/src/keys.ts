@@ -32,7 +32,8 @@ export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) =>
   crypto.validateKeyPair({ publicKey: publicKey.asBuffer(), secretKey });
 
 // TODO(dmaretskyi): Slicing because webcrypto keys are too long.
-export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
+export const discoveryKey = (key: PublicKeyLike): Buffer =>
+  crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
 
 /**
  * Return random bytes of length.

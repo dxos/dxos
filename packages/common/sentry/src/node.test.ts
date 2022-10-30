@@ -36,7 +36,7 @@ describe('Node error reporting', function () {
       expect(testkit.reports()).to.be.lengthOf(1);
     });
     const report = testkit.findReport(err);
-    (report.error?.stacktrace as Stacktrace).frames?.forEach(frame => {
+    (report.error?.stacktrace as Stacktrace).frames?.forEach((frame) => {
       expect(frame.filename?.includes('/')).to.be.false;
     });
   });

@@ -5,17 +5,17 @@
 import { defaultConfig, LogConfig, LogContext, LogLevel, LogMetadata, LogProcessor, LogProcessorType } from './config';
 import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
 
-export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void
+export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
 
 export interface Log extends Logger {
-  config: LogConfig
+  config: LogConfig;
 
-  debug: Logger
-  info: Logger
-  warn: Logger
-  error: Logger
+  debug: Logger;
+  info: Logger;
+  warn: Logger;
+  error: Logger;
 
-  catch: (error: Error, ctx?: LogContext, meta?: LogMetadata) => void
+  catch: (error: Error, ctx?: LogContext, meta?: LogMetadata) => void;
 }
 
 export const log: Log = (...params) => processLog(LogLevel.DEBUG, ...params);
@@ -30,7 +30,7 @@ log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 // TODO(burdon): Options for stack or not.
 log.catch = (error: Error, ctx, meta) => processLog(LogLevel.ERROR, String(error.stack), ctx, meta, error);
 
-export const processors: {[index: string]: LogProcessor} = {
+export const processors: { [index: string]: LogProcessor } = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
 };

@@ -11,10 +11,7 @@ export type ProtoResolver = (origin: string, target: string) => string | null;
 /**
  * Custom proto file resolver.
  */
-export function createProtoResolver (
-  original: ProtoResolver,
-  baseDir?: string
-): ProtoResolver {
+export function createProtoResolver(original: ProtoResolver, baseDir?: string): ProtoResolver {
   // NOTE: Must be function to preserve `this`.
   return function (this: any, origin, target) {
     // NOTE: Resolves `google.protobuf.any.proto`, etc.

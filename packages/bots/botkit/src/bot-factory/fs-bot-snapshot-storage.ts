@@ -8,9 +8,9 @@ import { join } from 'path';
 import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
 export type BotToRestore = {
-  bot: Bot
-  localPath: string
-}
+  bot: Bot;
+  localPath: string;
+};
 
 export interface BotSnapshotStorage {
   /**
@@ -18,32 +18,30 @@ export interface BotSnapshotStorage {
    * @param bot
    * @param localPath
    */
-  backupBot (bot: Bot, localPath: string | undefined): Promise<void>
+  backupBot(bot: Bot, localPath: string | undefined): Promise<void>;
   /**
    * Imports a bot from a specific storage type.
    * @param id
    */
-  restoreBot (id: string): Promise<BotToRestore>
+  restoreBot(id: string): Promise<BotToRestore>;
   /**
    * Fetches a list of all available bots.
    */
-  listBackupedBot (): Promise<string[]>
+  listBackupedBot(): Promise<string[]>;
   /**
    * Deletes a bot from the storage.
    */
-  deleteBackupedBot (id: string): Promise<void>
+  deleteBackupedBot(id: string): Promise<void>;
   /**
    * Deletes all bots from the storage.
    */
-  reset (): Promise<void>
+  reset(): Promise<void>;
 }
 
 export class FSBotSnapshotStorage implements BotSnapshotStorage {
-  constructor (
-    private readonly _dir: string
-  ) {}
+  constructor(private readonly _dir: string) {}
 
-  async backupBot (bot: Bot, localPath: string | undefined): Promise<void> {
+  async backupBot(bot: Bot, localPath: string | undefined): Promise<void> {
     if (localPath) {
       const botStorage = join(this._dir, bot.id!);
       await fs.promises.mkdir(this._dir, { recursive: true });
@@ -53,7 +51,7 @@ export class FSBotSnapshotStorage implements BotSnapshotStorage {
     }
   }
 
-  async restoreBot (id: string): Promise<BotToRestore> {
+  async restoreBot(id: string): Promise<BotToRestore> {
     const botStorage = join(this._dir, id);
     const data = await fs.promises.readFile(botStorage);
     // TODO(egorgripasov): Encode from protobuf.
@@ -61,7 +59,7 @@ export class FSBotSnapshotStorage implements BotSnapshotStorage {
     return dataToRestore;
   }
 
-  async listBackupedBot (): Promise<string[]> {
+  async listBackupedBot(): Promise<string[]> {
     if (fs.existsSync(this._dir)) {
       const files = await fs.promises.readdir(this._dir);
       return files;
@@ -69,14 +67,14 @@ export class FSBotSnapshotStorage implements BotSnapshotStorage {
     return [];
   }
 
-  async deleteBackupedBot (id: string): Promise<void> {
+  async deleteBackupedBot(id: string): Promise<void> {
     const botStorage = join(this._dir, id);
     if (fs.existsSync(botStorage)) {
       await fs.promises.unlink(botStorage);
     }
   }
 
-  async reset (): Promise<void> {
+  async reset(): Promise<void> {
     if (fs.existsSync(this._dir)) {
       await fs.promises.rmdir(this._dir, { recursive: true });
     }

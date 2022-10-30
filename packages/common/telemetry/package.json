@@ -7,13 +7,15 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/node.js": "./dist/src/browser.js"
+    "./dist/src/index.js": "./dist/browser.js",
+    "./src/node.ts": "./src/browser.ts"
   },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/sentry": "workspace:*",
     "@segment/snippet": "^4.15.3",
     "analytics-node": "^6.2.0"

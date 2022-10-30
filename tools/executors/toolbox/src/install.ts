@@ -13,7 +13,7 @@ import { loadJson } from './util';
 const install = async () => {
   const root = path.join(__dirname, '../../../..');
   const workspace = loadJson(path.join(root, 'workspace.json'));
-  Object.values(workspace.projects).forEach(baseDir => {
+  Object.values(workspace.projects).forEach((baseDir) => {
     const filename = path.join(root, baseDir as string, 'project.json');
     const projectJson = loadJson(filename);
     if (projectJson) {

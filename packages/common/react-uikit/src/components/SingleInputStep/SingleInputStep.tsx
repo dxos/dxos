@@ -6,93 +6,57 @@ import cx from 'classnames';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Button,
-  Group,
-  GroupProps,
-  Input,
-  InputProps,
-  InputSize,
-  useId
-} from '@dxos/react-ui';
+import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
 
-import { TKey } from '../../types';
-import { Loading, LoadingColor } from '../Loading';
-
-export interface SingleInputStepProps
-  extends Omit<GroupProps, 'label' | 'onChange'> {
-  rootLabelTKey: TKey
-  inputLabelTKey: TKey
-  onChange: (value: string) => void
-  pending?: boolean
-  onBack?: () => void
-  backTKey?: TKey
-  onNext: () => void
-  nextTKey?: TKey
-  loadingTKey?: TKey
-  inputPlaceholderTKey?: string
-  inputProps?: Omit<InputProps, 'label' | 'placeholder'>
+export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChange'> {
+  inputLabel: string;
+  onChange: (value: string) => void;
+  pending?: boolean;
+  onBack?: () => void;
+  backLabel?: string;
+  onNext: () => void;
+  nextLabel?: string;
+  loadingLabel?: string;
+  inputPlaceholder?: string;
+  inputProps?: Omit<InputProps, 'label' | 'placeholder'>;
 }
 
 export const SingleInputStep = ({
-  rootLabelTKey,
-  inputLabelTKey,
+  inputLabel,
   onChange,
   pending,
   onBack,
-  backTKey = 'back label',
+  backLabel,
   onNext,
-  nextTKey = 'next label',
-  loadingTKey = 'generic loading label',
-  inputPlaceholderTKey,
-  inputProps,
-  ...groupProps
+  nextLabel,
+  loadingLabel,
+  inputPlaceholder,
+  inputProps
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
-  const loadingId = useId('singleInputStep-loading');
   return (
-    <Group
-      elevation={5}
-      label={{
-        level: 1,
-        className: 'mb-4',
-        children: t(rootLabelTKey)
-      }}
-      {...groupProps}
-      className={cx('p-6 rounded-3xl', groupProps.className)}
-      aria-live='polite'
-    >
+    <>
       <Input
-        size={InputSize.lg}
-        label={t(inputLabelTKey)}
+        size='lg'
+        label={t(inputLabel)}
         {...inputProps}
-        {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })}
+        {...(inputPlaceholder && { placeholder: t(inputPlaceholder) })}
         {...(pending && { disabled: true })}
         onChange={onChange}
       />
-      <div role='none' className='flex gap-4 justify-end items-center'>
+      <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
         <div role='none' className={cx(!pending && 'hidden')}>
-          <Loading
-            color={LoadingColor.neutral}
-            className='p-0 ml-0'
-          />
-          <span id={loadingId} className='sr-only'>
-            {t(loadingTKey)}
-          </span>
+          <Loading label={loadingLabel || t('generic loading label')} className='p-0 ml-0' />
         </div>
         {onBack && (
           <Button onClick={onBack} {...(pending && { disabled: true })}>
-            {t(backTKey)}
+            {backLabel ?? t('back label')}
           </Button>
         )}
-        <Button
-          variant='primary'
-          onClick={onNext}
-          {...(pending && { disabled: true })}
-        >
-          {t(nextTKey)}
+        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })}>
+          {nextLabel ?? t('next label')}
         </Button>
       </div>
-    </Group>
+    </>
   );
 };

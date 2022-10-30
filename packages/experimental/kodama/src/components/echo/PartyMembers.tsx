@@ -11,10 +11,8 @@ import { useMembers, useParty } from '@dxos/react-client';
 import { Table } from '../util';
 
 export const PartyMembers: FC<{
-  partyKey: PublicKey
-}> = ({
-  partyKey
-}) => {
+  partyKey: PublicKey;
+}> = ({ partyKey }) => {
   const party = useParty(partyKey);
   const members = useMembers(party);
 
@@ -24,7 +22,7 @@ export const PartyMembers: FC<{
       columns={[
         {
           key: 'public_key',
-          value: key => truncateKey(key, 4),
+          value: (key) => truncateKey(key, 4),
           width: 20,
           color: 'green',
           label: 'key'

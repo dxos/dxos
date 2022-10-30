@@ -10,10 +10,10 @@ import { join } from 'path';
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export interface EsbuildExecutorOptions {
-  entryPoints: string[]
-  outdir?: string
-  outfile?: string
-  bundlePackages?: string[]
+  entryPoints: string[];
+  outdir?: string;
+  outfile?: string;
+  bundlePackages?: string[];
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {

@@ -9,9 +9,8 @@ import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
@@ -20,27 +19,26 @@ import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { SpaceProtocol } from './space-protocol';
 
+// TODO(burdon): Factor out types.
 export type DatabaseFactoryParams = {
-  databaseBackend: DatabaseBackend
-}
+  databaseBackend: DatabaseBackend;
+};
 
 type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
+type FeedProvider = (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
 
 export type SpaceParams = {
-  spaceKey: PublicKey
-  genesisFeed: FeedWrapper<FeedMessage>
-  controlFeed: FeedWrapper<FeedMessage>
-  dataFeed: FeedWrapper<FeedMessage>
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>
-  initialTimeframe: Timeframe
-  networkManager: NetworkManager
-  networkPlugins: Plugin[]
-  swarmIdentity: SwarmIdentity
-  databaseFactory: DatabaseFactory
-}
+  spaceKey: PublicKey;
+  protocol: SpaceProtocol;
+  genesisFeed: FeedWrapper<FeedMessage>;
+  controlFeed: FeedWrapper<FeedMessage>;
+  dataFeed: FeedWrapper<FeedMessage>;
+  feedProvider: FeedProvider;
+  databaseFactory: DatabaseFactory;
+  initialTimeframe?: Timeframe;
+};
 
 /**
  * Spaces are globally addressable databases with access control.
@@ -51,13 +49,12 @@ export class Space {
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
-  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
+  private readonly _feedProvider: FeedProvider;
+
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;
-
   private readonly _controlPipeline: ControlPipeline;
-  private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
   private _isOpen = false;
@@ -65,17 +62,15 @@ export class Space {
   private _databaseBackend?: FeedDatabaseBackend;
   private _database?: Database;
 
-  constructor ({
+  constructor({
     spaceKey,
+    protocol,
     genesisFeed,
     controlFeed,
     dataFeed,
     feedProvider,
-    initialTimeframe,
-    networkManager,
-    networkPlugins,
-    swarmIdentity,
-    databaseFactory
+    databaseFactory,
+    initialTimeframe
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -93,7 +88,7 @@ export class Space {
     });
 
     this._controlPipeline.setWriteFeed(controlFeed);
-    this._controlPipeline.onFeedAdmitted.set(async info => {
+    this._controlPipeline.onFeedAdmitted.set(async (info) => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
         if (!this._dataPipeline) {
@@ -104,60 +99,50 @@ export class Space {
       }
 
       if (!info.key.equals(genesisFeed.key)) {
-        this._replicator.addFeed(await feedProvider(info.key));
+        this._protocol.addFeed(await feedProvider(info.key));
       }
     });
 
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
 
     // Start replicating the genesis feed.
-    this._replicator.addFeed(genesisFeed);
-
-    // Create the network protocol.
-    this._protocol = new SpaceProtocol(
-      networkManager,
-      spaceKey,
-      swarmIdentity,
-      [
-        this._replicator,
-        ...networkPlugins
-      ]
-    );
+    this._protocol = protocol;
+    this._protocol.addFeed(genesisFeed);
   }
 
-  get isOpen () {
-    return this._isOpen;
-  }
-
-  get key () {
+  get key() {
     return this._key;
   }
 
-  get database () {
+  get database() {
     return this._database;
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  get genesisFeedKey(): PublicKey {
+    return this._genesisFeedKey;
+  }
+
+  get controlFeedKey() {
+    return this._controlFeed.key;
+  }
+
+  get dataFeedKey() {
+    return this._dataFeed.key;
   }
 
   /**
    * @test-only
    */
-  get controlPipeline (): PipelineAccessor {
+  get controlPipeline(): PipelineAccessor {
     return this._controlPipeline.pipeline;
   }
 
-  get genesisFeedKey (): PublicKey {
-    return this._genesisFeedKey;
-  }
-
-  get controlFeedKey () {
-    return this._controlFeed.key;
-  }
-
-  get dataFeedKey () {
-    return this._dataFeed.key;
-  }
-
   @synchronized
-  async open () {
+  async open() {
     log('opening...');
     if (this._isOpen) {
       return;
@@ -173,7 +158,7 @@ export class Space {
   }
 
   @synchronized
-  async close () {
+  async close() {
     log('closing...', { key: this._key });
     if (!this._isOpen) {
       return;
@@ -189,7 +174,7 @@ export class Space {
   }
 
   // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?
-  private async _openDataPipeline () {
+  private async _openDataPipeline() {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
     // Create pipeline.
@@ -203,10 +188,13 @@ export class Space {
 
     // Create database backend.
     {
-      const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
-        '@type': 'dxos.echo.feed.EchoEnvelope',
-        ...msg
-      }), this._dataPipeline.writer ?? failUndefined());
+      const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(
+        (msg) => ({
+          '@type': 'dxos.echo.feed.EchoEnvelope',
+          ...msg
+        }),
+        this._dataPipeline.writer ?? failUndefined()
+      );
 
       this._databaseBackend = new FeedDatabaseBackend(
         feedWriter,
@@ -219,7 +207,9 @@ export class Space {
 
     // Connect pipeline to the database.
     {
-      this._database = await this._databaseFactory({ databaseBackend: this._databaseBackend });
+      this._database = await this._databaseFactory({
+        databaseBackend: this._databaseBackend
+      });
       await this._database.initialize();
     }
 
@@ -258,7 +248,7 @@ export class Space {
     });
   }
 
-  private async _closeDataPipeline () {
+  private async _closeDataPipeline() {
     assert(this._dataPipeline, 'Data pipeline not initialized.');
 
     await this._dataPipeline?.stop();

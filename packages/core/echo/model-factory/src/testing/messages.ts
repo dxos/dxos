@@ -7,7 +7,10 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 export const createSetPropertyMutation = (
-  itemId: ItemID, key: string, value: string, timeframe = new Timeframe()
+  itemId: ItemID,
+  key: string,
+  value: string,
+  timeframe = new Timeframe()
 ): FeedMessage => ({
   timeframe,
   payload: {

@@ -17,7 +17,8 @@
     "install-playwright": "playwright install",
     "changed-packages": "scripts/changed",
     "lint-changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
-    "build": "nx run-many --target=build"
+    "build": "nx run-many --target=build",
+    "test": "nx run-many --target=test"
   },
   "dependencies": {
     "execa": "^5.1.0",
@@ -35,7 +36,7 @@
     "@dxos/plate": "workspace:*",
     "@dxos/playwright": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/shims": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typedoc-plugin-plate": "workspace:*",
@@ -96,6 +97,7 @@
     "nyc": "^15.1.0",
     "pkg-up": "^3.1.0",
     "playwright": "^1.27.1",
+    "prettier": "^2.7.1",
     "raf": "^3.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -46,11 +46,11 @@ describe('space/control-pipeline', function () {
       spaceKey,
       genesisFeed,
       initialTimeframe: new Timeframe(),
-      feedProvider: key => feedStore.openFeed(key)
+      feedProvider: (key) => feedStore.openFeed(key)
     });
 
     const admittedFeeds: PublicKey[] = [];
-    controlPipeline.onFeedAdmitted.set(async info => {
+    controlPipeline.onFeedAdmitted.set(async (info) => {
       log.debug('feed admitted');
       admittedFeeds.push(info.key);
     });

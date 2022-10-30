@@ -13,13 +13,13 @@ import { Callback } from '@dxos/util';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  services: ClientServices
-  systemPort: RpcPort
-  appPort: RpcPort
+  services: ClientServices;
+  systemPort: RpcPort;
+  appPort: RpcPort;
   options?: {
-    heartbeatInterval: number
-  }
-}
+    heartbeatInterval: number;
+  };
+};
 
 /**
  * Represents a tab connection within the worker.
@@ -37,7 +37,7 @@ export class WorkerSession {
 
   public onClose = new Callback<() => Promise<void>>();
 
-  constructor ({
+  constructor({
     services,
     systemPort,
     appPort,
@@ -83,11 +83,8 @@ export class WorkerSession {
     this.bridgeService = this._systemRpc.rpc.BridgeService;
   }
 
-  async open () {
-    await Promise.all([
-      this._appRpc.open(),
-      this._systemRpc.open()
-    ]);
+  async open() {
+    await Promise.all([this._appRpc.open(), this._systemRpc.open()]);
 
     await this._startTrigger.wait(); // TODO(dmaretskyi): Timeout.
 
@@ -104,7 +101,7 @@ export class WorkerSession {
     }, this._options.heartbeatInterval);
   }
 
-  async close () {
+  async close() {
     try {
       await this.onClose.callIfSet();
     } catch (err: any) {
@@ -115,9 +112,6 @@ export class WorkerSession {
       clearInterval(this._heartbeatTimer);
     }
 
-    await Promise.all([
-      this._appRpc.close(),
-      this._systemRpc.close()
-    ]);
+    await Promise.all([this._appRpc.close(), this._systemRpc.close()]);
   }
 }

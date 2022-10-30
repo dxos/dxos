@@ -50,32 +50,18 @@ const HaloInvitationContainer = () => {
   return (
     <Box sx={{ padding: 1 }}>
       <Toolbar>
-        <Button
-          onClick={handleCreateInvitation}
-        >
-          Create Invitation
-        </Button>
+        <Button onClick={handleCreateInvitation}>Create Invitation</Button>
       </Toolbar>
 
       {invitationCode && (
         <Box sx={{ marginTop: 1 }}>
-          <TextField
-            disabled
-            multiline
-            fullWidth
-            value={invitationCode}
-            maxRows={3}
-          />
+          <TextField disabled multiline fullWidth value={invitationCode} maxRows={3} />
         </Box>
       )}
 
       {pin && (
         <Box sx={{ marginTop: 1 }}>
-          <TextField
-            disabled
-            type='text'
-            value={pin}
-          />
+          <TextField disabled type='text' value={pin} />
         </Box>
       )}
     </Box>
@@ -83,9 +69,9 @@ const HaloInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any
-  identity?: string
-  invitation?: Invitation
+  error?: any;
+  identity?: string;
+  invitation?: Invitation;
 }
 
 /**
@@ -99,7 +85,10 @@ const HaloAuthenticationContainer = () => {
     try {
       const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
-      setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
+      setStatus({
+        identity: invitationDescriptor.identityKey?.toString(),
+        invitation
+      });
     } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });
@@ -110,13 +99,7 @@ const HaloAuthenticationContainer = () => {
     await status.invitation?.authenticate(Buffer.from(pin));
   };
 
-  return (
-    <PartyJoinPanel
-      status={status}
-      onSubmit={handleSubmit}
-      onAuthenticate={handleAuthenticate}
-    />
-  );
+  return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
 };
 
 const TestApp = () => {
@@ -135,14 +118,16 @@ const TestApp = () => {
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      flexShrink: 0,
-      overflow: 'hidden',
-      margin: 1
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        flexShrink: 0,
+        overflow: 'hidden',
+        margin: 1
+      }}
+    >
       <Paper>
         <ClientPanel client={client} profile={profile} parties={parties} />
         <Divider />
@@ -163,7 +148,14 @@ export const Primary = () => {
 
   return (
     <Container>
-      <Box sx={{ display: 'flex', flex: 1, padding: 1, justifyContent: 'space-around' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          padding: 1,
+          justifyContent: 'space-around'
+        }}
+      >
         {/* Instantiated Client. */}
         <ClientProvider>
           <TestApp />

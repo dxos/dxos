@@ -12,10 +12,10 @@ import { createCodecEncoding } from '@dxos/hypercore';
 import { FeedWriter } from '../feed-writer';
 
 export type TestItem = {
-  id: string
-  index: number
-  value: string
-}
+  id: string;
+  index: number;
+  value: string;
+};
 
 export const defaultCodec: Codec<any> = {
   encode: (obj: any) => Buffer.from(JSON.stringify(obj)),
@@ -24,7 +24,7 @@ export const defaultCodec: Codec<any> = {
 
 export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncoding(defaultCodec);
 
-export type TestBlockGenerator<T> = (i: number) => T
+export type TestBlockGenerator<T> = (i: number) => T;
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
   id: faker.datatype.uuid(),
@@ -38,29 +38,35 @@ export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = (i) => ({
 export class TestGenerator<T extends {}> {
   _count = 0;
 
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _generate: TestBlockGenerator<T>
   ) {}
 
-  async writeBlocks (writer: FeedWriter<T>, {
-    count = 1,
-    delay
-  }: {
-    count?: number
-    delay?: {
-      min: number
-      max: number
-    }
-  } = {}) {
-    return await Promise.all(Array.from(Array(count)).map(async () => {
-      const data = this._generate(this._count++);
-      const receipt = await writer.write(data);
-      if (delay) {
-        await sleep(faker.datatype.number(delay));
-      }
+  async writeBlocks(
+    writer: FeedWriter<T>,
+    {
+      count = 1,
+      delay
+    }: {
+      count?: number;
+      delay?: {
+        min: number;
+        max: number;
+      };
+    } = {}
+  ) {
+    return await Promise.all(
+      Array.from(Array(count)).map(async () => {
+        const data = this._generate(this._count++);
+        const receipt = await writer.write(data);
+        if (delay) {
+          await sleep(faker.datatype.number(delay));
+        }
 
-      return receipt;
-    }));
+        return receipt;
+      })
+    );
   }
 }
 

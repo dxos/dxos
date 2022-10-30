@@ -13,12 +13,12 @@ import { dedupe } from './util';
 /**
  * Represents where the selection has started.
  */
-export type SelectionRoot = Database | Entity
+export type SelectionRoot = Database | Entity;
 
 /**
  * Returned from each stage of the visitor.
  */
-export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R]
+export type SelectionContext<T extends Entity, R> = [entities: T[], result?: R];
 
 /**
  * Query subscription.
@@ -33,7 +33,7 @@ export class SelectionResult<T extends Entity, R = any> {
 
   private _lastResult: SelectionContext<T, R> = [[]];
 
-  constructor (
+  constructor(
     private readonly _execute: () => SelectionContext<T, R>,
     private readonly _update: Event<Entity[]>,
     private readonly _root: SelectionRoot,
@@ -42,19 +42,21 @@ export class SelectionResult<T extends Entity, R = any> {
     this.refresh();
 
     // Re-run if deps change.
-    this.update.addEffect(() => _update.on(currentEntities => {
-      const [previousEntities] = this._lastResult;
-      this.refresh();
+    this.update.addEffect(() =>
+      _update.on((currentEntities) => {
+        const [previousEntities] = this._lastResult;
+        this.refresh();
 
-      // Filters mutation events only if selection (since we can't reason about deps of call methods).
-      const set = new Set([...previousEntities, ...this._lastResult![0]]);
-      if (this._reducer || currentEntities.some(entity => set.has(entity as any))) {
-        this.update.emit(this);
-      }
-    }));
+        // Filters mutation events only if selection (since we can't reason about deps of call methods).
+        const set = new Set([...previousEntities, ...this._lastResult![0]]);
+        if (this._reducer || currentEntities.some((entity) => set.has(entity as any))) {
+          this.update.emit(this);
+        }
+      })
+    );
   }
 
-  toString () {
+  toString() {
     const [entities] = this._lastResult;
     return `SelectionResult<${JSON.stringify({
       entities: entities.length
@@ -64,7 +66,7 @@ export class SelectionResult<T extends Entity, R = any> {
   /**
    * Re-run query.
    */
-  refresh () {
+  refresh() {
     const [entities, result] = this._execute();
     this._lastResult = [dedupe(entities), result];
     return this;
@@ -73,14 +75,14 @@ export class SelectionResult<T extends Entity, R = any> {
   /**
    * The root of the selection. Either a database or an item. Must be a stable reference.
    */
-  get root (): SelectionRoot {
+  get root(): SelectionRoot {
     return this._root;
   }
 
   /**
    * Get the result of this selection.
    */
-  get entities (): T[] {
+  get entities(): T[] {
     if (!this._lastResult) {
       this.refresh();
     }
@@ -92,7 +94,7 @@ export class SelectionResult<T extends Entity, R = any> {
   /**
    * Returns the selection or reducer result.
    */
-  get value (): R extends void ? T[] : R {
+  get value(): R extends void ? T[] : R {
     if (!this._lastResult) {
       this.refresh();
     }
@@ -104,7 +106,7 @@ export class SelectionResult<T extends Entity, R = any> {
   /**
    * Return the first element if the set has exactly one element.
    */
-  expectOne (): T {
+  expectOne(): T {
     const entities = this.entities;
     assert(entities.length === 1, `Expected one result; got ${entities.length}`);
     return entities[0];

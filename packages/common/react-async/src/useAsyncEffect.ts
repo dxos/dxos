@@ -31,7 +31,7 @@ import { useEffect } from 'react';
  * @param deps
  */
 // TODO(burdon): Creade useAsyncMemo?
-export const useAsyncEffect = <T> (
+export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],
   deps?: any[]
@@ -45,7 +45,7 @@ export const useAsyncEffect = <T> (
     const asyncResult = callback(() => mounted);
 
     // TODO(burdon): Catch exception.
-    void Promise.resolve(asyncResult).then(result => {
+    void Promise.resolve(asyncResult).then((result) => {
       value = result;
     });
 

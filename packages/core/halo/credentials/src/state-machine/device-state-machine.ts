@@ -15,15 +15,17 @@ import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../cr
  */
 export class DeviceStateMachine {
   public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
+
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _identityKey: PublicKey,
     private readonly _deviceKey: PublicKey
   ) {}
 
-  async process (credential: Credential) {
+  async process(credential: Credential) {
     log('credential processed:', credential);
 
     // Save device key chain credential when processed by the party state machine.

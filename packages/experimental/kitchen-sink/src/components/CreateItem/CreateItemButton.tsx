@@ -14,12 +14,10 @@ import { TypeSelector } from '../TypeSelector';
 import { CreateItemDialog } from './CreateItemDialog';
 
 interface CreateItemButtonProps {
-  onCreate: (type?: string, title?: string) => void
+  onCreate: (type?: string, title?: string) => void;
 }
 
-export const CreateItemButton = ({
-  onCreate
-}: CreateItemButtonProps) => {
+export const CreateItemButton = ({ onCreate }: CreateItemButtonProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const [type, setType] = useState<string>(TestType.Org);
 
@@ -45,10 +43,7 @@ export const CreateItemButton = ({
         onCancel={() => setOpen(false)}
       >
         <Box sx={{ marginBottom: 1 }}>
-          <TypeSelector
-            value={type}
-            onChange={(type: string) => setType(type)}
-          />
+          <TypeSelector value={type} onChange={(type: string) => setType(type)} />
         </Box>
       </CreateItemDialog>
 

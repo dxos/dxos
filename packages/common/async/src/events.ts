@@ -8,7 +8,7 @@ import { throwUnhandledRejection } from '@dxos/debug';
 
 import { promiseTimeout } from './async';
 
-type UnsubscribeCallback = () => void
+type UnsubscribeCallback = () => void;
 
 export type Effect = () => UnsubscribeCallback | undefined;
 
@@ -16,13 +16,13 @@ export type Effect = () => UnsubscribeCallback | undefined;
  * Effect that's been added to a specific Event.
  */
 interface MaterializedEffect {
-  effect: Effect
-  cleanup: UnsubscribeCallback | undefined
+  effect: Effect;
+  cleanup: UnsubscribeCallback | undefined;
 }
 
 interface EventEmitterLike {
-  on(event: string, cb: (data: any) => void): void
-  off(event: string, cb: (data: any) => void): void
+  on(event: string, cb: (data: any) => void): void;
+  off(event: string, cb: (data: any) => void): void;
 }
 
 /**
@@ -31,12 +31,12 @@ interface EventEmitterLike {
 export class EventSubscriptions {
   private readonly _listeners: UnsubscribeCallback[] = [];
 
-  add (cb: UnsubscribeCallback) {
+  add(cb: UnsubscribeCallback) {
     this._listeners.push(cb);
   }
 
-  clear () {
-    this._listeners.forEach(cb => cb());
+  clear() {
+    this._listeners.forEach((cb) => cb());
     this._listeners.length = 0;
   }
 }
@@ -72,7 +72,7 @@ export class EventSubscriptions {
  * 7. Remove the need to namespace events when developing a class with events that will be used as a base-class.
  */
 export class Event<T = void> implements ReadOnlyEvent<T> {
-  static wrap<T> (emitter: EventEmitterLike, eventName: string): Event<T> {
+  static wrap<T>(emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();
 
     event.addEffect(() => {
@@ -98,7 +98,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param data param that will be passed to all listeners.
    */
-  emit (data: T) {
+  emit(data: T) {
     for (const listener of this._listeners) {
       void this._trigger(listener, data);
     }
@@ -117,7 +117,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on (callback: (data: T) => void): UnsubscribeCallback {
+  on(callback: (data: T) => void): UnsubscribeCallback {
     if (this._onceListeners.has(callback)) {
       this._onceListeners.delete(callback);
     }
@@ -140,7 +140,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  off (callback: (data: T) => void) {
+  off(callback: (data: T) => void) {
     this._listeners.delete(callback);
     this._onceListeners.delete(callback);
 
@@ -156,9 +156,11 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  once (callback: (data: T) => void): UnsubscribeCallback {
+  once(callback: (data: T) => void): UnsubscribeCallback {
     if (this._listeners.has(callback)) {
-      return () => { /* No-op. */ };
+      return () => {
+        /* No-op. */
+      };
     }
 
     this._onceListeners.add(callback);
@@ -179,9 +181,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * This iterator runs indefinitely.
    */
-  async * [Symbol.asyncIterator] (): AsyncIterator<T> {
+  async *[Symbol.asyncIterator](): AsyncIterator<T> {
     while (true) {
-      yield await new Promise(resolve => {
+      yield await new Promise((resolve) => {
         this.once(resolve);
       });
     }
@@ -192,9 +194,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param predicate
    */
-  waitFor (predicate: (data: T) => boolean): Promise<T> {
+  waitFor(predicate: (data: T) => boolean): Promise<T> {
     return new Promise((resolve) => {
-      const unsubscribe = this.on(data => {
+      const unsubscribe = this.on((data) => {
         if (predicate(data)) {
           unsubscribe();
           resolve(data);
@@ -207,7 +209,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
    * @param expectedCount
    */
-  waitForCount (expectedCount: number): Promise<T> {
+  waitForCount(expectedCount: number): Promise<T> {
     let count = 0;
     return this.waitFor(() => ++count === expectedCount);
   }
@@ -215,7 +217,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Similar to waitFor, but the promise resolves immediatelly if the condition is already true.
    */
-  async waitForCondition (predicate: () => boolean): Promise<void> {
+  async waitForCondition(predicate: () => boolean): Promise<void> {
     if (!predicate()) {
       await this.waitFor(predicate);
     }
@@ -224,7 +226,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Returns the number of persistent listeners.
    */
-  listenerCount () {
+  listenerCount() {
     return this._listeners.size + this._onceListeners.size;
   }
 
@@ -245,7 +247,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @returns Callback that will remove this effect once called.
    */
-  addEffect (effect: Effect): UnsubscribeCallback {
+  addEffect(effect: Effect): UnsubscribeCallback {
     const handle: MaterializedEffect = { effect, cleanup: undefined };
 
     if (this.listenerCount() > 0) {
@@ -260,20 +262,22 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     };
   }
 
-  debounce (timeout = 0) {
+  debounce(timeout = 0) {
     const debouncedEvent = new Event<void>();
 
     let firing = false;
 
-    debouncedEvent.addEffect(() => this.on(() => {
-      if (!firing) {
-        firing = true;
-        setTimeout(() => {
-          firing = false;
-          debouncedEvent.emit();
-        }, timeout);
-      }
-    }));
+    debouncedEvent.addEffect(() =>
+      this.on(() => {
+        if (!firing) {
+          firing = true;
+          setTimeout(() => {
+            firing = false;
+            debouncedEvent.emit();
+          }, timeout);
+        }
+      })
+    );
 
     return debouncedEvent;
   }
@@ -281,20 +285,20 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   /**
    * Turn any variant of `Event<T>` into an `Event<void>` discarding the callback parameter.
    */
-  discardParameter (): Event<void> {
+  discardParameter(): Event<void> {
     return this as any;
   }
 
   /**
    * Overriden to not retun implementation details.
    */
-  toJSON () {
+  toJSON() {
     return {
       listenerCount: this.listenerCount()
     };
   }
 
-  private async _trigger (listener: (data: T) => void, data: T) {
+  private async _trigger(listener: (data: T) => void, data: T) {
     try {
       await waitImmediate(); // Acts like setTimeout but preserves the stack-trace.
       listener(data);
@@ -304,13 +308,13 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     }
   }
 
-  private _runEffects () {
+  private _runEffects() {
     for (const handle of this._effects) {
       handle.cleanup = handle.effect();
     }
   }
 
-  private _cleanupEffects () {
+  private _cleanupEffects() {
     for (const handle of this._effects) {
       // eslint-disable-next-line no-unused-expressions
       handle.cleanup?.();
@@ -333,7 +337,7 @@ export interface ReadOnlyEvent<T = void> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): UnsubscribeCallback
+  on(callback: (data: T) => void): UnsubscribeCallback;
 
   /**
    * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
@@ -344,7 +348,7 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  off(callback: (data: T) => void): void
+  off(callback: (data: T) => void): void;
 
   /**
    * Register a callback to be called only once when the next event is emitted.
@@ -353,32 +357,32 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): UnsubscribeCallback
+  once(callback: (data: T) => void): UnsubscribeCallback;
 
   /**
    * An async iterator that iterates over events.
    *
    * This iterator runs indefinitely.
    */
-  [Symbol.asyncIterator](): AsyncIterator<T>
+  [Symbol.asyncIterator](): AsyncIterator<T>;
 
   /**
    * Returns a promise that resolves with the first event emitted that matches the provided predicate.
    *
    * @param predicate
    */
-  waitFor(predicate: (data: T) => boolean): Promise<T>
+  waitFor(predicate: (data: T) => boolean): Promise<T>;
 
   /**
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
    * @param expectedCount
    */
-  waitForCount(expectedCount: number): Promise<T>
+  waitForCount(expectedCount: number): Promise<T>;
 
   /**
    * Turn any variant of `Event<T>` into an `Event<void>` discarding the callback parameter.
    */
-  discardParameter(): Event<void>
+  discardParameter(): Event<void>;
 }
 
 /**

@@ -3,3 +3,4 @@
 //
 
 export * from './showcase-plugin';
+export * from './telemetry';

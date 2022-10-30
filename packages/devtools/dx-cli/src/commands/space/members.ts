@@ -23,7 +23,7 @@ export default class Members extends BaseCommand {
     }
   ];
 
-  async run (): Promise<any> {
+  async run(): Promise<any> {
     const { args, flags } = await this.parse(Members);
     let { key } = args;
 
@@ -33,7 +33,7 @@ export default class Members extends BaseCommand {
         key = await selectSpace(parties);
       }
 
-      const party = parties.find(party => party.key.toHex().startsWith(key));
+      const party = parties.find((party) => party.key.toHex().startsWith(key));
       if (!party) {
         this.log('Invalid key');
         return;

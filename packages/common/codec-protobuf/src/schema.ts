@@ -11,7 +11,10 @@ import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapp
 import { ServiceDescriptor } from './service';
 
 export class Schema<T, S extends {} = {}> {
-  static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}> (schema: any, substitutions: Substitutions = {}): Schema<T, S> {
+  static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(
+    schema: any,
+    substitutions: Substitutions = {}
+  ): Schema<T, S> {
     const root = protobufjs.Root.fromJSON(schema);
     return new Schema(root, substitutions);
   }
@@ -20,24 +23,20 @@ export class Schema<T, S extends {} = {}> {
 
   private readonly _codecCache: Record<string, ProtoCodec> = {};
 
-  constructor (
-    private _typesRoot: protobufjs.Root,
-    substitutions: Substitutions
-  ) {
+  constructor(private _typesRoot: protobufjs.Root, substitutions: Substitutions) {
     this._mapping = createMappingDescriptors(substitutions);
   }
 
-  getCodecForType<K extends keyof T & string> (typeName: K): ProtoCodec<T[K]> {
+  getCodecForType<K extends keyof T & string>(typeName: K): ProtoCodec<T[K]> {
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }
     const type = this._typesRoot.lookupType(typeName);
     this._codecCache[type.fullName] ??= new ProtoCodec(type, this._mapping, this);
     return this._codecCache[type.fullName];
-
   }
 
-  hasType (typeName: string): boolean {
+  hasType(typeName: string): boolean {
     if (typeName === '') {
       return false;
     }
@@ -49,7 +48,7 @@ export class Schema<T, S extends {} = {}> {
     }
   }
 
-  tryGetCodecForType (typeName: string): ProtoCodec {
+  tryGetCodecForType(typeName: string): ProtoCodec {
     if (typeName === '') {
       throw new Error(`Type not found: "${typeName}"`);
     }
@@ -62,7 +61,7 @@ export class Schema<T, S extends {} = {}> {
     return this._codecCache[type.fullName];
   }
 
-  getService<K extends keyof S & string> (name: K): ServiceDescriptor<S[K]> {
+  getService<K extends keyof S & string>(name: K): ServiceDescriptor<S[K]> {
     if (typeof name !== 'string') {
       throw new TypeError('Expected `name` argument to be a string');
     }
@@ -73,7 +72,7 @@ export class Schema<T, S extends {} = {}> {
   /**
    * Dynamically add new definitions to this schema.
    */
-  addJson (schema: any) {
+  addJson(schema: any) {
     if (!schema.nested) {
       throw new Error('Invalid schema: missing nested object');
     }

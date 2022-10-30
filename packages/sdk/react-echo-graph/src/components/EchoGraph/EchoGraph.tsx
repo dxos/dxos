@@ -16,30 +16,28 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 import { EchoGraphModel } from './model';
 
 export interface EchoGraphProps {
-  model?: EchoGraphModel
-  selected?: Set<ItemID>
-  itemAdapter: ItemAdapter
-  styles?: any
+  model?: EchoGraphModel;
+  selected?: Set<ItemID>;
+  itemAdapter: ItemAdapter;
+  styles?: any;
   options?: {
-    grid?: boolean
-  }
+    grid?: boolean;
+  };
 }
 
-export const EchoGraph = ({
-  model,
-  selected,
-  itemAdapter,
-  styles,
-  options = {}
-}: EchoGraphProps) => {
+export const EchoGraph = ({ model, selected, itemAdapter, styles, options = {} }: EchoGraphProps) => {
   const context = useSvgContext();
-  const projector = useMemo(() => new GraphForceProjector(context, {
-    forces: {
-      radial: {
-        strength: 0.02
-      }
-    }
-  }), []);
+  const projector = useMemo(
+    () =>
+      new GraphForceProjector(context, {
+        forces: {
+          radial: {
+            strength: 0.02
+          }
+        }
+      }),
+    []
+  );
 
   // TODO(burdon): Hack for stale callback.
   const selectedRef = useDynamicRef<Set<ItemID> | undefined>(() => selected, [selected]);
@@ -47,7 +45,9 @@ export const EchoGraph = ({
     const selected = selectedRef.current;
     return {
       class: selected?.size
-        ? (selected?.has(node.id) ? 'selected' : 'undefined')
+        ? selected?.has(node.id)
+          ? 'selected'
+          : 'undefined'
         : node.data!.type!.replaceAll(/\W/g, '_')
     };
   };
@@ -65,9 +65,7 @@ export const EchoGraph = ({
       <SVGContextProvider>
         <SVG>
           <Markers />
-          {options.grid !== false && (
-            <Grid axis />
-          )}
+          {options.grid !== false && <Grid axis />}
           <Zoom>
             <Graph
               className={clsx(defaultGraphStyles, styles)}
@@ -79,7 +77,8 @@ export const EchoGraph = ({
                 node: (node: GraphLayoutNode<Item<ObjectModel>>) => getAttributes(node)
               }}
               labels={{
-                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) => highlight ? itemAdapter.title(node.data!) : undefined
+                text: (node: GraphLayoutNode<Item<ObjectModel>>, highlight) =>
+                  highlight ? itemAdapter.title(node.data!) : undefined
               }}
             />
           </Zoom>

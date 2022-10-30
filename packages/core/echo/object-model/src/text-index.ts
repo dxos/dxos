@@ -7,8 +7,8 @@ import MiniSearch from 'minisearch';
 import { Getter } from './matcher';
 
 interface IndexerOptions {
-  fields: string[]
-  getter: Getter
+  fields: string[];
+  getter: Getter;
 }
 
 /**
@@ -21,7 +21,7 @@ export class TextIndex {
 
   private _items: any[] = [];
 
-  constructor ({ fields, getter }: IndexerOptions) {
+  constructor({ fields, getter }: IndexerOptions) {
     // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html#options-and-defaults
     this._minisearch = new MiniSearch({
       idField: 'id',
@@ -32,7 +32,7 @@ export class TextIndex {
 
   // TODO(burdon): Monitor memory usage and timing.
   // TODO(burdon): Calcuate diff.
-  update (items: any[]) {
+  update(items: any[]) {
     this._items = items;
     this._minisearch.removeAll();
     this._minisearch.addAll(items);
@@ -41,11 +41,13 @@ export class TextIndex {
   }
 
   // TODO(burdon): Async API?
-  search (text: string) {
+  search(text: string) {
     let results = this._cache.get(text);
     if (!results) {
-      results = this._minisearch.search(text)
-        .map(result => ({ ...result, item: this._items.find(item => item.id === result.id) }));
+      results = this._minisearch.search(text).map((result) => ({
+        ...result,
+        item: this._items.find((item) => item.id === result.id)
+      }));
 
       this._cache.set(text, results);
     }

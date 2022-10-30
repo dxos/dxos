@@ -3,23 +3,19 @@
 //
 
 import snippet from '@segment/snippet';
-import type Analytics from 'analytics-node';
-import assert from 'node:assert';
 
 import { captureException } from '@dxos/sentry';
 
 import { EventOptions, InitOptions, PageOptions } from './types';
 
-declare global {
-  const analytics: Analytics;
-}
-
-export const init = (options: InitOptions) => {
-  const apiKey = options.apiKey ?? process.env.DXOS_TELEMETRY_KEY;
-  assert(apiKey, 'Key required to send telemetry');
+export const init = ({ apiKey, enable = true }: InitOptions) => {
+  if (!enable) {
+    return;
+  }
 
   const contents = snippet.min({
-    apiKey
+    apiKey,
+    page: false
   });
 
   const script = document.createElement('script');
@@ -27,36 +23,22 @@ export const init = (options: InitOptions) => {
   document.body.append(script);
 };
 
-export const page = ({ machineId, identityId: anonymousId, ...options }: PageOptions) => {
-  analytics?.page({
+export const page = ({ identityId: userId, ...options }: PageOptions = {}) => {
+  (window as any).analytics?.page({
     ...options,
-    anonymousId,
-    properties: {
-      ...options.properties,
-      machineId
-    }
+    userId
   });
 };
 
-export const event = ({
-  machineId,
-  identityId: anonymousId,
-  name: event,
-  ...options
-}: EventOptions) => {
-  analytics?.track({
+export const event = ({ identityId: userId, name: event, ...options }: EventOptions) => {
+  (window as any).analytics?.track({
     ...options,
-    anonymousId,
-    event,
-    properties: {
-      ...options.properties,
-      machineId
-    }
+    event
   });
 };
 
 export const flush = async () => {
-  await analytics?.flush(err => {
+  await (window as any).analytics?.flush((err: any) => {
     captureException(err);
   });
 };

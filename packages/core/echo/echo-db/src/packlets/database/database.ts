@@ -20,24 +20,24 @@ import { Link } from './link';
 import { RootFilter, Selection, createSelection } from './selection';
 
 export interface CreateItemOption<M extends Model> {
-  model?: ModelConstructor<M>
-  type?: ItemType
-  parent?: ItemID
-  props?: any // TODO(dmaretskyi): Type this better. Rename properties?
+  model?: ModelConstructor<M>;
+  type?: ItemType;
+  parent?: ItemID;
+  props?: any; // TODO(dmaretskyi): Type this better. Rename properties?
 }
 
 export interface CreateLinkOptions<M extends Model, L extends Model, R extends Model> {
-  model?: ModelConstructor<M>
-  type?: ItemType
-  source: Item<L>
-  target: Item<R>
-  props?: any // TODO(dmaretskyi): Type this better.
+  model?: ModelConstructor<M>;
+  type?: ItemType;
+  source: Item<L>;
+  target: Item<R>;
+  props?: any; // TODO(dmaretskyi): Type this better.
 }
 
 export enum State {
   NULL = 'NULL',
   INITIALIZED = 'INITIALIZED',
-  DESTROYED = 'DESTROYED',
+  DESTROYED = 'DESTROYED'
 }
 
 /**
@@ -51,7 +51,7 @@ export class Database {
   /**
    * Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
    */
-  constructor (
+  constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _backend: DatabaseBackend,
     memberKey: PublicKey
@@ -59,11 +59,11 @@ export class Database {
     this._itemManager = new ItemManager(this._modelFactory, memberKey, this._backend.getWriteStream());
   }
 
-  get state () {
+  get state() {
     return this._state;
   }
 
-  get isReadOnly () {
+  get isReadOnly() {
     return this._backend.isReadOnly;
   }
 
@@ -71,7 +71,7 @@ export class Database {
    * Fired when any item is updated.
    * Contains a list of all entities changed from the last update.
    */
-  get update (): Event<Entity<any>[]> {
+  get update(): Event<Entity<any>[]> {
     return this._itemManager.debouncedUpdate;
   }
 
@@ -80,12 +80,12 @@ export class Database {
    * If the information about which entity got updated is not required prefer using `update`.
    */
   // TODO(burdon): Unused?
-  get entityUpdate (): Event<Entity<any>> {
+  get entityUpdate(): Event<Entity<any>> {
     return this._itemManager.update;
   }
 
   @synchronized
-  async initialize () {
+  async initialize() {
     if (this._state !== State.NULL) {
       throw new Error('Invalid state: database was already initialized.');
     }
@@ -95,7 +95,7 @@ export class Database {
   }
 
   @synchronized
-  async destroy () {
+  async destroy() {
     if (this._state === State.DESTROYED || this._state === State.NULL) {
       return;
     }
@@ -107,7 +107,7 @@ export class Database {
   /**
    * Creates a new item with the given queryable type and model.
    */
-  async createItem <M extends Model<any>> (options: CreateItemOption<M> = {}): Promise<Item<M>> {
+  async createItem<M extends Model<any>>(options: CreateItemOption<M> = {}): Promise<Item<M>> {
     this._assertInitialized();
     if (!options.model) {
       options.model = ObjectModel as any as ModelConstructor<M>;
@@ -115,20 +115,24 @@ export class Database {
 
     validateModelClass(options.model);
 
-    if (options.type && typeof options.type !== 'string' as ItemType) {
+    if (options.type && typeof options.type !== ('string' as ItemType)) {
       throw new TypeError('Invalid type.');
     }
 
-    if (options.parent && typeof options.parent !== 'string' as ItemID) {
+    if (options.parent && typeof options.parent !== ('string' as ItemID)) {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
     // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
-    return await this._itemManager.createItem(
-      options.model.meta.type, options.type, options.parent, options.props) as any;
+    return (await this._itemManager.createItem(
+      options.model.meta.type,
+      options.type,
+      options.parent,
+      options.props
+    )) as any;
   }
 
-  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>> (
+  async createLink<M extends Model<any>, S extends Model<any>, T extends Model<any>>(
     options: CreateLinkOptions<M, S, T>
   ): Promise<Link<M, S, T>> {
     this._assertInitialized();
@@ -140,19 +144,24 @@ export class Database {
 
     validateModelClass(model);
 
-    if (options.type && typeof options.type !== 'string' as ItemType) {
+    if (options.type && typeof options.type !== ('string' as ItemType)) {
       throw new TypeError('Invalid type.');
     }
 
     return this._itemManager.createLink(
-      model.meta.type, options.type, options.source.id, options.target.id, options.props);
+      model.meta.type,
+      options.type,
+      options.source.id,
+      options.target.id,
+      options.props
+    );
   }
 
   /**
    * Retrieves a item from the index.
    * @param itemId
    */
-  getItem (itemId: ItemID): Item<any> | undefined {
+  getItem(itemId: ItemID): Item<any> | undefined {
     this._assertInitialized();
     return this._itemManager.getItem(itemId);
   }
@@ -161,7 +170,7 @@ export class Database {
    * Waits for item matching the filter to be present and returns it.
    */
   // TODO(burdon): Generalize waitForCondition.
-  async waitForItem<T extends Model<any>> (filter: RootFilter): Promise<Item<T>> {
+  async waitForItem<T extends Model<any>>(filter: RootFilter): Promise<Item<T>> {
     const result = this.select(filter).exec();
     await result.update.waitForCondition(() => result.entities.length > 0);
     const item = result.expectOne();
@@ -173,7 +182,7 @@ export class Database {
    * Returns a selection context, which can be used to traverse the object graph.
    * @param filter
    */
-  select (filter?: RootFilter): Selection<Item<any>> {
+  select(filter?: RootFilter): Selection<Item<any>> {
     return createSelection<void>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
@@ -188,7 +197,7 @@ export class Database {
    * @param result
    * @param filter
    */
-  reduce<R> (result: R, filter?: RootFilter): Selection<Item<any>, R> {
+  reduce<R>(result: R, filter?: RootFilter): Selection<Item<any>, R> {
     return createSelection<R>(
       () => this._itemManager.items,
       () => this._itemManager.debouncedUpdate,
@@ -198,16 +207,16 @@ export class Database {
     );
   }
 
-  createSnapshot (): DatabaseSnapshot {
+  createSnapshot(): DatabaseSnapshot {
     this._assertInitialized();
     return this._backend.createSnapshot();
   }
 
-  createDataServiceHost (): DataServiceHost {
+  createDataServiceHost(): DataServiceHost {
     return this._backend.createDataServiceHost();
   }
 
-  private _assertInitialized () {
+  private _assertInitialized() {
     if (this._state !== State.INITIALIZED) {
       throw new Error('Database not initialized.');
     }

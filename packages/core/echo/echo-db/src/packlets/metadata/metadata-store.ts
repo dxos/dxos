@@ -20,8 +20,8 @@ import { Directory } from '@dxos/random-access-storage';
 export const STORAGE_VERSION = 1;
 
 export interface AddPartyOptions {
-  key: PublicKey
-  genesisFeed: PublicKey
+  key: PublicKey;
+  genesisFeed: PublicKey;
 }
 
 const emptyEchoMetadata = (): EchoMetadata => ({
@@ -34,11 +34,12 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 export class MetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
 
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _directory: Directory
   ) {}
 
-  get version (): number {
+  get version(): number {
     return this._metadata.version ?? 0;
   }
 
@@ -46,7 +47,7 @@ export class MetadataStore {
    * Returns a list of currently saved parties. The list and objects in it can be modified addParty and
    * addPartyFeed functions.
    */
-  get parties (): PartyMetadata[] {
+  get parties(): PartyMetadata[] {
     return this._metadata.parties ?? [];
   }
 
@@ -54,7 +55,7 @@ export class MetadataStore {
    * Loads metadata from persistent storage.
    */
   @synchronized
-  async load (): Promise<void> {
+  async load(): Promise<void> {
     const file = this._directory.getOrCreateFile('EchoMetadata');
     try {
       const { size: fileLength } = await file.stat();
@@ -83,7 +84,7 @@ export class MetadataStore {
   }
 
   @synchronized
-  private async _save (): Promise<void> {
+  private async _save(): Promise<void> {
     const data: EchoMetadata = {
       ...this._metadata,
       version: STORAGE_VERSION,
@@ -102,7 +103,6 @@ export class MetadataStore {
 
       // Saving data.
       await file.write(4, encoded);
-
     } finally {
       await file.close();
     }
@@ -111,24 +111,27 @@ export class MetadataStore {
   /**
    * Clears storage - doesn't work for now.
    */
-  async clear (): Promise<void> {
+  async clear(): Promise<void> {
     log('clearing all metadata');
     await this._directory.delete();
   }
 
-  getIdentityRecord (): IdentityRecord | undefined {
+  getIdentityRecord(): IdentityRecord | undefined {
     return this._metadata.identity;
   }
 
-  async setIdentityRecord (record: IdentityRecord) {
+  async setIdentityRecord(record: IdentityRecord) {
     assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
     await this._save();
   }
 
-  async addSpace (record: PartyMetadata) {
-    assert(!(this._metadata.parties ?? []).find(party => party.key === record.key), 'Cannot overwrite existing party in metadata');
+  async addSpace(record: PartyMetadata) {
+    assert(
+      !(this._metadata.parties ?? []).find((party) => party.key === record.key),
+      'Cannot overwrite existing party in metadata'
+    );
 
     (this._metadata.parties ??= []).push(record);
     await this._save();

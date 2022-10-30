@@ -14,8 +14,8 @@ import { CopyText } from '@dxos/react-components';
 import { BooleanIcon } from './BooleanIcon';
 
 export interface SwarmListProps {
-  swarms: SwarmInfo[]
-  onClick?: (id: PublicKey) => void
+  swarms: SwarmInfo[];
+  onClick?: (id: PublicKey) => void;
 }
 
 export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
@@ -43,11 +43,9 @@ export const SwarmTable = ({ swarms, onClick }: SwarmListProps) => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {swarms.map(swarm => (
+      {swarms.map((swarm) => (
         <TableRow key={swarm.id.toHex()}>
-          <TableCell sx={{ maxWidth: 200 }}>
-            {swarm.label && (<CopyText value={swarm.label} />)}
-          </TableCell>
+          <TableCell sx={{ maxWidth: 200 }}>{swarm.label && <CopyText value={swarm.label} />}</TableCell>
           <TableCell sx={{ maxWidth: 200 }}>
             <CopyText value={swarm.topic.toHex()} />
           </TableCell>

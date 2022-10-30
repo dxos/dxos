@@ -8,8 +8,8 @@ import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  records: RegistryRecord[]
-  error?: unknown
+  records: RegistryRecord[];
+  error?: unknown;
 }
 
 /**

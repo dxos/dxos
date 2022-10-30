@@ -21,21 +21,12 @@ export const Primary = () => {
 
   return (
     <div>
-      <input
-        data-id='test-input'
-        ref={inputRef}
-        type='text'
-      />
-      <button
-        data-id='test-button'
-        onClick={handleClick}
-      >
+      <input data-id='test-input' ref={inputRef} type='text' />
+      <button data-id='test-button' onClick={handleClick}>
         Test
       </button>
       <div>
-        <pre data-id='test-value'>
-          {JSON.stringify(state)}
-        </pre>
+        <pre data-id='test-value'>{JSON.stringify(state)}</pre>
       </div>
     </div>
   );

@@ -16,19 +16,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Theme as ThemeBase,
-  Renderer,
-  PageEvent,
-  RendererEvent,
-  Reflection,
-  ProjectReflection
-} from 'typedoc';
+import { Theme as ThemeBase, Renderer, PageEvent, RendererEvent, Reflection, ProjectReflection } from 'typedoc';
 
 export class Theme extends ThemeBase {
   private renderer: Renderer;
   private outputDirectory: string;
-  constructor (renderer: Renderer) {
+  constructor(renderer: Renderer) {
     super(renderer);
     this.renderer = renderer;
     this.outputDirectory = '';
@@ -37,14 +30,12 @@ export class Theme extends ThemeBase {
     });
   }
 
-  render (page: PageEvent<Reflection>): string {
+  render(page: PageEvent<Reflection>): string {
     const content = (page.template(page) as string) ?? '';
-    return (
-      content.replace(/[\r\n]{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') + '\n'
-    );
+    return content.replace(/[\r\n]{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') + '\n';
   }
 
-  onBeginRenderer (event: RendererEvent) {
+  onBeginRenderer(event: RendererEvent) {
     this.outputDirectory = event.outputDirectory;
   }
 
@@ -53,7 +44,7 @@ export class Theme extends ThemeBase {
    * @param project the project reflection
    * @returns a list of UrlMappings (or a promise of this)
    */
-  getUrls (project: ProjectReflection) {
+  getUrls(project: ProjectReflection) {
     return [];
     // const files = await executeDirectoryTemplate<Input>({
     //   templateDirectory: path.resolve(__dirname, "template/api"),

@@ -6,7 +6,7 @@ import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
-export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> }
+export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> };
 
 /**
  * Groups multiple services together so they can be served over one RPC peer.
@@ -17,16 +17,17 @@ export const createServiceBundle = <S>(services: ServiceBundle<S>): ServiceBundl
  * A type-safe RPC peer.
  */
 export class ProtoRpcPeer<S> {
-  constructor (
+  // prettier-ignore
+  constructor(
     public readonly rpc: S,
     private readonly peer: RpcPeer
   ) {}
 
-  async open () {
+  async open() {
     await this.peer.open();
   }
 
-  close () {
+  close() {
     this.peer.close();
   }
 }
@@ -35,29 +36,29 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Services that are expected to be serviced by the counter-party.
    */
-  requested: ServiceBundle<Client>
+  requested: ServiceBundle<Client>;
 
   /**
    * Services exposed to the counter-party.
    */
-  exposed: ServiceBundle<Server>
+  exposed: ServiceBundle<Server>;
 
   /**
    * Handlers for the exposed services
    * */
-  handlers: Server
+  handlers: Server;
 
   /**
    * Encoding options passed to the underlying proto codec.
    */
-  encodingOptions?: EncodingOptions
+  encodingOptions?: EncodingOptions;
 }
 
 /**
  * Create type-safe RPC peer from a service bundle.
  * Can both handle and issue requests.
  */
-export const createProtoRpcPeer = <Client = {}, Server = {}> ({
+export const createProtoRpcPeer = <Client = {}, Server = {}>({
   requested,
   exposed,
   handlers,
@@ -96,10 +97,13 @@ export const createProtoRpcPeer = <Client = {}, Server = {}> ({
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
 
-    requestedRpcs[serviceName] = requested[serviceName].createClient({
-      call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-      callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
-    }, encodingOptions);
+    requestedRpcs[serviceName] = requested[serviceName].createClient(
+      {
+        call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
+        callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
+      },
+      encodingOptions
+    );
   }
 
   return new ProtoRpcPeer(requestedRpcs, peer);
@@ -109,7 +113,10 @@ export const createProtoRpcPeer = <Client = {}, Server = {}> ({
  * Create a type-safe RPC client.
  * @deprecated Use createProtoRpcPeer instead.
  */
-export const createRpcClient = <S>(serviceDef: ServiceDescriptor<S>, options: Omit<RpcPeerOptions, 'messageHandler'>): ProtoRpcPeer<S> => {
+export const createRpcClient = <S>(
+  serviceDef: ServiceDescriptor<S>,
+  options: Omit<RpcPeerOptions, 'messageHandler'>
+): ProtoRpcPeer<S> => {
   const peer = new RpcPeer({
     ...options,
     messageHandler: () => {
@@ -129,8 +136,8 @@ export const createRpcClient = <S>(serviceDef: ServiceDescriptor<S>, options: Om
  * @deprecated
  */
 export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
-  service: ServiceDescriptor<S>
-  handlers: S
+  service: ServiceDescriptor<S>;
+  handlers: S;
 }
 
 /**
@@ -169,8 +176,8 @@ export const createBundledRpcClient = <S>(
  * @deprecated
  */
 export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
-  services: ServiceBundle<S>
-  handlers: S
+  services: ServiceBundle<S>;
+  handlers: S;
 }
 
 /**

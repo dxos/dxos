@@ -23,20 +23,20 @@ const theme = {
 
 const editorStyles = css`
   width: 100%;
-  
+
   > div {
     outline: none;
     margin: 16px 40px;
   }
-  
+
   .ltr {
     text-align: left;
   }
-  
+
   .rtl {
     text-align: right;
   }
-  
+
   .editor-paragraph {
     margin: 0 0 15px 0;
     position: relative;
@@ -45,10 +45,8 @@ const editorStyles = css`
 
 // TODO(burdon): Too narrow/specialized.
 const FocusPlugin: FC<{
-  eventHandler: Event
-}> = ({
-  eventHandler
-}) => {
+  eventHandler: Event;
+}> = ({ eventHandler }) => {
   const [editor] = useLexicalComposerContext();
   useEffect(() => {
     editor.focus();
@@ -67,14 +65,10 @@ const FocusPlugin: FC<{
  *
  */
 export const Editor: FC<{
-  id: string
-  item: Item<TextModel>
-  children?: JSX.Element | string
-}> = ({
-  id,
-  item,
-  children = ''
-}) => {
+  id: string;
+  item: Item<TextModel>;
+  children?: JSX.Element | string;
+}> = ({ id, item, children = '' }) => {
   const eventHandler = useMemo(() => new Event(), []);
 
   const handleClick = () => {
@@ -83,10 +77,7 @@ export const Editor: FC<{
 
   // https://github.com/facebook/lexical
   return (
-    <div
-      className={editorStyles}
-      onClick={handleClick}
-    >
+    <div className={editorStyles} onClick={handleClick}>
       <LexicalComposer
         initialConfig={{
           namespace: 'dxos',
@@ -96,18 +87,9 @@ export const Editor: FC<{
           }
         }}
       >
-        <LexicalPlainTextPlugin
-          placeholder=''
-          contentEditable={(
-            <LexicalContentEditable
-              spellCheck={false}
-            />
-          )}
-        />
+        <LexicalPlainTextPlugin placeholder='' contentEditable={<LexicalContentEditable spellCheck={false} />} />
 
-        <FocusPlugin
-          eventHandler={eventHandler}
-        />
+        <FocusPlugin eventHandler={eventHandler} />
 
         {children}
       </LexicalComposer>

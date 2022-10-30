@@ -15,7 +15,7 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
-  const str = (text && length) ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
+  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
 };
 
@@ -23,12 +23,12 @@ export const truncate = (text?: string, length = 0, right = false) => {
 // TODO(burdon): Optional package name.
 // TODO(burdon): Show exceptions on one line.
 export type FormatParts = {
-  path?: string
-  line?: number
-  level: LogLevel
-  message: string
-  context?: string
-}
+  path?: string;
+  line?: number;
+  level: LogLevel;
+  message: string;
+  context?: string;
+};
 
 export type Format = (parts: FormatParts, options: ConfigOptions) => (string | undefined)[];
 
@@ -44,11 +44,11 @@ export const DEFAULT_FORMATTER: Format = ({ path, line, level, message, context 
   ];
 };
 
-export const SHORT_FORMATTER: Format = ({ path, level, message }) => ([
+export const SHORT_FORMATTER: Format = ({ path, level, message }) => [
   chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
   chalk[LEVEL_COLORS[level]](shortLevelName[level]),
   message
-]);
+];
 
 const formatter = DEFAULT_FORMATTER;
 

@@ -2,120 +2,73 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-
-import { Box, Button, FormControlLabel, Switch, Typography } from '@mui/material';
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Client, Party } from '@dxos/client';
-import { useClient, useProfile } from '@dxos/react-client';
-import { FullScreen, QRCode } from '@dxos/react-components';
-import { JoinHaloDialog } from '@dxos/react-toolkit';
+import { useProfile } from '@dxos/react-client';
+import { AuthChoices, Button, Heading, Main, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
-import { ExistingIdentityDialog } from './ExistingIdentityDialog';
-import { NewIdentityDialog } from './NewIdentityDialog';
-
 export interface RegistrationPageProps {
-  onRegister?: (client: Client) => Promise<Party>
+  onRegister?: (client: Client) => Promise<Party>;
 }
 
 /**
  * Allows user to create an identity, join an existing identity or unlock their current identity.
  */
 export const LockPage = () => {
-  const client = useClient();
+  const { t } = useTranslation('halo');
   const profile = useProfile();
 
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') ?? '/spaces';
-
-  const [newIdentityOpen, setNewIdentityOpen] = useState(false);
-  const [existingIdentityOpen, setExistingIdentityOpen] = useState(false);
-  const [deviceInviteOpen, setDeviceInviteOpen] = useState(false);
 
   const handleUnlock = useCallback(() => {
     navigate('/spaces');
   }, []);
 
   return (
-    <FullScreen>
-      <Box sx={{
-        display: 'flex',
-        flexGrow: 1,
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-evenly',
-        maxHeight: '700px'
-      }}>
-        {/* TODO(wittjosiah): Update with device invite. */}
-        <QRCode value='https://halo.dxos.org' />
+    <Main className='max-w-lg mx-auto'>
+      <div role='none' className='text-center space-y-2'>
+        <QrCode value='https://halo.dxos.org' label={t('copy qrcode label')} />
+        <Heading>{t('halo label')}</Heading>
+      </div>
 
-        {!profile && (
-          <>
-            <Typography>HALO</Typography>
-            <Typography>There are no identities on this device yet</Typography>
-            <Button onClick={() => setNewIdentityOpen(true)}>new identity</Button>
-            <Button onClick={() => setExistingIdentityOpen(true)}>existing identity</Button>
-          </>
-        )}
+      {profile ? (
+        <>
+          <p className='text-center'>
+            {t('using halo as message', {
+              displayName: profile.username ?? humanize(profile.publicKey)
+            })}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className='text-center'>{t('identities empty message')}</p>
+          <AuthChoices
+            {...{
+              onJoin: () => navigate('/identity/join'),
+              onCreate: () => navigate('/identity/create'),
+              onRecover: () => navigate('/identity/recover')
+            }}
+          />
+        </>
+      )}
 
+      <div role='none' className='text-center px-2 space-y-2'>
         {profile && (
-          <>
-            <Typography>
-              Using HALO as
-              {' '}
-              <Typography
-                component='span'
-                sx={{ fontWeight: 700 }}
-              >
-                {profile.username ?? humanize(profile.publicKey)}
-              </Typography>
-            </Typography>
-            <FormControlLabel
-              control={<Switch />}
-              label='🔒️'
-              onChange={handleUnlock}
-            />
-          </>
+          <Button className='w-full' variant='primary' onClick={handleUnlock}>
+            {t('unlock label')}
+          </Button>
         )}
-
-        <Button onClick={() => window.open('https://github.com/dxos/dxos', '_blank')}>help</Button>
-      </Box>
-
-      <NewIdentityDialog
-        open={newIdentityOpen}
-        onClose={() => setNewIdentityOpen(false)}
-        onComplete={async (_: string, username: string) => {
-          // Create profile.
-          // TODO(burdon): Error handling.
-          await client.halo.createProfile({ username });
-          navigate(redirect);
-        }}
-      />
-
-      <ExistingIdentityDialog
-        open={existingIdentityOpen}
-        onClose={() => setExistingIdentityOpen(false)}
-        onRecover={async seedphrase => {
-          await client.halo.createProfile({ seedphrase });
-          navigate(redirect);
-        }}
-        onInvite={() => {
-          setExistingIdentityOpen(false);
-          setDeviceInviteOpen(true);
-        }}
-      />
-
-      <JoinHaloDialog
-        open={deviceInviteOpen}
-        closeOnSuccess={false}
-        onClose={() => setDeviceInviteOpen(false)}
-        onJoin={() => {
-          navigate(redirect);
-        }}
-      />
-    </FullScreen>
+        <Button
+          variant='outline'
+          className='w-full'
+          onClick={() => window.open('https://github.com/dxos/dxos', '_blank')}
+        >
+          {t('generic help label', { ns: 'uikit' })}
+        </Button>
+      </div>
+    </Main>
   );
 };

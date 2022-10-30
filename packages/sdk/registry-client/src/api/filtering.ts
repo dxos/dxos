@@ -13,12 +13,12 @@ export interface Filter {
   /**
    * Filter by record type. Will only return data records.
    */
-  type?: CID
+  type?: CID;
 
   /**
    * Filter by specific string appearing in record's text fields.
    */
-  text?: string
+  text?: string;
 }
 
 /**
@@ -68,12 +68,8 @@ const matchesRecordType = (record: RegistryRecord, type: CID) => {
 };
 
 const matchesText = (record: RegistryRecord, text: string) => {
-  const places = [
-    record.displayName ?? '',
-    record.description ?? '',
-    ...(record.tags ?? [])
-  ];
-  return places.some(place => place.toLowerCase().includes(text.toLowerCase()));
+  const places = [record.displayName ?? '', record.description ?? '', ...(record.tags ?? [])];
+  return places.some((place) => place.toLowerCase().includes(text.toLowerCase()));
 };
 
 const matchesDxn = (dxn: DXN, text: string): boolean => dxn.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;

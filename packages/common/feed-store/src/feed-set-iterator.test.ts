@@ -19,7 +19,6 @@ const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
 describe('FeedSetIterator', function () {
-
   // TODO(burdon): Test when feed is added on-the-fly.
 
   it('opens and closes multiple times', async function () {
@@ -58,12 +57,14 @@ describe('FeedSetIterator', function () {
 
     const numFeeds = 3;
     const numBlocks = 10;
-    const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
-      const key = await builder.keyring.createKey();
-      const feed = await feedStore.openFeed(key, { writable: true });
-      await iterator.addFeed(feed);
-      return feed;
-    }));
+    const feeds = await Promise.all(
+      Array.from(Array(numFeeds)).map(async () => {
+        const key = await builder.keyring.createKey();
+        const feed = await feedStore.openFeed(key, { writable: true });
+        await iterator.addFeed(feed);
+        return feed;
+      })
+    );
 
     const [done, received] = latch({ count: numBlocks });
 
@@ -79,7 +80,9 @@ describe('FeedSetIterator', function () {
       // Write block.
       setTimeout(async () => {
         const feed = faker.random.arrayElement(feeds);
-        await builder.generator.writeBlocks(feed.createFeedWriter(), { count: numBlocks });
+        await builder.generator.writeBlocks(feed.createFeedWriter(), {
+          count: numBlocks
+        });
       }, 100);
     }
 
@@ -103,18 +106,22 @@ describe('FeedSetIterator', function () {
     setTimeout(async () => {
       // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
-      const writers = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
-        const key = await builder.keyring.createKey();
-        const feed = await feedStore.openFeed(key, { writable: true });
-        await iterator.addFeed(feed);
-        return feed.createFeedWriter();
-      }));
+      const writers = await Promise.all(
+        Array.from(Array(numFeeds)).map(async () => {
+          const key = await builder.keyring.createKey();
+          const feed = await feedStore.openFeed(key, { writable: true });
+          await iterator.addFeed(feed);
+          return feed.createFeedWriter();
+        })
+      );
 
       expect(iterator.size).to.eq(numFeeds);
 
       for (const _ of Array.from(Array(numBlocks))) {
         const writer = faker.random.arrayElement(writers);
-        const receipts = await builder.generator.writeBlocks(writer, { count: 1 });
+        const receipts = await builder.generator.writeBlocks(writer, {
+          count: 1
+        });
         log('wrote', receipts);
       }
     }, faker.datatype.number({ min: 0, max: 100 }));
@@ -143,7 +150,7 @@ describe('FeedSetIterator', function () {
 
     // Written blocks.
     const written = feedStore.feeds.reduce((count, feed) => count + feed.properties.length, 0);
-    const feeds = feedStore.feeds.map(feed => ({
+    const feeds = feedStore.feeds.map((feed) => ({
       feedKey: feed.key,
       length: feed.properties.length
     }));

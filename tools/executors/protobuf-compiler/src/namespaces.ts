@@ -18,7 +18,8 @@ export const getFullNestedTypeName = (type: pb.ReflectionObject): DeclarationFul
   }
 };
 
-const isType = (obj: pb.ReflectionObject): obj is (pb.Type | pb.Enum | pb.Service) => obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
+const isType = (obj: pb.ReflectionObject): obj is pb.Type | pb.Enum | pb.Service =>
+  obj instanceof pb.Type || obj instanceof pb.Enum || obj instanceof pb.Service;
 
 export const getNamespaceName = (type: pb.ReflectionObject): DeclarationFullName => {
   if (type.parent) {
@@ -66,7 +67,8 @@ export const parseFullyQualifiedName = (name: string): DeclarationFullName => {
   return norm.split('.');
 };
 
-export const namesEqual = (a: DeclarationFullName, b: DeclarationFullName) => a.length === b.length && a.every((_, i) => a[i] === b[i]);
+export const namesEqual = (a: DeclarationFullName, b: DeclarationFullName) =>
+  a.length === b.length && a.every((_, i) => a[i] === b[i]);
 
 export const getSafeNamespaceIdentifier = (name: DeclarationFullName) => name.join('_');
 

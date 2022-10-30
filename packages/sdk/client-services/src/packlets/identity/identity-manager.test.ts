@@ -22,8 +22,8 @@ describe('identity-manager', function () {
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
-    signalContext?: MemorySignalManagerContext
-    storage?: Storage
+    signalContext?: MemorySignalManagerContext;
+    storage?: Storage;
   } = {}) => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 

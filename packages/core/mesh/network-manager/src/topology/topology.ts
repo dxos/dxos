@@ -8,34 +8,34 @@ export interface SwarmController {
   /**
    * Get current state.
    */
-  getState(): SwarmState
+  getState(): SwarmState;
 
   /**
    * Initiate a connection.
    */
-  connect(peer: PublicKey): void
+  connect(peer: PublicKey): void;
 
   /**
    * Disconnect from a peer.
    */
-  disconnect(peer: PublicKey): void
+  disconnect(peer: PublicKey): void;
 }
 
 export interface SwarmState {
   /**
    * This node's peer Id.
    */
-  ownPeerId: PublicKey
+  ownPeerId: PublicKey;
 
   /**
    * Peers with established connections.
    */
-  connected: PublicKey[]
+  connected: PublicKey[];
 
   /**
    * Candidates for connection. Does not intersect with a set of already connected peers.
    */
-  candidates: PublicKey[]
+  candidates: PublicKey[];
 }
 
 export interface Topology {
@@ -46,24 +46,24 @@ export interface Topology {
    *
    * @param controller
    */
-  init(controller: SwarmController): void
+  init(controller: SwarmController): void;
 
   /**
    * Called when swarm state is updated.
    */
-  update(): void
+  update(): void;
 
   /**
    * Called when remote peer offers a connection.
    *
    * @returns true - to accept the connection, false - to reject.
    */
-  onOffer(peer: PublicKey): Promise<boolean>
+  onOffer(peer: PublicKey): Promise<boolean>;
 
   /**
    * Called when swarm is destroyed or topology is changed.
    *
    * Any error thrown here will be a critical error for the swarm.
    */
-  destroy(): Promise<void>
+  destroy(): Promise<void>;
 }

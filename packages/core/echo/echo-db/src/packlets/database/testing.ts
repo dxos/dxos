@@ -17,14 +17,16 @@ export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
   const backend = new FeedDatabaseBackend(feed, undefined, { snapshots: true });
 
-  feed.written.on(([data, meta]) => backend.echoProcessor({
-    data,
-    meta: {
-      ...meta,
-      memberKey: PublicKey.random(),
-      timeframe: new Timeframe([[meta.feedKey, meta.seq]])
-    }
-  }));
+  feed.written.on(([data, meta]) =>
+    backend.echoProcessor({
+      data,
+      meta: {
+        ...meta,
+        memberKey: PublicKey.random(),
+        timeframe: new Timeframe([[meta.feedKey, meta.seq]])
+      }
+    })
+  );
 
   const database = new Database(modelFactory, backend, PublicKey.random());
 

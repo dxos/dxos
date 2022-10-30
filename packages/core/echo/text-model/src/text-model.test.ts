@@ -7,13 +7,13 @@ import faker from 'faker';
 
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { ModelFactory, TestRig } from '@dxos/model-factory';
+import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
 
 describe('TextModel', function () {
   it('insert', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 
@@ -30,7 +30,7 @@ describe('TextModel', function () {
   });
 
   it('insert a new text node', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
     const text1 = faker.lorem.lines(1);
@@ -51,19 +51,29 @@ describe('TextModel', function () {
   it('snapshot', async function () {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel<TextModel>(
-      TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
+      TextModel.meta.type,
+      'test',
+      {},
+      PublicKey.random(),
+      new MockFeedWriter()
+    );
 
     const text = faker.lorem.lines(1);
     model1.model.insert(text, 0);
 
     const snapshot = model1.createSnapshot();
     const model2 = modelFactory.createModel<TextModel>(
-      TextModel.meta.type, 'test', snapshot, PublicKey.random(), new MockFeedWriter());
+      TextModel.meta.type,
+      'test',
+      snapshot,
+      PublicKey.random(),
+      new MockFeedWriter()
+    );
     expect(model2.model.textContent).toBe(text);
   });
 
   it('conflict', async function () {
-    const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
+    const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
 

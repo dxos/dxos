@@ -67,12 +67,17 @@ describe('StateManager', function () {
   it('write loop', async function () {
     const feedWriter = new MockFeedWriter<Uint8Array>();
     const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
-    feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-      feedKey: meta.feedKey,
-      memberKey: PublicKey.random(),
-      seq: meta.seq,
-      timeframe: new Timeframe()
-    }, message));
+    feedWriter.written.on(([message, meta]) =>
+      stateManager.processMessage(
+        {
+          feedKey: meta.feedKey,
+          memberKey: PublicKey.random(),
+          seq: meta.seq,
+          timeframe: new Timeframe()
+        },
+        message
+      )
+    );
 
     await stateManager.model.sendMessage('message1');
 
@@ -80,7 +85,14 @@ describe('StateManager', function () {
   });
 
   it('late initialization', function () {
-    const stateManager = new StateManager<TestListModel>(TestListModel.meta.type, undefined, createId(), {}, feedA, null);
+    const stateManager = new StateManager<TestListModel>(
+      TestListModel.meta.type,
+      undefined,
+      createId(),
+      {},
+      feedA,
+      null
+    );
     expect(stateManager.initialized).toBe(false);
     expect(stateManager.modelType).toEqual(TestListModel.meta.type);
 
@@ -107,12 +119,17 @@ describe('StateManager', function () {
     it('single mutation gets applied synchronously', async function () {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
-      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey,
-        memberKey: PublicKey.random(),
-        seq: meta.seq,
-        timeframe: new Timeframe()
-      }, message));
+      feedWriter.written.on(([message, meta]) =>
+        stateManager.processMessage(
+          {
+            feedKey: meta.feedKey,
+            memberKey: PublicKey.random(),
+            seq: meta.seq,
+            timeframe: new Timeframe()
+          },
+          message
+        )
+      );
 
       const promise = stateManager.model.sendMessage('message1');
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);
@@ -124,12 +141,17 @@ describe('StateManager', function () {
     it('two optimistic mutations queued together', async function () {
       const feedWriter = new MockFeedWriter<Uint8Array>();
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
-      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey,
-        memberKey: PublicKey.random(),
-        seq: meta.seq,
-        timeframe: new Timeframe()
-      }, message));
+      feedWriter.written.on(([message, meta]) =>
+        stateManager.processMessage(
+          {
+            feedKey: meta.feedKey,
+            memberKey: PublicKey.random(),
+            seq: meta.seq,
+            timeframe: new Timeframe()
+          },
+          message
+        )
+      );
 
       const promise1 = stateManager.model.sendMessage('message1');
       const promise2 = stateManager.model.sendMessage('message2');
@@ -145,12 +167,17 @@ describe('StateManager', function () {
     it('with reordering', async function () {
       const feedWriter = new MockFeedWriter<Uint8Array>(feedB);
       const stateManager = new StateManager(TestListModel.meta.type, TestListModel, createId(), {}, feedA, feedWriter);
-      feedWriter.written.on(([message, meta]) => stateManager.processMessage({
-        feedKey: meta.feedKey,
-        memberKey: PublicKey.random(),
-        seq: meta.seq,
-        timeframe: new Timeframe()
-      }, message));
+      feedWriter.written.on(([message, meta]) =>
+        stateManager.processMessage(
+          {
+            feedKey: meta.feedKey,
+            memberKey: PublicKey.random(),
+            seq: meta.seq,
+            timeframe: new Timeframe()
+          },
+          message
+        )
+      );
 
       const promise = stateManager.model.sendMessage('message1');
       expect(stateManager.model.messages).toEqual([{ data: 'message1' }]);

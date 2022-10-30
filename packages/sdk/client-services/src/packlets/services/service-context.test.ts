@@ -18,19 +18,15 @@ describe('ServiceContext', function () {
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
-    signalContext?: MemorySignalManagerContext
-    storage?: Storage
+    signalContext?: MemorySignalManagerContext;
+    storage?: Storage;
   } = {}) => {
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory
     });
 
-    return new ServiceContext(
-      storage,
-      networkManager,
-      new ModelFactory().registerModel(ObjectModel)
-    );
+    return new ServiceContext(storage, networkManager, new ModelFactory().registerModel(ObjectModel));
   };
 
   describe('Identity management', function () {
@@ -89,7 +85,9 @@ describe('ServiceContext', function () {
       const space = await serviceContext.spaceManager!.createSpace();
 
       {
-        const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
+        const item = await space.database!.createItem<ObjectModel>({
+          type: 'test'
+        });
         void item.model.set('name', 'test');
       }
 
@@ -123,15 +121,23 @@ describe('ServiceContext', function () {
 
       {
         // Check item replicated from 1 => 2.
-        const item1 = await space1.database!.createItem({ type: 'dxos.example.1' });
-        const item2 = await space2.database!.waitForItem({ type: 'dxos.example.1' });
+        const item1 = await space1.database!.createItem({
+          type: 'dxos.example.1'
+        });
+        const item2 = await space2.database!.waitForItem({
+          type: 'dxos.example.1'
+        });
         expect(item1.id).toEqual(item2.id);
       }
 
       {
         // Check item replicated from 2 => 1.
-        const item1 = await space2.database!.createItem({ type: 'dxos.example.2' });
-        const item2 = await space1.database!.waitForItem({ type: 'dxos.example.2' });
+        const item1 = await space2.database!.createItem({
+          type: 'dxos.example.2'
+        });
+        const item2 = await space1.database!.waitForItem({
+          type: 'dxos.example.2'
+        });
         expect(item1.id).toEqual(item2.id);
       }
 

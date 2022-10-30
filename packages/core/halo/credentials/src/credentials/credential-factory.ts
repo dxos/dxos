@@ -13,23 +13,23 @@ import { getSignaturePayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {
-  subject: PublicKey
-  assertion: TypedMessage
-  nonce?: Uint8Array
-}
+  subject: PublicKey;
+  assertion: TypedMessage;
+  nonce?: Uint8Array;
+};
 
 export type CreateCredentialParams = {
-  signer: Signer
-  issuer: PublicKey
-  signingKey?: PublicKey
+  signer: Signer;
+  issuer: PublicKey;
+  signingKey?: PublicKey;
 
   // Provided only if signer is different from issuer.
-  chain?: Chain
+  chain?: Chain;
 
-  subject: PublicKey
-  assertion: TypedMessage
-  nonce?: Uint8Array
-}
+  subject: PublicKey;
+  assertion: TypedMessage;
+  nonce?: Uint8Array;
+};
 
 /**
  * Construct a signed credential message.
@@ -86,25 +86,23 @@ export const createCredentialMessage = (credential: Credential) => {
 };
 
 export interface CredentialSigner {
-  getIssuer(): PublicKey
-  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>
+  getIssuer(): PublicKey;
+  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>;
 }
 
 /**
  * Issue credentials directly signed by the issuer.
  */
-export const createCredentialSignerWithKey = (
-  signer: Signer,
-  issuer: PublicKey
-): CredentialSigner => ({
+export const createCredentialSignerWithKey = (signer: Signer, issuer: PublicKey): CredentialSigner => ({
   getIssuer: () => issuer,
-  createCredential: ({ subject, assertion, nonce }) => createCredential({
-    signer,
-    issuer,
-    subject,
-    assertion,
-    nonce
-  })
+  createCredential: ({ subject, assertion, nonce }) =>
+    createCredential({
+      signer,
+      issuer,
+      subject,
+      assertion,
+      nonce
+    })
 });
 
 /**
@@ -116,13 +114,14 @@ export const createCredentialSignerWithChain = (
   signingKey: PublicKey
 ): CredentialSigner => ({
   getIssuer: () => chain.credential.issuer,
-  createCredential: ({ subject, assertion, nonce }) => createCredential({
-    signer,
-    issuer: chain.credential.issuer,
-    signingKey,
-    chain,
-    subject,
-    assertion,
-    nonce
-  })
+  createCredential: ({ subject, assertion, nonce }) =>
+    createCredential({
+      signer,
+      issuer: chain.credential.issuer,
+      signingKey,
+      chain,
+      subject,
+      assertion,
+      nonce
+    })
 });

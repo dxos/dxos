@@ -37,7 +37,7 @@ const visitor = (value: any, depth = 1, path = '', ids: string[] = [], i = 0) =>
 
 // https://mui.com/customization/default-theme
 interface DefaultValueProps {
-  size?: Size
+  size?: Size;
 }
 const DefaultValue = styled(Typography)<DefaultValueProps>(({ size }) => ({
   overflowX: 'hidden',
@@ -58,8 +58,8 @@ const ConstValue = styled(DefaultValue)(({ theme }) => ({
 }));
 
 interface BooleanValueProps {
-  theme?: any
-  value: boolean
+  theme?: any;
+  value: boolean;
 }
 const BooleanValue = styled(DefaultValue)<BooleanValueProps>(({ theme, value }) => ({
   color: value ? theme.palette.success.dark : theme.palette.error.dark,
@@ -84,11 +84,11 @@ const TreeItem = ({
   value,
   children
 }: {
-  nodeId: string
-  size?: Size
-  label: string
-  value?: ReactElement
-  children?: ReactNode
+  nodeId: string;
+  size?: Size;
+  label: string;
+  value?: ReactElement;
+  children?: ReactNode;
 }) => {
   const theme = useTheme();
 
@@ -100,52 +100,48 @@ const TreeItem = ({
         overflowX: 'hidden'
       }}
       nodeId={nodeId}
-      label={(
-        <Box sx={{
-          display: 'flex',
-          overflowX: 'hidden'
-        }}>
-          <Typography sx={{
-            color: theme.palette.text.secondary,
-            fontWeight: 200,
-            fontSize: size === 'small' ? 14 : undefined
-          }}>
+      label={
+        <Box
+          sx={{
+            display: 'flex',
+            overflowX: 'hidden'
+          }}
+        >
+          <Typography
+            sx={{
+              color: theme.palette.text.secondary,
+              fontWeight: 200,
+              fontSize: size === 'small' ? 14 : undefined
+            }}
+          >
             {label}
           </Typography>
-          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>
-            {value !== undefined ? ':' : ''}
-          </span>
+          <span style={{ fontSize: size === 'small' ? 14 : undefined }}>{value !== undefined ? ':' : ''}</span>
           {value}
         </Box>
-      )}
+      }
     >
       {children}
     </MuiTreeItem>
   );
 };
 
-type Size = 'small' | 'medium' | undefined
+type Size = 'small' | 'medium' | undefined;
 
 // TODO(burdon): Extend MuiJsonTreeView
 export interface JsonTreeViewProps {
-  sx?: any
-  size?: Size
-  depth?: number
-  data?: any
-  onSelect?: () => void
+  sx?: any;
+  size?: Size;
+  depth?: number;
+  data?: any;
+  onSelect?: () => void;
 }
 
 /**
  * Visualizes an object as a tree view of all properties.
  * Works with JSON and other objects with nested values.
  */
-export const JsonTreeView = ({
-  sx,
-  size,
-  depth = Infinity,
-  data = {},
-  onSelect
-}: JsonTreeViewProps) => {
+export const JsonTreeView = ({ sx, size, depth = Infinity, data = {}, onSelect }: JsonTreeViewProps) => {
   if (!data) {
     data = {};
   }
@@ -169,28 +165,26 @@ export const JsonTreeView = ({
     }
 
     if (isPlainObject(value)) {
-      const items = Object.entries(value).map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (level === 0) ? items : (
-        <TreeItem
-          key={path}
-          nodeId={path || '.'}
-          size={size}
-          label={key}
-        >
+      const items = Object.entries(value)
+        .map(([key, value]) => renderNode(value, key, level + 1, `${path}.${key}`))
+        .filter(Boolean);
+      return level === 0 ? (
+        items
+      ) : (
+        <TreeItem key={path} nodeId={path || '.'} size={size} label={key}>
           {items}
         </TreeItem>
       );
     }
 
     if (Array.isArray(value)) {
-      const items = value.map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`)).filter(Boolean);
-      return (level === 0) ? items : (
-        <TreeItem
-          key={path}
-          nodeId={path}
-          size={size}
-          label={key}
-        >
+      const items = value
+        .map((value, key) => renderNode(value, `[${key}]`, level + 1, `${path}.${key}`))
+        .filter(Boolean);
+      return level === 0 ? (
+        items
+      ) : (
+        <TreeItem key={path} nodeId={path} size={size} label={key}>
           {items}
         </TreeItem>
       );
@@ -205,7 +199,11 @@ export const JsonTreeView = ({
     } else if (value === null) {
       itemValue = <ConstValue size={size}>null</ConstValue>;
     } else if (typeof value === 'boolean') {
-      itemValue = <BooleanValue size={size} value={value}>{String(value)}</BooleanValue>;
+      itemValue = (
+        <BooleanValue size={size} value={value}>
+          {String(value)}
+        </BooleanValue>
+      );
     } else if (typeof value === 'number') {
       itemValue = <NumberValue size={size}>{String(value)}</NumberValue>;
     } else if (typeof value === 'string') {
@@ -214,15 +212,7 @@ export const JsonTreeView = ({
       itemValue = <DefaultValue size={size}>{String(value)}</DefaultValue>;
     }
 
-    return (
-      <TreeItem
-        key={path}
-        nodeId={path}
-        size={size}
-        label={key}
-        value={itemValue}
-      />
-    );
+    return <TreeItem key={path} nodeId={path} size={size} label={key} value={itemValue} />;
   };
 
   const handleToggle = (_event: ChangeEvent<unknown>, nodeIds: string[]) => {

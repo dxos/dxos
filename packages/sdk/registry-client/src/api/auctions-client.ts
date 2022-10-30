@@ -13,21 +13,19 @@ import { DomainKey } from './domain-key';
  * Main API for DXNS auctions management.
  */
 export class AuctionsClient {
-  constructor (
-    private readonly _backend: AuctionsClientBackend
-  ) {}
+  constructor(private readonly _backend: AuctionsClientBackend) {}
 
   /**
    * Get an auction by name.
    */
-  async getAuction (name: string): Promise<Auction | undefined> {
+  async getAuction(name: string): Promise<Auction | undefined> {
     return this._backend.getAuction(name);
   }
 
   /**
    * Returns a collection of all auctions (ongoing and closed) in DXOS.
    */
-  async listAuctions (): Promise<Auction[]> {
+  async listAuctions(): Promise<Auction[]> {
     return this._backend.listAuctions();
   }
 
@@ -36,7 +34,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param startAmount The initial amount offered.
    */
-  async createAuction (name: string, startAmount: number): Promise<void> {
+  async createAuction(name: string, startAmount: number): Promise<void> {
     return this._backend.createAuction(name, startAmount);
   }
 
@@ -45,7 +43,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param amount The offered amount.
    */
-  async bidAuction (name: string, amount: number): Promise<void> {
+  async bidAuction(name: string, amount: number): Promise<void> {
     return this._backend.bidAuction(name, amount);
   }
 
@@ -54,7 +52,7 @@ export class AuctionsClient {
    * by invoking separate operation.
    * @param name An object of the auction.
    */
-  async closeAuction (name: string): Promise<void> {
+  async closeAuction(name: string): Promise<void> {
     await this._backend.closeAuction(name);
   }
 
@@ -64,7 +62,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param sudoSignFn A transaction signing function using a sudo/admin account with rights to to execute this high-privilege operation.
    */
-  async forceCloseAuction (name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void> {
+  async forceCloseAuction(name: string, sudoSignFn: SignTxFunction | AddressOrPair): Promise<void> {
     await this._backend.forceCloseAuction(name, sudoSignFn);
   }
 
@@ -73,7 +71,7 @@ export class AuctionsClient {
    * @param name An object of the auction.
    * @param account The DXNS Account that will claim the ownership of the domain.
    */
-  async claimAuction (domainName: string, account: AccountKey): Promise<DomainKey> {
+  async claimAuction(domainName: string, account: AccountKey): Promise<DomainKey> {
     return this._backend.claimAuction(domainName, account);
   }
 }

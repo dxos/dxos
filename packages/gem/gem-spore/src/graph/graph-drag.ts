@@ -10,11 +10,11 @@ import { D3DragEvent, Point, SVGContext } from '@dxos/gem-core';
 import { GraphLayoutLink, GraphLayoutNode, GraphNode } from './types';
 
 export interface DragOptions<N extends GraphNode> {
-  dragMod?: string
-  linkMod?: string
-  freezeMod?: string
-  onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void
-  onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void
+  dragMod?: string;
+  linkMod?: string;
+  freezeMod?: string;
+  onDrag?: (source?: GraphLayoutNode<N>, target?: GraphLayoutNode<N>, point?: Point) => void;
+  onDrop?: (source: GraphLayoutNode<N>, target?: GraphLayoutNode<N>) => void;
 }
 
 export const defaultOptions: DragOptions<any> = {
@@ -46,7 +46,8 @@ export const createSimulationDrag = <N extends GraphNode>(
     return modKey === undefined || event[modKey];
   };
 
-  return d3.drag()
+  return d3
+    .drag()
     .filter((event: MouseEvent) => !event.ctrlKey)
 
     .on('start', (event: D3DragEvent) => {
@@ -67,10 +68,7 @@ export const createSimulationDrag = <N extends GraphNode>(
           // Freeze node while dragging.
           event.subject.fx = event.x;
           event.subject.fy = event.y;
-          simulation
-            .alphaTarget(0)
-            .alpha(1)
-            .restart();
+          simulation.alphaTarget(0).alpha(1).restart();
           break;
         }
 

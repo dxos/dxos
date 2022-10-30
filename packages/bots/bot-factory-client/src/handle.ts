@@ -7,34 +7,31 @@ import { BotFactoryService, GetLogsResponse } from '@dxos/protocols/proto/dxos/b
 import { ProtoRpcPeer } from '@dxos/rpc';
 
 export class BotHandle {
-  constructor (
-    private readonly _id: string,
-    private _rpc: ProtoRpcPeer<BotFactoryService>
-  ) {}
+  constructor(private readonly _id: string, private _rpc: ProtoRpcPeer<BotFactoryService>) {}
 
-  get id (): string {
+  get id(): string {
     return this._id;
   }
 
-  async start () {
+  async start() {
     await this._rpc.rpc.start({
       id: this._id
     });
   }
 
-  async stop () {
+  async stop() {
     await this._rpc.rpc.stop({
       id: this._id
     });
   }
 
-  async remove () {
+  async remove() {
     await this._rpc.rpc.remove({
       id: this._id
     });
   }
 
-  async sendCommand (command: Uint8Array) {
+  async sendCommand(command: Uint8Array) {
     const { response } = await this._rpc.rpc.sendCommand({
       botId: this._id,
       command
@@ -42,7 +39,7 @@ export class BotHandle {
     return response;
   }
 
-  logsStream (): Stream<GetLogsResponse> {
+  logsStream(): Stream<GetLogsResponse> {
     return this._rpc.rpc.getLogs({
       botId: this._id
     });

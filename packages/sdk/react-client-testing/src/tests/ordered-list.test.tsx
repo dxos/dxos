@@ -17,18 +17,23 @@ const createTestComponents = async () => {
   await client.halo.createProfile();
 
   const party = await client.echo.createParty();
-  const items = await Promise.all(Array.from({ length: 3 }).map(async () => await party.database.createItem({
-    model: ObjectModel,
-    type: 'example:type/list-item',
-    props: {
-      name: faker.name.firstName()
-    }
-  })));
+  const items = await Promise.all(
+    Array.from({ length: 3 }).map(
+      async () =>
+        await party.database.createItem({
+          model: ObjectModel,
+          type: 'example:type/list-item',
+          props: {
+            name: faker.name.firstName()
+          }
+        })
+    )
+  );
 
   return { client, party, items };
 };
 
-const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: OrderedList}) => {
+const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList: OrderedList }) => {
   const subscriptions = useMemo(() => new EventSubscriptions(), []);
   const [order, setOrder] = useState(orderedList.values);
 
@@ -40,26 +45,22 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   }, [orderedList]);
 
   const handleChangeOrder = async () => {
-    const newOrder = [
-      order[1],
-      order[0],
-      ...order.slice(2)
-    ];
+    const newOrder = [order[1], order[0], ...order.slice(2)];
     await orderedList.init(newOrder);
   };
 
   return (
     <ul data-testid='click' onClick={handleChangeOrder}>
-      {order.map(id => (
+      {order.map((id) => (
         <li data-testid='item' key={id}>
-          {items.find(item => item.id === id)!.id}
+          {items.find((item) => item.id === id)!.id}
         </li>
       ))}
     </ul>
   );
 };
 
-describe('OrderedList', function () {
+describe.skip('OrderedList', function () {
   it('reorders', async function () {
     const { party, items } = await createTestComponents();
     const list = await party.database.createItem({
@@ -67,7 +68,7 @@ describe('OrderedList', function () {
       type: 'example:type/list'
     });
     const orderedList = new OrderedList(list.model);
-    await orderedList.init(items.map(item => item.id));
+    await orderedList.init(items.map((item) => item.id));
 
     render(<Test items={items} orderedList={orderedList} />);
 

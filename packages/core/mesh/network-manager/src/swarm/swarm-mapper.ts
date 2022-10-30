@@ -14,15 +14,15 @@ import { Swarm } from './swarm';
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.
  */
-export type PeerState = ConnectionState | 'INDIRECTLY_CONNECTED' | 'ME'
+export type PeerState = ConnectionState | 'INDIRECTLY_CONNECTED' | 'ME';
 
 /**
  * Information about remote peer, directly or indirectly connected.
  */
 export interface PeerInfo {
-  id: PublicKey
-  state: PeerState
-  connections: PublicKey[]
+  id: PublicKey;
+  state: PeerState;
+  connections: PublicKey[];
 }
 
 type Unsubscribe = () => void;
@@ -30,29 +30,38 @@ type Unsubscribe = () => void;
 export class SwarmMapper {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(PublicKey.hash);
+
   private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(PublicKey.hash);
 
-  get peers (): PeerInfo[] {
+  get peers(): PeerInfo[] {
     return Array.from(this._peers.values());
   }
 
   readonly mapUpdated = new Event<PeerInfo[]>();
 
-  constructor (
+  // prettier-ignore
+  constructor(
     private readonly _swarm: Swarm,
     private readonly _presence: PresencePlugin | undefined
   ) {
-    this._subscriptions.add(_swarm.connectionAdded.on(connection => {
-      this._update();
-      this._connectionSubscriptions.set(connection.remoteId, connection.stateChanged.on(() => {
+    this._subscriptions.add(
+      _swarm.connectionAdded.on((connection) => {
         this._update();
-      }));
-    }));
-    this._subscriptions.add(_swarm.connectionRemoved.on(connection => {
-      this._connectionSubscriptions.get(connection.remoteId)?.();
-      this._connectionSubscriptions.delete(connection.remoteId);
-      this._update();
-    }));
+        this._connectionSubscriptions.set(
+          connection.remoteId,
+          connection.stateChanged.on(() => {
+            this._update();
+          })
+        );
+      })
+    );
+    this._subscriptions.add(
+      _swarm.connectionRemoved.on((connection) => {
+        this._connectionSubscriptions.get(connection.remoteId)?.();
+        this._connectionSubscriptions.delete(connection.remoteId);
+        this._update();
+      })
+    );
     if (_presence) {
       const cb = () => {
         this._update();
@@ -62,7 +71,7 @@ export class SwarmMapper {
     this._update();
   }
 
-  private _update () {
+  private _update() {
     this._peers.clear();
     this._peers.set(this._swarm.ownPeerId, {
       id: this._swarm.ownPeerId,
@@ -97,12 +106,15 @@ export class SwarmMapper {
         }
       });
     }
-    log('graph changed', { directConnections: this._swarm.connections.length, totalPeersInSwarm: this._peers.size });
+    log('graph changed', {
+      directConnections: this._swarm.connections.length,
+      totalPeersInSwarm: this._peers.size
+    });
     this.mapUpdated.emit(Array.from(this._peers.values()));
   }
 
-  destroy () {
-    Array.from(this._connectionSubscriptions.values()).forEach(cb => cb());
+  destroy() {
+    Array.from(this._connectionSubscriptions.values()).forEach((cb) => cb());
     this._subscriptions.clear();
   }
 }

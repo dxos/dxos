@@ -12,24 +12,16 @@ import { read } from 'to-vfile';
 import { createParser } from './parser.js';
 
 interface Options {
-  autoNumber?: boolean
-  baseDir?: string
-  dryRun?: boolean
-  files?: string
-  html?: boolean
-  outDir?: string
-  verbose?: boolean
+  autoNumber?: boolean;
+  baseDir?: string;
+  dryRun?: boolean;
+  files?: string;
+  html?: boolean;
+  outDir?: string;
+  verbose?: boolean;
 }
 
-export const processFiles = async ({
-  autoNumber,
-  baseDir,
-  dryRun,
-  files,
-  html,
-  outDir,
-  verbose
-}: Options = {}) => {
+export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, outDir, verbose }: Options = {}) => {
   const parser = createParser({ autoNumber, baseDir, html, verbose });
 
   const globFiles = glob.sync(path.join(baseDir ?? '', files));
@@ -48,7 +40,11 @@ export const processFiles = async ({
     const count = diffLines(o, xx.toString() + '\n').length;
     if (count > 1) {
       const parts = path.parse(filename);
-      const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
+      const f = path.format({
+        ...parts,
+        base: undefined,
+        ext: html ? '.html' : '.md'
+      });
       const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
       console.log(`Updating: ${chalk.green(outFilename)}`);
 

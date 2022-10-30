@@ -27,14 +27,17 @@ export default {
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect
 const styles = css`
-  circle, rect, path {
+  circle,
+  rect,
+  path {
     stroke: seagreen;
     stroke-width: 2;
-    fill: #EEE;
+    fill: #eee;
     opacity: 0.4;
   }
-  
-  g.style-1 { // TODO(burdon): Serialize into item properties (proto).
+
+  g.style-1 {
+    // TODO(burdon): Serialize into item properties (proto).
     rect {
       stroke: red;
       stroke-width: 4;
@@ -46,25 +49,26 @@ const styles = css`
 `;
 
 type DataItem = {
-  type: string
+  type: string;
   data: {
-    bounds?: Bounds
-    pos?: Vertex
-    points?: []
-    r?: Vector
-    text?: string
-    class?: string
-    style?: any // TODO(burdon): Shared style mixin (rect, text, etc).
-    curve?: string // TODO(burdon): Type-specific or sub object?
-    closed?: boolean
-  }
-}
+    bounds?: Bounds;
+    pos?: Vertex;
+    points?: [];
+    r?: Vector;
+    text?: string;
+    class?: string;
+    style?: any; // TODO(burdon): Shared style mixin (rect, text, etc).
+    curve?: string; // TODO(burdon): Type-specific or sub object?
+    closed?: boolean;
+  };
+};
 
 // TODO(burdon): To Util.
-const convertPoints = array => array.map(([x, y]) => ({
-  x: FractionUtil.toFraction(x),
-  y: FractionUtil.toFraction(y)
-}));
+const convertPoints = (array) =>
+  array.map(([x, y]) => ({
+    x: FractionUtil.toFraction(x),
+    y: FractionUtil.toFraction(y)
+  }));
 
 // TODO(burdon): Hook.
 const data: DataItem[] = [
@@ -104,7 +108,12 @@ const data: DataItem[] = [
   {
     type: 'path',
     data: {
-      points: convertPoints([[8, -2], [8, -6], [4, -9], [-2, -2]]),
+      points: convertPoints([
+        [8, -2],
+        [8, -6],
+        [4, -9],
+        [-2, -2]
+      ]),
       curve: 'cardinal',
       closed: true
     }
@@ -112,7 +121,11 @@ const data: DataItem[] = [
   {
     type: 'path',
     data: {
-      points: convertPoints([[-8, 1], [-4, 1], [-6, 5]]),
+      points: convertPoints([
+        [-8, 1],
+        [-4, 1],
+        [-6, 5]
+      ]),
       closed: true
     }
   }
@@ -171,7 +184,7 @@ const updateRect = (el, scale, { bounds, style }) => {
 };
 
 const updatePath = (el, scale, { points, curve, closed }) => {
-  const p = points.map(p => scale.model.toPoint(p));
+  const p = points.map((p) => scale.model.toPoint(p));
   let line;
   switch (curve) {
     case 'cardinal': {
@@ -186,8 +199,7 @@ const updatePath = (el, scale, { points, curve, closed }) => {
       line = closed ? d3.curveLinearClosed : d3.curveLinear;
     }
   }
-  return el
-    .attr('d', d3.line().curve(line)(p));
+  return el.attr('d', d3.line().curve(line)(p));
 };
 
 const Component = () => {
@@ -202,15 +214,15 @@ const Component = () => {
       .data(data)
       .join('g')
       .each(({ type, data }, i, nodes) => {
-        const el = d3.select(nodes[i])
-          .attr('class', data.class);
+        const el = d3.select(nodes[i]).attr('class', data.class);
 
         switch (type) {
           case 'circle': {
             const { style, pos, text } = data;
-            el.selectAll('circle').data([0]).join('circle')
-              .call(updateCircle, scale, data);
-            el.selectAll('text').data(text ? [1] : []).join('text')
+            el.selectAll('circle').data([0]).join('circle').call(updateCircle, scale, data);
+            el.selectAll('text')
+              .data(text ? [1] : [])
+              .join('text')
               .call(updateText, scale, { style, pos, text });
             break;
           }
@@ -218,28 +230,33 @@ const Component = () => {
           case 'rect': {
             const { style, bounds, text } = data;
             const pos = Vector.center(bounds as Bounds);
-            el.selectAll('rect').data([0]).join('rect')
-              .call(updateRect, scale, data);
-            el.selectAll('text').data(text ? [1] : []).join('text')
+            el.selectAll('rect').data([0]).join('rect').call(updateRect, scale, data);
+            el.selectAll('text')
+              .data(text ? [1] : [])
+              .join('text')
               .call(updateText, scale, { style, pos, text });
             break;
           }
 
           case 'text': {
             const { style, bounds, text } = data;
-            el.selectAll('text').data(text ? [1] : []).join('text')
+            el.selectAll('text')
+              .data(text ? [1] : [])
+              .join('text')
               .call(updateText, scale, { style, bounds, text });
             break;
           }
 
           case 'path': {
             const { points } = data;
-            el.selectAll('path').data([0]).join('path')
-              .call(updatePath, scale, data);
-            el.selectAll('circle').data(points).join('circle')
+            el.selectAll('path').data([0]).join('path').call(updatePath, scale, data);
+            el.selectAll('circle')
+              .data(points)
+              .join('circle')
               .each((pos, i, nodes) => {
                 const [cx, cy] = scale.model.toPoint(pos);
-                return d3.select(nodes[i])
+                return d3
+                  .select(nodes[i])
                   .attr('cx', cx)
                   .attr('cy', cy)
                   .attr('r', scale.model.toValues([[1, 8]])[0]);
@@ -251,11 +268,7 @@ const Component = () => {
   }, [zoom]);
 
   return (
-    <svg
-      xmlns='http://www.w3.org/2000/svg'
-      ref={context.ref}
-      className={styles}
-    >
+    <svg xmlns='http://www.w3.org/2000/svg' ref={context.ref} className={styles}>
       <g ref={grid?.ref} className={defaultGridStyles} />
       <g ref={zoom?.ref} />
     </svg>

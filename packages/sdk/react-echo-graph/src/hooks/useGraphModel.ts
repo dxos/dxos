@@ -19,8 +19,7 @@ export const useGraphModel = (party?: Party, filters: ((item: Item<any>) => bool
 
   useEffect(() => {
     // TODO(burdon): API should filter out root item.
-    const filteredItems = items
-      .filter(item => filters.every(filter => filter(item)));
+    const filteredItems = items.filter((item) => filters.every((filter) => filter(item)));
 
     model.update(filteredItems);
     // TODO(kaplanski): Check for array prop changes.

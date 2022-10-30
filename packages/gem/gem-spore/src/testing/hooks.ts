@@ -15,7 +15,7 @@ export type ObjectMutator<T> = [
   T, // Current value.
   (data: T) => void, // Set value.
   (mutation: any) => T // Apply update mutation.
-]
+];
 
 /**
  * Returns a state object and setter, with addition live getter and updater (for the current up-to-date reference).
@@ -37,7 +37,7 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
     // https://github.com/kolodny/immutability-helper
     // NOTE: Use $apply to update variable (e.g., push to potentially null object).
     (mutation: any): T => {
-      setData(current => update<T>(current, mutation));
+      setData((current) => update<T>(current, mutation));
       return dataRef.current;
     }
   ];
@@ -57,15 +57,14 @@ export const useGraphGenerator = (options: { data?: GraphData<any> } = {}) => {
 
     updateData({
       nodes: {
-        $push: [
-          item
-        ]
+        $push: [item]
       },
-      links: Object.assign({}, parent && {
-        $push: [
-          createLink(parent as TestNode, item)
-        ]
-      })
+      links: Object.assign(
+        {},
+        parent && {
+          $push: [createLink(parent as TestNode, item)]
+        }
+      )
     });
   };
 

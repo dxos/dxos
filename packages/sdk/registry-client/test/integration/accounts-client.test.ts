@@ -7,9 +7,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import {
-  AccountsClient
-} from '../../src';
+import { AccountsClient } from '../../src';
 import { setupRegistryClient } from './utils';
 
 chai.use(chaiAsPromised);

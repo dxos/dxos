@@ -56,7 +56,9 @@ describe('Client', function () {
         await client.initialize();
         afterTest(() => client.destroy());
 
-        const profile = await client.halo.createProfile({ username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         // expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -82,7 +84,10 @@ describe('Client', function () {
         const seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
-        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
+        const profile = await client.halo.createProfile({
+          ...keyPair,
+          username: 'test-user'
+        });
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -154,7 +159,9 @@ describe('Client', function () {
 
         const party = await inviter.echo.createParty();
         assert(invitee.halo.profile);
-        const invitation = await party.createInvitation({ inviteeKey: invitee.halo.profile.publicKey });
+        const invitation = await party.createInvitation({
+          inviteeKey: invitee.halo.profile.publicKey
+        });
         expect(invitation.descriptor.secret).toBeUndefined();
         invitation.error.on(throwUnhandledRejection);
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
@@ -221,9 +228,13 @@ describe('Client', function () {
 
         // The preference can be changed and synced back.
         await invitee.halo.setGlobalPreference('DXNSAccount', '123');
-        await waitForExpect(async () => {
-          expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
-        }, 10_000, 100);
+        await waitForExpect(
+          async () => {
+            expect(await inviter.halo.getGlobalPreference('DXNSAccount')).toEqual('123');
+          },
+          10_000,
+          100
+        );
       }).timeout(10_000);
     });
 
@@ -276,9 +287,15 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         expect(item1.model.get('prop1')).toEqual('x');
@@ -292,9 +309,15 @@ describe('Client', function () {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const item1 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item1 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item1.model.set('prop1', 'x');
-        const item2 = await party.database.createItem({ model: ObjectModel, type: 'test' });
+        const item2 = await party.database.createItem({
+          model: ObjectModel,
+          type: 'test'
+        });
         await item2.model.set('prop1', 'y');
 
         const details = await party.getDetails();
@@ -319,13 +342,16 @@ describe('Client', function () {
   };
 
   describe('local', function () {
-    testSuite(async () => new Client({
-      runtime: {
-        client: {
-          mode: Runtime.Client.Mode.LOCAL
-        }
-      }
-    }));
+    testSuite(
+      async () =>
+        new Client({
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.LOCAL
+            }
+          }
+        })
+    );
   });
 
   describe('remote', function () {
@@ -345,13 +371,16 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({
-        runtime: {
-          client: {
-            mode: Runtime.Client.Mode.REMOTE
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
           }
-        }
-      }, { rpcPort: proxyPort });
+        },
+        { rpcPort: proxyPort }
+      );
     });
   });
 
@@ -378,13 +407,16 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({
-        runtime: {
-          client: {
-            mode: Runtime.Client.Mode.REMOTE
+      return new Client(
+        {
+          runtime: {
+            client: {
+              mode: Runtime.Client.Mode.REMOTE
+            }
           }
-        }
-      }, { rpcPort: proxyPort });
+        },
+        { rpcPort: proxyPort }
+      );
     });
   });
 
@@ -411,7 +443,10 @@ describe('Client', function () {
       await client.halo.createProfile({ username: 'test-user' });
       const party = await client.echo.createParty();
 
-      const item = await party.database.createItem({ model: TestModel, type: 'test' });
+      const item = await party.database.createItem({
+        model: TestModel,
+        type: 'test'
+      });
       await item.model.set('prop', 'value1');
 
       await client.destroy();

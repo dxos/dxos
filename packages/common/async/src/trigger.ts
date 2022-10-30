@@ -8,9 +8,8 @@ import { promiseTimeout } from './async';
  * Returns a tuple containing a Promise that will be resolved when the resolver function is called.
  * @deprecated Use `Trigger` instead.
  */
-export function trigger (timeout?: number): [() => Promise<void>, () => void]
-export function trigger <T>(timeout?: number): [() => Promise<T>, (arg: T) => void]
-export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => void] { // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T) => void] => {
+  // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
   let callback: (arg: T) => void;
 
   const promise = new Promise<T>((resolve, reject) => {
@@ -25,11 +24,11 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
   const resolver = (value: T) => callback(value);
 
   return [provider, resolver];
-}
+};
 
 export type TriggerOptions = {
-  autoReset: boolean
-}
+  autoReset: boolean;
+};
 
 /**
  * Enables blocked listeners to be awakened with optional timeouts.
@@ -45,16 +44,14 @@ export class Trigger<T = void> {
   private _promise!: Promise<T>;
   private _wake!: (value: T) => void;
 
-  constructor (
-    private _options: TriggerOptions = { autoReset: false }
-  ) {
+  constructor(private _options: TriggerOptions = { autoReset: false }) {
     this.reset();
   }
 
   /**
    * Wait until wake is called, with optional timeout.
    */
-  async wait ({ timeout }: { timeout?: number } = {}): Promise<T> {
+  async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
     if (timeout) {
       return promiseTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
     } else {
@@ -65,7 +62,7 @@ export class Trigger<T = void> {
   /**
    * Wake blocked callers (if any).
    */
-  wake (value: T) {
+  wake(value: T) {
     this._wake(value);
     if (this._options.autoReset) {
       this.reset();
@@ -77,7 +74,7 @@ export class Trigger<T = void> {
   /**
    * Reset promise (new waiters will wait).
    */
-  reset () {
+  reset() {
     this._promise = new Promise<T>((resolve) => {
       this._wake = resolve;
     });

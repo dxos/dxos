@@ -4,11 +4,7 @@
 
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  WebsocketSignalManager
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import {
   createWebRTCTransportFactory,
@@ -35,10 +31,10 @@ import { HaloSigner } from './signer';
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
 type ClientServiceHostParams = {
-  config: Config
-  modelFactory?: ModelFactory
-  transportFactory?: TransportFactory
-  signer?: HaloSigner
+  config: Config;
+  modelFactory?: ModelFactory;
+  transportFactory?: TransportFactory;
+  signer?: HaloSigner;
 };
 
 /**
@@ -51,7 +47,7 @@ export class ClientServiceHost implements ClientServiceProvider {
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
-  constructor ({
+  constructor({
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
     signer,
@@ -61,27 +57,21 @@ export class ClientServiceHost implements ClientServiceProvider {
     this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage } = createStorageObjects(
-      this._config.get('runtime.client.storage', {})!
-    );
+    const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
 
-    const networkingEnabled = this._config.get(
-      'runtime.services.signal.server'
-    );
+    const networkingEnabled = this._config.get('runtime.services.signal.server');
 
     const networkManager = new NetworkManager({
       signalManager: networkingEnabled
-        ? new WebsocketSignalManager([
-            this._config.get('runtime.services.signal.server')!
-        ])
+        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
       transportFactory:
         transportFactory ??
         // TODO(burdon): Should require memory transport.
         (networkingEnabled
           ? createWebRTCTransportFactory({
-            iceServers: this._config.get('runtime.services.ice')
-          })
+              iceServers: this._config.get('runtime.services.ice')
+            })
           : MemoryTransportFactory),
       log: true
     });
@@ -99,21 +89,21 @@ export class ClientServiceHost implements ClientServiceProvider {
     };
   }
 
-  get services () {
+  get services() {
     return this._services;
   }
 
   // TODO(dmaretskyi): progress.
-  async open (onProgressCallback?: ((progress: any) => void) | undefined) {
+  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
     await this._context.open();
     // this._devtoolsEvents.ready.emit();
   }
 
-  async close () {
+  async close() {
     await this._context.close();
   }
 
-  get echo () {
+  get echo() {
     return todo();
   }
 
@@ -121,7 +111,7 @@ export class ClientServiceHost implements ClientServiceProvider {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _createDevtoolsService (networkManager: NetworkManager): DevtoolsHost {
+  private _createDevtoolsService(networkManager: NetworkManager): DevtoolsHost {
     const dependencies: DevtoolsServiceDependencies = {
       networkManager
       //   config: this._config,

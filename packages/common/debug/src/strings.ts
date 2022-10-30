@@ -3,7 +3,7 @@
 //
 
 export const truncate = (str = '', length: number, pad: boolean | string = false) => {
-  if (str.length >= (length - 1)) {
+  if (str.length >= length - 1) {
     return str.substring(0, length - 1) + '…';
   } else {
     return pad ? str.padEnd(length, typeof pad === 'boolean' ? ' ' : pad[0]) : str;

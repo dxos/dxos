@@ -7,21 +7,22 @@ import { trigger } from './trigger';
 /**
  * Times out after delay.
  */
-export const sleep = (ms: number) => new Promise<void>((resolve) => {
-  const finish = Date.now() + ms;
+export const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    const finish = Date.now() + ms;
 
-  // `setTimeout` does not guarantee execution at >= the scheduled time and may execute slightly early.
-  const sleeper = () => {
-    const delta = finish - Date.now();
-    if (delta > 0) {
-      setTimeout(sleeper, delta);
-    } else {
-      resolve();
-    }
-  };
+    // `setTimeout` does not guarantee execution at >= the scheduled time and may execute slightly early.
+    const sleeper = () => {
+      const delta = finish - Date.now();
+      if (delta > 0) {
+        setTimeout(sleeper, delta);
+      } else {
+        resolve();
+      }
+    };
 
-  sleeper();
-});
+    sleeper();
+  });
 
 /**
  * Wait for promise or throw error on timeout.
@@ -42,10 +43,7 @@ export const promiseTimeout = <T>(promise: Promise<T>, timeout: number, error?: 
     };
   });
 
-  return Promise.race([
-    promise,
-    timeoutPromise
-  ]).finally(() => {
+  return Promise.race([promise, timeoutPromise]).finally(() => {
     cancelTimeout();
   });
 };

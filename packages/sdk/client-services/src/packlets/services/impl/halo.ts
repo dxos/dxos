@@ -24,14 +24,14 @@ import { HaloSigner } from '../signer';
  * HALO service implementation.
  */
 export class HaloService implements HaloServiceRpc {
-  constructor (
+  constructor(
     private readonly echo: any, // TODO(burdon): Remove.
     private readonly signer?: HaloSigner
   ) {}
 
   // TODO(burdon): Rename signMessage? (in interface).
   // TODO(burdon): Why is this part of the interface? (Can it be factored out completely?)
-  async sign (request: SignRequest): Promise<SignResponse> {
+  async sign(request: SignRequest): Promise<SignResponse> {
     assert(this.signer, 'Signer not set.');
     assert(request.publicKey, 'Provide a public_key of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
@@ -39,7 +39,7 @@ export class HaloService implements HaloServiceRpc {
     return this.signer.sign(request, key);
   }
 
-  async addKeyRecord (request: AddKeyRecordRequest): Promise<void> {
+  async addKeyRecord(request: AddKeyRecordRequest): Promise<void> {
     assert(request.keyRecord && request.keyRecord.publicKey, 'Missing key record.');
     await this.echo.halo.keyring.addKeyRecord(request.keyRecord);
     assert(await this.echo.halo.keyring.getKey(request.keyRecord.publicKey), 'Key not inserted correctly.');
@@ -47,7 +47,7 @@ export class HaloService implements HaloServiceRpc {
 
   // TODO(burdon): subscribeToContacts or just query/contacts with subscription object.
   //  ResultSet vs Stream?
-  subscribeContacts (): Stream<Contacts> {
+  subscribeContacts(): Stream<Contacts> {
     return new Stream(({ next }) => {
       next({ contacts: [] });
     });
@@ -75,14 +75,14 @@ export class HaloService implements HaloServiceRpc {
     });
   }
 
-  async setGlobalPreference (request: SetPreferenceRequest): Promise<void> {
+  async setGlobalPreference(request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
-  async getGlobalPreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
+  async getGlobalPreference(request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getGlobalPreferences()?.model;
     return {
@@ -90,14 +90,14 @@ export class HaloService implements HaloServiceRpc {
     };
   }
 
-  async setDevicePreference (request: SetPreferenceRequest): Promise<void> {
+  async setDevicePreference(request: SetPreferenceRequest): Promise<void> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     assert(preferences, 'Preferences failed to load.');
     await preferences.setProperty(request.key, request.value);
   }
 
-  async getDevicePreference (request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
+  async getDevicePreference(request: GetPreferenceRequest): Promise<GetPreferenceResponse> {
     assert(request.key, 'Missing key of property.');
     const preferences: ObjectModel | undefined = this.echo.halo.identity?.preferences?.getDevicePreferences()?.model;
     return {

@@ -5,7 +5,7 @@
 import { Enum, Type } from 'protobufjs';
 
 export interface SanitizeContext {
-  errors: string[]
+  errors: string[];
 }
 
 /**

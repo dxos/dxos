@@ -9,20 +9,20 @@ import { join } from 'node:path';
 import { execTool, getBin, mochaComment, resolveFiles } from './util';
 
 export type NodeOptions = {
-  testPatterns: string[]
-  coverage: boolean
-  coveragePath: string
-  watch: boolean
-  watchPatterns: string[]
-  outputPath: string
-  resultsPath: string
-  xmlReport: boolean
-  timeout: number
-  checkLeaks: boolean
-  forceExit: boolean
-  domRequired: boolean
-  reporter?: string
-}
+  testPatterns: string[];
+  coverage: boolean;
+  coveragePath: string;
+  watch: boolean;
+  watchPatterns: string[];
+  outputPath: string;
+  resultsPath: string;
+  xmlReport: boolean;
+  timeout: number;
+  checkLeaks: boolean;
+  forceExit: boolean;
+  domRequired: boolean;
+  reporter?: string;
+};
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
@@ -40,12 +40,15 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
     //   We want the logger preprocessor to be run on typescript source first.
     //   Then the SWC will transpile the typescript source to javascript.
-    '-r', '@dxos/log-hook/register',
-    '-r', '@swc-node/register',
+    '-r',
+    '@dxos/log-hook/register',
+    '-r',
+    '@swc-node/register',
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
-    '-t', String(options.timeout),
+    '-t',
+    String(options.timeout),
     ...(options.checkLeaks ? ['--checkLeaks'] : []),
     ...(options.forceExit ? ['--exit'] : [])
   ];
@@ -54,7 +57,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
-      'FORCE_COLOR': '2'
+      FORCE_COLOR: '2'
     }
   });
 
@@ -89,8 +92,10 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
   await writeFile(reporterConfigFile, JSON.stringify(reporterConfig), 'utf-8');
 
   return [
-    '--reporter', options.reporter ?? 'mocha-multi-reporters',
-    '--reporter-options', `configFile=${reporterConfigFile}`
+    '--reporter',
+    options.reporter ?? 'mocha-multi-reporters',
+    '--reporter-options',
+    `configFile=${reporterConfigFile}`
   ];
 };
 
@@ -103,16 +108,11 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
 };
 
 const getSetupArgs = (root: string, domRequired: boolean) => {
-  const scripts = [
-    'colors',
-    'mocha-env',
-    'catch-unhandled-rejections',
-    ...(domRequired ? ['react-setup'] : [])
-  ];
+  const scripts = ['colors', 'mocha-env', 'catch-unhandled-rejections', ...(domRequired ? ['react-setup'] : [])];
 
   return scripts
-    .map(script => join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`))
-    .map(script => ['-r', script])
+    .map((script) => join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`))
+    .map((script) => ['-r', script])
     .flat();
 };
 
@@ -121,10 +121,7 @@ const getWatchArgs = (watch: boolean, patterns: string[]) => {
     return [];
   }
 
-  return [
-    '--watch',
-    ...patterns.map(pattern => ['--watch-files', pattern]).flat()
-  ];
+  return ['--watch', ...patterns.map((pattern) => ['--watch-files', pattern]).flat()];
 };
 
 const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {
@@ -132,9 +129,5 @@ const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boole
     return [];
   }
 
-  return [
-    '--reporter', (xmlReport ? 'clover' : 'lcov'),
-    '--report-dir', outputPath,
-    'mocha'
-  ];
+  return ['--reporter', xmlReport ? 'clover' : 'lcov', '--report-dir', outputPath, 'mocha'];
 };
