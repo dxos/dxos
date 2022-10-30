@@ -33,6 +33,8 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   const { args } = options;
 
+  // TODO(burdon): Random errors if parallel > 1
+
   // TODO(burdon): Parse args.
   const cmd = args.split(' ')[0] ?? 'info';
 
