@@ -13,6 +13,6 @@ pnpm run update
 Examples:
 
 ```bash
-pnpm nx run-many --parallel=1 --target=toolbox --args=fix
-pnpm nx run-many --parallel=1 --target=toolbox --args=info --projects=async,util --verbose
+pnpm nx run-many --target=toolbox --args=fix
+pnpm nx run-many --target=toolbox --args=info --projects=async,util --verbose
 ```

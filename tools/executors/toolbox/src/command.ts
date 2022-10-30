@@ -8,7 +8,7 @@ import path from 'path';
 import { Workspace } from './workspace';
 
 export interface Config {
-  config: {
+  config?: {
     package: {
       common: string[];
     };

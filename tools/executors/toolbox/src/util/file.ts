@@ -7,17 +7,17 @@ import { parse } from 'comment-json';
 import { readFile, writeFile } from 'node:fs/promises';
 
 // TODO(burdon): Generalize into template builder.
-export const loadJson = async <T>(filename: string, defaultValue?: T): Promise<T> => {
-  const json = await readFile(filename, 'utf-8');
-  if (!json) {
-    if (!defaultValue) {
-      throw new Error(`Invalid file: ${filename}`);
+export const loadJson = async <T>(filename: string, throwOnError = true): Promise<T | undefined> => {
+  try {
+    const json = await readFile(filename, 'utf-8');
+    return parse(json, undefined, true) as T;
+  } catch (err) {
+    if (throwOnError) {
+      throw new Error(`Failed to process: ${filename} [${err}]`);
     }
 
-    return defaultValue;
+    return undefined;
   }
-
-  return parse(json, undefined, true) as T;
 };
 
 export const saveJson = async (filepath: string, value: any) => {

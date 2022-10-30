@@ -17,8 +17,8 @@ const projectFixedKeys = ['sourceRoot', 'projectType', 'targets'];
 
 /**
  * Clean-up package config files:
- * - `package.json`
  * - `project.json`
+ * - `package.json`
  * - `tsconfig.json`
  */
 export class FixCommand extends Command {
@@ -34,10 +34,28 @@ export class FixCommand extends Command {
 
   // TODO(burdon): Options.
   override async exec() {
+    await this.fixProject();
     await this.fixPackage();
     await this.fixTsConfig();
-    await this.fixProject();
     return true;
+  }
+
+  /**
+   * Process `project.json`.
+   */
+  async fixProject() {
+    const filepath = path.join(this.path, 'project.json');
+    const projectJson = await loadJson(filepath);
+    if (projectJson) {
+      const updated = sortJson(projectJson, {
+        depth: -1,
+        map: {
+          '.': projectFixedKeys
+        }
+      });
+
+      await saveJson(filepath, updated);
+    }
   }
 
   /**
@@ -45,7 +63,7 @@ export class FixCommand extends Command {
    */
   async fixPackage() {
     const rootPackage = await loadJson(path.join(this.context.root, 'package.json'));
-    const commonKeys = pick(rootPackage, this.config.config?.package?.common);
+    const commonKeys = pick(rootPackage, this.config.config?.package.common ?? []);
     const updated = sortPackageJson(defaultsDeep(this._packageJson, commonKeys));
     await saveJson(this._packagePath!, updated);
   }
@@ -55,7 +73,7 @@ export class FixCommand extends Command {
    */
   async fixTsConfig() {
     const filepath = path.join(this.path, 'tsconfig.json');
-    const tsConfigJson = await loadJson<any>(filepath);
+    const tsConfigJson = await loadJson<any>(filepath, false);
     if (tsConfigJson) {
       // Get refs.
       const { dependencies = {}, devDependencies = {} } = this._packageJson;
@@ -76,24 +94,6 @@ export class FixCommand extends Command {
         map: {
           '.': tsConfigFixedKeys,
           '.references': (value: any) => value.path
-        }
-      });
-
-      await saveJson(filepath, updated);
-    }
-  }
-
-  /**
-   * Process `project.json`.
-   */
-  async fixProject() {
-    const filepath = path.join(this.path, 'project.json');
-    const projectJson = await loadJson(filepath);
-    if (projectJson) {
-      const updated = sortJson(projectJson, {
-        depth: -1,
-        map: {
-          '.': projectFixedKeys
         }
       });
 

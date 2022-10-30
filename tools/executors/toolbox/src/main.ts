@@ -31,8 +31,6 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
-  // TODO(burdon): Fails randomly (on different projects) with run-many (unless parallel=1).
-  //  Cannot read properties of undefined (reading 'name')
   const { args } = options;
 
   // TODO(burdon): Parse args.
@@ -44,7 +42,7 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
 
   // Load config.
   const configPath = path.join(context.root, 'toolbox.json');
-  const config = await loadJson<Config>(configPath, {} as Config);
+  const config = (await loadJson<Config>(configPath, false)) ?? {};
 
   // TODO(burdon): Enum.
   let command: Command;
