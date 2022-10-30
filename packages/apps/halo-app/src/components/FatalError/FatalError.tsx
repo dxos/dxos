@@ -4,14 +4,14 @@
 
 import { Clipboard } from 'phosphor-react';
 import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Alert, Button, Dialog, Tooltip } from '@dxos/react-ui';
+import { Alert, Button, Dialog, Tooltip, useTranslation } from '@dxos/react-uikit';
 
 export interface FatalErrorProps {
   error: Error;
 }
 
+// TODO(wittjosiah): Factor out.
 export const FatalError = ({ error }: FatalErrorProps) => {
   const { t } = useTranslation();
   const isDev = process.env.NODE_ENV === 'development';

@@ -7,14 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Client, Party } from '@dxos/client';
 import { useProfile } from '@dxos/react-client';
-import {
-  AuthChoices,
-  Button,
-  Heading,
-  Main,
-  QrCode,
-  useTranslation
-} from '@dxos/react-uikit';
+import { AuthChoices, Button, Heading, Main, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface RegistrationPageProps {

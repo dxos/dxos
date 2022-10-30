@@ -3,24 +3,16 @@
 //
 
 import '@dxosTheme';
-import React, { useState } from 'react';
+import { ComponentStory, Story } from '@storybook/react';
+import React, { FC } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { templateForComponent } from '../../testing';
-import { ErrorsBoundaryProvider } from './ErrorsBoundaryProvider';
+import { ErrorsProvider } from './ErrorsProvider';
 
 export default {
-  title: 'react-uikit/ErrorsBoundaryProvider',
-  component: ErrorsBoundaryProvider
-};
-
-const FatalErrorThrower = () => {
-  const [throwError, setThrowError] = useState(false);
-  if (throwError) {
-    throw new Error('A wild MISSING№ appeared!');
-  }
-  return <Button onClick={() => setThrowError(true)}>Throw a fatal error</Button>;
+  title: 'react-uikit/ErrorsProvider',
+  component: ErrorsProvider
 };
 
 const UnhandledRejectionThrower = () => {
@@ -38,13 +30,23 @@ const UnhandledRejectionThrower = () => {
 };
 
 const Template = (_args: {}) => (
-  <ErrorsBoundaryProvider>
+  <ErrorsProvider>
     <div className='flex flex-col gap-4'>
-      <FatalErrorThrower />
       <UnhandledRejectionThrower />
     </div>
-  </ErrorsBoundaryProvider>
+  </ErrorsProvider>
 );
+
+// TODO(wittjosiah): Factor out.
+const templateForComponent =
+  <P extends {}>(Component: FC<P>) =>
+  (props: P): Story<P> => {
+    const template: ComponentStory<typeof Component> = (args) => <Component {...args} />;
+
+    const story = template.bind({});
+    story.args = props;
+    return story;
+  };
 
 export const Default = templateForComponent(Template)({});
 Default.args = {};

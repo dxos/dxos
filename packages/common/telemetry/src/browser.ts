@@ -8,10 +8,6 @@ import { captureException } from '@dxos/sentry';
 
 import { EventOptions, InitOptions, PageOptions } from './types';
 
-declare global {
-  const analytics: any;
-}
-
 export const init = ({ apiKey, enable = true }: InitOptions) => {
   if (!enable) {
     return;
@@ -28,21 +24,21 @@ export const init = ({ apiKey, enable = true }: InitOptions) => {
 };
 
 export const page = ({ identityId: userId, ...options }: PageOptions = {}) => {
-  analytics?.page({
+  (window as any).analytics?.page({
     ...options,
     userId
   });
 };
 
 export const event = ({ identityId: userId, name: event, ...options }: EventOptions) => {
-  analytics?.track({
+  (window as any).analytics?.track({
     ...options,
     event
   });
 };
 
 export const flush = async () => {
-  await analytics?.flush((err: any) => {
+  await (window as any).analytics?.flush((err: any) => {
     captureException(err);
   });
 };

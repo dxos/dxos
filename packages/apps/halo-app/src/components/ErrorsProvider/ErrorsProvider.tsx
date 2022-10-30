@@ -1,15 +1,14 @@
 //
 // Copyright 2022 DXOS.org
 //
+
 import cx from 'classnames';
 import debug from 'debug';
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Tooltip, valenceColorText, defaultFocus } from '@dxos/react-ui';
-
-import { FatalErrorBoundary } from './FatalErrorBoundary';
+import { Tooltip, valenceColorText, defaultFocus, useTranslation } from '@dxos/react-uikit';
+import { captureException } from '@dxos/sentry';
 
 export interface ErrorsContextState {
   errors: Error[];
@@ -28,13 +27,15 @@ const error = debug('dxos:react-toolkit:error');
 // TODO(burdon): Override if dev-only?
 const logError = (f: string, ...args: any[]) => (error.enabled ? error(f, ...args) : console.error(f, ...args));
 
-export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
+// TODO(wittjosiah): Factor out.
+export const ErrorsProvider = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
   const resetErrors = useCallback(() => setErrors([]), []);
 
   const onUnhandledRejection = useCallback((event: PromiseRejectionEvent) => {
+    captureException(event.reason);
     logError('unhandledrejection', event.reason);
     addError(event.reason);
     event.preventDefault();
@@ -42,6 +43,7 @@ export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
 
   const onWindowError = useCallback<Exclude<typeof window.onerror, null>>(
     (message, source, lineno, colno, error?: Error) => {
+      captureException(error);
       logError('onerror', message);
       addError(error!);
       return true; // Prevent default.
@@ -62,8 +64,9 @@ export const ErrorsBoundaryProvider = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <ErrorsContext.Provider value={{ errors, addError, resetErrors }}>
-      <FatalErrorBoundary>{children}</FatalErrorBoundary>
+      {children}
       <div role='none' className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}>
+        {/* TODO(wittjosiah): Render this warning conditionally based on a prop (e.g., isInternalUser?). */}
         {!!errors.length && (
           <Tooltip content={t('caught error message')}>
             <Warning tabIndex={0} weight='duotone' className={cx('w-6 h-6 rounded-md', defaultFocus)} />
