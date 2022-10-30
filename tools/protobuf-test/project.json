@@ -4,12 +4,12 @@
   "targets": {
     "build": {
       "executor": "nx:run-script",
-      "outputs": [
-        "tools/protobuf-test/dist"
-      ],
       "options": {
         "script": "build"
-      }
+      },
+      "outputs": [
+        "tools/protobuf-test/dist"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

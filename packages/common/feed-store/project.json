@@ -4,44 +4,44 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/feed-store/src/index.ts",
+        "outputPath": "packages/common/feed-store/dist",
+        "tsConfig": "packages/common/feed-store/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/feed-store/dist",
-        "tsConfig": "packages/common/feed-store/tsconfig.json",
-        "main": "packages/common/feed-store/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/feed-store/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/feed-store",
+        "outputPath": "tmp/mocha/packages/common/feed-store",
+        "resultsPath": "test-results/packages/common/feed-store",
         "testPatterns": [
           "packages/common/feed-store/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/feed-store/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/feed-store",
-        "resultsPath": "test-results/packages/common/feed-store",
-        "coveragePath": "coverage/packages/common/feed-store"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

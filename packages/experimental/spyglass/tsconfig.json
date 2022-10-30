@@ -13,11 +13,25 @@
     ]
   },
   "exclude": [
-    "node_modules",
     "dist",
+    "node_modules",
     "out"
   ],
   "include": [
     "src/**/*"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    }
   ]
 }

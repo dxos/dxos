@@ -15,6 +15,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../protocols"
     },
     {

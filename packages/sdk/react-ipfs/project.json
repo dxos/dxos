@@ -4,25 +4,25 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-ipfs/src/index.ts",
+        "outputPath": "packages/sdk/react-ipfs/dist",
+        "tsConfig": "packages/sdk/react-ipfs/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/react-ipfs/dist",
-        "tsConfig": "packages/sdk/react-ipfs/tsconfig.json",
-        "main": "packages/sdk/react-ipfs/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-ipfs/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

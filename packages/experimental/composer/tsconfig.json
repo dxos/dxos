@@ -10,11 +10,37 @@
       "node"
     ]
   },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
   "include": [
     "src"
   ],
-  "exclude": [
-    "vite.config.ts",
-    "*.t.ts"
+  "references": [
+    {
+      "path": "../../../tools/vite-plugin"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../common/react-uikit"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    }
   ]
 }

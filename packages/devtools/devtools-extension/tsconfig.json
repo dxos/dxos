@@ -35,6 +35,9 @@
       "path": "../../core/mesh/rpc"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

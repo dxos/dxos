@@ -5,5 +5,13 @@
   },
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../util"
+    }
   ]
 }

@@ -4,25 +4,25 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-client-testing/src/index.ts",
+        "outputPath": "packages/sdk/react-client-testing/dist",
+        "tsConfig": "packages/sdk/react-client-testing/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/react-client-testing/dist",
-        "tsConfig": "packages/sdk/react-client-testing/tsconfig.json",
-        "main": "packages/sdk/react-client-testing/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-client-testing/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

@@ -1,11 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "outDir": "dist",
     "types": [
       "@dxos/mocha",
       "mocha",
@@ -14,5 +14,13 @@
   },
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../sentry"
+    }
   ]
 }

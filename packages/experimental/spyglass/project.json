@@ -4,14 +4,14 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/spyglass/src/index.ts",
+        "outputPath": "packages/experimental/spyglass/dist",
+        "tsConfig": "packages/experimental/spyglass/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/experimental/spyglass/dist",
-        "tsConfig": "packages/experimental/spyglass/tsconfig.json",
-        "main": "packages/experimental/spyglass/src/index.ts"
-      }
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

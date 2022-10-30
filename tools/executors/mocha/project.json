@@ -1,34 +1,34 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/mocha/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/mocha/src/main.ts",
+        "outputPath": "tools/executors/mocha/dist",
+        "tsConfig": "tools/executors/mocha/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "tools/executors/mocha/dist",
-        "tsConfig": "tools/executors/mocha/tsconfig.json",
-        "main": "tools/executors/mocha/src/main.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "tools/executors/mocha/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "log-hook"
   ]

@@ -17,7 +17,7 @@
   ],
   "references": [
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../gem-core"
     }
   ]
 }

@@ -64,7 +64,7 @@ export class FixCommand extends Command {
     const tsConfigJson = loadJson(filepath);
     if (tsConfigJson) {
       // Get refs.
-      const { dependencies, devDependencies } = this._packageJson;
+      const { dependencies = {}, devDependencies = {} } = this._packageJson;
       tsConfigJson.references = [...Object.entries(dependencies), ...Object.entries(devDependencies)]
         .map(([key, value]) => {
           if (value === 'workspace:*') {

@@ -8,8 +8,8 @@
     ]
   },
   "include": [
-    "src",
-    "benchmark.js"
+    "benchmark.js",
+    "src"
   ],
   "references": [
     {
@@ -20,6 +20,12 @@
     },
     {
       "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../protocols"
     },
     {
       "path": "../network-generator"

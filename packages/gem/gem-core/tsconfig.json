@@ -15,9 +15,5 @@
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+  "references": []
 }

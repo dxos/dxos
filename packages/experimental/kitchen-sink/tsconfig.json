@@ -17,16 +17,19 @@
     "strict": true,
     "target": "ES2018",
     "types": [
-      "node",
-      "mocha"
+      "mocha",
+      "node"
     ]
   },
   "include": [
+    "playwright",
     "src",
-    "stories",
-    "playwright"
+    "stories"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
     {
       "path": "../../common/async"
     },
@@ -41,6 +44,15 @@
     },
     {
       "path": "../../core/echo/object-model"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../gem/gem-core"
+    },
+    {
+      "path": "../../gem/gem-spore"
     },
     {
       "path": "../../sdk/client"

@@ -1,44 +1,44 @@
 {
   "sourceRoot": "packages/gem/gem-spore/src",
   "projectType": "library",
-  "tags": [
-    "scope:gem"
-  ],
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gem/gem-spore/src/index.ts",
+        "outputPath": "packages/gem/gem-spore/dist",
+        "tsConfig": "packages/gem/gem-spore/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/gem/gem-spore/dist",
-        "tsConfig": "packages/gem/gem-spore/tsconfig.json",
-        "main": "packages/gem/gem-spore/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/gem/gem-spore/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "packages/gem/gem-spore/coverage"
-      ],
       "options": {
         "jestConfig": "packages/gem/gem-spore/jest.config.ts",
         "passWithNoTests": true
-      }
+      },
+      "outputs": [
+        "packages/gem/gem-spore/coverage"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     }
-  }
+  },
+  "tags": [
+    "scope:gem"
+  ]
 }

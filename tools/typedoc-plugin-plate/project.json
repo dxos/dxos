@@ -3,25 +3,25 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/typedoc-plugin-plate/src/index.ts",
+        "outputPath": "tools/typedoc-plugin-plate/dist",
+        "tsConfig": "tools/typedoc-plugin-plate/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "tools/typedoc-plugin-plate/dist",
-        "tsConfig": "tools/typedoc-plugin-plate/tsconfig.json",
-        "main": "tools/typedoc-plugin-plate/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "tools/typedoc-plugin-plate/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

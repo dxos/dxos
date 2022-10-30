@@ -4,47 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/mesh-protocol/src/index.ts",
+        "outputPath": "packages/core/mesh/mesh-protocol/dist",
+        "tsConfig": "packages/core/mesh/mesh-protocol/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/core/mesh/mesh-protocol/dist",
-        "tsConfig": "packages/core/mesh/mesh-protocol/tsconfig.json",
-        "main": "packages/core/mesh/mesh-protocol/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/mesh-protocol/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
         "ciEnvironments": [
           "nodejs"
         ],
+        "coveragePath": "coverage/packages/core/mesh/mesh-protocol",
+        "outputPath": "tmp/mocha/packages/core/mesh/mesh-protocol",
+        "resultsPath": "test-results/packages/core/mesh/mesh-protocol",
         "testPatterns": [
           "packages/core/mesh/mesh-protocol/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/mesh-protocol/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/mesh-protocol",
-        "resultsPath": "test-results/packages/core/mesh/mesh-protocol",
-        "coveragePath": "coverage/packages/core/mesh/mesh-protocol"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

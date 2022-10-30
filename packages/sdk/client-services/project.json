@@ -4,51 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/client-services/src/index.ts",
+        "outputPath": "packages/sdk/client-services/dist",
+        "tsConfig": "packages/sdk/client-services/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/client-services/dist",
-        "tsConfig": "packages/sdk/client-services/tsconfig.json",
-        "main": "packages/sdk/client-services/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
         "ciEnvironments": [
-          "nodejs",
           "chromium",
-          "firefox"
+          "firefox",
+          "nodejs"
         ],
+        "coveragePath": "coverage/packages/sdk/client-services",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/sdk/client-services",
+        "resultsPath": "test-results/packages/sdk/client-services",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client-services/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/sdk/client-services",
-        "resultsPath": "test-results/packages/sdk/client-services",
-        "coveragePath": "coverage/packages/sdk/client-services",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "forceExit": true
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

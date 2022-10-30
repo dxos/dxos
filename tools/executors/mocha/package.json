@@ -1,6 +1,10 @@
 {
   "name": "@dxos/mocha",
   "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "main": "dist/src/index.js",
   "types": "index.d.ts",
   "executors": "./executor.json"

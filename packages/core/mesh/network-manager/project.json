@@ -4,51 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/network-manager/src/index.ts",
+        "outputPath": "packages/core/mesh/network-manager/dist",
+        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/core/mesh/network-manager/dist",
-        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json",
-        "main": "packages/core/mesh/network-manager/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/network-manager/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
         "ciEnvironments": [
-          "nodejs",
           "chromium",
-          "firefox"
+          "firefox",
+          "nodejs"
         ],
+        "coveragePath": "coverage/packages/core/mesh/network-manager",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
+        "resultsPath": "test-results/packages/core/mesh/network-manager",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
           "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/network-manager/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
-        "resultsPath": "test-results/packages/core/mesh/network-manager",
-        "coveragePath": "coverage/packages/core/mesh/network-manager",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "forceExit": true
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

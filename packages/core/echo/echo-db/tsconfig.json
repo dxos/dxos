@@ -3,17 +3,16 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/typings",
       "@dxos/mocha",
+      "@dxos/typings",
       "@dxos/typings"
     ]
   },
+  "exclude": [],
   "include": [
+    "src/index.ts",
     "src/packlets",
-    "src/packlets/api",
-    "src/index.ts"
-  ],
-  "exclude": [
+    "src/packlets/api"
   ],
   "references": [
     {
@@ -29,25 +28,43 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/hypercore"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random-access-storage"
     },
     {
       "path": "../../../common/testutils"
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/timeframe"
     },
     {
-      "path": "../../../common/feed-store"
+      "path": "../../../common/util"
     },
     {
       "path": "../../halo/credentials"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../halo/keyring"
     },
     {
       "path": "../../mesh/mesh-protocol"
+    },
+    {
+      "path": "../../mesh/messaging"
+    },
+    {
+      "path": "../../mesh/network-manager"
     },
     {
       "path": "../../mesh/protocol-plugin-presence"

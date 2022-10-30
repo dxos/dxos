@@ -24,16 +24,28 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../common/debug"
     },
     {
       "path": "../../common/feed-store"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
@@ -51,10 +63,22 @@
       "path": "../../core/halo/credentials"
     },
     {
+      "path": "../../core/halo/keyring"
+    },
+    {
+      "path": "../../core/mesh/messaging"
+    },
+    {
       "path": "../../core/mesh/network-manager"
     },
     {
+      "path": "../../core/mesh/protocol-plugin-rpc"
+    },
+    {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/signal"
     },
     {
       "path": "../../core/protocols"

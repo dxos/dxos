@@ -8,7 +8,10 @@
   ],
   "references": [
     {
-      "path": "../broadcast"
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"

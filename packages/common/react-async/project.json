@@ -4,46 +4,46 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/react-async/src/index.ts",
+        "outputPath": "packages/common/react-async/dist",
+        "tsConfig": "packages/common/react-async/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/common/react-async/dist",
-        "tsConfig": "packages/common/react-async/tsconfig.json",
-        "main": "packages/common/react-async/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/react-async",
+        "domRequired": true,
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/common/react-async",
+        "resultsPath": "test-results/packages/common/react-async",
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
         ],
         "watchPatterns": [
           "packages/common/react-async/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/react-async",
-        "resultsPath": "test-results/packages/common/react-async",
-        "coveragePath": "coverage/packages/common/react-async",
-        "domRequired": true,
-        "forceExit": true
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

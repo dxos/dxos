@@ -4,73 +4,73 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/devtools/src/index.ts",
+        "outputPath": "packages/devtools/devtools/dist",
+        "tsConfig": "packages/devtools/devtools/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/devtools/devtools/dist",
-        "tsConfig": "packages/devtools/devtools/tsconfig.json",
-        "main": "packages/devtools/devtools/src/index.ts"
-      }
+      ]
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
-      "options": {
-        "uiFramework": "@storybook/react",
-        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
-        "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
-        }
-      },
       "configurations": {
         "ci": {
           "quiet": true
         }
-      }
+      },
+      "executor": "@nrwl/storybook:build",
+      "options": {
+        "config": {
+          "configFolder": "packages/devtools/devtools/.storybook"
+        },
+        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
+        "uiFramework": "@storybook/react"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@nxext/vite:build",
+      "options": {
+        "configFile": "packages/devtools/devtools/vite.config.ts",
+        "outputPath": "packages/devtools/devtools/out/devtools"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/devtools/devtools/out/devtools",
-        "configFile": "packages/devtools/devtools/vite.config.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/devtools/devtools/out/devtools",
-        "configFile": "packages/devtools/devtools/vite.config.ts"
+        "configFile": "packages/devtools/devtools/vite.config.ts",
+        "outputPath": "packages/devtools/devtools/out/devtools"
       }
     },
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
-      "options": {
-        "uiFramework": "@storybook/react",
-        "config": {
-          "configFolder": "packages/devtools/devtools/.storybook"
-        }
-      },
       "configurations": {
         "ci": {
           "quiet": true
         }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/devtools/devtools/.storybook"
+        },
+        "uiFramework": "@storybook/react"
       }
     },
     "toolbox": {

@@ -1,50 +1,50 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
-    "prebuild": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "tools/executors/protobuf-compiler/test/proto/gen"
-      ],
-      "options": {
-        "script": "prebuild"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/protobuf-compiler/src/index.ts",
+        "outputPath": "tools/executors/protobuf-compiler/dist",
+        "tsConfig": "tools/executors/protobuf-compiler/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "tools/executors/protobuf-compiler/dist",
-        "tsConfig": "tools/executors/protobuf-compiler/tsconfig.json",
-        "main": "tools/executors/protobuf-compiler/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "tools/executors/protobuf-compiler/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "prebuild"
+      },
+      "outputs": [
+        "tools/executors/protobuf-compiler/test/proto/gen"
+      ]
     },
     "test": {
+      "dependsOn": [
+        "prebuild"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "test"
-      },
-      "dependsOn": [
-        "prebuild"
-      ]
+      }
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     }
-  }
+  },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json"
 }

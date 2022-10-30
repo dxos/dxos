@@ -8,18 +8,21 @@
     "outDir": "dist",
     "types": [
       "@dxos/mocha",
-      "node",
-      "mocha"
+      "mocha",
+      "node"
     ]
   },
   "include": [
+    "src/*.ts",
     "src/experimental",
     "src/packlets/api",
     "src/packlets/proxies",
-    "src/packlets/services",
-    "src/*.ts"
+    "src/packlets/services"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
     {
       "path": "../../common/async"
     },
@@ -27,16 +30,22 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/feed-store"
     },
     {
-      "path": "../../common/random-access-storage"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
@@ -45,7 +54,7 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../common/feed-store"
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/model-factory"
@@ -54,13 +63,28 @@
       "path": "../../core/echo/object-model"
     },
     {
+      "path": "../../core/echo/text-model"
+    },
+    {
       "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-services"
     },
     {
       "path": "../config"

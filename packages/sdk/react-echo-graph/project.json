@@ -4,25 +4,25 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-echo-graph/src/index.ts",
+        "outputPath": "packages/sdk/react-echo-graph/dist",
+        "tsConfig": "packages/sdk/react-echo-graph/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/sdk/react-echo-graph/dist",
-        "tsConfig": "packages/sdk/react-echo-graph/tsconfig.json",
-        "main": "packages/sdk/react-echo-graph/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-echo-graph/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"

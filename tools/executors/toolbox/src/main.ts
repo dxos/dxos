@@ -31,7 +31,8 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
-  // TODO(burdon): No output if succeeds.
+  // TODO(burdon): Fails randomly (on different projects) with run-many (unless parallel=1).
+  //  Cannot read properties of undefined (reading 'name')
   const { args } = options;
 
   // TODO(burdon): Parse args.
@@ -53,6 +54,7 @@ export default async (options: ToolkitOptions, context: ExecutorContext): Promis
     }
 
     case 'info': {
+      // NOTE: --verbose to see output
       command = new InfoCommand(config, options, context, workspace);
       break;
     }

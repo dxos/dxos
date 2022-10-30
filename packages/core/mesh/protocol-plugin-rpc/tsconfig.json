@@ -18,6 +18,9 @@
       "path": "../../../common/codec-protobuf"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/testutils"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../mesh-protocol"
+    },
+    {
+      "path": "../messaging"
     },
     {
       "path": "../network-manager"

@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
       "path": "../client"
     },
     {

@@ -14,5 +14,10 @@
   "include": [
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    }
   ]
 }

@@ -1,43 +1,43 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/toolbox/src/main.ts",
+        "outputPath": "tools/executors/toolbox/dist",
+        "tsConfig": "tools/executors/toolbox/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "tools/executors/toolbox/dist",
-        "tsConfig": "tools/executors/toolbox/tsconfig.json",
-        "main": "tools/executors/toolbox/src/main.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "tools/executors/toolbox/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
+      "dependsOn": [
+        "prebuild"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "test"
-      },
-      "dependsOn": [
-        "prebuild"
-      ]
+      }
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     }
   },
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "log-hook"
   ]
