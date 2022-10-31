@@ -110,6 +110,7 @@ jobs:
           working_directory: ./packages/apps/halo-app
           command: ../../../.circleci/scripts/publish.sh
           environment:
+            NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
           name: Deploy Docs
@@ -117,6 +118,7 @@ jobs:
           command: ../.circleci/scripts/publish.sh
           no_output_timeout: 30m
           environment:
+            NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:

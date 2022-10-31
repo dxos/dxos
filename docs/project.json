@@ -31,13 +31,14 @@
           "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "DX_RELEASE"
+          "env": "NODE_ENV"
         },
         {
-          "env": "SEGMENT_API_KEY"
+          "env": "SENTRY_DESTINATION"
         },
-        "^production",
-        "default"
+        {
+          "env": "TELEMETRY_API_KEY"
+        }
       ],
       "options": {
         "script": "prerelease"
