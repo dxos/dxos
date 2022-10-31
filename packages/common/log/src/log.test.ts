@@ -2,13 +2,32 @@
 // Copyright 2022 DXOS.org
 //
 
+import path from 'path';
+
+import { LogLevel } from './config';
 import { log } from './log';
 
-// TODO(burdon): Override with LOG_FILTER
-// import { LogLevel } from './config';
-// log.config.filter = LogLevel.INFO;
-
 describe('log', function () {
+  it('config', function () {
+    log.config({
+      filter: LogLevel.INFO
+    });
+
+    log.debug('Debug level log message');
+    log.info('Info level log message');
+    log.warn('Warn level log message');
+  });
+
+  it.only('config file', function () {
+    log.config({
+      file: path.join(__dirname, '../test-config.yml')
+    });
+
+    log.debug('Debug level log message');
+    log.info('Info level log message');
+    log.warn('Warn level log message');
+  });
+
   it('line numbers', function () {
     log.warn('LOG LINE 13');
 
