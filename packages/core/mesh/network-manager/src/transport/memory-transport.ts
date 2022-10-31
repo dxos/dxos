@@ -123,7 +123,6 @@ export class MemoryTransport implements Transport {
   }
 }
 
-// TODO(burdon): Remove non-testing usage (i.e., Client config defaults).
 export const MemoryTransportFactory: TransportFactory = {
   create: (opts) => new MemoryTransport(opts.ownId, opts.remoteId, opts.sessionId, opts.topic, opts.stream)
 };

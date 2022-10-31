@@ -34,11 +34,29 @@ import {
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
+// TODO(burdon): Remove global and replace with factories.
 const signalContext = new MemorySignalManagerContext();
+
+// const createMemoryNetworkManager = (signalContext: MemorySignalManagerContext) => {
+//   return new NetworkManager({
+//     signalManager: new MemorySignalManager(signalContext),
+//     transportFactory: MemoryTransportFactory
+//   });
+// };
+
+// const createWebRTCNetworkManager = async (config: any, peerId: PublicKey) => {
+//   const signalManager = new WebsocketSignalManager(signalHosts!);
+//   await signalManager.subscribeMessages(peerId);
+//
+//   return new NetworkManager({
+//     signalManager,
+//     transportFactory: createWebRTCTransportFactory(config)
+//   });
+// };
 
 interface CreatePeerOptions {
   topic: PublicKey;
-  peerId: PublicKey; // TODO(burdon): peerKey
+  peerId: PublicKey;
   topology?: Topology;
   signalHosts?: string[];
   transportFactory: TransportFactory;
@@ -57,7 +75,6 @@ const createPeer = async ({
 }: CreatePeerOptions) => {
   const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
   await signalManager.subscribeMessages(peerId);
-
   const networkManager = new NetworkManager({
     signalManager,
     transportFactory
@@ -127,8 +144,8 @@ describe('NetworkManager', function () {
         received.push(p, s);
         return undefined;
       };
-      plugin1.on('receive', mockReceive);
 
+      plugin1.on('receive', mockReceive);
       plugin2.on('connect', async () => {
         await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
       });
@@ -163,8 +180,8 @@ describe('NetworkManager', function () {
           received.push(p, s);
           return undefined;
         };
-        plugin1.on('receive', mockReceive);
 
+        plugin1.on('receive', mockReceive);
         plugin2.on('connect', async () => {
           await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
         });
@@ -254,7 +271,6 @@ describe('NetworkManager', function () {
               plugin.on('connect', async (protocol: Protocol) => {
                 const { peerId } = protocol.getSession() ?? {};
                 const remoteId = PublicKey.from(peerId);
-
                 await plugin.send(remoteId.asBuffer(), 'ping');
               });
 
@@ -593,7 +609,11 @@ function sharedTests({
       transportFactory: await getTransportFactory()
     });
 
-    await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
+    // prettier-ignore
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
     log('Connected');
 
     const disconnectPromises = Promise.all([
