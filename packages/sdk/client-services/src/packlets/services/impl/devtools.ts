@@ -47,7 +47,7 @@ import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DevtoolsHostEvents, subscribeToNetworkStatus, subscribeToSwarmInfo } from '../../devtools';
 
 
-export type DevtoolsServiceParams  ={
+export type DevtoolsServiceContext  ={
   events: DevtoolsHostEvents;
   debug: any;
   config: Config;
@@ -58,7 +58,7 @@ export type DevtoolsServiceParams  ={
 }
 
 export class DevtoolsService implements DevtoolsHost {
-  constructor(private readonly _serviceContext: DevtoolsServiceParams) {}
+  constructor(private readonly _serviceContext: DevtoolsServiceContext) {}
 
   events(request: void): Stream<Event> {
     return new Stream<Event>(({ next }) => {
@@ -95,7 +95,7 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
-    todo();
+    return subscribeToParties(this._serviceContext, request));
   }
 
   subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
