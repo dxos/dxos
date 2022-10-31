@@ -12,7 +12,8 @@ import {
   ClientServiceHost,
   HaloSigner,
   InvalidConfigurationError,
-  RemoteServiceConnectionTimeout
+  RemoteServiceConnectionTimeout,
+  createNetworkManager
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
@@ -259,7 +260,8 @@ export class Client {
     this._serviceProvider = new ClientServiceHost({
       config: this._config,
       modelFactory: this._modelFactory,
-      signer: this._options.signer
+      signer: this._options.signer,
+      networkManager: createNetworkManager(this._config)
     });
 
     await this._serviceProvider.open(onProgressCallback);

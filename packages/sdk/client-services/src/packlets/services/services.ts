@@ -7,6 +7,7 @@ import { PartyService, ProfileService, SystemService, HaloService } from '@dxos/
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle } from '@dxos/rpc';
+import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
 
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
 export type ClientServices = {

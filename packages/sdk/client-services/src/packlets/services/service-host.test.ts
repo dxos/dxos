@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 import { ClientServiceHost } from './service-host';
 
 const defaultTestingConfig: ConfigProto = {
-  version: 1,
+  version: 1
   // runtime: {
   //   services: {
   //     signal: {
@@ -31,18 +31,18 @@ describe('ServiceHost', function () {
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalManagerContext),
       transportFactory: MemoryTransportFactory
-    })
+    });
 
     return new ClientServiceHost({
       config: new Config(defaultTestingConfig),
       networkManager
     });
-  }
+  };
 
-  it.only('process device invitation', async function () {
+  it('process device invitation', async function () {
     const signalManagerContext = new MemorySignalManagerContext();
     const peer1 = createPeer(signalManagerContext);
-    const peer2 = createPeer(signalManagerContext)
+    const peer2 = createPeer(signalManagerContext);
 
     await peer1.open();
     await peer2.open();
@@ -63,7 +63,7 @@ describe('ServiceHost', function () {
       });
     }
 
-             const [done, setAck] = latch({ count: 2 });
+    const [done, setAck] = latch({ count: 2 });
     {
       const invitation = await invitationTrigger.wait();
       const stream = peer2.services.ProfileService.acceptInvitation(invitation);

@@ -14,8 +14,8 @@ import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { ModelFactory, TestModel } from '@dxos/model-factory';
-import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
+import { TestModel } from '@dxos/model-factory';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
@@ -24,6 +24,7 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './packlets/proxies';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 
 describe('Client', function () {
   //
@@ -388,15 +389,34 @@ describe('Client', function () {
   });
 
   describe('remote - WebRTC proxy', function () {
+    const signalManagerContext = new MemorySignalManagerContext();
+
     testSuite(async () => {
-      const transportFactory = new WebRTCTransportProxyFactory();
-      transportFactory.setBridgeService(new WebRTCTransportService());
+      const config = new Config({
+        runtime: {
+          client: {
+            mode: Runtime.Client.Mode.REMOTE
+          }
+        }
+      });
+
+      const networkManager = new NetworkManager({
+        signalManager: new MemorySignalManager(signalManagerContext),
+        transportFactory: MemoryTransportFactory
+      });
+
+      // const transportFactory = new WebRTCTransportProxyFactory();
+      // transportFactory.setBridgeService(new WebRTCTransportService());
+      // const networkManager = NetworkManager({
+      //   log: true,
+      //   signalManager: new WebsocketSignalManager([config.get('runtime.services.signal.server')]),
+      //   transportFactory
+      // });
 
       const [proxyPort, hostPort] = createLinkedPorts();
       const hostClient = new ClientServiceHost({
-        config: new Config({}),
-        modelFactory: new ModelFactory().registerModel(ObjectModel),
-        transportFactory
+        config,
+        networkManager
       });
 
       await hostClient.open();
@@ -411,16 +431,7 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client(
-        {
-          runtime: {
-            client: {
-              mode: Runtime.Client.Mode.REMOTE
-            }
-          }
-        },
-        { rpcPort: proxyPort }
-      );
+      return new Client(config, { rpcPort: proxyPort });
     });
   });
 

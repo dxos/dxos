@@ -2,11 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
@@ -21,7 +23,22 @@ import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';
 import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
+import { WebsocketSignalManager } from '@dxos/messaging';
 // import { DevtoolsHostEvents } from '../devtools';
+
+// TODO(burdon): Factor out.
+export const createNetworkManager = (config: Config): NetworkManager => {
+  const signalServer = config.get('runtime.services.signal.server');
+  assert(signalServer);
+
+  return new NetworkManager({
+    log: true,
+    signalManager: new WebsocketSignalManager([signalServer]),
+    transportFactory: createWebRTCTransportFactory({
+      iceServers: config.get('runtime.services.ice')
+    })
+  });
+};
 
 type ClientServiceHostParams = {
   config: Config;
@@ -29,32 +46,6 @@ type ClientServiceHostParams = {
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
 };
-
-// import {
-//   createWebRTCTransportFactory,
-//   MemoryTransportFactory,
-//   NetworkManager,
-//   TransportFactory
-// } from '@dxos/network-manager';
-// import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-// const createNetworkManager = () => {
-//   const signalServer = this._config.get('runtime.services.signal.server');
-//   const networkManager = new NetworkManager({
-//     signalManager: signalServer
-//       ? new WebsocketSignalManager([signalServer])
-//       : new MemorySignalManager(SIGNAL_CONTEXT),
-//     transportFactory:
-//       transportFactory ??
-//       (signalServer
-//         ? createWebRTCTransportFactory({
-//             iceServers: this._config.get('runtime.services.ice')
-//           })
-//         : MemoryTransportFactory),
-//     log: true
-//   });
-//
-//   return networkManager;
-// }
 
 /**
  * Remote service implementation.
