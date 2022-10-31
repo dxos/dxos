@@ -30,7 +30,11 @@ export const LockPage = () => {
   return (
     <Main className='max-w-lg mx-auto'>
       <div role='none' className='text-center space-y-2'>
-        <QrCode value='https://halo.dxos.org' label={t('copy qrcode label')} />
+        <QrCode
+          value='https://halo.dxos.org'
+          label={<p className='max-w-[4.5rem]'>{t('copy qrcode label')}</p>}
+          side='left'
+        />
         <Heading>{t('halo label')}</Heading>
       </div>
 
