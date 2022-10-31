@@ -118,6 +118,7 @@ export const createRpcPlugin = <Client, Server>(
   pluginOptions?: CreateRpcPluginOptions<Client>
 ) => {
   const { onOpen, onClose, onError } = pluginOptions ?? {};
+
   return new RpcPlugin(async (port) => {
     // TODO(burdon): What does connection mean? Just one peer?
     //  See original comment re handling multiple connections.

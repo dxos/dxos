@@ -121,6 +121,7 @@ export class NetworkManager {
   /**
    * Join the swarm.
    */
+  // TODO(burdon): Join/Open?
   async openSwarmConnection({
     topic,
     peerId,

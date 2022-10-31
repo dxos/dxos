@@ -28,8 +28,14 @@ export class HaloInvitations {
    */
   async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     const identity = this._identityManager.identity ?? failUndefined();
+    console.log('############### createInvitation #################');
+    let connected = false;
 
-    const plugin = createRpcPlugin(
+    // TODO(burdon): Life-time of a connection:
+    //  - Swarm virtual meeting room (topic).
+    //  - No control over which peers to connect to. Reject should be outside of here (incl. auth).
+
+    const plugin = createRpcPlugin( // TODO(burdon): Actually a factory.
       {
         requested: {
           HaloGuestService: schema.getService('dxos.halo.invitations.HaloGuestService')
@@ -65,11 +71,19 @@ export class HaloInvitations {
       {
         onOpen: async (peer) => {
           log('sending admission offer', { identityKey: identity.identityKey });
+          if (connected) {
+            console.log('############### !!!!! #################');
+            return;
+          }
+          connected = true;
+
+          console.log('############### PRESENT #################');
           await peer.rpc.HaloGuestService.presentAdmissionOffer({
             identityKey: identity.identityKey,
             haloSpaceKey: identity.haloSpaceKey,
             genesisFeedKey: identity.haloGenesisFeedKey
           });
+
 
           onFinish?.();
         },
@@ -101,21 +115,23 @@ export class HaloInvitations {
    * Joins an existing identity HALO by invitation.
    */
   async acceptInvitation(invitation: InvitationDescriptor): Promise<Identity> {
-    const accepted = new Trigger<Identity>();
+    const accepted = new Trigger<Identity>(); // TODO(burdon): Must not share across multiple connections.
     const admitted = new Trigger<Identity>();
 
     const plugin = createRpcPlugin(
       {
-        requested: {
+        requested: { // TODO(burdon): Rename in-bound.
           HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
         },
-        exposed: {
+        exposed: { // TODO(burdon): Rename out-bound?
           HaloGuestService: schema.getService('dxos.halo.invitations.HaloGuestService')
         },
-        handlers: {
+        handlers: { // TODO(burdon): Factory to create handlers and open/close handlers.
           HaloGuestService: {
             presentAdmissionOffer: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
-              console.log('!!!!!!!!!!!!!!!!!!!');
+              console.log('############### ACCEPT #################');
+              // TODO(burdon): Test if already fixed.
+
               log('processing admission offer', { identityKey });
               const identity = await this._identityManager.acceptIdentity({
                 identityKey,
@@ -124,6 +140,9 @@ export class HaloInvitations {
               });
 
               accepted.wake(identity);
+
+
+              await admitted.wait();
             }
           }
         }

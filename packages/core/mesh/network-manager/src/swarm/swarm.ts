@@ -231,6 +231,7 @@ export class Swarm {
     };
   }
 
+  // TODO(burdon): Make async.
   private async _initiateConnection(remoteId: PublicKey) {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
@@ -252,6 +253,7 @@ export class Swarm {
     log('initiated', { topic: this._topic });
   }
 
+  // TODO(burdon): Make async.
   private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
     log('creating connection', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
     assert(!this._connections.has(remoteId), 'Peer already connected.');
@@ -306,6 +308,7 @@ export class Swarm {
     return connection;
   }
 
+  // TODO(burdon): Make async.
   private async _closeConnection(peerId: PublicKey) {
     log('closing...', { topic: this._topic, peerId });
     const connection = this._connections.get(peerId);

@@ -3,6 +3,8 @@
 //
 
 import fs from 'fs';
+import yaml from 'js-yaml';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import type { OwnershipScope } from './ownership';
 
@@ -60,30 +62,47 @@ export enum LogProcessorType {
 // Config
 //
 
+type LogFilter = {
+  level: LogLevel,
+  pattern?: string
+};
+
+export interface LogConfig {
+  config?: any;
+  processor?: string;
+  filter?: string | LogLevel;
+}
+
 export type ConfigOptions = {
+  processor?: string;
+  filter?: string[];
   column?: number;
 };
 
-// TODO(burdon): YML.
+export const defaultConfig: LogConfig = {
+  processor: LogProcessorType.CONSOLE,
+  filter: LogLevel[LogLevel.INFO]
+};
+
 const loadConfig = (filepath?: string): ConfigOptions | undefined => {
   if (filepath) {
     const text = fs.readFileSync(filepath, 'utf-8');
     if (text) {
-      return JSON.parse(text) as ConfigOptions;
+      return yaml.load(text) as ConfigOptions;
     }
   }
 };
 
-export interface LogConfig {
-  processor?: string;
-  filter?: string | LogLevel;
-  config?: any;
-}
-
-export const defaultConfig: LogConfig = {
-  processor: ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ?? LogProcessorType.CONSOLE,
-  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO],
-  config: 'process' in globalThis ? loadConfig(process!.env?.LOG_CONFIG) : undefined
+export const getDefaultConfig = (): LogConfig => {
+  if ('process' in globalThis) {
+    return defaultsDeep({
+      processor: process!.env?.LOG_PROCESSOR,
+      filter: process!.env?.LOG_FILTER,
+      config: loadConfig(process!.env?.LOG_CONFIG)
+    }, defaultConfig);
+  } else {
+    return defaultConfig;
+  }
 };
 
 export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {
@@ -92,7 +111,7 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
   }
 
   // TODO(burdon): Cache as part of config object.
-  const filters =
+  const filters: LogFilter[] =
     typeof config.filter === 'number'
       ? [{ level: config.filter }]
       : config.filter.split(/,\s*/).map((filter) => {
@@ -107,5 +126,5 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
               };
         });
 
-  return filters.some((filter) => level >= filter.level && (!filter.pattern || path.includes(filter.pattern)));
+  return filters.some((filter) => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
 };

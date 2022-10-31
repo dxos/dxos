@@ -66,9 +66,7 @@ const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
  */
 export class RpcPeer {
   private readonly _outgoingRequests = new Map<number, RequestItem>();
-
   private readonly _localStreams = new Map<number, Stream<any>>();
-
   private readonly _remoteOpenTrigger = new Trigger();
 
   private _nextId = 0;

@@ -25,8 +25,8 @@ const MEMORY_TRANSPORT_DELAY = 1;
 const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
   new Transform({
     objectMode: true,
-    transform: (chunk, enc, cb) => {
-      setTimeout(() => cb(null, chunk), delay);
+    transform: (chunk, _, cb) => {
+      setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
     }
   });
 
@@ -64,7 +64,7 @@ export class MemoryTransport implements Transport {
     this._ownKey = [this._topic, this._ownId, this._remoteId];
     this._remoteKey = [this._topic, this._remoteId, this._ownId];
 
-    assert(!MemoryTransport._connections.has(this._ownKey), 'Duplicate in-memory connection');
+    assert(!MemoryTransport._connections.has(this._ownKey), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._ownKey, this);
 
     this._remoteConnection = MemoryTransport._connections.get(this._remoteKey);
