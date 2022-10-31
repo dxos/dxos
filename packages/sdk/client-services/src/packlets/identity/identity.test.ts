@@ -23,7 +23,7 @@ import { Identity } from './identity';
 
 const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
-describe('halo/identity', function () {
+describe('identity/identity', function () {
   it('create', async function () {
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();

@@ -25,7 +25,7 @@ const defaultTestingConfig: ConfigProto = {
   // }
 };
 
-describe('ServiceHost', function () {
+describe('services/service-host', function () {
   // TODO(burdon): Factor out.
   const createPeer = (signalManagerContext: MemorySignalManagerContext) => {
     const networkManager = new NetworkManager({

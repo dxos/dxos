@@ -7,7 +7,7 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
+import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -61,7 +61,7 @@ export class HaloInvitations {
               // TODO(dmaretskyi): Admit guest's feeds otherwise messages from them won't be processed by the pipeline.
             }
           }
-        },
+        }
       });
 
       await peer.open();
@@ -105,13 +105,16 @@ export class HaloInvitations {
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         port,
-        requested: { // TODO(burdon): Rename in-bound.
+        requested: {
+          // TODO(burdon): Rename in-bound.
           HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
         },
-        exposed: { // TODO(burdon): Rename out-bound?
+        exposed: {
+          // TODO(burdon): Rename out-bound?
           HaloGuestService: schema.getService('dxos.halo.invitations.HaloGuestService')
         },
-        handlers: { // TODO(burdon): Factory to create handlers and open/close handlers.
+        handlers: {
+          // TODO(burdon): Factory to create handlers and open/close handlers.
           HaloGuestService: {
             presentAdmissionOffer: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
               log('processing admission offer', { identityKey });
