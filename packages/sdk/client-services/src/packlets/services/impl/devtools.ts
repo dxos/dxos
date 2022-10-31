@@ -37,25 +37,18 @@ import {
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-
-
 import { Config } from '@dxos/config';
-import { FeedStore } from '@dxos/feed-store';
-import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { DevtoolsHostEvents, subscribeToNetworkStatus, subscribeToSwarmInfo } from '../../devtools';
+import { DevtoolsHostEvents, subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../../devtools';
+import { subscribeToParties } from '../../devtools/parties';
+import { ServiceContext } from '../service-context';
 
-
-export type DevtoolsServiceContext  ={
+export type DevtoolsServiceContext = {
   events: DevtoolsHostEvents;
-  debug: any;
   config: Config;
-  feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
-  keyring: any;
-  modelFactory: ModelFactory;
-}
+  context: ServiceContext;
+};
 
 export class DevtoolsService implements DevtoolsHost {
   constructor(private readonly _serviceContext: DevtoolsServiceContext) {}
@@ -65,8 +58,8 @@ export class DevtoolsService implements DevtoolsHost {
       this._serviceContext.events.ready.on(() => {
         next({ ready: {} });
       });
-    }
-}
+    });
+  }
 
   getConfig(request: void): Promise<GetConfigResponse> {
     todo();
@@ -95,7 +88,14 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
-    return subscribeToParties(this._serviceContext, request));
+    return subscribeToParties(
+      {
+        feedStore: this._serviceContext.context.feedStore,
+        spaceManager: this._serviceContext.context.spaceManager!,
+        metadataStore: this._serviceContext.context.metadataStore
+      },
+      request
+    );
   }
 
   subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
@@ -134,14 +134,11 @@ export class DevtoolsService implements DevtoolsHost {
     return subscribeToNetworkStatus(this._serviceContext);
   }
 
-  subscribeToSignalTrace(request: void): Stream<SubscribeToSignalTraceResponse> {
-    todo();
-    return new Stream<SubscribeToSignalTraceResponse>(({next}) => {
-      next({})
-    })
+  subscribeToSignalTrace(): Stream<SubscribeToSignalTraceResponse> {
+    return subscribeToSignalTrace(this._serviceContext);
   }
 
-  subscribeToSwarmInfo(request: SubscribeToSwarmInfoRequest): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo(request);
+  subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
+    return subscribeToSwarmInfo(this._serviceContext);
   }
 }

@@ -5,6 +5,7 @@
 import { Readable } from 'stream';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import {
   SubscribeToFeedsRequest,
@@ -12,10 +13,12 @@ import {
   SubscribeToFeedBlocksRequest,
   SubscribeToFeedBlocksResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { DevtoolsServiceDependencies } from './devtools-context';
-
-export const subscribeToFeeds = ({ feedStore }: DevtoolsServiceDependencies, { feedKeys }: SubscribeToFeedsRequest) =>
+export const subscribeToFeeds = (
+  { feedStore }: { feedStore: FeedStore<FeedMessage> },
+  { feedKeys }: SubscribeToFeedsRequest
+) =>
   new Stream<SubscribeToFeedsResponse>(({ next }) => {
     if (feedKeys?.length === 0) {
       return;
@@ -63,7 +66,7 @@ export const subscribeToFeeds = ({ feedStore }: DevtoolsServiceDependencies, { f
   });
 
 export const subscribeToFeedBlocks = (
-  { feedStore }: DevtoolsServiceDependencies,
+  { feedStore }: { feedStore: FeedStore<FeedMessage> },
   { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest
 ) =>
   new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {

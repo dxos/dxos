@@ -33,5 +33,5 @@ export const createServices = ({
   ProfileService: new ProfileService(context),
   SystemService: new SystemService(config),
   TracingService: new TracingService(config),
-  DevtoolsHost: new DevtoolsService({} as DevtoolsServiceContext)
+  DevtoolsHost: new DevtoolsService({ config, context, networkManager } as DevtoolsServiceContext)
 });
