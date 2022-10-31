@@ -14,9 +14,7 @@ import { DeviceList, InvitationList } from '../../components';
 export const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
-  const [devices] = useState([
-    { publicKey: PublicKey.random(), displayName: 'This Device' }
-  ]);
+  const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);
   const invitations = useHaloInvitations(client);
 
   const handleInvite = () => {
@@ -24,7 +22,7 @@ export const DevicesPage = () => {
   };
 
   return (
-    <Main>
+    <Main className='max-w-7xl mx-auto'>
       <div role='none' className='flex items-center'>
         <Heading>{t('devices label')}</Heading>
         <div role='none' className='flex-grow' />

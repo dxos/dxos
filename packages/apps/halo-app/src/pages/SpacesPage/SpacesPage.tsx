@@ -7,13 +7,7 @@ import React from 'react';
 
 import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import {
-  Button,
-  getSize,
-  Main,
-  useTranslation,
-  Heading
-} from '@dxos/react-uikit';
+import { Button, getSize, Main, useTranslation, Heading } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 import { JoinSpaceDialog } from '..';
@@ -33,7 +27,7 @@ export const SpacesPage = () => {
   };
 
   return (
-    <Main>
+    <Main className='max-w-7xl mx-auto'>
       <div role='none' className='flex gap-2 items-center'>
         <Heading>{t('spaces label')}</Heading>
         <div role='none' className='flex-grow' />
@@ -45,11 +39,7 @@ export const SpacesPage = () => {
             </Button>
           }
         />
-        <Button
-          variant='primary'
-          onClick={handleCreateSpace}
-          className='flex gap-1'
-        >
+        <Button variant='primary' onClick={handleCreateSpace} className='flex gap-1'>
           <Plus className={getSize(5)} />
           {t('create space label', { ns: 'uikit' })}
         </Button>
