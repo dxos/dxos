@@ -17,6 +17,7 @@ jobs:
           token: ${{ secrets.CREATE_PR_TOKEN }}
           release-type: node
           command: manifest-pr
+          default-branch: wittjosiah/10-31-chore_Test_change
       
       - name: Checkout
         uses: actions/checkout@v3
