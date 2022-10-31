@@ -2,16 +2,19 @@ on:
   push:
     branches:
       - main
+      - wittjosiah/10-31-ci_Reintroduce_release_please
+
 name: Release automation with Release Please
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: dxos/release-please-action@v2.36.0
+      - uses: google-github-actions/release-please-action@v3
         id: release
         with:
           token: ${{ secrets.CREATE_PR_TOKEN }}
-          release-type: rush
-          package-name: '@dxos/protocols'
-          bump-minor-on-breaking: true
+          release-type: node
+          command: manifest-pr
+          package-name: dxos
