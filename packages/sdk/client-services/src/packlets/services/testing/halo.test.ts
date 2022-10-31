@@ -24,7 +24,6 @@ describe('services/halo', function () {
 
     const peer1 = await createServiceContext({ signalContext });
     const peer2 = await createServiceContext({ signalContext });
-
     await peer1.open();
     await peer2.open();
     afterTest(() => peer1.close());

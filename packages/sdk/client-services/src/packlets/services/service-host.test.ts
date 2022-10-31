@@ -41,9 +41,9 @@ describe('services/service-host', function () {
 
   it('process device invitation', async function () {
     const signalManagerContext = new MemorySignalManagerContext();
+
     const peer1 = createPeer(signalManagerContext);
     const peer2 = createPeer(signalManagerContext);
-
     await peer1.open();
     await peer2.open();
     afterTest(() => peer1.close());

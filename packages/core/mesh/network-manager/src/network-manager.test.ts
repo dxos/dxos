@@ -47,6 +47,7 @@ interface CreatePeerOptions {
 /**
  * @deprecated
  */
+// TODO(burdon): Builder pattern.
 const createPeer = async ({
   topic,
   peerId,
@@ -56,6 +57,7 @@ const createPeer = async ({
 }: CreatePeerOptions) => {
   const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
   await signalManager.subscribeMessages(peerId);
+
   const networkManager = new NetworkManager({
     signalManager,
     transportFactory
@@ -73,7 +75,7 @@ const createPeer = async ({
   };
 };
 
-describe('Network manager', function () {
+describe('NetworkManager', function () {
   describe('WebRTC transport', function () {
     let topic: PublicKey;
     let peer1Id: PublicKey;
@@ -91,6 +93,7 @@ describe('Network manager', function () {
       getTransportFactory: async () => createWebRTCTransportFactory()
     });
 
+    // TODO(burdon): Factor out config and remove consts.
     it.skip('two peers with different signal & turn servers', async function () {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
         topic,
@@ -171,6 +174,8 @@ describe('Network manager', function () {
           expect(received[0]).toBeInstanceOf(Protocol);
           expect(received[1]).toBe('{"message": "Hello"}');
         });
+
+        // TODO(burdon): Close.
       }).timeout(10_000);
     });
   }).timeout(10_000);
@@ -213,6 +218,7 @@ describe('Network manager', function () {
 
       return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService);
     };
+
     sharedTests({
       inMemory: false,
       signalUrl: SIGNAL_URL,
@@ -220,7 +226,7 @@ describe('Network manager', function () {
     });
   });
 
-  describe('In-memory transport', function () {
+  describe('memory transport', function () {
     sharedTests({
       inMemory: true,
       getTransportFactory: async () => MemoryTransportFactory
@@ -514,11 +520,12 @@ function sharedTests({
       received.push(p, s);
       return undefined;
     };
-    plugin1.on('receive', mockReceive);
 
+    plugin1.on('receive', mockReceive);
     plugin2.on('connect', async () => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
+
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
