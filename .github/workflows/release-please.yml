@@ -56,5 +56,6 @@ jobs:
           release-type: node
           command: manifest-pr
           package-name: dxos
+          default-branch: wittjosiah/10-31-chore_Test_change
 
       - run: pnpm -w nx run-many --target=toolbox --args=fix --parallel=1 
