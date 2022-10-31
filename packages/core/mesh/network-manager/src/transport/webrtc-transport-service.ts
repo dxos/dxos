@@ -53,7 +53,9 @@ export class WebRTCTransportService implements BridgeService {
       sessionId: PublicKey.from(Buffer.from('')),
       topic: PublicKey.from(Buffer.from('')),
       sendSignal: (msg) => {
-        console.log('WebRTCTransport Signal');
+        console.log('WebRTCTransport Signal', {
+          signal: { payload: msg.data.signal }
+        });
         event.emit({
           signal: { payload: msg.data.signal }
         });
@@ -106,13 +108,13 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    console.log('sendSignal');
+    console.log('sendSignal', signal);
     assert(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.transport.signal(signal);
   }
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
-    console.log('sendData');
+    console.log('Service.sendData', payload);
     assert(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.stream.push(payload);
   }

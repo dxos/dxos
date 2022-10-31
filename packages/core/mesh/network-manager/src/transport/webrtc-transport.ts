@@ -22,6 +22,7 @@ export type WebRTCTransportParams = {
   remoteId: PublicKey;
   sessionId: PublicKey;
   topic: PublicKey;
+  // TODO(mykola): change signature to accept only Signal
   sendSignal: (msg: SignalMessage) => void;
   webrtcConfig?: any;
 };

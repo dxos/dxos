@@ -166,6 +166,7 @@ describe('WebRTCTransportProxy', function () {
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
+      console.log('CONNECTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
     await waitForExpect(() => {
@@ -173,7 +174,7 @@ describe('WebRTCTransportProxy', function () {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('{"message": "Hello"}');
     });
-  }).timeout(2_000);
+  }).timeout(10_000);
 
   describe('Multiplexing', function () {
     let service: any;

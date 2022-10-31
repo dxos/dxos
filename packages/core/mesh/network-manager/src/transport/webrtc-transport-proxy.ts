@@ -58,7 +58,7 @@ export class WebRTCTransportProxy implements Transport {
         });
 
         this._params.stream.on('data', async (data: Uint8Array) => {
-          console.log('proxy stream data');
+          console.log('proxy stream data', data);
           try {
             await this._params.bridgeService.sendData({
               proxyId: this._proxyId,
