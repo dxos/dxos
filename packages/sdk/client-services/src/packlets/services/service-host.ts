@@ -13,14 +13,8 @@ import {
   TransportFactory
 } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost, SubscribeToFeedBlocksRequest } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { DevtoolsHostEvents, DevtoolsServiceDependencies, subscribeToFeedBlocks } from '../devtools';
-import {
-  subscribeToNetworkStatus as subscribeToSignalStatus,
-  subscribeToSignalTrace,
-  subscribeToSwarmInfo
-} from '../devtools/network';
+import { DevtoolsHostEvents } from '../devtools';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';
@@ -78,15 +72,13 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     this._context = new ServiceContext(storage, networkManager, modelFactory);
 
-    this._services = {
-      ...createServices({
-        config: this._config,
-        echo: null,
-        context: this._context,
-        signer: this._signer
-      }),
-      DevtoolsHost: this._createDevtoolsService(networkManager) // TODO(burdon): Move into createServices.
-    };
+    this._services = createServices({
+      config: this._config,
+      echo: null,
+      context: this._context,
+      signer: this._signer,
+      networkManager
+    });
   }
 
   get services() {
@@ -105,30 +97,5 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   get echo() {
     return todo();
-  }
-
-  /**
-   * Returns devtools context.
-   * Used by the DXOS DevTool Extension.
-   */
-  private _createDevtoolsService(networkManager: NetworkManager): DevtoolsHost {
-    const dependencies: DevtoolsServiceDependencies = {
-      networkManager,
-      feedStore: this._context.feedStore
-      //   config: this._config,
-      //   echo: this._echo,
-      //   feedStore: this._echo.feedStore,
-      //   modelFactory: this._echo.modelFactory,
-      //   keyring: this._echo.halo.keyring,
-      //   debug // Export debug lib.
-    } as any;
-
-    // return createDevtoolsHost(dependencies, this._devtoolsEvents);
-    return {
-      subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
-      subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
-      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies),
-      subscribeToFeedBlocks: (request: SubscribeToFeedBlocksRequest) => subscribeToFeedBlocks(dependencies, request)
-    } as any;
   }
 }
