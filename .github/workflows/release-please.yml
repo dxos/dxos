@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - wittjosiah/10-31-chore_Test_change
 
 name: Release automation with Release Please
 
