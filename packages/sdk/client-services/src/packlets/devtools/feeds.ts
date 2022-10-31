@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Readable } from 'readable-stream';
+import { Readable } from 'stream';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
@@ -33,12 +33,7 @@ export const subscribeToFeeds = ({ feedStore }: DevtoolsServiceDependencies, { f
             // TODO(wittjosiah): Start from timeframe?
             // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
             // Tail feed so as to not overload the browser.
-            const feedStream = new Readable({ objectMode: true }).wrap(
-              createBatchStream(feed, {
-                live: true,
-                start: 0
-              }) as any
-            );
+            const feedStream = new Readable({ objectMode: true }).wrap(feed.createReadableStream() as any);
 
             feedStream.on('data', (blocks) => {
               feedInfo!.length += blocks.length;
@@ -86,12 +81,7 @@ export const subscribeToFeedBlocks = (
       // TODO(wittjosiah): Start from timeframe?
       // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
       // Tail feed so as to not overload the browser.
-      feedStream = new Readable({ objectMode: true }).wrap(
-        createBatchStream(feed, {
-          live: true,
-          start: Math.max(0, feed.properties.length - maxBlocks)
-        }) as any
-      );
+      feedStream = new Readable({ objectMode: true }).wrap(feed.createReadableStream() as any);
 
       feedStream.on('data', (blocks) => {
         next({ blocks });
