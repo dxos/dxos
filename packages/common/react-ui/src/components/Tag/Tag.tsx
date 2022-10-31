@@ -14,7 +14,7 @@ export const Tag = ({ children, ...props }: PropsWithChildren<TagProps>) => {
     <span
       {...props}
       className={cx(
-        'bg-neutral-100 text-neutral-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-neutral-700 dark:text-neutral-300',
+        'bg-neutral-100 text-neutral-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-neutral-700 dark:text-neutral-300',
         props.className
       )}
     >
