@@ -1,0 +1,4 @@
+{
+  "packages/common/async": "0.0.1",
+  "packages/common/codec-protobuf": "0.0.1"
+}
