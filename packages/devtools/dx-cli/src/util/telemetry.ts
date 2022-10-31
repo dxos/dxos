@@ -11,10 +11,10 @@ import { captureException } from '@dxos/sentry';
 
 import telemetryrc from './telemetryrc.json';
 
-export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? telemetryrc.DX_ENVIRONMENT ?? undefined;
-export const DX_RELEASE = process.env.DX_RELEASE ?? telemetryrc.DX_RELEASE ?? undefined;
-export const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION ?? telemetryrc.SENTRY_DESTINATION ?? undefined;
-export const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY ?? telemetryrc.TELEMETRY_API_KEY ?? undefined;
+export const DX_ENVIRONMENT = telemetryrc.DX_ENVIRONMENT ?? undefined;
+export const DX_RELEASE = telemetryrc.DX_RELEASE ?? undefined;
+export const SENTRY_DESTINATION = telemetryrc.SENTRY_DESTINATION ?? undefined;
+export const TELEMETRY_API_KEY = telemetryrc.TELEMETRY_API_KEY ?? undefined;
 
 export type TelemetryContext = {
   installationId: string;
