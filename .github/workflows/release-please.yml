@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - main
-      - wittjosiah/10-31-ci_Reintroduce_release_please
 
 name: Release automation with Release Please
 
@@ -18,4 +17,3 @@ jobs:
           release-type: node
           command: manifest-pr
           package-name: dxos
-          default-branch: wittjosiah/10-31-ci_Reintroduce_release_please
