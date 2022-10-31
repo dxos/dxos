@@ -7,11 +7,12 @@ import React from 'react';
 
 import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import { Button, getSize, Main, useTranslation, Heading } from '@dxos/react-uikit';
+import { Button, getSize, Main, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 import { JoinSpaceDialog } from '..';
 import { SpaceList } from '../../components';
+import { HeadingWithActions } from '../../components/HeadingWithActions';
 
 export const SpacesPage = () => {
   const client = useClient();
@@ -28,22 +29,27 @@ export const SpacesPage = () => {
 
   return (
     <Main className='max-w-7xl mx-auto'>
-      <div role='none' className='flex gap-2 items-center'>
-        <Heading>{t('spaces label')}</Heading>
-        <div role='none' className='flex-grow' />
-        <JoinSpaceDialog
-          openTrigger={
-            <Button className='flex gap-1'>
-              <Rocket className={getSize(5)} />
-              {t('join space label', { ns: 'uikit' })}
+      <HeadingWithActions
+        heading={{
+          children: t('spaces label')
+        }}
+        actions={
+          <>
+            <JoinSpaceDialog
+              openTrigger={
+                <Button className='grow flex gap-1'>
+                  <Rocket className={getSize(5)} />
+                  {t('join space label', { ns: 'uikit' })}
+                </Button>
+              }
+            />
+            <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+              <Plus className={getSize(5)} />
+              {t('create space label', { ns: 'uikit' })}
             </Button>
-          }
-        />
-        <Button variant='primary' onClick={handleCreateSpace} className='flex gap-1'>
-          <Plus className={getSize(5)} />
-          {t('create space label', { ns: 'uikit' })}
-        </Button>
-      </div>
+          </>
+        }
+      />
 
       {spaces?.length > 0 && <SpaceList spaces={spaces} />}
     </Main>

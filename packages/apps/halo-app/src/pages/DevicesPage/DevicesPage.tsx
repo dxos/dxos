@@ -7,9 +7,10 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Main, Button, useTranslation, Heading } from '@dxos/react-uikit';
+import { Main, Button, useTranslation, getSize } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList } from '../../components';
+import { HeadingWithActions } from '../../components/HeadingWithActions';
 
 export const DevicesPage = () => {
   const { t } = useTranslation('halo');
@@ -23,14 +24,15 @@ export const DevicesPage = () => {
 
   return (
     <Main className='max-w-7xl mx-auto'>
-      <div role='none' className='flex items-center'>
-        <Heading>{t('devices label')}</Heading>
-        <div role='none' className='flex-grow' />
-        <Button variant='primary' className='flex gap-2' onClick={handleInvite}>
-          <Plus className='w-4 h-4' />
-          {t('add device label')}
-        </Button>
-      </div>
+      <HeadingWithActions
+        heading={{ children: t('devices label') }}
+        actions={
+          <Button variant='primary' className='grow flex gap-1' onClick={handleInvite}>
+            <Plus className={getSize(5)} />
+            {t('add device label')}
+          </Button>
+        }
+      />
       <DeviceList items={devices} />
       {invitations.length > 0 && <InvitationList invitations={invitations} />}
     </Main>

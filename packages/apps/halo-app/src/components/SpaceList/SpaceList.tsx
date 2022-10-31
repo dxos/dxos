@@ -3,12 +3,13 @@
 //
 
 import cx from 'classnames';
+import { Users, Nut } from 'phosphor-react';
 import React, { FunctionComponent } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { Avatar, defaultHover, defaultFocus } from '@dxos/react-uikit';
+import { Avatar, defaultHover, defaultFocus, Tag } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
@@ -16,10 +17,7 @@ export interface SpaceListProps {
   selected?: PublicKey;
   actionIcon?: FunctionComponent<any>;
   onSelect?: (space: PublicKey) => void;
-  onAction?: (
-    space: PublicKey,
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => void;
+  onAction?: (space: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
@@ -34,16 +32,24 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             key={keyHex}
             to={`/spaces/${keyHex}`}
             className={cx(
-              'flex items-center gap-2 p-2 rounded',
+              'bg-white dark:bg-neutral-800 elevated-buttons shadow-sm',
+              'rounded p-3 flex-none',
+              'flex gap-2 items-center',
               defaultFocus,
               defaultHover({})
             )}
           >
-            <Avatar
-              size={10}
-              fallbackValue={keyHex}
-              label={<p className='text-lg'>{title}</p>}
-            />
+            <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
+            <div role='none' className='flex flex-col items-end gap-2'>
+              <Tag className='inline-flex gap-1 items-center'>
+                <Users weight='bold' />
+                {'##'}
+              </Tag>
+              <Tag className='inline-flex gap-1 items-center'>
+                <Nut weight='bold' />
+                {'##'}
+              </Tag>
+            </div>
           </Link>
         );
       })}
