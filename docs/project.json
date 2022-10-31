@@ -38,7 +38,9 @@
         },
         {
           "env": "TELEMETRY_API_KEY"
-        }
+        },
+        "^production",
+        "default"
       ],
       "options": {
         "script": "prerelease"

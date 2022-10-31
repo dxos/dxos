@@ -37,8 +37,6 @@
     "bundle": {
       "executor": "@nxext/vite:build",
       "inputs": [
-        "production",
-        "^production",
         {
           "env": "CONFIG_DYNAMIC"
         },
@@ -53,7 +51,9 @@
         },
         {
           "env": "TELEMETRY_API_KEY"
-        }
+        },
+        "^production",
+        "production"
       ],
       "options": {
         "configFile": "packages/apps/halo-app/vite.config.ts",
