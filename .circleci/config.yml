@@ -143,5 +143,6 @@ workflows:
               only:
                 - main
                 - release
+                - wittjosiah/10-31-build_Align_and_hook_up_env_vars_to_deploy
           context:
             - Github
