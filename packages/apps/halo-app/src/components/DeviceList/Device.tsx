@@ -5,14 +5,16 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { Avatar, Group } from '@dxos/react-uikit';
+import { Avatar, Group, Tag, useTranslation } from '@dxos/react-uikit';
 
 export interface DeviceProps {
   publicKey: PublicKey;
   displayName?: string;
+  currentDevice?: boolean;
 }
 
 export const Device = (props: DeviceProps) => {
+  const { t } = useTranslation();
   return (
     <Group
       label={{
@@ -22,7 +24,12 @@ export const Device = (props: DeviceProps) => {
           <Avatar
             size={10}
             fallbackValue={props.publicKey.toHex()}
-            label={<p>{props.displayName}</p>}
+            label={
+              <p>
+                {props.displayName}
+                {props.currentDevice && <Tag className='ml-2 align-middle'>{t('current device label')}</Tag>}
+              </p>
+            }
           />
         )
       }}

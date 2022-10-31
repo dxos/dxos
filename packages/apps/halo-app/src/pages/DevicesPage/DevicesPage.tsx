@@ -15,7 +15,8 @@ export const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
   const [devices] = useState([
-    { publicKey: PublicKey.random(), displayName: 'This Device' }
+    { publicKey: PublicKey.random(), displayName: 'Olivia’s laptop', currentDevice: true },
+    { publicKey: PublicKey.random(), displayName: 'Olivia’s mobile' }
   ]);
   const invitations = useHaloInvitations(client);
 
