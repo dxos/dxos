@@ -398,6 +398,7 @@ describe('Client', function () {
         modelFactory: new ModelFactory().registerModel(ObjectModel),
         transportFactory
       });
+
       await hostClient.open();
       afterTest(() => hostClient.close());
 

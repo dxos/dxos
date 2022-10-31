@@ -4,20 +4,15 @@
 
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  createWebRTCTransportFactory,
-  MemoryTransportFactory,
-  NetworkManager,
-  TransportFactory
-} from '@dxos/network-manager';
+import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import {
-  subscribeToNetworkStatus as subscribeToSignalStatus,
+  subscribeToNetworkStatus as subscribeToSignalStatus, // TODO(burdon): ???
   subscribeToSignalTrace,
   subscribeToSwarmInfo
 } from '../devtools/network';
@@ -28,14 +23,38 @@ import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
 // import { DevtoolsHostEvents } from '../devtools';
 
-const SIGNAL_CONTEXT = new MemorySignalManagerContext();
-
 type ClientServiceHostParams = {
   config: Config;
-  modelFactory?: ModelFactory;
-  transportFactory?: TransportFactory;
   signer?: HaloSigner;
+  modelFactory?: ModelFactory;
+  networkManager: NetworkManager;
 };
+
+// import {
+//   createWebRTCTransportFactory,
+//   MemoryTransportFactory,
+//   NetworkManager,
+//   TransportFactory
+// } from '@dxos/network-manager';
+// import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+// const createNetworkManager = () => {
+//   const signalServer = this._config.get('runtime.services.signal.server');
+//   const networkManager = new NetworkManager({
+//     signalManager: signalServer
+//       ? new WebsocketSignalManager([signalServer])
+//       : new MemorySignalManager(SIGNAL_CONTEXT),
+//     transportFactory:
+//       transportFactory ??
+//       (signalServer
+//         ? createWebRTCTransportFactory({
+//             iceServers: this._config.get('runtime.services.ice')
+//           })
+//         : MemoryTransportFactory),
+//     log: true
+//   });
+//
+//   return networkManager;
+// }
 
 /**
  * Remote service implementation.
@@ -51,31 +70,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
     signer,
-    transportFactory
+    networkManager
   }: ClientServiceHostParams) {
     this._config = config;
     this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
-
-    const networkingEnabled = this._config.get('runtime.services.signal.server');
-
-    const networkManager = new NetworkManager({
-      signalManager: networkingEnabled
-        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
-        : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory:
-        transportFactory ??
-        // TODO(burdon): Should require memory transport.
-        (networkingEnabled
-          ? createWebRTCTransportFactory({
-              iceServers: this._config.get('runtime.services.ice')
-            })
-          : MemoryTransportFactory),
-      log: true
-    });
-
     this._context = new ServiceContext(storage, networkManager, modelFactory);
 
     this._services = {
@@ -95,12 +96,16 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   // TODO(dmaretskyi): progress.
   async open(onProgressCallback?: ((progress: any) => void) | undefined) {
+    log('opening...');
     await this._context.open();
     // this._devtoolsEvents.ready.emit();
+    log('opened');
   }
 
   async close() {
+    log('closing...');
     await this._context.close();
+    log('closed');
   }
 
   get echo() {

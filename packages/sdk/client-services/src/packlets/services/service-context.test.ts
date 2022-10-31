@@ -32,6 +32,7 @@ describe('ServiceContext', function () {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const serviceContext = new ServiceContext(storage, networkManager, modelFactory);
     await serviceContext.open();
+
     return serviceContext;
   };
 
@@ -44,7 +45,7 @@ describe('ServiceContext', function () {
       expect(identity).not.to.be.undefined;
     });
 
-    it.only('device invitations', async function () {
+    it('device invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
       const peer1 = await createServiceContext({ signalContext });
@@ -70,7 +71,7 @@ describe('ServiceContext', function () {
       await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
-      expect(space.database).to.be.true;
+      expect(space.database).not.to.be.undefined;
       expect(serviceContext.spaceManager!.spaces.has(space.key)).to.be.true;
       await space.close();
     });
@@ -110,7 +111,7 @@ describe('ServiceContext', function () {
       const invitation = await peer1.createInvitation(space1.key);
 
       const space2 = await peer2.acceptInvitation(invitation);
-      expect(space1.key).to.eq(space2.key);
+      expect(space1.key).to.deep.eq(space2.key);
 
       // TODO(burdon): Write multiple items.
 

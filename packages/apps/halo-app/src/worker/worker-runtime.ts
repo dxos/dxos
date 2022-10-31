@@ -29,7 +29,10 @@ export class WorkerRuntime {
   private _clientServices!: ClientServiceHost;
   private _config!: Config;
 
-  constructor(private readonly _configProvider: () => MaybePromise<Config>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _configProvider: () => MaybePromise<Config>
+  ) {}
 
   async start() {
     this._config = await this._configProvider();
@@ -37,6 +40,7 @@ export class WorkerRuntime {
       config: this._config,
       transportFactory: this._transportFactory
     });
+
     await this._clientServices.open();
     this._ready.wake();
   }

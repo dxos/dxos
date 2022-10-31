@@ -261,6 +261,7 @@ export class Client {
       modelFactory: this._modelFactory,
       signer: this._options.signer
     });
+
     await this._serviceProvider.open(onProgressCallback);
   }
 

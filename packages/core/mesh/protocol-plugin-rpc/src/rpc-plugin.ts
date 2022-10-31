@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { createProtoRpcPeer, ProtoRpcPeer, ProtoRpcPeerOptions, RpcPort } from '@dxos/rpc';
+import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
 type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>;
@@ -81,11 +81,9 @@ export class RpcPlugin {
   }
 }
 
-export const getPeerId = (peer: Protocol) => {
-  const { peerId } = peer.getSession() ?? {};
-  return peerId as string;
-};
-
+/**
+ *
+ */
 export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
   send: async (msg) => {
     const extension = peer.getExtension(RpcPlugin.EXTENSION);
@@ -102,42 +100,29 @@ export const createPort = async (peer: Protocol, receive: Event<SerializedObject
   }
 });
 
-type CreateRpcPluginOptions<Client> = {
-  onOpen?: (peer: ProtoRpcPeer<Client>) => Promise<void>;
-  onClose?: () => Promise<void>;
-  onError?: (err: Error) => void;
+/**
+ *
+ */
+export const getPeerId = (peer: Protocol) => {
+  const { peerId } = peer.getSession() ?? {};
+  // TODO(burdon): Assert?
+  return peerId as string;
 };
 
 /**
- * Creates an RPC plugin with the given handlers.
- * Calls the callback once the connection is established?
+ * Wrapper to ensure plugin only called once.
  */
-// prettier-ignore
-export const createRpcPlugin = <Client, Server>(
-  rpcOptions: Omit<ProtoRpcPeerOptions<Client, Server>, 'port'>,
-  pluginOptions?: CreateRpcPluginOptions<Client>
-) => {
-  const { onOpen, onClose, onError } = pluginOptions ?? {};
-
-  return new RpcPlugin(async (port) => {
-    // TODO(burdon): What does connection mean? Just one peer?
-    //  See original comment re handling multiple connections.
-    const peer = createProtoRpcPeer({ ...rpcOptions, port });
-
-    try {
-      log('opening peer');
-      await peer.open();
-      await onOpen?.(peer);
-    } catch (err: any) {
-      if (onError) {
-        onError(err);
-      } else {
-        log.error('RPC failed', err);
-      }
-    } finally {
-      log('closing peer');
-      await peer.close();
-      await onClose?.();
+// TODO(burdon): Debug why this is required with memory network.
+// TODO(burdon): Implement authentication/handshake.
+export const createRpcPlugin = (onOpen: OnConnect) => {
+  let connected = false;
+  return new RpcPlugin(async (port, peerId) => {
+    if (connected) {
+      log('already connected');
+      return;
     }
+
+    connected = true;
+    await onOpen(port, peerId);
   });
 };

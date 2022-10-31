@@ -12,6 +12,7 @@ import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/netwo
 import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { createProtoRpcPeer } from '@dxos/rpc';
 
 // TODO(burdon): Timeout.
 // TODO(burdon): Objective: Service impl pattern with clean open/close semantics.
@@ -79,8 +80,9 @@ export class SpaceInvitations {
   async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     const admitted = new Trigger();
 
-    const plugin = createRpcPlugin(
-      {
+    const plugin = createRpcPlugin(async (port) => {
+      const peer = createProtoRpcPeer({
+        port,
         requested: {
           SpaceGuestService: schema.getService('dxos.halo.invitations.SpaceGuestService')
         },
@@ -108,24 +110,21 @@ export class SpaceInvitations {
             }
           }
         }
-      },
+      });
+
+      await peer.open();
       {
-        onOpen: async (peer) => {
-          log('sending admission offer', { spaceKey: space.key });
-          await peer.rpc.SpaceGuestService.presentAdmissionOffer({
-            spaceKey: space.key,
-            genesisFeedKey: space.genesisFeedKey
-          });
+        log('sending admission offer', { spaceKey: space.key });
+        const ack = await peer.rpc.SpaceGuestService.presentAdmissionOffer({
+          spaceKey: space.key,
+          genesisFeedKey: space.genesisFeedKey
+        });
 
-          await admitted.wait();
-          onFinish?.();
-        },
-
-        onClose: async () => {
-          await connection.close();
-        }
+        onFinish?.();
       }
-    );
+      await peer.close();
+      await connection.close();
+    });
 
     const topic = PublicKey.random();
     const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
@@ -150,11 +149,11 @@ export class SpaceInvitations {
    * which then writes the guest's credentials to the space.
    */
   async acceptInvitation(invitation: InvitationDescriptor): Promise<Space> {
-    const accepted = new Trigger<Space>();
     const admitted = new Trigger<Space>();
 
-    const plugin = createRpcPlugin(
-      {
+    const plugin = createRpcPlugin(async (port) => {
+      const peer = createProtoRpcPeer({
+        port,
         requested: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
@@ -167,40 +166,28 @@ export class SpaceInvitations {
               log('processing admission offer', { spaceKey });
               // Create local space.
               const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
-              accepted.wake(space);
+
+              // Send local space's details to host (inviter).
+              // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
+              log('sending admission request', { identityKey: invitation.identityKey });
+              await peer.rpc.SpaceHostService.presentAdmissionCredentials({
+                identityKey: this._signingContext.identityKey,
+                deviceKey: this._signingContext.deviceKey,
+                controlFeedKey: space.controlFeedKey,
+                dataFeedKey: space.dataFeedKey
+              });
+
+              // TODO(burdon): Error: Writable stream closed prematurely
+              admitted.wake(space);
             }
           }
         }
-      },
-      {
-        onOpen: async (peer) => {
-          // Wait for host to ACK and local space to be created.
-          const space = await accepted.wait();
+      });
 
-          // Send local space's details to host (inviter).
-          // TODO(burdon): Could be called multiple times.
-          // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
-          log('sending admission request', { identityKey: invitation.identityKey });
-          await peer.rpc.SpaceHostService.presentAdmissionCredentials({
-            identityKey: this._signingContext.identityKey,
-            deviceKey: this._signingContext.deviceKey,
-            controlFeedKey: space.controlFeedKey,
-            dataFeedKey: space.dataFeedKey
-          });
-
-          // All done.
-          admitted.wake(space);
-        },
-
-        onClose: async () => {
-          await connection.close();
-        },
-
-        onError: (err: Error) => {
-          log.error('connection failed', err);
-        }
-      }
-    );
+      await peer.open();
+      await admitted.wait();
+      await peer.close();
+    });
 
     const topic = PublicKey.from(invitation.swarmKey);
     const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
@@ -212,6 +199,8 @@ export class SpaceInvitations {
       topology: new StarTopology(topic)
     });
 
-    return await admitted.wait();
+    const space = await admitted.wait();
+    await connection.close();
+    return space;
   }
 }
