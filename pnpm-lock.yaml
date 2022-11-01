@@ -108,7 +108,7 @@ importers:
       syncpack: ^8.2.4
       ts-node: 10.9.1
       tslib: ^2.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uuid: ^8.3.2
       vite: 3.0.9
       wait-for-expect: ^3.0.2
@@ -230,7 +230,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.51
@@ -298,7 +298,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
@@ -349,7 +349,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
@@ -385,7 +385,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       require-from-string: ^2.0.2
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
@@ -437,7 +437,7 @@ importers:
       isomorphic-ws: ^4.0.1
       sodium-native: ^3.4.1
       sodium-universal: ^3.1.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
@@ -757,7 +757,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       pirates: ~4.0.5
       sorcery: ^0.10.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       util: ^0.12.4
     dependencies:
       chalk: 4.1.2
@@ -962,7 +962,7 @@ importers:
   packages/common/testutils:
     specifiers:
       '@types/node': ^16.11.58
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     devDependencies:
       '@types/node': 16.11.66
       typescript: 4.8.4
@@ -1357,7 +1357,7 @@ importers:
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
       mocha: ^8.4.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
     dependencies:
@@ -1430,7 +1430,7 @@ importers:
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
       xor-distance: ^2.0.0
     dependencies:
@@ -1602,7 +1602,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1720,7 +1720,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
@@ -2210,7 +2210,7 @@ importers:
       react-dom: ^18.2.0
       robotjs: ~0.6.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uint8arrays: 3.0.0
       url-join: ^5.0.0
     dependencies:
@@ -2311,7 +2311,7 @@ importers:
       react: ^18.2.0
       supervisor: ~0.12.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2394,7 +2394,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       y-protocols: ^1.0.5
       yjs: ^13.5.41
@@ -2457,7 +2457,7 @@ importers:
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
     dependencies:
       '@dxos/keys': link:../../common/keys
@@ -3468,7 +3468,7 @@ importers:
       minimatch: ^5.1.0
       mocha: ^8.4.0
       ts-morph: ^16.0.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/log': link:../../packages/common/log
@@ -3500,7 +3500,7 @@ importers:
       '@babel/preset-env': ^7.19.3
       '@types/jscodeshift': ^0.11.5
       jscodeshift: ^0.13.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       jscodeshift: 0.13.1_@babel+preset-env@7.19.4
     devDependencies:
@@ -3515,7 +3515,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/yargs': ~16.0.1
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/toolchain-node-library': link:../toolchain-node-library
@@ -3550,7 +3550,7 @@ importers:
       terser: ^5.12.0
       ts-jest: 27.1.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
@@ -3600,7 +3600,7 @@ importers:
       eslint-plugin-react: ^7.30.0
       eslint-plugin-unused-imports: ^2.0.0
       prettier: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -3652,7 +3652,7 @@ importers:
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       argparse: 2.0.1
       chalk: 4.1.2
@@ -3678,6 +3678,7 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pick': ^4.4.7
       '@types/lodash.sortby': ^4.7.7
+      '@types/node': ^16.11.58
       chalk: ^4.1.0
       comment-json: ^4.2.3
       console-table-printer: ^2.11.0
@@ -3686,7 +3687,7 @@ importers:
       lodash.sortby: ^4.7.0
       sort-package-json: ^1.57.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       chalk: 4.1.2
       comment-json: 4.2.3
@@ -3699,7 +3700,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pick': 4.4.7
       '@types/lodash.sortby': 4.7.7
-      ts-node: 10.9.1_typescript@4.8.4
+      '@types/node': 16.11.66
+      ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
 
   tools/log-hook:
@@ -3710,7 +3712,7 @@ importers:
       pirates: ~4.0.5
       sorcery: ^0.10.0
       source-map: ^0.6.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.2.249
@@ -3737,7 +3739,7 @@ importers:
       prettier: ^2.7.1
       recursive-readdir: ^2.2.2
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       esbuild: 0.14.54
@@ -3791,7 +3793,7 @@ importers:
       remark-rehype: ~10.1.0
       to-vfile: ~7.2.3
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       unist-builder: ~3.0.0
       unist-util-visit: ^4.1.0
       yargs: ~16.2.0
@@ -3837,7 +3839,7 @@ importers:
       '@vuepress/client': ^2.0.0-beta.51
       change-case: ^4.1.2
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vuepress: ^2.0.0-beta.51
     devDependencies:
@@ -30805,36 +30807,6 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 16.11.66
-      acorn: 8.8.0
-      acorn-walk: 8.2.0
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 4.8.4
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    dev: true
-
-  /ts-node/10.9.1_typescript@4.8.4:
-    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
-    hasBin: true
-    peerDependencies:
-      '@swc/core': '>=1.2.50'
-      '@swc/wasm': '>=1.2.50'
-      '@types/node': '*'
-      typescript: '>=2.7'
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      '@swc/wasm':
-        optional: true
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.9
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.3
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3
