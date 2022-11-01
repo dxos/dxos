@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import cx from 'classnames';
 import { Plus } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Main, Button, useTranslation, getSize } from '@dxos/react-uikit';
+import { Main, Button, useTranslation, getSize, Group, defaultDisabled } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList } from '../../components';
 import { HeadingWithActions } from '../../components/HeadingWithActions';
@@ -22,6 +23,8 @@ export const DevicesPage = () => {
     void client.halo.createInvitation();
   };
 
+  const empty = invitations.length < 1;
+
   return (
     <Main className='max-w-7xl mx-auto'>
       <HeadingWithActions
@@ -34,7 +37,16 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      {invitations.length > 0 && <InvitationList invitations={invitations} />}
+      <Group
+        label={{
+          level: 2,
+          children: !empty ? t('invitations label') : t('empty invitations message'),
+          className: cx('text-xl', empty && defaultDisabled)
+        }}
+        elevation={0}
+      >
+        {!empty && <InvitationList invitations={invitations} />}
+      </Group>
     </Main>
   );
 };
