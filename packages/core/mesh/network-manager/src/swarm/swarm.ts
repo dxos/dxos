@@ -161,7 +161,7 @@ export class Swarm {
         assert(message.sessionId);
         const connection = this._createConnection(false, message.author, message.sessionId);
         try {
-          await connection.open();
+          connection.open();
         } catch (err: any) {
           this.errors.raise(err);
         }
@@ -273,26 +273,30 @@ export class Swarm {
     this.connectionAdded.emit(connection);
 
     connection.errors.handle((err) => {
-      log.error('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
+      // TODO(burdon): Change to warn? Why does this fail during tests?
+      log('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
       this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
     });
 
     connection.stateChanged.on((state) => {
       switch (state) {
-        case ConnectionState.CONNECTED:
+        case ConnectionState.CONNECTED: {
           this.connected.emit(remoteId);
           break;
+        }
 
-        case ConnectionState.REJECTED:
+        case ConnectionState.REJECTED: {
           // If the peer rejected our connection remove it from the set of candidates.
           this._discoveredPeers.delete(remoteId);
           break;
+        }
 
-        case ConnectionState.ACCEPTED:
+        case ConnectionState.ACCEPTED: {
           this._topology.update();
           break;
+        }
 
-        case ConnectionState.CLOSED:
+        case ConnectionState.CLOSED: {
           log('connection closed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
           // Connection might have been already closed or replace by a different one.
           // Only remove the connection if it has the same session id.
@@ -302,6 +306,7 @@ export class Swarm {
             this._topology.update();
           }
           break;
+        }
       }
     });
 
