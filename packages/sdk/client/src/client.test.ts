@@ -33,7 +33,7 @@ describe('Client', function () {
   const testSuite = (createClient: () => Promise<Client>) => {
     describe('initialization', function () {
       // TODO(wittjosiah): Review timeout.
-      it('initialize and destroy', async function () {
+      it.only('initialize and destroy', async function () {
         const client = await createClient();
         await client.initialize();
         await client.destroy();

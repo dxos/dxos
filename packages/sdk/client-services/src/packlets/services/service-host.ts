@@ -8,7 +8,7 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
@@ -23,12 +23,22 @@ import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';
 import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
-import { WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 // import { DevtoolsHostEvents } from '../devtools';
+
+// TODO(burdon): Remove.
+const memorySignalManagerContext = new MemorySignalManagerContext();
 
 // TODO(burdon): Factor out.
 export const createNetworkManager = (config: Config): NetworkManager => {
   const signalServer = config.get('runtime.services.signal.server');
+  // TODO(burdon): Remove.
+  if (!signalServer) {
+    return new NetworkManager({
+      signalManager: new MemorySignalManager(memorySignalManagerContext),
+      transportFactory: MemoryTransportFactory
+    });
+  }
   assert(signalServer);
 
   return new NetworkManager({

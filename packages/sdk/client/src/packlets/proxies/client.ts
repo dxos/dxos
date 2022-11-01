@@ -90,7 +90,7 @@ export class Client {
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
 
-  // TODO(burdon): Expose some kind of stable ID (e.g., from HALO).
+  // TODO(burdon): Expose some kind of stable ID (e.g., from HALO, MESH).
 
   /**
    * Creates the client object based on supplied configuration.
@@ -110,9 +110,6 @@ export class Client {
         `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
       );
     }
-
-    // TODO(burdon): Library should not set app-level globals.
-    // debug.enable(this._config.values.runtime?.client?.debug ?? process.env.DEBUG ?? 'dxos:*:error');
 
     this._mode = this._config.get('runtime.client.mode', Runtime.Client.Mode.AUTOMATIC)!;
     log(`mode=${Runtime.Client.Mode[this._mode]}`);
