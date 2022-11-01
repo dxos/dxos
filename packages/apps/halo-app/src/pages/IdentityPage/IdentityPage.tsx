@@ -15,7 +15,7 @@ export const IdentityPage = () => {
   const { t } = useTranslation('halo');
 
   return (
-    <main className='flex flex-col items-center max-w-xl mx-auto'>
+    <main className='flex flex-col items-center max-is-5xl mli-auto pli-7'>
       {/* TODO(wittjosiah): Update with device invite. */}
       <QrCode label={t('copy qrcode label')} value='https://halo.dxos.org' side='left' />
       <Input

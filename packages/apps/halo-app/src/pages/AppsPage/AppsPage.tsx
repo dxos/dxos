@@ -12,7 +12,7 @@ import { HeadingWithActions } from '../../components/HeadingWithActions';
 export const AppsPage = () => {
   const { t } = useTranslation('halo');
   return (
-    <main className='max-w-7xl mx-auto'>
+    <main className='max-is-5xl mli-auto pli-7'>
       <HeadingWithActions
         heading={{ children: t('apps label') }}
         actions={

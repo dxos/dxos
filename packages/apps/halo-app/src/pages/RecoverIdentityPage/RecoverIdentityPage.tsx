@@ -24,7 +24,7 @@ export const RecoverIdentityPage = () => {
     );
   }, [seedphrase]);
   return (
-    <main className='max-w-lg mx-auto'>
+    <main className='max-is-5xl mli-auto pli-7'>
       <Heading>{t('recover identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{

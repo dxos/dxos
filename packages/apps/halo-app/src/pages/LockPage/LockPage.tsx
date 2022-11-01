@@ -28,7 +28,7 @@ export const LockPage = () => {
   }, []);
 
   return (
-    <main className='max-is-lg mli-auto mbs-8 space-b-6'>
+    <main className='max-is-lg mli-auto mbs-8 pli-7 space-b-6'>
       <div role='none' className='text-center space-b-2'>
         <QrCode
           value='https://halo.dxos.org'

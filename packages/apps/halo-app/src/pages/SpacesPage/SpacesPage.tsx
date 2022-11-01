@@ -28,7 +28,7 @@ export const SpacesPage = () => {
   };
 
   return (
-    <main className='max-w-7xl mx-auto'>
+    <main className='max-is-5xl mli-auto pli-7'>
       <HeadingWithActions
         className='mbe-6'
         heading={{

@@ -28,7 +28,7 @@ export const JoinSpacePage = () => {
   const { t } = useTranslation();
 
   return (
-    <main className='max-w-lg mx-auto'>
+    <main className='max-is-lg mli-auto pli-7'>
       <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
       <JoinSpacePanel />
     </main>

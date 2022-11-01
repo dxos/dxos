@@ -26,7 +26,7 @@ export const DevicesPage = () => {
   const empty = invitations.length < 1;
 
   return (
-    <main className='max-is-7xl mli-auto'>
+    <main className='max-is-5xl mli-auto pli-7'>
       <HeadingWithActions
         className='mbe-6'
         heading={{ children: t('devices label') }}
