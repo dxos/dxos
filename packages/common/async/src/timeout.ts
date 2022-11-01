@@ -3,7 +3,7 @@
 //
 
 import { createPromiseFromCallback } from './callback';
-import { Observable, ObservableProvider } from './observable';
+import { TimeoutError } from './errors';
 
 /**
  * Times out after delay.
@@ -24,16 +24,6 @@ export const sleep = (ms: number) =>
 
     sleeper();
   });
-
-// TODO(burdon): Separate declaration file for errors.
-export class TimeoutError extends Error {
-  constructor(timeout: number, label?: string) {
-    super(`Timeout [${timeout}ms]${label === undefined ? '' : ` :${label}`}`);
-  }
-}
-
-// TODO(burdon): Move to debug.
-export const toError = (err: any) => (err === undefined || typeof err === 'string' ? new Error(err) : err);
 
 /**
  * Wait for promise or throw error.
@@ -57,40 +47,4 @@ export const asyncTimeout = <T>(
   return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timer);
   });
-};
-
-export interface AsyncEvents<T = any> {
-  onSuccess?(result: T): T;
-  onTimeout(err: TimeoutError): void;
-  onError(err: any): void; // TODO(burdon): Util to convert to error.
-}
-
-/**
- * Wait for promise and call callbacks.
- */
-// TODO(burdon): Optional retry with back-off?
-export const asyncTimeoutObservable = <T = any>(
-  promise: Promise<T> | (() => Promise<T>),
-  timeout: number
-): Observable<AsyncEvents<T>> => {
-  const observable = new ObservableProvider<AsyncEvents<T>>();
-
-  try {
-    setTimeout(async () => {
-      const result = await asyncTimeout<T>(promise, timeout);
-      observable.callbacks?.onSuccess?.(result);
-    });
-  } catch (err) {
-    if (!observable.callbacks) {
-      throw err; // Uncaught.
-    }
-
-    if (err instanceof TimeoutError) {
-      observable.callbacks.onTimeout(err);
-    } else {
-      observable.callbacks.onError(toError(err));
-    }
-  }
-
-  return observable;
 };

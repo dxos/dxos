@@ -4,6 +4,7 @@
 
 export * from './callback';
 export * from './event-emitter';
+export * from './errors';
 export * from './events';
 export * from './latch';
 export * from './observable';

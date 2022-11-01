@@ -4,9 +4,9 @@
 
 import { expect } from 'chai';
 
+import { AsyncEvents, TimeoutError } from './errors';
 import { latch } from './latch';
 import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable';
-import { AsyncEvents, TimeoutError } from './timeout';
 
 interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
   onConnect(connectionId: string): void;
@@ -15,6 +15,12 @@ interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
 type ConnectionObservable = CancellableObservable<ConnectionEvents>;
 
 describe.only('observable', function () {
+  /**
+   * Sets up a race between:
+   * a) succeeding
+   * b) being cancelled
+   * c) timing out
+   */
   const runTest = async (connectionDelay: number, cancelDelay: number, timeoutDelay: number) => {
     const [done, setDone] = latch();
 
