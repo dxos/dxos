@@ -6,7 +6,7 @@
  * Observable interface returned to caller.
  */
 export interface Observable<Events> {
-  observe(callbacks: Events): void;
+  subscribe(callbacks: Events): void;
 }
 
 /**
@@ -19,7 +19,7 @@ export class ObservableImpl<Events> implements Observable<Events> {
     return this._callbacks;
   }
 
-  observe(callbacks: Events) {
+  subscribe(callbacks: Events) {
     this._callbacks = callbacks;
   }
 
