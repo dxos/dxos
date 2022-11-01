@@ -24,7 +24,13 @@ const update = async () => {
           executor: '@dxos/toolbox:exec'
         };
 
-        fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2), 'utf-8');
+        if(projectJson.targets.build) {
+          projectJson.targets.build.options.transformers = [
+            '@dxos/log-hook/transformer'
+          ]
+        }
+
+        fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2) + '\n', 'utf-8');
         console.log(`Updated: ${filename}`);
       }
     })
