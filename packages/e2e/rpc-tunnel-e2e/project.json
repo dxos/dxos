@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
-        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

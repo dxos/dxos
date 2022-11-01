@@ -6,7 +6,10 @@
       "options": {
         "main": "tools/typedoc-plugin-plate/src/index.ts",
         "outputPath": "tools/typedoc-plugin-plate/dist",
-        "tsConfig": "tools/typedoc-plugin-plate/tsconfig.json"
+        "tsConfig": "tools/typedoc-plugin-plate/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

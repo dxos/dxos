@@ -7,7 +7,10 @@
       "options": {
         "main": "tools/executors/mocha/src/main.ts",
         "outputPath": "tools/executors/mocha/dist",
-        "tsConfig": "tools/executors/mocha/tsconfig.json"
+        "tsConfig": "tools/executors/mocha/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
