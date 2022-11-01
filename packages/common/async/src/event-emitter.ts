@@ -45,6 +45,5 @@ export const waitForEvent = (
     });
   });
 
-  return timeout ? asyncTimeout(promise, timeout, new Error('xxx')).finally(off) : promise.finally(off);
-  // return timeout ? asyncTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
+  return timeout ? asyncTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
 };

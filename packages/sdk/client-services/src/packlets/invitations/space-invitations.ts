@@ -14,6 +14,7 @@ import { schema } from '@dxos/protocols';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
+// TODO(burdon): Factor out.
 export interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
   onConnect(): void;
 }
@@ -39,8 +40,6 @@ export class SpaceInvitations {
       // TODO(burdon): Close connection.
     });
 
-    const admitted = new Trigger();
-
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         port,
@@ -54,7 +53,6 @@ export class SpaceInvitations {
           SpaceHostService: {
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               log('processing admission request', { identityKey, deviceKey });
-
               try {
                 await writeMessages(
                   space.controlPipeline.writer,
@@ -67,8 +65,6 @@ export class SpaceInvitations {
                     dataFeedKey
                   )
                 );
-
-                admitted.wake();
               } catch (err) {
                 observable.callbacks?.onError(err);
               }
@@ -86,7 +82,6 @@ export class SpaceInvitations {
           genesisFeedKey: space.genesisFeedKey
         });
 
-        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', onFinish);
         onFinish?.();
       }
       await peer.close();
