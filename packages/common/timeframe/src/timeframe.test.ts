@@ -3,13 +3,11 @@
 //
 
 import { expect } from 'chai';
-import debug from 'debug';
+import { log } from '@dxos/log';
 
 import { PublicKey } from '@dxos/keys';
 
 import { Timeframe } from './timeframe';
-
-const log = debug('dxos:timeframe:test');
 
 describe('spacetime', function () {
   it('constructors', function () {
