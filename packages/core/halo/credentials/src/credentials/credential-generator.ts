@@ -4,9 +4,10 @@
 
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { TypedMessage } from '@dxos/protocols';
 import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential } from './credential-factory';
+import { createCredential, CredentialSigner } from './credential-factory';
 
 // TODO(burdon): Normalize party_key, space_key (args, proto).
 
@@ -15,7 +16,7 @@ import { createCredential } from './credential-factory';
  */
 export class CredentialGenerator {
   constructor(
-    private readonly _keyring: Signer,
+    private readonly _keyring: Signer, // TODO(burdon): CredentialSigner.
     private readonly _identityKey: PublicKey,
     private readonly _deviceKey: PublicKey
   ) {}
@@ -23,30 +24,30 @@ export class CredentialGenerator {
   /**
    * Create genesis messages for new Space.
    */
-  async createSpaceGenesis(partyKey: PublicKey, controlKey: PublicKey): Promise<Credential[]> {
+  async createSpaceGenesis(spaceKey: PublicKey, controlKey: PublicKey): Promise<Credential[]> {
     return [
       await createCredential({
         signer: this._keyring,
-        issuer: partyKey,
-        subject: partyKey,
+        issuer: spaceKey,
+        subject: spaceKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey
+          partyKey: spaceKey
         }
       }),
 
       await createCredential({
         signer: this._keyring,
-        issuer: partyKey,
+        issuer: spaceKey,
         subject: this._identityKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
+          partyKey: spaceKey,
           role: PartyMember.Role.ADMIN
         }
       }),
 
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL)
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL)
     ];
   }
 
@@ -116,3 +117,51 @@ export class CredentialGenerator {
     });
   }
 }
+
+// TODO(burdon): Reconcile with above (esp. Signer).
+export const createAdmissionCredentials = async (
+  signer: CredentialSigner,
+  identityKey: PublicKey,
+  deviceKey: PublicKey,
+  spaceKey: PublicKey,
+  controlFeedKey: PublicKey,
+  dataFeedKey: PublicKey
+): Promise<TypedMessage[]> => {
+  const credentials = await Promise.all([
+    await signer.createCredential({
+      subject: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyMember',
+        partyKey: spaceKey,
+        role: PartyMember.Role.ADMIN
+      }
+    }),
+
+    await signer.createCredential({
+      subject: controlFeedKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: spaceKey,
+        deviceKey,
+        identityKey,
+        designation: AdmittedFeed.Designation.CONTROL
+      }
+    }),
+
+    await signer.createCredential({
+      subject: dataFeedKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: spaceKey,
+        deviceKey,
+        identityKey,
+        designation: AdmittedFeed.Designation.DATA
+      }
+    })
+  ]);
+
+  return credentials.map((credential) => ({
+    '@type': 'dxos.echo.feed.CredentialsMessage',
+    credential
+  }));
+};

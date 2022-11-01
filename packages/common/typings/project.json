@@ -5,7 +5,10 @@
     "build": {
       "executor": "nx:run-script",
       "options": {
-        "script": "build"
+        "script": "build",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       }
     },
     "toolbox": {

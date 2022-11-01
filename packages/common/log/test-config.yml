@@ -1,0 +1,6 @@
+formatter:
+  column: 60
+
+filter:
+  - warn
+  - log:info

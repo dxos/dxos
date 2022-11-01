@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/common/crypto/src/index.ts",
         "outputPath": "packages/common/crypto/dist",
-        "tsConfig": "packages/common/crypto/tsconfig.json"
+        "tsConfig": "packages/common/crypto/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

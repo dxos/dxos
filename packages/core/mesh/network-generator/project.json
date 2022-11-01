@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/mesh/network-generator/src/index.ts",
         "outputPath": "packages/core/mesh/network-generator/dist",
-        "tsConfig": "packages/core/mesh/network-generator/tsconfig.json"
+        "tsConfig": "packages/core/mesh/network-generator/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/apps/halo-app/src/index.ts",
         "outputPath": "packages/apps/halo-app/dist",
-        "tsConfig": "packages/apps/halo-app/tsconfig.json"
+        "tsConfig": "packages/apps/halo-app/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

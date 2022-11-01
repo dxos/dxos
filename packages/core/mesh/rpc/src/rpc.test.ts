@@ -142,8 +142,8 @@ describe('RpcPeer', function () {
 
       expect(open).toEqual(false);
 
-      alice.close();
-      bob.close();
+      await alice.close();
+      await bob.close();
     });
   });
 
@@ -261,7 +261,7 @@ describe('RpcPeer', function () {
       await Promise.all([alice.open(), bob.open()]);
 
       const req = bob.call('method', createPayload('request'));
-      bob.close();
+      await bob.close();
 
       await expect(req).toBeRejected();
     });
@@ -286,7 +286,7 @@ describe('RpcPeer', function () {
 
       await Promise.all([alice.open(), bob.open()]);
 
-      alice.close();
+      await alice.close();
       const req = bob.call('method', createPayload('request'));
 
       await expect(req).toBeRejected();

@@ -57,7 +57,7 @@ export const createDevtoolsRpcServer = async (client: Client, serviceHost: Clien
     openClientRpcServer: async () => {
       if (server) {
         log('Closing existing client RPC server.');
-        server.close();
+        await server.close();
       }
 
       log('Opening devtools client RPC server...');
@@ -71,8 +71,8 @@ export const createDevtoolsRpcServer = async (client: Client, serviceHost: Clien
         error(`Failed to open RPC server: ${err}`);
         return false;
       });
-      log('Opened devtools client RPC server.');
 
+      log('Opened devtools client RPC server.');
       return true;
     }
   };

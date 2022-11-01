@@ -11,7 +11,10 @@
         "main": "packages/gravity/orchestrator/src/index.ts",
         "outputPath": "packages/gravity/orchestrator/dist",
         "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
-        "updateBuildableProjectDepsInPackageJson": false
+        "updateBuildableProjectDepsInPackageJson": false,
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

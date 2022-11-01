@@ -15,7 +15,11 @@ export interface ServiceBackend {
 }
 
 export class ServiceDescriptor<S> {
-  constructor(private readonly _service: pb.Service, private readonly _schema: Schema<any>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _service: pb.Service,
+    private readonly _schema: Schema<any>
+  ) {}
 
   get serviceProto(): pb.Service {
     return this._service;

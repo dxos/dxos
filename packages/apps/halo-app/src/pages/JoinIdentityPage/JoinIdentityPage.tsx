@@ -5,21 +5,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationDescriptor } from '@dxos/client';
+import { InvitationWrapper } from '@dxos/client';
 import { useClient, useProfile } from '@dxos/react-client';
-import {
-  Heading,
-  Main,
-  SingleInputStep,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Heading, Main, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 // TODO(wittjosiah): Factor out.
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(
-      text.substring(text.lastIndexOf('?'))
-    );
+    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     const invitation = searchParams.get('invitation');
     console.log({ invitation, searchParams });
     return invitation ?? text;
@@ -42,10 +35,10 @@ export const JoinIdentityPage = () => {
 
   const onNext = useCallback(async () => {
     setPending(true);
-    let invitation: InvitationDescriptor;
+    let invitation: InvitationWrapper;
     try {
       const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-      invitation = InvitationDescriptor.decode(parsedInvitationCode);
+      invitation = InvitationWrapper.decode(parsedInvitationCode);
       await client.halo.acceptInvitation(invitation);
     } catch (err: any) {
       setPending(false);

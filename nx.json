@@ -126,7 +126,7 @@
           "env": "CI"
         },
         {
-          "env": "LOG_FILTER"
+          "env": "LOG_LEVEL"
         },
         {
           "env": "LOG_PROCESSOR"
