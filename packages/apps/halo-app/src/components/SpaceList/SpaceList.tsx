@@ -54,9 +54,9 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
               ),
               className: 'grow flex items-center mb-0'
             }}
-            className={cx(defaultGroup({ elevation: 1 }), 'flex items-center gap-2')}
+            className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
-            <div role='none' className='flex flex-col items-end gap-2'>
+            <div role='none' className='flex flex-col justify-center items-end gap-2'>
               <Tag className='inline-flex gap-1 items-center'>
                 <Users weight='bold' />
                 {'##'}
@@ -66,14 +66,14 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 {'##'}
               </Tag>
             </div>
-            <div role='none' className='flex flex-col md:flex-row gap-2'>
-              <Tooltip content={t('more options label', { ns: 'uikit' })} tooltipLabelsTrigger>
-                <Button variant='outline' className='flex gap-1'>
+            <div role='none' className='flex flex-col md:flex-row md:items-stretch gap-2'>
+              <Tooltip content={t('more options label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
+                <Button className='flex gap-1'>
                   <DotsThreeOutline className={getSize(5)} />
                 </Button>
               </Tooltip>
-              <Tooltip content={t('join label')} tooltipLabelsTrigger>
-                <Button variant='outline' className='flex gap-1'>
+              <Tooltip content={t('join label')} side='left' tooltipLabelsTrigger>
+                <Button className='flex gap-1'>
                   <SignIn className={getSize(5)} />
                 </Button>
               </Tooltip>
