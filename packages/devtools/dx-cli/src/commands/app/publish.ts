@@ -39,7 +39,8 @@ export default class Publish extends BaseCommand {
 
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
         await publisher.rpc.publish({
-          package: moduleConfig.values.package!
+          package: moduleConfig.values.package!,
+          skipExisting: false
         });
         verbose && this.log('Published to KUBE.');
       });
