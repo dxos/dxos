@@ -34,6 +34,7 @@ export class SpaceInvitations {
    */
   // TODO(burdon): Replace callback with cancelable observable.
   async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
+    // TODO(burdon): Repeat pattern.
     const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
       // TODO(burdon): Close connection.
     });
@@ -85,6 +86,7 @@ export class SpaceInvitations {
           genesisFeedKey: space.genesisFeedKey
         });
 
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', onFinish);
         onFinish?.();
       }
       await peer.close();

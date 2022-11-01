@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { latch } from '@dxos/async';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
@@ -45,7 +46,8 @@ describe('services/spaces', function () {
     await space.close();
   });
 
-  it('create and accepts space invitations', async function () {
+  // TODO(burdon): Only!!!
+  it.only('create and accepts space invitations', async function () {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await createServiceContext({ signalContext });
@@ -60,10 +62,17 @@ describe('services/spaces', function () {
     await peer2.createIdentity();
 
     const space1 = await peer1.spaceManager!.createSpace();
-    const invitation = await peer1.createInvitation(space1.key);
+
+    const [invited, setInvited] = latch();
+    const invitation = await peer1.createInvitation(space1.key, () => {
+      console.log('!!!!!!!!!!!!!!!!!!');
+      setInvited();
+    });
 
     const space2 = await peer2.acceptInvitation(invitation);
     expect(space1.key).to.deep.eq(space2.key);
+
+    await invited();
 
     // TODO(burdon): Write multiple items.
 
