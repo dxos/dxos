@@ -22,6 +22,7 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
   return (
     <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
       <HeadingWithActions
+        compact
         heading={{
           level: 2,
           className: 'text-lg font-body flex gap-2 items-center',

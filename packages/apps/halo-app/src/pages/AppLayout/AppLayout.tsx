@@ -104,7 +104,7 @@ export const AppLayout = () => {
         </div>
       )}
 
-      <div role='none' className='fixed block-start-5 inline-end-6 plb-1'>
+      <div role='none' className='fixed block-start-5 inline-end-6 plb-[2px]'>
         <Presence
           profile={profile!}
           party={space}
