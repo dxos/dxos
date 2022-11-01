@@ -26,3 +26,16 @@ export const createServiceContext = async ({
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   return new ServiceContext(storage, networkManager, modelFactory);
 };
+
+// TODO(burdon): Create test builder.
+export const createPeers = async (numPeers: number) => {
+  const signalContext = new MemorySignalManagerContext();
+
+  return await Promise.all(
+    Array.from(Array(numPeers)).map(async () => {
+      const peer = await createServiceContext({ signalContext });
+      await peer.open();
+      return peer;
+    })
+  );
+};

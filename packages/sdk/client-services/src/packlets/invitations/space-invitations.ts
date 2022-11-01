@@ -159,7 +159,6 @@ export class SpaceInvitations {
                 dataFeedKey: space.dataFeedKey
               });
 
-              // TODO(burdon): Error: Writable stream closed prematurely
               admitted.wake(space);
             }
           }
@@ -186,7 +185,7 @@ export class SpaceInvitations {
       const space = await admitted.wait();
       observable.callbacks?.onSuccess(space);
 
-      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
+      // TODO(burdon): Wait for host to complete (otherwise immediately kills swarm peer and RPC doesn't complete).
       await sleep(100);
       await connection.close();
     });

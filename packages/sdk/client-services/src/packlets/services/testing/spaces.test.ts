@@ -4,28 +4,14 @@
 
 import { expect } from 'chai';
 
-import { asyncChain, latch, sleep, TimeoutError, Trigger } from '@dxos/async';
+import { asyncChain, Trigger } from '@dxos/async';
 import { Space } from '@dxos/echo-db';
-import { MemorySignalManagerContext } from '@dxos/messaging';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { afterTest } from '@dxos/testutils';
 import { ServiceContext } from 'packages/sdk/client-services/src/packlets/services/service-context';
 
-import { createServiceContext } from './testing';
-
-// TODO(burdon): Create test builder.
-const createPeers = async (numPeers: number) => {
-  const signalContext = new MemorySignalManagerContext();
-
-  return await Promise.all(
-    Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalContext });
-      await peer.open();
-      return peer;
-    })
-  );
-};
+import { createPeers, createServiceContext } from './testing';
 
 const createIdentity = async (peer: ServiceContext) => {
   await peer.createIdentity();
@@ -38,20 +24,18 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 // TODO(burdon): Factor out and make configurable (multiple items).
-const sync = async (space1: Space, space2: Space) => {
-  const type = 'test';
-
+const syncItems = async (space1: Space, space2: Space) => {
   {
     // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type });
-    const item2 = await space2.database!.waitForItem({ type });
+    const item1 = await space1.database!.createItem({ type: 'type-1' });
+    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
     expect(item1.id).to.eq(item2.id);
   }
 
   {
     // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type });
-    const item2 = await space1.database!.waitForItem({ type });
+    const item1 = await space2.database!.createItem({ type: 'type-2' });
+    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
     expect(item1.id).to.eq(item2.id);
   }
 };
@@ -96,6 +80,7 @@ describe.only('services/spaces', function () {
   // TODO(burdon): Integrate observable with client API.
   // TODO(burdon): Separate test file for invitations.
   // TODO(burdon): Copy pattern to halo.
+  // TODO(burdon): Uncaught error if run both tests in browser (Error Closed: Request._openAndNotClosed).
   it('creates and accepts invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
@@ -142,7 +127,7 @@ describe.only('services/spaces', function () {
       const [space1, space2] = await Promise.all([complete1.wait(), complete2.wait()]);
       expect(space1.key).to.deep.eq(space2.key);
 
-      await sync(space1, space2);
+      await syncItems(space1, space2);
 
       await space1.close();
       await space2.close();
