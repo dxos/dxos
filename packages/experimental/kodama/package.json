@@ -19,11 +19,9 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "debug": "npm run build && ./bin/kodama.js",
     "prepublishOnly": "npm run test && npm run build",
-    "test": "toolchain test",
     "test:app": "npm run build && ./bin/test.js",
     "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
@@ -56,7 +54,6 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.2.2",

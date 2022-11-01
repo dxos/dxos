@@ -3,8 +3,7 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
-test('sanity', () => {
+it('sanity', function () {
   expect(true).toBeTruthy();
 });
