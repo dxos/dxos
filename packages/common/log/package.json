@@ -8,7 +8,8 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "browser": {
-    "node:util": "util"
+    "node:util": "util",
+    "./dist/src/index.js": "./dist/src/browser/index.js"
   },
   "types": "dist/src/index.d.ts",
   "files": [
@@ -20,11 +21,15 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
+    "js-yaml": "^4.1.0",
+    "lodash.defaultsdeep": "^4.6.1",
     "util": "^0.12.4"
   },
   "devDependencies": {
     "@swc-node/sourcemap-support": "^0.2.0",
     "@swc/core": "^1.3.9",
+    "@types/js-yaml": "^4.0.5",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.58",
     "pirates": "~4.0.5",
