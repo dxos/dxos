@@ -1021,8 +1021,10 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1050,8 +1052,10 @@ importers:
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/rpc': link:../../mesh/rpc
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1571,6 +1575,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
@@ -1582,6 +1587,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
       '@dxos/rpc': link:../rpc
@@ -2774,6 +2780,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -2801,6 +2808,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/protocols': link:../../core/protocols

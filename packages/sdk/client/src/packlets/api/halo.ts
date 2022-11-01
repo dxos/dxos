@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationDescriptor } from '@dxos/client-services';
+import { InvitationWrapper } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
@@ -10,7 +10,7 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Contact, CreateProfileOptions } from '../proxies';
-import { Invitation } from './invitation';
+import { InvitationChallenge } from './invitation-challenge';
 import { InvitationRequest } from './invitation-request';
 
 /**
@@ -34,7 +34,7 @@ export interface Halo {
 
   queryContacts(): ResultSet<Contact>;
   createInvitation(): Promise<InvitationRequest>;
-  acceptInvitation(invitationDescriptor: InvitationDescriptor): Invitation;
+  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
 
   queryDevices(): Promise<DeviceInfo[]>;
   setDevicePreference(key: string, value: string): Promise<void>;

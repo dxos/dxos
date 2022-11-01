@@ -85,6 +85,7 @@ export const createCredentialMessage = (credential: Credential) => {
   };
 };
 
+// TODO(burdon): Vs. Signer.
 export interface CredentialSigner {
   getIssuer(): PublicKey;
   createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>;

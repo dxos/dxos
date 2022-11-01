@@ -17,6 +17,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/rpc": "workspace:*",

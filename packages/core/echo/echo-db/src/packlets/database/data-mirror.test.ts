@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
@@ -52,7 +52,7 @@ describe('DataMirror', function () {
     dataMirror.open();
 
     // Create item
-    const promise = promiseTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
+    const promise = asyncTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
     const item = (await itemManager.createItem(ObjectModel.meta.type)) as Item<ObjectModel>;
 
@@ -66,7 +66,7 @@ describe('DataMirror', function () {
 
     // Mutate model
     await Promise.all([
-      promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
+      asyncTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
       item.model.set('foo', 'bar')
     ]);
 

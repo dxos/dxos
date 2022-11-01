@@ -3,7 +3,7 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
+import { ClientServiceProvider, InvitationWrapper } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -11,7 +11,7 @@ import { Profile, SignRequest } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { Halo, Invitation, InvitationRequest } from '../api';
+import { Halo, InvitationChallenge, InvitationRequest } from '../api';
 import { InvitationProxy } from './invitation-proxy';
 import { Contact, CreateProfileOptions, PartyMember } from './stubs';
 
@@ -128,10 +128,11 @@ export class HaloProxy implements Halo {
    *
    * To be used with `client.halo.createHaloInvitation` on the inviter side.
    */
-  acceptInvitation(invitationDescriptor: InvitationDescriptor): Invitation {
+  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge {
     const invitationProcessStream = this._serviceProvider.services.ProfileService.acceptInvitation(
       invitationDescriptor.toProto()
     );
+
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
       invitationDescriptor,
@@ -145,7 +146,7 @@ export class HaloProxy implements Halo {
       await this.profileChanged.waitForCondition(() => !!this.profile?.publicKey);
     };
 
-    return new Invitation(invitationDescriptor, waitForHalo(), authenticate);
+    return new InvitationChallenge(invitationDescriptor, waitForHalo(), authenticate);
   }
 
   async sign(request: SignRequest) {

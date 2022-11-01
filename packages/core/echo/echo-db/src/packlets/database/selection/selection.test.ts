@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { Event, promiseTimeout } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -236,19 +236,19 @@ describe('Selection', function () {
       {
         const promise = query.update.waitForCount(1);
         update.emit([project1]);
-        await promiseTimeout(promise, 10, new Error('timeout'));
+        await asyncTimeout(promise, 10, new Error('timeout'));
       }
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([]);
-        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+        await expect(asyncTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
 
       {
         const promise = query.update.waitForCount(1);
         update.emit([org1]);
-        await expect(promiseTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
+        await expect(asyncTimeout(promise, 10, new Error('timeout'))).rejects.toThrow('timeout');
       }
     });
   });

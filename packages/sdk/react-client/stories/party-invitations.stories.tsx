@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
+import { InvitationWrapper, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
@@ -50,13 +50,13 @@ const PartyInvitationContainer = () => {
       const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
         inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
       });
-      invitation.finished.on(() => resetInvitations());
 
+      invitation.finished.on(() => resetInvitations());
       if (!contact) {
         invitation.connected.on(() => setPin(invitation.secret.toString()));
       }
 
-      setInvitationCode(invitation.descriptor.encode());
+      setInvitationCode(invitation.encode());
     });
   };
 
@@ -111,7 +111,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(InvitationDescriptor.decode(invitationCode));
+      const invitation = await client.echo.acceptInvitation(InvitationWrapper.decode(invitationCode));
       setStatus({ invitation });
 
       const party = await invitation.getParty();
