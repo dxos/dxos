@@ -19,7 +19,8 @@ import {
   Button,
   useTranslation,
   getSize,
-  Tooltip
+  Tooltip,
+  buttonStyles
 } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
@@ -56,7 +57,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             }}
             className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
-            <div role='none' className='flex flex-col justify-center items-end gap-2'>
+            <div role='none' className='flex flex-col justify-center items-end gap-x-2 gap-y-1'>
               <Tag className='inline-flex gap-1 items-center'>
                 <Users weight='bold' />
                 {'##'}
@@ -66,16 +67,16 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 {'##'}
               </Tag>
             </div>
-            <div role='none' className='flex flex-col md:flex-row md:items-stretch gap-2'>
+            <div role='none' className='flex flex-col md:flex-row md:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('more options label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
-                <Button className='flex gap-1'>
+                <Button compact className='flex gap-1'>
                   <DotsThreeOutline className={getSize(5)} />
                 </Button>
               </Tooltip>
               <Tooltip content={t('join label')} side='left' tooltipLabelsTrigger>
-                <Button className='flex gap-1'>
+                <Link to={`/spaces/${keyHex}`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
                   <SignIn className={getSize(5)} />
-                </Button>
+                </Link>
               </Tooltip>
             </div>
           </Group>

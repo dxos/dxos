@@ -6,5 +6,6 @@ import { ComponentProps } from 'react';
 
 export interface ButtonProps extends ComponentProps<'button'> {
   variant?: 'default' | 'primary' | 'outline';
+  compact?: boolean;
   disabled?: boolean;
 }
