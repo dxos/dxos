@@ -26,7 +26,7 @@ import { HaloSigner } from './signer';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 // import { DevtoolsHostEvents } from '../devtools';
 
-// TODO(burdon): Remove.
+// TODO(burdon): Remove (no memory defaults).
 const memorySignalManagerContext = new MemorySignalManagerContext();
 
 // TODO(burdon): Factor out.
@@ -34,6 +34,7 @@ export const createNetworkManager = (config: Config): NetworkManager => {
   const signalServer = config.get('runtime.services.signal.server');
   // TODO(burdon): Remove.
   if (!signalServer) {
+    log.warn('DEPRECATED: falling back to MemorySignalManager');
     return new NetworkManager({
       signalManager: new MemorySignalManager(memorySignalManagerContext),
       transportFactory: MemoryTransportFactory
