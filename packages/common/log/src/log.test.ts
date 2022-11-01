@@ -8,6 +8,16 @@ import { LogLevel } from './config';
 import { log } from './log';
 
 describe('log', function () {
+  it('line numbers', function () {
+    log.warn('LOG LINE 12'); // TODO(burdon): Test by configuring custom processor.
+
+    try {
+      throw new Error('ERROR ON LINE 15');
+    } catch (err: any) {
+      log.catch(err);
+    }
+  });
+
   it('config', function () {
     log.config({
       filter: LogLevel.INFO
@@ -18,24 +28,14 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  it.only('config file', function () {
+  it('config file', function () {
     log.config({
-      file: path.join(__dirname, '../test-config.yml')
+      file: path.join('packages/common/log/test-config.yml')
     });
 
     log.debug('Debug level log message');
     log.info('Info level log message');
     log.warn('Warn level log message');
-  });
-
-  it('line numbers', function () {
-    log.warn('LOG LINE 13');
-
-    try {
-      throw new Error('ERROR ON LINE 16');
-    } catch (err: any) {
-      log.catch(err);
-    }
   });
 
   it('levels', function () {
@@ -44,10 +44,6 @@ describe('log', function () {
     log.info('Info level log message');
     log.warn('Warn level log message');
     log.error('Error level log message');
-  });
-
-  it('formatting', function () {
-    log.info(`${2} + ${2} = ${2 + 2}`);
   });
 
   it('context', function () {
