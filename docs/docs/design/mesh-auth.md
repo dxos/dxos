@@ -1,3 +1,5 @@
+TODO(burdon): Cleanup
+
 1. we have a general network abstraction where you can be connected to one or more peers via a discovery key (topic/swarm)
 2. that "connection" contains a single duplex stream with which you can communicated with the peer
 Q (for after the summary: where is the key exchange, encryption, noise, etc. done?)
