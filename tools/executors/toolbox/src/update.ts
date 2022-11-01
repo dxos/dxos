@@ -24,10 +24,8 @@ const update = async () => {
           executor: '@dxos/toolbox:exec'
         };
 
-        if(projectJson.targets.build) {
-          projectJson.targets.build.options.transformers = [
-            '@dxos/log-hook/transformer'
-          ]
+        if (projectJson.targets.build) {
+          projectJson.targets.build.options.transformers = ['@dxos/log-hook/transformer'];
         }
 
         fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2) + '\n', 'utf-8');
