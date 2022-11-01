@@ -53,7 +53,11 @@ export class StarTopology implements Topology {
   async onOffer(peer: PublicKey): Promise<boolean> {
     assert(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
-    log('offer', { peer, isCentral: peer.equals(this._centralPeer), isSelfCentral: ownPeerId.equals(this._centralPeer) });
+    log('offer', {
+      peer,
+      isCentral: peer.equals(this._centralPeer),
+      isSelfCentral: ownPeerId.equals(this._centralPeer)
+    });
     return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
   }
 

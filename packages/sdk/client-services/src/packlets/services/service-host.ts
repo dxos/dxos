@@ -7,6 +7,7 @@ import assert from 'assert';
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -23,7 +24,6 @@ import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';
 import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 // import { DevtoolsHostEvents } from '../devtools';
 
 // TODO(burdon): Remove (no memory defaults).

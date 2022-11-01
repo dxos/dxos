@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { expect } from 'chai';
 
 import { latch, Trigger } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { afterTest } from '@dxos/testutils';

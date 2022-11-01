@@ -67,7 +67,7 @@ export class HaloInvitations {
       await peer.open();
       {
         log('sending admission offer', { identityKey: identity.identityKey });
-        const ack = await peer.rpc.HaloGuestService.presentAdmissionOffer({
+        await peer.rpc.HaloGuestService.presentAdmissionOffer({
           identityKey: identity.identityKey,
           haloSpaceKey: identity.haloSpaceKey,
           genesisFeedKey: identity.haloGenesisFeedKey

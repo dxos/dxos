@@ -14,6 +14,7 @@ import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { log } from '@dxos/log';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { TestModel } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -24,7 +25,6 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './packlets/proxies';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 
 describe('Client', function () {
   //

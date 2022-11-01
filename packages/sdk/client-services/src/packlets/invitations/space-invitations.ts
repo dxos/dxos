@@ -115,7 +115,7 @@ export class SpaceInvitations {
       await peer.open();
       {
         log('sending admission offer', { spaceKey: space.key });
-        const ack = await peer.rpc.SpaceGuestService.presentAdmissionOffer({
+        await peer.rpc.SpaceGuestService.presentAdmissionOffer({
           spaceKey: space.key,
           genesisFeedKey: space.genesisFeedKey
         });
