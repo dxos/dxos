@@ -22,19 +22,19 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  const args = []
+  const args = [];
 
-  if(entry.meta) {
+  if (entry.meta) {
     args.push(`${getRelativeFilename(entry.meta.file)}:${entry.meta.line}`);
   }
 
-  args.push(`${shortLevelName[entry.level]} ${entry.message}`)
+  args.push(`${shortLevelName[entry.level]} ${entry.message}`);
 
   if (entry.ctx && Object.keys(entry.ctx).length > 0) {
     args.push(entry.ctx);
   }
 
-  switch(entry.level) {
+  switch (entry.level) {
     case LogLevel.ERROR:
       console.error(...args);
       break;

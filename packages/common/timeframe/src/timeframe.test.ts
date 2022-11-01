@@ -3,9 +3,9 @@
 //
 
 import { expect } from 'chai';
-import { log } from '@dxos/log';
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { Timeframe } from './timeframe';
 

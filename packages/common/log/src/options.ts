@@ -15,7 +15,7 @@ import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR, BROWSER_PROCESSOR } from './process
 export const processors: { [index: string]: LogProcessor } = {
   [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
   [LogProcessorType.BROWSER]: BROWSER_PROCESSOR,
-  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR,
+  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
 };
 
 export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] => {
@@ -48,7 +48,8 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
     options = defaultsDeep(options, loadOptions(options.file));
   }
 
-  const defaultProcessor = typeof window !== "undefined" && typeof window.document !== "undefined" ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
+  const defaultProcessor =
+    typeof window !== 'undefined' && typeof window.document !== 'undefined' ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
 
   return {
     options,

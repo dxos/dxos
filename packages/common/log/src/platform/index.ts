@@ -1,1 +1,5 @@
-export * from './node'
+//
+// Copyright 2022 DXOS.org
+//
+
+export * from './node';
