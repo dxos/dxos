@@ -3,7 +3,7 @@
 //
 
 import { createPromiseFromCallback } from './callback';
-import { ObservableImpl } from './observable';
+import { Observable, ObservableProvider } from './observable';
 
 /**
  * Times out after delay.
@@ -25,12 +25,15 @@ export const sleep = (ms: number) =>
     sleeper();
   });
 
-// TODO(burdon): Separate file for async errors.
+// TODO(burdon): Separate declaration file for errors.
 export class TimeoutError extends Error {
   constructor(timeout: number, label?: string) {
-    super(`Timeout [${timeout}ms]${label && ':'}${label}`);
+    super(`Timeout [${timeout}ms]${label === undefined ? '' : ` :${label}`}`);
   }
 }
+
+// TODO(burdon): Move to debug.
+export const toError = (err: any) => (err === undefined || typeof err === 'string' ? new Error(err) : err);
 
 /**
  * Wait for promise or throw error.
@@ -41,44 +44,37 @@ export const asyncTimeout = <T>(
   timeout: number,
   err?: Error | string
 ): Promise<T> => {
+  const throwable = (err === undefined || typeof err === 'string') ? new TimeoutError(timeout, err) : err;
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
 
-  let cancelTimeout: any;
+  let timer: NodeJS.Timeout;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      if (err === undefined || typeof err === 'string') {
-        reject(new TimeoutError(timeout, err));
-      } else {
-        reject(err);
-      }
+    timer = setTimeout(() => {
+      reject(throwable);
     }, timeout);
-
-    cancelTimeout = () => {
-      clearTimeout(timer);
-    };
   });
 
   return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
-    cancelTimeout();
+    clearTimeout(timer);
   });
 };
 
-export interface AsyncCallbacks<T = any> {
+export interface AsyncEvents<T = any> {
   onSuccess?(result: T): T;
   onTimeout(err: TimeoutError): void;
-  onError(err: Error): void;
+  onError(err: any): void; // TODO(burdon): Util to convert to error.
 }
 
 /**
  * Wait for promise and call callbacks.
  */
 // TODO(burdon): Optional retry with back-off?
-// prettier-ignore
-export const asyncCatch = <T = any> (
+export const asyncTimeoutObservable = <T = any>(
   promise: Promise<T> | (() => Promise<T>),
-  observable: ObservableImpl<AsyncCallbacks<T>>,
   timeout: number
-): void => {
+): Observable<AsyncEvents<T>> => {
+  const observable = new ObservableProvider<AsyncEvents<T>>();
+
   try {
     setTimeout(async () => {
       const result = await asyncTimeout<T>(promise, timeout);
@@ -86,17 +82,15 @@ export const asyncCatch = <T = any> (
     });
   } catch (err) {
     if (!observable.callbacks) {
-      throw err;
+      throw err; // Uncaught.
     }
 
     if (err instanceof TimeoutError) {
       observable.callbacks.onTimeout(err);
-    } else if (err instanceof Error) {
-      observable.callbacks.onError(err);
-    } else if (typeof err === 'string') {
-      observable.callbacks.onError(new Error(err));
     } else {
-      observable.callbacks.onError(new Error());
+      observable.callbacks.onError(toError(err));
     }
   }
+
+  return observable;
 };

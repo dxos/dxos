@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { AsyncEvents, CancellableObservableEvents, CancellableObservableProvider, Trigger } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
@@ -13,6 +13,10 @@ import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createProtoRpcPeer } from '@dxos/rpc';
+
+export interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
+  onConnect(): void;
+}
 
 /**
  * Manages the life-cycle of Space invitations between peers.
@@ -30,6 +34,10 @@ export class SpaceInvitations {
    */
   // TODO(burdon): Replace callback with cancelable observable.
   async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
+    const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
+      // TODO(burdon): Close connection.
+    });
+
     const admitted = new Trigger();
 
     const plugin = createRpcPlugin(async (port) => {
@@ -46,19 +54,23 @@ export class SpaceInvitations {
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               log('processing admission request', { identityKey, deviceKey });
 
-              await writeMessages(
-                space.controlPipeline.writer,
-                await createAdmissionCredentials(
-                  this._signingContext.credentialSigner,
-                  identityKey,
-                  deviceKey,
-                  space.key,
-                  controlFeedKey,
-                  dataFeedKey
-                )
-              );
+              try {
+                await writeMessages(
+                  space.controlPipeline.writer,
+                  await createAdmissionCredentials(
+                    this._signingContext.credentialSigner,
+                    identityKey,
+                    deviceKey,
+                    space.key,
+                    controlFeedKey,
+                    dataFeedKey
+                  )
+                );
 
-              admitted.wake();
+                admitted.wake();
+              } catch (err) {
+                observable.callbacks?.onError(err);
+              }
             }
           }
         }
