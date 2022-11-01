@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { PartyTable } from '../../components';
+import { SpaceTable } from '../../components';
 
 export const SpacesPanel = () => {
   const devtoolsHost = useDevtools();
@@ -16,5 +16,5 @@ export const SpacesPanel = () => {
     return null;
   }
 
-  return <PartyTable parties={parties} />;
+  return <SpaceTable parties={parties} />;
 };

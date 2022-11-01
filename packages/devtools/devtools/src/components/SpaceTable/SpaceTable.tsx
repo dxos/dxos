@@ -29,7 +29,7 @@ export interface PartyTableProps {
   parties: SubscribeToPartiesResponse.PartyInfo[];
 }
 
-export const PartyTable = ({ parties }: PartyTableProps) => (
+export const SpaceTable = ({ parties }: PartyTableProps) => (
   <Table stickyHeader size='small'>
     <TableHead>
       <TableRow>
