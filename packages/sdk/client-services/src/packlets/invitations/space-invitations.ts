@@ -89,7 +89,7 @@ export class SpaceInvitations {
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       await sleep(100);
-      await connection.close();
+      await connection!.close();
     });
 
     setTimeout(async () => {

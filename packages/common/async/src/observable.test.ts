@@ -14,7 +14,7 @@ interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
 
 type ConnectionObservable = CancellableObservable<ConnectionEvents>;
 
-describe.only('observable', function () {
+describe('observable', function () {
   /**
    * Sets up a race between:
    * a) succeeding
