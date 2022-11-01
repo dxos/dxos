@@ -14,10 +14,10 @@ import {
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { DevtoolsServiceContext } from '../services/impl/devtools';
+import { DevtoolsServiceParams } from '../services/impl/devtools';
 
 
-export const subscribeToNetworkStatus = (hook: DevtoolsServiceContext) =>
+export const subscribeToNetworkStatus = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
@@ -32,7 +32,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsServiceContext) =>
     update();
   });
 
-export const subscribeToSignalTrace = (hook: DevtoolsServiceContext) =>
+export const subscribeToSignalTrace = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
     next({ events: [] });
     const trace: CommandTrace[] = [];
@@ -42,7 +42,7 @@ export const subscribeToSignalTrace = (hook: DevtoolsServiceContext) =>
     });
   });
 
-export const subscribeToNetworkTopics = (hook: DevtoolsServiceContext) =>
+export const subscribeToNetworkTopics = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
     const update = () => {
       try {
@@ -61,7 +61,7 @@ export const subscribeToNetworkTopics = (hook: DevtoolsServiceContext) =>
     update();
   });
 
-export const subscribeToSwarmInfo = (hook: DevtoolsServiceContext) =>
+export const subscribeToSwarmInfo = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
     const networkManager = hook.networkManager;
     const update = () => {
@@ -75,7 +75,7 @@ export const subscribeToSwarmInfo = (hook: DevtoolsServiceContext) =>
   });
 
 export const getNetworkPeers = (
-  hook: DevtoolsServiceContext,
+  hook: DevtoolsServiceParams,
   request: GetNetworkPeersRequest
 ): GetNetworkPeersResponse => {
   if (!request.topic) {

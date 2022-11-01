@@ -3,7 +3,9 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
+import { NetworkManager } from '@dxos/network-manager';
 import {
   ClearSnapshotsRequest,
   DevtoolsHost,
@@ -33,17 +35,19 @@ import {
   SubscribeToPartiesResponse,
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse,
-  SubscribeToSwarmInfoRequest,
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { Config } from '@dxos/config';
-import { NetworkManager } from '@dxos/network-manager';
-import { DevtoolsHostEvents, subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from '../../devtools';
+import {
+  DevtoolsHostEvents,
+  subscribeToNetworkStatus,
+  subscribeToSignalTrace,
+  subscribeToSwarmInfo
+} from '../../devtools';
 import { subscribeToParties } from '../../devtools/parties';
 import { ServiceContext } from '../service-context';
 
-export type DevtoolsServiceContext = {
+export type DevtoolsServiceParams = {
   events: DevtoolsHostEvents;
   config: Config;
   networkManager: NetworkManager;
@@ -51,11 +55,11 @@ export type DevtoolsServiceContext = {
 };
 
 export class DevtoolsService implements DevtoolsHost {
-  constructor(private readonly _serviceContext: DevtoolsServiceContext) {}
+  constructor(private readonly params: DevtoolsServiceParams) {}
 
   events(request: void): Stream<Event> {
     return new Stream<Event>(({ next }) => {
-      this._serviceContext.events.ready.on(() => {
+      this.params.events.ready.on(() => {
         next({ ready: {} });
       });
     });
@@ -88,14 +92,7 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
-    return subscribeToParties(
-      {
-        feedStore: this._serviceContext.context.feedStore,
-        spaceManager: this._serviceContext.context.spaceManager!,
-        metadataStore: this._serviceContext.context.metadataStore
-      },
-      request
-    );
+    return subscribeToParties(this.params.context, request);
   }
 
   subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
@@ -131,14 +128,14 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus(this._serviceContext);
+    return subscribeToNetworkStatus(this.params);
   }
 
   subscribeToSignalTrace(): Stream<SubscribeToSignalTraceResponse> {
-    return subscribeToSignalTrace(this._serviceContext);
+    return subscribeToSignalTrace(this.params);
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo(this._serviceContext);
+    return subscribeToSwarmInfo(this.params);
   }
 }
