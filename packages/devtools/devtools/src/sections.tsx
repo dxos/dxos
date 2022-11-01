@@ -29,7 +29,7 @@ import {
   KeyringPanel,
   LoggingPanel,
   // NetworkPanel,
-  PartiesPanel,
+  SpacesPanel,
   ProfilePanel,
   // RegistryPanel,
   RpcTracePanel,
@@ -88,7 +88,7 @@ export const sections: Section[] = [
         id: 'echo.parties',
         title: 'Parties',
         icon: <PartiesIcon />,
-        panel: <PartiesPanel />
+        panel: <SpacesPanel />
       }
       // {
       //   id: 'echo.feeds',
