@@ -5,7 +5,7 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
 
-import { LogOptions } from '../config';
+import { LogOptions } from '../../config';
 
 export const loadOptions = (filepath?: string): LogOptions | undefined => {
   if (filepath) {

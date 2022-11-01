@@ -8,7 +8,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "browser": {
-    "node:util": "util"
+    "node:util": "util",
+    "./dist/src/platform/node/index.js": "./dist/src/platform/browser/index.js",
+    "./src/platform/node/index.ts": "./src/platform/browser/index.ts"
   },
   "types": "dist/src/index.d.ts",
   "files": [

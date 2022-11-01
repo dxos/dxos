@@ -6,6 +6,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 
 import { LogConfig, LogFilter, LogLevel, LogOptions, LogProcessorType, levels } from './config';
 import { LogProcessor } from './context';
+import { loadOptions } from './platform';
 import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
 
 /**
@@ -31,7 +32,7 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
 };
 
 export const getConfig = (_options?: LogOptions): LogConfig => {
-  const options: LogOptions = defaultsDeep(
+  let options: LogOptions = defaultsDeep(
     {},
     _options,
     'process' in globalThis && {
@@ -43,8 +44,7 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
   );
 
   if (options.file) {
-    // TODO(burdon): Node only.
-    // options = defaultsDeep(options, loadOptions(options.file));
+    options = defaultsDeep(options, loadOptions(options.file));
   }
 
   return {
