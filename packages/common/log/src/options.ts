@@ -31,7 +31,7 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
 };
 
 export const getConfig = (_options?: LogOptions): LogConfig => {
-  let options: LogOptions = defaultsDeep(
+  const options: LogOptions = defaultsDeep(
     {},
     _options,
     'process' in globalThis && {
