@@ -22,10 +22,11 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, InvitationWrapper, SpaceInvitations } from '../invitations';
+import { HaloInvitations, SpaceInvitations } from '../invitations';
 
 /**
  * Shared backend for all client services.
@@ -105,19 +106,20 @@ export class ServiceContext {
     return identity;
   }
 
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
+  // TODO(burdon): Remove.
+  createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
     assert(this.spaceManager);
     assert(this.spaceInvitations);
 
     const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    const invitation = await this.spaceInvitations.createInvitation(space, { onFinish });
-    return InvitationWrapper.fromProto(invitation);
+    return this.spaceInvitations.createInvitation(space);
   }
 
-  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
+  // TODO(burdon): Remove.
+  async acceptInvitation(invitationDescriptor: InvitationDescriptor) {
     assert(this.spaceInvitations);
 
-    return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
+    return this.spaceInvitations.acceptInvitation(invitationDescriptor);
   }
 
   private async _initialize() {

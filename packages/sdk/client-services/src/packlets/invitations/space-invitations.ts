@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsyncEvents, CancellableObservableEvents, CancellableObservableProvider, Trigger } from '@dxos/async';
+import { AsyncEvents, CancellableObservableEvents, CancellableObservableProvider, sleep, Trigger } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -16,7 +16,8 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 // TODO(burdon): Factor out.
 export interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnect(): void;
+  onConnect(invitation: InvitationDescriptor): void;
+  onSuccess(): void;
 }
 
 /**
@@ -33,11 +34,10 @@ export class SpaceInvitations {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  // TODO(burdon): Replace callback with cancelable observable.
-  async createInvitation(space: Space, { onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
-    // TODO(burdon): Repeat pattern.
+  createInvitation(space: Space): CancellableObservableProvider<ConnectionEvents> {
+    let connection: SwarmConnection | undefined = undefined;
     const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
-      // TODO(burdon): Close connection.
+      await connection?.close();
     });
 
     const plugin = createRpcPlugin(async (port) => {
@@ -53,6 +53,7 @@ export class SpaceInvitations {
           SpaceHostService: {
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               log('processing admission request', { identityKey, deviceKey });
+              // TODO(burdon): Wrap observable.
               try {
                 await writeMessages(
                   space.controlPipeline.writer,
@@ -82,27 +83,36 @@ export class SpaceInvitations {
           genesisFeedKey: space.genesisFeedKey
         });
 
-        onFinish?.();
+        observable.callbacks?.onSuccess();
       }
       await peer.close();
+
+      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
+      await sleep(100);
       await connection.close();
     });
 
-    const topic = PublicKey.random();
-    const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
-    const connection = await this._networkManager.openSwarmConnection({
-      topic,
-      peerId: topic, // TODO(burdon): Why???
-      // peerId,
-      protocol: createProtocolFactory(topic, peerId, [plugin]),
-      topology: new StarTopology(topic)
+    setTimeout(async () => {
+      const topic = PublicKey.random();
+      const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
+      const invitation: InvitationDescriptor = {
+        type: InvitationDescriptor.Type.INTERACTIVE, // TODO(burdon): Remove (default).
+        swarmKey: topic.asUint8Array(),
+        invitation: new Uint8Array() // TODO(burdon): Remove.
+      };
+
+      connection = await this._networkManager.openSwarmConnection({
+        topic,
+        peerId: topic, // TODO(burdon): Why???
+        // peerId,
+        protocol: createProtocolFactory(topic, peerId, [plugin]),
+        topology: new StarTopology(topic)
+      });
+
+      observable.callbacks?.onConnect(invitation);
     });
 
-    return {
-      type: InvitationDescriptor.Type.INTERACTIVE, // TODO(burdon): Remove (default).
-      swarmKey: topic.asUint8Array(),
-      invitation: new Uint8Array() // TODO(burdon): Remove.
-    };
+    return observable;
   }
 
   /**
@@ -162,7 +172,11 @@ export class SpaceInvitations {
     });
 
     const space = await admitted.wait();
+
+    // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
+    await sleep(100);
     await connection.close();
+
     return space;
   }
 }
