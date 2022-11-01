@@ -6,14 +6,7 @@ import { Eraser } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
-import {
-  Main,
-  QrCode,
-  useTranslation,
-  Button,
-  getSize,
-  Input
-} from '@dxos/react-uikit';
+import { Main, QrCode, useTranslation, Button, getSize, Input } from '@dxos/react-uikit';
 
 export const IdentityPage = () => {
   const client = useClient();
@@ -22,9 +15,9 @@ export const IdentityPage = () => {
   const { t } = useTranslation('halo');
 
   return (
-    <Main className='flex flex-col items-center'>
+    <Main className='flex flex-col items-center max-w-xl mx-auto'>
       {/* TODO(wittjosiah): Update with device invite. */}
-      <QrCode label={t('copy qrcode label')} value='https://halo.dxos.org' />
+      <QrCode label={t('copy qrcode label')} value='https://halo.dxos.org' side='left' />
       <Input
         label={t('username label', { ns: 'uikit' })}
         initialValue={username}
