@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@dxos/vite-plugin": "workspace:*",
-    "typescript": "^4.7.2",
+    "typescript": "^4.8.4",
     "vite": "3.0.9"
   }
 }

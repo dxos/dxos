@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/experimental/wallet-playground/src/index.ts",
         "outputPath": "packages/experimental/wallet-playground/dist",
-        "tsConfig": "packages/experimental/wallet-playground/tsconfig.json"
+        "tsConfig": "packages/experimental/wallet-playground/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

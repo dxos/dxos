@@ -52,7 +52,7 @@ export const register = () => {
       }
     },
     {
-      extensions: ['.ts', '.js']
+      extensions: ['.ts']
     }
   );
 

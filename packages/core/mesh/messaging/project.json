@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/mesh/messaging/src/index.ts",
         "outputPath": "packages/core/mesh/messaging/dist",
-        "tsConfig": "packages/core/mesh/messaging/tsconfig.json"
+        "tsConfig": "packages/core/mesh/messaging/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

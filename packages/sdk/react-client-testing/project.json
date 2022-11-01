@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/sdk/react-client-testing/src/index.ts",
         "outputPath": "packages/sdk/react-client-testing/dist",
-        "tsConfig": "packages/sdk/react-client-testing/tsconfig.json"
+        "tsConfig": "packages/sdk/react-client-testing/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

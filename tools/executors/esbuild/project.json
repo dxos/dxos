@@ -6,7 +6,10 @@
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
         "outputPath": "tools/executors/esbuild/dist",
-        "tsConfig": "tools/executors/esbuild/tsconfig.json"
+        "tsConfig": "tools/executors/esbuild/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/sdk/client/src/index.ts",
         "outputPath": "packages/sdk/client/dist",
-        "tsConfig": "packages/sdk/client/tsconfig.json"
+        "tsConfig": "packages/sdk/client/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

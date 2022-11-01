@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/experimental/composer/src/index.ts",
         "outputPath": "packages/experimental/composer/dist",
-        "tsConfig": "packages/experimental/composer/tsconfig.json"
+        "tsConfig": "packages/experimental/composer/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
