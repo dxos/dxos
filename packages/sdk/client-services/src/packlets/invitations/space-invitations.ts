@@ -15,9 +15,14 @@ import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitation
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 // TODO(burdon): Factor out.
-export interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
+export interface CreateInvitationEvents extends AsyncEvents, CancellableObservableEvents {
   onConnect(invitation: InvitationDescriptor): void;
   onSuccess(): void;
+}
+
+export interface AcceptInvitationEvents extends AsyncEvents, CancellableObservableEvents {
+  onConnect(invitation: InvitationDescriptor): void;
+  onSuccess(space: Space): void;
 }
 
 /**
@@ -34,9 +39,9 @@ export class SpaceInvitations {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space): CancellableObservableProvider<ConnectionEvents> {
+  createInvitation(space: Space): CancellableObservableProvider<CreateInvitationEvents> {
     let connection: SwarmConnection | undefined = undefined;
-    const observable = new CancellableObservableProvider<ConnectionEvents>(async () => {
+    const observable = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
       await connection?.close();
     });
 
@@ -120,7 +125,12 @@ export class SpaceInvitations {
    * The local guest peer (invitee) then sends the local party invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  async acceptInvitation(invitation: InvitationDescriptor): Promise<Space> {
+  acceptInvitation(invitation: InvitationDescriptor): CancellableObservableProvider<AcceptInvitationEvents> {
+    let connection: SwarmConnection | undefined = undefined;
+    const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
+      await connection?.close();
+    });
+
     const admitted = new Trigger<Space>();
 
     const plugin = createRpcPlugin(async (port) => {
@@ -161,22 +171,26 @@ export class SpaceInvitations {
       await peer.close();
     });
 
-    const topic = PublicKey.from(invitation.swarmKey);
-    const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
-    const connection = await this._networkManager.openSwarmConnection({
-      topic,
-      peerId: PublicKey.random(), // TODO(burdon): Why???
-      // peerId,
-      protocol: createProtocolFactory(topic, peerId, [plugin]),
-      topology: new StarTopology(topic)
+    setTimeout(async () => {
+      const topic = PublicKey.from(invitation.swarmKey);
+      const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
+      connection = await this._networkManager.openSwarmConnection({
+        topic,
+        peerId: PublicKey.random(), // TODO(burdon): Why???
+        // peerId,
+        protocol: createProtocolFactory(topic, peerId, [plugin]),
+        topology: new StarTopology(topic)
+      });
+
+      observable.callbacks?.onConnect(invitation);
+      const space = await admitted.wait();
+      observable.callbacks?.onSuccess(space);
+
+      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
+      await sleep(100);
+      await connection.close();
     });
 
-    const space = await admitted.wait();
-
-    // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
-    await sleep(100);
-    await connection.close();
-
-    return space;
+    return observable;
   }
 }

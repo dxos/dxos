@@ -116,7 +116,7 @@ export class ServiceContext {
   }
 
   // TODO(burdon): Remove.
-  async acceptInvitation(invitationDescriptor: InvitationDescriptor) {
+  acceptInvitation(invitationDescriptor: InvitationDescriptor) {
     assert(this.spaceInvitations);
 
     return this.spaceInvitations.acceptInvitation(invitationDescriptor);

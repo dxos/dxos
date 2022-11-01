@@ -19,7 +19,7 @@ describe('services/halo', function () {
     expect(identity).not.to.be.undefined;
   });
 
-  it('device invitations', async function () {
+  it('invitations', async function () {
     const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await createServiceContext({ signalContext });
