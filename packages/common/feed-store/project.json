@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/common/feed-store/src/index.ts",
         "outputPath": "packages/common/feed-store/dist",
-        "tsConfig": "packages/common/feed-store/tsconfig.json"
+        "tsConfig": "packages/common/feed-store/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

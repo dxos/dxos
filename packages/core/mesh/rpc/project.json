@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/mesh/rpc/src/index.ts",
         "outputPath": "packages/core/mesh/rpc/dist",
-        "tsConfig": "packages/core/mesh/rpc/tsconfig.json"
+        "tsConfig": "packages/core/mesh/rpc/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

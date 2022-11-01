@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/protocols/src/index.ts",
         "outputPath": "packages/core/protocols/dist",
-        "tsConfig": "packages/core/protocols/tsconfig.json"
+        "tsConfig": "packages/core/protocols/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

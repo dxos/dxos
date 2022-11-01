@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/sdk/react-echo-graph/src/index.ts",
         "outputPath": "packages/sdk/react-echo-graph/dist",
-        "tsConfig": "packages/sdk/react-echo-graph/tsconfig.json"
+        "tsConfig": "packages/sdk/react-echo-graph/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

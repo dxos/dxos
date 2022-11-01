@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/sdk/react-ipfs/src/index.ts",
         "outputPath": "packages/sdk/react-ipfs/dist",
-        "tsConfig": "packages/sdk/react-ipfs/tsconfig.json"
+        "tsConfig": "packages/sdk/react-ipfs/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
