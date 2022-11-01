@@ -4,3 +4,4 @@
 
 export * from './console-processor';
 export * from './debug-processor';
+export * from './browser-processor';

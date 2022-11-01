@@ -30,6 +30,7 @@ export const shortLevelName = {
 
 export enum LogProcessorType {
   CONSOLE = 'console',
+  BROWSER = 'browser',
   DEBUG = 'debug'
 }
 
