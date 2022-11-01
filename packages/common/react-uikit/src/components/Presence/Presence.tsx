@@ -57,7 +57,7 @@ const ProfileMenu = (props: PresenceProps) => {
           fallbackValue={profile.publicKey.toHex()}
           label={<span className='sr-only'>{profile.username ?? humanize(profile.publicKey.toHex())}</span>}
           className={cx(
-            'bg-white p-0.5 button-elevation rounded-full cursor-pointer',
+            'bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer',
             defaultHover({}),
             defaultFocus,
             defaultActive,
@@ -86,17 +86,14 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
     onClickManageProfile: _onClickManageProfile,
     closeLabel: _closeLabel,
     sideOffset,
-    collisionPadding,
-    size
+    collisionPadding
   } = props;
   const { t } = useTranslation();
   return (
     <Popover
       openTrigger={
-        <Button
-          className={cx(getSize(size ?? 7), 'rounded-md px-[0.25rem] py-[0.25rem] flex items-center justify-center')}
-        >
-          <UserPlus className='w-full h-auto' />
+        <Button compact>
+          <UserPlus className={getSize(4)} />
         </Button>
       }
       collisionPadding={collisionPadding ?? 8}
@@ -114,7 +111,7 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
 
 export const Presence = (props: PresenceProps) => {
   return (
-    <div role='none' className='flex gap-1'>
+    <div role='none' className='flex gap-1 items-center'>
       {props.party && <PartyMenu {...props} party={props.party!} />}
       <ProfileMenu {...props} />
     </div>

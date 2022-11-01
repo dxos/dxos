@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { defaultTestingConfig, InvitationDescriptor, Party } from '@dxos/client';
 import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
-import { Group, Loading, Main } from '@dxos/react-ui';
+import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import { templateForComponent } from '../../testing';
@@ -35,9 +35,9 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
   }, [client, profile]);
 
   return (
-    <Main className='flex justify-end'>
+    <main className='flex justify-end'>
       {profile ? <Presence {...args} profile={profile} /> : <Loading label='Loading…' />}
-    </Main>
+    </main>
   );
 };
 

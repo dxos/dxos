@@ -7,7 +7,7 @@ import React from 'react';
 
 import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import { Button, getSize, Main, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 import { JoinSpaceDialog } from '..';
@@ -28,8 +28,9 @@ export const SpacesPage = () => {
   };
 
   return (
-    <Main className='max-w-7xl mx-auto'>
+    <main className='max-w-7xl mx-auto'>
       <HeadingWithActions
+        className='mbe-6'
         heading={{
           children: t('spaces label')
         }}
@@ -52,6 +53,6 @@ export const SpacesPage = () => {
       />
 
       {spaces?.length > 0 && <SpaceList spaces={spaces} />}
-    </Main>
+    </main>
   );
 };

@@ -7,21 +7,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationDescriptor } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import {
-  Dialog,
-  DialogProps,
-  Heading,
-  Main,
-  SingleInputStep,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Dialog, DialogProps, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 // TODO(wittjosiah): Factor out.
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(
-      text.substring(text.lastIndexOf('?'))
-    );
+    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     const invitation = searchParams.get('invitation');
     return invitation ?? text;
   } catch (err) {
@@ -37,10 +28,10 @@ export const JoinSpacePage = () => {
   const { t } = useTranslation();
 
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-w-lg mx-auto'>
       <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
       <JoinSpacePanel />
-    </Main>
+    </main>
   );
 };
 

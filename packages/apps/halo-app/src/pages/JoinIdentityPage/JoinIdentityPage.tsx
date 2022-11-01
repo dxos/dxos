@@ -7,19 +7,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationDescriptor } from '@dxos/client';
 import { useClient, useProfile } from '@dxos/react-client';
-import {
-  Heading,
-  Main,
-  SingleInputStep,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 // TODO(wittjosiah): Factor out.
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(
-      text.substring(text.lastIndexOf('?'))
-    );
+    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     const invitation = searchParams.get('invitation');
     console.log({ invitation, searchParams });
     return invitation ?? text;
@@ -67,7 +60,7 @@ export const JoinIdentityPage = () => {
   }, []);
 
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-w-lg mx-auto'>
       <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
       {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
       <SingleInputStep
@@ -83,6 +76,6 @@ export const JoinIdentityPage = () => {
           onBack: () => history.back()
         }}
       />
-    </Main>
+    </main>
   );
 };

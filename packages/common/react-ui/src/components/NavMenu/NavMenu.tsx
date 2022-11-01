@@ -132,7 +132,7 @@ const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
     <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
-      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation overflow-x-auto'>
+      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-800 p-1 button-elevation overflow-x-auto'>
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
             <NavMenuTooltipLinkItem key={i} {...item} />

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Main, Button, useTranslation, getSize, Group, defaultDisabled } from '@dxos/react-uikit';
+import { Button, useTranslation, getSize, Group, defaultDisabled } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList } from '../../components';
 import { HeadingWithActions } from '../../components/HeadingWithActions';
@@ -26,8 +26,9 @@ export const DevicesPage = () => {
   const empty = invitations.length < 1;
 
   return (
-    <Main className='max-w-7xl mx-auto'>
+    <main className='max-is-7xl mli-auto'>
       <HeadingWithActions
+        className='mbe-6'
         heading={{ children: t('devices label') }}
         actions={
           <Button variant='primary' className='grow flex gap-1' onClick={handleInvite}>
@@ -38,6 +39,7 @@ export const DevicesPage = () => {
       />
       <DeviceList items={devices} />
       <Group
+        className='mbs-4'
         label={{
           level: 2,
           children: !empty ? t('invitations label') : t('empty invitations message'),
@@ -47,6 +49,6 @@ export const DevicesPage = () => {
       >
         {!empty && <InvitationList invitations={invitations} />}
       </Group>
-    </Main>
+    </main>
   );
 };

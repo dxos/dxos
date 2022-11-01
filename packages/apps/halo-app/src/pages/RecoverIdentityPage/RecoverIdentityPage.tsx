@@ -6,12 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import {
-  Heading,
-  Main,
-  SingleInputStep,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 export const RecoverIdentityPage = () => {
   const { t } = useTranslation();
@@ -29,7 +24,7 @@ export const RecoverIdentityPage = () => {
     );
   }, [seedphrase]);
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-w-lg mx-auto'>
       <Heading>{t('recover identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
@@ -41,6 +36,6 @@ export const RecoverIdentityPage = () => {
           onBack: () => history.back()
         }}
       />
-    </Main>
+    </main>
   );
 };

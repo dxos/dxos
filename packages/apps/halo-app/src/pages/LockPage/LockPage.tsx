@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Client, Party } from '@dxos/client';
 import { useProfile } from '@dxos/react-client';
-import { AuthChoices, Button, Heading, Main, QrCode, useTranslation } from '@dxos/react-uikit';
+import { AuthChoices, Button, Heading, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface RegistrationPageProps {
@@ -28,8 +28,8 @@ export const LockPage = () => {
   }, []);
 
   return (
-    <Main className='max-w-lg mx-auto'>
-      <div role='none' className='text-center space-y-2'>
+    <main className='max-is-lg mli-auto mbs-8 space-b-6'>
+      <div role='none' className='text-center space-b-2'>
         <QrCode
           value='https://halo.dxos.org'
           label={<p className='max-w-[4.5rem]'>{t('copy qrcode label')}</p>}
@@ -59,7 +59,7 @@ export const LockPage = () => {
         </>
       )}
 
-      <div role='none' className='text-center px-2 space-y-2'>
+      <div role='none' className='text-center px-2 space-b-2'>
         {profile && (
           <Button className='w-full' variant='primary' onClick={handleUnlock}>
             {t('unlock label')}
@@ -73,6 +73,6 @@ export const LockPage = () => {
           {t('generic help label', { ns: 'uikit' })}
         </Button>
       </div>
-    </Main>
+    </main>
   );
 };
