@@ -66,9 +66,7 @@ const codec = schema.getCodecForType('dxos.rpc.RpcMessage');
  */
 export class RpcPeer {
   private readonly _outgoingRequests = new Map<number, RequestItem>();
-
   private readonly _localStreams = new Map<number, Stream<any>>();
-
   private readonly _remoteOpenTrigger = new Trigger();
 
   private _nextId = 0;
@@ -126,7 +124,7 @@ export class RpcPeer {
   /**
    * Close the peer. Stop taking or making requests.
    */
-  close() {
+  async close() {
     this._unsubscribe?.();
     this._clearOpenInterval?.();
     for (const req of this._outgoingRequests.values()) {

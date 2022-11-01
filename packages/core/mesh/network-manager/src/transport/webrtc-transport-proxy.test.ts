@@ -217,8 +217,8 @@ describe('WebRTCTransportProxy', function () {
     });
 
     after(async function () {
-      service?.close();
-      rpcClient?.close();
+      await service?.close();
+      await rpcClient?.close();
     });
 
     it('establish connection and send data through with protocol', async function () {

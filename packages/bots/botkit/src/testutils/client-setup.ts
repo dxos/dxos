@@ -4,12 +4,12 @@
 
 import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
-import * as proto from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 export interface ClientSetup {
   client: Client;
   party: Party;
-  invitation: proto.InvitationDescriptor;
+  invitation: InvitationDescriptor;
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {

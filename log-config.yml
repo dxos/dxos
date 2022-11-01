@@ -1,0 +1,6 @@
+formatter:
+  column: 80
+
+filter:
+  - feed-store:debug
+  - swarm:debug

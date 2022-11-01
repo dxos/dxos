@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { Party, InvitationDescriptor } from '@dxos/client';
+import { Party, InvitationWrapper } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
 import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
@@ -22,7 +22,7 @@ enum PartyJoinState {
 }
 
 type JoinOptions = {
-  invitation: InvitationDescriptor;
+  invitation: InvitationWrapper;
   secretProvider: SecretProvider;
 };
 
@@ -82,11 +82,11 @@ export const JoinDialog = ({
       return;
     }
 
-    let invitation: InvitationDescriptor;
+    let invitation: InvitationWrapper;
     try {
       // Parse URL.
       const invitationCode = invitationCodeFromUrl(text);
-      invitation = InvitationDescriptor.decode(invitationCode);
+      invitation = InvitationWrapper.decode(invitationCode);
     } catch (err: any) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);

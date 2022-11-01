@@ -12,7 +12,7 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { Client, defaultTestingConfig } from './packlets/proxies';
 
-describe('Client - nonpersistent', function () {
+describe('Client - non-persistent', function () {
   it('open & close', async function () {
     const client = new Client(defaultTestingConfig);
     await client.initialize();

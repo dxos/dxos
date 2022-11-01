@@ -8,13 +8,13 @@ import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout, sleep } from '@dxos/async';
+import { Event, asyncTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
@@ -198,7 +198,7 @@ export class BotHandle {
 
     this._reportingStream = undefined;
     try {
-      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
+      await asyncTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (err: any) {
       this._log(`Failed to stop bot: ${err}`);
     }
@@ -320,7 +320,7 @@ export class BotHandle {
       logFilePath: this.getLogFilePath(this.startTimestamp)
     });
 
-    this._log('Openning RPC channel');
+    this._log('Opening RPC channel');
     this._rpc = createRpcClient(schema.getService('dxos.bot.BotService'), {
       port,
       timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.

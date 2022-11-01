@@ -20,9 +20,9 @@ import {
   RedeemedInvitation,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
+import { InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -85,14 +85,14 @@ export class ProfileService implements ProfileServiceRpc {
         invitation.secret = secret;
 
         next({
-          descriptor: invitation.toProto(),
-          state: InvitationState.WAITING_FOR_CONNECTION
+          state: InvitationState.WAITING_FOR_CONNECTION,
+          descriptor: invitation
         });
       });
     });
   }
 
-  acceptInvitation(request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation(invitation: InvitationDescriptor): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -110,7 +110,7 @@ export class ProfileService implements ProfileServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(InvitationDescriptor.fromProto(request));
+      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(invitation);
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

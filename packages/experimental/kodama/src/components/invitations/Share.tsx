@@ -26,10 +26,10 @@ export const Share: FC<{
       // TODO(burdon): Set timeout to process invitation? Separate method to start?
       const invitation = await onCreate();
       setInvitation(invitation);
-      const clipped = await copyToClipboard(invitation.descriptor.encode());
+      const clipped = await copyToClipboard(invitation.encode());
       setClipped(clipped);
       if (!clipped) {
-        write(`Invitation (clipboard not available)\n${invitation.descriptor.encode()}\n\n`);
+        write(`Invitation (clipboard not available)\n${invitation.encode()}\n\n`);
       }
       // qrcode.generate(invitation.descriptor.encode(), { small: true }, (str: string) => {
       //   console.log(str);
@@ -63,7 +63,7 @@ export const Share: FC<{
               Invitation
               {clipped && <Text> (copied to clipboard)</Text>}
             </Text>
-            <Text>{invitation.descriptor.encode()}</Text>
+            <Text>{invitation.encode()}</Text>
           </Box>
           {/* <Box flexDirection='column' marginTop={1}>
             <Text color='red'>Verification code</Text>

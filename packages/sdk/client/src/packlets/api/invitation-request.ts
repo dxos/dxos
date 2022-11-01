@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, until } from '@dxos/async';
-import { InvitationDescriptor } from '@dxos/client-services';
+import { InvitationWrapper } from '@dxos/client-services';
 
 /**
  * Invitation created by sender.
@@ -35,12 +35,7 @@ export class InvitationRequest {
 
   readonly canceled = new Event();
 
-  constructor(
-    private readonly _descriptor: InvitationDescriptor,
-    connected: Event,
-    finished: Event,
-    error: Event<Error>
-  ) {
+  constructor(private readonly _descriptor: InvitationWrapper, connected: Event, finished: Event, error: Event<Error>) {
     this.connected = connected;
     this.finished = finished;
     this.error = error;
@@ -50,7 +45,7 @@ export class InvitationRequest {
     });
   }
 
-  get descriptor(): InvitationDescriptor {
+  get descriptor(): InvitationWrapper {
     return this._descriptor;
   }
 
@@ -63,6 +58,10 @@ export class InvitationRequest {
    */
   get hasConnected(): boolean {
     return this._hasConnected;
+  }
+
+  encode() {
+    return InvitationWrapper.encode(this._descriptor);
   }
 
   /**

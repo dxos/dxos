@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { latch, promiseTimeout, sleep, untilError, untilPromise } from '@dxos/async';
+import { latch, asyncTimeout, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
@@ -123,7 +123,7 @@ describe('FeedQueue', function () {
         expect(queue.length).to.eq(0);
         expect(feed.properties.length).to.eq(0);
 
-        const next = await promiseTimeout(queue.pop(), 500);
+        const next = await asyncTimeout(queue.pop(), 500);
         expect(next).not.to.be.undefined;
         received();
 
