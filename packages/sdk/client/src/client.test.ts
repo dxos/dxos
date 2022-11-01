@@ -405,14 +405,6 @@ describe('Client', function () {
         transportFactory: MemoryTransportFactory
       });
 
-      // const transportFactory = new WebRTCTransportProxyFactory();
-      // transportFactory.setBridgeService(new WebRTCTransportService());
-      // const networkManager = NetworkManager({
-      //   log: true,
-      //   signalManager: new WebsocketSignalManager([config.get('runtime.services.signal.server')]),
-      //   transportFactory
-      // });
-
       const [proxyPort, hostPort] = createLinkedPorts();
       const hostClient = new ClientServiceHost({
         config,
