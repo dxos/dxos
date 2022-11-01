@@ -9,12 +9,12 @@ import { getConfig } from './options';
 /**
  * Logging function.
  */
-export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
+type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
 
 /**
  * Properties accessible on the logging function.
  */
-export interface Log extends Logger {
+interface Log extends Logger {
   config: (options: LogOptions) => void;
 
   debug: Logger;

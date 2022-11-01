@@ -48,8 +48,8 @@ describe('log', function () {
 
   it('context', function () {
     log.info('Message with context', {
-      foo: 'bar',
-      baz: 123
+      title: 'test',
+      context: 123
     });
   });
 });
