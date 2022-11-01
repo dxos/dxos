@@ -88,6 +88,6 @@ const isLogMethod = (node: ts.Node): boolean => {
 const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root: string): ts.Expression =>
   f.createObjectLiteralExpression([
     f.createPropertyAssignment('file', f.createStringLiteral(relative(root, sourceFile.fileName))),
-    f.createPropertyAssignment('line', f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.pos).line)),
+    f.createPropertyAssignment('line', f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1)),
     // TODO(dmaretskyi): Ownership scope & bugcheck.
   ], false)
