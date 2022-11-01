@@ -1,6 +1,6 @@
 {
   "sourceRoot": "packages/devtools/devtools-extension/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
