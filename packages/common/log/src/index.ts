@@ -3,6 +3,8 @@
 //
 
 export * from './config';
+export * from './context';
 export * from './log';
-export { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
+export * from './processors';
+
 export { getCurrentOwnershipScope } from './ownership';
