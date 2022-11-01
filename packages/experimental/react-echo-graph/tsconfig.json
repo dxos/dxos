@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -13,7 +12,8 @@
     "/node_modules/"
   ],
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
@@ -23,22 +23,25 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/react-async"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../gem/gem-core"
+    },
+    {
+      "path": "../../gem/gem-spore"
     },
     {
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../client-testing"
+      "path": "../react-client-testing"
     }
   ]
 }

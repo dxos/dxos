@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -9,9 +8,6 @@
     ],
     "outDir": "dist"
   },
-  "exclude": [
-    "/node_modules/"
-  ],
   "include": [
     "src"
   ],
@@ -20,25 +16,10 @@
       "path": "../../../tools/deprecated/protocols-toolchain"
     },
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/react-async"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../client-testing"
     }
   ]
 }

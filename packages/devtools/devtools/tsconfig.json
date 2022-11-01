@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/vite-plugin"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -66,6 +63,18 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/react-registry-client"
+    },
+    {
+      "path": "../../experimental/registry-client"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -78,16 +87,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-components"
-    },
-    {
-      "path": "../../sdk/react-registry-client"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
-    },
-    {
-      "path": "../../sdk/registry-client"
+      "path": "../../sdk/vite-plugin"
     },
     {
       "path": "../devtools-mesh"
