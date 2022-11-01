@@ -1,3 +1,4 @@
+import { relative } from 'path';
 import * as ts from 'typescript';
 
 type PluginOptions = {
@@ -29,7 +30,7 @@ export const before = (pluginOptions: PluginOptions, program: ts.Program): ts.Cu
             args.push(f.createObjectLiteralExpression())
           }
           if (args.length === 2) {
-            args.push(getLogMetadata(sourceFile, node))
+            args.push(getLogMetadata(sourceFile, node, process.cwd()))
           }
 
           return f.updateCallExpression(node, node.expression, node.typeArguments, args);
@@ -84,9 +85,9 @@ const isLogMethod = (node: ts.Node): boolean => {
   return false;
 }
 
-const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression): ts.Expression =>
+const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root: string): ts.Expression =>
   f.createObjectLiteralExpression([
-    f.createPropertyAssignment('file', f.createStringLiteral(sourceFile.fileName)),
+    f.createPropertyAssignment('file', f.createStringLiteral(relative(root, sourceFile.fileName))),
     f.createPropertyAssignment('line', f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.pos).line)),
     // TODO(dmaretskyi): Ownership scope & bugcheck.
   ], false)
