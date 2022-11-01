@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
-    "typescript": "^4.7.2",
+    "typescript": "^4.8.4",
     "yargs": "~16.2.0"
   },
   "devDependencies": {

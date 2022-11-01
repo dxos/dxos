@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/mesh/network-manager/src/index.ts",
         "outputPath": "packages/core/mesh/network-manager/dist",
-        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json"
+        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

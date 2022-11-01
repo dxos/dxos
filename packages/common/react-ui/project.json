@@ -10,7 +10,10 @@
         ],
         "main": "packages/common/react-ui/src/index.ts",
         "outputPath": "packages/common/react-ui/dist",
-        "tsConfig": "packages/common/react-ui/tsconfig.json"
+        "tsConfig": "packages/common/react-ui/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
