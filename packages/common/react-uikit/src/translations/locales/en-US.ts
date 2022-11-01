@@ -40,5 +40,6 @@ export const uikit = {
   'copy party invite code label': 'Scan to join, click to copy URL',
   'add contact label': 'Add a contact',
   'open apps directory label': 'Open apps directory',
-  'pending label': 'Pending'
+  'pending label': 'Pending',
+  'more options label': 'More options'
 };

@@ -22,5 +22,7 @@ export const halo = {
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
   'offline ready label': 'HALO is ready to use offline.',
   'empty invitations message': 'No pending invitations',
-  'invitations label': 'Invitations'
+  'invitations label': 'Invitations',
+  'join label': 'Join',
+  'manage label': 'Manage'
 };
