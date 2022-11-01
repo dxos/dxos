@@ -24,17 +24,15 @@ describe.only('observable', function () {
         clearTimeout(connectTimeout);
       });
 
-      // TODO(burdon): Use asyncTimeoutObservable.
+      // TODO(burdon): Use asyncTimeoutObservable and/or delegation.
 
       const timeout = setTimeout(() => {
         clearTimeout(connectTimeout);
-        clearTimeout(cancelTimeout);
         observable.callbacks?.onTimeout(new TimeoutError(timeoutDelay));
       }, timeoutDelay);
 
       const connectTimeout = setTimeout(() => {
         clearTimeout(timeout);
-        clearTimeout(cancelTimeout);
         observable.callbacks?.onConnect('connection-1');
       }, connectionDelay);
 
@@ -67,11 +65,15 @@ describe.only('observable', function () {
       }
     });
 
-    const cancelTimeout = setTimeout(async () => {
-      await observable.cancel();
-    }, cancelDelay);
+    {
+      const cancelTimeout = setTimeout(async () => {
+        await observable.cancel();
+      }, cancelDelay);
 
-    await done();
+      await done();
+
+      clearTimeout(cancelTimeout);
+    }
 
     observable.unsubscribe();
 
