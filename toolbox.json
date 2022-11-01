@@ -2,7 +2,6 @@
   "config": {
     "package": {
       "common": [
-        "version",
         "license",
         "author",
         "homepage",
