@@ -90,10 +90,12 @@ describe.only('services/spaces', function () {
     const space1 = await peer1.spaceManager!.createSpace();
     const observable1 = peer1.createInvitation(space1.key);
     observable1.subscribe({
-      onConnect: async (invitation: InvitationDescriptor) => {
-        const observable2 = peer2.acceptInvitation(invitation);
+      onConnect: async (invitation1: InvitationDescriptor) => {
+        const observable2 = peer2.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnect: async (invitation: InvitationDescriptor) => {},
+          onConnect: async (invitation2: InvitationDescriptor) => {
+            expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
+          },
           onSuccess: (space2: Space) => {
             complete2.wake(space2);
           },
@@ -144,13 +146,14 @@ describe.only('services/spaces', function () {
     const space1 = await peer1.spaceManager!.createSpace();
     const observable1 = await peer1.createInvitation(space1.key);
     observable1.subscribe({
-      onConnect: async (invitation: InvitationDescriptor) => {
-        connected1.wake(invitation);
+      onConnect: async (invitation1: InvitationDescriptor) => {
+        connected1.wake(invitation1);
 
-        const observable2 = await peer2.acceptInvitation(invitation);
+        const observable2 = await peer2.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnect: async (invitation: InvitationDescriptor) => {
-            connected2.wake(invitation);
+          onConnect: async (invitation2: InvitationDescriptor) => {
+            expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
+            connected2.wake(invitation2);
           },
           onSuccess: () => {
             throw new Error();
