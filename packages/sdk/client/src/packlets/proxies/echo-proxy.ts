@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, EventSubscriptions, latch } from '@dxos/async';
-import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
+import { ClientServiceProvider, InvitationWrapper } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -189,7 +189,7 @@ export class EchoProxy implements Echo {
    *
    * To be used with `party.createInvitation` on the inviter side.
    */
-  acceptInvitation(invitationDescriptor: InvitationDescriptor): PartyInvitation {
+  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation {
     const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
       invitationDescriptor.toProto()
     );

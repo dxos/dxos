@@ -20,7 +20,7 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
-export { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+export { clientServiceBundle, ClientServiceHost, InvitationWrapper } from '@dxos/client-services';
 
 export { PublicKey } from '@dxos/keys';
 

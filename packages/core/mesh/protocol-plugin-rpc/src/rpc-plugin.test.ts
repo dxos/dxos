@@ -24,14 +24,17 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
     signalManager: new MemorySignalManager(signalContext),
     transportFactory: MemoryTransportFactory
   });
+
+  // TODO(burdon): Close connections.
   afterTest(() => networkManager.destroy());
   const plugin = new RpcPlugin(onConnect);
-  await networkManager.joinProtocolSwarm({
+  await networkManager.openSwarmConnection({
     topic,
     peerId,
     protocol: createProtocolFactory(topic, peerId, [plugin]),
     topology: new StarTopology(topic)
   });
+
   return { plugin, networkManager };
 };
 
@@ -53,6 +56,7 @@ describe('Protocol plugin rpc', function () {
       clientPort = port;
       connected.emit();
     });
+
     await Promise.all([serverConnected, clientConnected]);
     assert(serverPort);
     assert(clientPort);
@@ -98,6 +102,7 @@ describe('Protocol plugin rpc', function () {
       });
       connected.emit();
     });
+
     await createPeer(topic, clientId, async (port) => {
       client = createRpcClient(service, { port });
       connected.emit();
@@ -136,6 +141,7 @@ describe('Protocol plugin rpc', function () {
         },
         port
       });
+
       await server.open();
     });
 

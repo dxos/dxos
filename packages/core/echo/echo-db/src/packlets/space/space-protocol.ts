@@ -8,7 +8,7 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
+import { MMSTTopology, NetworkManager, Plugin, SwarmConnection } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
@@ -39,24 +39,28 @@ export class SpaceProtocol {
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
 
-  private readonly _presence: PresencePlugin;
-  private readonly _authenticator: AuthPlugin;
+  private readonly _presencePlugin: PresencePlugin;
+  private readonly _authPlugin: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
 
   readonly authenticationFailed: Event;
 
+  private _connection?: SwarmConnection;
+
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
+
+    // Plugins
     this._swarmIdentity = identity;
+    this._presencePlugin = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
+    this._authPlugin = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this._customPlugins = plugins;
 
-    this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
-    this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
     this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
 
-    this.authenticationFailed = this._authenticator.authenticationFailed;
+    this.authenticationFailed = this._authPlugin.authenticationFailed;
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
@@ -65,7 +69,10 @@ export class SpaceProtocol {
   }
 
   async start() {
-    log('starting...');
+    if (this._connection) {
+      return;
+    }
+
     // TODO(burdon): Document why empty buffer.
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
@@ -76,21 +83,25 @@ export class SpaceProtocol {
       sampleSize: 20
     };
 
-    await this._networkManager.joinProtocolSwarm({
+    log('starting...');
+    this._connection = await this._networkManager.openSwarmConnection({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
-      presence: this._presence,
+      presence: this._presencePlugin,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._discoveryKey}`
     });
+
     log('started');
   }
 
   async stop() {
-    log('stopping...');
-    await this._networkManager.leaveProtocolSwarm(this._discoveryKey);
-    log('stopped');
+    if (this._connection) {
+      log('stopping...');
+      await this._connection.close();
+      log('stopped');
+    }
   }
 
   private _createProtocol(
@@ -125,13 +136,13 @@ export class SpaceProtocol {
       initiator
     });
 
-    const plugins: Plugin[] = [this._presence, this._authenticator, this._replicator, ...this._customPlugins];
+    const plugins: Plugin[] = [this._presencePlugin, this._authPlugin, this._replicator, ...this._customPlugins];
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
     return protocol;
   }
 
   get peers() {
-    return this._presence.peers.map((peer) => PublicKey.from(peer));
+    return this._presencePlugin.peers.map((peer) => PublicKey.from(peer));
   }
 }

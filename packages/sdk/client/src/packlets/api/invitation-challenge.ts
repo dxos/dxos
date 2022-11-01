@@ -2,19 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationDescriptor } from '@dxos/client-services';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationWrapper } from '@dxos/client-services';
 
 /**
  * Invitation that is being redeemed.
  * It works in non-interactive mode and requires no authentication.
  */
-export class Invitation<T = void> {
+export class InvitationChallenge<T = void> {
   constructor(
-    protected readonly _descriptor: InvitationDescriptor,
+    protected readonly _descriptor: InvitationWrapper,
     protected readonly _invitationPromise: Promise<T>,
     protected readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}
+
+  toJSON() {
+    return this.descriptor.toProto() as any;
+  }
 
   get descriptor() {
     return this._descriptor;
@@ -30,9 +33,5 @@ export class Invitation<T = void> {
    */
   wait(): Promise<T> {
     return this._invitationPromise;
-  }
-
-  toJSON(): InvitationDescriptorProto {
-    return this.descriptor.toProto();
   }
 }

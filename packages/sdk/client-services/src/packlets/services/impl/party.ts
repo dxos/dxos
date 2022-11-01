@@ -11,7 +11,7 @@ import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
-  CreateSnaspotRequest,
+  CreateSnapshotRequest,
   GetPartyDetailsRequest,
   InvitationRequest,
   InvitationState,
@@ -26,15 +26,16 @@ import {
   SubscribePartyRequest,
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
+import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
  * Party service implementation.
  */
+// TODO(burdon): Rename Space.
 export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
@@ -182,7 +183,7 @@ export class PartyService implements PartyServiceRpc {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         try {
-          let invitation: InvitationDescriptor;
+          let invitation: InvitationWrapper;
           if (!request.inviteeKey) {
             // const secret = Buffer.from(generatePasscode());
             // const secretProvider = async () => {
@@ -194,19 +195,20 @@ export class PartyService implements PartyServiceRpc {
               close();
             });
 
-            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
+            assert(invitation.type === InvitationDescriptor.Type.INTERACTIVE);
             // invitation.secret = Buffer.from(secret);
           } else {
             todo();
             // invitation = await party.invitationManager.createOfflineInvitation(request.invitee_key);
           }
 
+          // TODO(burdon): Change stream type.
           next({
             state: InvitationState.WAITING_FOR_CONNECTION,
-            descriptor: invitation.toProto()
+            descriptor: invitation!.toProto()
           });
 
-          // if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
+          // if (invitation.type === InvitationDescriptor.Type.OFFLINE) {
           //   close();
           // }
         } catch (err: any) {
@@ -217,7 +219,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation(request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation(request: InvitationDescriptor): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -236,7 +238,7 @@ export class PartyService implements PartyServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.joinSpace(InvitationDescriptor.fromProto(request));
+      const partyPromise = this.serviceContext.acceptInvitation(InvitationWrapper.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
@@ -294,7 +296,7 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  async createSnapshot(request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async createSnapshot(request: CreateSnapshotRequest): Promise<PartySnapshot> {
     return todo();
     // assert(request.party_key);
     // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));

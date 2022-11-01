@@ -17,7 +17,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { IdentityManager } from './identity-manager';
 
-describe('identity-manager', function () {
+describe('identity/identity-manager', function () {
   const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })

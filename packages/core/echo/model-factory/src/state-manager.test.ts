@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
@@ -112,7 +112,7 @@ describe('StateManager', function () {
     const gotUpdate = stateManager.model.update.waitForCount(1);
     stateManager.processMessage(createMeta(feedA, 0), TestListModel.meta.mutationCodec.encode({ data: 'message1' }));
 
-    await promiseTimeout(gotUpdate, 100, new Error('timeout'));
+    await asyncTimeout(gotUpdate, 100, new Error('timeout'));
   });
 
   describe('optimistic mutations', function () {
