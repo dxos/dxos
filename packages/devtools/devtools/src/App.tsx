@@ -38,12 +38,6 @@ export const App = () => {
           }
         };
     const config = new Config(await Dynamics(), Defaults(), remoteSourceConfig);
-    console.log('config:', config.values);
-    console.log('config:', {
-      dynamics: await Dynamics(),
-      defaults: Defaults(),
-      remoteSourceConfig
-    });
     const client = new Client(config);
     setClientProvider(async () => {
       await client.initialize();

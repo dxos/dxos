@@ -15,7 +15,6 @@ export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: S
     const update = async () => {
       await context.initialized.wait();
       const parties: Space[] = [...context.spaceManager!.spaces.values()];
-      console.log('Spaces: ', parties);
       const filteredParties = parties.filter(
         (party) => !partyKeys?.length || partyKeys.some((partyKey) => partyKey.equals(party.key))
       );

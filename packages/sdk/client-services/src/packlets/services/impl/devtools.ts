@@ -43,7 +43,9 @@ import {
   subscribeToNetworkStatus,
   subscribeToSignalTrace,
   subscribeToSwarmInfo,
-  subscribeToSpaces
+  subscribeToSpaces,
+  subscribeToFeedBlocks,
+  subscribeToFeeds
 } from '../../devtools';
 import { ServiceContext } from '../service-context';
 
@@ -100,11 +102,11 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToFeeds(request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    todo();
+    return subscribeToFeeds(this.params.context, request);
   }
 
   subscribeToFeedBlocks(request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    todo();
+    return subscribeToFeedBlocks(this.params.context, request);
   }
 
   getPartySnapshot(request: GetPartySnapshotRequest): Promise<GetPartySnapshotResponse> {
