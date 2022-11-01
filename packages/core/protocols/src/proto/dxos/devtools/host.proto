@@ -154,10 +154,10 @@ message SubscribeToPartiesResponse {
   message PartyInfo {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
-    bool is_active = 3;
-    dxos.echo.timeframe.TimeframeVector timeframe = 4;
-    repeated dxos.keys.PublicKey feeds = 5;
-    map<string, string> properties = 6;
+    dxos.echo.timeframe.TimeframeVector timeframe = 3;
+    dxos.keys.PublicKey genesisFeed = 4;
+    dxos.keys.PublicKey controlFeed = 5;
+    dxos.keys.PublicKey dataFeed = 6;
   }
 
   repeated PartyInfo parties = 1;

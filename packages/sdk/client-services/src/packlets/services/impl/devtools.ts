@@ -42,9 +42,9 @@ import {
   DevtoolsHostEvents,
   subscribeToNetworkStatus,
   subscribeToSignalTrace,
-  subscribeToSwarmInfo
+  subscribeToSwarmInfo,
+  subscribeToSpaces
 } from '../../devtools';
-import { subscribeToParties } from '../../devtools/parties';
 import { ServiceContext } from '../service-context';
 
 export type DevtoolsServiceParams = {
@@ -92,7 +92,7 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
-    return subscribeToParties(this.params.context, request);
+    return subscribeToSpaces(this.params.context, request);
   }
 
   subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {

@@ -34,15 +34,16 @@ export const SpaceTable = ({ parties }: PartyTableProps) => (
     <TableHead>
       <TableRow>
         <TableCell sx={{ width: 40 }} />
-        <TableCell>Party Key</TableCell>
+        <TableCell>Space Key</TableCell>
         <TableCell sx={{ width: 40 }}>Open</TableCell>
-        <TableCell sx={{ width: 40 }}>Active</TableCell>
-        <TableCell sx={{ width: 40 }}>Feeds</TableCell>
+        <TableCell sx={{ width: 40 }}>Genesis Feed</TableCell>
+        <TableCell sx={{ width: 40 }}>Control Feed</TableCell>
+        <TableCell sx={{ width: 40 }}>Data Feed</TableCell>
         <TableCell>TimeFrame</TableCell>
       </TableRow>
     </TableHead>
     <TableBody>
-      {parties.map(({ key, isOpen, isActive, feeds, timeframe }) => (
+      {parties.map(({ key, isOpen, genesisFeed, controlFeed, dataFeed, timeframe }) => (
         <TableRow key={key!.toHex()}>
           <TableCell>
             <HashIcon value={key!.toHex()!} />
@@ -54,9 +55,17 @@ export const SpaceTable = ({ parties }: PartyTableProps) => (
             <BooleanIcon value={isOpen} />
           </TableCell>
           <TableCell align='center'>
-            <BooleanIcon value={isActive} />
+            <HashIcon value={genesisFeed.toHex()!} />
+            <CopyText monospace variant='h6' value={genesisFeed!.toHex()} length={8} />
           </TableCell>
-          <TableCell align='center'>{feeds!.length}</TableCell>
+          <TableCell align='center'>
+            <HashIcon value={controlFeed.toHex()!} />
+            <CopyText monospace variant='h6' value={controlFeed!.toHex()} length={8} />
+          </TableCell>
+          <TableCell align='center'>
+            <HashIcon value={dataFeed.toHex()!} />
+            <CopyText monospace variant='h6' value={dataFeed!.toHex()} length={8} />
+          </TableCell>
           <TableCell monospace>{timeframe && <TimeFrame value={timeframe as any} />}</TableCell>
         </TableRow>
       ))}
