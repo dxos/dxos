@@ -8,7 +8,8 @@ import chalk from 'chalk';
 import debug from 'debug';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
-import * as path from 'path';
+import fetch from 'node-fetch';
+import * as path from 'node:path';
 
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';

@@ -70,6 +70,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^16.11.58",
+    "@types/node-fetch": "^2.5.10",
     "globby": "^11.1.0",
     "shx": "^0.3.3"
   },

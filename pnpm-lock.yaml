@@ -1829,6 +1829,7 @@ importers:
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
       chalk: ^4.1.0
       cli-progress: ^3.11.2
       debug: ^4.3.3
@@ -1887,6 +1888,7 @@ importers:
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/node': 16.11.66
+      '@types/node-fetch': 2.6.2
       globby: 11.1.0
       shx: 0.3.4
 
@@ -12139,7 +12141,7 @@ packages:
   /@types/node-fetch/2.6.2:
     resolution: {integrity: sha512-DHqhlq5jeESLy19TYhLakJ07kNumXWjcDdxXsLUMJZ6ue8VZJj4kLPQVE/2mdHh3xZziNF1xppu5lwmS53HR+A==}
     dependencies:
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
       form-data: 3.0.1
     dev: true
 
