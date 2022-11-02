@@ -43,6 +43,7 @@ const ProfileMenu = (props: PresenceProps) => {
     party: _party,
     closeLabel: _closeLabel,
     onClickManageParty: _onClickManageParty,
+    managingParty: _managingParty,
     onClickGoToParty: _onClickGoToParty,
     sideOffset,
     collisionPadding,
