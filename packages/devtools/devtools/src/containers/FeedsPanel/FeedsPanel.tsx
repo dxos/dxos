@@ -29,11 +29,8 @@ export const FeedsPanel = () => {
     {},
     [selectedPartyKey, selectedFeed]
   );
-  console.log('blocks', blocks);
   useEffect(() => {
     if (blocks) {
-      console.log('blocks', blocks);
-      console.log('messages', messages);
       setMessages([...messages, ...blocks]);
     }
   }, [blocks]);

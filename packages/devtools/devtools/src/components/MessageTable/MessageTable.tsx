@@ -75,7 +75,6 @@ export const MessageTable = ({ messages, getType = defaultGetType, onSelect }: M
         {
           // Messages with feed metadata.
           messages.map(({ feedKey, seq, data }) => {
-            console.log('MessageTable', { feedKey, seq, data });
             const key = feedKey.toString();
             const rowKey = `key-${key}-${seq}`;
             const type = getType(data);
