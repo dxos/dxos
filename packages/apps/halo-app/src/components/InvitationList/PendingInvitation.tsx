@@ -47,7 +47,7 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
       />
       <QrCode
         size={40}
-        value={createInvitationUrl(value.descriptor.encode().toString())}
+        value={createInvitationUrl(value.encode())}
         label={<p className='w-20'>{t('copy halo invite code label')}</p>}
         side='top'
         sideOffset={12}
