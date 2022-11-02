@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { ProhibitInset } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import urlJoin from 'url-join';
 
 import { InvitationRequest } from '@dxos/client';
@@ -18,6 +18,8 @@ export interface PendingInvitationProps {
 
 export const PendingInvitation = ({ value }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
+
+  const onCancel = useCallback(() => value.cancel(), [value]);
 
   return (
     <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
@@ -36,7 +38,7 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
         }}
         actions={
           <>
-            <Button className='grow flex gap-1 items-center'>
+            <Button className='grow flex gap-1 items-center' onClick={onCancel}>
               <ProhibitInset className={getSize(5)} />
               <span>{t('cancel label')}</span>
             </Button>
