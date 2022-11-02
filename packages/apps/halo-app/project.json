@@ -36,6 +36,25 @@
     },
     "bundle": {
       "executor": "@nxext/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
       "options": {
         "configFile": "packages/apps/halo-app/vite.config.ts",
         "outputPath": "packages/apps/halo-app/out/halo"
