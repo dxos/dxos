@@ -16,7 +16,6 @@ import {
 
 import { DevtoolsServiceParams } from '../services/impl/devtools';
 
-
 export const subscribeToNetworkStatus = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
