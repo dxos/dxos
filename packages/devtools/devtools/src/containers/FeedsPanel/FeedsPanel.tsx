@@ -5,22 +5,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useParties, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client';
 
 import { KeySelect, MessageTable, Panel } from '../../components';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
-  const parties = useParties();
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 
-  const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
-  const partyFeeds = useMemo(
-    () => remoteParties?.find(({ key }) => selectedPartyKey && key?.equals(selectedPartyKey))?.feeds ?? [],
-    [remoteParties, selectedPartyKey]
-  );
-
+  const parties = useStream(() => devtoolsHost.subscribeToParties({}), {}).parties ?? [];
+  const partyFeeds = useMemo(() => {
+    if (!selectedPartyKey || !parties) {
+      return [];
+    }
+    const party = parties.find((party) => party.key.equals(selectedPartyKey));
+    return party ? [party.genesisFeed, party.controlFeed, party.dataFeed] : [];
+  }, [parties, selectedPartyKey]);
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
@@ -28,9 +29,11 @@ export const FeedsPanel = () => {
     {},
     [selectedPartyKey, selectedFeed]
   );
-
+  console.log('blocks', blocks);
   useEffect(() => {
     if (blocks) {
+      console.log('blocks', blocks);
+      console.log('messages', messages);
       setMessages([...messages, ...blocks]);
     }
   }, [blocks]);
@@ -45,7 +48,6 @@ export const FeedsPanel = () => {
     setSelectedFeed(feedKey);
     setMessages([]);
   };
-
   return (
     <Panel
       controls={

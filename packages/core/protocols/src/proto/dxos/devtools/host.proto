@@ -197,11 +197,11 @@ message SubscribeToFeedBlocksRequest {
 
 message SubscribeToFeedBlocksResponse {
   message Block {
-    bytes key = 1;
+    dxos.keys.PublicKey feed_key = 1;
     int32 seq = 2;
-    bool sync = 3;
-    string path = 4;
-    dxos.echo.feed.FeedMessage data = 5;
+    // bool sync = 3;
+    // string path = 4;
+    dxos.echo.feed.FeedMessage data = 3;
   }
 
   repeated Block blocks = 1;

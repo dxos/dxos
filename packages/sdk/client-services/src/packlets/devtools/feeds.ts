@@ -5,8 +5,9 @@
 import { Readable } from 'stream';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedIterator, FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,
@@ -73,25 +74,26 @@ export const subscribeToFeedBlocks = (
     if (!feedKey) {
       return;
     }
-
-    let feedStream: Readable;
-    setTimeout(async () => {
+    let iterator: FeedIterator<FeedMessage>;
+    setImmediate(async () => {
       const feed = await feedStore.getFeed(feedKey);
       if (!feed) {
         return;
       }
 
-      // TODO(wittjosiah): Start from timeframe?
-      // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
-      // Tail feed so as to not overload the browser.
-      feedStream = new Readable({ objectMode: true }).wrap(feed.createReadableStream() as any);
+      iterator = new FeedIterator(feed);
+      await iterator.open();
 
-      feedStream.on('data', (blocks) => {
-        next({ blocks });
-      });
+      const update = async () => {
+        for await (const block of iterator) {
+          next({ blocks: [block] });
+        }
+      };
+
+      await update();
     });
 
     return () => {
-      feedStream?.destroy();
+      iterator?.close().catch((err) => log.catch(err));
     };
   });
