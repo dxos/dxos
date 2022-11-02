@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
 import { captureException } from '@dxos/sentry';
+import { init, event } from '@dxos/telemetry';
 
 import telemetryrc from './telemetryrc.json';
 
@@ -16,31 +17,50 @@ export const DX_ENVIRONMENT = telemetryrc.DX_ENVIRONMENT ?? undefined;
 export const DX_RELEASE = telemetryrc.DX_RELEASE ?? undefined;
 export const SENTRY_DESTINATION = telemetryrc.SENTRY_DESTINATION ?? undefined;
 export const TELEMETRY_API_KEY = telemetryrc.TELEMETRY_API_KEY ?? undefined;
+export const IPDATA_API_KEY = telemetryrc.IPDATA_API_KEY ?? undefined;
 
 export type TelemetryContext = {
-  installationId: string;
-  isInternalUser: boolean;
-  fullCrashReports: boolean;
-  disableTelemetry: boolean;
+  mode: 'disabled' | 'basic' | 'full';
+  installationId?: string;
+  group?: string;
+  environment?: string;
+  release?: string;
   timezone: string;
   runtime: string;
   os: string;
+  arch: string;
   ci: boolean;
-  environment?: string;
-  release?: string;
   [key: string]: any;
 };
 
-const DEFAULTS = {
-  isInternalUser: false,
-  fullCrashReports: false,
-  disableTelemetry: false,
+const DEFAULTS: TelemetryContext = {
+  mode: 'basic',
+  environment: DX_ENVIRONMENT,
+  release: DX_RELEASE,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   runtime: `Node ${process.version}`,
-  os: `${os.platform()} ${os.release()}`,
-  ci: process.env.CI === 'true',
-  environment: DX_ENVIRONMENT,
-  release: DX_RELEASE
+  os: os.platform(),
+  arch: os.arch(),
+  ci: process.env.CI === 'true'
+};
+
+export const disableTelemetry = async (configDir: string) => {
+  if (!TELEMETRY_API_KEY) {
+    return;
+  }
+
+  const { installationId } = await getTelemetryContext(configDir);
+  const path = join(configDir, '.telemetry-disabled');
+  if (await exists(path)) {
+    return;
+  }
+
+  init({ apiKey: TELEMETRY_API_KEY, batchSize: 1, enable: true });
+  event({
+    installationId,
+    name: 'dx-cli:telemetry:disable'
+  });
+  await writeFile(path, '', 'utf-8');
 };
 
 export const getTelemetryContext = async (configDir: string): Promise<TelemetryContext> => {
@@ -69,7 +89,7 @@ const createContext = async (idPath: string) => {
 const validate = (contextString: string) => {
   try {
     const context = yaml.load(contextString) as TelemetryContext;
-    if (Boolean(context.installationId) && validateUuid(context.installationId)) {
+    if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
       return { ...DEFAULTS, ...context };
     }
   } catch (err: any) {

@@ -14,9 +14,18 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
+import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { getTelemetryContext, PublisherRpcPeer, SENTRY_DESTINATION, TelemetryContext, TELEMETRY_API_KEY } from './util';
+import {
+  disableTelemetry,
+  getTelemetryContext,
+  IPDATA_API_KEY,
+  PublisherRpcPeer,
+  SENTRY_DESTINATION,
+  TelemetryContext,
+  TELEMETRY_API_KEY
+} from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -67,14 +76,13 @@ export abstract class BaseCommand extends Command {
     await super.init();
 
     this._telemetryContext = await getTelemetryContext(this.config.configDir);
-    const { installationId, isInternalUser, fullCrashReports, disableTelemetry, environment, release } =
-      this._telemetryContext;
+    const { mode, installationId, group, environment, release } = this._telemetryContext;
 
-    if (isInternalUser) {
-      this.log(chalk`{bgMagenta You're using the CLI as an internal user} ✨\n`);
+    if (group === 'dxos') {
+      this.log(chalk`✨ {bgMagenta You're using the CLI as an internal user} ✨\n`);
     }
 
-    if (SENTRY_DESTINATION && !disableTelemetry) {
+    if (SENTRY_DESTINATION && mode !== 'disabled') {
       Sentry.init({
         installationId,
         destination: SENTRY_DESTINATION,
@@ -82,22 +90,39 @@ export abstract class BaseCommand extends Command {
         release,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
-        scrubFilenames: !fullCrashReports,
+        scrubFilenames: mode !== 'full',
         properties: {
-          isInternalUser
+          group
         }
       });
     }
 
     if (TELEMETRY_API_KEY) {
+      mode === 'disabled' && (await disableTelemetry(this.config.configDir));
+
       Telemetry.init({
         apiKey: TELEMETRY_API_KEY,
         batchSize: 20,
-        enable: Boolean(TELEMETRY_API_KEY) && !disableTelemetry
+        enable: Boolean(TELEMETRY_API_KEY) && mode !== 'disabled'
       });
     }
 
     this.addToTelemetryContext({ command: this.id });
+
+    setTimeout(async () => {
+      await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`)
+        .then((res) => res.json())
+        .then((data) => {
+          this.addToTelemetryContext({
+            city: data.city,
+            region: data.region,
+            country: data.country,
+            latitude: data.latitude,
+            longitude: data.longitude
+          });
+        })
+        .catch((err) => captureException(err));
+    });
 
     // Load user config file.
     const { flags } = await this.parse(this.constructor as any);
