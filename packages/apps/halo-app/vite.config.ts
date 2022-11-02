@@ -35,7 +35,6 @@ export default defineConfig({
     include: [
       '@dxos/async',
       '@dxos/client',
-      '@dxos/client-services',
       '@dxos/keys',
       '@dxos/log',
       '@dxos/composer',
