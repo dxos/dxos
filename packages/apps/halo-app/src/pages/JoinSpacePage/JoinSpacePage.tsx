@@ -10,17 +10,7 @@ import { InvitationDescriptor, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Dialog, DialogProps, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
-// TODO(wittjosiah): Factor out.
-const invitationCodeFromUrl = (text: string) => {
-  try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('invitation');
-    return invitation ?? text;
-  } catch (err) {
-    console.log(err);
-    return text;
-  }
-};
+import { invitationCodeFromUrl } from '../../util';
 
 /**
  *
