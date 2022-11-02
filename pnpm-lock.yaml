@@ -3773,6 +3773,12 @@ importers:
   tools/protobuf-test:
     specifiers: {}
 
+  tools/readme:
+    specifiers:
+      '@dxos/plate': workspace:*
+    dependencies:
+      '@dxos/plate': link:../plate
+
   tools/ridoculous:
     specifiers:
       '@babel/core': ^7.18.13
