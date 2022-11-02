@@ -110,7 +110,7 @@ const PartyLink = ({ onClickGoToParty }: Pick<PresenceProps, 'onClickGoToParty'>
   return (
     <Button compact variant='primary' className='flex w-full gap-1 pli-2' onClick={onClickGoToParty}>
       <span className='text-xs'>{t('go to party label')}</span>
-      <Check className={getSize(4)} />
+      <Check className={getSize(4)} weight='bold' />
     </Button>
   );
 };
