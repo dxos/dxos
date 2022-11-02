@@ -96,12 +96,12 @@ export const sections: Section[] = [
         icon: <FeedsIcon />,
         panel: <FeedsPanel />
       },
-      // {
-      //   id: 'echo.items',
-      //   title: 'Items',
-      //   icon: <ItemsIcon />,
-      //   panel: <ItemsPanel />
-      // },
+      {
+        id: 'echo.items',
+        title: 'Items',
+        icon: <ItemsIcon />,
+        panel: <ItemsPanel />
+      },
       // {
       //   id: 'echo.snapshots',
       //   title: 'Snapshots',

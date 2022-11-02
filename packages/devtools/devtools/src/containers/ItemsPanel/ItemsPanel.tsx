@@ -4,10 +4,7 @@
 
 import React, { useState } from 'react';
 
-import {
-  ChevronRight as ExpandIcon,
-  ExpandMore as CollapseIcon
-} from '@mui/icons-material';
+import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 import { Box } from '@mui/material';
 
@@ -41,8 +38,7 @@ export const ItemsPanel = () => {
 
   const parties = useParties();
   const party = useParty(selectedPartyKey);
-  const items =
-    useSelection(party?.select().filter((item) => !item.parent)) ?? [];
+  const items = useSelection(party?.select().filter((item) => !item.parent)) ?? [];
 
   return (
     <Panel
@@ -71,9 +67,7 @@ export const ItemsPanel = () => {
           ))}
         </TreeView>
 
-        <Box flex={1}>
-          {selectedItem && <ItemDetails item={selectedItem} />}
-        </Box>
+        <Box flex={1}>{selectedItem && <ItemDetails item={selectedItem} />}</Box>
       </Box>
     </Panel>
   );
