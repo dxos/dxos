@@ -108,7 +108,7 @@ importers:
       syncpack: ^8.2.4
       ts-node: 10.9.1
       tslib: ^2.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uuid: ^8.3.2
       vite: 3.0.9
       wait-for-expect: ^3.0.2
@@ -230,7 +230,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.51
@@ -267,7 +267,6 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/composer': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
@@ -286,7 +285,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.17.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
@@ -299,7 +297,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
@@ -307,7 +305,6 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/composer': link:../../experimental/composer
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
@@ -324,7 +321,6 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
@@ -351,7 +347,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
@@ -387,7 +383,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       require-from-string: ^2.0.2
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
@@ -439,7 +435,7 @@ importers:
       isomorphic-ws: ^4.0.1
       sodium-native: ^3.4.1
       sodium-universal: ^3.1.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
@@ -750,19 +746,27 @@ importers:
     specifiers:
       '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': ^1.3.9
+      '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
       chalk: ^4.1.0
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       pirates: ~4.0.5
       sorcery: ^0.10.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       util: ^0.12.4
     dependencies:
       chalk: 4.1.2
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       util: 0.12.5
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.3.9
+      '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.66
       pirates: 4.0.5
@@ -845,7 +849,6 @@ importers:
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
       tailwindcss: ^3.1.8
-      tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
       vite: 3.0.9
     dependencies:
@@ -867,7 +870,6 @@ importers:
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
       tailwindcss: 3.1.8
-      tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
@@ -958,7 +960,7 @@ importers:
   packages/common/testutils:
     specifiers:
       '@types/node': ^16.11.58
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     devDependencies:
       '@types/node': 16.11.66
       typescript: 4.8.4
@@ -966,12 +968,14 @@ importers:
   packages/common/timeframe:
     specifiers:
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
       util: ^0.12.4
     dependencies:
       '@dxos/keys': link:../keys
+      '@dxos/log': link:../log
       '@dxos/util': link:../util
       debug: 4.3.4
       util: 0.12.5
@@ -1015,8 +1019,10 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1044,8 +1050,10 @@ importers:
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/rpc': link:../../mesh/rpc
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1353,7 +1361,7 @@ importers:
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
       mocha: ^8.4.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
     dependencies:
@@ -1426,7 +1434,7 @@ importers:
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
       xor-distance: ^2.0.0
     dependencies:
@@ -1565,6 +1573,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
@@ -1576,6 +1585,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
       '@dxos/rpc': link:../rpc
@@ -1598,7 +1608,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1716,7 +1726,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
@@ -2206,7 +2216,7 @@ importers:
       react-dom: ^18.2.0
       robotjs: ~0.6.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uint8arrays: 3.0.0
       url-join: ^5.0.0
     dependencies:
@@ -2307,7 +2317,7 @@ importers:
       react: ^18.2.0
       supervisor: ~0.12.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2390,7 +2400,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       y-protocols: ^1.0.5
       yjs: ^13.5.41
@@ -2453,7 +2463,7 @@ importers:
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
     dependencies:
       '@dxos/keys': link:../../common/keys
@@ -2768,6 +2778,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -2795,6 +2806,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/protocols': link:../../core/protocols
@@ -3464,7 +3476,7 @@ importers:
       minimatch: ^5.1.0
       mocha: ^8.4.0
       ts-morph: ^16.0.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/log': link:../../packages/common/log
@@ -3496,7 +3508,7 @@ importers:
       '@babel/preset-env': ^7.19.3
       '@types/jscodeshift': ^0.11.5
       jscodeshift: ^0.13.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       jscodeshift: 0.13.1_@babel+preset-env@7.19.4
     devDependencies:
@@ -3511,7 +3523,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/yargs': ~16.0.1
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/toolchain-node-library': link:../toolchain-node-library
@@ -3546,7 +3558,7 @@ importers:
       terser: ^5.12.0
       ts-jest: 27.1.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
@@ -3596,7 +3608,7 @@ importers:
       eslint-plugin-react: ^7.30.0
       eslint-plugin-unused-imports: ^2.0.0
       prettier: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -3648,7 +3660,7 @@ importers:
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       argparse: 2.0.1
       chalk: 4.1.2
@@ -3674,6 +3686,7 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pick': ^4.4.7
       '@types/lodash.sortby': ^4.7.7
+      '@types/node': ^16.11.58
       chalk: ^4.1.0
       comment-json: ^4.2.3
       console-table-printer: ^2.11.0
@@ -3682,7 +3695,7 @@ importers:
       lodash.sortby: ^4.7.0
       sort-package-json: ^1.57.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       chalk: 4.1.2
       comment-json: 4.2.3
@@ -3695,7 +3708,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pick': 4.4.7
       '@types/lodash.sortby': 4.7.7
-      ts-node: 10.9.1_typescript@4.8.4
+      '@types/node': 16.11.66
+      ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
 
   tools/log-hook:
@@ -3706,7 +3720,7 @@ importers:
       pirates: ~4.0.5
       sorcery: ^0.10.0
       source-map: ^0.6.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.2.249
@@ -3733,7 +3747,7 @@ importers:
       prettier: ^2.7.1
       recursive-readdir: ^2.2.2
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       esbuild: 0.14.54
@@ -3787,7 +3801,7 @@ importers:
       remark-rehype: ~10.1.0
       to-vfile: ~7.2.3
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       unist-builder: ~3.0.0
       unist-util-visit: ^4.1.0
       yargs: ~16.2.0
@@ -3833,7 +3847,7 @@ importers:
       '@vuepress/client': ^2.0.0-beta.51
       change-case: ^4.1.2
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vuepress: ^2.0.0-beta.51
     devDependencies:
@@ -8584,23 +8598,6 @@ packages:
     resolution: {integrity: sha512-d0O68AYy/9oeEy1DdC07bz1/ZXX+DqCskRd3i4JzLSTXwefzaepQrKjXC7aNM8lTHjFLDO0pDgaEiQ7jEk+HVg==}
     dependencies:
       '@babel/runtime': 7.19.4
-    dev: false
-
-  /@react-hook/async/3.1.1_react@18.2.0:
-    resolution: {integrity: sha512-C9KoDSIjhmVwm6jXPnWfVqqrdPvqOnvUrkUStkUUODV4F1GfNlyVdmYx/54HsgMlham61xEF6UvScqiLTaHYeQ==}
-    peerDependencies:
-      react: '>=16.8'
-    dependencies:
-      '@react-hook/latest': 1.0.3_react@18.2.0
-      react: 18.2.0
-    dev: false
-
-  /@react-hook/latest/1.0.3_react@18.2.0:
-    resolution: {integrity: sha512-dy6duzl+JnAZcDbNTfmaP3xHiKtbXYOaz3G51MGVljh548Y8MWzTr+PHLOfvpypEVW9zwvl+VyKjbWKEVbV1Rg==}
-    peerDependencies:
-      react: '>=16.8'
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /@remix-run/router/1.0.2:
@@ -26798,14 +26795,6 @@ packages:
       resolve: 1.22.1
     dev: false
 
-  /postcss-js/3.0.3:
-    resolution: {integrity: sha512-gWnoWQXKFw65Hk/mi2+WTQTHdPD5UJdDXZmX073EY/B3BWnYjO4F4t0VneTCnCGQ5E5GsCdMkzPaTXwl3r5dJw==}
-    engines: {node: '>=10.0'}
-    dependencies:
-      camelcase-css: 2.0.1
-      postcss: 8.4.18
-    dev: false
-
   /postcss-js/4.0.0_postcss@8.4.18:
     resolution: {integrity: sha512-77QESFBwgX4irogGVPgQ5s07vLvFqWr228qZY+w6lW599cRlK/HmnlivnnVUxkjHnCu4J16PDMHcH+e+2HbvTQ==}
     engines: {node: ^12 || ^14 || >= 16}
@@ -30161,53 +30150,8 @@ packages:
     engines: {node: '>= 6.0.0'}
     dev: false
 
-  /tailwindcss-logical/3.0.0_xkowlklhtk6sfvtndbucb3hfiy:
-    resolution: {integrity: sha512-vwevx/tQaSm2s5tt+NnbFP3dylwOHIDtVweWGvUATF/SvK5Zreq1+3arrk7dLJ+4ka37ZA9SvAh71413HOCj1Q==}
-    dependencies:
-      tailwindcss: 3.0.7_xkowlklhtk6sfvtndbucb3hfiy
-    transitivePeerDependencies:
-      - autoprefixer
-      - postcss
-      - ts-node
-    dev: false
-
   /tailwindcss-radix/2.6.0:
     resolution: {integrity: sha512-32gv65ommaEMPKRS9yPmbvc6QcV+LsAqtSe1RFindBctVpS6+SbmkfcdecW/zgRvHW7KeAgl3iyzq2ZmRqsdZQ==}
-    dev: false
-
-  /tailwindcss/3.0.7_xkowlklhtk6sfvtndbucb3hfiy:
-    resolution: {integrity: sha512-rZdKNHtC64jcQncLoWOuCzj4lQDTAgLtgK3WmQS88tTdpHh9OwLqULTQxI3tw9AMJsqSpCKlmcjW/8CSnni6zQ==}
-    engines: {node: '>=12.13.0'}
-    hasBin: true
-    peerDependencies:
-      autoprefixer: ^10.0.2
-      postcss: ^8.0.9
-    dependencies:
-      arg: 5.0.2
-      autoprefixer: 10.4.12_postcss@8.4.18
-      chalk: 4.1.2
-      chokidar: 3.5.3
-      color-name: 1.1.4
-      cosmiconfig: 7.0.1
-      detective: 5.2.1
-      didyoumean: 1.2.2
-      dlv: 1.1.3
-      fast-glob: 3.2.12
-      glob-parent: 6.0.2
-      is-glob: 4.0.3
-      normalize-path: 3.0.0
-      object-hash: 2.2.0
-      postcss: 8.4.18
-      postcss-js: 3.0.3
-      postcss-load-config: 3.1.4_postcss@8.4.18
-      postcss-nested: 5.0.6_postcss@8.4.18
-      postcss-selector-parser: 6.0.10
-      postcss-value-parser: 4.2.0
-      quick-lru: 5.1.1
-      resolve: 1.22.1
-      tmp: 0.2.1
-    transitivePeerDependencies:
-      - ts-node
     dev: false
 
   /tailwindcss/3.1.8:
@@ -30581,6 +30525,7 @@ packages:
     engines: {node: '>=8.17.0'}
     dependencies:
       rimraf: 3.0.2
+    dev: true
 
   /tmpl/1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
@@ -30870,36 +30815,6 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 16.11.66
-      acorn: 8.8.0
-      acorn-walk: 8.2.0
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 4.8.4
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    dev: true
-
-  /ts-node/10.9.1_typescript@4.8.4:
-    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
-    hasBin: true
-    peerDependencies:
-      '@swc/core': '>=1.2.50'
-      '@swc/wasm': '>=1.2.50'
-      '@types/node': '*'
-      typescript: '>=2.7'
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      '@swc/wasm':
-        optional: true
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.9
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.3
       acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3

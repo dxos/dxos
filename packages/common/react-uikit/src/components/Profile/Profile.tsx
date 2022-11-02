@@ -48,10 +48,7 @@ export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: 
   }, [client, invitations]);
 
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(
-    () => invitations[0] && createInvitationUrl(invitations[0].descriptor.encode().toString()),
-    [invitations]
-  );
+  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0].encode()), [invitations]);
 
   return invitationUrl ? (
     <QrCode

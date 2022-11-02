@@ -9,15 +9,15 @@ import assert from 'node:assert';
 import { ripemd160 } from '@dxos/crypto';
 import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-// TODO(burdon): Move to halo.
+// TODO(burdon): Move to Client API.
 
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 /**
- * A serialized version of InvitationDescriptor that's suitable to be encoded as an URL query string.
+ * A serialized version of InvitationWrapper that's suitable to be encoded as an URL query string.
  */
 export interface InvitationQueryParameters {
   hash: string;
@@ -35,11 +35,21 @@ export interface InvitationQueryParameters {
  *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
  */
-export class InvitationDescriptor {
-  static fromQueryParameters(queryParameters: InvitationQueryParameters): InvitationDescriptor {
-    const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
+// TODO(burdon): Move to Client API (and/or remove).
+export class InvitationWrapper {
+  static decode(code: string): InvitationWrapper {
+    const json = base62.decode(code).toString();
+    return InvitationWrapper.fromQueryParameters(JSON.parse(json));
+  }
 
-    const descriptor = new InvitationDescriptor(
+  static encode(invitation: InvitationWrapper): string {
+    const buffer = Buffer.from(JSON.stringify(invitation.toQueryParameters()));
+    return base62.encode(buffer);
+  }
+
+  static fromQueryParameters(queryParameters: InvitationQueryParameters): InvitationWrapper {
+    const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
+    const descriptor = new InvitationWrapper(
       parseInvitationType(type),
       PublicKey.from(swarmKey),
       PublicKey.bufferize(invitation),
@@ -53,12 +63,12 @@ export class InvitationDescriptor {
     return descriptor;
   }
 
-  static fromProto(invitation: InvitationDescriptorProto): InvitationDescriptor {
-    assert(invitation.type !== undefined, 'Invitation type not provided.');
-    assert(invitation.swarmKey, 'Invitation swarm key not provided.');
-    assert(invitation.invitation, 'Invitation not provided.');
+  static fromProto(invitation: InvitationDescriptor): InvitationWrapper {
+    assert(invitation.type !== undefined);
+    assert(invitation.swarmKey, 'Missing swarm key');
+    assert(invitation.invitation);
 
-    return new InvitationDescriptor(
+    return new InvitationWrapper(
       invitation.type,
       PublicKey.from(invitation.swarmKey),
       Buffer.from(invitation.invitation),
@@ -67,15 +77,8 @@ export class InvitationDescriptor {
     );
   }
 
-  // TODO(burdon): Move to client API.
-  static decode(code: string): InvitationDescriptor {
-    const json = base62.decode(code).toString();
-    return InvitationDescriptor.fromQueryParameters(JSON.parse(json));
-  }
-
-  // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
   constructor(
-    public readonly type: InvitationDescriptorProto.Type,
+    public readonly type: InvitationDescriptor.Type,
     public readonly swarmKey: PublicKey,
     public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
@@ -97,9 +100,16 @@ export class InvitationDescriptor {
     return query.hash;
   }
 
-  /**
-   * Exports an InvitationDescriptor to an object suitable for use as query parameters.
-   */
+  toProto(): InvitationDescriptor {
+    return {
+      type: this.type,
+      swarmKey: this.swarmKey.asUint8Array(),
+      invitation: this.invitation,
+      identityKey: this.identityKey?.asUint8Array(),
+      secret: this.secret
+    };
+  }
+
   toQueryParameters(): InvitationQueryParameters {
     const query: Partial<InvitationQueryParameters> = {
       swarmKey: this.swarmKey.toHex(),
@@ -112,36 +122,19 @@ export class InvitationDescriptor {
     }
 
     query.hash = ripemd160(stableStringify(query));
-
     return query as InvitationQueryParameters;
-  }
-
-  toProto(): InvitationDescriptorProto {
-    return {
-      type: this.type,
-      swarmKey: this.swarmKey.asUint8Array(),
-      invitation: this.invitation,
-      identityKey: this.identityKey?.asUint8Array(),
-      secret: this.secret
-    };
-  }
-
-  // TODO(burdon): Move to client API.
-  encode(): string {
-    const buffer = Buffer.from(JSON.stringify(this.toQueryParameters()));
-    return base62.encode(buffer);
   }
 }
 
 // TODO(burdon): Move to client API.
-const parseInvitationType = (str: string): InvitationDescriptorProto.Type => {
+const parseInvitationType = (str: string): InvitationDescriptor.Type => {
   const type = parseInt(str);
   assert(
-    type === InvitationDescriptorProto.Type.INTERACTIVE || type === InvitationDescriptorProto.Type.OFFLINE,
+    type === InvitationDescriptor.Type.INTERACTIVE || type === InvitationDescriptor.Type.OFFLINE,
     'Invalid invitation type'
   );
   return type;
 };
 
 // TODO(burdon): Move to client API.
-const stringifyInvitationType = (type: InvitationDescriptorProto.Type): string => type.toString();
+const stringifyInvitationType = (type: InvitationDescriptor.Type): string => type.toString();

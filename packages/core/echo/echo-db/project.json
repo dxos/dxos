@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/echo/echo-db/src/index.ts",
         "outputPath": "packages/core/echo/echo-db/dist",
-        "tsConfig": "packages/core/echo/echo-db/tsconfig.json"
+        "tsConfig": "packages/core/echo/echo-db/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

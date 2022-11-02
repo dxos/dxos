@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationDescriptor } from '@dxos/client-services';
+import { InvitationWrapper } from '@dxos/client-services';
 import { Database, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -11,7 +11,7 @@ import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ActivationOptions, PartyMember } from '../proxies';
-import { Invitation } from './invitation';
+import { InvitationChallenge } from './invitation-challenge';
 import { InvitationRequest } from './invitation-request';
 
 export interface CreationInvitationOptions {
@@ -61,7 +61,7 @@ export interface Party {
   createSnapshot(): Promise<PartySnapshot>;
 }
 
-export class PartyInvitation extends Invitation<Party> {
+export class PartyInvitation extends InvitationChallenge<Party> {
   /**
    * Wait for the invitation flow to complete and return the target party.
    */
@@ -81,5 +81,5 @@ export interface Echo {
   cloneParty(snapshot: PartySnapshot): Promise<Party>;
   getParty(partyKey: PublicKey): Party | undefined;
   queryParties(): ResultSet<Party>;
-  acceptInvitation(invitationDescriptor: InvitationDescriptor): PartyInvitation;
+  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation;
 }

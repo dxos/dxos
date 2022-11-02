@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/gravity/gravity-dashboard/src/index.ts",
         "outputPath": "packages/gravity/gravity-dashboard/dist",
-        "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json"
+        "tsConfig": "packages/gravity/gravity-dashboard/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { Client, Party, InvitationDescriptor } from '@dxos/client';
+import { Client, Party, InvitationWrapper } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import {
   BotReport,
@@ -38,7 +38,7 @@ export class Bot implements BotService {
 
     if (request.invitation) {
       assert(request.invitation.secret, 'Secret must be provided with invitation');
-      const invitation = InvitationDescriptor.fromProto(request.invitation);
+      const invitation = InvitationWrapper.fromProto(request.invitation);
       log('Client bot join party');
       // TODO(yivlad): errors are not handled well in RPC.
       try {

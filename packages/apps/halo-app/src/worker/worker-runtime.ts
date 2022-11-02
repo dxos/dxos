@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServiceHost } from '@dxos/client';
+import { ClientServiceHost, createNetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
@@ -29,14 +29,18 @@ export class WorkerRuntime {
   private _clientServices!: ClientServiceHost;
   private _config!: Config;
 
-  constructor(private readonly _configProvider: () => MaybePromise<Config>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _configProvider: () => MaybePromise<Config>
+  ) {}
 
   async start() {
     this._config = await this._configProvider();
     this._clientServices = new ClientServiceHost({
       config: this._config,
-      transportFactory: this._transportFactory
+      networkManager: createNetworkManager(this._config)
     });
+
     await this._clientServices.open();
     this._ready.wake();
   }

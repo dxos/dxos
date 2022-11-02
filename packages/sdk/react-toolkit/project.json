@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/sdk/react-toolkit/src/index.ts",
         "outputPath": "packages/sdk/react-toolkit/dist",
-        "tsConfig": "packages/sdk/react-toolkit/tsconfig.json"
+        "tsConfig": "packages/sdk/react-toolkit/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

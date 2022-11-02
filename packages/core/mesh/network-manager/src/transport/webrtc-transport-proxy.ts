@@ -144,7 +144,6 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
    */
   setBridgeService(bridgeService: BridgeService | undefined): this {
     this._bridgeService = bridgeService;
-
     for (const connection of this._connections) {
       connection.forceClose();
     }
@@ -159,6 +158,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
       ...options,
       bridgeService: this._bridgeService
     });
+
     this._connections.add(transport);
     transport.closed.on(() => this._connections.delete(transport));
 

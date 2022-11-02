@@ -2,22 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  createWebRTCTransportFactory,
-  MemoryTransportFactory,
-  NetworkManager,
-  TransportFactory
-} from '@dxos/network-manager';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
 import {
-  subscribeToNetworkStatus as subscribeToSignalStatus,
+  subscribeToNetworkStatus as subscribeToSignalStatus, // TODO(burdon): ???
   subscribeToSignalTrace,
   subscribeToSwarmInfo
 } from '../devtools/network';
@@ -28,13 +26,36 @@ import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
 // import { DevtoolsHostEvents } from '../devtools';
 
-const SIGNAL_CONTEXT = new MemorySignalManagerContext();
+// TODO(burdon): Remove (no memory defaults).
+const memorySignalManagerContext = new MemorySignalManagerContext();
+
+// TODO(burdon): Factor out.
+export const createNetworkManager = (config: Config): NetworkManager => {
+  const signalServer = config.get('runtime.services.signal.server');
+  // TODO(burdon): Remove.
+  if (!signalServer) {
+    log.warn('DEPRECATED: falling back to MemorySignalManager');
+    return new NetworkManager({
+      signalManager: new MemorySignalManager(memorySignalManagerContext),
+      transportFactory: MemoryTransportFactory
+    });
+  }
+  assert(signalServer);
+
+  return new NetworkManager({
+    log: true,
+    signalManager: new WebsocketSignalManager([signalServer]),
+    transportFactory: createWebRTCTransportFactory({
+      iceServers: config.get('runtime.services.ice')
+    })
+  });
+};
 
 type ClientServiceHostParams = {
   config: Config;
-  modelFactory?: ModelFactory;
-  transportFactory?: TransportFactory;
   signer?: HaloSigner;
+  modelFactory?: ModelFactory;
+  networkManager: NetworkManager;
 };
 
 /**
@@ -51,31 +72,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
     signer,
-    transportFactory
+    networkManager
   }: ClientServiceHostParams) {
     this._config = config;
     this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
-
-    const networkingEnabled = this._config.get('runtime.services.signal.server');
-
-    const networkManager = new NetworkManager({
-      signalManager: networkingEnabled
-        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
-        : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory:
-        transportFactory ??
-        // TODO(burdon): Should require memory transport.
-        (networkingEnabled
-          ? createWebRTCTransportFactory({
-              iceServers: this._config.get('runtime.services.ice')
-            })
-          : MemoryTransportFactory),
-      log: true
-    });
-
     this._context = new ServiceContext(storage, networkManager, modelFactory);
 
     this._services = {
@@ -95,12 +98,16 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   // TODO(dmaretskyi): progress.
   async open(onProgressCallback?: ((progress: any) => void) | undefined) {
+    log('opening...');
     await this._context.open();
     // this._devtoolsEvents.ready.emit();
+    log('opened');
   }
 
   async close() {
+    log('closing...');
     await this._context.close();
+    log('closed');
   }
 
   get echo() {

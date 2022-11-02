@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/common/keys/src/index.ts",
         "outputPath": "packages/common/keys/dist",
-        "tsConfig": "packages/common/keys/tsconfig.json"
+        "tsConfig": "packages/common/keys/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

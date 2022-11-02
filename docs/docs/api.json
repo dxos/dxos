@@ -2717,7 +2717,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										}
 									],
@@ -3936,7 +3936,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										}
 									],
@@ -4956,7 +4956,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										},
 										{
@@ -5068,7 +5068,7 @@
 							"type": {
 								"type": "reference",
 								"id": 388,
-								"name": "InvitationDescriptor"
+								"name": "InvitationWrapper"
 							}
 						},
 						{
@@ -5189,7 +5189,7 @@
 								"type": {
 									"type": "reference",
 									"id": 388,
-									"name": "InvitationDescriptor"
+									"name": "InvitationWrapper"
 								}
 							}
 						},
@@ -5259,7 +5259,7 @@
 									"flags": {},
 									"type": {
 										"type": "reference",
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -5371,7 +5371,7 @@
 				},
 				{
 					"id": 388,
-					"name": "InvitationDescriptor",
+					"name": "InvitationWrapper",
 					"kind": 128,
 					"kindString": "Class",
 					"flags": {},
@@ -5400,7 +5400,7 @@
 							"signatures": [
 								{
 									"id": 399,
-									"name": "new InvitationDescriptor",
+									"name": "new InvitationWrapper",
 									"kind": 16384,
 									"kindString": "Constructor signature",
 									"flags": {},
@@ -5474,7 +5474,7 @@
 									"type": {
 										"type": "reference",
 										"id": 388,
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -5660,7 +5660,7 @@
 									"flags": {},
 									"type": {
 										"type": "reference",
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -5689,7 +5689,7 @@
 										"summary": [
 											{
 												"kind": "text",
-												"text": "Exports an InvitationDescriptor to an object suitable for use as query parameters."
+												"text": "Exports an InvitationWrapper to an object suitable for use as query parameters."
 											}
 										]
 									},
@@ -5738,7 +5738,7 @@
 									"type": {
 										"type": "reference",
 										"id": 388,
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -5774,14 +5774,14 @@
 											"flags": {},
 											"type": {
 												"type": "reference",
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										}
 									],
 									"type": {
 										"type": "reference",
 										"id": 388,
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -5824,7 +5824,7 @@
 									"type": {
 										"type": "reference",
 										"id": 388,
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									}
 								}
 							]
@@ -6203,7 +6203,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										},
 										{
@@ -6426,7 +6426,7 @@
 								"type": {
 									"type": "reference",
 									"id": 388,
-									"name": "InvitationDescriptor"
+									"name": "InvitationWrapper"
 								}
 							}
 						},
@@ -11180,7 +11180,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										},
 										{
@@ -11295,7 +11295,7 @@
 							"type": {
 								"type": "reference",
 								"id": 388,
-								"name": "InvitationDescriptor"
+								"name": "InvitationWrapper"
 							},
 							"inheritedFrom": {
 								"type": "reference",
@@ -11431,7 +11431,7 @@
 								"type": {
 									"type": "reference",
 									"id": 388,
-									"name": "InvitationDescriptor"
+									"name": "InvitationWrapper"
 								},
 								"inheritedFrom": {
 									"type": "reference",
@@ -11565,7 +11565,7 @@
 									"flags": {},
 									"type": {
 										"type": "reference",
-										"name": "InvitationDescriptor"
+										"name": "InvitationWrapper"
 									},
 									"inheritedFrom": {
 										"type": "reference",
@@ -17618,7 +17618,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										}
 									],
@@ -18035,7 +18035,7 @@
 											"type": {
 												"type": "reference",
 												"id": 388,
-												"name": "InvitationDescriptor"
+												"name": "InvitationWrapper"
 											}
 										}
 									],
@@ -18814,7 +18814,7 @@
 							"type": {
 								"type": "reference",
 								"id": 388,
-								"name": "InvitationDescriptor"
+								"name": "InvitationWrapper"
 							}
 						},
 						{

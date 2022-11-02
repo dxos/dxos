@@ -13,7 +13,7 @@ import { Avatar, QrCode, useTranslation, Tag, defaultGroup, Button, getSize } fr
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  value: InvitationRequest;
+  value: InvitationRequest; // TODO(burdon): Rename invitation.
 }
 
 export const PendingInvitation = ({ value }: PendingInvitationProps) => {

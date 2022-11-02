@@ -154,7 +154,7 @@ export const SharingDialog = ({
             {invitations.map((invitation, i) => (
               <PendingInvitation
                 key={i}
-                invitationCode={invitation.descriptor.encode().toString()}
+                invitationCode={invitation.encode()}
                 pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
                 createUrl={createUrl}
                 onCancel={() => onCancelInvitation(invitation)}

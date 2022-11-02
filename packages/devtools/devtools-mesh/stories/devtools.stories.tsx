@@ -44,7 +44,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   });
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
-  await networkManager.joinProtocolSwarm({
+  await networkManager.openSwarmConnection({
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),

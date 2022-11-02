@@ -6,7 +6,7 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationDescriptor, Party } from '@dxos/client';
+import { InvitationWrapper, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Dialog, DialogProps, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
@@ -48,7 +48,7 @@ const JoinSpacePanel = () => {
 
   const redeemInvitation = useCallback(() => {
     const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-    const invitation = InvitationDescriptor.decode(parsedInvitationCode);
+    const invitation = InvitationWrapper.decode(parsedInvitationCode);
     const redeemeingInvitation = client.echo.acceptInvitation(invitation);
     return redeemeingInvitation.getParty();
   }, [navigate, invitationCode]);

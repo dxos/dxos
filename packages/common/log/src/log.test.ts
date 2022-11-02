@@ -2,21 +2,40 @@
 // Copyright 2022 DXOS.org
 //
 
-import { log } from './log';
+import path from 'path';
 
-// TODO(burdon): Override with LOG_FILTER
-// import { LogLevel } from './config';
-// log.config.filter = LogLevel.INFO;
+import { LogLevel } from './config';
+import { log } from './log';
 
 describe('log', function () {
   it('line numbers', function () {
-    log.warn('LOG LINE 13');
+    log.warn('LOG LINE 12'); // TODO(burdon): Test by configuring custom processor.
 
     try {
-      throw new Error('ERROR ON LINE 16');
+      throw new Error('ERROR ON LINE 15');
     } catch (err: any) {
       log.catch(err);
     }
+  });
+
+  it('config', function () {
+    log.config({
+      filter: LogLevel.INFO
+    });
+
+    log.debug('Debug level log message');
+    log.info('Info level log message');
+    log.warn('Warn level log message');
+  });
+
+  it('config file', function () {
+    log.config({
+      file: path.join('packages/common/log/test-config.yml')
+    });
+
+    log.debug('Debug level log message');
+    log.info('Info level log message');
+    log.warn('Warn level log message');
   });
 
   it('levels', function () {
@@ -27,14 +46,10 @@ describe('log', function () {
     log.error('Error level log message');
   });
 
-  it('formatting', function () {
-    log.info(`${2} + ${2} = ${2 + 2}`);
-  });
-
   it('context', function () {
     log.info('Message with context', {
-      foo: 'bar',
-      baz: 123
+      title: 'test',
+      context: 123
     });
   });
 });

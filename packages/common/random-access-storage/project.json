@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/common/random-access-storage/src/index.ts",
         "outputPath": "packages/common/random-access-storage/dist",
-        "tsConfig": "packages/common/random-access-storage/tsconfig.json"
+        "tsConfig": "packages/common/random-access-storage/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

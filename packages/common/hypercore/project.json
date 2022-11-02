@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/common/hypercore/src/index.ts",
         "outputPath": "packages/common/hypercore/dist",
-        "tsConfig": "packages/common/hypercore/tsconfig.json"
+        "tsConfig": "packages/common/hypercore/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
