@@ -22,7 +22,9 @@ export const AppLayout = () => {
   const spaceKey = useSafeSpaceKey(spaceHex);
   const space = useParty(spaceKey);
 
-  const isRootPath = location.pathname.split('/').length < 3;
+  const pathSegments = location.pathname.split('/').length;
+  const isRootPath = pathSegments < 3;
+  const isManagingSpace = !!spaceHex && pathSegments > 3;
 
   const centerMenuItems = [
     {
@@ -111,8 +113,10 @@ export const AppLayout = () => {
           className='flex-none'
           size={10}
           sideOffset={4}
+          managingParty={isManagingSpace}
           onClickManageProfile={() => navigate('/identity')}
           onClickGoToParty={() => navigate(`/spaces/${spaceHex}`)}
+          onClickManageParty={() => navigate(`/spaces/${spaceHex}/settings`)}
         />
       </div>
 

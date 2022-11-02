@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import { Users, Nut, SignIn, DotsThreeOutline } from 'phosphor-react';
+import { Users, Nut, SignIn, Gear } from 'phosphor-react';
 import React, { FunctionComponent } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -16,7 +16,6 @@ import {
   defaultGroup,
   defaultHover,
   defaultFocus,
-  Button,
   useTranslation,
   getSize,
   Tooltip,
@@ -68,10 +67,10 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
               </Tag>
             </div>
             <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
-              <Tooltip content={t('more options label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
-                <Button compact className='flex gap-1'>
-                  <DotsThreeOutline className={getSize(5)} />
-                </Button>
+              <Tooltip content={t('manage party label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
+                <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
+                  <Gear className={getSize(5)} />
+                </Link>
               </Tooltip>
               <Tooltip content={t('join label')} side='left' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>

@@ -27,6 +27,7 @@ import {
   LockPage,
   RecoverIdentityPage,
   RequireIdentity,
+  SpaceMetaPage,
   SpacePage,
   SpacesPage
 } from './pages';
@@ -77,7 +78,8 @@ const Routes = () => {
             { path: '/spaces', element: <SpacesPage /> },
             { path: '/contacts', element: <ContactsPage /> },
             { path: '/apps', element: <AppsPage /> },
-            { path: '/spaces/:space', element: <SpacePage /> }
+            { path: '/spaces/:space', element: <SpacePage /> },
+            { path: '/spaces/:space/settings', element: <SpaceMetaPage /> }
           ]
         }
       ]
