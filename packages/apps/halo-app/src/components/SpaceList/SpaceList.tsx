@@ -67,7 +67,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 {'##'}
               </Tag>
             </div>
-            <div role='none' className='flex flex-col md:flex-row md:items-stretch gap-x-2 gap-y-1'>
+            <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('more options label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
                 <Button compact className='flex gap-1'>
                   <DotsThreeOutline className={getSize(5)} />

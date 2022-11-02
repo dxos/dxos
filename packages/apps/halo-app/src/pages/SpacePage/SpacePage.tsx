@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft } from 'phosphor-react';
+import { CaretLeft, Planet } from 'phosphor-react';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -33,9 +33,10 @@ export const SpacePage = () => {
         <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
       </div>
       <div role='none' className='fixed block-start-7 inline-start-7 mlb-px'>
-        <Tooltip content={t('back label', { ns: 'uikit' })} tooltipLabelsTrigger>
+        <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
           <Button compact onClick={() => navigate('/spaces')} className='flex gap-1'>
             <CaretLeft className={getSize(4)} />
+            <Planet className={getSize(4)} />
           </Button>
         </Tooltip>
       </div>

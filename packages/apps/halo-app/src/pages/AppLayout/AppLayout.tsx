@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AddressBook, Command, DeviceMobileCamera, Planet, SignOut } from 'phosphor-react';
+import { AddressBook, DiamondsFour, DeviceMobileCamera, Planet, SignOut } from 'phosphor-react';
 import React from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -45,7 +45,7 @@ export const AppLayout = () => {
     },
     {
       label: t('apps label'),
-      icon: <Command {...iconAttributes} />,
+      icon: <DiamondsFour {...iconAttributes} />,
       pathName: '/apps'
     },
     {

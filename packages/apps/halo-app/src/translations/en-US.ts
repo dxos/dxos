@@ -10,6 +10,7 @@ export const halo = {
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
+  'back to spaces label': 'Back to spaces',
   'devices label': 'Devices',
   'add device label': 'Invite another device',
   'identity label': 'You',
