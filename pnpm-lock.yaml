@@ -36,6 +36,7 @@ importers:
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/toolbox': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
       '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
@@ -107,7 +108,7 @@ importers:
       syncpack: ^8.2.4
       ts-node: 10.9.1
       tslib: ^2.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uuid: ^8.3.2
       vite: 3.0.9
       wait-for-expect: ^3.0.2
@@ -128,6 +129,7 @@ importers:
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
+      '@dxos/toolbox': link:tools/executors/toolbox
       '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
       '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
@@ -228,7 +230,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.51
@@ -279,9 +281,12 @@ importers:
       '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@sentry/react': ^7.17.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
       '@types/react': ^18.0.21
@@ -293,10 +298,11 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -313,8 +319,11 @@ importers:
       '@dxos/react-uikit': link:../../common/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
+      '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
       phosphor-react: 1.4.1_react@18.2.0
@@ -333,13 +342,14 @@ importers:
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
+      workbox-window: 6.5.4
 
   packages/apps/templates/bare-template:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
@@ -375,7 +385,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       require-from-string: ^2.0.2
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
@@ -427,7 +437,7 @@ importers:
       isomorphic-ws: ^4.0.1
       sodium-native: ^3.4.1
       sodium-universal: ^3.1.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
     dependencies:
       '@dxos/async': link:../../common/async
@@ -681,6 +691,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/randombytes': ^2.0.0
@@ -709,6 +720,7 @@ importers:
       util: 0.12.5
     devDependencies:
       '@dxos/log': link:../log
+      '@dxos/util': link:../util
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/randombytes': 2.0.0
@@ -736,19 +748,27 @@ importers:
     specifiers:
       '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': ^1.3.9
+      '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
       chalk: ^4.1.0
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       pirates: ~4.0.5
       sorcery: ^0.10.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       util: ^0.12.4
     dependencies:
       chalk: 4.1.2
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       util: 0.12.5
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.3.9
+      '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.66
       pirates: 4.0.5
@@ -814,6 +834,7 @@ importers:
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
       '@radix-ui/react-popover': ^1.0.2
+      '@radix-ui/react-toast': ^1.1.1
       '@radix-ui/react-tooltip': ^1.0.2
       '@tailwindcss/forms': ^0.5.3
       '@types/react': ^18.0.21
@@ -841,6 +862,7 @@ importers:
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-popover': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-toast': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
       alea: 1.0.1
@@ -911,13 +933,13 @@ importers:
 
   packages/common/sentry:
     specifiers:
-      '@sentry/browser': ^7.16.0
-      '@sentry/node': ^7.16.0
+      '@sentry/browser': ^7.17.2
+      '@sentry/node': ^7.17.2
       '@sentry/types': ^7.16.0
       sentry-testkit: ^4.1.0
     dependencies:
-      '@sentry/browser': 7.16.0
-      '@sentry/node': 7.16.0
+      '@sentry/browser': 7.17.2
+      '@sentry/node': 7.17.2
     devDependencies:
       '@sentry/types': 7.16.0
       sentry-testkit: 4.1.0
@@ -940,7 +962,7 @@ importers:
   packages/common/testutils:
     specifiers:
       '@types/node': ^16.11.58
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     devDependencies:
       '@types/node': 16.11.66
       typescript: 4.8.4
@@ -948,12 +970,14 @@ importers:
   packages/common/timeframe:
     specifiers:
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       debug: ^4.3.3
       util: ^0.12.4
     dependencies:
       '@dxos/keys': link:../keys
+      '@dxos/log': link:../log
       '@dxos/util': link:../util
       debug: 4.3.4
       util: 0.12.5
@@ -997,8 +1021,10 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1026,8 +1052,10 @@ importers:
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/rpc': link:../../mesh/rpc
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1335,7 +1363,7 @@ importers:
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
       mocha: ^8.4.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
     dependencies:
@@ -1408,7 +1436,7 @@ importers:
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       ws: ^7.4.4
       xor-distance: ^2.0.0
     dependencies:
@@ -1547,6 +1575,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
@@ -1558,6 +1587,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
       '@dxos/rpc': link:../rpc
@@ -1580,7 +1610,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
@@ -1698,7 +1728,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
@@ -2188,7 +2218,7 @@ importers:
       react-dom: ^18.2.0
       robotjs: ~0.6.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       uint8arrays: 3.0.0
       url-join: ^5.0.0
     dependencies:
@@ -2289,7 +2319,7 @@ importers:
       react: ^18.2.0
       supervisor: ~0.12.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/async': link:../../common/async
@@ -2372,7 +2402,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       y-protocols: ^1.0.5
       yjs: ^13.5.41
@@ -2435,7 +2465,7 @@ importers:
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       url-join: ^5.0.0
     dependencies:
       '@dxos/keys': link:../../common/keys
@@ -2750,6 +2780,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -2777,6 +2808,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/protocols': link:../../core/protocols
@@ -3446,7 +3478,7 @@ importers:
       minimatch: ^5.1.0
       mocha: ^8.4.0
       ts-morph: ^16.0.0
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/log': link:../../packages/common/log
@@ -3478,7 +3510,7 @@ importers:
       '@babel/preset-env': ^7.19.3
       '@types/jscodeshift': ^0.11.5
       jscodeshift: ^0.13.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       jscodeshift: 0.13.1_@babel+preset-env@7.19.4
     devDependencies:
@@ -3493,7 +3525,7 @@ importers:
       '@types/node': ^16.11.58
       '@types/yargs': ~16.0.1
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       '@dxos/toolchain-node-library': link:../toolchain-node-library
@@ -3528,7 +3560,7 @@ importers:
       terser: ^5.12.0
       ts-jest: 27.1.4
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       wtfnode: ~0.9.1
       yargs: ~16.2.0
     dependencies:
@@ -3578,7 +3610,7 @@ importers:
       eslint-plugin-react: ^7.30.0
       eslint-plugin-unused-imports: ^2.0.0
       prettier: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_z4bbprzjrhnsfa24uvmcbu7f5q
@@ -3630,7 +3662,7 @@ importers:
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       argparse: 2.0.1
       chalk: 4.1.2
@@ -3651,6 +3683,37 @@ importers:
       ts-node: 10.9.1_ee7ozjix4gtbq7xqorjokx6z5u
       typescript: 4.8.4
 
+  tools/executors/toolbox:
+    specifiers:
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.pick': ^4.4.7
+      '@types/lodash.sortby': ^4.7.7
+      '@types/node': ^16.11.58
+      chalk: ^4.1.0
+      comment-json: ^4.2.3
+      console-table-printer: ^2.11.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.pick: ^4.4.0
+      lodash.sortby: ^4.7.0
+      sort-package-json: ^1.57.0
+      ts-node: 10.9.1
+      typescript: ^4.8.4
+    dependencies:
+      chalk: 4.1.2
+      comment-json: 4.2.3
+      console-table-printer: 2.11.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.pick: 4.4.0
+      lodash.sortby: 4.7.0
+      sort-package-json: 1.57.0
+    devDependencies:
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.pick': 4.4.7
+      '@types/lodash.sortby': 4.7.7
+      '@types/node': 16.11.66
+      ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
+      typescript: 4.8.4
+
   tools/log-hook:
     specifiers:
       '@swc-node/sourcemap-support': ^0.2.0
@@ -3659,7 +3722,7 @@ importers:
       pirates: ~4.0.5
       sorcery: ^0.10.0
       source-map: ^0.6.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
     dependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.2.249
@@ -3686,7 +3749,7 @@ importers:
       prettier: ^2.7.1
       recursive-readdir: ^2.2.2
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
       esbuild: 0.14.54
@@ -3740,7 +3803,7 @@ importers:
       remark-rehype: ~10.1.0
       to-vfile: ~7.2.3
       ts-node: 10.9.1
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       unist-builder: ~3.0.0
       unist-util-visit: ^4.1.0
       yargs: ~16.2.0
@@ -3786,7 +3849,7 @@ importers:
       '@vuepress/client': ^2.0.0-beta.51
       change-case: ^4.1.2
       typedoc: 0.23.15
-      typescript: ^4.7.2
+      typescript: ^4.8.4
       vue: ^3.2.40
       vuepress: ^2.0.0-beta.51
     devDependencies:
@@ -8406,6 +8469,29 @@ packages:
       react: 18.2.0
     dev: false
 
+  /@radix-ui/react-toast/1.1.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-0wNOO9/O1jNvJQOVJD62HoquYqsC8KhWvRgmZ2vlw/5PW/K88mcS2G0gKCrWtcAC33rLttPU1JPd4SF+qzCZ6A==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-dismissable-layer': 1.0.2_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-portal': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-presence': 1.0.0_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
+      '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
+      '@radix-ui/react-visually-hidden': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /@radix-ui/react-tooltip/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
     resolution: {integrity: sha512-11gUlok2rv5mu+KBtxniOKKNKjqC/uTbgFHWoQdbF46vMV+zjDaBvCtVDK9+MTddlpmlisGPGvvojX7Qm0yr+g==}
     peerDependencies:
@@ -8678,32 +8764,32 @@ packages:
       '@ndhoule/map': 2.0.1
     dev: false
 
-  /@sentry/browser/7.16.0:
-    resolution: {integrity: sha512-tJ063zvoF8Raw7mzQEXupOFPSN6v36WIbsDVGeFdToPCwViaBuATaxvWCrudGzsnBkMyItmTLJkzn9SEIXUOiw==}
+  /@sentry/browser/7.17.2:
+    resolution: {integrity: sha512-LICJvwnES+Jp7ShN7zkmTFYIQB9jWOg/s9U58CQWfwrkMTwE4zKylojF3OTtyNaMmekVv/y/1JjeS5KAK3IrHQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.16.0
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/core/7.16.0:
-    resolution: {integrity: sha512-vq6H1b/IPTvzDD9coQ3wIudvSjkAYuUlXb1dv69dRlq4v3st9dcKBps1Zf0lQ1i4TVlDLoe1iGMmNFglMF1Q5w==}
+  /@sentry/core/7.17.2:
+    resolution: {integrity: sha512-mBFjngWJPN3V1A/tz/qa1jkQvmZtU07hhlWg+kmajD0nFulPHUWEvZhsi8NFveGcxMxc/wmaSSLcEOpKq5L29g==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/node/7.16.0:
-    resolution: {integrity: sha512-OC0TO6UTetv8IsX3zNhdeui7YVIQCnhkbfi+CMrB6YsHaMP2A9qH5gNyu/hKbaY9+4xci7e4rxyRmI65aKS9ow==}
+  /@sentry/node/7.17.2:
+    resolution: {integrity: sha512-dMHff7C3MgKpIlbLkrEEtq1nX8o1Tiax/DWOtj5dLrPMsjQyivMs906GeS3GJkX7YeMMfy93j8gC+qIK54gqFw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.16.0
-      '@sentry/types': 7.16.0
-      '@sentry/utils': 7.16.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       cookie: 0.4.2
       https-proxy-agent: 5.0.1
       lru_map: 0.3.3
@@ -8712,15 +8798,35 @@ packages:
       - supports-color
     dev: false
 
+  /@sentry/react/7.17.2_react@18.2.0:
+    resolution: {integrity: sha512-vE3JND7yPVWQkrFXxbzz6nfq+jn8YZL7kitr/ioTqWBvZJyxveIl8qg7w6dN0JpMmbV52dEumSSXk8rHLtCTyw==}
+    engines: {node: '>=8'}
+    peerDependencies:
+      react: 15.x || 16.x || 17.x || 18.x
+    dependencies:
+      '@sentry/browser': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
+      hoist-non-react-statics: 3.3.2
+      react: 18.2.0
+      tslib: 1.14.1
+    dev: false
+
   /@sentry/types/7.16.0:
     resolution: {integrity: sha512-i6D+OK6d0l/k+VQvRp/Pt21WkDEgVBUIZq+sOkEZJczbcfexVdXKeXXoYTD2vYuFq8Yy28fzlsZaKI+NoH94yQ==}
     engines: {node: '>=8'}
+    dev: true
 
-  /@sentry/utils/7.16.0:
-    resolution: {integrity: sha512-3Zh1txg7IRp4kZAdG27YF7K6lD1IZyuAo9KjoPg1Xzqa4DOZyASJuEkbf+rK2a9T4HrtVHHXJUsNbKg8WM3VHg==}
+  /@sentry/types/7.17.2:
+    resolution: {integrity: sha512-zxhNQ8Xt/hfP8bFZEV66ovJZK7aUqok5w1wjsHgkUz/S6/gkiMrDYT3OtRCRuY3mfQu9KmeBniM0xZkaxREJ1w==}
+    engines: {node: '>=8'}
+    dev: false
+
+  /@sentry/utils/7.17.2:
+    resolution: {integrity: sha512-l8t6qzyi+UUzD0a/oOYn4i+Eii+Ei29/TVwj/+9ogfJzBk6dSwSLvXievsyCRpcN3tftpWP0cHREcbZN64ZOWw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.16.0
+      '@sentry/types': 7.17.2
       tslib: 1.14.1
     dev: false
 
@@ -12216,6 +12322,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.sortby/4.7.7:
+    resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
+    dependencies:
+      '@types/lodash': 4.14.186
+    dev: true
+
   /@types/lodash.zip/4.2.7:
     resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
     dependencies:
@@ -14065,6 +14177,10 @@ packages:
     resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
     dev: false
 
+  /array-timsort/1.0.3:
+    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
+    dev: false
+
   /array-union/1.0.2:
     resolution: {integrity: sha512-Dxr6QJj/RdU/hCaBjOfxW+q6lyuVE6JFWIrAUpuOOhoJJoQ99cUn3igRaHVB5P9WrgFVN0FfArM3x0cueOU8ng==}
     engines: {node: '>=0.10.0'}
@@ -15865,6 +15981,17 @@ packages:
     engines: {node: ^12.20.0 || >=14}
     dev: true
 
+  /comment-json/4.2.3:
+    resolution: {integrity: sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==}
+    engines: {node: '>= 6'}
+    dependencies:
+      array-timsort: 1.0.3
+      core-util-is: 1.0.3
+      esprima: 4.0.1
+      has-own-prop: 2.0.0
+      repeat-string: 1.6.1
+    dev: false
+
   /common-ancestor-path/1.0.1:
     resolution: {integrity: sha512-L3sHRo1pXXEqX8VU28kfgUY+YGsk09hPqZiZmLacNib6XNTCM8ubYeT7ryXQw8asB1sKgcU5lkB7ONug08aB8w==}
     dev: false
@@ -16010,6 +16137,12 @@ packages:
 
   /console-control-strings/1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
+
+  /console-table-printer/2.11.1:
+    resolution: {integrity: sha512-8LfFpbF/BczoxPwo2oltto5bph8bJkGOATXsg3E9ddMJOGnWJciKHldx2zDj5XIBflaKzPfVCjOTl6tMh7lErg==}
+    dependencies:
+      simple-wcswidth: 1.0.1
+    dev: false
 
   /constant-case/3.0.4:
     resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
@@ -20054,6 +20187,10 @@ packages:
       assert-plus: 1.0.0
     dev: true
 
+  /git-hooks-list/1.0.3:
+    resolution: {integrity: sha512-Y7wLWcrLUXwk2noSka166byGCvhMtDRpgHdzCno1UQv/n/Hegp++a2xBWJL1lJarnKD3SWaljD+0z1ztqxuKyQ==}
+    dev: false
+
   /github-from-package/0.0.0:
     resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
     dev: true
@@ -20271,6 +20408,20 @@ packages:
       define-properties: 1.1.4
     dev: true
 
+  /globby/10.0.0:
+    resolution: {integrity: sha512-3LifW9M4joGZasyYPz2A1U74zbC/45fvpXUvO/9KbSa+VV0aGZarWkfdgKyR9sExNP0t0x0ss/UMJpNpcaTspw==}
+    engines: {node: '>=8'}
+    dependencies:
+      '@types/glob': 7.2.0
+      array-union: 2.1.0
+      dir-glob: 3.0.1
+      fast-glob: 3.2.12
+      glob: 7.2.3
+      ignore: 5.2.0
+      merge2: 1.4.1
+      slash: 3.0.0
+    dev: false
+
   /globby/10.0.2:
     resolution: {integrity: sha512-7dUi7RvCoT/xast/o/dLN53oqND4yk0nsHkhRgn9w65C4PofCLOoJ39iSOg+qVDdWQPIEj+eszMHQ+aLVwwQSg==}
     engines: {node: '>=8'}
@@ -20465,6 +20616,11 @@ packages:
     dependencies:
       is-glob: 3.1.0
     dev: true
+
+  /has-own-prop/2.0.0:
+    resolution: {integrity: sha512-Pq0h+hvsVm6dDEa8x82GnLSYHOzNDt7f0ddFa3FqcQlgzEiptPqL+XrOJNavjOzSYiYWIrgeVYYgGlLmnxwilQ==}
+    engines: {node: '>=8'}
+    dev: false
 
   /has-property-descriptors/1.0.0:
     resolution: {integrity: sha512-62DVLZGoiEBDHQyqG4w9xCuZ7eJEwNmJRWw2VY84Oedb7WFcA27fiEVe8oUQx9hAUJ4ekurquucTGwsyO1XGdQ==}
@@ -23600,7 +23756,6 @@ packages:
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
-    dev: true
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -29064,6 +29219,10 @@ packages:
       - supports-color
     dev: false
 
+  /simple-wcswidth/1.0.1:
+    resolution: {integrity: sha512-xMO/8eNREtaROt7tJvWJqHBDTMFN4eiQ5I4JRMuilwfnFcV5W9u7RUkueNkdw0jPqGMX36iCywelS5yilTuOxg==}
+    dev: false
+
   /siphash24/1.3.1:
     resolution: {integrity: sha512-moemC3ZKiTzH29nbFo3Iw8fbemWWod4vNs/WgKbQ54oEs6mE6XVlguxvinYjB+UmaE0PThgyED9fUkWvirT8hA==}
     dependencies:
@@ -29235,6 +29394,22 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-plain-obj: 2.1.0
+    dev: false
+
+  /sort-object-keys/1.1.3:
+    resolution: {integrity: sha512-855pvK+VkU7PaKYPc+Jjnmt4EzejQHyhhF33q31qG8x7maDzkeFhAAThdCYay11CISO+qAMwjOBP+fPZe0IPyg==}
+    dev: false
+
+  /sort-package-json/1.57.0:
+    resolution: {integrity: sha512-FYsjYn2dHTRb41wqnv+uEqCUvBpK3jZcTp9rbz2qDTmel7Pmdtf+i2rLaaPMRZeSVM60V3Se31GyWFpmKs4Q5Q==}
+    hasBin: true
+    dependencies:
+      detect-indent: 6.1.0
+      detect-newline: 3.1.0
+      git-hooks-list: 1.0.3
+      globby: 10.0.0
+      is-plain-obj: 2.1.0
+      sort-object-keys: 1.1.3
     dev: false
 
   /source-list-map/2.0.1:

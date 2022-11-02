@@ -11,6 +11,7 @@ const { spawnSync } = require('child_process');
 //
 
 const getArg = (flag) => {
+  // TODO(burdon): Extract project from args if not reported directly.
   const idx = process.argv.findIndex((arg) => arg.startsWith(flag));
   if (idx === -1) {
     return undefined;

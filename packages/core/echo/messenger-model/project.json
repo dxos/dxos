@@ -4,44 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/echo/messenger-model/src/index.ts",
         "outputPath": "packages/core/echo/messenger-model/dist",
         "tsConfig": "packages/core/echo/messenger-model/tsconfig.json",
-        "main": "packages/core/echo/messenger-model/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/echo/messenger-model/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/core/echo/messenger-model",
+        "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
+        "resultsPath": "test-results/packages/core/echo/messenger-model",
         "testPatterns": [
           "packages/core/echo/messenger-model/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/messenger-model/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
-        "resultsPath": "test-results/packages/core/echo/messenger-model",
-        "coveragePath": "coverage/packages/core/echo/messenger-model"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

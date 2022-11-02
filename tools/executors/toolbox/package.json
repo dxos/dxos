@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/toolbox",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "check": "true",
+    "update": "ts-node ./src/update.ts"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "comment-json": "^4.2.3",
+    "console-table-printer": "^2.11.0",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.pick": "^4.4.0",
+    "lodash.sortby": "^4.7.0",
+    "sort-package-json": "^1.57.0"
+  },
+  "devDependencies": {
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.pick": "^4.4.7",
+    "@types/lodash.sortby": "^4.7.7",
+    "@types/node": "^16.11.58",
+    "ts-node": "10.9.1",
+    "typescript": "^4.8.4"
+  },
+  "executors": "./executors.json"
+}

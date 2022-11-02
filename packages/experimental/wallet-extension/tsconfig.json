@@ -10,9 +10,9 @@
     "outDir": "dist",
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
     "types": [
+      "mocha",
       "node",
-      "webpack-env",
-      "mocha"
+      "webpack-env"
     ]
   },
   "include": [
@@ -21,6 +21,9 @@
     "stories"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
     {
       "path": "../../common/async"
     },

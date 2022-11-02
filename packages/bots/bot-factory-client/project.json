@@ -4,40 +4,46 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/bots/bot-factory-client/src/index.ts",
         "outputPath": "packages/bots/bot-factory-client/dist",
         "tsConfig": "packages/bots/bot-factory-client/tsconfig.json",
-        "main": "packages/bots/bot-factory-client/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outfile}"
-      ],
       "options": {
+        "bundlePackages": [
+          "@dxos/network-manager"
+        ],
         "entryPoints": [
           "packages/bots/bot-factory-client/src/index.ts"
         ],
-        "outfile": "packages/bots/bot-factory-client/dist/browser.js",
-        "bundlePackages": [
-          "@dxos/network-manager"
-        ]
-      }
+        "outfile": "packages/bots/bot-factory-client/dist/browser.js"
+      },
+      "outputs": [
+        "{options.outfile}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/bots/bot-factory-client/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

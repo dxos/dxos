@@ -2,13 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultConfig, LogConfig, LogContext, LogLevel, LogMetadata, LogProcessor, LogProcessorType } from './config';
-import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
+import { LogOptions, LogConfig, LogLevel } from './config';
+import { LogContext, LogMetadata } from './context';
+import { getConfig } from './options';
 
-export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
+/**
+ * Logging function.
+ */
+type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
 
-export interface Log extends Logger {
-  config: LogConfig;
+/**
+ * Properties accessible on the logging function.
+ */
+interface Log extends Logger {
+  config: (options: LogOptions) => void;
 
   debug: Logger;
   info: Logger;
@@ -18,30 +25,50 @@ export interface Log extends Logger {
   catch: (error: Error, ctx?: LogContext, meta?: LogMetadata) => void;
 }
 
-export const log: Log = (...params) => processLog(LogLevel.DEBUG, ...params);
+interface LogImp extends Log {
+  _config: LogConfig;
+}
 
-log.config = defaultConfig;
+const createLog = (): LogImp => {
+  const log: LogImp = (...params) => processLog(LogLevel.DEBUG, ...params);
 
-log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
-log.info = (...params) => processLog(LogLevel.INFO, ...params);
-log.warn = (...params) => processLog(LogLevel.WARN, ...params);
-log.error = (...params) => processLog(LogLevel.ERROR, ...params);
+  log._config = getConfig();
 
-// TODO(burdon): Options for stack or not.
-log.catch = (error: Error, ctx, meta) => processLog(LogLevel.ERROR, String(error.stack), ctx, meta, error);
+  log.config = (options: LogOptions) => {
+    log._config = getConfig(options);
+  };
 
-export const processors: { [index: string]: LogProcessor } = {
-  [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
-  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
+  log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
+  log.info = (...params) => processLog(LogLevel.INFO, ...params);
+  log.warn = (...params) => processLog(LogLevel.WARN, ...params);
+  log.error = (...params) => processLog(LogLevel.ERROR, ...params);
+
+  // TODO(burdon): Option to display/hide stack.
+  log.catch = (error: Error, ctx, meta) => processLog(LogLevel.ERROR, String(error.stack), ctx, meta, error);
+
+  /**
+   * Process the current log call.
+   */
+  const processLog = (level: LogLevel, message: string, ctx?: LogContext, meta?: LogMetadata, error?: Error) => {
+    log._config.processor(log._config, {
+      level,
+      message,
+      ctx,
+      meta,
+      error
+    });
+  };
+
+  return log;
 };
 
-const processLog = (level: LogLevel, message: string, ctx?: LogContext, meta?: LogMetadata, error?: Error) => {
-  const processor = processors[log.config.processor!] ?? CONSOLE_PROCESSOR;
-  processor(log.config, {
-    level,
-    message,
-    ctx,
-    meta,
-    error
-  });
-};
+/**
+ * Global logging function.
+ */
+// TODO(burdon): Instance loggers? (e.g., provide additional displayed logging context/filtering).
+export const log = ((globalThis as any).dx_log ??= createLog());
+
+declare global {
+  // eslint-disable-next-line camelcase
+  const dx_log: Log;
+}

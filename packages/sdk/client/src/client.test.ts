@@ -9,12 +9,14 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+import { clientServiceBundle, ClientServiceHost, InvitationWrapper } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { ModelFactory, TestModel } from '@dxos/model-factory';
-import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
+import { log } from '@dxos/log';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { TestModel } from '@dxos/model-factory';
+import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
@@ -31,7 +33,7 @@ describe('Client', function () {
   const testSuite = (createClient: () => Promise<Client>) => {
     describe('initialization', function () {
       // TODO(wittjosiah): Review timeout.
-      it('initialize and destroy', async function () {
+      it.only('initialize and destroy', async function () {
         const client = await createClient();
         await client.initialize();
         await client.destroy();
@@ -56,9 +58,7 @@ describe('Client', function () {
         await client.initialize();
         afterTest(() => client.destroy());
 
-        const profile = await client.halo.createProfile({
-          username: 'test-user'
-        });
+        const profile = await client.halo.createProfile({ username: 'test-user' });
         expect(profile).toBeDefined();
         // expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -84,10 +84,7 @@ describe('Client', function () {
         const seedPhrase = generateSeedPhrase();
         const keyPair = keyPairFromSeedPhrase(seedPhrase);
 
-        const profile = await client.halo.createProfile({
-          ...keyPair,
-          username: 'test-user'
-        });
+        const profile = await client.halo.createProfile({ ...keyPair, username: 'test-user' });
         expect(profile).toBeDefined();
         expect(profile?.username).toEqual('test-user');
         expect(client.halo.profile).toBeDefined();
@@ -104,6 +101,10 @@ describe('Client', function () {
         expect(recoveredClient.halo.profile!.username).toEqual('test-user');
       }).timeout(2000);
     });
+
+    //
+    // TODO(burdon): Factor out invitation tests.
+    //
 
     describe('party invitations', function () {
       const prepareInvitations = async () => {
@@ -127,6 +128,8 @@ describe('Client', function () {
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
         invitation.error.on(throwUnhandledRejection);
+        log('created invitation', { invitation: invitation.descriptor });
+
         const inviteeParty = await invitee.echo.acceptInvitation(invitation.descriptor).getParty();
         expect(inviteeParty.key).toEqual(party.key);
 
@@ -139,10 +142,11 @@ describe('Client', function () {
 
         const party = await inviter.echo.createParty();
         const invitation = await party.createInvitation();
+        log('created invitation', { invitation: invitation.descriptor });
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
-        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const reencodedDescriptor = InvitationWrapper.fromQueryParameters(invitation.descriptor.toQueryParameters());
         const acceptedInvitation = invitee.echo.acceptInvitation(reencodedDescriptor);
         await connectedFired;
 
@@ -384,17 +388,29 @@ describe('Client', function () {
     });
   });
 
-  describe('remote - wrtc proxy', function () {
+  describe('remote - WebRTC proxy', function () {
+    const signalManagerContext = new MemorySignalManagerContext();
+
     testSuite(async () => {
-      const transportFactory = new WebRTCTransportProxyFactory();
-      transportFactory.setBridgeService(new WebRTCTransportService());
+      const config = new Config({
+        runtime: {
+          client: {
+            mode: Runtime.Client.Mode.REMOTE
+          }
+        }
+      });
+
+      const networkManager = new NetworkManager({
+        signalManager: new MemorySignalManager(signalManagerContext),
+        transportFactory: MemoryTransportFactory
+      });
 
       const [proxyPort, hostPort] = createLinkedPorts();
       const hostClient = new ClientServiceHost({
-        config: new Config({}),
-        modelFactory: new ModelFactory().registerModel(ObjectModel),
-        transportFactory
+        config,
+        networkManager
       });
+
       await hostClient.open();
       afterTest(() => hostClient.close());
 
@@ -407,16 +423,7 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client(
-        {
-          runtime: {
-            client: {
-              mode: Runtime.Client.Mode.REMOTE
-            }
-          }
-        },
-        { rpcPort: proxyPort }
-      );
+      return new Client(config, { rpcPort: proxyPort });
     });
   });
 

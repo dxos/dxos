@@ -18,7 +18,7 @@ export class StarTopology implements Topology {
   ) {}
 
   toString() {
-    return `StarTopology(${this._centralPeer})`;
+    return `StarTopology(${this._centralPeer.truncate()})`;
   }
 
   init(controller: SwarmController): void {
@@ -30,11 +30,12 @@ export class StarTopology implements Topology {
     assert(this._controller, 'Not initialized.');
     const { candidates, connected, ownPeerId } = this._controller.getState();
     if (!ownPeerId.equals(this._centralPeer)) {
-      log('As leaf peer dropping all connections apart from central peer.');
+      log('leaf peer dropping all connections apart from central peer.');
+
       // Drop all connections other than central peer.
       for (const peer of connected) {
         if (!peer.equals(this._centralPeer)) {
-          log(`Dropping extra connection ${peer}`);
+          log('dropping connection', { peer });
           this._controller.disconnect(peer);
         }
       }
@@ -43,7 +44,7 @@ export class StarTopology implements Topology {
     for (const peer of candidates) {
       // Connect to central peer.
       if (peer.equals(this._centralPeer) || ownPeerId.equals(this._centralPeer)) {
-        log(`Connecting to peer ${peer}`);
+        log('connecting to peer', { peer });
         this._controller.connect(peer);
       }
     }
@@ -52,11 +53,11 @@ export class StarTopology implements Topology {
   async onOffer(peer: PublicKey): Promise<boolean> {
     assert(this._controller, 'Not initialized.');
     const { ownPeerId } = this._controller.getState();
-    log(
-      `Offer from ${peer} isCentral=${peer.equals(this._centralPeer)} isSelfCentral=${ownPeerId.equals(
-        this._centralPeer
-      )}`
-    );
+    log('offer', {
+      peer,
+      isCentral: peer.equals(this._centralPeer),
+      isSelfCentral: ownPeerId.equals(this._centralPeer)
+    });
     return ownPeerId.equals(this._centralPeer) || peer.equals(this._centralPeer);
   }
 

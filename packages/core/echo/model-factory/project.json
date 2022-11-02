@@ -4,44 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/echo/model-factory/src/index.ts",
         "outputPath": "packages/core/echo/model-factory/dist",
         "tsConfig": "packages/core/echo/model-factory/tsconfig.json",
-        "main": "packages/core/echo/model-factory/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/echo/model-factory/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/core/echo/model-factory",
+        "outputPath": "tmp/mocha/packages/core/echo/model-factory",
+        "resultsPath": "test-results/packages/core/echo/model-factory",
         "testPatterns": [
           "packages/core/echo/model-factory/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/model-factory/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/echo/model-factory",
-        "resultsPath": "test-results/packages/core/echo/model-factory",
-        "coveragePath": "coverage/packages/core/echo/model-factory"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

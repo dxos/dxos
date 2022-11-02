@@ -64,7 +64,7 @@ export class MessageRouter implements SignalMessaging {
       return;
     }
 
-    log(`receive message: ${JSON.stringify(message)} from ${author} to ${recipient}`);
+    log('received', { from: author, to: recipient, msg: message });
 
     if (message.data?.offer) {
       await this._handleOffer({ author, recipient, message });
@@ -113,8 +113,8 @@ export class MessageRouter implements SignalMessaging {
       // Setting unique message_id if it not specified yet.
       messageId: message.messageId ?? PublicKey.random()
     };
-    log(`sent message: ${JSON.stringify(networkMessage)} from ${author} to ${recipient}`);
 
+    log('sending', { from: author, to: recipient, msg: networkMessage });
     await this._encodeAndSend({ author, recipient, message: networkMessage });
   }
 
@@ -142,8 +142,8 @@ export class MessageRouter implements SignalMessaging {
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
       this._offerRecords.delete(message.data.answer.offerMessageId);
-      assert(message.data?.answer, 'No Answer');
-      log(`resolving answer with ${message.data.answer}`);
+      assert(message.data?.answer, 'No answer');
+      log('resolving', { answer: message.data.answer });
       offerRecord.resolve(message.data.answer);
     }
   }
@@ -194,6 +194,7 @@ export class MessageRouter implements SignalMessaging {
       ...message,
       data: { signal: message.data.signal }
     };
+
     await this._onSignal(signalMessage);
   }
 }

@@ -1,5 +1,9 @@
 {
   "name": "@dxos/eslint-plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "main": "index.js",
   "dependencies": {
     "@dxos/eslint-plugin-rules": "workspace:*",
@@ -21,7 +25,7 @@
   },
   "devDependencies": {
     "eslint": "^8.24.0",
-    "typescript": "^4.7.2"
+    "typescript": "^4.8.4"
   },
   "publishConfig": {
     "access": "public"

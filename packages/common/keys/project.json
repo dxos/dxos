@@ -4,44 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/keys/src/index.ts",
         "outputPath": "packages/common/keys/dist",
         "tsConfig": "packages/common/keys/tsconfig.json",
-        "main": "packages/common/keys/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-    ],
       "options": {
         "lintFilePatterns": [
           "packages/common/keys/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/keys",
+        "outputPath": "tmp/mocha/packages/common/keys",
+        "resultsPath": "test-results/packages/common/keys",
         "testPatterns": [
           "packages/common/keys/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/keys/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/keys",
-        "resultsPath": "test-results/packages/common/keys",
-        "coveragePath": "coverage/packages/common/keys"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

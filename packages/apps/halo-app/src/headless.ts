@@ -29,11 +29,8 @@ if (typeof SharedWorker !== 'undefined') {
     const windowAppPort = createIFramePort({
       channel: 'dxos:app',
       onOrigin: (origin) => {
-        // TODO(wittjosiah): Make debug logs.
-        console.log('IFrame port origin confirmed:', origin);
         setTimeout(async () => {
           await createRuntime(origin, wrtcPort);
-          console.log('Runtime created.');
         });
       }
     });

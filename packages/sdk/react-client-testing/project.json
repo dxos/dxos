@@ -4,47 +4,31 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/sdk/react-client-testing/src/index.ts",
         "outputPath": "packages/sdk/react-client-testing/dist",
         "tsConfig": "packages/sdk/react-client-testing/tsconfig.json",
-        "main": "packages/sdk/react-client-testing/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-client-testing/**/*.{ts,tsx,js,jsx}"
         ]
-      }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
+      },
       "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
-      "options": {
-        "testPatterns": [
-          "packages/sdk/react-client-testing/src/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "watchPatterns": [
-          "packages/sdk/react-client-testing/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/sdk/react-client-testing",
-        "resultsPath": "test-results/packages/sdk/react-client-testing",
-        "coveragePath": "coverage/packages/sdk/react-client-testing",
-        "domRequired": true,
-        "checkLeaks": false,
-        "forceExit": true
-      }
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

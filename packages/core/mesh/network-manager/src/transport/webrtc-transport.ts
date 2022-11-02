@@ -106,11 +106,10 @@ export class WebRTCTransport implements Transport {
   }
 }
 
-// TODO(burdon): Pass in opts?
 // TODO(dmaretskyi): Convert to class.
 export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
   create: (opts) =>
-    new WebRTCTransport(
+    new WebRTCTransport( // TODO(burdon): Refactor with to take opts in constructor.
       opts.initiator,
       opts.stream,
       opts.ownId,

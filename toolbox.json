@@ -1,0 +1,12 @@
+{
+  "config": {
+    "package": {
+      "common": [
+        "license",
+        "author",
+        "homepage",
+        "bugs"
+      ]
+    }
+  }
+}

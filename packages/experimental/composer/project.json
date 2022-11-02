@@ -4,32 +4,38 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/experimental/composer/src/index.ts",
         "outputPath": "packages/experimental/composer/dist",
         "tsConfig": "packages/experimental/composer/tsconfig.json",
-        "main": "packages/experimental/composer/src/index.ts"
-      }
-    },
-    "serve": {
-      "executor": "@nxext/vite:dev",
-      "options": {
-        "outputPath": "packages/experimental/composer/out/composer",
-        "configFile": "packages/experimental/composer/vite.config.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/experimental/composer/src/**/*.{js,jsx,ts,tsx}"
         ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "configFile": "packages/experimental/composer/vite.config.ts",
+        "outputPath": "packages/experimental/composer/out/composer"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

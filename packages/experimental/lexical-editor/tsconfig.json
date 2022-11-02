@@ -7,16 +7,22 @@
     ],
     "outDir": "dist",
     "types": [
-      "node",
-      "mocha"
+      "mocha",
+      "node"
     ]
   },
   "include": [
+    "playwright",
     "src",
-    "stories",
-    "playwright"
+    "stories"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../common/async"
+    },
     {
       "path": "../../common/debug"
     },

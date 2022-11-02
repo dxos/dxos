@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultTestingConfig, InvitationDescriptor, Party } from '@dxos/client';
+import { defaultTestingConfig, InvitationWrapper, Party } from '@dxos/client';
 import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
 import { Group, Loading, Main } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -77,7 +77,7 @@ const JoinPanel = () => {
   const [showPin, setShowPin] = useState(false);
 
   const handleInvite = async () => {
-    const invitation = InvitationDescriptor.decode(invitationCode);
+    const invitation = InvitationWrapper.decode(invitationCode);
     setShowPin(true);
     console.log({ invitation });
     const acceptedInvitation = await client.halo.acceptInvitation(invitation);

@@ -20,10 +20,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../core/protocols"
     }
   ]
 }

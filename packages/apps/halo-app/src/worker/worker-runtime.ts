@@ -3,10 +3,11 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServiceHost } from '@dxos/client';
+import { ClientServiceHost, createNetworkManager } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
+import { MaybePromise } from '@dxos/util';
 
 import { WorkerSession } from './worker-session';
 
@@ -22,19 +23,24 @@ export type CreateSessionParams = {
  */
 export class WorkerRuntime {
   private readonly _transportFactory = new WebRTCTransportProxyFactory();
-  private readonly _clientServices: ClientServiceHost;
   private readonly _ready = new Trigger();
   private readonly sessions = new Set<WorkerSession>();
   private _sessionForNetworking?: WorkerSession;
+  private _clientServices!: ClientServiceHost;
+  private _config!: Config;
 
-  constructor(private readonly _config: Config) {
-    this._clientServices = new ClientServiceHost({
-      config: this._config,
-      transportFactory: this._transportFactory
-    });
-  }
+  // prettier-ignore
+  constructor(
+    private readonly _configProvider: () => MaybePromise<Config>
+  ) {}
 
   async start() {
+    this._config = await this._configProvider();
+    this._clientServices = new ClientServiceHost({
+      config: this._config,
+      networkManager: createNetworkManager(this._config)
+    });
+
     await this._clientServices.open();
     this._ready.wake();
   }
