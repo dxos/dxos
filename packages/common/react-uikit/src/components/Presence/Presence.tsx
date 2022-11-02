@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import { UserPlus, UserCircleGear, Gear } from 'phosphor-react';
+import { UserPlus, UserCircleGear, Gear, Check } from 'phosphor-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -30,7 +30,9 @@ export interface PresenceProps
   profile: NaturalProfile;
   party?: Party;
   closeLabel?: string;
+  managingParty?: boolean;
   onClickManageParty?: () => void;
+  onClickGoToParty?: () => void;
   onClickManageProfile?: () => void;
 }
 
@@ -41,6 +43,7 @@ const ProfileMenu = (props: PresenceProps) => {
     party: _party,
     closeLabel: _closeLabel,
     onClickManageParty: _onClickManageParty,
+    onClickGoToParty: _onClickGoToParty,
     sideOffset,
     collisionPadding,
     ...avatarProps
@@ -79,15 +82,7 @@ const ProfileMenu = (props: PresenceProps) => {
 };
 
 const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
-  const {
-    party,
-    onClickManageParty,
-    profile: _profile,
-    onClickManageProfile: _onClickManageProfile,
-    closeLabel: _closeLabel,
-    sideOffset,
-    collisionPadding
-  } = props;
+  const { party, onClickManageParty, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
   return (
     <Popover
@@ -109,10 +104,20 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
   );
 };
 
+const PartyLink = ({ onClickGoToParty }: Pick<PresenceProps, 'onClickGoToParty'>) => {
+  const { t } = useTranslation('halo');
+  return (
+    <Button compact variant='primary' className='flex w-full gap-1 pli-2' onClick={onClickGoToParty}>
+      <span className='text-xs'>{t('go to party label')}</span>
+      <Check className={getSize(4)} />
+    </Button>
+  );
+};
+
 export const Presence = (props: PresenceProps) => {
   return (
-    <div role='none' className='flex gap-1 items-center'>
-      {props.party && <PartyMenu {...props} party={props.party!} />}
+    <div role='none' className='flex gap-2 items-center'>
+      {props.party && (props.managingParty ? <PartyLink {...props} /> : <PartyMenu {...props} party={props.party!} />)}
       <ProfileMenu {...props} />
     </div>
   );

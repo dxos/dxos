@@ -25,5 +25,6 @@ export const halo = {
   'empty invitations message': 'No pending invitations',
   'invitations label': 'Invitations',
   'join label': 'Join',
-  'manage label': 'Manage'
+  'manage label': 'Manage',
+  'go to party label': 'Done'
 };

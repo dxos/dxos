@@ -58,7 +58,7 @@ export const AppLayout = () => {
   return (
     <div role='none' className='mbs-24'>
       {isRootPath && (
-        <div role='none' className='fixed block-start-5 inset-inline-6 flex items-center justify-center gap-2'>
+        <div role='none' className='fixed block-start-5 inset-inline-6 flex items-center justify-center gap-2 z-[1]'>
           <NavMenu
             items={centerMenuItems.map((navMenuItem) =>
               'separator' in navMenuItem
@@ -104,7 +104,7 @@ export const AppLayout = () => {
         </div>
       )}
 
-      <div role='none' className='fixed block-start-5 inline-end-6 plb-[2px]'>
+      <div role='none' className='fixed block-start-5 inline-end-6 plb-[2px] z-[2]'>
         <Presence
           profile={profile!}
           party={space}
@@ -112,6 +112,7 @@ export const AppLayout = () => {
           size={10}
           sideOffset={4}
           onClickManageProfile={() => navigate('/identity')}
+          onClickGoToParty={() => navigate(`/spaces/${spaceHex}`)}
         />
       </div>
 

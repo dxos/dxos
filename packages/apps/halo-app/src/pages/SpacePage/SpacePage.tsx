@@ -29,7 +29,7 @@ export const SpacePage = () => {
 
   return (
     <>
-      <div role='none' className='fixed block-start-6 inset-inline-24 flex gap-2 justify-center items-center'>
+      <div role='none' className='fixed block-start-6 inset-inline-24 flex gap-2 justify-center items-center z-[1]'>
         <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
       </div>
       <div role='none' className='fixed block-start-7 inline-start-7 mlb-px'>
