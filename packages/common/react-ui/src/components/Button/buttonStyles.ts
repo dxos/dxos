@@ -13,7 +13,8 @@ export const defaultButtonColors = 'bg-white text-neutral-900 dark:bg-neutral-75
 export const buttonStyles = (props: ButtonProps) => {
   const resolvedVariant = props.variant || 'default';
   return cx(
-    'inline-flex select-none items-center justify-center rounded-md text-sm font-medium',
+    'inline-flex select-none items-center justify-center text-sm font-medium',
+    props.rounding ?? 'rounded-md',
     props.compact ? 'p-1.5' : 'pli-4 plb-2',
     'transition-color duration-100',
     defaultHover(props),

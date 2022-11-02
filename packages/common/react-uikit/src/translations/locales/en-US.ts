@@ -41,5 +41,6 @@ export const uikit = {
   'add contact label': 'Add a contact',
   'open apps directory label': 'Open apps directory',
   'pending label': 'Pending',
-  'more options label': 'More options'
+  'more options label': 'More options',
+  'empty space message': 'Nobody else here… yet.'
 };
