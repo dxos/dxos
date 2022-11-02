@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAsyncEffect } from '@dxos/react-async';
+import { useProfile } from '@dxos/react-client';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
+import { humanize } from '@dxos/util';
 
 import { DX_ENVIRONMENT, DX_RELEASE, BASE_PROPERTIES } from '../telemetry';
 
@@ -15,10 +17,10 @@ const SENTRY_DESTINATION = process.env.SENTRY_DSN;
 const TELEMETRY_API_KEY = process.env.SEGMENT_API_KEY;
 
 export const useTelemetry = () => {
-  // const client = useClient();
+  const profile = useProfile();
   // TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
   // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
-  const identityId = undefined;
+  const identityId = useMemo(() => profile && humanize(profile.publicKey), [profile]);
 
   const location = useLocation();
   const [lastFocusEvent, setLastFocusEvent] = useState(new Date());
