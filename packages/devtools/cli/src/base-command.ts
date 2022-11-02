@@ -26,6 +26,7 @@ export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
   private _client?: Client;
   private _startTime: Date;
+  private _failing = false;
   protected _telemetryContext?: TelemetryContext;
 
   static override flags = {
@@ -98,14 +99,6 @@ export abstract class BaseCommand extends Command {
 
     this.addToTelemetryContext({ command: this.id });
 
-    Telemetry.event({
-      installationId,
-      name: 'dx-cli:command:start',
-      properties: {
-        ...this._telemetryContext
-      }
-    });
-
     // Load user config file.
     const { flags } = await this.parse(this.constructor as any);
     const { config: configFile } = flags as any;
@@ -128,6 +121,7 @@ export abstract class BaseCommand extends Command {
   }
 
   override async catch(err: Error) {
+    this._failing = true;
     Sentry.captureException(err);
     this.error(err);
   }
@@ -138,7 +132,7 @@ export abstract class BaseCommand extends Command {
 
     Telemetry.event({
       installationId: this._telemetryContext?.installationId,
-      name: 'dx-cli:command:finish',
+      name: `dx-cli.command.${this._failing ? 'failure' : 'success'}`,
       properties: {
         ...this._telemetryContext,
         duration: endTime.getTime() - this._startTime.getTime()
