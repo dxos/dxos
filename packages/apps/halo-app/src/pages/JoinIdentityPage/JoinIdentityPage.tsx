@@ -60,7 +60,7 @@ export const JoinIdentityPage = () => {
   }, []);
 
   return (
-    <main className='max-is-lg mli-auto pli-7'>
+    <main className='max-is-lg mli-auto pli-7 mbs-7'>
       <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
       {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
       <SingleInputStep

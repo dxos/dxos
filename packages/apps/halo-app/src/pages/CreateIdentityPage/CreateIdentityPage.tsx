@@ -24,7 +24,7 @@ export const CreateIdentityPage = () => {
     );
   }, [username]);
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
+    <main className='max-is-5xl mli-auto pli-7 mbs-7'>
       <Heading>{t('create identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{

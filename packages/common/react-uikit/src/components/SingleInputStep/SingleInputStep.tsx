@@ -16,6 +16,8 @@ export interface SingleInputStepProps extends Omit<GroupProps, 'label' | 'onChan
   backLabel?: string;
   onNext: () => void;
   nextLabel?: string;
+  onCancelPending?: () => void;
+  cancelPendingLabel?: string;
   loadingLabel?: string;
   inputPlaceholder?: string;
   inputProps?: Omit<InputProps, 'label' | 'placeholder'>;
@@ -29,6 +31,8 @@ export const SingleInputStep = ({
   backLabel,
   onNext,
   nextLabel,
+  onCancelPending,
+  cancelPendingLabel,
   loadingLabel,
   inputPlaceholder,
   inputProps
@@ -45,12 +49,18 @@ export const SingleInputStep = ({
         onChange={onChange}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
-        <div role='none' className={cx(!pending && 'hidden')}>
-          <Loading label={loadingLabel || t('generic loading label')} className='p-0 ml-0' />
-        </div>
         {onBack && (
           <Button onClick={onBack} {...(pending && { disabled: true })}>
             {backLabel ?? t('back label')}
+          </Button>
+        )}
+        <div role='none' className='grow' />
+        <div role='none' className={cx(!pending && 'hidden')}>
+          <Loading label={loadingLabel || t('generic loading label')} className='p-0 ml-0' />
+        </div>
+        {onCancelPending && (
+          <Button onClick={onCancelPending} {...(!pending && { disabled: true })}>
+            {cancelPendingLabel ?? t('cancel label')}
           </Button>
         )}
         <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })}>
