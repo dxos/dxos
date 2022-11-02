@@ -4,6 +4,7 @@
 
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import { join } from 'node:path';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
@@ -21,12 +22,25 @@ export type TelemetryContext = {
   isInternalUser: boolean;
   fullCrashReports: boolean;
   disableTelemetry: boolean;
+  timezone: string;
+  runtime: string;
+  os: string;
+  ci: boolean;
+  environment?: string;
+  release?: string;
+  [key: string]: any;
 };
 
 const DEFAULTS = {
   isInternalUser: false,
   fullCrashReports: false,
-  disableTelemetry: false
+  disableTelemetry: false,
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  runtime: `Node ${process.version}`,
+  os: `${os.platform()} ${os.release()}`,
+  ci: process.env.CI === 'true',
+  environment: DX_ENVIRONMENT,
+  release: DX_RELEASE
 };
 
 export const getTelemetryContext = async (configDir: string): Promise<TelemetryContext> => {

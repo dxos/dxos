@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Flags } from '@oclif/core';
+import { Command, Config, Flags } from '@oclif/core';
 import assert from 'assert';
+import chalk from 'chalk';
 import debug from 'debug';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
@@ -15,15 +16,7 @@ import { ConfigProto } from '@dxos/config';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import {
-  DX_ENVIRONMENT,
-  DX_RELEASE,
-  getTelemetryContext,
-  PublisherRpcPeer,
-  SENTRY_DESTINATION,
-  TELEMETRY_API_KEY,
-  TelemetryContext
-} from './util';
+import { getTelemetryContext, PublisherRpcPeer, SENTRY_DESTINATION, TelemetryContext, TELEMETRY_API_KEY } from './util';
 
 const log = debug('dxos:cli:main');
 
@@ -32,6 +25,7 @@ const ENV_DX_CONFIG = 'DX_CONFIG';
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigProto;
   private _client?: Client;
+  private _startTime: Date;
   protected _telemetryContext?: TelemetryContext;
 
   static override flags = {
@@ -48,6 +42,12 @@ export abstract class BaseCommand extends Command {
       default: 30
     })
   };
+
+  constructor(argv: string[], config: Config) {
+    super(argv, config);
+
+    this._startTime = new Date();
+  }
 
   flags: any;
 
@@ -66,14 +66,19 @@ export abstract class BaseCommand extends Command {
     await super.init();
 
     this._telemetryContext = await getTelemetryContext(this.config.configDir);
-    const { installationId, isInternalUser, fullCrashReports, disableTelemetry } = this._telemetryContext;
+    const { installationId, isInternalUser, fullCrashReports, disableTelemetry, environment, release } =
+      this._telemetryContext;
+
+    if (isInternalUser) {
+      this.log(chalk`{bgMagenta You're using the CLI as an internal user} ✨\n`);
+    }
 
     if (SENTRY_DESTINATION && !disableTelemetry) {
       Sentry.init({
         installationId,
         destination: SENTRY_DESTINATION,
-        environment: DX_ENVIRONMENT,
-        release: DX_RELEASE,
+        environment,
+        release,
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
         scrubFilenames: !fullCrashReports,
@@ -91,14 +96,13 @@ export abstract class BaseCommand extends Command {
       });
     }
 
+    this.addToTelemetryContext({ command: this.id });
+
     Telemetry.event({
       installationId,
       name: 'dx-cli:command:start',
       properties: {
-        command: this.id,
-        environment: DX_ENVIRONMENT,
-        release: DX_RELEASE,
-        isInternalUser
+        ...this._telemetryContext
       }
     });
 
@@ -130,16 +134,14 @@ export abstract class BaseCommand extends Command {
 
   // Called after each run.
   override async finally() {
-    const { installationId, isInternalUser } = this._telemetryContext ?? {};
+    const endTime = new Date();
 
     Telemetry.event({
-      installationId,
+      installationId: this._telemetryContext?.installationId,
       name: 'dx-cli:command:finish',
       properties: {
-        command: this.id,
-        environment: DX_ENVIRONMENT,
-        release: DX_RELEASE,
-        isInternalUser
+        ...this._telemetryContext,
+        duration: endTime.getTime() - this._startTime.getTime()
       }
     });
   }
@@ -206,5 +208,16 @@ export abstract class BaseCommand extends Command {
         await rpc.close();
       }
     }
+  }
+
+  addToTelemetryContext(values: object) {
+    if (!this._telemetryContext) {
+      return;
+    }
+
+    this._telemetryContext = {
+      ...this._telemetryContext,
+      ...values
+    };
   }
 }

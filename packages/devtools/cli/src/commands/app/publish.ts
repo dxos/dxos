@@ -5,6 +5,8 @@
 import { Flags } from '@oclif/core';
 import assert from 'assert';
 
+import { captureException } from '@dxos/sentry';
+
 import { BaseCommand } from '../../base-command';
 import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
 
@@ -49,6 +51,8 @@ export default class Publish extends BaseCommand {
         }
       }
 
+      this.addToTelemetryContext({ bundleSize: moduleConfig.values.package!.modules?.map(({ bundle }) => bundle) });
+
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
         await publisher.rpc.publish({
           package: moduleConfig.values.package!,
@@ -57,6 +61,7 @@ export default class Publish extends BaseCommand {
         verbose && this.log('Published to KUBE.');
       });
     } catch (err: any) {
+      captureException(err);
       this.log(`Unable to publish: ${err.message}`);
       this.error(err, { exit: 1 });
     }
