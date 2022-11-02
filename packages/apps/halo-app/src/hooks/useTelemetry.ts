@@ -9,10 +9,10 @@ import { useAsyncEffect } from '@dxos/react-async';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development';
-const DX_RELEASE = process.env.DX_RELEASE ?? 'development';
-const SENTRY_DESTINATION = process.env.SENTRY_DSN;
-const TELEMETRY_API_KEY = process.env.SEGMENT_API_KEY;
+const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
+const DX_RELEASE = process.env.DX_RELEASE;
+const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION;
+const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 
 export const useTelemetry = () => {
   // const client = useClient();

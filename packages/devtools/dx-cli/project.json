@@ -27,14 +27,20 @@
         "{options.outputFile}"
       ]
     },
-    "prerelease": {
+    "prebuild": {
       "executor": "nx:run-script",
       "inputs": [
         {
-          "env": "SENTRY_DSN"
+          "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "SEGMENT_API_KEY"
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
         },
         "^production",
         "default"
@@ -43,7 +49,7 @@
         "script": "api-keys"
       },
       "outputs": [
-        "packages/devtools/dx-cli/dist/src/util/telemetry.js"
+        "packages/devtools/dx-cli/src/util/telemetryrc.json"
       ]
     },
     "test": {
