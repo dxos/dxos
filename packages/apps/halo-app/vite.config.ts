@@ -28,7 +28,8 @@ export default defineConfig({
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
-    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY)
+    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
+    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
   },
   optimizeDeps: {
     force: true,
