@@ -30,9 +30,7 @@ export const FeedsPanel = () => {
     [selectedPartyKey, selectedFeed]
   );
   useEffect(() => {
-    if (blocks) {
-      setMessages([...messages, ...blocks]);
-    }
+    setMessages(blocks ?? []);
   }, [blocks]);
 
   const handlePartyChange = (key: PublicKey | undefined) => {

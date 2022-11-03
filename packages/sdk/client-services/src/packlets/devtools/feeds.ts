@@ -34,7 +34,7 @@ export const subscribeToFeeds = (
         .forEach((feed) => {
           if (!feedMap.has(feed.key)) {
             feedMap.set(feed.key, feed);
-            subscriptions.add(feed.on('close', update));
+            feed.on('close', update); // TODO(mykola): Unsubscribe.
           }
         });
       next({
@@ -76,19 +76,16 @@ export const subscribeToFeedBlocks = (
       });
       await iterator.close();
     };
-    const subscriptions = new EventSubscriptions();
 
     setImmediate(async () => {
       const feed = await feedStore.getFeed(feedKey);
       if (!feed) {
         return;
       }
-      subscriptions.add(feed.on('append', () => update(feed)));
-      subscriptions.add(feed.on('truncate', () => update(feed)));
+      feed.on('append', () => update(feed)); // TODO(mykola): Unsubscribe.
+      feed.on('truncate', () => update(feed)); // TODO(mykola): Unsubscribe.
       await update(feed);
     });
 
-    return () => {
-      subscriptions.clear();
-    };
+    return () => {};
   });
