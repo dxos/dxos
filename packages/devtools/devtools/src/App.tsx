@@ -46,7 +46,7 @@ export const App = () => {
   };
 
   useEffect(() => {
-    let remoteSource: string;
+    let remoteSource: string | undefined;
     if (REMOTE_CLIENT) {
       remoteSource = 'http://localhost:3967/headless.html';
     }
