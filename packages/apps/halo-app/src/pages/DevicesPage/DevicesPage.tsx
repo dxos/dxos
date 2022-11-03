@@ -22,8 +22,6 @@ export const DevicesPage = () => {
     void client.halo.createInvitation();
   };
 
-  const empty = invitations.length < 1;
-
   return (
     <main className='max-is-5xl mli-auto pli-7'>
       <HeadingWithActions

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, Planet, Plus } from 'phosphor-react';
+import { CaretLeft, Planet, UserPlus } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -51,13 +51,13 @@ export const SpaceMetaPage = () => {
         <HeadingWithActions
           heading={{
             level: 2,
-            children: t('space members label')
+            children: t('space members label', { ns: 'uikit' })
           }}
           actions={
             <>
               <Button variant='primary' onClick={onCreateInvitation} className='flex gap-1 items-center'>
                 <span>{t('create invitation label')}</span>
-                <Plus className={getSize(5)} />
+                <UserPlus className={getSize(5)} />
               </Button>
             </>
           }

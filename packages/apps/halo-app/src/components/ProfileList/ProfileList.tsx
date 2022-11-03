@@ -12,7 +12,7 @@ export interface ProfileListProps {
 }
 
 export const ProfileList = ({ profiles }: ProfileListProps) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation('uikit');
   return profiles.length > 0 ? (
     <ul>
       {profiles.map((profile) => {

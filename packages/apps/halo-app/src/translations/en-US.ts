@@ -27,5 +27,5 @@ export const halo = {
   'join label': 'Join',
   'manage label': 'Manage',
   'go to party label': 'Done',
-  'create invitation label': 'Create an invitation'
+  'create invitation label': 'Invite'
 };
