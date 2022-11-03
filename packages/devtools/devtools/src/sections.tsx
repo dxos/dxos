@@ -41,23 +41,23 @@ import {
 } from './containers';
 
 export const sections: Section[] = [
-  // {
-  //   title: 'CLIENT',
-  //   items: [
-  //     {
-  //       id: 'config',
-  //       title: 'Config',
-  //       icon: <ConfigIcon />,
-  //       panel: <ConfigPanel />
-  //     },
-  //     {
-  //       id: 'storage',
-  //       title: 'Storage',
-  //       icon: <StorageIcon />,
-  //       panel: <StoragePanel />
-  //     }
-  //   ]
-  // },
+  {
+    title: 'CLIENT',
+    items: [
+      {
+        id: 'config',
+        title: 'Config',
+        icon: <ConfigIcon />,
+        panel: <ConfigPanel />
+      }
+      //     {
+      //       id: 'storage',
+      //       title: 'Storage',
+      //       icon: <StorageIcon />,
+      //       panel: <StoragePanel />
+      //     }
+    ]
+  },
   // {
   //   title: 'HALO',
   //   items: [
@@ -101,7 +101,7 @@ export const sections: Section[] = [
         title: 'Items',
         icon: <ItemsIcon />,
         panel: <ItemsPanel />
-      },
+      }
       // {
       //   id: 'echo.snapshots',
       //   title: 'Snapshots',
