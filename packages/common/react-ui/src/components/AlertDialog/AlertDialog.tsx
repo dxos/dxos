@@ -41,10 +41,6 @@ export const AlertDialog = ({
   const [confirmDisabled, setConfirmDisabled] = useState(!!destructiveConfirmString);
   const [confirmStringValue, setConfirmStringValue] = useState('');
 
-  console.log('[destructiveConfirmString]', destructiveConfirmString);
-  console.log('[confirmDisabled]', confirmDisabled);
-  console.log('[confirmStringValue]', confirmStringValue);
-
   useEffect(() => {
     if (destructiveConfirmString) {
       setConfirmDisabled(confirmStringValue !== destructiveConfirmString);

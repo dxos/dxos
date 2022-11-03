@@ -27,5 +27,6 @@ export const halo = {
   'join label': 'Join',
   'manage label': 'Manage',
   'go to party label': 'Done',
-  'create invitation label': 'Invite'
+  'create invitation label': 'Invite',
+  'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:'
 };

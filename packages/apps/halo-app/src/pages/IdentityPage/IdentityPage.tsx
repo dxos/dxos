@@ -6,13 +6,16 @@ import { Eraser } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
-import { QrCode, useTranslation, Button, getSize, Input } from '@dxos/react-uikit';
+import { QrCode, useTranslation, Button, getSize, Input, AlertDialog } from '@dxos/react-uikit';
+import { humanize } from '@dxos/util';
 
 export const IdentityPage = () => {
   const client = useClient();
   const profile = useProfile();
   const [username, setUsername] = useState(profile?.username ?? '');
   const { t } = useTranslation('halo');
+
+  const confirmString = humanize(profile!.publicKey.toHex());
 
   return (
     <main className='flex flex-col items-center max-is-lg mli-auto pli-7'>
@@ -32,17 +35,31 @@ export const IdentityPage = () => {
             onClick={() => client.halo.setGlobalPreference('username', username)}
           >Update</Button>
         )} */}
-      <Button
-        variant='outline'
-        className='flex gap-1 w-full'
-        onClick={async () => {
-          await client.reset();
-          window.location.reload();
+      <AlertDialog
+        title={t('reset device label')}
+        openTrigger={
+          <Button variant='outline' className='flex gap-1 w-full'>
+            <Eraser className={getSize(5)} />
+            {t('reset device label')}
+          </Button>
+        }
+        destructiveConfirmString={confirmString}
+        destructiveConfirmInputProps={{
+          label: t('confirm reset device label', { confirmString })
         }}
-      >
-        <Eraser className={getSize(5)} />
-        {t('reset device label')}
-      </Button>
+        cancelTrigger={<Button>{t('cancel label', { ns: 'uikit' })}</Button>}
+        confirmTrigger={
+          <Button
+            onClick={async () => {
+              await client.reset();
+              window.location.reload();
+            }}
+            className='text-error-700 dark:text-error-400'
+          >
+            {t('reset device label')}
+          </Button>
+        }
+      />
     </main>
   );
 };
