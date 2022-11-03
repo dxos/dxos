@@ -36,10 +36,11 @@ export class SpaceInvitationProxy {
     stream.subscribe(
       (invitation: Invitation) => {
         assert(invitation.spaceKey?.equals(spaceKey));
-        assert(invitation.invitationId);
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
+            assert(invitation.invitationId);
+            invitationId = invitation.invitationId;
             observer.callbacks?.onConnecting(invitation);
             break;
           }
