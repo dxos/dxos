@@ -1,6 +1,6 @@
 {
   "sourceRoot": "packages/apps/patterns/react-composer/src",
-  "projectType": "application",
+  "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
