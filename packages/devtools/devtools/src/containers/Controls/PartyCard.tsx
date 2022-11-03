@@ -100,7 +100,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
         </MenuItem>
       </Menu>
 
-      <PartySharingDialog open={partySharing} onClose={() => setPartySharing(false)} spaceKey={party.key} />
+      <PartySharingDialog open={partySharing} onClose={() => setPartySharing(false)} partyKey={party.key} />
 
       <Card
         sx={{

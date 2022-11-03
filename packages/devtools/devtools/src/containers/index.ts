@@ -11,7 +11,7 @@ export * from './KeyringPanel';
 export * from './LoggingPanel';
 export * from './NetworkPanel';
 export * from './PanelsContainer';
-export * from './PartiesPanel';
+export * from './SpacesPanel';
 export * from './ProfilePanel';
 export * from './RegistryPanel';
 export * from './SignalPanel';

@@ -1,0 +1,85 @@
+on:
+  push:
+    branches:
+      - main
+
+name: Release automation with Release Please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          release-type: node
+          command: manifest-pr
+
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          release-type: node
+          command: github-release
+      
+      - name: Checkout
+        uses: actions/checkout@v3
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: pnpm/action-setup@v2.2.4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Install dependencies
+        run: pnpm install
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Build Libraries
+        run: |
+          APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
+          pnpm nx run-many --target=build --exclude="$APPS"
+          pnpm nx run-many --target=bundle --exclude="$APPS"
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Publish to NPM
+        run: pnpm --filter-prod="packages/**" publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Upload Artifacts
+        run: |
+          zip -r devtools.zip packages/devtools/devtools-extension/dist
+          gh release upload ${{ steps.release.outputs.tag_name }} devtools.zip
+        if: ${{ steps.release.outputs.release_created }}

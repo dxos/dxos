@@ -2,25 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationWrapper } from '@dxos/client';
 import { useClient, useProfile } from '@dxos/react-client';
-import { Heading, Main, SingleInputStep, useTranslation } from '@dxos/react-uikit';
+import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
-// TODO(wittjosiah): Factor out.
-const invitationCodeFromUrl = (text: string) => {
-  try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('invitation');
-    console.log({ invitation, searchParams });
-    return invitation ?? text;
-  } catch (err) {
-    console.log(err);
-    return text;
-  }
-};
+import { invitationCodeFromUrl } from '../../util';
 
 export const JoinIdentityPage = () => {
   const { t } = useTranslation();
@@ -31,21 +21,15 @@ export const JoinIdentityPage = () => {
   const redirect = searchParams.get('redirect') ?? '/spaces';
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
-  const [pending, setPending] = useState(false);
 
-  const onNext = useCallback(async () => {
-    setPending(true);
-    let invitation: InvitationWrapper;
-    try {
-      const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-      invitation = InvitationWrapper.decode(parsedInvitationCode);
-      await client.halo.acceptInvitation(invitation);
-    } catch (err: any) {
-      setPending(false);
-      // TODO(wittjosiah): Error rendering.
-      console.error(err);
-    }
+  const redeemInvitation = useCallback(() => {
+    const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
+    const invitation = InvitationWrapper.decode(parsedInvitationCode);
+    const redeemeingInvitation = client.halo.acceptInvitation(invitation);
+    return redeemeingInvitation.wait();
   }, [invitationCode]);
+
+  const [{ status, cancel, error }, call] = useAsync(redeemInvitation);
 
   useEffect(() => {
     if (profile) {
@@ -55,27 +39,34 @@ export const JoinIdentityPage = () => {
 
   useEffect(() => {
     if (invitationParam) {
-      void onNext();
+      void call();
     }
   }, []);
 
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-is-lg mli-auto pli-7 mbs-7'>
       <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
       {/* TODO(wittjosiah): Factor out join panel to react-uikit. */}
       <SingleInputStep
         {...{
-          pending,
+          pending: status === 'loading',
           inputLabel: t('invitation code label', { ns: 'uikit' }),
           inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
           inputProps: {
             initialValue: invitationCode
           },
           onChange: setInvitationCode,
-          onNext,
-          onBack: () => history.back()
+          onNext: call,
+          onCancelPending: cancel,
+          onBack: () => history.back(),
+          ...(error && {
+            inputProps: {
+              validationMessage: error.message,
+              validationValence: 'error'
+            }
+          })
         }}
       />
-    </Main>
+    </main>
   );
 };

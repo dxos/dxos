@@ -2,24 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
+import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationWrapper } from '@dxos/client';
+import { InvitationWrapper, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Dialog, DialogProps, Heading, Main, SingleInputStep, useTranslation } from '@dxos/react-uikit';
+import { Dialog, DialogProps, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
-// TODO(wittjosiah): Factor out.
-const invitationCodeFromUrl = (text: string) => {
-  try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('invitation');
-    return invitation ?? text;
-  } catch (err) {
-    console.log(err);
-    return text;
-  }
-};
+import { invitationCodeFromUrl } from '../../util';
 
 /**
  *
@@ -28,10 +19,10 @@ export const JoinSpacePage = () => {
   const { t } = useTranslation();
 
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-is-lg mli-auto pli-7 mbs-7'>
       <Heading>{t('join space label', { ns: 'uikit' })}</Heading>
       <JoinSpacePanel />
-    </Main>
+    </main>
   );
 };
 
@@ -54,41 +45,46 @@ const JoinSpacePanel = () => {
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
-  const [pending, setPending] = useState(false);
 
-  const onNext = useCallback(async () => {
-    setPending(true);
-    let invitation: InvitationWrapper;
-    try {
-      const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-      invitation = InvitationWrapper.decode(parsedInvitationCode);
-      const redeemingInvitation = client.echo.acceptInvitation(invitation);
-      const space = await redeemingInvitation.getParty();
-      navigate(`/spaces/${space.key.toHex()}`);
-    } catch (err: any) {
-      setPending(false);
-      // TODO(wittjosiah): Error rendering.
-      console.error(err);
-    }
-  }, [invitationCode]);
+  const redeemInvitation = useCallback(() => {
+    const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
+    const invitation = InvitationWrapper.decode(parsedInvitationCode);
+    const redeemeingInvitation = client.echo.acceptInvitation(invitation);
+    return redeemeingInvitation.getParty();
+  }, [navigate, invitationCode]);
+
+  const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
 
   useEffect(() => {
     if (invitationParam) {
-      void onNext();
+      void call();
     }
   }, []);
+
+  useEffect(() => {
+    if (status === 'success' && value) {
+      navigate(`#/spaces/${value.key.toHex()}`);
+    }
+  }, [status, value]);
 
   return (
     <SingleInputStep
       {...{
-        pending,
+        pending: status === 'loading',
         inputLabel: t('invitation code label', { ns: 'uikit' }),
         inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
           initialValue: invitationCode
         },
         onChange: setInvitationCode,
-        onNext
+        onNext: call,
+        onCancelPending: cancel,
+        ...(error && {
+          inputProps: {
+            validationMessage: error.message,
+            validationValence: 'error'
+          }
+        })
       }}
     />
   );

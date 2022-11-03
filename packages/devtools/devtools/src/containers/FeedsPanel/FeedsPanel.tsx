@@ -5,38 +5,36 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useParties, useStream } from '@dxos/react-client';
+import { useDevtools, useStream } from '@dxos/react-client';
 
 import { KeySelect, MessageTable, Panel } from '../../components';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
-  const parties = useParties();
-  const [selectedspaceKey, setSelectedspaceKey] = useState<PublicKey>();
+  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 
-  const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
-  const partyFeeds = useMemo(
-    () => remoteParties?.find(({ key }) => selectedspaceKey && key?.equals(selectedspaceKey))?.feeds ?? [],
-    [remoteParties, selectedspaceKey]
-  );
-
+  const parties = useStream(() => devtoolsHost.subscribeToParties({}), {}).parties ?? [];
+  const partyFeeds = useMemo(() => {
+    if (!selectedPartyKey || !parties) {
+      return [];
+    }
+    const party = parties.find((party) => party.key.equals(selectedPartyKey));
+    return party ? [party.genesisFeed, party.controlFeed, party.dataFeed] : [];
+  }, [parties, selectedPartyKey]);
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: selectedspaceKey, feedKey: selectedFeed }),
+    () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
     {},
-    [selectedspaceKey, selectedFeed]
+    [selectedPartyKey, selectedFeed]
   );
-
   useEffect(() => {
-    if (blocks) {
-      setMessages([...messages, ...blocks]);
-    }
+    setMessages(blocks ?? []);
   }, [blocks]);
 
   const handlePartyChange = (key: PublicKey | undefined) => {
-    setSelectedspaceKey(key);
+    setSelectedPartyKey(key);
     setSelectedFeed(undefined);
     setMessages([]);
   };
@@ -45,7 +43,6 @@ export const FeedsPanel = () => {
     setSelectedFeed(feedKey);
     setMessages([]);
   };
-
   return (
     <Panel
       controls={
@@ -54,7 +51,7 @@ export const FeedsPanel = () => {
             id='party-select'
             label='Party'
             keys={parties.map(({ key }) => key)}
-            selected={selectedspaceKey}
+            selected={selectedPartyKey}
             onChange={handlePartyChange}
           />
           <KeySelect

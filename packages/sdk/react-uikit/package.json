@@ -1,0 +1,48 @@
+{
+  "name": "@dxos/react-uikit",
+  "version": "0.1.0",
+  "description": "A React component library for DXOS",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "classnames": "^2.3.2",
+    "debug": "^4.3.3",
+    "i18next": "^21.10.0",
+    "react-i18next": "^11.18.6",
+    "url-join": "^5.0.0"
+  },
+  "devDependencies": {
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/debug": "^4.1.7",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "phosphor-react": "^1.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "storybook-dark-mode": "^1.1.2",
+    "vite": "3.0.9"
+  },
+  "peerDependencies": {
+    "phosphor-react": "^1.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

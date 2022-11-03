@@ -20,13 +20,13 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/vite-plugin"
-    },
-    {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

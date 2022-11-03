@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
-import { Loading, Main } from '@dxos/react-ui';
+import { Loading } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
 import { Composer, ProviderFallback } from './components';
@@ -38,9 +38,9 @@ export const App = () => {
       <ProfileProvider>
         <PartyProvider>
           <TextItemProvider>
-            <Main>
+            <main>
               <Demo />
-            </Main>
+            </main>
           </TextItemProvider>
         </PartyProvider>
       </ProfileProvider>

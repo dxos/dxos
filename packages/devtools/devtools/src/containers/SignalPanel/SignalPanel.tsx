@@ -41,21 +41,19 @@ export const SignalPanel = () => {
   }
 
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      flex: 1,
-      padding: 1,
-      overflow: 'hidden',
-      overflowY: 'auto',
-      overflowX: 'auto'
-    }}>
-      {servers.length >= 1 && (
-        <SignalStatusComp status={servers.map(signalStatus)} />
-      )}
-      {events.length < 1 && (
-        <SignalTrace trace={events?.map(event => JSON.parse(event))} />
-      )}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        padding: 1,
+        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'auto'
+      }}
+    >
+      {servers.length >= 1 && <SignalStatusComp status={servers.map(signalStatus)} />}
+      {events.length < 1 && <SignalTrace trace={events?.map((event) => JSON.parse(event))} />}
     </Box>
   );
 };

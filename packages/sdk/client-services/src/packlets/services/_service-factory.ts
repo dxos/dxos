@@ -3,8 +3,11 @@
 //
 
 import { Config } from '@dxos/config';
+import { NetworkManager } from '@dxos/network-manager';
 
-import { HaloService, SpaceService, ProfileService, SystemServiceImpl, TracingServiceImpl } from './impl';
+import { DevtoolsHostEvents } from '../devtools';
+import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl';
+import { DevtoolsService } from './impl/devtools';
 import { ServiceContext } from './service-context';
 import { ClientServices } from './services';
 import { HaloSigner } from './signer';
@@ -14,19 +17,19 @@ import { HaloSigner } from './signer';
  */
 export const createServices = ({
   config,
-  context, // TODO(burdon): Split.
-  echo, // TODO(burdon): Rename.
-  signer
+  context, // TODO(burdon): Too big to pass into services.?
+  signer // TODO(burdon): Remove (legacy?)
 }: {
   config: Config;
   context: ServiceContext;
-  echo: any;
+  networkManager: NetworkManager;
   signer?: HaloSigner;
-}): Omit<ClientServices, 'DevtoolsHost'> => ({
+}): ClientServices => ({
   DataService: context.dataService,
-  HaloService: new HaloService(echo, signer), // TODO(burdon): Remove.
-  PartyService: new SpaceService(context),
+  HaloService: new HaloService(null, signer), // TODO(burdon): Remove.
+  PartyService: new PartyService(context),
   ProfileService: new ProfileService(context),
-  SystemService: new SystemServiceImpl(config),
-  TracingService: new TracingServiceImpl(config)
+  SystemService: new SystemService(config),
+  TracingService: new TracingService(config),
+  DevtoolsHost: new DevtoolsService({ events: new DevtoolsHostEvents(), config, context })
 });

@@ -1,5 +1,6 @@
 {
   "name": "@dxos/playwright",
+  "version": "0.1.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
