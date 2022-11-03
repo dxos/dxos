@@ -78,7 +78,6 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     this._services = createServices({
       config: this._config,
-      echo: null,
       context: this._context,
       signer: this._signer,
       networkManager
@@ -101,9 +100,5 @@ export class ClientServiceHost implements ClientServiceProvider {
     log('closing...');
     await this._context.close();
     log('closed');
-  }
-
-  get echo() {
-    return todo();
   }
 }
