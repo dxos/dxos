@@ -5,14 +5,12 @@
 import assert from 'assert';
 
 import { Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 
-import { DevtoolsHostEvents } from '../devtools';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { createServices } from './service-factory';

@@ -5,7 +5,6 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
-import { NetworkManager } from '@dxos/network-manager';
 import {
   ClearSnapshotsRequest,
   DevtoolsHost,
