@@ -4,14 +4,7 @@
 
 import assert from 'assert';
 
-import {
-  AsyncEvents,
-  CancellableObservable,
-  CancellableObservableEvents,
-  CancellableObservableProvider,
-  sleep,
-  Trigger
-} from '@dxos/async';
+import { CancellableObservable, CancellableObservableProvider, sleep, Trigger } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
@@ -23,25 +16,36 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-// TODO(burdon): Factor out.
-
-export interface CreateInvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnecting(invitation: Invitation): void;
-  onConnected(invitation: Invitation): void;
-  onSuccess(invitation: Invitation): void;
-}
-
-export interface AcceptInvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnecting(invitation: Invitation): void;
-  onConnected(invitation: Invitation): void;
-  onSuccess(space: Space): void; // TODO(burdon): Pass invitation.
-}
+import { AcceptInvitationEvents, CreateInvitationEvents, InvitationsBroker } from './invitations';
 
 /**
  * Manages the life-cycle of Space invitations between peers.
+ * Life of an invitation:
+ *
+ * Host
+ * - Creates an invitation containing the swarm topic (rendezvous key, which can be passed out-of-band to the guest).
+ * - Joins the swarm with this topic.
+ * - Once connected to guest, send the admission offer (e.g., space keys).
+ * - Listen for guest's credentials presentation (e.g., device key) then write credentials to the feed.
+ *
+ *  [Client] => SpaceInvitationProxy.createInvitation(): Observable
+ *    <RPC:InvitationService>
+ *      SpaceInvitationService => SpaceInvitations.createInvitation(): Observable
+ *        SpaceGuestService.presentAdmissionOffer()
+ *          [SpaceHostService.presentAdmissionCredentials] => write credentials.
+ *
+ * Guest
+ * - Joins the swarm with the topic encoded in the invitation.
+ * - Listens for the hosts' admission offer.
+ * - Responds with credentials presentation.
+ *
+ * [Client] => SpaceInvitationProxy.acceptInvitation(): Observable
+ *    <RPC:InvitationService>
+ *      SpaceInvitationService => SpaceInvitations.acceptInvitation(): Observable
+ *        [SpaceGuestService.presentAdmissionOffer] => SpaceHostService.presentAdmissionCredentials()
+ *
  */
-// TODO(burdon): Rename factory.
-export class SpaceInvitations {
+export class SpaceInvitations implements InvitationsBroker<Space> {
   constructor(
     private readonly _spaceManager: SpaceManager,
     private readonly _networkManager: NetworkManager,

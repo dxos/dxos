@@ -45,7 +45,7 @@ describe('services/spaces', function () {
   // TODO(burdon): Separate test file for invitations.
   // TODO(burdon): Copy pattern to halo.
   // TODO(burdon): Uncaught error if run both tests in browser (Error Closed: Request._openAndNotClosed).
-  it.only('creates and accepts invitation', async function () {
+  it('creates and accepts invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<Space>();

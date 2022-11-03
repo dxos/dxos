@@ -15,11 +15,6 @@ import { closeAfterTest, createIdentity, createPeers } from '../testing';
 import { SpaceInvitationProxy } from './space-invitations-proxy';
 import { SpaceInvitationServiceImpl } from './space-invitations-services';
 
-// TODO(burdon): TestBuilder.
-// TODO(burdon): Test with createLinkedPorts
-// TODO(burdon): Error states.
-// TODO(burdon): Stream observable API.
-
 describe('services/space-invitation-service', function () {
   it('creates party and invites peer', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
@@ -42,7 +37,6 @@ describe('services/space-invitation-service', function () {
         (invitation: Invitation) => {
           expect(invitation.spaceKey).to.deep.eq(space1.key);
           states.push(invitation.state!);
-          console.log('>>', invitation);
           switch (invitation.state) {
             case Invitation.State.CONNECTING: {
               peer2.acceptInvitation(invitation);
@@ -70,26 +64,6 @@ describe('services/space-invitation-service', function () {
     }
   });
 
-  /**
-   * Life of an invitation:
-   *
-   * Host
-   *
-   *  Client => [ Observable ] <= [ Proxy.createInvitation ]
-   *    <RPC Stream>
-   *      [ ServiceImpl ] => [ Observable ] => [ SpaceInvitationClient.presentAdmissionOffer ]
-   *        <RPC Stream>
-   *          [ InvitationServiceServer.presentAdmissionCredentials ]
-   *
-   * Guest
-   *
-   *  Client => [ Observable ] => [ Proxy.acceptInvitation ]
-   *    <RPC Stream>
-   *      [ ServiceImpl ] => [ Observable ] => [ SpaceInvitationClient.presentAdmissionOffer ]
-   *        <RPC Stream>
-   *          [ InvitationServiceServer.presentAdmissionCredentials ]
-   *
-   */
   it('creates party and cancels invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 

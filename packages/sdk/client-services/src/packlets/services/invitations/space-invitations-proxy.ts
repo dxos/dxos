@@ -3,12 +3,13 @@
 //
 
 import assert from 'assert';
-import { CreateInvitationEvents } from 'packages/sdk/client-services/src/packlets/services/invitations/space-invitations';
 
 import { CancellableObservable, CancellableObservableProvider } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+
+import { CreateInvitationEvents } from './invitations';
 
 /**
  *
