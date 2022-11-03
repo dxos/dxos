@@ -15,6 +15,7 @@ import {
   SubscribeToFeedBlocksResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { ComplexMap } from '@dxos/util';
 
 export const subscribeToFeeds = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
@@ -25,7 +26,7 @@ export const subscribeToFeeds = (
       return;
     }
 
-    const feedMap = new Map<PublicKey, { feedKey: PublicKey; stream: Readable; length: number }>();
+    const feedMap = new ComplexMap<PublicKey, { feedKey: PublicKey; stream: Readable; length: number }>(PublicKey.hash);
 
     setTimeout(async () => {
       const feeds = await feedStore.feeds;
