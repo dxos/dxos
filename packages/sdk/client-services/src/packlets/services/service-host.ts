@@ -30,6 +30,7 @@ export const createNetworkManager = (config: Config): NetworkManager => {
   if (!signalServer) {
     log.warn('DEPRECATED: falling back to MemorySignalManager');
     return new NetworkManager({
+      log: true,
       signalManager: new MemorySignalManager(memorySignalManagerContext),
       transportFactory: MemoryTransportFactory
     });

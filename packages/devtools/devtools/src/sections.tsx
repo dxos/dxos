@@ -50,12 +50,12 @@ export const sections: Section[] = [
         icon: <ConfigIcon />,
         panel: <ConfigPanel />
       }
-      //     {
-      //       id: 'storage',
-      //       title: 'Storage',
-      //       icon: <StorageIcon />,
-      //       panel: <StoragePanel />
-      //     }
+      // {
+      //   id: 'storage',
+      //   title: 'Storage',
+      //   icon: <StorageIcon />,
+      //   panel: <StoragePanel />
+      // }
     ]
   },
   // {
