@@ -15,8 +15,8 @@ export const uikit = {
   'join space label': 'Join a space',
   'create space label': 'Create a space',
   'share space label': 'Share space',
-  'username label': 'Username',
-  'username placeholder': 'Enter your preferred username here',
+  'username label': 'Display name',
+  'username placeholder': 'Enter your preferred display name here',
   'invitation code label': 'Invitation code or URL',
   'invitation code placeholder': 'Paste the invitation code or URL here',
   'seed phrase label': 'Seed phrase (space separated)',
@@ -37,5 +37,11 @@ export const uikit = {
   'manage profile label': 'Manage identity',
   'manage party label': 'Manage space',
   'copy halo invite code label': 'Scan to authenticate a device, click to copy URL',
-  'copy party invite code label': 'Scan to join, click to copy URL'
+  'copy party invite code label': 'Scan to join, click to copy URL',
+  'add contact label': 'Add a contact',
+  'open apps directory label': 'Open apps directory',
+  'pending label': 'Pending',
+  'more options label': 'More options',
+  'empty space message': 'Nobody else is in this space… yet.',
+  'space members label': 'Members'
 };
