@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
 import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/mesh/muxer';
+import { log } from '@dxos/log'
 
 import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
@@ -35,6 +36,16 @@ type CreateChannelInternalParams = {
   contentType?: string;
 }
 
+/**
+ * Channel based multiplexer.
+ * 
+ * Can be used to open a number of channels represented by streams or RPC ports.
+ * Performs framing for RPC ports.
+ * Will buffer data until the remote peer opens the channel.
+ * 
+ * The API will not advertise channels that as they are opened by the remote peer.
+ * A higher level API (could be build on top of this muxer) for channel discovery is required.
+ */
 export class Muxer {
   private readonly _framer = new Framer();
   public readonly stream = this._framer.stream;
@@ -44,8 +55,9 @@ export class Muxer {
 
   private _nextId = 0;
   private _destroyed = false;
+  private _destroying = false;
 
-  public close = new Event();
+  public close = new Event<Error | undefined>();
 
   constructor() {
     this._framer.port.subscribe((msg) => {
@@ -53,6 +65,16 @@ export class Muxer {
     });
   }
 
+  /**
+   * Creates a duplex Node.js-style stream.
+   * 
+   * The remote peer is expected to call `createStream` with the same tag.
+   * 
+   * The stream is immediately readable and writable.
+   * NOTE: 
+   *  The remote peer will buffer data until the stream is opened remotely with the same tag.
+   *  Having a channel open only on one side will cause a memory leak on the remote side.
+   */
   createStream(tag: string, opts: CreateChannelOpts = {}): NodeJS.ReadWriteStream {
     const channel = this._getOrCreateStream({
       tag,
@@ -77,6 +99,16 @@ export class Muxer {
     return stream;
   }
 
+  /**
+   * Creates an RPC port.
+   * 
+   * The remote peer is expected to call `createPort` with the same tag.
+   * 
+   * The stream is immediately usable.
+   * NOTE: 
+   *  The remote peer will buffer data until the stream is opened remotely with the same tag.
+   *  Having a channel open only on one side will cause a memory leak on the remote side.
+   */
   createPort(tag: string, opts: CreateChannelOpts = {}): RpcPort {
     const stream = this._getOrCreateStream({
       tag,
@@ -109,6 +141,11 @@ export class Muxer {
    * Force-close with optional error.
    */
   destroy(err?: Error) {
+    if (this._destroying) {
+      return;
+    }
+    this._destroying = true;
+
     this._sendCommand({
       destroy: {
         error: err?.message
@@ -117,7 +154,7 @@ export class Muxer {
     this._dispose();
   }
 
-  private _dispose() {
+  private _dispose(err?: Error) {
     if (this._destroyed) {
       return;
     }
@@ -127,11 +164,16 @@ export class Muxer {
 
     // TODO(dmaretskyi): Destroy streams.
 
-    this.close.emit();
+    this.close.emit(err);
   }
 
   private _handleCommand(cmd: Command) {
-  if (cmd.openChannel) {
+    if(this._destroyed || this._destroying) {
+      log.warn('Received command after destroy');
+      return;
+    }
+
+    if (cmd.openChannel) {
       const stream = this._getOrCreateStream({
         tag: cmd.openChannel.tag,
         contentType: cmd.openChannel.contentType,
@@ -150,9 +192,10 @@ export class Muxer {
     }
   }
 
-  private _sendCommand(cmd: Command) {
-    // TODO(dmaretskyi): Error handling.
-    this._framer.port.send(codec.encode(cmd));
+  private async _sendCommand(cmd: Command) {
+    Promise.resolve(this._framer.port.send(codec.encode(cmd))).catch(err => {
+      this.destroy(err);
+    });
   }
 
   private _getOrCreateStream(params: CreateChannelInternalParams): Cannel {

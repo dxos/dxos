@@ -20,6 +20,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "varint": "^6.0.0"
