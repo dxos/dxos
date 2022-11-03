@@ -14,7 +14,7 @@ import { closeAfterTest, createIdentity, createPeers } from '../testing';
 import { SpaceInvitationProxy } from './space-invitations-proxy';
 import { SpaceInvitationServiceImpl } from './space-invitations-service';
 
-describe.only('services/space-invitation-service', function () {
+describe('services/space-invitation-service', function () {
   it('creates space and invites peer', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
@@ -27,20 +27,26 @@ describe.only('services/space-invitation-service', function () {
     const service2: InvitationService = new SpaceInvitationServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
 
     const space1 = await peer1.spaceManager.createSpace();
-    const success = new Trigger<Invitation>();
+
+    const success1 = new Trigger<Invitation>();
+    const success2 = new Trigger<Invitation>();
 
     {
       const proxy1 = new SpaceInvitationProxy(service1);
-      const observable = proxy1.createInvitation(space1.key);
-      observable.subscribe({
+      const observable1 = proxy1.createInvitation(space1.key);
+      observable1.subscribe({
         onConnecting: (invitation: Invitation) => {
           const proxy2 = new SpaceInvitationProxy(service2);
-          proxy2.acceptInvitation(invitation);
-          // peer2.acceptInvitation(invitation);
+          const observable2 = proxy2.acceptInvitation(invitation);
+          observable2.subscribe({
+            onSuccess: (invitation: Invitation) => {
+              success2.wake(invitation);
+            }
+          });
         },
         onConnected: (invitation: Invitation) => {},
         onSuccess: (invitation: Invitation) => {
-          success.wake(invitation);
+          success1.wake(invitation);
         },
         onCancelled: () => raise(new Error()),
         onTimeout: (err: Error) => raise(new Error(err.message)),
@@ -48,8 +54,9 @@ describe.only('services/space-invitation-service', function () {
       });
     }
 
-    const invitation = await success.wait();
-    expect(invitation.state).to.eq(Invitation.State.SUCCESS);
+    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
+    expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
+    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
   });
 
   it('creates space and cancels invitation', async function () {

@@ -45,22 +45,22 @@ export class SpaceInvitationProxy {
           case Invitation.State.CONNECTING: {
             assert(invitation.invitationId);
             invitationId = invitation.invitationId;
-            observable.callbacks?.onConnecting(invitation);
+            observable.callbacks?.onConnecting?.(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observable.callbacks?.onConnected(invitation);
+            observable.callbacks?.onConnected?.(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
-            observable.callbacks?.onSuccess(invitation);
+            observable.callbacks?.onSuccess?.(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observable.callbacks?.onCancelled();
+            observable.callbacks?.onCancelled?.();
             break;
           }
 
@@ -98,23 +98,23 @@ export class SpaceInvitationProxy {
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
-            observable.callbacks?.onConnecting(invitation);
+            observable.callbacks?.onConnecting?.(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observable.callbacks?.onConnected(invitation);
+            observable.callbacks?.onConnected?.(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
             assert(invitation.spaceKey);
-            observable.callbacks?.onSuccess(invitation);
+            observable.callbacks?.onSuccess?.(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observable.callbacks?.onCancelled();
+            observable.callbacks?.onCancelled?.();
             break;
           }
 

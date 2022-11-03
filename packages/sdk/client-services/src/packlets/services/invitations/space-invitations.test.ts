@@ -61,8 +61,8 @@ describe('services/spaces', function () {
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
-          onSuccess: (spaceKey: PublicKey) => {
-            complete2.wake(spaceKey);
+          onSuccess: (invitation) => {
+            complete2.wake(invitation.spaceKey!);
           },
           onCancelled: () => {
             throw new Error();
