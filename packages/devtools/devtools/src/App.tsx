@@ -16,6 +16,8 @@ import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
+const REMOTE_CLIENT = false;
+
 export const App = () => {
   const [clientProvider, setClientProvider] = useState<Promise<Client>>();
 
@@ -28,8 +30,14 @@ export const App = () => {
             }
           }
         }
-      : {};
-
+      : {
+          // Only for debugging purposes.
+          runtime: {
+            client: {
+              mode: 1
+            }
+          }
+        };
     const config = new Config(await Dynamics(), Defaults(), remoteSourceConfig);
     const client = new Client(config);
     setClientProvider(async () => {
@@ -39,7 +47,7 @@ export const App = () => {
   };
 
   useEffect(() => {
-    void handleRemoteSource();
+    void handleRemoteSource(REMOTE_CLIENT ? 'http://localhost:3967/headless.html' : undefined);
   }, []);
 
   if (!clientProvider) {

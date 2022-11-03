@@ -154,10 +154,10 @@ message SubscribeToPartiesResponse {
   message PartyInfo {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
-    bool is_active = 3;
-    dxos.echo.timeframe.TimeframeVector timeframe = 4;
-    repeated dxos.keys.PublicKey feeds = 5;
-    map<string, string> properties = 6;
+    dxos.echo.timeframe.TimeframeVector timeframe = 3;
+    dxos.keys.PublicKey genesisFeed = 4;
+    dxos.keys.PublicKey controlFeed = 5;
+    dxos.keys.PublicKey dataFeed = 6;
   }
 
   repeated PartyInfo parties = 1;
@@ -175,8 +175,7 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.keys.PublicKey party_key = 1;
-  repeated dxos.keys.PublicKey feed_keys = 2;
+  repeated dxos.keys.PublicKey feed_keys = 1;
 }
 
 message SubscribeToFeedsResponse {
@@ -198,11 +197,9 @@ message SubscribeToFeedBlocksRequest {
 
 message SubscribeToFeedBlocksResponse {
   message Block {
-    bytes key = 1;
+    dxos.keys.PublicKey feed_key = 1;
     int32 seq = 2;
-    bool sync = 3;
-    string path = 4;
-    dxos.echo.feed.FeedMessage data = 5;
+    dxos.echo.feed.FeedMessage data = 3;
   }
 
   repeated Block blocks = 1;
