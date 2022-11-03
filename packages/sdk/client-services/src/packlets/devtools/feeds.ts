@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Readable } from 'stream';
-
+import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { FeedIterator, FeedStore } from '@dxos/feed-store';
+import { FeedIterator, FeedStore, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -26,44 +25,31 @@ export const subscribeToFeeds = (
       return;
     }
 
-    const feedMap = new ComplexMap<PublicKey, { feedKey: PublicKey; stream: Readable; length: number }>(PublicKey.hash);
+    const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
+    const subscriptions = new EventSubscriptions();
 
-    setTimeout(async () => {
+    const update = async () => {
       const feeds = await feedStore.feeds;
       feeds
         .filter((feed) => !feedKeys?.length || feedKeys.some((feedKey) => feedKey.equals(feed.key)))
         .forEach((feed) => {
-          let feedInfo = feedMap.get(feed.key);
-          if (!feedInfo) {
-            // TODO(wittjosiah): Start from timeframe?
-            // TODO(wittjosiah): Bi-directional lazy loading to feed into virtualized table.
-            // Tail feed so as to not overload the browser.
-            const feedStream = new Readable({ objectMode: true }).wrap(feed.createReadableStream() as any);
-
-            feedStream.on('data', (blocks) => {
-              feedInfo!.length += blocks.length;
-
-              next({
-                feeds: Array.from(feedMap.values()).map(({ feedKey, length }) => ({
-                  feedKey,
-                  length
-                }))
-              });
-            });
-
-            feedInfo = {
-              feedKey: feed.key,
-              stream: feedStream,
-              length: 0
-            };
-
-            feedMap.set(feed.key, feedInfo);
+          if (!feedMap.has(feed.key)) {
+            feedMap.set(feed.key, feed);
+            subscriptions.add(feed.on('close', update));
           }
         });
+      next({
+        feeds: Array.from(feedMap.values()).map((feed) => ({ feedKey: feed.key, length: feed.properties.length }))
+      });
+    };
+
+    setImmediate(async () => {
+      subscriptions.add(feedStore.feedOpened.on(update));
+      await update();
     });
 
     return () => {
-      feedMap.forEach(({ stream }) => stream.destroy());
+      subscriptions.clear();
     };
   });
 
@@ -85,13 +71,9 @@ export const subscribeToFeedBlocks = (
       iterator = new FeedIterator(feed);
       await iterator.open();
 
-      const update = async () => {
-        for await (const block of iterator) {
-          next({ blocks: [block] });
-        }
-      };
-
-      await update();
+      for await (const block of iterator) {
+        next({ blocks: [block] });
+      }
     });
 
     return () => {
