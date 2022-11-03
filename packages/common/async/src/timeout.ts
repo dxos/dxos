@@ -3,7 +3,7 @@
 //
 
 import { createPromiseFromCallback } from './callback';
-import { ObservableImpl } from './observable';
+import { TimeoutError } from './errors';
 
 /**
  * Times out after delay.
@@ -25,13 +25,6 @@ export const sleep = (ms: number) =>
     sleeper();
   });
 
-// TODO(burdon): Separate file for async errors.
-export class TimeoutError extends Error {
-  constructor(timeout: number, label?: string) {
-    super(`Timeout [${timeout}ms]${label && ':'}${label}`);
-  }
-}
-
 /**
  * Wait for promise or throw error.
  */
@@ -41,62 +34,23 @@ export const asyncTimeout = <T>(
   timeout: number,
   err?: Error | string
 ): Promise<T> => {
+  const throwable = (err === undefined || typeof err === 'string') ? new TimeoutError(timeout, err) : err;
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
 
-  let cancelTimeout: any;
+  let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      if (err === undefined || typeof err === 'string') {
-        reject(new TimeoutError(timeout, err));
-      } else {
-        reject(err);
-      }
+    timeoutId = setTimeout(() => {
+      reject(throwable);
     }, timeout);
 
-    cancelTimeout = () => {
-      clearTimeout(timer);
-    };
+    // In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+    // https://nodejs.org/api/timers.html#timeoutunref
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+      timeoutId.unref();
+    }
   });
 
   return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
-    cancelTimeout();
+    clearTimeout(timeoutId);
   });
-};
-
-export interface AsyncCallbacks<T = any> {
-  onSuccess?(result: T): T;
-  onTimeout(err: TimeoutError): void;
-  onError(err: Error): void;
-}
-
-/**
- * Wait for promise and call callbacks.
- */
-// TODO(burdon): Optional retry with back-off?
-// prettier-ignore
-export const asyncCatch = <T = any> (
-  promise: Promise<T> | (() => Promise<T>),
-  observable: ObservableImpl<AsyncCallbacks<T>>,
-  timeout: number
-): void => {
-  try {
-    setTimeout(async () => {
-      const result = await asyncTimeout<T>(promise, timeout);
-      observable.callbacks?.onSuccess?.(result);
-    });
-  } catch (err) {
-    if (!observable.callbacks) {
-      throw err;
-    }
-
-    if (err instanceof TimeoutError) {
-      observable.callbacks.onTimeout(err);
-    } else if (err instanceof Error) {
-      observable.callbacks.onError(err);
-    } else if (typeof err === 'string') {
-      observable.callbacks.onError(new Error(err));
-    } else {
-      observable.callbacks.onError(new Error());
-    }
-  }
 };

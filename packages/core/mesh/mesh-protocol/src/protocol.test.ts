@@ -238,7 +238,6 @@ describe('Protocol', function () {
         expect(onInitCalled).toBe(2);
 
         const bufferMessages = protocol.getExtension(bufferExtension)!;
-
         bufferMessages.on('error', (err: any) => {
           log('Error: %o', err);
         });

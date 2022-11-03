@@ -40,23 +40,26 @@ export type FormatParts = {
   line?: number;
   level: LogLevel;
   message: string;
-  context?: string;
+  context?: any;
+  error?: Error;
 };
 
 export type Formatter = (config: LogConfig, parts: FormatParts) => (string | undefined)[];
 
-export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context }) => {
+export const DEFAULT_FORMATTER: Formatter = (config, { path, line, level, message, context, error }) => {
   const column = config.options?.formatter?.column;
-  const filepath = `${path}:${line}`;
+
+  const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
+
   return [
     // NOTE: File path must come fist for console hyperlinks.
-    path !== undefined && line !== undefined ? chalk.grey(filepath) : undefined, // Don't truncate for terminal output.
-    column ? ''.padStart(column - filepath.length) : undefined,
+    // Must not truncate for terminal output.
+    filepath,
+    column && filepath ? ''.padStart(column - filepath.length) : undefined,
     chalk[LEVEL_COLORS[level]](column ? shortLevelName[level] : LogLevel[level]),
     message,
-    // NOTE: Must not stringify.
-    // TODO(burdon): Substitutions (e.g., replace buffer contents with length?)
-    context
+    context,
+    error
   ];
 };
 
@@ -70,23 +73,22 @@ export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => 
 const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
-  if (!shouldLog(config, entry.level, entry.meta?.file ?? '')) {
+  const { level, message, context, meta, error } = entry;
+  if (!shouldLog(config, level, meta?.file ?? '')) {
     return;
   }
 
-  const parts: FormatParts = {
-    level: entry.level,
-    message: entry.message
-  };
+  const parts: FormatParts = { level, message, error };
 
-  if (entry.meta) {
-    parts.path = getRelativeFilename(entry.meta.file);
-    parts.line = entry.meta.line;
+  if (meta) {
+    parts.path = getRelativeFilename(meta.file);
+    parts.line = meta.line;
   }
 
-  if (entry.ctx && Object.keys(entry.ctx).length > 0) {
-    parts.context = inspect(entry.ctx, false, undefined, true);
+  if ((context && Object.keys(context).length > 0) || context instanceof Error) {
+    parts.context = inspect(context, false, undefined, true);
   }
 
-  console.log(formatter(config, parts).filter(Boolean).join(' '));
+  const line = formatter(config, parts).filter(Boolean).join(' ');
+  console.log(line);
 };

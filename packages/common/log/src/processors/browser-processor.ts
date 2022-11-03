@@ -30,18 +30,21 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   args.push(`${shortLevelName[entry.level]} ${entry.message}`);
 
-  if (entry.ctx && Object.keys(entry.ctx).length > 0) {
-    args.push(entry.ctx);
+  if (entry.context && Object.keys(entry.context).length > 0) {
+    args.push(entry.context);
   }
 
   switch (entry.level) {
-    case LogLevel.ERROR:
+    case LogLevel.ERROR: {
       console.error(...args);
       break;
-    case LogLevel.WARN:
+    }
+    case LogLevel.WARN: {
       console.warn(...args);
       break;
-    default:
+    }
+    default: {
       console.log(...args);
+    }
   }
 };

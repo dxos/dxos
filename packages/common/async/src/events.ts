@@ -4,7 +4,7 @@
 
 import { throwUnhandledRejection } from '@dxos/debug';
 
-type UnsubscribeCallback = () => void;
+export type UnsubscribeCallback = () => void;
 
 export type Effect = () => UnsubscribeCallback | undefined;
 

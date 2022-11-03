@@ -3,6 +3,8 @@
 //
 
 export * from './callback';
+export * from './chain';
+export * from './errors';
 export * from './event-emitter';
 export * from './events';
 export * from './latch';

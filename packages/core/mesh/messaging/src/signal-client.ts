@@ -95,6 +95,7 @@ export class SignalClient implements SignalMethods {
 
   /**
    * @param _host Signal server websocket URL.
+   * @param _onMessage
    */
   constructor(
     private readonly _host: string,
@@ -112,95 +113,8 @@ export class SignalClient implements SignalMethods {
     this._createClient();
   }
 
-  private _setState(newState: SignalState) {
-    this._state = newState;
-    this._lastStateChange = Date.now();
-    log(`Signal state changed ${JSON.stringify(this.getStatus())}`);
-    this.statusChanged.emit(this.getStatus());
-  }
-
-  private _createClient() {
-    this._connectionStarted = Date.now();
-    try {
-      this._client = new SignalRPCClient(this._host);
-    } catch (err: any) {
-      if (this._state === SignalState.RE_CONNECTING) {
-        this._reconnectAfter *= 2;
-      }
-
-      this._lastError = err;
-      this._setState(SignalState.DISCONNECTED);
-      this._reconnect();
-    }
-
-    this._subscriptions.add(
-      this._client.connected.on(() => {
-        this._lastError = undefined;
-        this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
-        this._setState(SignalState.CONNECTED);
-      })
-    );
-
-    this._subscriptions.add(
-      this._client.error.on((error) => {
-        log(`Socket error: ${error.message}`);
-        if (this._state === SignalState.CLOSED) {
-          return;
-        }
-
-        if (this._state === SignalState.RE_CONNECTING) {
-          this._reconnectAfter *= 2;
-        }
-
-        this._lastError = error;
-        this._setState(SignalState.DISCONNECTED);
-
-        this._reconnect();
-      })
-    );
-
-    this._subscriptions.add(
-      this._client.disconnected.on(() => {
-        log('Socket disconnected');
-        // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
-        if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
-          return;
-        }
-
-        if (this._state === SignalState.RE_CONNECTING) {
-          this._reconnectAfter *= 2;
-        }
-
-        this._setState(SignalState.DISCONNECTED);
-        this._reconnect();
-      })
-    );
-  }
-
-  private _reconnect() {
-    log(`Reconnecting in ${this._reconnectAfter}ms`);
-    if (this._reconnectIntervalId !== undefined) {
-      console.error('Signal api already reconnecting.');
-      return;
-    }
-    if (this._state === SignalState.CLOSED) {
-      return;
-    }
-
-    this._reconnectIntervalId = setTimeout(() => {
-      this._reconnectIntervalId = undefined;
-
-      this._subscriptions.clear();
-
-      // Close client if it wasn't already closed.
-      this._client.close().catch(() => {});
-
-      this._setState(SignalState.RE_CONNECTING);
-      this._createClient();
-    }, this._reconnectAfter);
-  }
-
   async close() {
+    log('closing...');
     this._subscriptions.clear();
 
     if (this._reconnectIntervalId !== undefined) {
@@ -209,7 +123,7 @@ export class SignalClient implements SignalMethods {
 
     await this._client.close();
     this._setState(SignalState.CLOSED);
-    log('Closed.');
+    log('closed');
   }
 
   getStatus(): SignalStatus {
@@ -244,25 +158,6 @@ export class SignalClient implements SignalMethods {
     await this._client.sendMessage(msg);
   }
 
-  @synchronized
-  private async _subscribeSwarmEvents(topic: PublicKey, peerId: PublicKey): Promise<void> {
-    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
-    const swarmStream = await this._client.join({ topic, peerId });
-    // Subscribing to swarm events.
-    // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
-    swarmStream.subscribe((swarmEvent: SwarmEvent) => {
-      this.swarmEvent.emit({ topic, swarmEvent });
-    });
-
-    // Saving swarm stream.
-    this._swarmStreams.set(topic, swarmStream);
-
-    this._subscriptions.add(() => {
-      swarmStream.close();
-      this._swarmStreams.delete(topic);
-    });
-  }
-
   async subscribeMessages(peerId: PublicKey): Promise<void> {
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
@@ -287,6 +182,113 @@ export class SignalClient implements SignalMethods {
     this._subscriptions.add(() => {
       messageStream.close();
       this._messageStreams.delete(peerId);
+    });
+  }
+
+  private _setState(newState: SignalState) {
+    this._state = newState;
+    this._lastStateChange = Date.now();
+    log('signal state changed', { status: this.getStatus() });
+    this.statusChanged.emit(this.getStatus());
+  }
+
+  private _createClient() {
+    this._connectionStarted = Date.now();
+    try {
+      this._client = new SignalRPCClient(this._host);
+    } catch (err: any) {
+      if (this._state === SignalState.RE_CONNECTING) {
+        this._reconnectAfter *= 2;
+      }
+
+      this._lastError = err;
+      this._setState(SignalState.DISCONNECTED);
+      this._reconnect();
+    }
+
+    this._subscriptions.add(
+      this._client.connected.on(() => {
+        this._lastError = undefined;
+        this._reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
+        this._setState(SignalState.CONNECTED);
+      })
+    );
+
+    this._subscriptions.add(
+      this._client.error.on((error) => {
+        log('socket error', { error });
+        if (this._state === SignalState.CLOSED) {
+          return;
+        }
+
+        if (this._state === SignalState.RE_CONNECTING) {
+          this._reconnectAfter *= 2;
+        }
+
+        this._lastError = error;
+        this._setState(SignalState.DISCONNECTED);
+
+        this._reconnect();
+      })
+    );
+
+    this._subscriptions.add(
+      this._client.disconnected.on(() => {
+        log('socket disconnected');
+        // This is also called in case of error, but we already have disconnected the socket on error, so no need to do anything here.
+        if (this._state !== SignalState.CONNECTING && this._state !== SignalState.RE_CONNECTING) {
+          return;
+        }
+
+        if (this._state === SignalState.RE_CONNECTING) {
+          this._reconnectAfter *= 2;
+        }
+
+        this._setState(SignalState.DISCONNECTED);
+        this._reconnect();
+      })
+    );
+  }
+
+  private _reconnect() {
+    log(`reconnecting in ${this._reconnectAfter}ms`);
+    if (this._reconnectIntervalId !== undefined) {
+      console.error('Signal api already reconnecting.');
+      return;
+    }
+    if (this._state === SignalState.CLOSED) {
+      return;
+    }
+
+    this._reconnectIntervalId = setTimeout(() => {
+      this._reconnectIntervalId = undefined;
+
+      this._subscriptions.clear();
+
+      // Close client if it wasn't already closed.
+      this._client.close().catch(() => {});
+
+      this._setState(SignalState.RE_CONNECTING);
+      this._createClient();
+    }, this._reconnectAfter);
+  }
+
+  @synchronized
+  private async _subscribeSwarmEvents(topic: PublicKey, peerId: PublicKey): Promise<void> {
+    assert(!this._swarmStreams.has(topic), 'Already subscribed to swarm events.');
+    const swarmStream = await this._client.join({ topic, peerId });
+    // Subscribing to swarm events.
+    // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
+    swarmStream.subscribe((swarmEvent: SwarmEvent) => {
+      this.swarmEvent.emit({ topic, swarmEvent });
+    });
+
+    // Saving swarm stream.
+    this._swarmStreams.set(topic, swarmStream);
+
+    this._subscriptions.add(() => {
+      swarmStream.close();
+      this._swarmStreams.delete(topic);
     });
   }
 }
