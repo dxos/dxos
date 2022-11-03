@@ -19,6 +19,13 @@ const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 export type CleanupCb = void | (() => void);
 
 export type CreateChannelOpts = {
+  /**
+   * MIME type of the wire content.
+   *
+   * Examples:
+   *  - application/octet-stream
+   *  - application/x-protobuf; messageType="dxos.rpc.Message"
+   */
   contentType?: string;
 };
 
@@ -75,6 +82,9 @@ export class Muxer {
 
     channel.push = (data) => {
       stream.push(data);
+    };
+    channel.destroy = (err) => {
+      stream.destroy(err);
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -165,13 +175,19 @@ export class Muxer {
     this._destroyed = true;
     this._framer.destroy();
 
-    // TODO(dmaretskyi): Destroy streams.
+    for (const channel of this._channelsByTag.values()) {
+      channel.destroy?.(err);
+    }
 
     this.close.emit(err);
+
+    // Make it easy for GC.
+    this._channelsByLocalId.clear();
+    this._channelsByTag.clear();
   }
 
   private _handleCommand(cmd: Command) {
-    log(`Received command`, { cmd })
+    log('Received command', { cmd });
 
     if (this._destroyed || this._destroying) {
       log.warn('Received command after destroy');
@@ -222,7 +238,8 @@ export class Muxer {
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
-        push: null
+        push: null,
+        destroy: null
       };
       this._channelsByTag.set(channel.tag, channel);
       this._channelsByLocalId.set(channel.id, channel);
@@ -258,6 +275,7 @@ type Channel = {
    * The originating Data commands should carry this id.
    */
   remoteId: null | number;
+
   contentType?: string;
 
   /**
@@ -269,6 +287,8 @@ type Channel = {
    * Set when we initialize a NodeJS stream or an RPC port consuming the channel.
    */
   push: null | ((data: Uint8Array) => void);
+
+  destroy: null | ((err?: Error) => void);
 };
 
 type CreateChannelInternalParams = {

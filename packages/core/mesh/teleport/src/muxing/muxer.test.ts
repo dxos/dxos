@@ -3,6 +3,8 @@
 //
 
 import { expect } from 'chai';
+import { pipeline, Transform } from 'stream';
+import waitForExpect from 'wait-for-expect';
 
 import { latch, promiseTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
@@ -12,8 +14,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { Muxer } from './muxer';
 import { RpcPort } from './rpc-port';
-import { Transform } from 'stream';
-import waitForExpect from 'wait-for-expect';
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -124,35 +124,62 @@ describe('Muxer', function () {
     await wait();
   });
 
-  it('node.js streams', async () => {
+  it('node.js streams', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const stream2 = peer2.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream',
+      contentType: 'application/octet-stream'
     });
 
     // Buffer data before remote peer opens.
     stream2.write('hello');
 
     const stream1 = peer1.createStream('example.extension/stream1', {
-      contentType: 'application/octet-stream',
+      contentType: 'application/octet-stream'
     });
 
-    stream1.pipe(new Transform({
-      transform (chunk, encoding, callback) {
-        callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
-      }
-    })).pipe(stream1);
+    pipeline(
+      stream1,
+      new Transform({
+        transform(chunk, encoding, callback) {
+          callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
+        }
+      }),
+      stream1,
+      () => {}
+    );
 
     let received = '';
     stream2.on('data', (chunk) => {
       received += Buffer.from(chunk).toString();
     });
-    
+
     stream2.write(' world!');
 
     await waitForExpect(() => {
       expect(received).to.eq('HELLO WORLD!');
-    })
-  })
+    });
+  });
+
+  it('destroying muxers destroys open streams', async function () {
+    const { peer1, peer2 } = setupPeers();
+
+    const stream1 = peer1.createStream('example.extension/stream1', {
+      contentType: 'application/octet-stream'
+    });
+
+    const stream2 = peer2.createStream('example.extension/stream1', {
+      contentType: 'application/octet-stream'
+    });
+
+    const [wait, inc] = latch({ count: 2, timeout: 500 });
+
+    stream1.once('close', inc);
+    stream2.once('close', inc);
+
+    peer1.destroy();
+    // Peer2 should also be destroyed.
+
+    await wait();
+  });
 });

@@ -19,7 +19,7 @@ const pipeWithRandomizedChunks = (from: NodeJS.ReadableStream, to: NodeJS.Writab
     buffers.push(data);
   });
 
-  // Flush data every 20ms.
+  // Flush data every millisecond.
   const intervalId = setInterval(() => {
     const buffer = Buffer.concat(buffers);
 
@@ -76,7 +76,7 @@ describe('Framer', function () {
   });
 
   // This test is a bit slow because of sleep and flush on interval.
-  it('works', async function () {
+  it('end-to-end stress test', async function () {
     const peer1 = new Framer();
     const peer2 = new Framer();
 
