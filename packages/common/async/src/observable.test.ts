@@ -9,7 +9,7 @@ import { latch } from './latch';
 import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable';
 
 interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnect(connectionId: string): void;
+  onConnected(connectionId: string): void;
 }
 
 type ConnectionObservable = CancellableObservable<ConnectionEvents>;
@@ -39,7 +39,7 @@ describe('observable', function () {
 
       const connectTimeout = setTimeout(() => {
         clearTimeout(timeout);
-        observable.callbacks?.onConnect('connection-1');
+        observable.callbacks?.onConnected('connection-1');
       }, connectionDelay);
 
       return observable;
@@ -53,11 +53,11 @@ describe('observable', function () {
 
     // TODO(burdon): Auto unsubscribe on err?
     observable.subscribe({
-      onConnect: () => {
+      onConnected: () => {
         connected = true;
         setDone();
       },
-      onCancel() {
+      onCancelled() {
         cancelled = true;
         setDone();
       },

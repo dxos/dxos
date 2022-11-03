@@ -274,6 +274,7 @@ export class RpcPeer {
 
     let response: Response;
     try {
+      // TODO(burdon): Use asyncTimeout (@dxos/async).
       response = await Promise.race([
         promise,
         createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
@@ -305,8 +306,8 @@ export class RpcPeer {
   }
 
   /**
-   * Make RPC call with a streaming response. Will trigger a handler on the other side.
-   *
+   * Make RPC call with a streaming response.
+   * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
   callStream(method: string, request: Any): Stream<Any> {
@@ -377,12 +378,13 @@ export class RpcPeer {
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
+
       const response = await this._options.messageHandler(req.method, req.payload);
       return {
         id: req.id,
         payload: response
       };
-    } catch (err: any) {
+    } catch (err) {
       return {
         id: req.id,
         error: encodeError(err)
@@ -396,6 +398,7 @@ export class RpcPeer {
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
+
       const responseStream = this._options.streamHandler(req.method, req.payload);
       responseStream.onReady(() => {
         callback({
@@ -403,6 +406,7 @@ export class RpcPeer {
           streamReady: true
         });
       });
+
       responseStream.subscribe(
         (msg) => {
           callback({
@@ -424,6 +428,7 @@ export class RpcPeer {
           }
         }
       );
+
       this._localStreams.set(req.id, responseStream);
     } catch (err: any) {
       callback({
@@ -434,6 +439,7 @@ export class RpcPeer {
   }
 }
 
+// TODO(burdon): Factor out.
 const encodeError = (err: any): ErrorResponse => {
   if (typeof err === 'object' && err?.message) {
     return {
@@ -457,6 +463,7 @@ const encodeError = (err: any): ErrorResponse => {
  * The promise will never cause unhandledPromiseRejection.
  * The timeout will not block the Node.JS process from exiting.
  */
+// TODO(burdon): Reconcile with asyncTimeout (and/or move to @dxos/async).
 const createTimeoutPromise = (timeout: number, error: Error) => {
   const timeoutPromise = new Promise<any>((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(error), timeout);
@@ -466,6 +473,7 @@ const createTimeoutPromise = (timeout: number, error: Error) => {
       timeoutId.unref();
     }
   });
+
   timeoutPromise.catch(() => {}); // Mute the promise.
   return timeoutPromise;
 };

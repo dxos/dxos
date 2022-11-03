@@ -50,7 +50,7 @@ export class SpaceInvitationServiceImpl implements InvitationService {
           next(invitation);
           close(); // TODO(burdon): Does this close immediately?
         },
-        onCancel: () => {
+        onCancelled: () => {
           invitation.state = Invitation.State.CANCELLED;
           next(invitation);
           close();

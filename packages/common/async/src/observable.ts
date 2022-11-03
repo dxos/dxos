@@ -30,7 +30,7 @@ export class ObservableProvider<Events> implements Observable<Events> {
 }
 
 export interface CancellableObservableEvents {
-  onCancel(): void;
+  onCancelled(): void;
 }
 
 export interface CancellableObservable<Events extends CancellableObservableEvents> extends Observable<Events> {
@@ -47,7 +47,7 @@ export class CancellableObservableProvider<
 
   // prettier-ignore
   constructor(
-    private readonly _handleCancel = async () => this._callbacks?.onCancel()
+    private readonly _handleCancel?: () => Promise<void>
   ) {
     super();
   }
@@ -62,11 +62,8 @@ export class CancellableObservableProvider<
     }
 
     this._cancelled = true;
-    if (this._handleCancel) {
-      await this._handleCancel();
-    }
-
-    this.callbacks?.onCancel();
+    await this._handleCancel?.();
+    this.callbacks?.onCancelled();
 
     if (unsubscribe) {
       this.unsubscribe();
