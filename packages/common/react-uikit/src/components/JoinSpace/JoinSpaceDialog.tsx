@@ -17,7 +17,7 @@ export const JoinSpaceDialog = ({ dialogProps, ...props }: JoinSpaceDialogProps)
   const { t } = useTranslation();
 
   return (
-    <Dialog title={t('join space label', { ns: 'uikit' })} {...dialogProps}>
+    <Dialog title={t('join space label')} {...dialogProps}>
       <JoinSpacePanel {...props} />
     </Dialog>
   );

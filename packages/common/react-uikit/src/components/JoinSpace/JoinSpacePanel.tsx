@@ -51,8 +51,8 @@ export const JoinSpacePanel = ({
     <SingleInputStep
       {...{
         pending: status === 'loading',
-        inputLabel: t('invitation code label', { ns: 'uikit' }),
-        inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
+        inputLabel: t('invitation code label'),
+        inputPlaceholder: t('invitation code placeholder'),
         inputProps: {
           initialValue: invitationCode
         },

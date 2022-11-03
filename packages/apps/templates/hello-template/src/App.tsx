@@ -7,28 +7,54 @@ import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
 import React from 'react';
 import { HashRouter, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
+import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
 import { ClientProvider, useClient, useParties, useParty, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
-import { Button, getSize, Heading, JoinSpaceDialog, Loading, Tooltip, useTranslation } from '@dxos/react-uikit';
+import {
+  Button,
+  getSize,
+  Heading,
+  JoinSpaceDialog,
+  Loading,
+  Tooltip,
+  UiKitProvider,
+  useTranslation
+} from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
+
+import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
+  const {
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({ onRegisterError: (err) => console.error(err) });
+
   return (
-    <ClientProvider config={configProvider}>
-      <HashRouter>
-        <Routes>
-          <Route path='/' element={<SpacesView />} />
-          <Route path='/:space' element={<SpaceView />} />
-        </Routes>
-      </HashRouter>
-    </ClientProvider>
+    <UiKitProvider resourceExtensions={translationResources}>
+      <ClientProvider config={configProvider}>
+        <HashRouter>
+          <Routes>
+            <Route path='/' element={<SpacesView />} />
+            <Route path='/:space' element={<SpaceView />} />
+          </Routes>
+        </HashRouter>
+      </ClientProvider>
+
+      {needRefresh ? (
+        <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+      ) : offlineReady ? (
+        <ServiceWorkerToast variant='offlineReady' />
+      ) : null}
+    </UiKitProvider>
   );
 };
 
@@ -80,7 +106,7 @@ export const SpacesView = () => {
 };
 
 const SpaceView = () => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation('hello');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex);

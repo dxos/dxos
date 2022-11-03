@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: example:app/hello
+    - name: hello
       type: dxos:type/app
       build:
         command: npm run bundle

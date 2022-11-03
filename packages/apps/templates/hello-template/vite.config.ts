@@ -44,7 +44,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'out/example/app/hello',
+    outDir: 'out/hello',
     commonjsOptions: {
       include: [/packages/, /node_modules/]
     }
