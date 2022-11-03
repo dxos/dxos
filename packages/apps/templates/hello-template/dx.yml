@@ -9,14 +9,14 @@ package:
 
 runtime:
   client:
-    # TODO(wittjosiah): Remote.
-    mode: local
+    mode: remote
+    # remoteSource: http://localhost:3967/headless.html
     storage:
       persistent: true
 
   services:
     signal:
-      server: ws://localhost:8888/.well-known/dx/signal
+      server: ws://kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos

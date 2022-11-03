@@ -18,7 +18,7 @@ export const SpacePage = () => {
   const { t } = useTranslation('halo');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex);
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
   const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
 

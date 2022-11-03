@@ -18,7 +18,7 @@ export const SpaceSettingsPage = () => {
   const { t } = useTranslation('halo');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex);
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
   const invitations = usePartyInvitations(spaceKey);
   const members = useMembers(space);

@@ -5,6 +5,7 @@
 import { AddressBook, DiamondsFour, DeviceMobileCamera, Planet, SignOut } from 'phosphor-react';
 import React from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import urlJoin from 'url-join';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useParty, useProfile } from '@dxos/react-client';
@@ -12,13 +13,19 @@ import { NavMenu, NavMenuSeparatorProps, Presence, useTranslation } from '@dxos/
 
 const iconAttributes = { className: 'h-5 w-5' };
 
+const createInvitationUrl = (invitationCode: string) => {
+  const invitationPath = '/spaces/join';
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
+};
+
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
   const profile = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex);
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
 
   const pathSegments = location.pathname.split('/').length;
@@ -114,6 +121,7 @@ export const AppLayout = () => {
           size={10}
           sideOffset={4}
           managingSpace={isManagingSpace}
+          createInvitationUrl={createInvitationUrl}
           onClickManageProfile={() => navigate('/identity')}
           onClickGoToSpace={() => navigate(`/spaces/${spaceHex}`)}
           onClickManageSpace={() => navigate(`/spaces/${spaceHex}/settings`)}

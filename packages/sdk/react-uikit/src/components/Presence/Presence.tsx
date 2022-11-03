@@ -74,10 +74,12 @@ const ProfileMenu = (props: PresenceProps) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
-        <UserCircleGear className={getSize(5)} />
-        <span>{t('manage profile label')}</span>
-      </Button>
+      {onClickManageProfile && (
+        <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
+          <UserCircleGear className={getSize(5)} />
+          <span>{t('manage profile label')}</span>
+        </Button>
+      )}
       <UsernameInput profile={profile} />
     </Popover>
   );
@@ -102,10 +104,12 @@ const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
-        <Gear className={getSize(5)} />
-        <span>{t('manage party label')}</span>
-      </Button>
+      {onClickManageSpace && (
+        <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
+          <Gear className={getSize(5)} />
+          <span>{t('manage party label')}</span>
+        </Button>
+      )}
     </Popover>
   );
 };

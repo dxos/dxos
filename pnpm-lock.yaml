@@ -490,6 +490,7 @@ importers:
       react-router-dom: ^6.3.0
       require-from-string: ^2.0.2
       typescript: ^4.8.4
+      url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
@@ -508,6 +509,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
