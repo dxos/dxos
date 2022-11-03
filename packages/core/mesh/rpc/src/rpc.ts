@@ -267,6 +267,8 @@ export class RpcPeer {
         stream: false
       }
     }).catch((err) => {
+      // TODO(burdon): Need to surface this.
+      console.log('>>>>>>>>>>>>>', err);
       error(err);
     });
 

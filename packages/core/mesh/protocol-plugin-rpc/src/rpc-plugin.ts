@@ -88,11 +88,7 @@ export const createPort = (peer: Protocol, receive: Event<SerializedObject>): Rp
     send: async (msg) => {
       const extension = peer.getExtension(RpcPlugin.EXTENSION);
       assert(extension, 'Extension is not set.');
-      try {
-        await extension.send(msg);
-      } catch (err) {
-        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', err);
-      }
+      await extension.send(msg);
     },
 
     subscribe: (cb) => {
