@@ -281,12 +281,7 @@ export class RpcPeer {
       const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;
-
-      // Keep waiting if sending promise completes without error.
-      if (response === undefined) {
-        response = await waiting;
-        assert(response.id === id);
-      }
+      assert(response.id === id);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
@@ -463,24 +458,4 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
-};
-
-/**
- * Creates a promise that will be rejected after a certain timeout.
- * The promise will never cause unhandledPromiseRejection.
- * The timeout will not block the Node.JS process from exiting.
- */
-// TODO(burdon): Reconcile with asyncTimeout (and/or move to @dxos/async).
-const createTimeoutPromise = (timeout: number, error: Error) => {
-  const timeoutPromise = new Promise<any>((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(error), timeout);
-
-    // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
-    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-      timeoutId.unref();
-    }
-  });
-
-  timeoutPromise.catch(() => {}); // Mute the promise.
-  return timeoutPromise;
 };

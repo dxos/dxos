@@ -45,7 +45,7 @@ describe('services/spaces', function () {
   // TODO(burdon): Separate test file for invitations.
   // TODO(burdon): Copy pattern to halo.
   // TODO(burdon): Uncaught error if run both tests in browser (Error Closed: Request._openAndNotClosed).
-  it('creates and accepts invitation', async function () {
+  it.only('creates and accepts invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<Space>();
@@ -64,7 +64,7 @@ describe('services/spaces', function () {
           onSuccess: (space2: Space) => {
             complete2.wake(space2);
           },
-          onCancel: () => {
+          onCancelled: () => {
             throw new Error();
           },
           onTimeout: (err: any) => {
@@ -79,7 +79,7 @@ describe('services/spaces', function () {
       onSuccess: (invitation: Invitation) => {
         complete1.wake(space1);
       },
-      onCancel: () => {
+      onCancelled: () => {
         // TODO(burdon): Change observable API to throw error by default?
         throw new Error();
       },
@@ -128,7 +128,7 @@ describe('services/spaces', function () {
           onSuccess: () => {
             throw new Error();
           },
-          onCancel: () => {
+          onCancelled: () => {
             throw new Error();
           },
           onTimeout: (err: any) => {
@@ -145,7 +145,7 @@ describe('services/spaces', function () {
       onSuccess: () => {
         throw new Error();
       },
-      onCancel: () => {
+      onCancelled: () => {
         cancelled.wake();
       },
       onTimeout: (err: any) => {

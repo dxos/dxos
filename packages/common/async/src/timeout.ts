@@ -37,14 +37,20 @@ export const asyncTimeout = <T>(
   const throwable = (err === undefined || typeof err === 'string') ? new TimeoutError(timeout, err) : err;
   const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
 
-  let timer: NodeJS.Timeout;
+  let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<T>((resolve, reject) => {
-    timer = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       reject(throwable);
     }, timeout);
+
+    // In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+    // https://nodejs.org/api/timers.html#timeoutunref
+    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+      timeoutId.unref();
+    }
   });
 
   return Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
-    clearTimeout(timer);
+    clearTimeout(timeoutId);
   });
 };

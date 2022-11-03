@@ -42,6 +42,13 @@ export class RpcPlugin {
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
+  async close() {
+    for (const connection of this._peers.values()) {
+      await connection.cleanup?.();
+      await connection.peer.close();
+    }
+  }
+
   private async _onPeerConnect(peer: Protocol) {
     const peerId = getPeerId(peer);
     const receive = new Event<SerializedObject>();
@@ -69,13 +76,6 @@ export class RpcPlugin {
     const connection = this._peers.get(peerId);
     if (connection) {
       connection.receive.emit(data);
-    }
-  }
-
-  async close() {
-    for (const connection of this._peers.values()) {
-      await connection.cleanup?.();
-      await connection.peer.close();
     }
   }
 }
@@ -107,7 +107,6 @@ export const createPort = (peer: Protocol, receive: Event<SerializedObject>): Rp
  */
 export const getPeerId = (peer: Protocol) => {
   const { peerId } = peer.getSession() ?? {};
-  // TODO(burdon): Assert?
   return peerId as string;
 };
 
@@ -115,15 +114,16 @@ export const getPeerId = (peer: Protocol) => {
  * Wrapper to ensure plugin only called once.
  */
 // TODO(burdon): Debug why this is required with memory network.
-export const createRpcPlugin = (onOpen: OnConnect) => {
-  let connected = false;
+type CreatePluginOptions = { maxConnections: number };
+export const createRpcPlugin = (onOpen: OnConnect, options: CreatePluginOptions = { maxConnections: 1 }) => {
+  let count = 0;
   return new RpcPlugin(async (port, peerId) => {
-    if (connected) {
-      log('already connected');
+    if (count >= options.maxConnections) {
+      log(`max connections reached: ${count}`);
       return;
     }
 
-    connected = true;
+    count++;
     await onOpen(port, peerId);
   });
 };

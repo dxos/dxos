@@ -53,8 +53,8 @@ export class SpaceInvitations {
    */
   createInvitation(space: Space): CancellableObservable<CreateInvitationEvents> {
     let connection: SwarmConnection | undefined;
+
     const topic = PublicKey.random();
-    const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
     const invitation: Invitation = {
       invitationId: PublicKey.random().toHex(),
       swarmKey: topic,
@@ -120,16 +120,15 @@ export class SpaceInvitations {
       }
 
       await peer.close();
-
-      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       await sleep(100);
       await connection!.close();
     });
 
     setTimeout(async () => {
+      const peerId = PublicKey.random();
       connection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: topic, // TODO(burdon): Why???
+        peerId: topic, // TODO(burdon): Why not use peerId?
         // peerId,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
@@ -148,12 +147,12 @@ export class SpaceInvitations {
    */
   acceptInvitation(invitation: Invitation): CancellableObservable<AcceptInvitationEvents> {
     let connection: SwarmConnection | undefined;
+
     const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
       await connection?.close();
     });
 
     const admitted = new Trigger<Space>();
-
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         port,
@@ -203,10 +202,10 @@ export class SpaceInvitations {
     setTimeout(async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
-      const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
+      const peerId = PublicKey.random();
       connection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: PublicKey.random(), // TODO(burdon): Why???
+        peerId: PublicKey.random(), // TODO(burdon): Why not use peerId?
         // peerId,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
@@ -216,7 +215,8 @@ export class SpaceInvitations {
       const space = await admitted.wait();
       observable.callbacks?.onSuccess(space);
 
-      // TODO(burdon): Wait for host to complete (otherwise immediately kills swarm peer and RPC doesn't complete).
+      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
+      //  Implement mechanism for plugin to finalize (or remove itself).
       await sleep(100);
       await connection.close();
     });

@@ -20,15 +20,15 @@ export class ProtoRpcPeer<Service> {
   // prettier-ignore
   constructor(
     public readonly rpc: Service,
-    private readonly peer: RpcPeer
+    private readonly _peer: RpcPeer
   ) {}
 
   async open() {
-    await this.peer.open();
+    await this._peer.open();
   }
 
   async close() {
-    await this.peer.close();
+    await this._peer.close();
   }
 }
 

@@ -37,6 +37,9 @@ export class SpaceInvitationProxy {
         // assert(invitation.invitationId); // TODO(burdon): Assert.
         invitationId = invitation.invitationId!;
 
+        // TODO(burdon): Auto-map;
+        // TODO(burdon): Delegate timeout to error.
+
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
             observer.callbacks?.onConnecting(invitation);
@@ -59,7 +62,15 @@ export class SpaceInvitationProxy {
             break;
           }
 
-          // TODO(burdon): Handle errors.
+          case Invitation.State.TIMEOUT: {
+            // observer.callbacks?.onTimeout(); // TODO(burdon): ???
+            break;
+          }
+
+          case Invitation.State.ERROR: {
+            observer.callbacks?.onError(invitation.errorCode);
+            break;
+          }
         }
       },
       (err) => {
