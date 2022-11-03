@@ -208,7 +208,7 @@ importers:
   docs:
     specifiers:
       '@dxos/plate': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-client': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/typedoc-plugin-plate': workspace:*
       '@types/eslint': ^8.4.6
@@ -236,7 +236,7 @@ importers:
       vuepress: ^2.0.0-beta.51
     devDependencies:
       '@dxos/plate': link:../tools/plate
-      '@dxos/react-components': link:../packages/deprecated/react-components
+      '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.6
