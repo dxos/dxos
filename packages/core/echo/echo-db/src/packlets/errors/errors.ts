@@ -27,8 +27,8 @@ export class InvalidStorageVersionError extends DXOSError {
 }
 
 export class SpaceNotFoundError extends DXOSError {
-  constructor(partyKey: PublicKey) {
-    super('PARTY_NOT_FOUND', `Space not found: ${partyKey}`);
+  constructor(spaceKey: PublicKey) {
+    super('PARTY_NOT_FOUND', `Space not found: ${spaceKey}`);
   }
 }
 

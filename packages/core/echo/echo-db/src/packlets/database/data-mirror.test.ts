@@ -43,11 +43,11 @@ describe('DataMirror', function () {
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
     const dataServiceRouter = new DataService();
-    const partyKey = PublicKey.random();
-    dataServiceRouter.trackParty(partyKey, dataServiceHost);
+    const spaceKey = PublicKey.random();
+    dataServiceRouter.trackParty(spaceKey, dataServiceHost);
 
     const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
-    const dataMirror = new DataMirror(mirrorItemManager, dataServiceRouter, partyKey);
+    const dataMirror = new DataMirror(mirrorItemManager, dataServiceRouter, spaceKey);
 
     dataMirror.open();
 

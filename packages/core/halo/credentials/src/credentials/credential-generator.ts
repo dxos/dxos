@@ -9,8 +9,6 @@ import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxo
 
 import { createCredential, CredentialSigner } from './credential-factory';
 
-// TODO(burdon): Normalize party_key, space_key (args, proto).
-
 /**
  * Utility class for generating credential messages, where the issuer is the current identity or device.
  */
@@ -32,7 +30,7 @@ export class CredentialGenerator {
         subject: spaceKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey: spaceKey
+          spaceKey
         }
       }),
 
@@ -42,7 +40,7 @@ export class CredentialGenerator {
         subject: this._identityKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey: spaceKey,
+          spaceKey,
           role: PartyMember.Role.ADMIN
         }
       }),
@@ -56,7 +54,7 @@ export class CredentialGenerator {
    * Admit identity and control and data feeds.
    */
   async createMemberInvitation(
-    partyKey: PublicKey,
+    spaceKey: PublicKey,
     identityKey: PublicKey,
     deviceKey: PublicKey,
     controlKey: PublicKey,
@@ -69,13 +67,13 @@ export class CredentialGenerator {
         subject: identityKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
+          spaceKey,
           role: PartyMember.Role.MEMBER
         }
       }),
 
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(partyKey, dataKey, AdmittedFeed.Designation.DATA)
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA)
     ];
   }
 
@@ -99,7 +97,7 @@ export class CredentialGenerator {
    * Add feed to space.
    */
   async createFeedAdmission(
-    partyKey: PublicKey,
+    spaceKey: PublicKey,
     feedKey: PublicKey,
     designation: AdmittedFeed.Designation
   ): Promise<Credential> {
@@ -109,7 +107,7 @@ export class CredentialGenerator {
       subject: feedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey,
+        spaceKey,
         identityKey: this._identityKey,
         deviceKey: this._deviceKey,
         designation
@@ -132,7 +130,7 @@ export const createAdmissionCredentials = async (
       subject: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
-        partyKey: spaceKey,
+        spaceKey,
         role: PartyMember.Role.ADMIN
       }
     }),
@@ -141,7 +139,7 @@ export const createAdmissionCredentials = async (
       subject: controlFeedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: spaceKey,
+        spaceKey,
         deviceKey,
         identityKey,
         designation: AdmittedFeed.Designation.CONTROL
@@ -152,7 +150,7 @@ export const createAdmissionCredentials = async (
       subject: dataFeedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: spaceKey,
+        spaceKey,
         deviceKey,
         identityKey,
         designation: AdmittedFeed.Designation.DATA

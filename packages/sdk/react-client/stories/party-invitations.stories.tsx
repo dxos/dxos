@@ -24,7 +24,7 @@ export default {
  */
 const PartyInvitationContainer = () => {
   const client = useClient();
-  const [partyKey, setPartyKey] = useState<PublicKey>();
+  const [spaceKey, setspaceKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
   const [contact, setContact] = useState<string>();
   const contacts = useContacts();
@@ -38,7 +38,7 @@ const PartyInvitationContainer = () => {
   const handleCreateParty = () => {
     setTimeout(async () => {
       const party = await client.echo.createParty();
-      setPartyKey(party.key);
+      setspaceKey(party.key);
       resetInvitations();
     });
   };
@@ -47,7 +47,7 @@ const PartyInvitationContainer = () => {
     setTimeout(async () => {
       resetInvitations();
 
-      const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
+      const invitation = await client.echo.getParty(spaceKey!)!.createInvitation({
         inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
       });
 
@@ -67,7 +67,7 @@ const PartyInvitationContainer = () => {
           <Button variant='outlined' onClick={handleCreateParty}>
             Create Party
           </Button>
-          <Button disabled={!partyKey} onClick={handleCreateInvitation}>
+          <Button disabled={!spaceKey} onClick={handleCreateInvitation}>
             Create Invitation
           </Button>
         </Toolbar>

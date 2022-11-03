@@ -14,14 +14,14 @@ import { useParty, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
 
-const TaskList = ({ party_key }) => {
-  const party = useParty(party_key);
+const TaskList = ({ space_key }) => {
+  const party = useParty(space_key);
 
   const items = useSelection(
     party.database.select(
       selection => selection.filter({ type: TASK_TYPE }).filter((item) => !item.model.getProperty('deleted')).items
     ),
-    [party_key]
+    [space_key]
   );
 
   // ...

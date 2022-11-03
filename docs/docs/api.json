@@ -2710,7 +2710,7 @@
 									"parameters": [
 										{
 											"id": 961,
-											"name": "invitationDescriptor",
+											"name": "Invitation",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -2894,7 +2894,7 @@
 									"parameters": [
 										{
 											"id": 956,
-											"name": "partyKey",
+											"name": "spaceKey",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -3929,7 +3929,7 @@
 									"parameters": [
 										{
 											"id": 1002,
-											"name": "invitationDescriptor",
+											"name": "Invitation",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -17611,7 +17611,7 @@
 									"parameters": [
 										{
 											"id": 739,
-											"name": "invitationDescriptor",
+											"name": "Invitation",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -17741,7 +17741,7 @@
 									"parameters": [
 										{
 											"id": 734,
-											"name": "partyKey",
+											"name": "spaceKey",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -18028,7 +18028,7 @@
 									"parameters": [
 										{
 											"id": 770,
-											"name": "invitationDescriptor",
+											"name": "Invitation",
 											"kind": 32768,
 											"kindString": "Parameter",
 											"flags": {},
@@ -18799,7 +18799,7 @@
 					"children": [
 						{
 							"id": 1033,
-							"name": "invitationDescriptor",
+							"name": "Invitation",
 							"kind": 1024,
 							"kindString": "Property",
 							"flags": {},
@@ -30808,7 +30808,7 @@
 							"parameters": [
 								{
 									"id": 1215,
-									"name": "partyKey",
+									"name": "spaceKey",
 									"kind": 32768,
 									"kindString": "Parameter",
 									"flags": {
@@ -30860,7 +30860,7 @@
 							"parameters": [
 								{
 									"id": 1239,
-									"name": "partyKey",
+									"name": "spaceKey",
 									"kind": 32768,
 									"kindString": "Parameter",
 									"flags": {

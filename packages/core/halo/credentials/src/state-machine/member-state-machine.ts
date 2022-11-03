@@ -30,7 +30,7 @@ export class MemberStateMachine {
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
@@ -50,7 +50,7 @@ export class MemberStateMachine {
   async process(credential: Credential) {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.PartyMember');
-    assert(assertion.partyKey.equals(this._partyKey));
+    assert(assertion.spaceKey.equals(this._spaceKey));
     assert(!this._members.has(credential.subject.id));
 
     const info: MemberInfo = {

@@ -23,6 +23,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",

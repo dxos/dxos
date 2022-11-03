@@ -21,8 +21,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import type { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
@@ -106,20 +106,16 @@ export class ServiceContext {
     return identity;
   }
 
-  // TODO(burdon): Remove.
-  createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
+  createInvitation(spaceKey: PublicKey) {
     assert(this.spaceManager);
     assert(this.spaceInvitations);
-
     const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
     return this.spaceInvitations.createInvitation(space);
   }
 
-  // TODO(burdon): Remove.
-  acceptInvitation(invitationDescriptor: InvitationDescriptor) {
+  acceptInvitation(invitation: Invitation) {
     assert(this.spaceInvitations);
-
-    return this.spaceInvitations.acceptInvitation(invitationDescriptor);
+    return this.spaceInvitations.acceptInvitation(invitation);
   }
 
   private async _initialize() {

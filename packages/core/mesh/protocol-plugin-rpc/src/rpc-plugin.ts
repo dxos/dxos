@@ -45,11 +45,10 @@ export class RpcPlugin {
   private async _onPeerConnect(peer: Protocol) {
     const peerId = getPeerId(peer);
     const receive = new Event<SerializedObject>();
-
     this._peers.set(peerId, { peer, receive });
-    const port = await createPort(peer, receive);
-    const cleanup = await this._onConnect(port, peerId);
 
+    const port = createPort(peer, receive);
+    const cleanup = await this._onConnect(port, peerId);
     if (typeof cleanup === 'function') {
       const connection = this._peers.get(peerId);
       connection && (connection.cleanup = cleanup);
@@ -84,21 +83,28 @@ export class RpcPlugin {
 /**
  *
  */
-export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
-  send: async (msg) => {
-    const extension = peer.getExtension(RpcPlugin.EXTENSION);
-    assert(extension, 'Extension is not set.');
-    await extension.send(msg);
-  },
+export const createPort = (peer: Protocol, receive: Event<SerializedObject>): RpcPort => {
+  return {
+    send: async (msg) => {
+      const extension = peer.getExtension(RpcPlugin.EXTENSION);
+      assert(extension, 'Extension is not set.');
+      try {
+        await extension.send(msg);
+      } catch (err) {
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', err);
+      }
+    },
 
-  subscribe: (cb) => {
-    const adapterCallback = (obj: SerializedObject) => {
-      cb(obj.data);
-    };
-    receive.on(adapterCallback);
-    return () => receive.off(adapterCallback);
-  }
-});
+    subscribe: (cb) => {
+      const adapterCallback = (obj: SerializedObject) => {
+        cb(obj.data);
+      };
+
+      receive.on(adapterCallback);
+      return () => receive.off(adapterCallback);
+    }
+  };
+};
 
 /**
  *
@@ -113,7 +119,6 @@ export const getPeerId = (peer: Protocol) => {
  * Wrapper to ensure plugin only called once.
  */
 // TODO(burdon): Debug why this is required with memory network.
-// TODO(burdon): Implement authentication/handshake.
 export const createRpcPlugin = (onOpen: OnConnect) => {
   let connected = false;
   return new RpcPlugin(async (port, peerId) => {

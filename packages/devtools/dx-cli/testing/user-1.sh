@@ -24,7 +24,7 @@ fi
 # Create Space
 KEY=$($dx space create --json | jq --raw-output '.key')
 # mkdir -p /tmp/dx-cli/testing
-# echo $KEY > /tmp/dx-cli/testing_party_key.txt
+# echo $KEY > /tmp/dx-cli/testing_space_key.txt
 
 # Create Invitation
 $dx space invite $KEY

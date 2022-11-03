@@ -16,7 +16,7 @@ import {
   SetPreferenceRequest,
   GetPreferenceRequest,
   GetPreferenceResponse
-} from '@dxos/protocols/proto/dxos/client';
+} from '@dxos/protocols/proto/dxos/client/services';
 
 import { HaloSigner } from '../signer';
 

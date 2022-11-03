@@ -109,7 +109,7 @@ export class BotFactoryClient {
     const invitation = await party.createInvitation();
     const { id } = await this._rpcClient.rpc.spawnBot({
       package: spec,
-      partyKey: party.key,
+      spaceKey: party.key,
       invitation: invitation.descriptor.toProto()
     });
 

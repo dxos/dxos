@@ -20,7 +20,7 @@ package dxos.echo.snapshot;
 //
 
 message PartySnapshot {
-  bytes party_key = 1;
+  bytes space_key = 1;
   optional timeframe.TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.

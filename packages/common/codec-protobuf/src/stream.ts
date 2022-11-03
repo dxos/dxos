@@ -28,6 +28,21 @@ type Producer<T> = (callbacks: {
 
 export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
 
+// TODO(burdon): Implement Observable<T> pattern to simplify callbacks.
+// stream.subscribe({
+//   onData: (data: CustomData) => {
+//   },
+//   onOpen: () => {
+//   },
+//   onClose: () => {
+//   },
+//   onError: () => {
+//   }
+// });
+//
+// stream.unsubscribe();
+// await stream.close90:
+
 /**
  * Represents a typed stream of data.
  *
@@ -151,7 +166,7 @@ export class Stream<T> {
     }
   }
 
-  subscribe(onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
+  subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -180,6 +195,7 @@ export class Stream<T> {
   /**
    * Resolves when stream is ready.
    */
+  // TODO(burdon): Gather all callbacks into single observer.
   waitUntilReady(): Promise<void> {
     return this._readyPromise;
   }
@@ -199,6 +215,7 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
+  // TODO(burdon): Make async.
   close() {
     if (this._isClosed) {
       return;

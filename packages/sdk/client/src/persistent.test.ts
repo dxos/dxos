@@ -56,20 +56,20 @@ describe('Client - persistent', function () {
   it('MetadataStore save/load', async () => {
     const storage = createStorage({ type: StorageType.IDB });
     const directory = storage.createDirectory('metadata');
-    const party_key = PublicKey.random();
+    const space_key = PublicKey.random();
 
     // Create a new metadata store. And adding party.
     {
       const metadataStore = new MetadataStore(directory);
-      await metadataStore.addParty(party_key);
+      await metadataStore.addParty(space_key);
     }
 
     // Create a new metadata store in same directory. And check if loads party.
     {
       const metadataStore = new MetadataStore(directory);
       await metadataStore.load();
-      const partyLoaded = metadataStore.getParty(party_key);
-      expect(partyLoaded?.key).toEqual(party_key);
+      const partyLoaded = metadataStore.getParty(space_key);
+      expect(partyLoaded?.key).toEqual(space_key);
     }
   }).retries(10);
   */

@@ -16,16 +16,19 @@ import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
 
+// TODO(burdon): Replace with @dxos/log.
 const log = debug('dxos:rpc');
 const error = log.extend('error');
 
 type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
-  messageHandler: (method: string, request: Any) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any) => Stream<Any>;
   port: RpcPort;
   timeout?: number;
+
+  messageHandler: (method: string, request: Any) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any) => Stream<Any>;
+
   /**
    * Do not require or send handshake messages.
    */
@@ -108,8 +111,9 @@ export class RpcPeer {
     log('Send open message');
     await this._sendMessage({ open: true });
 
+    // TODO(burdon): Document.
     this._clearOpenInterval = exponentialBackoffInterval(() => {
-      void this._sendMessage({ open: true }).catch((error) => log(`Error: ${error}`));
+      void this._sendMessage({ open: true }).catch((err) => log(`Error: ${err}`));
     }, 50);
 
     await this._remoteOpenTrigger.wait();
@@ -161,8 +165,8 @@ export class RpcPeer {
               response.error
             )} close=${response.close}`
           );
-          void this._sendMessage({ response }).catch((error) => {
-            log(`Unhandled error during stream close: ${error}`);
+          void this._sendMessage({ response }).catch((err) => {
+            log(`Unhandled error during stream close: ${err}`);
           });
         });
       } else {
@@ -237,31 +241,33 @@ export class RpcPeer {
 
   /**
    * Make RPC call. Will trigger a handler on the other side.
-   *
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any): Promise<Any> {
+    log(`Calling: ${method}`);
     if (!this._open) {
       throw new RpcNotOpenError();
     }
 
     const id = this._nextId++;
-
     const promise = new Promise<Response>((resolve, reject) => {
       this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
     });
 
+    // TODO(burdon): Seems sketchy.
     // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
     promise.catch(() => {});
 
-    void this._sendMessage({
+    this._sendMessage({
       request: {
         id,
         method,
         payload: request,
         stream: false
       }
+    }).catch((err) => {
+      error(err);
     });
 
     let response: Response;
@@ -277,10 +283,11 @@ export class RpcPeer {
         error.stack += `\n\nRpc client was closed at:\n${err.stack}`;
         throw error;
       }
+
       throw err;
     }
-    assert(response.id === id);
 
+    assert(response.id === id);
     if (response.payload) {
       return response.payload;
     } else if (response.error) {
@@ -327,13 +334,12 @@ export class RpcPeer {
       };
 
       const stack = new StackTrace();
-
-      const closeStream = (error?: Error) => {
-        if (!error) {
+      const closeStream = (err?: Error) => {
+        if (!err) {
           close();
         } else {
-          error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
-          close(error);
+          err.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
+          close(err);
         }
       };
 
@@ -346,12 +352,16 @@ export class RpcPeer {
           payload: request,
           stream: true
         }
-      }).catch((error) => close(error));
+      }).catch((err) => {
+        close(err);
+      });
 
       return () => {
         this._sendMessage({
           streamClose: { id }
-        }).catch(() => {}); // Ignore the error here as there's no good way to handle it.
+        }).catch((err) => {
+          error(err);
+        });
       };
     });
   }

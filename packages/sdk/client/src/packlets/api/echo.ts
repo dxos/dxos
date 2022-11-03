@@ -7,7 +7,7 @@ import { Database, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
-import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { PartyDetails } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ActivationOptions, PartyMember } from '../proxies';
@@ -79,7 +79,7 @@ export interface Echo {
   registerModel(constructor: ModelConstructor<any>): void;
   createParty(): Promise<Party>;
   cloneParty(snapshot: PartySnapshot): Promise<Party>;
-  getParty(partyKey: PublicKey): Party | undefined;
+  getParty(spaceKey: PublicKey): Party | undefined;
   queryParties(): ResultSet<Party>;
-  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation;
+  acceptInvitation(Invitation: InvitationWrapper): PartyInvitation;
 }

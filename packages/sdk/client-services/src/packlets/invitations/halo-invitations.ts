@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -9,7 +11,7 @@ import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Identity, IdentityManager } from '../identity';
@@ -27,7 +29,7 @@ export class HaloInvitations {
   /**
    * Sends a HALO admission offer and waits for guest to accept.
    */
-  async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
+  async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<Invitation> {
     const identity = this._identityManager.identity ?? failUndefined();
 
     const plugin = createRpcPlugin(async (port) => {
@@ -90,16 +92,15 @@ export class HaloInvitations {
     });
 
     return {
-      type: InvitationDescriptor.Type.INTERACTIVE,
-      swarmKey: topic.asUint8Array(),
-      invitation: new Uint8Array() // TODO(burdon): Remove.
+      type: Invitation.Type.INTERACTIVE,
+      swarmKey: topic
     };
   }
 
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation(invitation: InvitationDescriptor): Promise<Identity> {
+  async acceptInvitation(invitation: Invitation): Promise<Identity> {
     const admitted = new Trigger<Identity>(); // TODO(burdon): Must not share across multiple connections.
 
     const plugin = createRpcPlugin(async (port) => {
@@ -144,6 +145,7 @@ export class HaloInvitations {
       await peer.close();
     });
 
+    assert(invitation.swarmKey);
     const topic = PublicKey.from(invitation.swarmKey);
     const peerId = PublicKey.random(); // TODO(burdon): Fails if using the actual peer key.
     const connection = await this._networkManager.openSwarmConnection({

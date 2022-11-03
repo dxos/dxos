@@ -10,44 +10,46 @@ import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/hal
 import { createCredential, verifyCredential } from '../credentials';
 import { PartyStateMachine } from './party-state-machine';
 
+// TODO(burdon): Rename key vars with key suffix.
+
 describe('PartyStateMachine', function () {
   it('basic party creation', async function () {
     const keyring = new Keyring();
-    const party = await keyring.createKey();
-    const identity = await keyring.createKey();
-    const device = await keyring.createKey();
-    const feed = await keyring.createKey();
+    const spaceKey = await keyring.createKey();
+    const identityKey = await keyring.createKey();
+    const deviceKey = await keyring.createKey();
+    const feedKey = await keyring.createKey();
 
-    const partyState = new PartyStateMachine(party);
+    const partyState = new PartyStateMachine(spaceKey);
 
     expect(
       await partyState.process(
         await createCredential({
-          issuer: party,
-          subject: party,
+          issuer: spaceKey,
+          subject: spaceKey,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyGenesis',
-            partyKey: party
+            spaceKey
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
     expect(
       await partyState.process(
         await createCredential({
-          issuer: party,
-          subject: identity,
+          issuer: spaceKey,
+          subject: identityKey,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyMember',
-            partyKey: party,
+            spaceKey,
             role: PartyMember.Role.ADMIN
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -55,11 +57,11 @@ describe('PartyStateMachine', function () {
       credential: await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          deviceKey: device,
-          identityKey: identity
+          deviceKey: deviceKey,
+          identityKey: identityKey
         },
-        subject: device,
-        issuer: identity,
+        subject: deviceKey,
+        issuer: identityKey,
         signer: keyring
       })
     };
@@ -67,40 +69,40 @@ describe('PartyStateMachine', function () {
     expect(
       await partyState.process(
         await createCredential({
-          issuer: identity,
-          subject: feed,
+          issuer: identityKey,
+          subject: feedKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            partyKey: party,
-            identityKey: identity,
-            deviceKey: device,
+            spaceKey,
+            identityKey: identityKey,
+            deviceKey: deviceKey,
             designation: AdmittedFeed.Designation.CONTROL
           },
           signer: keyring,
-          signingKey: device,
+          signingKey: deviceKey,
           chain
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
     expect(partyState.genesisCredential).toBeDefined();
     expect(Array.from(partyState.members.values())).toMatchObject([
       {
-        key: identity,
+        key: identityKey,
         assertion: {
-          partyKey: party,
+          spaceKey,
           role: PartyMember.Role.ADMIN
         }
       }
     ]);
     expect(Array.from(partyState.feeds.values())).toMatchObject([
       {
-        key: feed,
+        key: feedKey,
         assertion: {
-          partyKey: party,
-          identityKey: identity,
-          deviceKey: device,
+          spaceKey,
+          identityKey: identityKey,
+          deviceKey: deviceKey,
           designation: AdmittedFeed.Designation.CONTROL
         }
       }
@@ -110,23 +112,23 @@ describe('PartyStateMachine', function () {
 
   it('admitting a member', async function () {
     const keyring = new Keyring();
-    const party = await keyring.createKey();
+    const spaceKey = await keyring.createKey();
     const identity = await keyring.createKey();
     const device = await keyring.createKey();
     const feed = await keyring.createKey();
     const identity2 = await keyring.createKey();
 
-    const partyState = new PartyStateMachine(party);
+    const partyState = new PartyStateMachine(spaceKey);
 
     // Create the party genesis credential.`
     expect(
       await partyState.process(
         await createCredential({
-          issuer: party,
-          subject: party,
+          issuer: spaceKey,
+          subject: spaceKey,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyGenesis',
-            partyKey: party
+            spaceKey
           },
           signer: keyring
         }),
@@ -138,11 +140,11 @@ describe('PartyStateMachine', function () {
     expect(
       await partyState.process(
         await createCredential({
-          issuer: party,
+          issuer: spaceKey,
           subject: identity,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyMember',
-            partyKey: party,
+            spaceKey,
             role: PartyMember.Role.ADMIN
           },
           signer: keyring
@@ -171,7 +173,7 @@ describe('PartyStateMachine', function () {
           subject: identity2,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyMember',
-            partyKey: party,
+            spaceKey,
             role: PartyMember.Role.MEMBER
           },
           signer: keyring,
@@ -187,14 +189,14 @@ describe('PartyStateMachine', function () {
       {
         key: identity,
         assertion: {
-          partyKey: party,
+          spaceKey,
           role: PartyMember.Role.ADMIN
         }
       },
       {
         key: identity2,
         assertion: {
-          partyKey: party,
+          spaceKey,
           role: PartyMember.Role.MEMBER
         }
       }
@@ -205,27 +207,27 @@ describe('PartyStateMachine', function () {
 
   it('storing device credentials and building a chain', async function () {
     const keyring = new Keyring();
-    const haloParty = await keyring.createKey();
-    const identity = await keyring.createKey();
+    const halospaceKey = await keyring.createKey();
+    const identityKey = await keyring.createKey();
     const device1 = await keyring.createKey();
     const device2 = await keyring.createKey();
-    const feed = await keyring.createKey();
+    const feedKey = await keyring.createKey();
 
-    const haloState = new PartyStateMachine(haloParty);
+    const haloState = new PartyStateMachine(halospaceKey);
 
     // Create the party genesis credential.
     expect(
       await haloState.process(
         await createCredential({
-          issuer: haloParty,
-          subject: haloParty,
+          issuer: halospaceKey,
+          subject: halospaceKey,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyGenesis',
-            partyKey: haloParty
+            spaceKey: halospaceKey
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -233,16 +235,16 @@ describe('PartyStateMachine', function () {
     expect(
       await haloState.process(
         await createCredential({
-          issuer: haloParty,
-          subject: identity,
+          issuer: halospaceKey,
+          subject: identityKey,
           assertion: {
             '@type': 'dxos.halo.credentials.PartyMember',
-            partyKey: haloParty,
+            spaceKey: halospaceKey,
             role: PartyMember.Role.ADMIN
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -250,16 +252,16 @@ describe('PartyStateMachine', function () {
     expect(
       await haloState.process(
         await createCredential({
-          issuer: identity,
-          subject: identity,
+          issuer: identityKey,
+          subject: identityKey,
           assertion: {
             '@type': 'dxos.halo.credentials.HaloSpace',
-            identityKey: identity,
-            haloKey: haloParty
+            identityKey: identityKey,
+            haloKey: halospaceKey
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -270,13 +272,13 @@ describe('PartyStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device1,
-            identityKey: identity
+            identityKey: identityKey
           },
           subject: device1,
-          issuer: identity,
+          issuer: identityKey,
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -287,10 +289,10 @@ describe('PartyStateMachine', function () {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device2,
-            identityKey: identity
+            identityKey: identityKey
           },
           subject: device2,
-          issuer: identity,
+          issuer: identityKey,
           signingKey: device1,
           // Create the keychain for device1 using credentials from the party.
           chain: {
@@ -302,7 +304,7 @@ describe('PartyStateMachine', function () {
           },
           signer: keyring
         }),
-        feed
+        feedKey
       )
     ).toEqual(true);
 
@@ -310,14 +312,14 @@ describe('PartyStateMachine', function () {
     const credential = await createCredential({
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: haloParty,
+        spaceKey: halospaceKey,
         deviceKey: device2,
         designation: AdmittedFeed.Designation.CONTROL,
-        identityKey: identity
+        identityKey: identityKey
       },
-      issuer: identity,
+      issuer: identityKey,
       signer: keyring,
-      subject: feed,
+      subject: feedKey,
       signingKey: device2,
       // Create the keychain for device2 using credentials from the party.
       chain: {

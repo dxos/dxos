@@ -6,8 +6,7 @@
     <working-directory>$PROJECT_DIR$</working-directory>
     <pass-parent-env>true</pass-parent-env>
     <envs>
-      <env name="LOG_FILTER" value="debug" />
-      <env name="LOG_CONFIG" value="./log-config.json" />
+      <env name="LOG_CONFIG" value="packages/sdk/client-services/log-config.yml" />
     </envs>
     <ui>bdd</ui>
     <extra-mocha-options>--project=client-services</extra-mocha-options>

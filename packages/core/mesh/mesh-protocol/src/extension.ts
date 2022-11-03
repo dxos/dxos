@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import { StreamExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 import assert from 'node:assert';
 
 import { patchBufferCodec, Codec, WithTypeUrl } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 
 import {
@@ -20,11 +21,8 @@ import {
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
 import { Protocol } from './protocol';
-import { keyToHuman } from './utils';
 
 const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
-
-const log = debug('dxos:protocol:extension');
 
 const kCodec = Symbol('nanomessage.codec');
 
@@ -50,6 +48,7 @@ export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<
 // TODO(burdon): Rename ProtocolPlugin to disambiguate ProtocolExtension.
 export class Extension extends Nanomessage {
   public _name: any;
+
   public [kCodec]: Codec<any>;
   public on: any;
   public open: any;
@@ -93,9 +92,7 @@ export class Extension extends Nanomessage {
    */
   constructor(name: string, { schema: userSchema, ...nmOptions }: ExtensionOptions = {}) {
     super(nmOptions);
-
-    assert(typeof name === 'string' && name.length > 0, 'name is required.');
-
+    assert(name.length > 0, 'name is required.');
     this._name = name;
 
     const codec = schema.getCodecForType('dxos.mesh.protocol.Message');
@@ -105,7 +102,7 @@ export class Extension extends Nanomessage {
 
     this[kCodec] = patchBufferCodec(codec);
 
-    this.on('error', (err: any) => log(err));
+    this.on('error', (err: any) => log.error(err));
   }
 
   get name() {
@@ -163,12 +160,10 @@ export class Extension extends Nanomessage {
 
   /**
    * Initializes the extension.
-   *
-   * @param {Protocol} protocol
    */
   async openWithProtocol(protocol: Protocol) {
     assert(!this._protocol);
-    log(`init[${this._name}]: ${keyToHuman(protocol.id)}`);
+    log('open', { name: this._name, id: PublicKey.from(protocol.id) });
 
     this._protocol = protocol;
     this._protocolExtension = this._protocol.stream.registerExtension(this.name, {
@@ -176,7 +171,10 @@ export class Extension extends Nanomessage {
         try {
           await this._subscribeCb?.(msg);
         } catch (err: any) {
-          log(`${this.name} failed to execute subscribe callback on message.`, { msg, err });
+          log.error('failed to execute subscribe callback on message', {
+            name: this._name,
+            id: PublicKey.from(protocol.id)
+          });
         }
       }
     });
@@ -270,13 +268,11 @@ export class Extension extends Nanomessage {
     } catch (err: any) {
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
-      }
-
-      if (NMSG_ERR_TIMEOUT.equals(err)) {
+      } else if (NMSG_ERR_TIMEOUT.equals(err)) {
         throw ERR_EXTENSION_RESPONSE_TIMEOUT.from(err);
+      } else {
+        throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       }
-
-      throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
     }
   }
 
@@ -288,7 +284,6 @@ export class Extension extends Nanomessage {
     }
 
     assert(this._protocol);
-
     await super._open();
   }
 
@@ -335,6 +330,7 @@ export class Extension extends Nanomessage {
       }
     } catch (err: any) {
       this.emit('error', err);
+
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
         '@type': 'dxos.mesh.protocol.Error',
@@ -363,7 +359,6 @@ export class Extension extends Nanomessage {
       return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
     } else {
       assert(message['@type'], 'Message does not have a type URL.');
-
       return message;
     }
   }

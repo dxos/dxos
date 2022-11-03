@@ -7,46 +7,14 @@ import { expect } from 'chai';
 import { asyncChain, Trigger } from '@dxos/async';
 import { Space } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { afterTest } from '@dxos/testutils';
-import { ServiceContext } from 'packages/sdk/client-services/src/packlets/services/service-context';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { createPeers, createServiceContext } from './testing';
+import { ServiceContext } from '../service-context';
+import { closeAfterTest, createIdentity, createPeers, syncItems } from './testing';
 
-const createIdentity = async (peer: ServiceContext) => {
-  await peer.createIdentity();
-  return peer;
-};
-
-const closeAfterTest = async (peer: ServiceContext) => {
-  afterTest(() => peer.close());
-  return peer;
-};
-
-// TODO(burdon): Factor out and make configurable (multiple items).
-const syncItems = async (space1: Space, space2: Space) => {
-  {
-    // Check item replicated from 1 => 2.
-    const item1 = await space1.database!.createItem({ type: 'type-1' });
-    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
-    expect(item1.id).to.eq(item2.id);
-  }
-
-  {
-    // Check item replicated from 2 => 1.
-    const item1 = await space2.database!.createItem({ type: 'type-2' });
-    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
-    expect(item1.id).to.eq(item2.id);
-  }
-};
-
-describe.only('services/spaces', function () {
+describe('services/spaces', function () {
   it('genesis', async function () {
-    const peer = await createServiceContext();
-    await peer.open();
-    afterTest(() => peer.close());
-
-    await peer.createIdentity();
+    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.spaceManager!.createSpace();
     expect(space.database).not.to.be.undefined;
@@ -55,11 +23,7 @@ describe.only('services/spaces', function () {
   });
 
   it('genesis with database mutations', async function () {
-    const peer = await createServiceContext();
-    await peer.open();
-    afterTest(() => peer.close());
-
-    await peer.createIdentity();
+    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
     const space = await peer.spaceManager!.createSpace();
 
     {
@@ -90,10 +54,11 @@ describe.only('services/spaces', function () {
     const space1 = await peer1.spaceManager!.createSpace();
     const observable1 = peer1.createInvitation(space1.key);
     observable1.subscribe({
-      onConnect: async (invitation1: InvitationDescriptor) => {
+      onConnecting: async (invitation1: Invitation) => {
         const observable2 = peer2.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnect: async (invitation2: InvitationDescriptor) => {
+          onConnecting: async (invitation2: Invitation) => {},
+          onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
           onSuccess: (space2: Space) => {
@@ -110,7 +75,8 @@ describe.only('services/spaces', function () {
           }
         });
       },
-      onSuccess: () => {
+      onConnected: (invitation: Invitation) => {},
+      onSuccess: (invitation: Invitation) => {
         complete1.wake(space1);
       },
       onCancel: () => {
@@ -136,24 +102,28 @@ describe.only('services/spaces', function () {
     }
   });
 
+  // TODO(burdon): Factor out common test with above.
   it('cancels invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();
-    const connected1 = new Trigger<InvitationDescriptor>(); // peer 1 connected.
-    const connected2 = new Trigger<InvitationDescriptor>(); // peer 2 connected.
+    const connecting1 = new Trigger<Invitation>(); // peer 1 connected.
+    const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
 
     const space1 = await peer1.spaceManager!.createSpace();
     const observable1 = await peer1.createInvitation(space1.key);
     observable1.subscribe({
-      onConnect: async (invitation1: InvitationDescriptor) => {
-        connected1.wake(invitation1);
+      onConnecting: async (invitation1: Invitation) => {
+        connecting1.wake(invitation1);
 
         const observable2 = await peer2.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnect: async (invitation2: InvitationDescriptor) => {
+          onConnecting: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
-            connected2.wake(invitation2);
+            connecting2.wake(invitation2);
+          },
+          onConnected: async (invitation2: Invitation) => {
+            // TODO(burdon): Maybe connects?
           },
           onSuccess: () => {
             throw new Error();
@@ -169,6 +139,9 @@ describe.only('services/spaces', function () {
           }
         });
       },
+      onConnected: async (invitation1: Invitation) => {
+        // TODO(burdon): Maybe connects?
+      },
       onSuccess: () => {
         throw new Error();
       },
@@ -183,13 +156,13 @@ describe.only('services/spaces', function () {
       }
     });
 
-    const invitation1 = await connected1.wait();
-    const invitation2 = await connected2.wait();
+    const invitation1 = await connecting1.wait();
+    const invitation2 = await connecting2.wait();
     expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
 
     // TODO(burdon): Simulate network latency.
-    setTimeout(() => {
-      observable1.cancel();
+    setTimeout(async () => {
+      await observable1.cancel();
     });
 
     await cancelled.wait();

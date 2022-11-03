@@ -11,10 +11,10 @@ import { useParties } from '@dxos/react-client';
 import { List } from '../util';
 
 export const PartyList: FC<{
-  partyKey?: PublicKey;
-  onSelect: (partyKey: PublicKey) => void;
+  spaceKey?: PublicKey;
+  onSelect: (spaceKey: PublicKey) => void;
 }> = ({
-  partyKey, // TODO(burdon): Selection not set.
+  spaceKey, // TODO(burdon): Selection not set.
   onSelect
 }) => {
   const parties = useParties();
@@ -24,7 +24,7 @@ export const PartyList: FC<{
       id='party-list'
       focusId='party-list'
       showCount
-      onSelect={(partyKey) => onSelect(PublicKey.from(partyKey))}
+      onSelect={(spaceKey) => onSelect(PublicKey.from(spaceKey))}
       items={parties.map((party) => ({
         id: party.key.toHex(),
         key: truncateKey(party.key, 4),

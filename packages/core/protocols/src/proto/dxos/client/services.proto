@@ -1,0 +1,186 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/config.proto";
+import "dxos/keys.proto";
+
+// TODO(burdon): Restructure all services.
+// TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
+
+package dxos.client.services;
+
+//
+// Design notes:
+// - Basic CRUD methods for records (streaming queries).
+// - Custom Request/Response objects for complex operations; otherwise generic structs for simplicity.
+// - Normalize records for performance (e.g., Space members separate from Space metadata).
+//
+
+//
+// System
+//
+
+service SystemService {
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config); // TODO(burdon): Stream?
+  rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+//
+// Signing
+// TODO(burdon): Rename Crypto/KeystoreService?
+//
+
+// TODO(burdon): Metadata (e.g., added, expired).
+message KeyRecord {
+  dxos.keys.PublicKey public_key = 1;
+}
+
+message SignRequest {
+  dxos.keys.PublicKey public_key = 1;
+  bytes payload = 2;
+}
+
+message SignResponse {
+  bytes signed = 2;
+}
+
+service SigningService {
+  rpc UpdateKeyRecord(KeyRecord) returns (KeyRecord);
+  rpc Sign(SignRequest) returns (SignResponse);
+}
+
+//
+// Halo
+//
+
+message Profile {
+  dxos.keys.PublicKey identity_key = 1;
+  string display_name = 2;
+}
+
+message RecoverProfileRequest {
+  bytes recovery_key = 1;
+}
+
+service HaloService {
+  rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
+  rpc UpdateProfile(Profile) returns (google.protobuf.Empty);
+  rpc QueryProfile(google.protobuf.Empty) returns (stream Profile); // TODO(burdon): Stream?
+}
+
+// TODO(burdon): PreferencesService?
+
+//
+// Devices
+//
+
+// TODO(burdon): Preferences.
+message Device {
+  dxos.keys.PublicKey device_key = 1;
+}
+
+service DevicesService {
+  rpc UpdateDevice(google.protobuf.Empty) returns (Device);
+  rpc QueryDevices(google.protobuf.Empty) returns (stream Device);
+}
+
+//
+// Contacts
+//
+
+message Contact {
+  Profile profile = 1;
+}
+
+service ContactsService {
+  rpc UpdateContact(google.protobuf.Empty) returns (Contact);
+  rpc QueryContacts(google.protobuf.Empty) returns (stream Contact);
+}
+
+//
+// Data Spaces
+// TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
+//
+
+// TODO(burdon): Preferences.
+message Space {
+  dxos.keys.PublicKey space_key = 1;
+}
+
+// TODO(burdon): See PartyMember in halo.credentials.
+message QueryMembersRequest {}
+message QueryMembersResponse {}
+
+service SpacesService {
+  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc QuerySpaces(google.protobuf.Empty) returns (stream Space);
+  rpc QueryMembers(QueryMembersRequest) returns (stream QueryMembersResponse);
+}
+
+//
+// Invitations (Halo and Data Spaces).
+//
+
+/**
+ * Represents the invitation state passed between client and service.
+ */
+message Invitation {
+  enum Type {
+    /// Requires both to be online to complete key exchange.
+    INTERACTIVE = 0;
+    /// Guest's identity key is known; invitation can be accepted by any valid peer.
+    OFFLINE = 1;
+  }
+
+  enum State {
+    CONNECTING = 0;
+    CONNECTED = 1;
+    SUCCESS = 2;
+    CANCELLED = 3;
+    TIMEOUT = 4;
+    ERROR = 5;
+  }
+
+  /// Local identifier.
+  optional string invitation_id = 1;
+
+  /// Determined when created.
+  optional Type type = 2;
+
+  /// Local state.
+  optional State state = 3;
+
+  /// Local error code.
+  optional int32 error_code = 4;
+
+  /// Swarm rendezvous (random).
+  optional dxos.keys.PublicKey swarm_key = 5; // TODO(burdon): Bytes?
+
+  /// Guest's identity (only present if OFFLINE).
+  optional dxos.keys.PublicKey identity_key = 6;
+
+  /// Must be stripped out when passing to another peer.
+  optional bytes secret = 7;
+
+  /// Space key if data invitation.
+  optional dxos.keys.PublicKey space_key = 8;
+}
+
+message AuthenticateRequest {
+}
+
+message AuthenticateResponse {
+}
+
+// TODO(burdon): Separate implementations for HALO/Data Spaces.
+service InvitationService {
+  rpc CreateInvitation(Invitation) returns (stream Invitation);
+  rpc CancelInvitation(Invitation) returns (google.protobuf.Empty);
+  rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+}

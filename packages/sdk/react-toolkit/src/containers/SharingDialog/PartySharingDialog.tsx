@@ -15,16 +15,16 @@ export interface PartySharingDialogProps
     SharingDialogProps,
     'title' | 'members' | 'onCreateInvitation' | 'onCancelInvitation' | 'onCreateBotInvitation'
   > {
-  partyKey: PublicKey;
+  spaceKey: PublicKey;
 }
 
 /**
  * Manages the workflow for inviting a user to a party.
  */
-export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogProps) => {
-  const party = useParty(partyKey);
+export const PartySharingDialog = ({ spaceKey, ...props }: PartySharingDialogProps) => {
+  const party = useParty(spaceKey);
   const members = useMembers(party);
-  const invitations = usePartyInvitations(partyKey);
+  const invitations = usePartyInvitations(spaceKey);
   const botClient = useBotFactoryClient(false);
 
   const handleInvitation = async () => {

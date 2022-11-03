@@ -83,10 +83,10 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = InvitationWrapper.decode(invitationCode);
-      const invitation = await client.halo.acceptInvitation(invitationDescriptor);
+      const Invitation = InvitationWrapper.decode(invitationCode);
+      const invitation = await client.halo.acceptInvitation(Invitation);
       setStatus({
-        identity: invitationDescriptor.identityKey?.toString(),
+        identity: Invitation.identityKey?.toString(),
         invitation
       });
     } catch (err: any) {

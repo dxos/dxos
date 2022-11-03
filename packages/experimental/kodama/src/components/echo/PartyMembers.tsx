@@ -11,9 +11,9 @@ import { useMembers, useParty } from '@dxos/react-client';
 import { Table } from '../util';
 
 export const PartyMembers: FC<{
-  partyKey: PublicKey;
-}> = ({ partyKey }) => {
-  const party = useParty(partyKey);
+  spaceKey: PublicKey;
+}> = ({ spaceKey }) => {
+  const party = useParty(spaceKey);
   const members = useMembers(party);
 
   return (

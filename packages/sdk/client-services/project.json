@@ -41,7 +41,7 @@
         "resultsPath": "test-results/packages/sdk/client-services",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
-          "packages/sdk/client-services/src/**/*.test.{ts,js}"
+          "packages/sdk/client-services/src/**/[^_]*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client-services/src/**/*"

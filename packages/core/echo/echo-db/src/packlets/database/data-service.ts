@@ -38,21 +38,21 @@ export class DataService implements DataServiceRpc {
   }
 
   subscribeEntitySet(request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
-    assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    assert(request.spaceKey);
+    const host = this._trackedParties.get(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.subscribeEntitySet();
   }
 
   subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
-    assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    assert(request.spaceKey);
+    const host = this._trackedParties.get(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.subscribeEntityStream(request);
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
-    assert(request.partyKey);
+    assert(request.spaceKey);
     assert(request.mutation);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host = this._trackedParties.get(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.write(request.mutation);
   }
 }

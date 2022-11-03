@@ -2,7 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsyncEvents, CancellableObservableEvents, CancellableObservableProvider, sleep, Trigger } from '@dxos/async';
+import assert from 'assert';
+
+import {
+  AsyncEvents,
+  CancellableObservable,
+  CancellableObservableEvents,
+  CancellableObservableProvider,
+  sleep,
+  Trigger
+} from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
@@ -11,18 +20,21 @@ import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 // TODO(burdon): Factor out.
+
 export interface CreateInvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnect(invitation: InvitationDescriptor): void;
-  onSuccess(): void;
+  onConnecting(invitation: Invitation): void;
+  onConnected(invitation: Invitation): void;
+  onSuccess(invitation: Invitation): void;
 }
 
 export interface AcceptInvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnect(invitation: InvitationDescriptor): void;
-  onSuccess(space: Space): void;
+  onConnecting(invitation: Invitation): void;
+  onConnected(invitation: Invitation): void;
+  onSuccess(space: Space): void; // TODO(burdon): Pass invitation.
 }
 
 /**
@@ -39,8 +51,17 @@ export class SpaceInvitations {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space): CancellableObservableProvider<CreateInvitationEvents> {
-    let connection: SwarmConnection | undefined = undefined;
+  createInvitation(space: Space): CancellableObservable<CreateInvitationEvents> {
+    let connection: SwarmConnection | undefined;
+    const topic = PublicKey.random();
+    const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
+    const invitation: Invitation = {
+      invitationId: PublicKey.random().toHex(),
+      swarmKey: topic,
+      spaceKey: space.key
+    };
+
+    // TODO(burdon): Stop anything pending.
     const observable = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
       await connection?.close();
     });
@@ -57,9 +78,8 @@ export class SpaceInvitations {
         handlers: {
           SpaceHostService: {
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
-              log('processing admission request', { identityKey, deviceKey });
-              // TODO(burdon): Wrap observable.
               try {
+                log('processing admission request', { identityKey, deviceKey });
                 await writeMessages(
                   space.controlPipeline.writer,
                   await createAdmissionCredentials(
@@ -81,15 +101,21 @@ export class SpaceInvitations {
 
       // TODO(burdon): Error handling and timeout.
       await peer.open();
-      {
+      log('connected');
+      observable.callbacks?.onConnected(invitation);
+
+      try {
         log('sending admission offer', { spaceKey: space.key });
         await peer.rpc.SpaceGuestService.presentAdmissionOffer({
           spaceKey: space.key,
           genesisFeedKey: space.genesisFeedKey
         });
 
-        observable.callbacks?.onSuccess();
+        observable.callbacks?.onSuccess(invitation);
+      } catch (err) {
+        observable.callbacks?.onError(err);
       }
+
       await peer.close();
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
@@ -98,14 +124,6 @@ export class SpaceInvitations {
     });
 
     setTimeout(async () => {
-      const topic = PublicKey.random();
-      const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
-      const invitation: InvitationDescriptor = {
-        type: InvitationDescriptor.Type.INTERACTIVE, // TODO(burdon): Remove (default).
-        swarmKey: topic.asUint8Array(),
-        invitation: new Uint8Array() // TODO(burdon): Remove.
-      };
-
       connection = await this._networkManager.openSwarmConnection({
         topic,
         peerId: topic, // TODO(burdon): Why???
@@ -114,7 +132,7 @@ export class SpaceInvitations {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnect(invitation);
+      observable.callbacks?.onConnecting(invitation);
     });
 
     return observable;
@@ -125,8 +143,8 @@ export class SpaceInvitations {
    * The local guest peer (invitee) then sends the local party invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: InvitationDescriptor): CancellableObservableProvider<AcceptInvitationEvents> {
-    let connection: SwarmConnection | undefined = undefined;
+  acceptInvitation(invitation: Invitation): CancellableObservable<AcceptInvitationEvents> {
+    let connection: SwarmConnection | undefined;
     const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
       await connection?.close();
     });
@@ -150,14 +168,18 @@ export class SpaceInvitations {
               const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
 
               // Send local space's details to host (inviter).
-              // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
-              log('sending admission request', { identityKey: invitation.identityKey });
-              await peer.rpc.SpaceHostService.presentAdmissionCredentials({
-                identityKey: this._signingContext.identityKey,
-                deviceKey: this._signingContext.deviceKey,
-                controlFeedKey: space.controlFeedKey,
-                dataFeedKey: space.dataFeedKey
-              });
+              try {
+                log('sending admission request', { identityKey: invitation.identityKey });
+                await peer.rpc.SpaceHostService.presentAdmissionCredentials({
+                  identityKey: this._signingContext.identityKey,
+                  deviceKey: this._signingContext.deviceKey,
+                  controlFeedKey: space.controlFeedKey,
+                  dataFeedKey: space.dataFeedKey
+                });
+              } catch (err) {
+                // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
+                observable.callbacks?.onError(err);
+              }
 
               admitted.wake(space);
             }
@@ -166,12 +188,15 @@ export class SpaceInvitations {
       });
 
       await peer.open();
+      log('connected');
+      observable.callbacks?.onConnected(invitation);
       await admitted.wait();
       await peer.close();
     });
 
     setTimeout(async () => {
-      const topic = PublicKey.from(invitation.swarmKey);
+      assert(invitation.swarmKey);
+      const topic = invitation.swarmKey;
       const peerId = PublicKey.random(); // TODO(burdon): Use actual key.
       connection = await this._networkManager.openSwarmConnection({
         topic,
@@ -181,7 +206,7 @@ export class SpaceInvitations {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnect(invitation);
+      observable.callbacks?.onConnecting(invitation);
       const space = await admitted.wait();
       observable.callbacks?.onSuccess(space);
 

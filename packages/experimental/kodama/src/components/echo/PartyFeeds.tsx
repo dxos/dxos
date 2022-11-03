@@ -10,12 +10,12 @@ import { PublicKey } from '@dxos/keys';
 import { Table } from '../util';
 
 export const PartyFeeds: FC<{
-  partyKey: PublicKey;
-}> = ({ partyKey }) => {
+  spaceKey: PublicKey;
+}> = ({ spaceKey }) => {
   return null;
   // TODO(dmaretskyi): Not working currently.
   // const devtoolsHost = useDevtools();
-  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ party_key }), {});
+  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ space_key }), {});
 
   return (
     <Table

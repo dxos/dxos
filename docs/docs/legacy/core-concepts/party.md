@@ -34,8 +34,8 @@ To be able to access a specific Party, you should use the `useParty` hook from `
 ```jsx
 import { useParty } from '@dxos/react-client';
 
-const Component = ({ party_key }) => {
-  const party = useParty(party_key);
+const Component = ({ space_key }) => {
+  const party = useParty(space_key);
 
   // ...
 };

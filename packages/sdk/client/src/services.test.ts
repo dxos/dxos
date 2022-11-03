@@ -8,7 +8,7 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxos/client';
+import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxos/client/services';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 

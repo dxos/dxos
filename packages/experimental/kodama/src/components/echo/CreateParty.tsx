@@ -11,7 +11,7 @@ import { TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const CreateParty: FC<{
-  onCreate: (partyKey: PublicKey) => void;
+  onCreate: (spaceKey: PublicKey) => void;
 }> = ({ onCreate }) => {
   const client = useClient();
   const [name, setName] = useState<string>();

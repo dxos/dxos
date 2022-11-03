@@ -25,7 +25,7 @@ export type Bot = {
   id: Key;
   identity?: Key;
   peerId?: Key;
-  partyKey?: Key;
+  spaceKey?: Key;
   timeframe?: Timeframe;
 };
 

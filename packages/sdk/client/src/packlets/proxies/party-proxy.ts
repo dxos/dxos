@@ -8,7 +8,7 @@ import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
@@ -133,13 +133,13 @@ export class PartyProxy implements Party {
 
   async getDetails(): Promise<PartyDetails> {
     return this._serviceProvider.services.PartyService.getPartyDetails({
-      partyKey: this._key
+      spaceKey: this._key
     });
   }
 
   async _setOpen(open: boolean) {
     await this._serviceProvider.services.PartyService.setPartyState({
-      partyKey: this.key,
+      spaceKey: this.key,
       open
     });
   }
@@ -149,7 +149,7 @@ export class PartyProxy implements Party {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
     // await this._serviceProvider.services.PartyService.setPartyState({
-    //   party_key: this.key,
+    //   space_key: this.key,
     //   active_global,
     //   active_device
     // });
@@ -198,7 +198,7 @@ export class PartyProxy implements Party {
   queryMembers() {
     return streamToResultSet(
       this._serviceProvider.services.PartyService.subscribeMembers({
-        partyKey: this.key
+        spaceKey: this.key
       }),
       (response) => response?.members ?? []
     );
@@ -216,7 +216,7 @@ export class PartyProxy implements Party {
    *   but only the specified recipient can accept the invitation.
    */
   async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
+    const stream = this._serviceProvider.services.PartyService.createInvitation({ spaceKey: this.key, inviteeKey });
     return this._invitationProxy.createInvitationRequest({ stream });
   }
 
@@ -225,7 +225,7 @@ export class PartyProxy implements Party {
    */
   createSnapshot(): Promise<PartySnapshot> {
     return todo();
-    // return this._serviceProvider.services.PartyService.createSnapshot({ party_key: this.key });
+    // return this._serviceProvider.services.PartyService.createSnapshot({ space_key: this.key });
   }
 
   /**

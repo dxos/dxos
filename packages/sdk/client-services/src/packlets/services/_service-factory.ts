@@ -4,7 +4,7 @@
 
 import { Config } from '@dxos/config';
 
-import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl';
+import { HaloService, SpaceService, ProfileService, SystemServiceImpl, TracingServiceImpl } from './impl';
 import { ServiceContext } from './service-context';
 import { ClientServices } from './services';
 import { HaloSigner } from './signer';
@@ -14,9 +14,9 @@ import { HaloSigner } from './signer';
  */
 export const createServices = ({
   config,
-  context, // TODO(burdon): Too big to pass into services.?
-  echo, // TODO(burdon): Remove (legacy?)
-  signer // TODO(burdon): Remove (legacy?)
+  context, // TODO(burdon): Split.
+  echo, // TODO(burdon): Rename.
+  signer
 }: {
   config: Config;
   context: ServiceContext;
@@ -25,8 +25,8 @@ export const createServices = ({
 }): Omit<ClientServices, 'DevtoolsHost'> => ({
   DataService: context.dataService,
   HaloService: new HaloService(echo, signer), // TODO(burdon): Remove.
-  PartyService: new PartyService(context),
+  PartyService: new SpaceService(context),
   ProfileService: new ProfileService(context),
-  SystemService: new SystemService(config),
-  TracingService: new TracingService(config)
+  SystemService: new SystemServiceImpl(config),
+  TracingService: new TracingServiceImpl(config)
 });

@@ -4,8 +4,10 @@
 
 // @dxos/mocha platform=nodejs
 
+import { Stream } from '@dxos/codec-protobuf';
 import expect from 'expect';
 import assert from 'node:assert';
+import { Invitation } from 'packages/sdk/client/src/experimental/api';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
@@ -356,6 +358,10 @@ describe('Client', function () {
           }
         })
     );
+  });
+
+  it('', function () {
+    const [proxyPort, hostPort] = createLinkedPorts();
   });
 
   describe('remote', function () {

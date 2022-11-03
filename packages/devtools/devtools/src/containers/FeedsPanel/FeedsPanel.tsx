@@ -12,20 +12,21 @@ import { KeySelect, MessageTable, Panel } from '../../components';
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
   const parties = useParties();
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedspaceKey, setSelectedspaceKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 
   const { parties: remoteParties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
   const partyFeeds = useMemo(
-    () => remoteParties?.find(({ key }) => selectedPartyKey && key?.equals(selectedPartyKey))?.feeds ?? [],
-    [remoteParties, selectedPartyKey]
+    () => remoteParties?.find(({ key }) => selectedspaceKey && key?.equals(selectedspaceKey))?.feeds ?? [],
+    [remoteParties, selectedspaceKey]
   );
 
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
-    {}, [selectedPartyKey, selectedFeed]
+    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: selectedspaceKey, feedKey: selectedFeed }),
+    {},
+    [selectedspaceKey, selectedFeed]
   );
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export const FeedsPanel = () => {
   }, [blocks]);
 
   const handlePartyChange = (key: PublicKey | undefined) => {
-    setSelectedPartyKey(key);
+    setSelectedspaceKey(key);
     setSelectedFeed(undefined);
     setMessages([]);
   };
@@ -46,27 +47,27 @@ export const FeedsPanel = () => {
   };
 
   return (
-    <Panel controls={(
-      <>
-        <KeySelect
-          id='party-select'
-          label='Party'
-          keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={handlePartyChange}
-        />
-        <KeySelect
-          id='feed-select'
-          label='Feed'
-          keys={partyFeeds}
-          selected={selectedFeed}
-          onChange={handleFeedChange}
-        />
-      </>
-    )}>
-      <MessageTable
-        messages={messages}
-      />
+    <Panel
+      controls={
+        <>
+          <KeySelect
+            id='party-select'
+            label='Party'
+            keys={parties.map(({ key }) => key)}
+            selected={selectedspaceKey}
+            onChange={handlePartyChange}
+          />
+          <KeySelect
+            id='feed-select'
+            label='Feed'
+            keys={partyFeeds}
+            selected={selectedFeed}
+            onChange={handleFeedChange}
+          />
+        </>
+      }
+    >
+      <MessageTable messages={messages} />
     </Panel>
   );
 };

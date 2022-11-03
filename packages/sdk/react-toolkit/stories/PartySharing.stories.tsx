@@ -37,19 +37,19 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const [partyKey, setPartyKey] = useState<PublicKey>();
+  const [spaceKey, setspaceKey] = useState<PublicKey>();
   const client = useClient();
 
   const handleCreateParty = async () => {
     const party = await client.echo.createParty();
-    setPartyKey(party.key);
+    setspaceKey(party.key);
   };
 
   useEffect(() => {
     void handleCreateParty();
   }, []);
 
-  if (!partyKey) {
+  if (!spaceKey) {
     return null;
   }
 
@@ -60,7 +60,7 @@ const Sender = () => {
         <Button onClick={handleCreateParty}>Create Party</Button>
       </Toolbar>
 
-      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={false} />
+      <PartySharingDialog open={open} spaceKey={spaceKey} onClose={() => setOpen(false)} modal={false} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />

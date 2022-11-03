@@ -18,10 +18,10 @@ import { useParty } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
 
-const TaskList = ({ party_key }) => {
+const TaskList = ({ space_key }) => {
   const [taskTitle, setTaskTitle] = useState('');
 
-  const party = useParty(party_key);
+  const party = useParty(space_key);
 
   const handleCreateTask = async () => {
     await party.database.createItem({

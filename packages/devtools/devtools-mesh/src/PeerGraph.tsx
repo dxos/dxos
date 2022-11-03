@@ -12,7 +12,7 @@ import { humanize } from '@dxos/util';
 
 // const classMap: Record<string, string> = {
 //   ME: 'blue',
-//   WAITING_FOR_CONNECTION: 'orange',
+//   CONNECTING: 'orange',
 //   CONNECTED: 'green',
 //   CLOSED: 'red'
 // };

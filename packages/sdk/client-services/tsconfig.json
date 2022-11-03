@@ -16,6 +16,9 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "**/_*.*"
+  ],
   "references": [
     {
       "path": "../../common/async"

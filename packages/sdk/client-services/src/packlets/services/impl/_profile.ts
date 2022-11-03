@@ -19,8 +19,8 @@ import {
   RecoverProfileRequest,
   RedeemedInvitation,
   SubscribeProfileResponse
-} from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/proto/dxos/client/services';
+import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
@@ -56,7 +56,7 @@ export class ProfileService implements ProfileServiceRpc {
 
   async recoverProfile(request: RecoverProfileRequest): Promise<Profile> {
     return todo();
-    if (!request.seedPhrase) {
+    if (!request.recoveryKey) {
       throw new Error('Recovery SeedPhrase not provided.');
     }
     // await this.echo.open();
@@ -85,14 +85,14 @@ export class ProfileService implements ProfileServiceRpc {
         invitation.secret = secret;
 
         next({
-          state: InvitationState.WAITING_FOR_CONNECTION,
+          state: InvitationState.CONNECTING,
           descriptor: invitation
         });
       });
     });
   }
 
-  acceptInvitation(invitation: InvitationDescriptor): Stream<RedeemedInvitation> {
+  acceptInvitation(invitation: Invitation): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();
@@ -119,7 +119,7 @@ export class ProfileService implements ProfileServiceRpc {
           next({
             id,
             state: InvitationState.SUCCESS,
-            partyKey: identity.identityKey
+            spaceKey: identity.identityKey
           });
         })
         .catch((err) => {

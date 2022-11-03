@@ -127,7 +127,7 @@ const Main = () => {
       </Box>
 
       {/* 4. Sharing. */}
-      <PartySharingDialog open={action === 'share'} onClose={() => setAction(undefined)} partyKey={party.key} />
+      <PartySharingDialog open={action === 'share'} onClose={() => setAction(undefined)} spaceKey={party.key} />
 
       {/* 5. Joining. */}
       <JoinPartyDialog

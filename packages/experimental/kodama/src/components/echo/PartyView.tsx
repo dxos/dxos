@@ -15,17 +15,17 @@ import { PartyList } from './PartyList';
 export const PartyView = () => {
   const { focus } = useFocus({ isActive: false });
   const { focusNext } = useFocusManager();
-  const [{ partyKey }, { setPartyKey }] = useAppState();
+  const [{ spaceKey }, { setspaceKey }] = useAppState();
   const [type, setType] = useState<string>();
-  const party = useParty(partyKey);
+  const party = useParty(spaceKey);
 
   return (
     <Box flexDirection='column' flexGrow={1}>
       <Box flexDirection='column' flexGrow={1}>
         <PartyList
-          partyKey={party?.key}
-          onSelect={(partyKey) => {
-            setPartyKey(partyKey);
+          spaceKey={party?.key}
+          onSelect={(spaceKey) => {
+            setspaceKey(spaceKey);
             focusNext();
           }}
         />

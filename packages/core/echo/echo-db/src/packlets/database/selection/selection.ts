@@ -125,9 +125,7 @@ export class Selection<T extends Entity<any>, R = void> {
    * @param filter A filter object or a predicate function.
    */
   filter(this: Selection<Item<any>, R>, filter: ItemFilter): Selection<Item<any>, R>;
-
   filter<U extends Entity>(this: Selection<U, R>, filter: Predicate<U>): Selection<U, R>;
-
   filter<U extends Entity>(this: Selection<U, R>, filter: Predicate<T> | ItemFilter): Selection<U, R> {
     const predicate = filterToPredicate(filter);
     return this._createSubSelection(([items, result]) => [items.filter(predicate), result]);

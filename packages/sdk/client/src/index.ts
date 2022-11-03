@@ -29,7 +29,7 @@ export { ItemID } from '@dxos/protocols';
 // TODO(burdon): Remove exported protos?
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
-export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client/services';
 
 export { ObjectModel, OrderedList } from '@dxos/object-model';
 

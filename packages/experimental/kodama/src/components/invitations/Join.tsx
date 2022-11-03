@@ -13,7 +13,7 @@ import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../component
 import { Panel } from '../util';
 
 export const Join: FC<{
-  onJoin?: (partyKey: PublicKey) => void;
+  onJoin?: (spaceKey: PublicKey) => void;
 }> = ({ onJoin }) => {
   const client = useClient();
   const [focused, setFocused] = useState(false);
@@ -21,8 +21,8 @@ export const Join: FC<{
   const [secret, setSecret] = useState<string>();
   const [invitation, setInvitation] = useState<PartyInvitation>();
   const [status, setStatus] = useState<StatusState>();
-  const [partyKey, setPartyKey] = useState<PublicKey>();
-  const party = useParty(partyKey);
+  const [spaceKey, setspaceKey] = useState<PublicKey>();
+  const party = useParty(spaceKey);
 
   // Sample code for testing.
   // 2Jfg6YbVr56jMcKBfXefCkSfvAG73UIJYft2ORDOlNof0iAPCqNrvLH6A1lsZKVO9VGKzKzZlU60yjrlvNIfCsUdihG0sJsLesWHBSbyOs2flkEbQPaxPucsuBxalb7J5nGow5Dcn8rERUqOQEIBkve5hzATC60y9rooOnCflZ7k5MIOFjM7KZt7kkmGyOcNumzK0jayOV882TfEZuYrCOM0zilOnDDTZaOACEEMotiWYForVzdb9QtxnpxYcwbSdfZQeGTdZTSjTy9VYAwo0FYoDCNlpXSwCBto1vgJ2JV6kjFb9TLyN4SGbv0CHhkD6JziDHVk7vxo5ebll2P4psfSuLaw7Xxj9xRRnj2dxUp3yg5s4051fpRhli6b4D6tNKwgcEAtnSeRzazrArM85
@@ -56,7 +56,7 @@ export const Join: FC<{
       const party = await invitation!.getParty();
       setInvitation(undefined);
       setStatus({ success: 'OK' });
-      setPartyKey(party.key);
+      setspaceKey(party.key);
       onJoin?.(party.key);
     } catch (err) {
       setStatus({ error: err as Error });

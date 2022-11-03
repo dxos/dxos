@@ -13,9 +13,9 @@ import { useClient } from '../client';
  * Get a specific Party.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useParty = (partyKey?: PublicKeyLike): Party | undefined => {
+export const useParty = (spaceKey?: PublicKeyLike): Party | undefined => {
   const parties = useParties();
-  return parties.find((party) => partyKey && party.key.equals(partyKey));
+  return parties.find((party) => spaceKey && party.key.equals(spaceKey));
 };
 
 /**

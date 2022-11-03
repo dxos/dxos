@@ -24,8 +24,8 @@ export interface PartyState {
  * Keeps and in-memory index of credentials and allows to query them.
  */
 export class PartyStateMachine implements PartyState {
-  private readonly _members = new MemberStateMachine(this._partyKey);
-  private readonly _feeds = new FeedStateMachine(this._partyKey);
+  private readonly _members = new MemberStateMachine(this._spaceKey);
+  private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
 
@@ -35,7 +35,7 @@ export class PartyStateMachine implements PartyState {
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get genesisCredential(): Credential | undefined {
@@ -70,11 +70,11 @@ export class PartyStateMachine implements PartyState {
           log.warn('Party already has a genesis credential.');
           return false;
         }
-        if (!credential.issuer.equals(this._partyKey)) {
+        if (!credential.issuer.equals(this._spaceKey)) {
           log.warn('Party genesis credential must be issued by party.');
           return false;
         }
-        if (!credential.subject.id.equals(this._partyKey)) {
+        if (!credential.subject.id.equals(this._spaceKey)) {
           log.warn('Party genesis credential must be issued to party.');
           return false;
         }
@@ -112,7 +112,7 @@ export class PartyStateMachine implements PartyState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
-    return key.equals(this._partyKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
+    return key.equals(this._spaceKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
   }
 
   private _canAdmitFeeds(key: PublicKey): boolean {

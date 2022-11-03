@@ -75,6 +75,7 @@ describe('Schema', function () {
   test('complex fields round trip', () => {
     const codec = schema.getCodecForType('example.testing.types.ComplexFields');
 
+    // TODO(burdon): Remove foo/bar.
     const initial: ComplexFields = {
       repeatedField: [new MyKey(Buffer.from('foo')), new MyKey(Buffer.from('bar'))],
       requiredField: new MyKey(Buffer.from('foo')),

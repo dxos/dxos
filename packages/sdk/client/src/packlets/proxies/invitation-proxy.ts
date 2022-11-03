@@ -13,8 +13,8 @@ import {
   InvitationRequest as InvitationRequestProto,
   InvitationState,
   RedeemedInvitation as RedeemedInvitationProto
-} from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/proto/dxos/client/services';
+import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';
@@ -25,7 +25,7 @@ export interface CreateInvitationRequestOpts {
 
 export interface HandleInvitationRedemptionOpts {
   stream: Stream<RedeemedInvitationProto>;
-  invitationDescriptor: InvitationWrapper;
+  Invitation: InvitationWrapper;
   onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>;
 }
 
@@ -102,7 +102,7 @@ export class InvitationProxy {
 
   static handleInvitationRedemption({
     stream,
-    invitationDescriptor,
+    Invitation,
     onAuthenticate
   }: HandleInvitationRedemptionOpts): HandleInvitationRedemptionResult {
     const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitationProto>();
@@ -130,7 +130,7 @@ export class InvitationProxy {
     );
 
     const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptor.Type.OFFLINE) {
+      if (Invitation.type === Invitation.Type.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
 
@@ -142,9 +142,9 @@ export class InvitationProxy {
       });
     };
 
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptor.Type.INTERACTIVE) {
+    if (Invitation.secret && Invitation.type === Invitation.Type.INTERACTIVE) {
       // Authenticate straight away, if secret is already provided.
-      void authenticate(invitationDescriptor.secret);
+      void authenticate(Invitation.secret);
     }
 
     return {

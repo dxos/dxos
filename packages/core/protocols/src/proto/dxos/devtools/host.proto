@@ -114,7 +114,7 @@ message SubscribeToKeyringKeysResponse {
 // SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
-  optional dxos.keys.PublicKey party_key = 1;
+  optional dxos.keys.PublicKey space_key = 1;
 }
 
 message SubscribeToCredentialMessagesResponse {
@@ -147,7 +147,7 @@ message GetNetworkPeersResponse {
 // SubscribeToParties
 
 message SubscribeToPartiesRequest {
-  repeated dxos.keys.PublicKey party_keys = 1;
+  repeated dxos.keys.PublicKey space_keys = 1;
 }
 
 message SubscribeToPartiesResponse {
@@ -175,7 +175,7 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
   repeated dxos.keys.PublicKey feed_keys = 2;
 }
 
@@ -191,7 +191,7 @@ message SubscribeToFeedsResponse {
 // SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
-  optional dxos.keys.PublicKey party_key = 1;
+  optional dxos.keys.PublicKey space_key = 1;
   optional dxos.keys.PublicKey feed_key = 2;
   optional int32 max_blocks = 3;
 }
@@ -211,7 +211,7 @@ message SubscribeToFeedBlocksResponse {
 // GetPartySnapshot
 
 message GetPartySnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 message GetPartySnapshotResponse {
@@ -221,7 +221,7 @@ message GetPartySnapshotResponse {
 // SavePartySnapshot
 
 message SavePartySnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 message SavePartySnapshotResponse {

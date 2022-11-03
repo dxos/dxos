@@ -3,13 +3,16 @@
 //
 
 import { Config } from '@dxos/config';
-import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools/host';
+import { TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 
 /**
  *
  */
-export class TracingService implements TracingServiceRpc {
-  constructor(private readonly _config: Config) {}
+export class TracingServiceImpl implements TracingService {
+  // prettier-ignore
+  constructor(
+    private readonly _config: Config
+  ) {}
 
   async setTracingOptions() {
     throw new Error('Tracing not available.');

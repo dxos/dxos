@@ -5,7 +5,7 @@
 import { InvitationWrapper } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
@@ -34,7 +34,7 @@ export interface Halo {
 
   queryContacts(): ResultSet<Contact>;
   createInvitation(): Promise<InvitationRequest>;
-  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
+  acceptInvitation(Invitation: InvitationWrapper): InvitationChallenge;
 
   queryDevices(): Promise<DeviceInfo[]>;
   setDevicePreference(key: string, value: string): Promise<void>;

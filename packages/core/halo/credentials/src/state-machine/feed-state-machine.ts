@@ -28,13 +28,13 @@ export interface FeedInfo {
  * Provides a list of admitted feeds.
  */
 export class FeedStateMachine {
-  private _feeds = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
+  private readonly _feeds = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
   readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
@@ -50,7 +50,7 @@ export class FeedStateMachine {
   async process(credential: Credential, fromFeed: PublicKey) {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
-    assert(assertion.partyKey.equals(this._partyKey));
+    assert(assertion.spaceKey.equals(this._spaceKey));
     assert(!this._feeds.has(credential.subject.id));
 
     const info: FeedInfo = {
@@ -59,6 +59,7 @@ export class FeedStateMachine {
       assertion,
       parent: fromFeed
     };
+
     this._feeds.set(credential.subject.id, info);
     await this.onFeedAdmitted.callIfSet(info);
   }

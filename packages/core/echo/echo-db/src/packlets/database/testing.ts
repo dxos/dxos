@@ -38,13 +38,13 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   modelFactory: ModelFactory,
   dataServiceHost: DataServiceHost
 ) => {
-  const partyKey = PublicKey.random();
+  const spaceKey = PublicKey.random();
   const dataServiceRouter = new DataService();
-  dataServiceRouter.trackParty(partyKey, dataServiceHost);
+  dataServiceRouter.trackParty(spaceKey, dataServiceHost);
 
   const database = new Database(
     modelFactory,
-    new RemoteDatabaseBackend(dataServiceRouter, partyKey),
+    new RemoteDatabaseBackend(dataServiceRouter, spaceKey),
     PublicKey.random()
   );
 

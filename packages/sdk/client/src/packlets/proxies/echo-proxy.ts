@@ -91,7 +91,7 @@ export class EchoProxy implements Echo {
           //   }
           // });
 
-          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ party_key: party.public_key });
+          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ space_key: party.public_key });
           // partyStream.subscribe(async ({ party }) => {
           //   if (!party) {
           //     return;
@@ -173,8 +173,8 @@ export class EchoProxy implements Echo {
   /**
    * Returns an individual party by its key.
    */
-  getParty(partyKey: PublicKey): Party | undefined {
-    return this._parties.get(partyKey);
+  getParty(spaceKey: PublicKey): Party | undefined {
+    return this._parties.get(spaceKey);
   }
 
   /**
@@ -189,13 +189,11 @@ export class EchoProxy implements Echo {
    *
    * To be used with `party.createInvitation` on the inviter side.
    */
-  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation {
-    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
-      invitationDescriptor.toProto()
-    );
+  acceptInvitation(Invitation: InvitationWrapper): PartyInvitation {
+    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(Invitation.toProto());
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,
-      invitationDescriptor,
+      Invitation,
       onAuthenticate: async (request) => {
         await this._serviceProvider.services.PartyService.authenticateInvitation(request);
       }
@@ -203,11 +201,11 @@ export class EchoProxy implements Echo {
 
     const waitForParty = async () => {
       const process = await waitForFinish();
-      assert(process.partyKey);
-      await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
-      return this.getParty(process.partyKey) ?? failUndefined();
+      assert(process.spaceKey);
+      await this._partiesChanged.waitForCondition(() => this._parties.has(process.spaceKey!));
+      return this.getParty(process.spaceKey) ?? failUndefined();
     };
 
-    return new PartyInvitation(invitationDescriptor, waitForParty(), authenticate);
+    return new PartyInvitation(Invitation, waitForParty(), authenticate);
   }
 }

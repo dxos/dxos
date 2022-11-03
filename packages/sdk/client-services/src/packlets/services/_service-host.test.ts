@@ -8,8 +8,7 @@ import { latch, Trigger } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { InvitationState } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { ClientServiceHost } from './service-host';
@@ -49,13 +48,13 @@ describe('services/service-host', function () {
     afterTest(() => peer1.close());
     afterTest(() => peer2.close());
 
-    const invitationTrigger = new Trigger<InvitationDescriptor>();
+    const invitationTrigger = new Trigger<Invitation>();
     {
       await peer1.services.ProfileService.createProfile({});
       const stream = peer1.services.ProfileService.createInvitation();
       stream.subscribe((msg) => {
         switch (msg.state) {
-          case InvitationState.WAITING_FOR_CONNECTION: {
+          case Invitation.State.CONNECTING: {
             invitationTrigger.wake(msg.descriptor!);
             break;
           }
@@ -69,13 +68,13 @@ describe('services/service-host', function () {
       const stream = peer2.services.ProfileService.acceptInvitation(invitation);
       stream.subscribe((msg) => {
         switch (msg.state) {
-          case InvitationState.CONNECTED: {
+          case Invitation.State.CONNECTED: {
             setAck();
             break;
           }
 
-          case InvitationState.SUCCESS: {
-            expect(msg.partyKey).not.to.be.undefined;
+          case Invitation.State.SUCCESS: {
+            expect(msg.spaceKey).not.to.be.undefined;
             setAck();
             break;
           }

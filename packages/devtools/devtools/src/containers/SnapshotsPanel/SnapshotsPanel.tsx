@@ -16,22 +16,22 @@ import { KeySelect, Panel } from '../../components';
 export const SnapshotsPanel = () => {
   const devtoolsHost = useDevtools();
   const parties = useParties();
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedspaceKey, setSelectedspaceKey] = useState<PublicKey>();
   const [snapshot, setSnapshot] = useState<PartySnapshot>();
 
   const handlePartyChange = (key: PublicKey | undefined) => {
-    setSelectedPartyKey(key);
+    setSelectedspaceKey(key);
     if (key) {
       setTimeout(async () => {
-        const { snapshot } = await devtoolsHost.getPartySnapshot({ partyKey: key });
+        const { snapshot } = await devtoolsHost.getPartySnapshot({ spaceKey: key });
         setSnapshot(snapshot);
       });
     }
   };
 
   const handleSaveSnapshot = async () => {
-    if (selectedPartyKey) {
-      const { snapshot } = await devtoolsHost.savePartySnapshot({ partyKey: selectedPartyKey });
+    if (selectedspaceKey) {
+      const { snapshot } = await devtoolsHost.savePartySnapshot({ spaceKey: selectedspaceKey });
       setSnapshot(snapshot);
     }
   };
@@ -41,32 +41,25 @@ export const SnapshotsPanel = () => {
   };
 
   return (
-    <Panel controls={(
-      <>
-        <Toolbar>
-          <Button
-            variant='outlined'
-            onClick={handleSaveSnapshot}
-            disabled={!selectedPartyKey}
-          >
-            Save Snapshot
-          </Button>
-          <Button onClick={handleClearSnapshots}>
-            Delete Snapshots
-          </Button>
-        </Toolbar>
-        <KeySelect
-          label='Party'
-          keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={handlePartyChange}
-        />
-      </>
-    )}>
-      <JsonTreeView
-        size='small'
-        data={snapshot}
-      />
+    <Panel
+      controls={
+        <>
+          <Toolbar>
+            <Button variant='outlined' onClick={handleSaveSnapshot} disabled={!selectedspaceKey}>
+              Save Snapshot
+            </Button>
+            <Button onClick={handleClearSnapshots}>Delete Snapshots</Button>
+          </Toolbar>
+          <KeySelect
+            label='Party'
+            keys={parties.map(({ key }) => key)}
+            selected={selectedspaceKey}
+            onChange={handlePartyChange}
+          />
+        </>
+      }
+    >
+      <JsonTreeView size='small' data={snapshot} />
     </Panel>
   );
 };
