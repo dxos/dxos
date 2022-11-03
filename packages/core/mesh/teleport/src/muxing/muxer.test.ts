@@ -137,6 +137,7 @@ describe('Muxer', function () {
     const stream1 = peer1.createStream('example.extension/stream1', {
       contentType: 'application/octet-stream',
     });
+
     stream1.pipe(new Transform({
       transform (chunk, encoding, callback) {
         callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
