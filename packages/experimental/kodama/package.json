@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kodama",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "Interactive DXOS shell.",
   "homepage": "https://dxos.org",
