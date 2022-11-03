@@ -6,7 +6,6 @@ import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { FeedIterator, FeedStore, FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,
@@ -61,22 +60,35 @@ export const subscribeToFeedBlocks = (
     if (!feedKey) {
       return;
     }
-    let iterator: FeedIterator<FeedMessage>;
+
+    const update = async (feed: FeedWrapper<FeedMessage>) => {
+      const iterator = new FeedIterator(feed);
+      await iterator.open();
+      const blocks = [];
+      for await (const block of iterator) {
+        blocks.push(block);
+        if (blocks.length >= feed.properties.length) {
+          break;
+        }
+      }
+      next({
+        blocks: blocks.slice(-maxBlocks)
+      });
+      await iterator.close();
+    };
+    const subscriptions = new EventSubscriptions();
+
     setImmediate(async () => {
       const feed = await feedStore.getFeed(feedKey);
       if (!feed) {
         return;
       }
-
-      iterator = new FeedIterator(feed);
-      await iterator.open();
-
-      for await (const block of iterator) {
-        next({ blocks: [block] });
-      }
+      subscriptions.add(feed.on('append', () => update(feed)));
+      subscriptions.add(feed.on('truncate', () => update(feed)));
+      await update(feed);
     });
 
     return () => {
-      iterator?.close().catch((err) => log.catch(err));
+      subscriptions.clear();
     };
   });
