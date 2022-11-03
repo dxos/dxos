@@ -21,12 +21,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, SpaceInvitations } from '../invitations';
+import { HaloInvitations, SpaceInvitations } from './invitations';
 
 /**
  * Shared backend for all client services.

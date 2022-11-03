@@ -249,54 +249,55 @@ export class RpcPeer {
       throw new RpcNotOpenError();
     }
 
-    const id = this._nextId++;
-    const responseReceived = new Promise<Response>((resolve, reject) => {
-      this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
-    });
-
-    // TODO(burdon): Seems sketchy.
-    // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
-    // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
-    responseReceived.catch(() => {});
-
-    const sending = this._sendMessage({
-      request: {
-        id,
-        method,
-        payload: request,
-        stream: false
-      }
-    });
-
     let response: Response;
     try {
+      // Set-up response listener.
+      const id = this._nextId++;
+      const responseReceived = new Promise<Response>((resolve, reject) => {
+        this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
+      });
+
       // TODO(burdon): Remove createTimeoutPromise below.
       // const race = Promise.race([
       //   responseReceived,
       //   createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
       // ]);
+      // Send request call.
+      const sending = this._sendMessage({
+        request: {
+          id,
+          method,
+          payload: request,
+          stream: false
+        }
+      });
 
-      const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
+      // TODO(burdon): Seems sketchy.
+      // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
+      // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
+      responseReceived.catch(() => {});
 
       // Wait until send completes or throws an error (or response throws a timeout).
-      response = await Promise.race([sending, waiting]);
+      const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
+      await Promise.race([sending, waiting]);
+      response = await waiting;
 
       // Keep waiting if sending promise completes without error.
       if (response === undefined) {
         response = await waiting;
+        assert(response.id === id);
       }
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();
-        error.stack += `\n\nRpc client was closed at:\n${err.stack}`;
+        error.stack += `\n\nRPC client was closed at:\n${err.stack}`;
         throw error;
       }
 
       throw err;
     }
 
-    assert(response.id === id);
     if (response.payload) {
       return response.payload;
     } else if (response.error) {

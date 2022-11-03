@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ServiceContext } from '../service-context';
-import { closeAfterTest, createIdentity, createPeers, syncItems } from './testing';
+import { closeAfterTest, createIdentity, createPeers, syncItems } from '../testing';
 
 describe('services/spaces', function () {
   it('genesis', async function () {
@@ -67,10 +67,10 @@ describe('services/spaces', function () {
           onCancel: () => {
             throw new Error();
           },
-          onTimeout: (err) => {
+          onTimeout: (err: any) => {
             throw err;
           },
-          onError: (err) => {
+          onError: (err: any) => {
             throw err;
           }
         });
@@ -83,10 +83,10 @@ describe('services/spaces', function () {
         // TODO(burdon): Change observable API to throw error by default?
         throw new Error();
       },
-      onTimeout: (err) => {
+      onTimeout: (err: any) => {
         throw err;
       },
-      onError: (err) => {
+      onError: (err: any) => {
         throw err;
       }
     });
@@ -131,10 +131,10 @@ describe('services/spaces', function () {
           onCancel: () => {
             throw new Error();
           },
-          onTimeout: (err) => {
+          onTimeout: (err: any) => {
             throw err;
           },
-          onError: (err) => {
+          onError: (err: any) => {
             throw err;
           }
         });
@@ -148,10 +148,10 @@ describe('services/spaces', function () {
       onCancel: () => {
         cancelled.wake();
       },
-      onTimeout: (err) => {
+      onTimeout: (err: any) => {
         throw err;
       },
-      onError: (err) => {
+      onError: (err: any) => {
         throw err;
       }
     });

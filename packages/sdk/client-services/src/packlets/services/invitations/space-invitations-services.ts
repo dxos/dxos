@@ -10,7 +10,7 @@ import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { AuthenticateRequest, Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { SpaceInvitations } from '../../invitations';
+import { SpaceInvitations } from './space-invitations';
 
 /**
  * Spaces invitations service.

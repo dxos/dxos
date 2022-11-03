@@ -58,6 +58,11 @@ service SigningService {
 // Halo
 //
 
+// TODO(burdon): Identity.
+message Identity {
+  Profile profile = 1;
+}
+
 message Profile {
   dxos.keys.PublicKey identity_key = 1;
   string display_name = 2;
@@ -171,6 +176,10 @@ message Invitation {
   optional dxos.keys.PublicKey space_key = 8;
 }
 
+message CancelInvitationRequest {
+  string invitation_id = 1;
+}
+
 message AuthenticateRequest {
 }
 
@@ -180,7 +189,7 @@ message AuthenticateResponse {
 // TODO(burdon): Separate implementations for HALO/Data Spaces.
 service InvitationService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc CancelInvitation(Invitation) returns (google.protobuf.Empty);
+  rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
 }

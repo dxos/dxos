@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
-import { createServiceContext } from './testing';
+import { createServiceContext } from '../testing';
 
 describe('services/halo', function () {
   it('creates identity', async function () {

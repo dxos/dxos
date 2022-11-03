@@ -32,10 +32,10 @@ export interface InvitationQueryParameters {
  *
  * Can be serialized to protobuf or JSON.
  * Invitations can be interactive or offline.
- *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
+ *
+ * @deprecated
  */
-// TODO(burdon): Move to Client API (and/or remove).
 export class InvitationWrapper {
   static decode(code: string): InvitationWrapper {
     const json = base62.decode(code).toString();
