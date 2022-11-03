@@ -64,7 +64,7 @@ describe('services/space-invitation-service', function () {
     }
   });
 
-  it.only('creates party and cancels invitation', async function () {
+  it('creates party and cancels invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(peer1.spaceManager);
