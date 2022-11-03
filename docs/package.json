@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@dxos/plate": "workspace:*",
-    "@dxos/react-components": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/telemetry": "workspace:*",
     "@dxos/typedoc-plugin-plate": "workspace:*",
     "@types/eslint": "^8.4.6",
