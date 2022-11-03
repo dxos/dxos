@@ -21,7 +21,7 @@ import {
   getTelemetryContext,
   PublisherRpcPeer,
   SENTRY_DESTINATION,
-  TELEMETRY_KEY
+  TELEMETRY_API_KEY
 } from './util';
 
 const log = debug('dxos:cli:main');
@@ -82,11 +82,11 @@ export abstract class BaseCommand extends Command {
       });
     }
 
-    if (TELEMETRY_KEY) {
+    if (TELEMETRY_API_KEY) {
       Telemetry.init({
-        apiKey: TELEMETRY_KEY,
+        apiKey: TELEMETRY_API_KEY,
         batchSize: 20,
-        enable: Boolean(TELEMETRY_KEY) && !disableTelemetry
+        enable: Boolean(TELEMETRY_API_KEY) && !disableTelemetry
       });
     }
 
