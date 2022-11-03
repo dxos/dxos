@@ -1,6 +1,7 @@
 {
   "name": "@dxos/bot-factory-client",
   "version": "0.1.0",
+  "private": true,
   "description": "Bot",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,8 +33,5 @@
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "jsonify": "^0.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

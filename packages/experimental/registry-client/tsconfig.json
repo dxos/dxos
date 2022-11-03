@@ -1,0 +1,56 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "noImplicitAny": false,
+    "outDir": "dist",
+    "paths": {
+      "@polkadot/api/augment": [
+        "./packages/experimental/registry-client/src/polkadot/interfaces/augment-api.ts"
+      ],
+      "@polkadot/types/augment": [
+        "./packages/experimental/registry-client/src/polkadot/interfaces/augment-types.ts"
+      ],
+      "sample-polkadotjs-typegen/*": [
+        "./packages/experimental/registry-client/src/*"
+      ]
+    }
+  },
+  "exclude": [
+    "dist"
+  ],
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -13,11 +12,15 @@
     "/node_modules/"
   ],
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
       "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../bots/bot-factory-client"
     },
     {
       "path": "../../common/async"
@@ -26,7 +29,25 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../experimental/react-client-testing"
+    },
+    {
+      "path": "../../experimental/react-registry-client"
+    },
+    {
+      "path": "../../experimental/registry-client"
     },
     {
       "path": "../../sdk/client"
@@ -38,7 +59,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../client-testing"
+      "path": "../react-components"
     }
   ]
 }
