@@ -32,13 +32,13 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-testing"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../client-testing"
     }
   ]
 }

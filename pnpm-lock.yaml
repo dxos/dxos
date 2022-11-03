@@ -236,7 +236,7 @@ importers:
       vuepress: ^2.0.0-beta.51
     devDependencies:
       '@dxos/plate': link:../tools/plate
-      '@dxos/react-components': link:../packages/sdk/react-components
+      '@dxos/react-components': link:../packages/deprecated/react-components
       '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.6
@@ -285,7 +285,6 @@ importers:
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.17.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
@@ -315,14 +314,13 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../common/react-uikit
+      '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
-      '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
@@ -332,8 +330,8 @@ importers:
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       url-join: 5.0.0
     devDependencies:
-      '@dxos/react-client-testing': link:../../sdk/react-client-testing
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/react-client-testing': link:../../experimental/react-client-testing
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/debug': 4.1.7
       '@types/node': 16.11.66
       '@types/react': 18.0.21
@@ -355,7 +353,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
     devDependencies:
-      '@dxos/vite-plugin': link:../../../../tools/vite-plugin
+      '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
@@ -393,16 +391,16 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components': link:../../../sdk/react-components
-      '@dxos/react-toolkit': link:../../../sdk/react-toolkit
+      '@dxos/react-components': link:../../../deprecated/react-components
+      '@dxos/react-toolkit': link:../../../deprecated/react-toolkit
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/react-client-testing': link:../../../sdk/react-client-testing
-      '@dxos/vite-plugin': link:../../../../tools/vite-plugin
+      '@dxos/react-client-testing': link:../../../experimental/react-client-testing
+      '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@storybook/addon-actions': 6.5.12_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.12_adidkwhvysrv6kbkczxkpx7kju
       '@storybook/addon-interactions': 6.5.12_335cwx3de7hzzvfoyjqbus3zhu
@@ -535,7 +533,7 @@ importers:
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/registry-client': link:../../sdk/registry-client
+      '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
       abort-controller: 3.0.0
       assert: 2.0.0
@@ -830,7 +828,6 @@ importers:
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
       '@headlessui/react': ^1.7.3
-      '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-avatar': ^1.0.1
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
@@ -852,7 +849,6 @@ importers:
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
       tailwindcss: ^3.1.8
-      tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
       vite: 3.0.9
     dependencies:
@@ -860,7 +856,6 @@ importers:
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-avatar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
@@ -875,57 +870,9 @@ importers:
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
       tailwindcss: 3.1.8
-      tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
-      phosphor-react: 1.4.1_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-
-  packages/common/react-uikit:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-ui': workspace:*
-      '@dxos/util': workspace:*
-      '@dxos/vite-plugin': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^2.0.1
-      classnames: ^2.3.2
-      debug: ^4.3.3
-      i18next: ^21.10.0
-      phosphor-react: ^1.4.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      react-i18next: ^11.18.6
-      storybook-dark-mode: ^1.1.2
-      url-join: ^5.0.0
-      vite: 3.0.9
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/debug': link:../debug
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-ui': link:../react-ui
-      '@dxos/util': link:../util
-      classnames: 2.3.2
-      debug: 4.3.4
-      i18next: 21.10.0
-      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
-      url-join: 5.0.0
-    devDependencies:
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
-      '@types/debug': 4.1.7
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
@@ -1682,6 +1629,174 @@ importers:
       debug: 4.3.4
       glob: 7.1.7
 
+  packages/deprecated/react-components:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/util': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@mui/system': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ^4.0.6
+      '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/string-hash': ^1.1.1
+      babel-plugin-add-module-exports: ^1.0.4
+      clsx: ^1.1.1
+      debug: ^4.3.3
+      faker: ^5.5.3
+      lodash.defaultsdeep: ^4.6.1
+      lodash.isplainobject: ^4.0.6
+      qrcode.react: ^3.1.0
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      string-hash: ~1.1.3
+      url-join: ^5.0.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/util': link:../../common/util
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      debug: 4.3.4
+      lodash.defaultsdeep: 4.6.1
+      lodash.isplainobject: 4.0.6
+      qrcode.react: 3.1.0_react@18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      string-hash: 1.1.3
+      url-join: 5.0.0
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
+      '@dxos/client': link:../../sdk/client
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
+      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
+      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.isplainobject': 4.0.7
+      '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/string-hash': 1.1.1
+      babel-plugin-add-module-exports: 1.0.4
+      clsx: 1.2.1
+      faker: 5.5.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
+  packages/deprecated/react-toolkit:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@babel/plugin-transform-runtime': ^7.11.5
+      '@dxos/async': workspace:*
+      '@dxos/bot-factory-client': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-registry-client': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@mui/system': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.isplainobject': ^4.0.6
+      '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/uuid': ~8.3.3
+      assert: ^2.0.0
+      babel-plugin-add-module-exports: ^1.0.4
+      debug: ^4.3.3
+      lodash.defaultsdeep: ^4.6.1
+      lodash.isplainobject: ^4.0.6
+      mobile-detect: ~1.4.5
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      url-join: ^5.0.0
+      uuid: ^8.3.2
+    dependencies:
+      '@dxos/debug': link:../../common/debug
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-registry-client': link:../../experimental/react-registry-client
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      assert: 2.0.0
+      debug: 4.3.4
+      lodash.defaultsdeep: 4.6.1
+      lodash.isplainobject: 4.0.6
+      mobile-detect: 1.4.5
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      url-join: 5.0.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
+      '@dxos/async': link:../../common/async
+      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/keys': link:../../common/keys
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-client-testing': link:../../experimental/react-client-testing
+      '@dxos/react-components': link:../react-components
+      '@dxos/registry-client': link:../../experimental/registry-client
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
+      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
+      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
+      '@types/debug': 4.1.7
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.isplainobject': 4.0.7
+      '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/uuid': 8.3.4
+      babel-plugin-add-module-exports: 1.0.4
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
   packages/devtools/devtools:
     specifiers:
       '@babel/core': ^7.18.13
@@ -1754,10 +1869,10 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-registry-client': link:../../sdk/react-registry-client
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
-      '@dxos/registry-client': link:../../sdk/registry-client
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-registry-client': link:../../experimental/react-registry-client
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
+      '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
@@ -1776,7 +1891,7 @@ importers:
       '@babel/core': 7.19.3
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
       '@types/color-hash': 1.0.2
       '@types/faker': 5.5.9
@@ -1844,7 +1959,7 @@ importers:
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
@@ -1914,8 +2029,8 @@ importers:
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../core/mesh/protocol-plugin-presence
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2053,7 +2168,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-components': link:../../deprecated/react-components
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2066,11 +2181,56 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
+  packages/experimental/client-testing:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/columnify': ^1.5.1
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/js-yaml': ^4.0.5
+      assert: ^2.0.0
+      chalk: ^4.1.0
+      columnify: ^1.6.0
+      debug: ^4.3.3
+      faker: ^5.5.3
+      js-yaml: ^4.1.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      debug: 4.3.4
+      faker: 5.5.3
+      js-yaml: 4.1.0
+    devDependencies:
+      '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/random-access-storage': link:../../common/random-access-storage
+      '@dxos/testutils': link:../../common/testutils
+      '@types/columnify': 1.5.1
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/js-yaml': 4.0.5
+      chalk: 4.1.2
+      columnify: 1.6.0
 
   packages/experimental/composer:
     specifiers:
@@ -2104,9 +2264,9 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
-      '@dxos/react-uikit': link:../../common/react-uikit
+      '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/text-model': link:../../core/echo/text-model
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
@@ -2149,7 +2309,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/client-testing': link:../client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/react-async': link:../../common/react-async
@@ -2227,7 +2387,7 @@ importers:
       url-join: ^5.0.0
     dependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/client-testing': link:../client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/gem-core': link:../../gem/gem-core
@@ -2235,11 +2395,11 @@ importers:
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-client-testing': link:../../sdk/react-client-testing
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-echo-graph': link:../../sdk/react-echo-graph
-      '@dxos/react-ipfs': link:../../sdk/react-ipfs
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-client-testing': link:../react-client-testing
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-echo-graph': link:../react-echo-graph
+      '@dxos/react-ipfs': link:../react-ipfs
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
@@ -2293,7 +2453,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@types/copy-paste': ^1.1.30
@@ -2328,7 +2487,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/client-testing': link:../client-testing
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
@@ -2353,7 +2512,6 @@ importers:
       react: 18.2.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
@@ -2368,96 +2526,244 @@ importers:
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
 
-  packages/experimental/lexical-editor:
+  packages/experimental/react-client-testing:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dnd-kit/core': ^6.0.5
+      '@dnd-kit/modifiers': ^6.0.0
+      '@dnd-kit/sortable': ^7.0.1
+      '@dnd-kit/utilities': ^3.2.0
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/util': workspace:*
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@mui/system': ^5.8.1
+      '@tanstack/react-table': 8.0.0-beta.3
+      '@testing-library/dom': ^8.17.1
+      '@testing-library/react': ^13.4.0
+      '@testing-library/user-event': ^14.4.3
+      '@types/faker': ^5.5.9
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      faker: ^5.5.3
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
+      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
+      '@dnd-kit/utilities': 3.2.0_react@18.2.0
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-testing': link:../client-testing
+      '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/util': link:../../common/util
+      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
+      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
+      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
+      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
+      '@tanstack/react-table': 8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/dom': 8.19.0
+      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
+      '@types/faker': 5.5.9
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      faker: 5.5.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
+  packages/experimental/react-echo-graph:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/esbuild-server': ~2.29.0
-      '@dxos/object-model': workspace:*
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/text-model': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
-      '@lexical/hashtag': ~0.5.0
-      '@lexical/list': ~0.5.0
-      '@lexical/react': ~0.5.0
-      '@lexical/table': ~0.5.0
-      '@lexical/utils': ~0.5.0
-      '@lexical/yjs': ~0.5.0
       '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
-      '@types/debug': ^4.1.7
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
+      '@mui/system': ^5.8.1
+      '@types/faker': ^5.5.9
       '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      debug: ^4.3.3
-      lexical: ~0.5.0
-      mocha: ^8.4.0
+      clsx: ^1.1.1
+      faker: ^5.5.3
       react: ^18.2.0
       react-dom: ^18.2.0
-      ts-node: 10.9.1
-      typescript: ^4.8.4
-      wait-for-expect: ^3.0.2
-      y-protocols: ^1.0.5
-      yjs: ^13.5.41
     dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/object-model': link:../../core/echo/object-model
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
-      '@dxos/text-model': link:../../core/echo/text-model
-      '@lexical/hashtag': 0.5.0_lexical@0.5.0
-      '@lexical/list': 0.5.0_lexical@0.5.0
-      '@lexical/table': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      '@lexical/yjs': 0.5.0_lexical@0.5.0+yjs@13.5.41
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      lexical: 0.5.0
-      y-protocols: 1.0.5
-      yjs: 13.5.41
+      '@dxos/gem-core': link:../../gem/gem-core
+      '@dxos/gem-spore': link:../../gem/gem-spore
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/react-client-testing': link:../../sdk/react-client-testing
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-client-testing': link:../react-client-testing
+      '@dxos/react-components': link:../../deprecated/react-components
       '@emotion/css': 11.10.0_@babel+core@7.19.3
       '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
       '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      '@lexical/react': 0.5.0_7x5ipar2pryb5a4en6ju6uefiq
-      '@types/debug': 4.1.7
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.66
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
+      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
+      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
+      '@types/faker': 5.5.9
       '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-      debug: 4.3.4
-      mocha: 8.4.0
+      clsx: 1.2.1
+      faker: 5.5.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
-      typescript: 4.8.4
-      wait-for-expect: 3.0.2
+
+  packages/experimental/react-ipfs:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/node': ^16.11.58
+      '@types/react': ^18.0.21
+      ipfs-http-client: ~56.0.1
+      node-fetch: ^2.6.0
+      react: ^18.2.0
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/react-client': link:../../sdk/react-client
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
+    devDependencies:
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/node': 16.11.66
+      '@types/react': 18.0.21
+      node-fetch: 2.6.7
+      react: 18.2.0
+
+  packages/experimental/react-registry-client:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/registry-client': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/react': ^18.0.21
+      assert: ^2.0.0
+      debug: ^4.3.3
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/registry-client': link:../registry-client
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      debug: 4.3.4
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/debug': 4.1.7
+      '@types/react': 18.0.21
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
+  packages/experimental/registry-client:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@polkadot/api': 4.17.1
+      '@polkadot/keyring': 6.11.1
+      '@polkadot/metadata': 4.17.1
+      '@polkadot/rpc-core': 4.17.1
+      '@polkadot/typegen': ^4.17.1
+      '@polkadot/types': 4.17.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
+      '@types/faker': ^5.5.9
+      '@types/fs-extra': ^9.0.4
+      '@types/randombytes': ^2.0.0
+      assert: ^2.0.0
+      bn.js: 4.12.0
+      faker: ^5.5.3
+      fs-extra: ^8.1.0
+      multihashes: ^4.0.2
+      protobufjs: ^6.9.0
+      randombytes: ^2.1.0
+      util: ^0.12.4
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      bn.js: 4.12.0
+      faker: 5.5.3
+      fs-extra: 8.1.0
+      multihashes: 4.0.3
+      randombytes: 2.1.0
+      util: 0.12.5
+    devDependencies:
+      '@polkadot/api': 4.17.1
+      '@polkadot/keyring': 6.11.1
+      '@polkadot/metadata': 4.17.1
+      '@polkadot/rpc-core': 4.17.1
+      '@polkadot/typegen': 4.17.1
+      '@polkadot/types': 4.17.1
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
+      '@types/faker': 5.5.9
+      '@types/fs-extra': 9.0.13
+      '@types/randombytes': 2.0.0
+      protobufjs: 6.11.3
 
   packages/experimental/spyglass:
     specifiers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/faker': ^5.5.9
       '@types/isomorphic-fetch': ^0.0.36
@@ -2481,7 +2787,6 @@ importers:
       preact-render-to-string: 5.2.5_preact@10.11.2
       url-join: 5.0.0
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 16.11.66
@@ -2532,8 +2837,8 @@ importers:
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/util': link:../../common/util
       '@hot-loader/react-dom': 17.0.2_react@18.2.0
@@ -2578,8 +2883,8 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../sdk/react-components
-      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/react-components': link:../../deprecated/react-components
+      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
       '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
       react: 18.2.0
@@ -2760,7 +3065,7 @@ importers:
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/registry-client': link:../../sdk/registry-client
+      '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/signal': link:../../core/mesh/signal
       '@dxos/testutils': link:../../common/testutils
@@ -2910,51 +3215,6 @@ importers:
       '@types/memdown': 3.0.0
       '@types/readable-stream': 2.3.14
 
-  packages/sdk/client-testing:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/model-factory': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      '@types/columnify': ^1.5.1
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/js-yaml': ^4.0.5
-      assert: ^2.0.0
-      chalk: ^4.1.0
-      columnify: ^1.6.0
-      debug: ^4.3.3
-      faker: ^5.5.3
-      js-yaml: ^4.1.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../client
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
-      faker: 5.5.3
-      js-yaml: 4.1.0
-    devDependencies:
-      '@dxos/model-factory': link:../../core/echo/model-factory
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@dxos/testutils': link:../../common/testutils
-      '@types/columnify': 1.5.1
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/js-yaml': 4.0.5
-      chalk: 4.1.2
-      columnify: 1.6.0
-
   packages/sdk/config:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -3059,407 +3319,66 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
-  packages/sdk/react-client-testing:
+  packages/sdk/react-uikit:
     specifiers:
-      '@babel/core': ^7.18.13
-      '@dnd-kit/core': ^6.0.5
-      '@dnd-kit/modifiers': ^6.0.0
-      '@dnd-kit/sortable': ^7.0.1
-      '@dnd-kit/utilities': ^3.2.0
-      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@mui/system': ^5.8.1
-      '@tanstack/react-table': 8.0.0-beta.3
-      '@testing-library/dom': ^8.17.1
-      '@testing-library/react': ^13.4.0
-      '@testing-library/user-event': ^14.4.3
-      '@types/faker': ^5.5.9
+      '@dxos/vite-plugin': workspace:*
+      '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      faker: ^5.5.3
+      '@vitejs/plugin-react': ^2.0.1
+      classnames: ^2.3.2
+      debug: ^4.3.3
+      i18next: ^21.10.0
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@dnd-kit/core': 6.0.5_biqbaboplfbrettd7655fr4n2y
-      '@dnd-kit/modifiers': 6.0.0_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/sortable': 7.0.1_vvd3dzag27tc7rclyb2whqqnpe
-      '@dnd-kit/utilities': 3.2.0_react@18.2.0
-      '@dxos/async': link:../../common/async
+      react-i18next: ^11.18.6
+      storybook-dark-mode: ^1.1.2
+      url-join: ^5.0.0
+      vite: 3.0.9
+    dependencies:
       '@dxos/client': link:../client
-      '@dxos/client-testing': link:../client-testing
+      '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../react-client
-      '@dxos/react-components': link:../react-components
+      '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
-      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
-      '@tanstack/react-table': 8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y
-      '@testing-library/dom': 8.19.0
-      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
-      '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
-      '@types/faker': 5.5.9
+      classnames: 2.3.2
+      debug: 4.3.4
+      i18next: 21.10.0
+      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
+      url-join: 5.0.0
+    devDependencies:
+      '@dxos/vite-plugin': link:../vite-plugin
+      '@types/debug': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      faker: 5.5.3
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
-  packages/sdk/react-components:
+  packages/sdk/vite-plugin:
     specifiers:
-      '@babel/core': ^7.18.13
-      '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/util': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@mui/system': ^5.8.1
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.isplainobject': ^4.0.6
-      '@types/react': ^18.0.21
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/string-hash': ^1.1.1
-      babel-plugin-add-module-exports: ^1.0.4
-      clsx: ^1.1.1
-      debug: ^4.3.3
-      faker: ^5.5.3
-      lodash.defaultsdeep: ^4.6.1
-      lodash.isplainobject: ^4.0.6
-      qrcode.react: ^3.1.0
-      react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^18.2.0
-      string-hash: ~1.1.3
-      url-join: ^5.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/util': link:../../common/util
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      debug: 4.3.4
-      lodash.defaultsdeep: 4.6.1
-      lodash.isplainobject: 4.0.6
-      qrcode.react: 3.1.0_react@18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
-      string-hash: 1.1.3
-      url-join: 5.0.0
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
-      '@dxos/client': link:../client
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
-      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/lodash.defaultsdeep': 4.6.7
-      '@types/lodash.isplainobject': 4.0.7
-      '@types/react': 18.0.21
-      '@types/react-copy-to-clipboard': 5.0.4
-      '@types/string-hash': 1.1.1
-      babel-plugin-add-module-exports: 1.0.4
-      clsx: 1.2.1
-      faker: 5.5.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/sdk/react-echo-graph:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/gem-core': workspace:*
-      '@dxos/gem-spore': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@mui/system': ^5.8.1
-      '@types/faker': ^5.5.9
-      '@types/react': ^18.0.21
-      clsx: ^1.1.1
-      faker: ^5.5.3
-      react: ^18.2.0
-      react-dom: ^18.2.0
-    dependencies:
-      '@dxos/gem-core': link:../../gem/gem-core
-      '@dxos/gem-spore': link:../../gem/gem-spore
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../client
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-client': link:../react-client
-      '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components': link:../react-components
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
-      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
-      '@types/faker': 5.5.9
-      '@types/react': 18.0.21
-      clsx: 1.2.1
-      faker: 5.5.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/sdk/react-ipfs:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/node': ^16.11.58
-      '@types/react': ^18.0.21
-      ipfs-http-client: ~56.0.1
-      node-fetch: ^2.6.0
-      react: ^18.2.0
-    dependencies:
-      '@dxos/client': link:../client
-      '@dxos/react-client': link:../react-client
-      ipfs-http-client: 56.0.3_node-fetch@2.6.7
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/node': 16.11.66
-      '@types/react': 18.0.21
-      node-fetch: 2.6.7
-      react: 18.2.0
-
-  packages/sdk/react-registry-client:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/react': ^18.0.21
-      assert: ^2.0.0
-      debug: ^4.3.3
-      react: ^18.2.0
-      react-dom: ^18.2.0
+      rollup: ~2.77.3
+      rollup-plugin-polyfill-node: ^0.10.2
+      vite: 3.0.9
     dependencies:
       '@dxos/config': link:../config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/registry-client': link:../registry-client
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/debug': 4.1.7
-      '@types/react': 18.0.21
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/sdk/react-toolkit:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@babel/plugin-transform-runtime': ^7.11.5
-      '@dxos/async': workspace:*
-      '@dxos/bot-factory-client': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-registry-client': workspace:*
-      '@dxos/registry-client': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@mui/system': ^5.8.1
-      '@types/debug': ^4.1.7
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.isplainobject': ^4.0.6
-      '@types/react': ^18.0.21
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/uuid': ~8.3.3
-      assert: ^2.0.0
-      babel-plugin-add-module-exports: ^1.0.4
-      debug: ^4.3.3
-      lodash.defaultsdeep: ^4.6.1
-      lodash.isplainobject: ^4.0.6
-      mobile-detect: ~1.4.5
-      react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^18.2.0
-      url-join: ^5.0.0
-      uuid: ^8.3.2
-    dependencies:
-      '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-registry-client': link:../react-registry-client
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      assert: 2.0.0
-      debug: 4.3.4
-      lodash.defaultsdeep: 4.6.1
-      lodash.isplainobject: 4.0.6
-      mobile-detect: 1.4.5
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
-      url-join: 5.0.0
-      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.19.3
-      '@dxos/async': link:../../common/async
-      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
-      '@dxos/client': link:../client
-      '@dxos/config': link:../config
-      '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/keys': link:../../common/keys
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/react-client': link:../react-client
-      '@dxos/react-client-testing': link:../react-client-testing
-      '@dxos/react-components': link:../react-components
-      '@dxos/registry-client': link:../registry-client
-      '@emotion/react': 11.10.4_bjroym7kxlcs2vvwnej4p3gzwu
-      '@emotion/styled': 11.10.4_ogudqqhlstsi7uge4lir7ff3ty
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/lab': 5.0.0-alpha.103_qutr45o6ticqz7in34jzqohuui
-      '@mui/material': 5.10.9_ikcgkdnp4bn3rgptamntbhbo7e
-      '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
-      '@types/debug': 4.1.7
-      '@types/lodash.defaultsdeep': 4.6.7
-      '@types/lodash.isplainobject': 4.0.7
-      '@types/react': 18.0.21
-      '@types/react-copy-to-clipboard': 5.0.4
-      '@types/uuid': 8.3.4
-      babel-plugin-add-module-exports: 1.0.4
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/sdk/registry-client:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1
-      '@polkadot/metadata': 4.17.1
-      '@polkadot/rpc-core': 4.17.1
-      '@polkadot/typegen': ^4.17.1
-      '@polkadot/types': 4.17.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
-      '@types/faker': ^5.5.9
-      '@types/fs-extra': ^9.0.4
-      '@types/randombytes': ^2.0.0
-      assert: ^2.0.0
-      bn.js: 4.12.0
-      faker: ^5.5.3
-      fs-extra: ^8.1.0
-      multihashes: ^4.0.2
-      protobufjs: ^6.9.0
-      randombytes: ^2.1.0
-      util: ^0.12.4
-    dependencies:
-      '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      bn.js: 4.12.0
-      faker: 5.5.3
-      fs-extra: 8.1.0
-      multihashes: 4.0.3
-      randombytes: 2.1.0
-      util: 0.12.5
-    devDependencies:
-      '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1
-      '@polkadot/metadata': 4.17.1
-      '@polkadot/rpc-core': 4.17.1
-      '@polkadot/typegen': 4.17.1
-      '@polkadot/types': 4.17.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
-      '@types/faker': 5.5.9
-      '@types/fs-extra': 9.0.13
-      '@types/randombytes': 2.0.0
-      protobufjs: 6.11.3
+      rollup: 2.77.3
+      rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   tools/beast:
     specifiers:
@@ -3865,20 +3784,6 @@ importers:
       typescript: 4.8.4
       vue: 3.2.41
       vuepress: 2.0.0-beta.51_fz2pamxh7dcjrm3lqupsik2cnu
-
-  tools/vite-plugin:
-    specifiers:
-      '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      rollup: ~2.77.3
-      rollup-plugin-polyfill-node: ^0.10.2
-      vite: 3.0.9
-    dependencies:
-      '@dxos/config': link:../../packages/sdk/config
-      '@dxos/esbuild-plugins': 2.29.0
-      rollup: 2.77.3
-      rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
 packages:
 
@@ -6314,222 +6219,6 @@ packages:
       - encoding
       - supports-color
 
-  /@lexical/clipboard/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-JFvdH4N/80GxC0jhaiO/fdUOeYcX8pMFrcrpBDeNIcBN/9eF8Rn/czvoPLLNB9Kcbz8d8XXqabKEGCz2hFL//w==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/html': 0.5.0_lexical@0.5.0
-      '@lexical/list': 0.5.0_lexical@0.5.0
-      '@lexical/selection': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/code/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-GmqRaQ8EBtlu13ObSZYiGDzIsrkwRyyqI2HRVBrPo2iszLBpby+7uIncAVQVkxt1JNYOKE2n4JfxK8TSYyMtYQ==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-      prismjs: 1.29.0
-    dev: true
-
-  /@lexical/dragon/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-Gf0jN8hjlF8E71wAsvbRpR1u9oS6RUjUw3VWp/Qa+IrtjBFFVzdTUloUs3cjMX9E/MFRJgt3wPsaKx2IuLBWQw==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/hashtag/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-3MT72y72BmK4q7Rtb9gP3n83UL4vWC078T9io4zyPxKEI1Mh3UAVuRwh6Ypn0FeH94XvmuZAGVdoOC/nTd1now==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-
-  /@lexical/history/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-DCQgh1aQ1KS5JVYPU6GYr52BN0MQqmoXfFtf5uYCX9CbSAC0hDSK8ZPqwFW7jINqe6GwXxy7bo32j7E0A5023A==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/html/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-uJAof6gXTLOH9JnmPJ+wxILFtu7I/eCebFyVMjV53sqaeLsQ3pDfBTUe4RO+NciC+XBQ1WVpZgCM8Yx5c5cMmQ==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/selection': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/link/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-XB8e+UPI9jeqsi7+Wr0n9SToljiS+gZmJ5gXANtR6lSZPtpcSUPs1iJZU2A2dNKXdvsZwSPCFdPL6ogFaaRvvQ==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/list/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-TYXe4FtNL7Lk3XDEhPyUbT0Pb1TU58qZywGCdrtuRjPnF4oDvRXgg9EhYWfHzYwdsyhNgaHId+Fq41CjrwTMYg==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-
-  /@lexical/mark/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-leeqegWD4hqUdfYNsxB5iwsWozX2oc6mnJzcJfR4UB3Ksr0zH2xHc/z3Zp+CTeGuK5Tzppq5yGS+4cQ5xNpVgQ==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/markdown/0.5.0_pk4iz76swcl2xpssw5krbc6ozu:
-    resolution: {integrity: sha512-02RLx7PdVzvYxvx65FTbXkW6KcjQZ1waAaMDNKdtBV9r9Mv2Y2XunCUjErYHQ1JN9JkGGv0+JuliRT7qZTsF+Q==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/code': 0.5.0_lexical@0.5.0
-      '@lexical/link': 0.5.0_lexical@0.5.0
-      '@lexical/list': 0.5.0_lexical@0.5.0
-      '@lexical/rich-text': 0.5.0_qqgt7rj5c76uep654vyaavnrhu
-      '@lexical/text': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    transitivePeerDependencies:
-      - '@lexical/clipboard'
-      - '@lexical/selection'
-    dev: true
-
-  /@lexical/offset/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-ie4AFbvtt0CFBqaMcb0/gUuhoTt+YwbFXPFo1hW+oDVpmo3rJsEJKVsHhftBvHIP+/G5QlgPIhVmnlcSvEteTw==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      lexical: 0.5.0
-
-  /@lexical/overflow/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-N+BQvgODU9lS7VK4FlxIRhGeASwsxfdkECtZ5iomHfqqNEI0WPLHbCTCkwS10rjfH1NrkXC314Y0SG2F7Ncv9Q==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/plain-text/0.5.0_qqgt7rj5c76uep654vyaavnrhu:
-    resolution: {integrity: sha512-t1rnVnSXbPs9jLN/36/xZLNAlF9jwv8rSh6GHsjRIYiWX/MovNmgPmhNq/nkc+gRFZ2FKTFjdz3UeAUF4xQZMw==}
-    peerDependencies:
-      '@lexical/clipboard': 0.5.0
-      '@lexical/selection': 0.5.0
-      '@lexical/utils': 0.5.0
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/clipboard': 0.5.0_lexical@0.5.0
-      '@lexical/selection': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/react/0.5.0_7x5ipar2pryb5a4en6ju6uefiq:
-    resolution: {integrity: sha512-bba0KXslxjf6M8XXJhx1rsrq9UV/6eo73WCZel2K+tGz8NEn1HCRTebQoebmRikzEQatEa3SoB6R47drMlk7Yw==}
-    peerDependencies:
-      lexical: 0.5.0
-      react: '>=17.x'
-      react-dom: '>=17.x'
-    dependencies:
-      '@lexical/clipboard': 0.5.0_lexical@0.5.0
-      '@lexical/code': 0.5.0_lexical@0.5.0
-      '@lexical/dragon': 0.5.0_lexical@0.5.0
-      '@lexical/hashtag': 0.5.0_lexical@0.5.0
-      '@lexical/history': 0.5.0_lexical@0.5.0
-      '@lexical/link': 0.5.0_lexical@0.5.0
-      '@lexical/list': 0.5.0_lexical@0.5.0
-      '@lexical/mark': 0.5.0_lexical@0.5.0
-      '@lexical/markdown': 0.5.0_pk4iz76swcl2xpssw5krbc6ozu
-      '@lexical/overflow': 0.5.0_lexical@0.5.0
-      '@lexical/plain-text': 0.5.0_qqgt7rj5c76uep654vyaavnrhu
-      '@lexical/rich-text': 0.5.0_qqgt7rj5c76uep654vyaavnrhu
-      '@lexical/selection': 0.5.0_lexical@0.5.0
-      '@lexical/table': 0.5.0_lexical@0.5.0
-      '@lexical/text': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      '@lexical/yjs': 0.5.0_lexical@0.5.0+yjs@13.5.41
-      lexical: 0.5.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    transitivePeerDependencies:
-      - yjs
-    dev: true
-
-  /@lexical/rich-text/0.5.0_qqgt7rj5c76uep654vyaavnrhu:
-    resolution: {integrity: sha512-JhgMn70K410j3T/2WefPpEswZ+hWF3aJMNu7zkrCf2wB+KdrrGYoeNSZUzg2r4e6BuJgS117KlD99+MDnokCuw==}
-    peerDependencies:
-      '@lexical/clipboard': 0.5.0
-      '@lexical/selection': 0.5.0
-      '@lexical/utils': 0.5.0
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/clipboard': 0.5.0_lexical@0.5.0
-      '@lexical/selection': 0.5.0_lexical@0.5.0
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/selection/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-6I5qlqkYDIbDZPGwSOuvpWQUrqMY6URaKwrWsijQZMnNNKscGpC7IKb7sSDKn6YkLm7tuqig3hf2p+6hshkyWg==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/table/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-VNHWSsTFDSHNzLdQOR9qgKx4tvTuiDz6w0GfwBnMP4Ro2iKKtNowmZO4wDEZtVlUHvLMuOGuYqipOtKEDKbD4w==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/utils': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-
-  /@lexical/text/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-RqhOBU2Ecg0WVW8p1d3OB2a8sQyvh3suADdr7We50+Dn/k1M+jhKVWiQnf07ve4/yqYTj6/9/8AAg7kuNS2P/A==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      lexical: 0.5.0
-    dev: true
-
-  /@lexical/utils/0.5.0_lexical@0.5.0:
-    resolution: {integrity: sha512-FhQ+thPFTOyBxyRGcd3yJuYh/rvD8ro43DaelWD1KpSlwQ/YuWpdxsSuMqJ32ERpl+bmPPFP2kjkBofxSw1Quw==}
-    peerDependencies:
-      lexical: 0.5.0
-    dependencies:
-      '@lexical/list': 0.5.0_lexical@0.5.0
-      '@lexical/table': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-
-  /@lexical/yjs/0.5.0_lexical@0.5.0+yjs@13.5.41:
-    resolution: {integrity: sha512-2io4GqnRoSh6Nu9bzsDOlwPFJYjXZ9SdgU4ZioH2VvyW4wVstd+ZF2QVcUJlhuwgQr6DzuvM/pqN914IufLzpw==}
-    peerDependencies:
-      lexical: 0.5.0
-      yjs: '>=13.5.22'
-    dependencies:
-      '@lexical/offset': 0.5.0_lexical@0.5.0
-      lexical: 0.5.0
-      yjs: 13.5.41
-
   /@mapbox/node-pre-gyp/1.0.10:
     resolution: {integrity: sha512-4ySo4CjzStuprMwk35H5pPbkymjv1SF3jGLj6rAHp/xT/RF7TL7bd9CTm1xDY49K2qF7jmR/g7k+SkLETP6opA==}
     hasBin: true
@@ -8206,25 +7895,6 @@ packages:
       '@babel/runtime': 7.19.4
     dev: false
 
-  /@radix-ui/react-alert-dialog/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
-    resolution: {integrity: sha512-0MtxV53FaEEBOKRgyLnEqHZKKDS5BldQ9oUBsKVXWI5FHbl2jp35qs+0aJET+K5hJDsc40kQUzP7g+wC7tqrqA==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.19.4
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-slot': 1.0.1_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    transitivePeerDependencies:
-      - '@types/react'
-    dev: false
-
   /@radix-ui/react-arrow/1.0.1_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-1yientwXqXcErDHEv8av9ZVNEBldH8L9scVR3is20lL+jOCfcJyMFZFEY5cgIrgexsq1qggSXqiEL/d/4f+QXA==}
     peerDependencies:
@@ -8623,23 +8293,6 @@ packages:
     resolution: {integrity: sha512-d0O68AYy/9oeEy1DdC07bz1/ZXX+DqCskRd3i4JzLSTXwefzaepQrKjXC7aNM8lTHjFLDO0pDgaEiQ7jEk+HVg==}
     dependencies:
       '@babel/runtime': 7.19.4
-    dev: false
-
-  /@react-hook/async/3.1.1_react@18.2.0:
-    resolution: {integrity: sha512-C9KoDSIjhmVwm6jXPnWfVqqrdPvqOnvUrkUStkUUODV4F1GfNlyVdmYx/54HsgMlham61xEF6UvScqiLTaHYeQ==}
-    peerDependencies:
-      react: '>=16.8'
-    dependencies:
-      '@react-hook/latest': 1.0.3_react@18.2.0
-      react: 18.2.0
-    dev: false
-
-  /@react-hook/latest/1.0.3_react@18.2.0:
-    resolution: {integrity: sha512-dy6duzl+JnAZcDbNTfmaP3xHiKtbXYOaz3G51MGVljh548Y8MWzTr+PHLOfvpypEVW9zwvl+VyKjbWKEVbV1Rg==}
-    peerDependencies:
-      react: '>=16.8'
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /@remix-run/router/1.0.2:
@@ -22310,6 +21963,7 @@ packages:
 
   /isomorphic.js/0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+    dev: false
 
   /isstream/0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
@@ -23584,14 +23238,12 @@ packages:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  /lexical/0.5.0:
-    resolution: {integrity: sha512-J0cFuNPQQY5P9W5XW2/xgqp5W0eEQ2rxShLf8eevLvxFWsPSY3zjg3RCzTHyheSiGBBjKDIaM4gxtO8eNeJr2A==}
-
   /lib0/0.2.52:
     resolution: {integrity: sha512-CjxlM7UgICfN6b2OPALBXchIBiNk6jE+1g7JP8ha+dh1xKRDSYpH0WQl1+rMqCju49xUnwPG34v4CR5/rPOZhg==}
     engines: {node: '>=14'}
     dependencies:
       isomorphic.js: 0.2.5
+    dev: false
 
   /lie/3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
@@ -26835,14 +26487,6 @@ packages:
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.1
-    dev: false
-
-  /postcss-js/3.0.3:
-    resolution: {integrity: sha512-gWnoWQXKFw65Hk/mi2+WTQTHdPD5UJdDXZmX073EY/B3BWnYjO4F4t0VneTCnCGQ5E5GsCdMkzPaTXwl3r5dJw==}
-    engines: {node: '>=10.0'}
-    dependencies:
-      camelcase-css: 2.0.1
-      postcss: 8.4.18
     dev: false
 
   /postcss-js/4.0.0_postcss@8.4.18:
@@ -30200,53 +29844,8 @@ packages:
     engines: {node: '>= 6.0.0'}
     dev: false
 
-  /tailwindcss-logical/3.0.0_xkowlklhtk6sfvtndbucb3hfiy:
-    resolution: {integrity: sha512-vwevx/tQaSm2s5tt+NnbFP3dylwOHIDtVweWGvUATF/SvK5Zreq1+3arrk7dLJ+4ka37ZA9SvAh71413HOCj1Q==}
-    dependencies:
-      tailwindcss: 3.0.7_xkowlklhtk6sfvtndbucb3hfiy
-    transitivePeerDependencies:
-      - autoprefixer
-      - postcss
-      - ts-node
-    dev: false
-
   /tailwindcss-radix/2.6.0:
     resolution: {integrity: sha512-32gv65ommaEMPKRS9yPmbvc6QcV+LsAqtSe1RFindBctVpS6+SbmkfcdecW/zgRvHW7KeAgl3iyzq2ZmRqsdZQ==}
-    dev: false
-
-  /tailwindcss/3.0.7_xkowlklhtk6sfvtndbucb3hfiy:
-    resolution: {integrity: sha512-rZdKNHtC64jcQncLoWOuCzj4lQDTAgLtgK3WmQS88tTdpHh9OwLqULTQxI3tw9AMJsqSpCKlmcjW/8CSnni6zQ==}
-    engines: {node: '>=12.13.0'}
-    hasBin: true
-    peerDependencies:
-      autoprefixer: ^10.0.2
-      postcss: ^8.0.9
-    dependencies:
-      arg: 5.0.2
-      autoprefixer: 10.4.12_postcss@8.4.18
-      chalk: 4.1.2
-      chokidar: 3.5.3
-      color-name: 1.1.4
-      cosmiconfig: 7.0.1
-      detective: 5.2.1
-      didyoumean: 1.2.2
-      dlv: 1.1.3
-      fast-glob: 3.2.12
-      glob-parent: 6.0.2
-      is-glob: 4.0.3
-      normalize-path: 3.0.0
-      object-hash: 2.2.0
-      postcss: 8.4.18
-      postcss-js: 3.0.3
-      postcss-load-config: 3.1.4_postcss@8.4.18
-      postcss-nested: 5.0.6_postcss@8.4.18
-      postcss-selector-parser: 6.0.10
-      postcss-value-parser: 4.2.0
-      quick-lru: 5.1.1
-      resolve: 1.22.1
-      tmp: 0.2.1
-    transitivePeerDependencies:
-      - ts-node
     dev: false
 
   /tailwindcss/3.1.8:
@@ -30620,6 +30219,7 @@ packages:
     engines: {node: '>=8.17.0'}
     dependencies:
       rimraf: 3.0.2
+    dev: true
 
   /tmpl/1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
@@ -33098,6 +32698,7 @@ packages:
     resolution: {integrity: sha512-4eSTrrs8OeI0heXKKioRY4ag7V5Bk85Z4MeniUyown3o3y0G7G4JpAZWrZWfTp7pzw2b53GkAQWKqHsHi9j9JA==}
     dependencies:
       lib0: 0.2.52
+    dev: false
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

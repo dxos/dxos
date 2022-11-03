@@ -1,6 +1,6 @@
 {
   "sourceRoot": "packages/devtools/devtools/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
