@@ -86,7 +86,7 @@ describe('Framer', function () {
     // Peer 1 loops messages back to peer 2.
     peer1.port.subscribe((message) => {
       // console.log('lo', message.length)
-      peer1.port.send(message);
+      void peer1.port.send(message);
     });
 
     const framesSent: Buffer[] = [];
@@ -99,7 +99,7 @@ describe('Framer', function () {
     while (framesSent.length < TOTAL_FRAMES) {
       const frame = randomBytes(Math.floor(Math.random() * 400));
       // console.log('wrt', frame.length)
-      peer2.port.send(frame);
+      void peer2.port.send(frame);
       framesSent.push(frame);
 
       if (Math.random() < 0.1) {
@@ -134,7 +134,7 @@ describe('Framer', function () {
 
     // Peer 1 loops messages back to peer 2.
     peer1.port.subscribe((message) => {
-      peer1.port.send(message);
+      void peer1.port.send(message);
     });
 
     const framesSent: Buffer[] = [];
@@ -146,7 +146,7 @@ describe('Framer', function () {
     const TOTAL_FRAMES = 1000;
     while (framesSent.length < TOTAL_FRAMES) {
       const frame = randomBytes(Math.floor(Math.random() * 400));
-      peer2.port.send(frame);
+      void peer2.port.send(frame);
       framesSent.push(frame);
     }
 

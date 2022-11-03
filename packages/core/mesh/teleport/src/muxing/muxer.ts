@@ -3,16 +3,16 @@
 //
 
 import assert from 'assert';
+import { Duplex } from 'stream';
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/mesh/muxer';
-import { log } from '@dxos/log'
+import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
-import { Duplex } from 'stream';
 
 const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 
@@ -20,15 +20,15 @@ export type CleanupCb = void | (() => void);
 
 export type CreateChannelOpts = {
   contentType?: string;
-}
+};
 
 /**
  * Channel based multiplexer.
- * 
+ *
  * Can be used to open a number of channels represented by streams or RPC ports.
  * Performs framing for RPC ports.
  * Will buffer data until the remote peer opens the channel.
- * 
+ *
  * The API will not advertise channels that as they are opened by the remote peer.
  * A higher level API (could be build on top of this muxer) for channel discovery is required.
  */
@@ -53,9 +53,9 @@ export class Muxer {
 
   /**
    * Creates a duplex Node.js-style stream.
-   * 
+   *
    * The remote peer is expected to call `createStream` with the same tag.
-   * 
+   *
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
@@ -71,12 +71,11 @@ export class Muxer {
         // TODO(dmaretskyi): Should we error if sending data has errored?
         callback();
       },
-      read: () => {
-      },
+      read: () => {}
     });
     channel.push = (data) => {
       stream.push(data);
-    }
+    };
 
     // NOTE: Make sure channel.push is set before sending the command.
     this._sendCommand({
@@ -92,9 +91,9 @@ export class Muxer {
 
   /**
    * Creates an RPC port.
-   * 
+   *
    * The remote peer is expected to call `createPort` with the same tag.
-   * 
+   *
    * The port is immediately usable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
@@ -106,16 +105,16 @@ export class Muxer {
     assert(!channel.push, `Channel already open: ${tag}`);
 
     // We need to buffer incoming data until the port is subscribed to.
-    let inboundBuffer: Uint8Array[] = [];    
+    let inboundBuffer: Uint8Array[] = [];
     let callback: ((data: Uint8Array) => void) | undefined;
 
     channel.push = (data) => {
-      if(callback) {
+      if (callback) {
         callback(data);
       } else {
         inboundBuffer.push(data);
       }
-    }
+    };
 
     const port: RpcPort = {
       send: (data: Uint8Array) => {
@@ -124,7 +123,7 @@ export class Muxer {
       subscribe: (cb: (data: Uint8Array) => void) => {
         assert(!callback, 'Only one subscriber is allowed');
         callback = cb;
-        for(const data of inboundBuffer) {
+        for (const data of inboundBuffer) {
           cb(data);
         }
         inboundBuffer = [];
@@ -174,7 +173,7 @@ export class Muxer {
   }
 
   private _handleCommand(cmd: Command) {
-    if(this._destroyed || this._destroying) {
+    if (this._destroyed || this._destroying) {
       log.warn('Received command after destroy');
       return;
     }
@@ -182,12 +181,12 @@ export class Muxer {
     if (cmd.openChannel) {
       const channel = this._getOrCreateStream({
         tag: cmd.openChannel.tag,
-        contentType: cmd.openChannel.contentType,
-      })
+        contentType: cmd.openChannel.contentType
+      });
       channel.remoteId = cmd.openChannel.id;
-      
+
       // Flush any buffered data.
-      for(const data of channel.buffer) {
+      for (const data of channel.buffer) {
         this._sendCommand({
           data: {
             channelId: channel.remoteId,
@@ -198,8 +197,8 @@ export class Muxer {
       channel.buffer = [];
     } else if (cmd.data) {
       const stream = this._channelsByLocalId.get(cmd.data.channelId) ?? failUndefined();
-      if(!stream.push) {
-        log.warn(`Received data for channel before it was opened`, { tag: stream.tag });
+      if (!stream.push) {
+        log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
       }
       stream.push(cmd.data.data);
@@ -209,7 +208,7 @@ export class Muxer {
   }
 
   private _sendCommand(cmd: Command) {
-    Promise.resolve(this._framer.port.send(codec.encode(cmd))).catch(err => {
+    Promise.resolve(this._framer.port.send(codec.encode(cmd))).catch((err) => {
       this.destroy(err);
     });
   }
@@ -223,7 +222,7 @@ export class Muxer {
         tag: params.tag,
         contentType: params.contentType,
         buffer: [],
-        push: null,
+        push: null
       };
       this._channelsByTag.set(channel.tag, channel);
       this._channelsByLocalId.set(channel.id, channel);
@@ -232,7 +231,8 @@ export class Muxer {
   }
 
   private _sendData(channel: Channel, data: Uint8Array) {
-    if(channel.remoteId === null) { // Remote side has not opened the channel yet.
+    if (channel.remoteId === null) {
+      // Remote side has not opened the channel yet.
       channel.buffer.push(data);
     } else {
       this._sendCommand({
@@ -248,7 +248,7 @@ export class Muxer {
 type Channel = {
   /**
    * Our local channel ID.
-   * 
+   *
    * Incoming Data commands will have this ID.
    */
   id: number;
@@ -256,7 +256,7 @@ type Channel = {
 
   /**
    * Remote id is set when we receive an OpenChannel command.
-   * 
+   *
    * The originating Data commands should carry this id.
    */
   remoteId: null | number;
@@ -276,4 +276,4 @@ type Channel = {
 type CreateChannelInternalParams = {
   tag: string;
   contentType?: string;
-}
+};

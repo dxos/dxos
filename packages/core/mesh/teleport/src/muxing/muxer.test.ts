@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { latch, promiseTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/dist/src/proto/gen/example/testing/rpc';
+import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
