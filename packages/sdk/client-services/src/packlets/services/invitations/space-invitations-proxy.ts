@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, CancellableObservableProvider } from '@dxos/async';
+import { CancellableObservable, CancellableObservableProvider, TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
@@ -38,8 +38,7 @@ export class SpaceInvitationProxy {
         // assert(invitation.invitationId); // TODO(burdon): Assert.
         invitationId = invitation.invitationId!;
 
-        // TODO(burdon): Auto-map;
-        // TODO(burdon): Delegate timeout to error.
+        // TODO(burdon): Auto-map (escalate timeout to error).
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
@@ -58,18 +57,17 @@ export class SpaceInvitationProxy {
           }
 
           case Invitation.State.CANCELLED: {
-            // TODO(burdon): pass invitation to all callbacks.
             observer.callbacks?.onCancelled();
             break;
           }
 
           case Invitation.State.TIMEOUT: {
-            // observer.callbacks?.onTimeout(); // TODO(burdon): ???
+            observer.callbacks?.onTimeout(new TimeoutError());
             break;
           }
 
           case Invitation.State.ERROR: {
-            observer.callbacks?.onError(invitation.errorCode);
+            observer.callbacks?.onError(new Error(invitation.errorCode));
             break;
           }
         }
