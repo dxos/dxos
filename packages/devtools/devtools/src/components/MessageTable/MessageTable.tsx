@@ -6,15 +6,7 @@ import ColorHash from 'color-hash';
 import React, { useState } from 'react';
 
 import { ChevronRight as ExpandIcon } from '@mui/icons-material';
-import {
-  IconButton,
-  Link,
-  TableBody,
-  TableHead,
-  TableRow,
-  colors,
-  useTheme
-} from '@mui/material';
+import { IconButton, Link, TableBody, TableHead, TableRow, colors, useTheme } from '@mui/material';
 
 import { FeedBlock } from '@dxos/feed-store';
 import { JsonTreeView } from '@dxos/react-components';
@@ -23,7 +15,7 @@ import { Table, TableCell } from '../Table';
 
 const colorHash = new ColorHash({ saturation: 0.5 });
 
-const color = (type: string) => type === 'halo' ? colors.red[500] : colors.blue[500];
+const color = (type: string) => (type === 'halo' ? colors.red[500] : colors.blue[500]);
 
 // TODO(burdon): Remove.
 const defaultGetType = (message: any) => {
@@ -52,32 +44,25 @@ const defaultGetType = (message: any) => {
 };
 
 export interface MessageTableProps {
-  messages: FeedBlock<any>[]
-  getType?: (message: any) => string
-  onSelect?: (data: any) => {}
+  messages: FeedBlock<any>[];
+  getType?: (message: any) => string;
+  onSelect?: (data: any) => {};
 }
 
 /**
  * Hypercore message table.
  */
-export const MessageTable = ({
-  messages,
-  getType = defaultGetType,
-  onSelect
-}: MessageTableProps) => {
+export const MessageTable = ({ messages, getType = defaultGetType, onSelect }: MessageTableProps) => {
   const theme = useTheme();
 
   // Dynamically expand for performance.
-  const [expanded, setExpanded] = useState<{[index: string]: any}>({});
+  const [expanded, setExpanded] = useState<{ [index: string]: any }>({});
   const handleExpand = (rowKey: string) => {
     setExpanded({ ...expanded, ...{ [rowKey]: true } });
   };
 
   return (
-    <Table
-      stickyHeader
-      size='small'
-    >
+    <Table stickyHeader size='small'>
       <TableHead>
         <TableRow>
           <TableCell>Key</TableCell>
@@ -102,25 +87,16 @@ export const MessageTable = ({
                 }}
               >
                 {/* Feed. */}
-                <TableCell
-                  monospace
-                  style={{ color: colorHash.hex(key) }}
-                  title={key}
-                >
+                <TableCell monospace style={{ color: colorHash.hex(key) }} title={key}>
                   {feedKey.truncate(8)}
                 </TableCell>
 
                 {/* Number. */}
-                <TableCell monospace>
-                  {seq}
-                </TableCell>
+                <TableCell monospace>{seq}</TableCell>
 
                 {/* Type. */}
                 <TableCell>
-                  <Link
-                    style={{ color: color(type), cursor: 'pointer' }}
-                    onClick={() => onSelect?.(data)}
-                  >
+                  <Link style={{ color: color(type), cursor: 'pointer' }} onClick={() => onSelect?.(data)}>
                     {type}
                   </Link>
                 </TableCell>
@@ -129,19 +105,16 @@ export const MessageTable = ({
                 {/* TODO(burdon): Custom rendering of links for public keys. */}
                 <TableCell>
                   {expanded[rowKey] ? (
-                    <JsonTreeView
-                      size='small'
-                      depth={2}
-                      data={{ data }}
-                    />
-                  ) : ( // TODO(burdon): Factor out.
+                    <JsonTreeView size='small' depth={2} data={{ data }} />
+                  ) : (
+                    // TODO(burdon): Factor out.
                     <IconButton
                       size='small'
                       onClick={() => handleExpand(rowKey)}
                       sx={{
-                        'marginLeft': '5px',
-                        'width': 21,
-                        'height': 21,
+                        marginLeft: '5px',
+                        width: 21,
+                        height: 21,
                         '& svg': {
                           width: 18,
                           height: 18

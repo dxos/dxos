@@ -6,18 +6,14 @@ import React from 'react';
 
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { PartyTable } from '../../components';
+import { SpaceTable } from '../../components';
 
-export const PartiesPanel = () => {
+export const SpacesPanel = () => {
   const devtoolsHost = useDevtools();
   const { parties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
   if (parties === undefined) {
     return null;
   }
 
-  return (
-    <PartyTable
-      parties={parties}
-    />
-  );
+  return <SpaceTable parties={parties} />;
 };
