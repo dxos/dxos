@@ -9,8 +9,9 @@ import { onEvent, waitForEvent } from './event-emitter';
 import { latch } from './latch';
 import { asyncTimeout } from './timeout';
 
-it('onEvent', async function () {
-  const emitter = new EventEmitter();
+describe('event-emitter', function () {
+  it('onEvent', async function () {
+    const emitter = new EventEmitter();
 
   const [done, resolve] = latch();
 
@@ -53,6 +54,7 @@ it('waitForEvent (with test)', async function () {
 it('waitForEvent (expired)', async function () {
   const emitter = new EventEmitter();
 
-  await expect(() => waitForEvent(emitter, 'test', undefined, 100)).to.throw;
-  expect(emitter.listenerCount('test')).to.equal(0);
+    await expect(() => waitForEvent(emitter, 'test', undefined, 100)).to.throw;
+    expect(emitter.listenerCount('test')).to.equal(0);
+  });
 });

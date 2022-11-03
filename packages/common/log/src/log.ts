@@ -9,7 +9,7 @@ import { getConfig } from './options';
 /**
  * Logging function.
  */
-type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void;
+type Logger = (message: string, context?: LogContext, meta?: LogMetadata) => void;
 
 /**
  * Properties accessible on the logging function.
@@ -22,7 +22,7 @@ interface Log extends Logger {
   warn: Logger;
   error: Logger;
 
-  catch: (error: Error, ctx?: LogContext, meta?: LogMetadata) => void;
+  catch: (error: Error, context?: LogContext, meta?: LogMetadata) => void;
 }
 
 interface LogImp extends Log {
@@ -44,16 +44,16 @@ const createLog = (): LogImp => {
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 
   // TODO(burdon): Option to display/hide stack.
-  log.catch = (error: Error, ctx, meta) => processLog(LogLevel.ERROR, String(error.stack), ctx, meta, error);
+  log.catch = (error: Error, context, meta) => processLog(LogLevel.ERROR, String(error.stack), context, meta, error);
 
   /**
    * Process the current log call.
    */
-  const processLog = (level: LogLevel, message: string, ctx?: LogContext, meta?: LogMetadata, error?: Error) => {
+  const processLog = (level: LogLevel, message: string, context?: LogContext, meta?: LogMetadata, error?: Error) => {
     log._config.processor(log._config, {
       level,
       message,
-      ctx,
+      context,
       meta,
       error
     });

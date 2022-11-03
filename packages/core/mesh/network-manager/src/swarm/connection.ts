@@ -32,7 +32,7 @@ export enum ConnectionState {
   /**
    * Waiting for a connection to be originated from the remote peer.
    */
-  WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
+  CONNECTING = 'CONNECTING',
 
   /**
    * Peer rejected offer.
@@ -127,7 +127,7 @@ export class Connection {
   // TODO(burdon): Make async?
   open() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
-    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
+    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
     assert(!this._transport);
     this._transport = this._transportFactory.create({
