@@ -77,6 +77,7 @@ describe('services/space-invitation-service', function () {
       const stream: Stream<Invitation> = service.createInvitation(invitation);
       stream.subscribe((invitation: Invitation) => {
         expect(invitation.spaceKey).to.deep.eq(space1.key);
+        console.log('>>', invitation);
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
             peer2.acceptInvitation(invitation);

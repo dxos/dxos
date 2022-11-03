@@ -250,16 +250,16 @@ export class RpcPeer {
     }
 
     const id = this._nextId++;
-    const promise = new Promise<Response>((resolve, reject) => {
+    const responseReceived = new Promise<Response>((resolve, reject) => {
       this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
     });
 
     // TODO(burdon): Seems sketchy.
     // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
     // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
-    promise.catch(() => {});
+    responseReceived.catch(() => {});
 
-    this._sendMessage({
+    const sending = this._sendMessage({
       request: {
         id,
         method,
@@ -268,18 +268,29 @@ export class RpcPeer {
       }
     }).catch((err) => {
       // TODO(burdon): Need to surface this.
-      console.log('>>>>>>>>>>>>>', err);
+      console.log('##### 1', err);
       error(err);
+      throw err;
     });
 
     let response: Response;
     try {
-      // TODO(burdon): Use asyncTimeout (@dxos/async).
       response = await Promise.race([
-        promise,
+        sending,
+        responseReceived,
+        // TODO(burdon): Use asyncTimeout (@dxos/async).
         createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
       ]);
+
+      if (response === undefined) {
+        response = await Promise.race([
+          responseReceived,
+          // TODO(burdon): Use asyncTimeout (@dxos/async).
+          createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
+        ]);
+      }
     } catch (err) {
+      console.log('#### 2', err);
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();
