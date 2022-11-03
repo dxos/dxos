@@ -830,6 +830,7 @@ importers:
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
       '@headlessui/react': ^1.7.3
+      '@radix-ui/react-alert-dialog': ^1.0.2
       '@radix-ui/react-avatar': ^1.0.1
       '@radix-ui/react-dialog': ^1.0.0
       '@radix-ui/react-navigation-menu': ^1.1.1
@@ -859,6 +860,7 @@ importers:
       '@fontsource/roboto-flex': 4.5.2
       '@fontsource/space-grotesk': 4.5.10
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-alert-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-avatar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
@@ -8202,6 +8204,25 @@ packages:
     resolution: {integrity: sha512-3e7rn8FDMin4CgeL7Z/49smCA3rFYY3Ha2rUQ7HRWFadS5iCRw08ZgVT1LaNTCNqgvrUiyczLflrVrF0SRQtNA==}
     dependencies:
       '@babel/runtime': 7.19.4
+    dev: false
+
+  /@radix-ui/react-alert-dialog/1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce:
+    resolution: {integrity: sha512-0MtxV53FaEEBOKRgyLnEqHZKKDS5BldQ9oUBsKVXWI5FHbl2jp35qs+0aJET+K5hJDsc40kQUzP7g+wC7tqrqA==}
+    peerDependencies:
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    dependencies:
+      '@babel/runtime': 7.19.4
+      '@radix-ui/primitive': 1.0.0
+      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
+      '@radix-ui/react-context': 1.0.0_react@18.2.0
+      '@radix-ui/react-dialog': 1.0.2_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
+      '@radix-ui/react-slot': 1.0.1_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    transitivePeerDependencies:
+      - '@types/react'
     dev: false
 
   /@radix-ui/react-arrow/1.0.1_biqbaboplfbrettd7655fr4n2y:
