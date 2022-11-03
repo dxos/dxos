@@ -100,11 +100,11 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToFeeds(request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds(this.params.context, request);
+    return subscribeToFeeds({ feedStore: this.params.context.feedStore }, request);
   }
 
   subscribeToFeedBlocks(request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    return subscribeToFeedBlocks(this.params.context, request);
+    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request);
   }
 
   getPartySnapshot(request: GetPartySnapshotRequest): Promise<GetPartySnapshotResponse> {
@@ -128,14 +128,14 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus(this.params);
+    return subscribeToNetworkStatus({ networkManager: this.params.context.networkManager });
   }
 
   subscribeToSignalTrace(): Stream<SubscribeToSignalTraceResponse> {
-    return subscribeToSignalTrace(this.params);
+    return subscribeToSignalTrace({ networkManager: this.params.context.networkManager });
   }
 
   subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo(this.params);
+    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
   }
 }
