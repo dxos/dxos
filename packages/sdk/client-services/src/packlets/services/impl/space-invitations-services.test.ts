@@ -7,6 +7,7 @@ import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ServiceContext } from '../service-context';
@@ -36,20 +37,29 @@ describe('services/space-invitation-service', function () {
 
     {
       const stream: Stream<Invitation> = service.createInvitation(invitation);
-      stream.subscribe((invitation: Invitation) => {
-        expect(invitation.spaceKey).to.deep.eq(space1.key);
-        states.push(invitation.state!);
-        switch (invitation.state) {
-          case Invitation.State.CONNECTING: {
-            peer2.acceptInvitation(invitation);
-            break;
+      stream.subscribe(
+        (invitation: Invitation) => {
+          expect(invitation.spaceKey).to.deep.eq(space1.key);
+          states.push(invitation.state!);
+          console.log('>>', invitation);
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              peer2.acceptInvitation(invitation);
+              break;
+            }
+            case Invitation.State.SUCCESS: {
+              success.wake(invitation);
+              break;
+            }
           }
-          case Invitation.State.SUCCESS: {
-            success.wake(invitation);
-            break;
+        },
+        (err) => {
+          // TODO(burdon): Test error case.
+          if (err) {
+            log.error(err);
           }
         }
-      });
+      );
     }
 
     {
@@ -75,27 +85,35 @@ describe('services/space-invitation-service', function () {
 
     {
       const stream: Stream<Invitation> = service.createInvitation(invitation);
-      stream.subscribe((invitation: Invitation) => {
-        expect(invitation.spaceKey).to.deep.eq(space1.key);
-        console.log('>>', invitation);
-        switch (invitation.state) {
-          case Invitation.State.CONNECTING: {
-            peer2.acceptInvitation(invitation);
-            break;
+      stream.subscribe(
+        (invitation: Invitation) => {
+          expect(invitation.spaceKey).to.deep.eq(space1.key);
+          console.log('>>', invitation);
+          switch (invitation.state) {
+            case Invitation.State.CONNECTING: {
+              peer2.acceptInvitation(invitation);
+              break;
+            }
+            case Invitation.State.CONNECTED: {
+              void service.cancelInvitation(invitation); // TODO(burdon): Uncaught exception.
+              break;
+            }
+            case Invitation.State.SUCCESS: {
+              throw new Error('Succeeded before being cancelled');
+            }
+            case Invitation.State.CANCELLED: {
+              cancelled.wake(invitation);
+              break;
+            }
           }
-          case Invitation.State.CONNECTED: {
-            void service.cancelInvitation(invitation); // TODO(burdon): Uncaught exception.
-            break;
-          }
-          case Invitation.State.SUCCESS: {
-            throw new Error('Succeeded before being cancelled');
-          }
-          case Invitation.State.CANCELLED: {
-            cancelled.wake(invitation);
-            break;
+        },
+        (err) => {
+          // TODO(burdon): Test error case.
+          if (err) {
+            log.error(err);
           }
         }
-      });
+      );
     }
 
     {

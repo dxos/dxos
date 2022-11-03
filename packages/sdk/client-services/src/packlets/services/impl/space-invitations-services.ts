@@ -56,13 +56,11 @@ export class SpaceInvitationServiceImpl implements InvitationService {
           close();
         },
         onTimeout: (err: TimeoutError) => {
-          invitation.state = Invitation.State.ERROR;
-          invitation.errorCode = 504; // TODO(burdon): Enum.
+          invitation.state = Invitation.State.TIMEOUT;
           close(err);
         },
         onError: (err: any) => {
           invitation.state = Invitation.State.ERROR;
-          invitation.errorCode = 500; // TODO(burdon): Enum.
           close(err);
         }
       });

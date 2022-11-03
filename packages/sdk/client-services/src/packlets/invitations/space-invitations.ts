@@ -113,7 +113,10 @@ export class SpaceInvitations {
 
         observable.callbacks?.onSuccess(invitation);
       } catch (err) {
-        observable.callbacks?.onError(err);
+        if (!observable.cancelled) {
+          log.error('failed', err);
+          observable.callbacks?.onError(err);
+        }
       }
 
       await peer.close();
@@ -178,7 +181,10 @@ export class SpaceInvitations {
                 });
               } catch (err) {
                 // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
-                observable.callbacks?.onError(err);
+                if (!observable.cancelled) {
+                  log.error('failed', err);
+                  observable.callbacks?.onError(err);
+                }
               }
 
               admitted.wake(space);

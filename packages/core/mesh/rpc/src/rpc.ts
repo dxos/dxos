@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
 import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
@@ -266,31 +266,26 @@ export class RpcPeer {
         payload: request,
         stream: false
       }
-    }).catch((err) => {
-      // TODO(burdon): Need to surface this.
-      console.log('##### 1', err);
-      error(err);
-      throw err;
     });
 
     let response: Response;
     try {
-      response = await Promise.race([
-        sending,
-        responseReceived,
-        // TODO(burdon): Use asyncTimeout (@dxos/async).
-        createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
-      ]);
+      // TODO(burdon): Remove createTimeoutPromise below.
+      // const race = Promise.race([
+      //   responseReceived,
+      //   createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
+      // ]);
 
+      const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
+
+      // Wait until send completes or throws an error (or response throws a timeout).
+      response = await Promise.race([sending, waiting]);
+
+      // Keep waiting if sending promise completes without error.
       if (response === undefined) {
-        response = await Promise.race([
-          responseReceived,
-          // TODO(burdon): Use asyncTimeout (@dxos/async).
-          createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
-        ]);
+        response = await waiting;
       }
     } catch (err) {
-      console.log('#### 2', err);
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();
