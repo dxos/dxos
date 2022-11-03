@@ -5,6 +5,7 @@
 export * from './DeviceList';
 export * from './ErrorsProvider';
 export * from './FatalError';
+export * from './HeadingWithActions';
 export * from './InvitationList';
 export * from './ServiceWorkerToast';
 export * from './SpaceList';

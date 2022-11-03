@@ -10,8 +10,7 @@ import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
-import { InvitationList } from '../../components';
-import { HeadingWithActions } from '../../components/HeadingWithActions';
+import { InvitationList, HeadingWithActions } from '../../components';
 import { ProfileList } from '../../components/ProfileList';
 import { useSafeSpaceKey } from '../../hooks';
 

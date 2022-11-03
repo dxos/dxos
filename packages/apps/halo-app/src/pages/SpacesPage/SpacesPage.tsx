@@ -11,8 +11,7 @@ import { Button, getSize, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 import { JoinSpaceDialog } from '..';
-import { SpaceList } from '../../components';
-import { HeadingWithActions } from '../../components/HeadingWithActions';
+import { SpaceList, HeadingWithActions } from '../../components';
 
 export const SpacesPage = () => {
   const client = useClient();

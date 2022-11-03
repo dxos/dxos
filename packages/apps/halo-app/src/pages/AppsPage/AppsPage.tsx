@@ -7,7 +7,7 @@ import React from 'react';
 
 import { useTranslation, Button, getSize } from '@dxos/react-uikit';
 
-import { HeadingWithActions } from '../../components/HeadingWithActions';
+import { HeadingWithActions } from '../../components';
 
 export const AppsPage = () => {
   const { t } = useTranslation('halo');

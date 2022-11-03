@@ -9,8 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
-import { DeviceList, InvitationList } from '../../components';
-import { HeadingWithActions } from '../../components/HeadingWithActions';
+import { DeviceList, InvitationList, HeadingWithActions } from '../../components';
 
 export const DevicesPage = () => {
   const { t } = useTranslation('halo');
