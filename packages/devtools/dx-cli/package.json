@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dx-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "CLI Test using oclif.",
   "keywords": [
     "oclif"
