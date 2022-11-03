@@ -1,0 +1,59 @@
+{
+  "sourceRoot": "packages/experimental/client-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/client-testing/src/index.ts",
+        "outputPath": "packages/experimental/client-testing/dist",
+        "tsConfig": "packages/experimental/client-testing/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/client-testing/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/experimental/client-testing",
+        "outputPath": "tmp/mocha/packages/experimental/client-testing",
+        "resultsPath": "test-results/packages/experimental/client-testing",
+        "testPatterns": [
+          "packages/experimental/client-testing/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/client-testing/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

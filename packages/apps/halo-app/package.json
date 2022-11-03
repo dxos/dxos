@@ -1,6 +1,7 @@
 {
   "name": "@dxos/halo-app",
   "version": "0.1.0",
+  "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

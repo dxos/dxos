@@ -49,6 +49,12 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
       "path": "../../gem/gem-core"
     },
     {
@@ -58,28 +64,22 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-testing"
-    },
-    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client-testing"
+      "path": "../client-testing"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../react-client-testing"
     },
     {
-      "path": "../../sdk/react-echo-graph"
+      "path": "../react-echo-graph"
     },
     {
-      "path": "../../sdk/react-ipfs"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
+      "path": "../react-ipfs"
     }
   ]
 }

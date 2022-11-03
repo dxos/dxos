@@ -1,11 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
-      "ESNext"
+      "es2019"
     ],
     "outDir": "dist"
   },
@@ -13,7 +12,8 @@
     "/node_modules/"
   ],
   "include": [
-    "src"
+    "src",
+    "stories"
   ],
   "references": [
     {
@@ -29,10 +29,13 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../common/util"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
