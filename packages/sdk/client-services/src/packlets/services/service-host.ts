@@ -59,7 +59,6 @@ type ClientServiceHostParams = {
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _config: Config;
   private readonly _signer?: HaloSigner;
-  private readonly _devtoolsEvents = new DevtoolsHostEvents();
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 

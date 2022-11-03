@@ -5,8 +5,9 @@
 import { Config } from '@dxos/config';
 import { NetworkManager } from '@dxos/network-manager';
 
+import { DevtoolsHostEvents } from '../devtools';
 import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl';
-import { DevtoolsService, DevtoolsServiceParams } from './impl/devtools';
+import { DevtoolsService } from './impl/devtools';
 import { ServiceContext } from './service-context';
 import { ClientServices } from './services';
 import { HaloSigner } from './signer';
@@ -31,5 +32,5 @@ export const createServices = ({
   ProfileService: new ProfileService(context),
   SystemService: new SystemService(config),
   TracingService: new TracingService(config),
-  DevtoolsHost: new DevtoolsService({ config, context, networkManager } as DevtoolsServiceParams)
+  DevtoolsHost: new DevtoolsService({ events: new DevtoolsHostEvents(), config, context, networkManager })
 });
