@@ -53,9 +53,7 @@ export class Muxer {
 
   /**
    * Creates a duplex Node.js-style stream.
-   *
    * The remote peer is expected to call `createStream` with the same tag.
-   *
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
@@ -65,14 +63,16 @@ export class Muxer {
       contentType: opts.contentType
     });
     assert(!channel.push, `Channel already open: ${tag}`);
+
     const stream = new Duplex({
       write: (data, encoding, callback) => {
         this._sendData(channel, data);
         // TODO(dmaretskyi): Should we error if sending data has errored?
         callback();
       },
-      read: () => {}
+      read: () => {} // No-op. We will push data when we receive it.
     });
+
     channel.push = (data) => {
       stream.push(data);
     };
@@ -91,9 +91,7 @@ export class Muxer {
 
   /**
    * Creates an RPC port.
-   *
    * The remote peer is expected to call `createPort` with the same tag.
-   *
    * The port is immediately usable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
@@ -173,6 +171,8 @@ export class Muxer {
   }
 
   private _handleCommand(cmd: Command) {
+    log(`Received command`, { cmd })
+
     if (this._destroyed || this._destroying) {
       log.warn('Received command after destroy');
       return;
@@ -248,7 +248,6 @@ export class Muxer {
 type Channel = {
   /**
    * Our local channel ID.
-   *
    * Incoming Data commands will have this ID.
    */
   id: number;
@@ -256,7 +255,6 @@ type Channel = {
 
   /**
    * Remote id is set when we receive an OpenChannel command.
-   *
    * The originating Data commands should carry this id.
    */
   remoteId: null | number;

@@ -12,6 +12,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { Muxer } from './muxer';
 import { RpcPort } from './rpc-port';
+import { Transform } from 'stream';
+import waitForExpect from 'wait-for-expect';
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -121,4 +123,35 @@ describe('Muxer', function () {
 
     await wait();
   });
+
+  it('node.js streams', async () => {
+    const { peer1, peer2 } = setupPeers();
+
+    const stream2 = peer2.createStream('example.extension/stream1', {
+      contentType: 'application/octet-stream',
+    });
+
+    // Buffer data before remote peer opens.
+    stream2.write('hello');
+
+    const stream1 = peer1.createStream('example.extension/stream1', {
+      contentType: 'application/octet-stream',
+    });
+    stream1.pipe(new Transform({
+      transform (chunk, encoding, callback) {
+        callback(null, Buffer.from(Buffer.from(chunk).toString().toUpperCase())); // Make all characters uppercase.
+      }
+    })).pipe(stream1);
+
+    let received = '';
+    stream2.on('data', (chunk) => {
+      received += Buffer.from(chunk).toString();
+    });
+    
+    stream2.write(' world!');
+
+    await waitForExpect(() => {
+      expect(received).to.eq('HELLO WORLD!');
+    })
+  })
 });
