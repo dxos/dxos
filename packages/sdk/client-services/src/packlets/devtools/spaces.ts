@@ -49,25 +49,3 @@ export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: S
       unsubscribe?.();
     };
   });
-
-// export const getPartySnapshot = async (
-//   { echo }: DevtoolsServiceDependencies,
-//   request: GetPartySnapshotRequest
-// ): Promise<GetPartySnapshotResponse> => {
-//   const snapshot = await echo.snapshotStore.load(request.partyKey);
-//   return { snapshot };
-// };
-
-// export const savePartySnapshot = async (
-//   { echo }: DevtoolsServiceDependencies,
-//   request: SavePartySnapshotRequest
-// ): Promise<SavePartySnapshotResponse> => {
-//   const party = echo.getParty(request.partyKey);
-//   if (!party) {
-//     return {};
-//   }
-
-//   const snapshot = await party.createSnapshot();
-//   await echo.snapshotStore.save(snapshot);
-//   return { snapshot };
-// };
