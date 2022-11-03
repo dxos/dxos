@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bare-template",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Application template with only the essentials.",
   "homepage": "https://dxos.org",

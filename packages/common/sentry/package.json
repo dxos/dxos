@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sentry",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Provides a common interface for Sentry node & browser",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
