@@ -17,18 +17,16 @@ import { HaloSigner } from './signer';
 export const createServices = ({
   config,
   context, // TODO(burdon): Too big to pass into services.?
-  echo, // TODO(burdon): Remove (legacy?)
   networkManager,
   signer // TODO(burdon): Remove (legacy?)
 }: {
   config: Config;
   context: ServiceContext;
-  echo: any;
   networkManager: NetworkManager;
   signer?: HaloSigner;
 }): ClientServices => ({
   DataService: context.dataService,
-  HaloService: new HaloService(echo, signer), // TODO(burdon): Remove.
+  HaloService: new HaloService(null, signer), // TODO(burdon): Remove.
   PartyService: new PartyService(context),
   ProfileService: new ProfileService(context),
   SystemService: new SystemService(config),
