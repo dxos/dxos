@@ -20,14 +20,14 @@ export const subscribeToNetworkStatus = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
-        const status = hook.networkManager.signal.getStatus();
+        const status = hook.context.networkManager.signal.getStatus();
         next({ servers: status });
       } catch (err: any) {
         close(err);
       }
     };
 
-    hook.networkManager.signal.statusChanged.on(update);
+    hook.context.networkManager.signal.statusChanged.on(update);
     update();
   });
 
@@ -35,7 +35,7 @@ export const subscribeToSignalTrace = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
     next({ events: [] });
     const trace: CommandTrace[] = [];
-    hook.networkManager.signal.commandTrace.on((msg) => {
+    hook.context.networkManager.signal.commandTrace.on((msg) => {
       trace.push(msg);
       next({ events: trace.map((msg) => JSON.stringify(msg)) });
     });
@@ -45,24 +45,24 @@ export const subscribeToNetworkTopics = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
     const update = () => {
       try {
-        const topics = hook.networkManager.topics;
+        const topics = hook.context.networkManager.topics;
         const labeledTopics = topics.map((topic) => ({
           topic,
-          label: hook.networkManager.getSwarm(topic)?.label ?? topic.toHex()
+          label: hook.context.networkManager.getSwarm(topic)?.label ?? topic.toHex()
         }));
         next({ topics: labeledTopics });
       } catch (err: any) {
         close(err);
       }
     };
-    hook.networkManager.topicsUpdated.on(update);
+    hook.context.networkManager.topicsUpdated.on(update);
 
     update();
   });
 
 export const subscribeToSwarmInfo = (hook: DevtoolsServiceParams) =>
   new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
-    const networkManager = hook.networkManager;
+    const networkManager = hook.context.networkManager;
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
@@ -81,7 +81,7 @@ export const getNetworkPeers = (
     throw new Error('Expected a network topic');
   }
 
-  const map = hook.networkManager.getSwarmMap(PublicKey.from(request.topic));
+  const map = hook.context.networkManager.getSwarmMap(PublicKey.from(request.topic));
   return {
     peers: map?.peers.map((peer) => ({
       ...peer,
