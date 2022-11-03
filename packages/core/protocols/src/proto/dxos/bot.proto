@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 import "dxos/client.proto";
 import "dxos/config.proto";
-import "dxos/echo/invitation.proto";
+import "dxos/halo/invitations.proto";
 import "dxos/keys.proto";
 
 package dxos.bot;
@@ -67,7 +67,7 @@ message SpawnBotRequest {
   optional BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.invitation.InvitationDescriptor invitation = 2;
+  optional dxos.halo.invitations.InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
   optional dxos.keys.PublicKey party_key = 3;
@@ -121,7 +121,7 @@ message InitializeRequest {
   optional dxos.config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.invitation.InvitationDescriptor invitation = 2;
+  optional dxos.halo.invitations.InvitationDescriptor invitation = 2;
 
   /// ID of the bot.
   optional string id = 3;

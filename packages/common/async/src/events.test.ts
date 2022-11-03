@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { sleep } from './async';
 import { Event } from './events';
+import { sleep } from './timeout';
 
 describe('Event', function () {
   it('#debounce', async function () {

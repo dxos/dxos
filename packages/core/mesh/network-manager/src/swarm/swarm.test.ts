@@ -7,7 +7,7 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
-import { sleep, promiseTimeout } from '@dxos/async';
+import { sleep, asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
@@ -61,8 +61,8 @@ describe('Swarm', function () {
     expect(swarm2.connections.length).toEqual(0);
 
     const promise = Promise.all([
-      promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
-      promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
+      asyncTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+      asyncTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
     // Behavior of the Signal Server.
@@ -161,8 +161,8 @@ describe('Swarm', function () {
     const { swarm1, swarm2, peerId2 } = setupSwarm();
 
     const promise = Promise.all([
-      promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
-      promiseTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
+      asyncTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
+      asyncTimeout(swarm2.connected.waitForCount(1), 3000, new Error('Swarm2 connect timeout.'))
     ]);
 
     swarm1.onSwarmEvent({

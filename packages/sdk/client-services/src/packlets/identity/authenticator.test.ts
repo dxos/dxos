@@ -25,7 +25,6 @@ describe('identity/authenticator', function () {
     const authVerifier = createHaloAuthVerifier(() => new ComplexSet(PublicKey.hash, [deviceKey]));
 
     const nonce = new Uint8Array([2, 1, 3, 7]);
-
     const credential = await authProvider(nonce);
     assert(credential);
     expect(await authVerifier(nonce, credential)).toBeTruthy();

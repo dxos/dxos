@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts",
         "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
-        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json"
+        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

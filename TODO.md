@@ -1,38 +1,55 @@
 # TODOs
 
-## https://github.com/dxos/dxos/pull/1670
+Staging area for internal work-in-progress (written-up into GH issues).
 
-- [ ] Organize this list by package (and figure out where to put it).
+## Issues
 
-- [ ] Factor out PRs: 
-  - [ ] `mocha` runner.
-  - [ ] Rename `@dxos/test-utils`.
-  - [ ] Rename `@dxos/shims` => `@dxos/typings`; Remove/rename all `shims.d.ts`.
+- https://github.com/dxos/dxos/issues/1576
 
-- [ ] Client services (close iterator)? 
-- [ ] Factor out invitations (echo/halo).
-- [ ] Remove `party` vars.
+## Network/Hypercore
 
-- [ ] `@dxos/feed-store` benchmark/stress-test/metrics (dump RAS blocks/size).
-- [ ] `@dxos/feed-store` error types?
+- [ ] Basic hypercore multiplexer prototype/tests (dynamically add plug-ins).
+- [ ] Hypercore v10.
+
+## Invitations (https://github.com/dxos/dxos/issues/1745)
+
+- [ ] Observer pattern (pending, connected, verified, done, error, fatal, timed-out, etc.)
+  - [ ] Remove callbacks (see profile.createInvitation).
+- [ ] Reconcile Signer/CredentialsSigner.
+- [ ] Remove `invitation` field from proto and wrappers.
+- [ ] Client API (class names).
+- [ ] Remove InvitationWrapper.
+- [ ] Bidirectional requests.
+- [x] Clean-up protobuf defs (incl. service defs).
+
+## Protocols
+
+- [ ] Clean-up defs; remove "party".
+- [ ] ProtoRpcPeerOptions (rename requested/exposed options).
+
+## Tools
+
+- [ ] Unify `@dxos/log`, `@dxos/util` spy, and `@dxos/spyglass`.
+- [ ] Add `@dxos/x` tools (deps, sorting, etc.)
+- [ ] Unify `@dxos/beast`, `@dxos/ridoculous`).
+- [ ] `@testing` directive.
+- [ ] Logging indicator to match open/close (e.g., with timing); indented levels?
+- [ ] Convert Buffers into lengths when logging.
 - [ ] Utils to randomize tests.
 
+## Clean-up
+
+- [ ] `@dxos/feed-store` benchmark/stress-test/metrics (dump RAS blocks/size).
+- [ ] Move tests to `chai`.
+- [ ] Standardize (and write-up) logging format, test names, etc.
+- [ ] Remove `party` vars.
 - [ ] Standardize debug inspect pattern; hook into logger JSON.stringify.
 - [ ] Rationalize `@dxos/async` (e.g., triggers, events).
 - [ ] Rationalize `@dxos/debug` (e.g., range).
 - [ ] Rationalize `@dxos/util`.
 - [ ] Use TestItemBuilder pattern from `@dxos/feed-store` in `@dxos/network-manager`.
 
-- [ ] Convert Buffers into lengths when logging.
-- [ ] Logging indicator to match open/close (e.g., with timing); indented levels?
-- [ ] Move tests to `chai`.
-- [ ] `@testing` directive.
-- [ ] Unify `@dxos/log`, `@dxos/util` spy, and `@dxos/spyglass`.
-- [ ] Add `@dxos/x` tools (deps, sorting, etc.)
-- [ ] Unify `@dxos/beast`, `@dxos/ridoculous`).
-- [ ] Standardize (and write-up) logging format, test names, etc.
-
-- [ ] Basic hypercore multiplexer prototype/tests (dynamically add plug-ins).
-- [ ] Hypercore v10.
+## Misc
 
 - [ ] Document IDEA tricks, keys, etc.
+  - [ ] https://youtrack.jetbrains.com/issues?q=by:%20me&preview=WEB-57606

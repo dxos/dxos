@@ -7,7 +7,7 @@ import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import debug from 'debug';
 import React, { FC, useEffect, useState } from 'react';
 
-import { Item, InvitationDescriptor, Party } from '@dxos/client';
+import { Item, InvitationWrapper, Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useClient, ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -39,7 +39,7 @@ const tableStyles = css`
 `;
 
 type InvitationInfo = {
-  descriptor: InvitationDescriptor;
+  descriptor: InvitationWrapper;
   secret: string;
 };
 

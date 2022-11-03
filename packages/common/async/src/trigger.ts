@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { promiseTimeout } from './async';
+import { asyncTimeout } from './timeout';
 
 /**
  * Returns a tuple containing a Promise that will be resolved when the resolver function is called.
@@ -53,7 +53,7 @@ export class Trigger<T = void> {
    */
   async wait({ timeout }: { timeout?: number } = {}): Promise<T> {
     if (timeout) {
-      return promiseTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
+      return asyncTimeout(this._promise, timeout, new Error(`Timed out after ${timeout}ms.`));
     } else {
       return this._promise;
     }

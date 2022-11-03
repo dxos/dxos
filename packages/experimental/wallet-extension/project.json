@@ -11,7 +11,10 @@
         "main": "packages/experimental/wallet-extension/src/index.ts",
         "outputPath": "packages/experimental/wallet-extension/dist",
         "tsConfig": "packages/experimental/wallet-extension/tsconfig.json",
-        "updateBuildableProjectDepsInPackageJson": false
+        "updateBuildableProjectDepsInPackageJson": false,
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
