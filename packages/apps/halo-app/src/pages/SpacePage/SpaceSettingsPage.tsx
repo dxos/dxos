@@ -6,13 +6,13 @@ import { CaretLeft, Planet, UserPlus } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 import { InvitationList, HeadingWithActions } from '../../components';
 import { ProfileList } from '../../components/ProfileList';
-import { useSafeSpaceKey } from '../../hooks';
 
 export const SpaceSettingsPage = () => {
   const { t } = useTranslation('halo');

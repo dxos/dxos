@@ -2,167 +2,114 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import '@dxosTheme';
+import cx from 'classnames';
+import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
+import React from 'react';
+import { HashRouter, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
-import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
+import { Item } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
+import { SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
+import { ClientProvider, useClient, useParties, useParty, useSelection } from '@dxos/react-client';
+import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
+import { Button, getSize, Heading, JoinSpaceDialog, Loading, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { TextModel } from '@dxos/text-model';
+import { humanize } from '@dxos/util';
 
-import { Item, ObjectModel, Party } from '@dxos/client';
-import { useClient, useProfile, useSelection } from '@dxos/react-client';
-import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
-import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-toolkit';
+const configProvider = async () => new Config(await Dynamics(), Defaults());
 
-const Main = () => {
-  const client = useClient();
-  const [party, setParty] = useState<Party>();
-
-  const inputRef = useRef<HTMLInputElement>();
-  const [action, setAction] = useState<string>();
-
-  // 1. Create party.
-  useEffect(() => {
-    // TODO(wittjosiah): Attempt to load existing party.
-    void client.echo.createParty().then((party) => setParty(party));
-  }, []);
-
-  // 3. Select items.
-  const items = useSelection(party?.select().filter({ type: 'task' })) ?? [];
-  items.sort((item1: Item<ObjectModel>, item2: Item<ObjectModel>) => {
-    const checked1 = item1.model.get('done');
-    const checked2 = item2.model.get('done');
-    return checked1 === checked2 ? 0 : checked1 ? 1 : -1;
-  });
-
-  // 6. Serialize.
-  const serializer = usePartySerializer();
-  const download = useFileDownload();
-
-  if (!party) {
-    return null;
-  }
-
-  // 2. Create item.
-  const handleCreateTask = () => {
-    const title = inputRef.current!.value.trim();
-    if (title) {
-      void party!.database.createItem({
-        type: 'task',
-        props: {
-          title
-        }
-      });
-    }
-
-    inputRef.current!.value = '';
-    inputRef.current!.focus();
-  };
-
-  const handleTaskChecked = (item: Item<ObjectModel>, checked: boolean) => {
-    void item.model.set('done', checked);
-  };
-
-  const handleExport = async () => {
-    const blob = await serializer.serializeParty(party!);
-    download(blob, `${party?.key.toHex()}.party`);
-  };
-
-  const handleImport = async (files: File[]) => {
-    const data = await new Uint8Array(await files[0].arrayBuffer());
-    const party = await serializer.deserializeParty(data);
-    setParty(party);
-  };
-
+export const App = () => {
   return (
-    <Box
-      sx={{
-        padding: 2,
-        width: 800,
-        margin: 'auto',
-        marginTop: 2,
-        border: '1px solid #CCC'
-      }}
-    >
-      <Box sx={{ display: 'flex' }}>
-        <TextField
-          inputRef={inputRef}
-          autoFocus
-          fullWidth
-          placeholder='Enter task.'
-          autoComplete='off'
-          spellCheck={false}
-          onKeyDown={(event) => event.key === 'Enter' && handleCreateTask()}
-        />
-
-        <Button onClick={handleCreateTask}>Add</Button>
-      </Box>
-
-      <List sx={{ my: 2 }}>
-        {items.map((item) => (
-          <ListItemButton key={item.id} disableRipple>
-            <ListItemIcon>
-              <Checkbox
-                checked={item.model.get('done') ?? false}
-                onChange={(event) => {
-                  handleTaskChecked(item, event.target.checked);
-                }}
-              />
-            </ListItemIcon>
-            <ListItemText primary={item.model.get('title')} />
-          </ListItemButton>
-        ))}
-      </List>
-
-      <Box>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('share')}>
-          Share
-        </Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('join')}>
-          Join
-        </Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={handleExport}>
-          Export
-        </Button>
-        <Button sx={{ mr: 1 }} variant='outlined' onClick={() => setAction('import')}>
-          Import
-        </Button>
-      </Box>
-
-      {/* 4. Sharing. */}
-      <PartySharingDialog open={action === 'share'} onClose={() => setAction(undefined)} partyKey={party.key} />
-
-      {/* 5. Joining. */}
-      <JoinPartyDialog
-        open={action === 'join'}
-        onJoin={(party) => setParty(party)}
-        onClose={() => setAction(undefined)}
-        closeOnSuccess={true}
-      />
-
-      {/* 6. Import. */}
-      <FileUploadDialog open={action === 'import'} onClose={() => setAction(undefined)} onUpload={handleImport} />
-    </Box>
+    <ClientProvider config={configProvider}>
+      <HashRouter>
+        <Routes>
+          <Route path='/' element={<SpacesView />} />
+          <Route path='/:space' element={<SpaceView />} />
+        </Routes>
+      </HashRouter>
+    </ClientProvider>
   );
 };
 
-export const App = () => {
-  const profile = useProfile();
+export const SpacesView = () => {
+  const client = useClient();
+  const spaces = useParties();
+  const navigate = useNavigate();
+  const { t } = useTranslation('hello');
 
-  if (!profile) {
-    return (
-      <Box
-        sx={{
-          marginY: 2,
-          marginX: 'auto',
-          width: 300,
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <Button variant='contained' onClick={() => window.open('https://halo.dxos.org', '_blank')}>
-          Create a HALO identity
-        </Button>
-      </Box>
-    );
+  const handleCreateSpace = async () => {
+    // 1. Create party.
+    const space = await client.echo.createParty();
+
+    // 2. Create item.
+    await space.database.createItem({
+      model: TextModel,
+      type: DOCUMENT_TYPE
+    });
+  };
+
+  return (
+    <main className='max-is-5xl mli-auto pli-7'>
+      <div role='none' className={cx('flex flex-wrap items-center gap-x-2 gap-y-4')}>
+        <Heading>{t('spaces label')}</Heading>
+        <div role='none' className='grow-[99] min-w-[2rem]' />
+        <div role='none' className='grow flex gap-2'>
+          {/* 5. Joining. */}
+          <JoinSpaceDialog
+            onJoin={(space) => navigate(`/${space.key.toHex()}`)}
+            dialogProps={{
+              openTrigger: (
+                <Button className='grow flex gap-1'>
+                  <Rocket className={getSize(5)} />
+                  {t('join space label', { ns: 'uikit' })}
+                </Button>
+              )
+            }}
+          />
+          <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+            <Plus className={getSize(5)} />
+            {t('create space label', { ns: 'uikit' })}
+          </Button>
+        </div>
+      </div>
+
+      {spaces?.length > 0 && <SpaceList spaces={spaces} />}
+    </main>
+  );
+};
+
+const SpaceView = () => {
+  const { t } = useTranslation('halo');
+  const navigate = useNavigate();
+  const { space: spaceHex } = useParams();
+  const spaceKey = useSafeSpaceKey(spaceHex);
+  const space = useParty(spaceKey);
+
+  // 3. Select items.
+  const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+
+  if (!space) {
+    return null;
   }
 
-  return <Main />;
+  return (
+    <>
+      <div role='none' className='fixed block-start-6 inset-inline-24 flex gap-2 justify-center items-center z-[1]'>
+        <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
+        {/* 4. TODO(wittjosiah): Sharing. */}
+      </div>
+      <div role='none' className='fixed block-start-7 inline-start-7 mlb-px'>
+        <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
+          <Button compact onClick={() => navigate('/spaces')} className='flex gap-1'>
+            <CaretLeft className={getSize(4)} />
+            <Planet className={getSize(4)} />
+          </Button>
+        </Tooltip>
+      </div>
+      <main className='max-is-5xl mli-auto pli-7'>
+        {item ? <Composer item={item} className='z-0' /> : <Loading label={t('generic loading label')} size='md' />}
+      </main>
+    </>
+  );
 };

@@ -7,13 +7,12 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import type { Item } from '@dxos/client';
+import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useParty, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
 import { Button, getSize, Heading, Loading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import type { TextModel } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
-
-import { useSafeSpaceKey } from '../../hooks';
 
 export const SpacePage = () => {
   const { t } = useTranslation('halo');
