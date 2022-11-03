@@ -4,6 +4,8 @@ on:
     branches:
       - main
 
+# TODO(wittjosiah): Update for Nx repo. Migrate to CircleCI.
+
 name: Integration tests with DXNS
 jobs:
   check-integration-dxns:

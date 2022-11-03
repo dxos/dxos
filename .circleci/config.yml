@@ -55,7 +55,7 @@ jobs:
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
             - run: pnpm nx run-many --target=lint
       - run:
-          name: "Upload to codecov.com"
+          name: Upload to codecov.com
           command: ./.circleci/scripts/upload-codecov.sh
       - store_test_results:
           path: test-results
@@ -87,8 +87,17 @@ jobs:
       - run: pnpm install
       - *cache_save
       - nx/set-shas
+      # TODO(wittjosiah): Exclude apps because they can't be bundled in parallel currently.
       - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          name: Bundle
+          command: |
+            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
+            pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --exclude="$APPS"
+      - run:
+          name: Bundle (Apps)
+          command: |
+            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
+            pnpm nx run-many --base=$NX_BASE --head=$NX_HEAD --target=bundle --projects="$APPS" --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
