@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-type Part<T> = (...args: any) => Promise<any>;
+type Transform = (...args: any) => Promise<any>;
 
 /**
  * Async reducer iteratively applies functions to the given array of elements.
  */
 export const asyncChain =
-  <T>(chain: Part<T>[]) =>
+  <T>(chain: Transform[]) =>
   async (elements: Promise<T[]>) => {
     let result = await Promise.resolve(elements);
     for (const part of chain) {

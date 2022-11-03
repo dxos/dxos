@@ -16,7 +16,7 @@ describe('timeout', function () {
   });
 
   it('fails', async function () {
-    const promise = sleep(100).then(() => 'test');
+    const promise = sleep(200).then(() => 'test');
     await expectToThrow(() => asyncTimeout(promise, 100, new Error('timeout')));
   });
 
