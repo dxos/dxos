@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
