@@ -9,6 +9,8 @@ import './hypercore-protocol';
 import './hypercore-streams';
 import './misc';
 import './nanoerror';
+import './nanomessage';
 import './nanoresource';
+import './nanoresource-promise';
 import './random-access-storage';
 import './streamx';

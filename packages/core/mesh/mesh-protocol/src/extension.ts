@@ -50,13 +50,8 @@ export class Extension extends Nanomessage {
   public _name: any;
 
   public [kCodec]: Codec<any>;
-  public on: any;
-  public open: any;
-  public request: any;
-  public close: any;
-  public emit: any;
-  public userSchema: any;
-  public nmOptions: any;
+
+  public stats: any;
 
   private _protocol: Protocol | null = null;
   private _protocolExtension: StreamExtension | null = null;
@@ -121,7 +116,6 @@ export class Extension extends Nanomessage {
    */
   setHandshakeHandler(handshakeHandler: HandshakeHandler) {
     this._handshakeHandler = handshakeHandler;
-
     return this;
   }
 
@@ -132,7 +126,6 @@ export class Extension extends Nanomessage {
    */
   setCloseHandler(closeHandler: CloseHandler) {
     this._closeHandler = closeHandler;
-
     return this;
   }
 
@@ -143,7 +136,6 @@ export class Extension extends Nanomessage {
    */
   setMessageHandler(messageHandler: MessageHandler) {
     this._messageHandler = messageHandler;
-
     return this;
   }
 
@@ -154,7 +146,6 @@ export class Extension extends Nanomessage {
    */
   setFeedHandler(feedHandler: FeedHandler) {
     this._feedHandler = feedHandler;
-
     return this;
   }
 
@@ -185,7 +176,6 @@ export class Extension extends Nanomessage {
   async onInit() {
     try {
       await this.open();
-
       assert(this._protocol);
       if (this._protocol.stream.destroyed) {
         throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -239,6 +229,10 @@ export class Extension extends Nanomessage {
     }
   }
 
+  //
+  // Nanomesssage interface.
+  //
+
   /**
    * Sends a message to peer.
    * @param {(Object|Buffer)} message
@@ -246,13 +240,13 @@ export class Extension extends Nanomessage {
    * @param {Boolean} options.oneway
    * @returns {Promise<Object>} Response from peer.
    */
-  async send(message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
+  override async send(message: Buffer | Uint8Array | WithTypeUrl<object>, options: { oneway?: boolean } = {}) {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
     }
 
-    const builtMessage = this._buildMessage(message);
+    const builtMessage = buildMessage(message);
 
     if (options.oneway) {
       return super.send(builtMessage);
@@ -276,8 +270,11 @@ export class Extension extends Nanomessage {
     }
   }
 
-  // Nanomesssage interface.
-  private async _open() {
+  override _subscribe(next: (msg: any) => Promise<void>) {
+    this._subscribeCb = next;
+  }
+
+  override async _open() {
     assert(this._protocol);
     if (this._protocol.stream.destroyed) {
       throw new ERR_PROTOCOL_STREAM_CLOSED();
@@ -287,8 +284,7 @@ export class Extension extends Nanomessage {
     await super._open();
   }
 
-  // code @override
-  private async _close() {
+  override async _close() {
     try {
       await super._close();
       if (this._closeHandler) {
@@ -300,14 +296,7 @@ export class Extension extends Nanomessage {
     }
   }
 
-  private _subscribe(next: (msg: any) => Promise<void>) {
-    this._subscribeCb = next;
-  }
-
-  /**
-   * @overrides _send in Nanomessage
-   */
-  private _send(msg: Buffer) {
+  override async _send(msg: Buffer) {
     assert(this._protocol);
     assert(this._protocolExtension);
     if (this._protocol.stream.destroyed) {
@@ -317,16 +306,13 @@ export class Extension extends Nanomessage {
     this._protocolExtension.send(msg);
   }
 
-  /**
-   * @override _onMessage from Nanomessagerpc
-   */
-  private async _onMessage(msg: Buffer) {
+  override async _onMessage(msg: Buffer) {
     try {
       await this.open();
       if (this._messageHandler) {
         assert(this._protocol);
         const result = await this._messageHandler(this._protocol, msg);
-        return this._buildMessage(result);
+        return buildMessage(result);
       }
     } catch (err: any) {
       this.emit('error', err);
@@ -339,27 +325,27 @@ export class Extension extends Nanomessage {
       };
     }
   }
-
-  /**
-   * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
-   */
-  private _buildMessage(message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> {
-    if (typeof message === 'string') {
-      // Backwards compatibility.
-      return this._buildMessage(Buffer.from(message));
-    } else if (Buffer.isBuffer(message)) {
-      return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
-    } else if (message instanceof Uint8Array) {
-      return {
-        '@type': 'dxos.mesh.protocol.Buffer',
-        data: Buffer.from(message)
-      };
-    } else if (message == null) {
-      // Apparently this is a use-case.
-      return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
-    } else {
-      assert(message['@type'], 'Message does not have a type URL.');
-      return message;
-    }
-  }
 }
+
+/**
+ * Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
+ */
+const buildMessage = (message: Buffer | Uint8Array | WithTypeUrl<object>): WithTypeUrl<any> => {
+  if (typeof message === 'string') {
+    // Backwards compatibility.
+    return buildMessage(Buffer.from(message));
+  } else if (Buffer.isBuffer(message)) {
+    return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
+  } else if (message instanceof Uint8Array) {
+    return {
+      '@type': 'dxos.mesh.protocol.Buffer',
+      data: Buffer.from(message)
+    };
+  } else if (message == null) {
+    // Apparently this is a use-case.
+    return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
+  } else {
+    assert(message['@type'], 'Message does not have a type URL.');
+    return message;
+  }
+};
