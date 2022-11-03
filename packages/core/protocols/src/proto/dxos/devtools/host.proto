@@ -199,8 +199,6 @@ message SubscribeToFeedBlocksResponse {
   message Block {
     dxos.keys.PublicKey feed_key = 1;
     int32 seq = 2;
-    // bool sync = 3;
-    // string path = 4;
     dxos.echo.feed.FeedMessage data = 3;
   }
 
