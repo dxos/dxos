@@ -4,9 +4,10 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, CancellableObservableProvider, TimeoutError } from '@dxos/async';
+import { CancellableObservable, CancellableObservableProvider, observableError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { AcceptInvitationEvents, CreateInvitationEvents } from './invitations';
@@ -15,15 +16,18 @@ import { AcceptInvitationEvents, CreateInvitationEvents } from './invitations';
  * Client API for invitation services.
  */
 // TODO(burdon): Make generic (factor out spaceKey and invitation generation).
+// TODO(burdon): Options (e.g., timeout).
 export class SpaceInvitationProxy {
   // prettier-ignore
   constructor(
     private readonly _service: InvitationService
   ) {}
 
-  createInvitation(spaceKey: PublicKey, options = {}): CancellableObservable<any> {
+  createInvitation(spaceKey: PublicKey): CancellableObservable<any> {
+    assert(spaceKey);
+
     let invitationId: string;
-    const observer = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
       if (invitationId) {
         await this._service.cancelInvitation({ invitationId });
       }
@@ -41,103 +45,91 @@ export class SpaceInvitationProxy {
           case Invitation.State.CONNECTING: {
             assert(invitation.invitationId);
             invitationId = invitation.invitationId;
-            observer.callbacks?.onConnecting(invitation);
+            observable.callbacks?.onConnecting(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observer.callbacks?.onConnected(invitation);
+            observable.callbacks?.onConnected(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
-            observer.callbacks?.onSuccess(invitation);
+            observable.callbacks?.onSuccess(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observer.callbacks?.onCancelled();
+            observable.callbacks?.onCancelled();
             break;
           }
 
-          case Invitation.State.TIMEOUT: {
-            observer.callbacks?.onTimeout(new TimeoutError());
-            break;
-          }
-
-          case Invitation.State.ERROR: {
-            observer.callbacks?.onError(new Error(`Service error: ${invitation.errorCode}`));
-            break;
+          default: {
+            log.error(`Invalid state: ${invitation.state}`);
           }
         }
       },
       (err) => {
         if (err) {
-          observer.callbacks!.onError(err);
+          observableError(observable, err);
         }
       }
     );
 
-    return observer;
+    return observable;
   }
 
-  acceptInvitation(spaceKey: PublicKey, options = {}): CancellableObservable<any> {
+  acceptInvitation(invitation: Invitation): CancellableObservable<any> {
+    assert(invitation && invitation.spaceKey && invitation.swarmKey);
+
     let invitationId: string;
-    const observer = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
       if (invitationId) {
         await this._service.cancelInvitation({ invitationId });
       }
     });
 
-    const stream: Stream<Invitation> = this._service.acceptInvitation({
-      spaceKey
-    });
+    const stream: Stream<Invitation> = this._service.acceptInvitation(invitation);
 
     stream.subscribe(
       (invitation: Invitation) => {
-        assert(invitation.spaceKey?.equals(spaceKey));
+        assert(invitation.spaceKey?.equals(invitation.spaceKey));
         assert(invitation.invitationId);
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
-            observer.callbacks?.onConnecting(invitation);
+            observable.callbacks?.onConnecting(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observer.callbacks?.onConnected(invitation);
+            observable.callbacks?.onConnected(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
             assert(invitation.spaceKey);
-            observer.callbacks?.onSuccess(invitation.spaceKey);
+            observable.callbacks?.onSuccess(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observer.callbacks?.onCancelled();
+            observable.callbacks?.onCancelled();
             break;
           }
 
-          case Invitation.State.TIMEOUT: {
-            observer.callbacks?.onTimeout(new TimeoutError());
-            break;
-          }
-
-          case Invitation.State.ERROR: {
-            observer.callbacks?.onError(new Error(`Service error: ${invitation.errorCode}`));
-            break;
+          default: {
+            log.error(`Invalid state: ${invitation.state}`);
           }
         }
       },
       (err) => {
         if (err) {
-          observer.callbacks!.onError(err);
+          observableError(observable, err);
         }
       }
     );
 
-    return observer;
+    return observable;
   }
 }

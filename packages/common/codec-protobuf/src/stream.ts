@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 const log = debug('dxos:codec-protobuf:stream');
 
-type Producer<T> = (callbacks: {
+type Callbacks<T> = {
   /**
    * Advises that the producer is ready to stream the data.
    * Called automatically with the first call to `next`.
@@ -23,8 +23,10 @@ type Producer<T> = (callbacks: {
    * Closes the stream.
    * Optional error can be provided.
    */
-  close: (error?: Error) => void;
-}) => (() => void) | void;
+  close: (err?: Error) => void;
+};
+
+type Producer<T> = (callbacks: Callbacks<T>) => ((err?: Error) => void) | void;
 
 export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
 
@@ -95,7 +97,7 @@ export class Stream<T> {
 
   private _isClosed = false;
   private _closeError: Error | undefined;
-  private _dispose: (() => void) | undefined;
+  private _onClose: ((err?: Error) => void) | undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
@@ -110,7 +112,7 @@ export class Stream<T> {
       this._resolveReadyPromise = resolve;
     });
 
-    const disposeCallback = producer({
+    const onClose = producer({
       ready: () => {
         this._markAsReady();
       },
@@ -143,7 +145,7 @@ export class Stream<T> {
 
         this._isClosed = true;
         this._closeError = err;
-        this._dispose?.();
+        this._onClose?.(err);
         try {
           this._closeHandler?.(err);
         } catch (err: any) {
@@ -153,8 +155,8 @@ export class Stream<T> {
       }
     });
 
-    if (disposeCallback) {
-      this._dispose = disposeCallback;
+    if (onClose) {
+      this._onClose = onClose;
     }
   }
 
@@ -222,13 +224,13 @@ export class Stream<T> {
     }
 
     this._isClosed = true;
-    this._dispose?.();
+    this._onClose?.();
     this._closeHandler?.(undefined);
 
     // Clear function pointers.
     this._messageHandler = undefined;
     this._closeHandler = undefined;
-    this._dispose = undefined;
+    this._onClose = undefined;
   }
 }
 

@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, CancellableObservableProvider, sleep, Trigger } from '@dxos/async';
+import { CancellableObservable, CancellableObservableProvider, observableError, sleep, Trigger } from '@dxos/async';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
@@ -103,9 +103,8 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
         }
       });
 
-      // TODO(burdon): Error handling and timeout.
       await peer.open();
-      log('connected');
+      log('connected'); // TODO(burdon): Peer id?
       observable.callbacks?.onConnected(invitation);
 
       try {
@@ -118,8 +117,8 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
         observable.callbacks?.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
-          log.error('failed', err);
-          observable.callbacks?.onError(err);
+          log.error('RPC failed', err);
+          observableError(observable, err);
         }
       }
 
@@ -185,8 +184,8 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
               } catch (err) {
                 // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
                 if (!observable.cancelled) {
-                  log.error('failed', err);
-                  observable.callbacks?.onError(err);
+                  log.error('RPC failed', err);
+                  observableError(observable, err);
                 }
               }
 
@@ -197,7 +196,7 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
       });
 
       await peer.open();
-      log('connected');
+      log('connected'); // TODO(burdon): Peer id?
       observable.callbacks?.onConnected(invitation);
       await admitted.wait();
       await peer.close();
@@ -217,7 +216,8 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
 
       observable.callbacks?.onConnecting(invitation);
       const space = await admitted.wait();
-      observable.callbacks?.onSuccess(space.key);
+      invitation.spaceKey = space.key;
+      observable.callbacks?.onSuccess(invitation);
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       //  Implement mechanism for plugin to finalize (or remove itself).

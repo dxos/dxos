@@ -3,7 +3,6 @@
 //
 
 import { AsyncEvents, CancellableObservable, CancellableObservableEvents } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface CreateInvitationEvents extends AsyncEvents, CancellableObservableEvents {
@@ -15,7 +14,7 @@ export interface CreateInvitationEvents extends AsyncEvents, CancellableObservab
 export interface AcceptInvitationEvents extends AsyncEvents, CancellableObservableEvents {
   onConnecting(invitation: Invitation): void;
   onConnected(invitation: Invitation): void;
-  onSuccess(spaceKey: PublicKey): void; // TODO(burdon): Pass invitation.
+  onSuccess(invitation: Invitation): void;
 }
 
 // TODO(burdon): Create base class.

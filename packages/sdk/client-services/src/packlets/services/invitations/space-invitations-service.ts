@@ -16,7 +16,8 @@ import { SpaceInvitations } from './space-invitations';
  * Spaces invitations service.
  */
 export class SpaceInvitationServiceImpl implements InvitationService {
-  private readonly _connectionStreams = new Map<string, CancellableObservable<any>>();
+  private readonly _createInvitations = new Map<string, CancellableObservable<any>>();
+  private readonly _acceptInvitations = new Map<string, CancellableObservable<any>>();
 
   // prettier-ignore
   constructor (
@@ -37,7 +38,7 @@ export class SpaceInvitationServiceImpl implements InvitationService {
         onConnecting: (invitation) => {
           assert(invitation.invitationId);
           invitationId = invitation.invitationId;
-          this._connectionStreams.set(invitation.invitationId, observable);
+          this._createInvitations.set(invitation.invitationId, observable);
           invitation.state = Invitation.State.CONNECTING;
           next(invitation);
         },
@@ -69,10 +70,59 @@ export class SpaceInvitationServiceImpl implements InvitationService {
         }
       });
 
-      return () => {
-        log('stream closed', { spaceKey: invitation.spaceKey });
-        void observable.cancel();
-        this._connectionStreams.delete(invitation.invitationId!);
+      return (err) => {
+        log('stream closed', { spaceKey: invitation.spaceKey, err });
+        this._createInvitations.delete(invitation.invitationId!);
+      };
+    });
+  }
+
+  acceptInvitation(invitation: Invitation): Stream<Invitation> {
+    return new Stream<Invitation>(({ next, close }) => {
+      assert(invitation.spaceKey);
+      log('stream opened', { spaceKey: invitation.spaceKey });
+
+      let invitationId: string;
+      const observable = this._spaceInvitations.acceptInvitation(invitation);
+      observable.subscribe({
+        onConnecting: (invitation) => {
+          assert(invitation.invitationId);
+          invitationId = invitation.invitationId;
+          this._acceptInvitations.set(invitation.invitationId, observable);
+          invitation.state = Invitation.State.CONNECTING;
+          next(invitation);
+        },
+        onConnected: (invitation) => {
+          assert(invitation.invitationId);
+          invitation.state = Invitation.State.CONNECTED;
+          next(invitation);
+        },
+        onSuccess: (invitation) => {
+          assert(invitation.spaceKey);
+          invitation.state = Invitation.State.SUCCESS;
+          next(invitation);
+          close();
+        },
+        onCancelled: () => {
+          assert(invitationId);
+          invitation.invitationId = invitationId;
+          invitation.state = Invitation.State.CANCELLED;
+          next(invitation);
+          close();
+        },
+        onTimeout: (err: TimeoutError) => {
+          invitation.state = Invitation.State.TIMEOUT;
+          close(err);
+        },
+        onError: (err: any) => {
+          invitation.state = Invitation.State.ERROR;
+          close(err);
+        }
+      });
+
+      return (err) => {
+        log('stream closed', { spaceKey: invitation.spaceKey, err });
+        this._acceptInvitations.delete(invitation.invitationId!);
       };
     });
   }
@@ -80,12 +130,9 @@ export class SpaceInvitationServiceImpl implements InvitationService {
   async cancelInvitation(invitation: Invitation): Promise<void> {
     log('cancelling...');
     assert(invitation.invitationId);
-    const observable = this._connectionStreams.get(invitation.invitationId!);
+    const observable =
+      this._createInvitations.get(invitation.invitationId) ?? this._acceptInvitations.get(invitation.invitationId);
     await observable?.cancel();
-  }
-
-  acceptInvitation(invitation: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next }) => {});
   }
 
   async authenticate(request: AuthenticateRequest): Promise<Invitation> {
