@@ -42,5 +42,6 @@ export const uikit = {
   'open apps directory label': 'Open apps directory',
   'pending label': 'Pending',
   'more options label': 'More options',
-  'empty space message': 'Nobody else here… yet.'
+  'empty space message': 'Nobody else is in this space… yet.',
+  'space members label': 'Members'
 };

@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretLeft, Planet } from 'phosphor-react';
-import React from 'react';
+import { CaretLeft, Planet, Plus } from 'phosphor-react';
+import React, { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import type { Item } from '@dxos/client';
-import { DOCUMENT_TYPE } from '@dxos/composer';
-import { useParty, useSelection } from '@dxos/react-client';
+import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
-import type { TextModel } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
+import { InvitationList } from '../../components';
+import { HeadingWithActions } from '../../components/HeadingWithActions';
+import { ProfileList } from '../../components/ProfileList';
 import { useSafeSpaceKey } from '../../hooks';
 
 export const SpaceMetaPage = () => {
@@ -21,7 +21,14 @@ export const SpaceMetaPage = () => {
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex);
   const space = useParty(spaceKey);
-  const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+  const invitations = usePartyInvitations(spaceKey);
+  const members = useMembers(space);
+
+  const onCreateInvitation = useCallback(() => {
+    if (space) {
+      void space.createInvitation();
+    }
+  }, [space]);
 
   if (!space) {
     return null;
@@ -40,7 +47,24 @@ export const SpaceMetaPage = () => {
           </Button>
         </Tooltip>
       </div>
-      <main className='max-is-5xl mli-auto pli-7'>Manage space</main>
+      <main className='max-is-5xl mli-auto pli-7'>
+        <HeadingWithActions
+          heading={{
+            level: 2,
+            children: t('space members label')
+          }}
+          actions={
+            <>
+              <Button variant='primary' onClick={onCreateInvitation} className='flex gap-1 items-center'>
+                <span>{t('create invitation label')}</span>
+                <Plus className={getSize(5)} />
+              </Button>
+            </>
+          }
+        />
+        <ProfileList profiles={members} />
+        <InvitationList {...{ invitations }} />
+      </main>
     </>
   );
 };

@@ -16,13 +16,13 @@ import {
   defaultActive,
   defaultFocus,
   defaultHover,
+  defaultInlineSeparator,
   getSize,
   Popover,
   PopoverProps
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
-import { PartyInviteSingleton } from '../Party';
 import { UsernameInput } from '../Profile';
 
 export interface PresenceProps
@@ -89,47 +89,24 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
   const members: NaturalProfile[] = useMembers(party);
 
   return (
-    <>
-      <Popover
-        openTrigger={
-          <Button compact className='flex items-center border-ie-0' rounding='rounded-is-md rounded-ie-0'>
-            <UsersThree className={getSize(4)} />
-            <span className='mli-1 leading-none'>{members.length}</span>
-          </Button>
-        }
-        collisionPadding={collisionPadding ?? 8}
-        sideOffset={sideOffset ?? 0}
-        className='flex flex-col gap-4 items-center'
-      >
-        {members.length > 0 ? (
-          <ul>
-            {members.map((member) => (
-              <li>
-                <Avatar fallbackValue={member.publicKey.toHex()} label={humanize(member.publicKey.toHex())} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <span>{t('empty space message')}</span>
-        )}
-      </Popover>
-      <Popover
-        openTrigger={
-          <Button compact rounding='rounded-ie-md rounded-is-0'>
-            <UserPlus className={getSize(4)} />
-          </Button>
-        }
-        collisionPadding={collisionPadding ?? 8}
-        sideOffset={sideOffset ?? 0}
-        className='flex flex-col gap-4 items-center'
-      >
-        <PartyInviteSingleton party={party} />
-        <Button className='flex w-full gap-2' onClick={onClickManageParty}>
-          <Gear className={getSize(5)} />
-          <span>{t('manage party label')}</span>
+    <Popover
+      openTrigger={
+        <Button compact className='flex items-center gap-1'>
+          <UsersThree className={getSize(4)} />
+          <span className='leading-none'>{members.length}</span>
+          <span role='none' className={cx(defaultInlineSeparator, 'bs-3')} />
+          <UserPlus className={getSize(4)} />
         </Button>
-      </Popover>
-    </>
+      }
+      collisionPadding={collisionPadding ?? 8}
+      sideOffset={sideOffset ?? 0}
+      className='flex flex-col gap-4 items-center'
+    >
+      <Button className='flex w-full gap-2' onClick={onClickManageParty}>
+        <Gear className={getSize(5)} />
+        <span>{t('manage party label')}</span>
+      </Button>
+    </Popover>
   );
 };
 

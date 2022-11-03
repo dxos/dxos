@@ -6,7 +6,7 @@ import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import cx from 'classnames';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { defaultFocus, defaultHover } from '../../styles';
+import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
@@ -122,7 +122,7 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className='h-5 border-l border-neutral-300 dark:border-neutral-700' />;
+  return <span role='none' className={cx(defaultInlineSeparator, 'bs-5')} />;
 };
 
 const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;

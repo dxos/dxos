@@ -26,5 +26,6 @@ export const halo = {
   'invitations label': 'Invitations',
   'join label': 'Join',
   'manage label': 'Manage',
-  'go to party label': 'Done'
+  'go to party label': 'Done',
+  'create invitation label': 'Create an invitation'
 };

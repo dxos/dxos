@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { Plus } from 'phosphor-react';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Button, useTranslation, getSize, Group, defaultDisabled } from '@dxos/react-uikit';
+import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList } from '../../components';
 import { HeadingWithActions } from '../../components/HeadingWithActions';
@@ -38,17 +37,7 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <Group
-        className='mbs-4'
-        label={{
-          level: 2,
-          children: !empty ? t('invitations label') : t('empty invitations message'),
-          className: cx('text-xl', empty && defaultDisabled)
-        }}
-        elevation={0}
-      >
-        {!empty && <InvitationList invitations={invitations} />}
-      </Group>
+      <InvitationList {...{ invitations }} />
     </main>
   );
 };
