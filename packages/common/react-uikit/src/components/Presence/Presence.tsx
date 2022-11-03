@@ -29,11 +29,11 @@ export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
     Pick<PopoverProps, 'collisionPadding' | 'sideOffset'> {
   profile: NaturalProfile;
-  party?: Party;
+  space?: Party;
   closeLabel?: string;
-  managingParty?: boolean;
-  onClickManageParty?: () => void;
-  onClickGoToParty?: () => void;
+  managingSpace?: boolean;
+  onClickManageSpace?: () => void;
+  onClickGoToSpace?: () => void;
   onClickManageProfile?: () => void;
 }
 
@@ -41,11 +41,11 @@ const ProfileMenu = (props: PresenceProps) => {
   const {
     profile,
     onClickManageProfile,
-    party: _party,
+    space: _space,
     closeLabel: _closeLabel,
-    onClickManageParty: _onClickManageParty,
-    managingParty: _managingParty,
-    onClickGoToParty: _onClickGoToParty,
+    onClickManageSpace: _onClickManageSpace,
+    managingSpace: _managingSpace,
+    onClickGoToSpace: _onClickGoToSpace,
     sideOffset,
     collisionPadding,
     ...avatarProps
@@ -83,10 +83,10 @@ const ProfileMenu = (props: PresenceProps) => {
   );
 };
 
-const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
-  const { party, onClickManageParty, sideOffset, collisionPadding } = props;
+const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
+  const { space, onClickManageSpace, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
-  const members: NaturalProfile[] = useMembers(party);
+  const members: NaturalProfile[] = useMembers(space);
 
   return (
     <Popover
@@ -102,7 +102,7 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      <Button className='flex w-full gap-2' onClick={onClickManageParty}>
+      <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
         <Gear className={getSize(5)} />
         <span>{t('manage party label')}</span>
       </Button>
@@ -110,10 +110,10 @@ const PartyMenu = (props: Omit<PresenceProps, 'party'> & { party: Party }) => {
   );
 };
 
-const PartyLink = ({ onClickGoToParty }: Pick<PresenceProps, 'onClickGoToParty'>) => {
+const PartyLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>) => {
   const { t } = useTranslation('halo');
   return (
-    <Button compact className='flex w-full gap-1 pli-2' onClick={onClickGoToParty}>
+    <Button compact className='flex w-full gap-1 pli-2' onClick={onClickGoToSpace}>
       <span className='text-xs'>{t('go to party label')}</span>
       <Check className={getSize(4)} weight='bold' />
     </Button>
@@ -123,7 +123,7 @@ const PartyLink = ({ onClickGoToParty }: Pick<PresenceProps, 'onClickGoToParty'>
 export const Presence = (props: PresenceProps) => {
   return (
     <div role='none' className='flex items-center'>
-      {props.party && (props.managingParty ? <PartyLink {...props} /> : <PartyMenu {...props} party={props.party!} />)}
+      {props.space && (props.managingSpace ? <PartyLink {...props} /> : <PartyMenu {...props} space={props.space!} />)}
       <ProfileMenu {...props} />
     </div>
   );

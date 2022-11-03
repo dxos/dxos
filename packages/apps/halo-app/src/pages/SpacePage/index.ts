@@ -3,4 +3,4 @@
 //
 
 export * from './SpacePage';
-export * from './SpaceMetaPage';
+export * from './SpaceSettingsPage';

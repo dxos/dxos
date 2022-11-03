@@ -61,6 +61,7 @@ export const AppLayout = () => {
     <div role='none' className='mbs-24'>
       {isRootPath && (
         <div role='none' className='fixed block-start-5 inset-inline-6 flex items-center justify-center gap-2 z-[1]'>
+          {/* Expanded menu (min-width: md) */}
           <NavMenu
             items={centerMenuItems.map((navMenuItem) =>
               'separator' in navMenuItem
@@ -81,7 +82,7 @@ export const AppLayout = () => {
             )}
             className='hidden md:flex grow-0 shrink'
           />
-
+          {/* Compact menu (max-width: md) */}
           <NavMenu
             items={centerMenuItems.map((navMenuItem) =>
               'separator' in navMenuItem
@@ -109,14 +110,14 @@ export const AppLayout = () => {
       <div role='none' className='fixed block-start-5 inline-end-6 plb-[2px] z-[2]'>
         <Presence
           profile={profile!}
-          party={space}
+          space={space}
           className='flex-none'
           size={10}
           sideOffset={4}
-          managingParty={isManagingSpace}
+          managingSpace={isManagingSpace}
           onClickManageProfile={() => navigate('/identity')}
-          onClickGoToParty={() => navigate(`/spaces/${spaceHex}`)}
-          onClickManageParty={() => navigate(`/spaces/${spaceHex}/settings`)}
+          onClickGoToSpace={() => navigate(`/spaces/${spaceHex}`)}
+          onClickManageSpace={() => navigate(`/spaces/${spaceHex}/settings`)}
         />
       </div>
 

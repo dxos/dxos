@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import { Users, Nut, SignIn, Gear } from 'phosphor-react';
+import { SignIn, Gear } from 'phosphor-react';
 import React, { FunctionComponent } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -11,7 +11,6 @@ import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import {
   Avatar,
-  Tag,
   Group,
   defaultGroup,
   defaultHover,
@@ -56,16 +55,6 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             }}
             className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
-            <div role='none' className='flex flex-col justify-center items-end gap-x-2 gap-y-1'>
-              <Tag className='inline-flex gap-1 items-center'>
-                <Users weight='bold' />
-                {'##'}
-              </Tag>
-              <Tag className='inline-flex gap-1 items-center'>
-                <Nut weight='bold' />
-                {'##'}
-              </Tag>
-            </div>
             <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('manage party label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>

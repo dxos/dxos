@@ -14,7 +14,7 @@ import { InvitationList, HeadingWithActions } from '../../components';
 import { ProfileList } from '../../components/ProfileList';
 import { useSafeSpaceKey } from '../../hooks';
 
-export const SpaceMetaPage = () => {
+export const SpaceSettingsPage = () => {
   const { t } = useTranslation('halo');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
