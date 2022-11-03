@@ -6,6 +6,7 @@ import tailwindcssForms from '@tailwindcss/forms';
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
+import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
@@ -251,7 +252,7 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                     }
                   }
                 },
-                plugins: [tailwindcssForms, tailwindcssRadix()],
+                plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
                 content: [resolve(root || './', 'node_modules/@dxos/react-ui/dist/**/*.js'), ...config.content]
               }),

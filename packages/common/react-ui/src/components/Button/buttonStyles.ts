@@ -13,7 +13,9 @@ export const defaultButtonColors = 'bg-white text-neutral-900 dark:bg-neutral-75
 export const buttonStyles = (props: ButtonProps) => {
   const resolvedVariant = props.variant || 'default';
   return cx(
-    'inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
+    'inline-flex select-none items-center justify-center text-sm font-medium',
+    props.rounding ?? 'rounded-md',
+    props.compact ? 'p-1.5' : 'pli-4 plb-2',
     'transition-color duration-100',
     defaultHover(props),
     resolvedVariant === 'default' &&
@@ -22,7 +24,7 @@ export const buttonStyles = (props: ButtonProps) => {
     resolvedVariant === 'primary' && 'border border-primary-550 hover:border-transparent',
     resolvedVariant === 'primary' && primaryButtonColors,
     resolvedVariant === 'outline' &&
-      'text-neutral-700 border border-neutral-600 font-medium rounded-lg text-sm text-center dark:border-neutral-300 dark:text-neutral-150',
+      'text-neutral-700 border border-neutral-600 dark:border-neutral-300 dark:text-neutral-150',
     defaultFocus,
     props.disabled ? defaultDisabled : resolvedVariant !== 'outline' && 'button-elevation',
     // Register all radix states

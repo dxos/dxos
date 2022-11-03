@@ -10,6 +10,7 @@ export const halo = {
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
+  'back to spaces label': 'Back to spaces',
   'devices label': 'Devices',
   'add device label': 'Invite another device',
   'identity label': 'You',
@@ -20,5 +21,12 @@ export const halo = {
   'need refresh description': 'You’ll likely need these updates to continue using DXOS without interruption.',
   'refresh label': 'Refresh',
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
-  'offline ready label': 'HALO is ready to use offline.'
+  'offline ready label': 'HALO is ready to use offline.',
+  'empty invitations message': 'No pending invitations',
+  'invitations label': 'Invitations',
+  'join label': 'Join',
+  'manage label': 'Manage',
+  'go to party label': 'Done',
+  'create invitation label': 'Invite',
+  'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:'
 };

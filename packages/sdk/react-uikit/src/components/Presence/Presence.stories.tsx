@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { defaultTestingConfig, InvitationWrapper, Party } from '@dxos/client';
 import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
-import { Group, Loading, Main } from '@dxos/react-ui';
+import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import { templateForComponent } from '../../testing';
@@ -35,9 +35,9 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
   }, [client, profile]);
 
   return (
-    <Main className='flex justify-end'>
+    <main className='flex justify-end'>
       {profile ? <Presence {...args} profile={profile} /> : <Loading label='Loading…' />}
-    </Main>
+    </main>
   );
 };
 
@@ -110,24 +110,24 @@ Sharing.args = {};
 
 const WithinSpaceTemplate = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
+  const [space, setSpace] = useState<Party>();
 
   useEffect(() => {
-    console.log('[client change]', party);
-    if (client && !party) {
-      console.log('[creating party]', party);
+    console.log('[client change]', space);
+    if (client && !space) {
+      console.log('[creating space]', space);
       void client.echo
         .createParty()
-        .then((party: Party) => {
-          console.log('[setting party]', party);
-          setParty(party);
+        .then((space: Party) => {
+          console.log('[setting space]', space);
+          setSpace(space);
         })
-        .catch((err) => console.log('[error creating party]', err))
-        .finally(() => console.log('[done creating party]'));
+        .catch((err) => console.log('[error creating space]', err))
+        .finally(() => console.log('[done creating space]'));
     }
   }, [client]);
 
-  return party ? <Template party={party} /> : <Loading label='Creating space…' />;
+  return space ? <Template space={space} /> : <Loading label='Creating space…' />;
 };
 
 export const WithinSpace = templateForComponent(WithinSpaceTemplate)({});

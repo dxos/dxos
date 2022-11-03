@@ -3,6 +3,7 @@
 //
 
 export * from './Alert';
+export * from './AlertDialog';
 export * from './Avatar';
 export * from './Button';
 export * from './CompoundButton';
@@ -11,10 +12,10 @@ export * from './Group';
 export * from './Heading';
 export * from './Loading';
 export * from './Input';
-export * from './Main';
 export * from './NavMenu';
 export * from './Popover';
 export * from './QrCode';
+export * from './Tag';
 export * from './Toast';
 export * from './Tooltip';
 export * from './UiProvider';

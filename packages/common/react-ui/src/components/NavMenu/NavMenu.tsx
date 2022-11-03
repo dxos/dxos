@@ -6,7 +6,7 @@ import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import cx from 'classnames';
 import React, { ComponentProps, ForwardedRef, forwardRef, ReactNode } from 'react';
 
-import { defaultFocus, defaultHover } from '../../styles';
+import { defaultFocus, defaultHover, defaultInlineSeparator } from '../../styles';
 import { defaultButtonColors, primaryButtonColors } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
@@ -122,7 +122,7 @@ const NavMenuTooltipLinkItem = forwardRef(
 export const NavMenuLink = NavigationMenuPrimitive.Link;
 
 export const NavMenuSeparatorItem = (_props: NavMenuSeparatorProps) => {
-  return <span role='none' className='h-5 border-l border-neutral-300 dark:border-neutral-700' />;
+  return <span role='none' className={cx(defaultInlineSeparator, 'bs-5')} />;
 };
 
 const isTooltipLinkItem = (o: any): o is NavMenuTooltipLinkItemProps => 'tooltip' in o;
@@ -132,7 +132,7 @@ const isSeparator = (o: any): o is NavMenuSeparatorProps => 'separator' in o;
 export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
   return (
     <NavigationMenuPrimitive.Root {...rootProps} className={cx('flex justify-center', rootProps.className)}>
-      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 p-2 button-elevation overflow-x-auto'>
+      <NavigationMenuPrimitive.List className='relative flex flex-row items-center gap-1 rounded-lg bg-white dark:bg-neutral-750 p-1 button-elevation overflow-x-auto'>
         {items.map((item: NavMenuItem, i) => {
           return isTooltipLinkItem(item) ? (
             <NavMenuTooltipLinkItem key={i} {...item} />
@@ -154,7 +154,7 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
             'transition-[width_transform] duration-[250ms] ease-[ease]'
           )}
         >
-          <div className='top-1 relative bg-white dark:bg-neutral-800 w-2 h-2 rotate-45' />
+          <div className='top-1 relative bg-white dark:bg-neutral-750 w-2 h-2 rotate-45' />
         </NavigationMenuPrimitive.Indicator>
       </NavigationMenuPrimitive.List>
 
@@ -166,7 +166,7 @@ export const NavMenu = ({ items, ...rootProps }: NavMenuProps) => {
       >
         <NavigationMenuPrimitive.Viewport
           className={cx(
-            'relative mt-2 shadow-lg rounded-md bg-white dark:bg-neutral-800 overflow-hidden',
+            'relative mt-2 shadow-lg rounded-md bg-white dark:bg-neutral-750 overflow-hidden',
             'w-radix-navigation-menu-viewport',
             'h-radix-navigation-menu-viewport',
             'radix-state-open:animate-scale-in-content',
