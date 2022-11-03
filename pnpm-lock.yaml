@@ -2029,8 +2029,8 @@ importers:
       react-router-dom: ^6.3.0
     dependencies:
       '@dxos/debug': link:../../common/debug
-      '@dxos/gem-core': link:../../gem/gem-core
-      '@dxos/gem-spore': link:../../gem/gem-spore
+      '@dxos/gem-core': link:../../experimental/gem-core
+      '@dxos/gem-spore': link:../../experimental/gem-spore
       '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
@@ -2291,6 +2291,98 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
 
+  packages/experimental/gem-core:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/esbuild-book-knobs': ~2.28.3
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/esbuild-server': ~2.29.0
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@types/d3': ^7.1.0
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/jest': ^27.4.1
+      '@types/lodash': ^4.14.182
+      assert: ^2.0.0
+      csstype: ^3.0.10
+      d3: ^7.4.4
+      debug: ^4.3.3
+      faker: ^5.5.3
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      use-resize-observer: ^9.0.0
+    dependencies:
+      assert: 2.0.0
+      csstype: 3.1.1
+      d3: 7.6.1
+      debug: 4.3.4
+      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/esbuild-server': 2.29.0
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@types/d3': 7.4.0
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/jest': 27.5.2
+      '@types/lodash': 4.14.186
+      faker: 5.5.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
+  packages/experimental/gem-spore:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/esbuild-book-knobs': ~2.28.3
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/esbuild-server': ~2.29.0
+      '@dxos/gem-core': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@types/d3': ^7.1.0
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/jest': ^27.4.1
+      '@types/lodash': ^4.14.182
+      clsx: ^1.1.1
+      csstype: ^3.0.10
+      d3: ^7.4.4
+      d3-force: ~3.0.0
+      debug: ^4.3.3
+      faker: ^5.5.3
+      immutability-helper: ^3.0.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      use-resize-observer: ^9.0.0
+    dependencies:
+      '@dxos/gem-core': link:../gem-core
+      clsx: 1.2.1
+      csstype: 3.1.1
+      d3: 7.6.1
+      d3-force: 3.0.0
+      debug: 4.3.4
+      immutability-helper: 3.1.1
+      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/esbuild-server': 2.29.0
+      '@emotion/css': 11.10.0_@babel+core@7.19.3
+      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
+      '@types/d3': 7.4.0
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/jest': 27.5.2
+      '@types/lodash': 4.14.186
+      faker: 5.5.3
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+
   packages/experimental/kai:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2396,8 +2488,8 @@ importers:
       '@dxos/client-testing': link:../client-testing
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/gem-core': link:../../gem/gem-core
-      '@dxos/gem-spore': link:../../gem/gem-spore
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-client': link:../../sdk/react-client
@@ -2625,8 +2717,8 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
-      '@dxos/gem-core': link:../../gem/gem-core
-      '@dxos/gem-spore': link:../../gem/gem-spore
+      '@dxos/gem-core': link:../gem-core
+      '@dxos/gem-spore': link:../gem-spore
     devDependencies:
       '@babel/core': 7.19.3
       '@dxos/async': link:../../common/async
@@ -2901,98 +2993,6 @@ importers:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
 
-  packages/gem/gem-core:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/esbuild-book-knobs': ~2.28.3
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/esbuild-server': ~2.29.0
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@types/d3': ^7.1.0
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/jest': ^27.4.1
-      '@types/lodash': ^4.14.182
-      assert: ^2.0.0
-      csstype: ^3.0.10
-      d3: ^7.4.4
-      debug: ^4.3.3
-      faker: ^5.5.3
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      use-resize-observer: ^9.0.0
-    dependencies:
-      assert: 2.0.0
-      csstype: 3.1.1
-      d3: 7.6.1
-      debug: 4.3.4
-      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/esbuild-server': 2.29.0
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
-      '@types/d3': 7.4.0
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/jest': 27.5.2
-      '@types/lodash': 4.14.186
-      faker: 5.5.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
-  packages/gem/gem-spore:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/esbuild-book-knobs': ~2.28.3
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/esbuild-server': ~2.29.0
-      '@dxos/gem-core': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@types/d3': ^7.1.0
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/jest': ^27.4.1
-      '@types/lodash': ^4.14.182
-      clsx: ^1.1.1
-      csstype: ^3.0.10
-      d3: ^7.4.4
-      d3-force: ~3.0.0
-      debug: ^4.3.3
-      faker: ^5.5.3
-      immutability-helper: ^3.0.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      use-resize-observer: ^9.0.0
-    dependencies:
-      '@dxos/gem-core': link:../gem-core
-      clsx: 1.2.1
-      csstype: 3.1.1
-      d3: 7.6.1
-      d3-force: 3.0.0
-      debug: 4.3.4
-      immutability-helper: 3.1.1
-      use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y
-    devDependencies:
-      '@babel/core': 7.19.3
-      '@dxos/esbuild-book-knobs': 2.28.12_6ekedun2gj3yzkfjv5ysqycysy
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/esbuild-server': 2.29.0
-      '@emotion/css': 11.10.0_@babel+core@7.19.3
-      '@emotion/react': 11.10.4_b6k74wvxdvqypha4emuv7fd2ke
-      '@types/d3': 7.4.0
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/jest': 27.5.2
-      '@types/lodash': 4.14.186
-      faker: 5.5.3
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-
   packages/gravity/gravity-dashboard:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3013,7 +3013,7 @@ importers:
       react-dom: ^18.2.0
       use-resize-observer: ^9.0.0
     dependencies:
-      '@dxos/gem-core': link:../../gem/gem-core
+      '@dxos/gem-core': link:../../experimental/gem-core
       d3: 7.6.1
       debug: 4.3.4
       use-resize-observer: 9.0.2_biqbaboplfbrettd7655fr4n2y

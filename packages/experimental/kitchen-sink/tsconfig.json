@@ -55,12 +55,6 @@
       "path": "../../deprecated/react-toolkit"
     },
     {
-      "path": "../../gem/gem-core"
-    },
-    {
-      "path": "../../gem/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -80,6 +74,12 @@
     },
     {
       "path": "../react-ipfs"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ]
 }

@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "packages/gem/gem-spore/src",
+  "sourceRoot": "packages/experimental/gem-core/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/gem/gem-spore/src/index.ts",
-        "outputPath": "packages/gem/gem-spore/dist",
-        "tsConfig": "packages/gem/gem-spore/tsconfig.json",
+        "main": "packages/experimental/gem-core/src/index.ts",
+        "outputPath": "packages/experimental/gem-core/dist",
+        "tsConfig": "packages/experimental/gem-core/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
         ]
@@ -20,7 +20,7 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "packages/gem/gem-spore/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/gem-core/**/*.{ts,tsx,js,jsx}"
         ]
       },
       "outputs": [
@@ -30,18 +30,15 @@
     "test": {
       "executor": "@nrwl/jest:jest",
       "options": {
-        "jestConfig": "packages/gem/gem-spore/jest.config.ts",
+        "jestConfig": "packages/experimental/gem-core/jest.config.ts",
         "passWithNoTests": true
       },
       "outputs": [
-        "packages/gem/gem-spore/coverage"
+        "packages/experimental/gem-core/coverage"
       ]
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
     }
-  },
-  "tags": [
-    "scope:gem"
-  ]
+  }
 }

@@ -29,12 +29,6 @@
       "path": "../../deprecated/react-components"
     },
     {
-      "path": "../../gem/gem-core"
-    },
-    {
-      "path": "../../gem/gem-spore"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -42,6 +36,12 @@
     },
     {
       "path": "../react-client-testing"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ]
 }
