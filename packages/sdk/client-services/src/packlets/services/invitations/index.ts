@@ -6,4 +6,4 @@ export * from './halo-invitations';
 export * from './invitations';
 export * from './space-invitations';
 export * from './space-invitations-proxy';
-export * from './space-invitations-services';
+export * from './space-invitations-service';

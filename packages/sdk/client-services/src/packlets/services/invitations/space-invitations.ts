@@ -217,7 +217,7 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
 
       observable.callbacks?.onConnecting(invitation);
       const space = await admitted.wait();
-      observable.callbacks?.onSuccess(space);
+      observable.callbacks?.onSuccess(space.key);
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       //  Implement mechanism for plugin to finalize (or remove itself).

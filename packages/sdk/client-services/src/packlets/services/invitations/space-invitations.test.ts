@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
-import { Space } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -48,8 +48,8 @@ describe('services/spaces', function () {
   it('creates and accepts invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    const complete1 = new Trigger<Space>();
-    const complete2 = new Trigger<Space>();
+    const complete1 = new Trigger<PublicKey>();
+    const complete2 = new Trigger<PublicKey>();
 
     const space1 = await peer1.spaceManager!.createSpace();
     const observable1 = peer1.createInvitation(space1.key);
@@ -61,8 +61,8 @@ describe('services/spaces', function () {
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
-          onSuccess: (space2: Space) => {
-            complete2.wake(space2);
+          onSuccess: (spaceKey: PublicKey) => {
+            complete2.wake(spaceKey);
           },
           onCancelled: () => {
             throw new Error();
@@ -77,7 +77,7 @@ describe('services/spaces', function () {
       },
       onConnected: (invitation: Invitation) => {},
       onSuccess: (invitation: Invitation) => {
-        complete1.wake(space1);
+        complete1.wake(space1.key);
       },
       onCancelled: () => {
         // TODO(burdon): Change observable API to throw error by default?
@@ -92,8 +92,13 @@ describe('services/spaces', function () {
     });
 
     {
-      const [space1, space2] = await Promise.all([complete1.wait(), complete2.wait()]);
-      expect(space1.key).to.deep.eq(space2.key);
+      const [spaceKey1, spaceKey2] = await Promise.all([complete1.wait(), complete2.wait()]);
+      expect(spaceKey1).to.deep.eq(spaceKey2);
+
+      const space1 = peer1.spaceManager!.spaces.get(spaceKey1)!;
+      const space2 = peer2.spaceManager!.spaces.get(spaceKey2)!;
+      expect(space1).not.to.be.undefined;
+      expect(space2).not.to.be.undefined;
 
       await syncItems(space1, space2);
 

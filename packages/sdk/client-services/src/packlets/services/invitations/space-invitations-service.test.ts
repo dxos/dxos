@@ -13,7 +13,7 @@ import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client
 import { ServiceContext } from '../service-context';
 import { closeAfterTest, createIdentity, createPeers } from '../testing';
 import { SpaceInvitationProxy } from './space-invitations-proxy';
-import { SpaceInvitationServiceImpl } from './space-invitations-services';
+import { SpaceInvitationServiceImpl } from './space-invitations-service';
 
 describe('services/space-invitation-service', function () {
   it('creates party and invites peer', async function () {
@@ -64,7 +64,7 @@ describe('services/space-invitation-service', function () {
     }
   });
 
-  it('creates party and cancels invitation', async function () {
+  it.only('creates party and cancels invitation', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(peer1.spaceManager);
@@ -82,7 +82,6 @@ describe('services/space-invitation-service', function () {
       },
       onConnected: (invitation: Invitation) => {
         void observable.cancel();
-        // void service.cancelInvitation({ invitationId: invitation.invitationId! });
       },
       onSuccess: (invitation: Invitation) => {
         throw new Error('Succeeded before being cancelled.');

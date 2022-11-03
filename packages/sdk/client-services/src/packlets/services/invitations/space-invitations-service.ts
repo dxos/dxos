@@ -26,15 +26,17 @@ export class SpaceInvitationServiceImpl implements InvitationService {
 
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
-      log('stream open', { invitation });
       assert(invitation.spaceKey);
+      log('stream opened', { spaceKey: invitation.spaceKey });
       const space = this._spaceManager.spaces.get(invitation.spaceKey!);
       assert(space);
 
+      let invitationId: string;
       const observable = this._spaceInvitations.createInvitation(space);
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);
+          invitationId = invitation.invitationId;
           this._connectionStreams.set(invitation.invitationId, observable);
           invitation.state = Invitation.State.CONNECTING;
           next(invitation);
@@ -48,9 +50,11 @@ export class SpaceInvitationServiceImpl implements InvitationService {
           assert(invitation.invitationId);
           invitation.state = Invitation.State.SUCCESS;
           next(invitation);
-          close(); // TODO(burdon): Does this close immediately?
+          close();
         },
         onCancelled: () => {
+          assert(invitationId);
+          invitation.invitationId = invitationId;
           invitation.state = Invitation.State.CANCELLED;
           next(invitation);
           close();
@@ -66,7 +70,7 @@ export class SpaceInvitationServiceImpl implements InvitationService {
       });
 
       return () => {
-        log('stream closed', { invitation });
+        log('stream closed', { spaceKey: invitation.spaceKey });
         void observable.cancel();
         this._connectionStreams.delete(invitation.invitationId!);
       };
