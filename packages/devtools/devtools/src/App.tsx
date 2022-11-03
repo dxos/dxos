@@ -31,6 +31,7 @@ export const App = () => {
           }
         }
       : {
+          // Only for debugging purposes.
           runtime: {
             client: {
               mode: 1
