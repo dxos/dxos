@@ -18,7 +18,6 @@ import { HaloSigner } from './signer';
 export const createServices = ({
   config,
   context, // TODO(burdon): Too big to pass into services.?
-  networkManager,
   signer // TODO(burdon): Remove (legacy?)
 }: {
   config: Config;
@@ -32,5 +31,5 @@ export const createServices = ({
   ProfileService: new ProfileService(context),
   SystemService: new SystemService(config),
   TracingService: new TracingService(config),
-  DevtoolsHost: new DevtoolsService({ events: new DevtoolsHostEvents(), config, context, networkManager })
+  DevtoolsHost: new DevtoolsService({ events: new DevtoolsHostEvents(), config, context })
 });

@@ -52,7 +52,6 @@ import { ServiceContext } from '../service-context';
 export type DevtoolsServiceParams = {
   events: DevtoolsHostEvents;
   config: Config;
-  networkManager: NetworkManager;
   context: ServiceContext;
 };
 
