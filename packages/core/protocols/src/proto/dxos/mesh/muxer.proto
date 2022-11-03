@@ -1,0 +1,38 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.mesh.muxer;
+
+message Command {
+  oneof content {
+    OpenChannel open_channel = 1;
+    Data data = 2;
+    Destroy destroy = 3;
+  }
+}
+
+/**
+ * Notify the remote peer that we are opening a channel.
+ * Data messages for this channel could follow after this message.
+ */
+message OpenChannel {
+  int32 id = 1;
+  string tag = 2;
+   
+  // Optional Mime-type or URL describing the protocol that is hosted ober this stream. Used for introspection.
+  optional string content_type = 3;
+}
+
+message Data {
+  int32 channel_id = 1;
+  bytes data = 2;
+}
+
+/// Terminate the connection. The other peer can expect the connection to be closed.
+message Destroy {
+  // Error that caused the termination.
+  optional string error = 1;
+}

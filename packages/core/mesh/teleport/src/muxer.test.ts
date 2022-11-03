@@ -56,19 +56,17 @@ describe('Muxer', function () {
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
     for (const peer of [peer1, peer2]) {
-      peer.createChannel('dxos.test.extension1', (channel) => {
-        const client = createRpc(
-          channel.createPort('rpc', {
-            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
-          }),
-          async ({ data }) => ({ data })
-        );
+      const client = createRpc(
+        peer.createPort('example.extension/rpc', {
+          contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
+        }),
+        async ({ data }) => ({ data })
+      );
 
-        setTimeout(async () => {
-          await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
-          inc();
-        });
+      setTimeout(async () => {
+        await client.open();
+        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
+        inc();
       });
     }
 
@@ -91,50 +89,9 @@ describe('Muxer', function () {
     const [wait, inc] = latch({ count: 4, timeout: 500 });
 
     for (const peer of [peer1, peer2]) {
-      peer.createChannel('dxos.test.extension', (channel) => {
-        {
-          const client = createRpc(
-            channel.createPort('rpc1', {
-              contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
-            }),
-            async ({ data }) => ({ data: data + '-rpc1' })
-          );
-
-          setTimeout(async () => {
-            await client.open();
-            expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
-            inc();
-          });
-        }
-        {
-          const client = createRpc(
-            channel.createPort('rpc2', {
-              contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
-            }),
-            async ({ data }) => ({ data: data + '-rpc2' })
-          );
-
-          setTimeout(async () => {
-            await client.open();
-            expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
-            inc();
-          });
-        }
-      });
-    }
-
-    await wait();
-  });
-
-  it('two extensions', async function () {
-    const { peer1, peer2 } = setupPeers();
-
-    const [wait, inc] = latch({ count: 4, timeout: 500 });
-
-    for (const peer of [peer1, peer2]) {
-      peer.createChannel('dxos.test.extension1', (channel) => {
+      {
         const client = createRpc(
-          channel.createPort('rpc', {
+          peer.createPort('example.extension/rpc1', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
           }),
           async ({ data }) => ({ data: data + '-rpc1' })
@@ -145,11 +102,10 @@ describe('Muxer', function () {
           expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
           inc();
         });
-      });
-
-      peer.createChannel('dxos.test.extension2', (channel) => {
+      }
+      {
         const client = createRpc(
-          channel.createPort('rpc', {
+          peer.createPort('example.extension/rpc2', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
           }),
           async ({ data }) => ({ data: data + '-rpc2' })
@@ -160,7 +116,7 @@ describe('Muxer', function () {
           expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
           inc();
         });
-      });
+      }
     }
 
     await wait();

@@ -7,22 +7,40 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
-import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/teleport';
+import { Command } from '@dxos/protocols/dist/src/proto/gen/dxos/mesh/muxer';
 
-import { Channel, CreateStreamOpts, StreamHandle } from './channel';
 import { Framer } from './framer';
+import { RpcPort } from './rpc-port';
+import { Duplex } from 'stream';
 
-const codec = schema.getCodecForType('dxos.teleport.Command');
+const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 
 export type CleanupCb = void | (() => void);
+
+export type CreateChannelOpts = {
+  contentType?: string;
+}
+
+type Cannel = {
+  id: number;
+  tag: string;
+  remoteId?: number;
+  contentType?: string;
+  buffer: Uint8Array[];
+  push?: (data: Uint8Array) => void;
+};
+
+type CreateChannelInternalParams = {
+  tag: string;
+  contentType?: string;
+}
 
 export class Muxer {
   private readonly _framer = new Framer();
   public readonly stream = this._framer.stream;
 
-  private readonly _channels = new Map<string, Channel>();
-  private readonly _remoteChannels = new Set<string>();
-  private readonly _streamsByRemoteId = new Map<number, StreamHandle>();
+  private readonly _channelsByRemoteId = new Map<number, Cannel>();
+  private readonly _channelsByTag = new Map<string, Cannel>();
 
   private _nextId = 0;
   private _destroyed = false;
@@ -35,25 +53,56 @@ export class Muxer {
     });
   }
 
-  createChannel(tag: string, onOpen: (channel: Channel) => CleanupCb) {
-    assert(!this._channels.has(tag), `Channel already exists: ${tag}`);
-
-    const channel: Channel = new Channel(
+  createStream(tag: string, opts: CreateChannelOpts = {}): NodeJS.ReadWriteStream {
+    const channel = this._getOrCreateStream({
       tag,
-      onOpen,
-      (tag, opts) => this._getOrCreateStream(channel, tag, opts),
-      (streamId, data) => {
-        this._sendCommand({
-          data: { streamId, data }
-        });
-      }
-    );
-
-    this._channels.set(tag, channel);
-
-    this._sendCommand({
-      advertizeChannel: { tag }
+      contentType: opts.contentType
     });
+    const stream = new Duplex({
+      write: (data, encoding, callback) => {
+        this._sendCommand({
+          data: {
+            channelId: channel.id,
+            data
+          }
+        });
+        callback();
+      },
+      read: () => {
+      },
+    });
+    channel.push = (data) => {
+      stream.push(data);
+    }
+    return stream;
+  }
+
+  createPort(tag: string, opts: CreateChannelOpts = {}): RpcPort {
+    const stream = this._getOrCreateStream({
+      tag,
+      contentType: opts.contentType
+    });
+
+    assert(!stream.push, `Port already open: ${tag}`);
+
+    return {
+      send: (data: Uint8Array) => {
+        this._sendCommand({
+          data: {
+            channelId: stream.id,
+            data
+          }
+        });
+      },
+      subscribe: (cb: (data: Uint8Array) => void) => {
+        assert(!stream.push, 'Only one subscriber is allowed');
+        for (const data of stream.buffer) {
+          cb(data);
+        }
+        stream.buffer = [];
+        stream.push = cb;
+      }
+    };
   }
 
   /**
@@ -82,22 +131,15 @@ export class Muxer {
   }
 
   private _handleCommand(cmd: Command) {
-    if (cmd.advertizeChannel) {
-      this._remoteChannels.add(cmd.advertizeChannel.tag);
-
-      const localChannel = this._channels.get(cmd.advertizeChannel.tag);
-      if (localChannel) {
-        this._openChannel(cmd.advertizeChannel.tag);
-      }
-    } else if (cmd.openChannel) {
-      this._openChannel(cmd.openChannel.tag);
-    } else if (cmd.openStream) {
-      const channel = this._channels.get(cmd.openStream.channel) ?? failUndefined();
-      const stream = this._getOrCreateStream(channel, cmd.openStream.tag, { contentType: cmd.openStream.contentType });
-      stream.remoteId = cmd.openStream.id;
-      this._streamsByRemoteId.set(cmd.openStream.id, stream);
+  if (cmd.openChannel) {
+      const stream = this._getOrCreateStream({
+        tag: cmd.openChannel.tag,
+        contentType: cmd.openChannel.contentType,
+      })
+      stream.remoteId = cmd.openChannel.id;
+      this._channelsByRemoteId.set(stream.remoteId, stream);
     } else if (cmd.data) {
-      const stream = this._streamsByRemoteId.get(cmd.data.streamId) ?? failUndefined();
+      const stream = this._channelsByRemoteId.get(cmd.data.channelId) ?? failUndefined();
       if (stream.push) {
         stream.push(cmd.data.data);
       } else {
@@ -109,38 +151,25 @@ export class Muxer {
   }
 
   private _sendCommand(cmd: Command) {
+    // TODO(dmaretskyi): Error handling.
     this._framer.port.send(codec.encode(cmd));
   }
 
-  private _openChannel(tag: string) {
-    const channel = this._channels.get(tag) ?? failUndefined();
-
-    if (!channel.isOpen) {
-      channel.open();
-
-      this._sendCommand({
-        openChannel: { tag }
-      });
-    }
-  }
-
-  private _getOrCreateStream(channel: Channel, tag: string, opts: CreateStreamOpts) {
-    let stream = channel.streams.get(tag);
+  private _getOrCreateStream(params: CreateChannelInternalParams): Cannel {
+    let stream = this._channelsByTag.get(params.tag);
     if (!stream) {
       stream = {
         id: this._nextId++,
-        tag,
-        contentType: opts.contentType,
-        channel,
+        tag: params.tag,
+        contentType: params.contentType,
         buffer: []
       };
-      channel.streams.set(tag, stream);
+      this._channelsByTag.set(params.tag, stream);
       this._sendCommand({
-        openStream: {
+        openChannel: {
           id: stream.id,
-          tag,
-          channel: channel.tag,
-          contentType: opts.contentType
+          tag: stream.tag,
+          contentType: stream.contentType
         }
       });
     }
