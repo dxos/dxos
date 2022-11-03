@@ -67,14 +67,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Publish to NPM
-        run: |
-          pnpm \
-            --filter-prod="packages/common/**" \
-            --filter-prod="packages/core/**" \
-            --filter-prod="packages/devtools/**" \
-            --filter-prod="packages/gem/**" \
-            --filter-prod="packages/sdk/**" \
-            publish
+        run: pnpm --filter-prod="packages/**" publish
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Upload Artifacts
