@@ -1,13 +1,22 @@
 {
-  "sourceRoot": "packages/devtools/dx-cli/src",
+  "sourceRoot": "packages/devtools/cli/src",
   "projectType": "application",
   "targets": {
+    "bin": {
+      "executor": "nx:run-script",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "script": "bin"
+      }
+    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/devtools/dx-cli/src/index.ts",
-        "outputPath": "packages/devtools/dx-cli/dist",
-        "tsConfig": "packages/devtools/dx-cli/tsconfig.json",
+        "main": "packages/devtools/cli/src/index.ts",
+        "outputPath": "packages/devtools/cli/dist",
+        "tsConfig": "packages/devtools/cli/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
         ]
@@ -20,7 +29,7 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "packages/devtools/dx-cli/**/*.{ts,js}"
+          "packages/devtools/cli/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -49,7 +58,7 @@
         "script": "api-keys"
       },
       "outputs": [
-        "packages/devtools/dx-cli/src/util/telemetryrc.json"
+        "packages/devtools/cli/src/util/telemetryrc.json"
       ]
     },
     "test": {
@@ -62,14 +71,14 @@
         "ciEnvironments": [
           "nodejs"
         ],
-        "coveragePath": "coverage/packages/devtools/dx-cli",
-        "outputPath": "tmp/mocha/packages/devtools/dx-cli",
-        "resultsPath": "test-results/packages/devtools/dx-cli",
+        "coveragePath": "coverage/packages/devtools/cli",
+        "outputPath": "tmp/mocha/packages/devtools/cli",
+        "resultsPath": "test-results/packages/devtools/cli",
         "testPatterns": [
-          "packages/devtools/dx-cli/src/**/*.test.{ts,js}"
+          "packages/devtools/cli/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/devtools/dx-cli/src/**/*"
+          "packages/devtools/cli/src/**/*"
         ]
       },
       "outputs": [

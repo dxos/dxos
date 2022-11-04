@@ -1,8 +1,10 @@
 {
-  "name": "@dxos/dx-cli",
+  "name": "@dxos/cli",
   "version": "0.1.1",
-  "description": "CLI Test using oclif.",
+  "description": "DXOS CLI",
   "keywords": [
+    "dxos",
+    "cli",
     "oclif"
   ],
   "homepage": "https://dxos.org",
@@ -22,11 +24,10 @@
   ],
   "scripts": {
     "api-keys": "node ./scripts/inject_api_keys.js",
-    "prepack": "npm run build && oclif manifest && oclif readme",
+    "bin": "./bin/run",
+    "prepack": "oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
-    "readme": "oclif readme",
-    "run:cmd": "npm run build && ./bin/run config --config ./config/config.yml --json",
-    "run:config": "npm run build && ./bin/run config --config ./config/config.yml --json"
+    "readme": "oclif readme"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
