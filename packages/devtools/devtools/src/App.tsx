@@ -12,7 +12,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Controls, PanelsContainer } from './containers';
+import { Controls, PanelsContainer, ConfigSource } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
@@ -21,24 +21,19 @@ const REMOTE_CLIENT = false;
 export const App = () => {
   const [clientProvider, setClientProvider] = useState<Promise<Client>>();
 
-  const handleRemoteSource = async (remoteSource?: string) => {
-    const remoteSourceConfig = remoteSource
-      ? {
-          runtime: {
-            client: {
-              remoteSource
-            }
-          }
+  const onSource = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
+    const remoteSourceConfig = {
+      runtime: {
+        client: {
+          remoteSource,
+          mode
         }
-      : {
-          // Only for debugging purposes.
-          runtime: {
-            client: {
-              mode: 1
-            }
-          }
-        };
-    const config = new Config(await Dynamics(), Defaults(), remoteSourceConfig);
+      }
+    };
+    const config = new Config(remoteSourceConfig, Defaults());
+    console.log('dynamic config', await Dynamics());
+    console.log('defaults config', Defaults());
+    console.log('remoteSourceConfig', remoteSourceConfig);
     const client = new Client(config);
     setClientProvider(async () => {
       await client.initialize();
@@ -47,7 +42,10 @@ export const App = () => {
   };
 
   useEffect(() => {
-    void handleRemoteSource(REMOTE_CLIENT ? 'http://localhost:3967/headless.html' : undefined);
+    void onSource({
+      remoteSource: REMOTE_CLIENT ? 'http://localhost:3967/headless.html' : undefined,
+      mode: REMOTE_CLIENT ? 2 : 1
+    });
   }, []);
 
   if (!clientProvider) {
@@ -65,7 +63,7 @@ export const App = () => {
             </Box>
 
             <Box sx={{ display: 'flex', flexShrink: 0 }}>
-              <Controls onRemoteSource={handleRemoteSource} />
+              <Controls onSource={onSource} />
             </Box>
           </ClientProvider>
         </FullScreen>

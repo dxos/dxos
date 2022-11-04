@@ -3,3 +3,4 @@
 //
 
 export * from './Controls';
+export * from './ConfigSource';
