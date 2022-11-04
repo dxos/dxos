@@ -1,6 +1,6 @@
 {
   "name": "@dxos/wallet-extension",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "DXOS Wallet Extension",
   "homepage": "https://dxos.org",
