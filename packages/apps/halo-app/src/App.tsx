@@ -14,7 +14,6 @@ import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
 import { ErrorsProvider, FatalError, ServiceWorkerToast } from './components';
-import { useTelemetry } from './hooks';
 import {
   AppLayout,
   AppsPage,
@@ -31,6 +30,7 @@ import {
   SpacePage,
   SpacesPage
 } from './pages';
+import { useTelemetry } from './telemetry';
 import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
