@@ -15,14 +15,22 @@ export default class Publish extends BaseCommand {
     configPath: Flags.string({
       description: 'Path to dx.yml'
     }),
+    skipExisting: Flags.boolean({
+      description: 'Do not update content on KUBE if version already exists',
+      default: false
+    }),
     verbose: Flags.boolean({
-      description: 'Verbose output'
+      description: 'Verbose output',
+      default: false
+    }),
+    version: Flags.string({
+      description: 'Version of modules to publish'
     })
   };
 
   async run(): Promise<any> {
     const { flags } = await this.parse(Publish);
-    const { configPath, verbose } = flags;
+    const { configPath, skipExisting, verbose, version } = flags;
 
     try {
       const moduleConfig = await loadConfig(configPath);
@@ -35,11 +43,16 @@ export default class Publish extends BaseCommand {
         await build({ verbose }, { log: (...args) => this.log(...args), module });
         const cid = await publish({ verbose }, { module, config: this.clientConfig });
         module.bundle = cid.bytes;
+
+        if (version) {
+          module.build = { ...module.build, version };
+        }
       }
 
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
         await publisher.rpc.publish({
-          package: moduleConfig.values.package!
+          package: moduleConfig.values.package!,
+          skipExisting
         });
         verbose && this.log('Published to KUBE.');
       });
