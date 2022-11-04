@@ -13,7 +13,7 @@ if [ $1 = "production" ]; then
   DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
   VERSION=$(cat package.json | jq '.version')
 
-  pnpm -w nx bin cli app publish \
+  $ROOT/packages/devtools/cli/bin/run app publish \
     --config=$DX_CONFIG \
     --version=$VERSION \
     --skipExisting \
@@ -24,7 +24,7 @@ else
   export DX_ENVIRONMENT=development
   DX_CONFIG="$ROOT/packages/devtools/cli/config/config-dev.yml"
 
-  pnpm -w nx bin cli app publish \
+  $ROOT/packages/devtools/cli/bin/run app publish \
     --config=$DX_CONFIG \
     --verbose
 fi
