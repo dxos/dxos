@@ -25,7 +25,7 @@ const serviceBundle = createServiceBundle<TestServices>({
   SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
 });
 
-describe.only('service registry', function () {
+describe('service registry', function () {
   it('creates a proxy', async function () {
     interface Test {
       value: number;
@@ -41,7 +41,7 @@ describe.only('service registry', function () {
     expect(await proxy.add(1, 2, 3)).to.eq(6);
   });
 
-  it.only('builds a service registry', async function () {
+  it('builds a service registry', async function () {
     const serviceContext = createServiceContext();
     await serviceContext.open();
     await serviceContext.createIdentity();
