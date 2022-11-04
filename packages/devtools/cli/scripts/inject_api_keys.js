@@ -11,7 +11,7 @@ const TELEMETRY_PATH = './src/util/telemetryrc.json';
 const injectApiKeys = async () => {
   const telemetryrc = {
     DX_ENVIRONMENT: process.env.DX_ENVIRONMENT ?? null,
-    DX_RELEASE: process.env.NODE_ENV === 'production' ? `dx-cli@${packageJson.version}` : null,
+    DX_RELEASE: process.env.NODE_ENV === 'production' ? `@dxos/cli@${packageJson.version}` : null,
     SENTRY_DESTINATION: process.env.SENTRY_DESTINATION ?? null,
     TELEMETRY_API_KEY: process.env.TELEMETRY_API_KEY ?? null
   };
