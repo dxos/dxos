@@ -86,10 +86,7 @@ export const InvitationStatus = ({
           cursor === 3 ? activeColor : cursor > 3 ? resolvedColor : inactiveColor
         )}
       />
-      <div
-        role='none'
-        className={cx(pip, cursor === 4 && 'animate-ping', cursor >= 4 ? resolvedColor : inactiveColor)}
-      />
+      <div role='none' className={cx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />
     </div>
   );
 };

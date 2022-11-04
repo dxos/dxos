@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useCallback, useReducer, Reducer, useEffect, useState, useMemo } from 'react';
+import { useReducer, Reducer, useEffect, useState, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/client';
 
@@ -37,7 +37,7 @@ export interface InvitationReducerState {
   status: InvitationReducerStatus;
   haltedAt?: InvitationReducerStatus;
   result: [null, null] | InvitationResult;
-  secret?: string;
+  secret: string;
   error?: Error;
   subject?: PublicKey;
 }
@@ -75,6 +75,7 @@ export type InvitationAction =
  * in `@dxos/react-client`.
  */
 export const useInvitation = (profileKey: PublicKey) => {
+  const initialSecret = useMemo(() => Math.random().toString(16).slice(2, 6), []);
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) =>
       ({
@@ -82,7 +83,6 @@ export const useInvitation = (profileKey: PublicKey) => {
         // `subject`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === InvitationReducerStatus.done ? action.result : prev.result,
         subject: action.status === InvitationReducerStatus.connecting ? action.subject : prev.subject,
-        secret: action.status === InvitationReducerStatus.ready ? action.secret : prev.secret,
         // `error` gets reset each time we leave the error state
         ...(action.status === InvitationReducerStatus.failed && { error: action.error }),
         // `haltedAt` gets reset each time we leave the error or cancelled state
@@ -97,7 +97,7 @@ export const useInvitation = (profileKey: PublicKey) => {
         status: InvitationReducerStatus.init,
         result: [null, null],
         error: undefined,
-        secret: undefined
+        secret: initialSecret
       };
     }
   );
@@ -106,17 +106,14 @@ export const useInvitation = (profileKey: PublicKey) => {
   // Connect step
   // ===
 
-  const storedConnect = useCallback(
-    async (subjectKey: PublicKey) => {
-      await pause(4e3);
-      return Math.random().toString(16).slice(2, 6);
-    },
-    [profileKey]
-  );
-
   const [connect] = useState(() => {
     const cancelled: Set<Promise<string> | null> = new Set();
     let previous: Promise<string> | null;
+
+    const storedConnect = async (_subjectKey: PublicKey) => {
+      await pause(4e3);
+      return initialSecret;
+    };
 
     return Object.assign(
       async (subjectKey: PublicKey) => {
@@ -156,21 +153,18 @@ export const useInvitation = (profileKey: PublicKey) => {
   // Validation step
   // ===
 
-  const storedValidate = useCallback(
-    async (secret: string) => {
-      await pause(4e3);
-      if (secret === state.secret) {
-        return [{ key: state.subject }, { publicKey: profileKey }] as InvitationResult;
-      } else {
-        throw new Error('Secret does not match');
-      }
-    },
-    [state.secret]
-  );
-
   const [validate] = useState(() => {
     const cancelled: Set<Promise<InvitationResult> | null> = new Set();
     let previous: Promise<InvitationResult> | null;
+
+    const storedValidate = async (secret: string) => {
+      await pause(4e3);
+      if (secret === initialSecret) {
+        return [{ key: profileKey }, { publicKey: state.subject }] as InvitationResult;
+      } else {
+        throw new Error('Secret does not match');
+      }
+    };
 
     return Object.assign(
       async (secret: string) => {

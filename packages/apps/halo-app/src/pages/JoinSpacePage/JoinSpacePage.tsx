@@ -60,7 +60,7 @@ export const JoinSpacePanel = () => {
   } = useInvitation(profile!.publicKey);
 
   const onConnectNext = useCallback(() => {
-    void connect(PublicKey.fromHex(invitationCode));
+    void connect(PublicKey.random());
   }, [invitationCode]);
 
   const onValidateNext = useCallback(() => {
@@ -97,7 +97,8 @@ export const JoinSpacePanel = () => {
             inputLabel: t('invitation code label', { ns: 'uikit' }),
             inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
             inputProps: {
-              initialValue: invitationCode
+              initialValue: invitationCode,
+              autoFocus: true
             },
             onChange: setInvitationCode,
             onNext: onConnectNext,
@@ -117,7 +118,8 @@ export const JoinSpacePanel = () => {
             inputLabel: t('invitation secret label', { ns: 'uikit' }),
             inputPlaceholder: t('invitation secret placeholder', { ns: 'uikit' }),
             inputProps: {
-              initialValue: ''
+              initialValue: '',
+              autoFocus: true
             },
             onChange: setInvitationSecret,
             onNext: onValidateNext,
