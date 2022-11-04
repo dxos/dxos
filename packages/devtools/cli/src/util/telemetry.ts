@@ -38,7 +38,7 @@ const DEFAULTS: TelemetryContext = {
   environment: DX_ENVIRONMENT,
   release: DX_RELEASE,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  runtime: `Node ${process.version}`,
+  runtime: `node ${process.version}`,
   os: os.platform(),
   arch: os.arch(),
   ci: process.env.CI === 'true'
