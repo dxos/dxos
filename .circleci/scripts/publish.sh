@@ -6,9 +6,10 @@ PACKAGE=${PWD##*/}
 PACKAGE_CAPS=${PACKAGE^^}
 PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
+eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
+eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
+
 if [ $1 = "production" ]; then
-  eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_SENTRY_DSN""
-  eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
   export DX_ENVIRONMENT=production
   DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
   VERSION=$(cat package.json | jq '.version')
@@ -19,8 +20,6 @@ if [ $1 = "production" ]; then
     --skipExisting \
     --verbose
 else
-  eval "export SENTRY_DESTINATION=$"${PACKAGE_ENV}_DEV_SENTRY_DSN""
-  eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_DEV_SEGMENT_API_KEY""
   export DX_ENVIRONMENT=development
   DX_CONFIG="$ROOT/packages/devtools/cli/config/config-dev.yml"
 
