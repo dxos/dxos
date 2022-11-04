@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
 import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
@@ -16,16 +16,19 @@ import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
 
 const DEFAULT_TIMEOUT = 3000;
 
+// TODO(burdon): Replace with @dxos/log.
 const log = debug('dxos:rpc');
 const error = log.extend('error');
 
 type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
-  messageHandler: (method: string, request: Any) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any) => Stream<Any>;
   port: RpcPort;
   timeout?: number;
+
+  messageHandler: (method: string, request: Any) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any) => Stream<Any>;
+
   /**
    * Do not require or send handshake messages.
    */
@@ -108,8 +111,9 @@ export class RpcPeer {
     log('Send open message');
     await this._sendMessage({ open: true });
 
+    // TODO(burdon): Document.
     this._clearOpenInterval = exponentialBackoffInterval(() => {
-      void this._sendMessage({ open: true }).catch((error) => log(`Error: ${error}`));
+      void this._sendMessage({ open: true }).catch((err) => log(`Error: ${err}`));
     }, 50);
 
     await this._remoteOpenTrigger.wait();
@@ -161,8 +165,8 @@ export class RpcPeer {
               response.error
             )} close=${response.close}`
           );
-          void this._sendMessage({ response }).catch((error) => {
-            log(`Unhandled error during stream close: ${error}`);
+          void this._sendMessage({ response }).catch((err) => {
+            log(`Unhandled error during stream close: ${err}`);
           });
         });
       } else {
@@ -237,49 +241,57 @@ export class RpcPeer {
 
   /**
    * Make RPC call. Will trigger a handler on the other side.
-   *
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any): Promise<Any> {
+    log(`Calling: ${method}`);
     if (!this._open) {
       throw new RpcNotOpenError();
     }
 
-    const id = this._nextId++;
-
-    const promise = new Promise<Response>((resolve, reject) => {
-      this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
-    });
-
-    // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
-    // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
-    promise.catch(() => {});
-
-    void this._sendMessage({
-      request: {
-        id,
-        method,
-        payload: request,
-        stream: false
-      }
-    });
-
     let response: Response;
     try {
-      response = await Promise.race([
-        promise,
-        createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
-      ]);
+      // Set-up response listener.
+      const id = this._nextId++;
+      const responseReceived = new Promise<Response>((resolve, reject) => {
+        this._outgoingRequests.set(id, new RequestItem(resolve, reject, false));
+      });
+
+      // TODO(burdon): Remove createTimeoutPromise below.
+      // const race = Promise.race([
+      //   responseReceived,
+      //   createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
+      // ]);
+      // Send request call.
+      const sending = this._sendMessage({
+        request: {
+          id,
+          method,
+          payload: request,
+          stream: false
+        }
+      });
+
+      // TODO(burdon): Seems sketchy.
+      // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
+      // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
+      responseReceived.catch(() => {});
+
+      // Wait until send completes or throws an error (or response throws a timeout).
+      const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
+      await Promise.race([sending, waiting]);
+      response = await waiting;
+      assert(response.id === id);
     } catch (err) {
       if (err instanceof RpcClosedError) {
         // Rethrow the error here to have the correct stack-trace.
         const error = new RpcClosedError();
-        error.stack += `\n\nRpc client was closed at:\n${err.stack}`;
+        error.stack += `\n\nRPC client was closed at:\n${err.stack}`;
         throw error;
       }
+
       throw err;
     }
-    assert(response.id === id);
 
     if (response.payload) {
       return response.payload;
@@ -296,8 +308,8 @@ export class RpcPeer {
   }
 
   /**
-   * Make RPC call with a streaming response. Will trigger a handler on the other side.
-   *
+   * Make RPC call with a streaming response.
+   * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
   callStream(method: string, request: Any): Stream<Any> {
@@ -327,13 +339,12 @@ export class RpcPeer {
       };
 
       const stack = new StackTrace();
-
-      const closeStream = (error?: Error) => {
-        if (!error) {
+      const closeStream = (err?: Error) => {
+        if (!err) {
           close();
         } else {
-          error.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
-          close(error);
+          err.stack += `\n\nError happened in the stream at:\n${stack.getStack()}`;
+          close(err);
         }
       };
 
@@ -346,12 +357,16 @@ export class RpcPeer {
           payload: request,
           stream: true
         }
-      }).catch((error) => close(error));
+      }).catch((err) => {
+        close(err);
+      });
 
       return () => {
         this._sendMessage({
           streamClose: { id }
-        }).catch(() => {}); // Ignore the error here as there's no good way to handle it.
+        }).catch((err) => {
+          error(err);
+        });
       };
     });
   }
@@ -365,12 +380,13 @@ export class RpcPeer {
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
+
       const response = await this._options.messageHandler(req.method, req.payload);
       return {
         id: req.id,
         payload: response
       };
-    } catch (err: any) {
+    } catch (err) {
       return {
         id: req.id,
         error: encodeError(err)
@@ -384,6 +400,7 @@ export class RpcPeer {
       assert(typeof req.id === 'number');
       assert(req.payload);
       assert(req.method);
+
       const responseStream = this._options.streamHandler(req.method, req.payload);
       responseStream.onReady(() => {
         callback({
@@ -391,6 +408,7 @@ export class RpcPeer {
           streamReady: true
         });
       });
+
       responseStream.subscribe(
         (msg) => {
           callback({
@@ -412,6 +430,7 @@ export class RpcPeer {
           }
         }
       );
+
       this._localStreams.set(req.id, responseStream);
     } catch (err: any) {
       callback({
@@ -422,6 +441,7 @@ export class RpcPeer {
   }
 }
 
+// TODO(burdon): Factor out.
 const encodeError = (err: any): ErrorResponse => {
   if (typeof err === 'object' && err?.message) {
     return {
@@ -438,22 +458,4 @@ const encodeError = (err: any): ErrorResponse => {
       message: JSON.stringify(err)
     };
   }
-};
-
-/**
- * Creates a promise that will be rejected after a certain timeout.
- * The promise will never cause unhandledPromiseRejection.
- * The timeout will not block the Node.JS process from exiting.
- */
-const createTimeoutPromise = (timeout: number, error: Error) => {
-  const timeoutPromise = new Promise<any>((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(error), timeout);
-
-    // `unref` prevents the timeout from blocking Node.JS process from exiting. Not available in browsers.
-    if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-      timeoutId.unref();
-    }
-  });
-  timeoutPromise.catch(() => {}); // Mute the promise.
-  return timeoutPromise;
 };

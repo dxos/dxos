@@ -10,11 +10,11 @@ export const ONLINE_CONFIG: ConfigProto = {
   runtime: {
     services: {
       signal: {
-        server: 'wss://halo.dxos.org/.well-known/dx/signal'
+        server: 'wss://kube.dxos.org/.well-known/dx/signal'
       },
       ice: [
         {
-          urls: 'turn:demo.kube.moon.dxos.network:3478',
+          urls: 'turn:kube.dxos.org:3478',
           username: 'dxos',
           credential: 'dxos'
         }

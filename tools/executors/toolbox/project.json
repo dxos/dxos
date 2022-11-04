@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
@@ -7,7 +8,10 @@
       "options": {
         "main": "tools/executors/toolbox/src/main.ts",
         "outputPath": "tools/executors/toolbox/dist",
-        "tsConfig": "tools/executors/toolbox/tsconfig.json"
+        "tsConfig": "tools/executors/toolbox/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -47,8 +51,8 @@
       "executor": "@dxos/toolbox:exec"
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
-    "log-hook"
+    "log-hook",
+    "mocha"
   ]
 }

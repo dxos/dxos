@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/apps/halo-app/src/index.ts",
         "outputPath": "packages/apps/halo-app/dist",
-        "tsConfig": "packages/apps/halo-app/tsconfig.json"
+        "tsConfig": "packages/apps/halo-app/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
@@ -33,6 +36,25 @@
     },
     "bundle": {
       "executor": "@nxext/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
       "options": {
         "configFile": "packages/apps/halo-app/vite.config.ts",
         "outputPath": "packages/apps/halo-app/out/halo"

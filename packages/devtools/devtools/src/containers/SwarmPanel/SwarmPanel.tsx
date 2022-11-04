@@ -16,7 +16,5 @@ export const SwarmPanel = () => {
   }
 
   // TODO(burdon): Requires cast despite subsitutions.
-  return (
-    <SwarmDetails swarms={data as SwarmInfo[]} />
-  );
+  return <SwarmDetails swarms={data as SwarmInfo[]} />;
 };

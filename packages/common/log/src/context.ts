@@ -30,7 +30,7 @@ export interface LogMetadata {
 export interface LogEntry {
   level: LogLevel;
   message: string;
-  ctx?: LogContext;
+  context?: LogContext;
   meta?: LogMetadata;
   error?: Error;
 }

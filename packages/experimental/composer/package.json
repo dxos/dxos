@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
@@ -40,8 +40,5 @@
     "@vitejs/plugin-react": "^2.0.1",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

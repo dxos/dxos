@@ -1,13 +1,16 @@
 {
   "sourceRoot": "packages/devtools/devtools/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/devtools/devtools/src/index.ts",
         "outputPath": "packages/devtools/devtools/dist",
-        "tsConfig": "packages/devtools/devtools/tsconfig.json"
+        "tsConfig": "packages/devtools/devtools/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

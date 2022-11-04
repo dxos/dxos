@@ -1,0 +1,34 @@
+{
+  "sourceRoot": "packages/experimental/react-ipfs/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/react-ipfs/src/index.ts",
+        "outputPath": "packages/experimental/react-ipfs/dist",
+        "tsConfig": "packages/experimental/react-ipfs/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/react-ipfs/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  }
+}

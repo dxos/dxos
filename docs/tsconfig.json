@@ -22,7 +22,7 @@
       "path": "../packages/common/telemetry"
     },
     {
-      "path": "../packages/sdk/react-components"
+      "path": "../packages/sdk/react-client"
     },
     {
       "path": "../tools/plate"

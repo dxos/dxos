@@ -73,7 +73,7 @@ const config: UserConfig = defineUserConfig({
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
         'process.env.DX_RELEASE': env(process.env.DX_RELEASE),
-        'process.env.SEGMENT_API_KEY': env(process.env.SEGMENT_API_KEY)
+        'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY)
       },
       optimizeDeps: {
         force: true,

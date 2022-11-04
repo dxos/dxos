@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "2.33.8",
+  "version": "0.1.1",
   "description": "Tiny RPC library.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "earljs": "~0.1.10",
-    "typescript": "^4.7.2"
+    "typescript": "^4.8.4"
   },
   "publishConfig": {
     "access": "public"

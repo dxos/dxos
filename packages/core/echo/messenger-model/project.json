@@ -7,7 +7,10 @@
       "options": {
         "main": "packages/core/echo/messenger-model/src/index.ts",
         "outputPath": "packages/core/echo/messenger-model/dist",
-        "tsConfig": "packages/core/echo/messenger-model/tsconfig.json"
+        "tsConfig": "packages/core/echo/messenger-model/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"

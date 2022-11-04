@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/react-registry-client",
+  "version": "0.1.1",
+  "private": true,
+  "description": "React registry client API",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "book": "toolchain book",
+    "build:book": "toolchain build:book",
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/registry-client": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/debug": "^4.1.7",
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
+  }
+}

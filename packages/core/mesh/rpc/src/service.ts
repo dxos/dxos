@@ -6,29 +6,29 @@ import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
-export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> };
+export type ServiceBundle<Service> = { [Key in keyof Service]: ServiceDescriptor<Service[Key]> };
 
 /**
  * Groups multiple services together so they can be served over one RPC peer.
  */
-export const createServiceBundle = <S>(services: ServiceBundle<S>): ServiceBundle<S> => services;
+export const createServiceBundle = <Service>(services: ServiceBundle<Service>): ServiceBundle<Service> => services;
 
 /**
  * A type-safe RPC peer.
  */
-export class ProtoRpcPeer<S> {
+export class ProtoRpcPeer<Service> {
   // prettier-ignore
   constructor(
-    public readonly rpc: S,
-    private readonly peer: RpcPeer
+    public readonly rpc: Service,
+    private readonly _peer: RpcPeer
   ) {}
 
   async open() {
-    await this.peer.open();
+    await this._peer.open();
   }
 
   async close() {
-    await this.peer.close();
+    await this._peer.close();
   }
 }
 
@@ -148,14 +148,11 @@ export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandle
  */
 export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOptions<S>): RpcPeer => {
   const server = service.createServer(handlers);
-
-  const peer = new RpcPeer({
+  return new RpcPeer({
     ...rest,
     messageHandler: server.call.bind(server),
     streamHandler: server.callStream.bind(server)
   });
-
-  return peer;
 };
 
 /**
@@ -191,31 +188,30 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
-
     rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 
-  const peer = new RpcPeer({
+  return new RpcPeer({
     ...rest,
+
     messageHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
-
       if (!rpc[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
+
       return rpc[serviceName].call(methodName, request);
     },
+
     streamHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
-
       if (!rpc[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
       }
+
       return rpc[serviceName].callStream(methodName, request);
     }
   });
-
-  return peer;
 };
 
 const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
@@ -225,5 +221,6 @@ const parseMethodName = (method: string): [serviceName: string, methodName: stri
   if (serviceName.length === 0 || methodName.length === 0) {
     throw new Error(`Invalid method: ${method}`);
   }
+
   return [serviceName, methodName];
 };

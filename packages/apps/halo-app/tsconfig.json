@@ -18,7 +18,7 @@
   ],
   "references": [
     {
-      "path": "../../../tools/vite-plugin"
+      "path": "../../sdk/vite-plugin"
     },
     {
       "path": "../../common/async"
@@ -36,7 +36,7 @@
       "path": "../../common/react-ui"
     },
     {
-      "path": "../../common/react-uikit"
+      "path": "../../sdk/react-uikit"
     },
     {
       "path": "../../common/sentry"
@@ -78,7 +78,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client-testing"
+      "path": "../../experimental/react-client-testing"
     }
   ]
 }

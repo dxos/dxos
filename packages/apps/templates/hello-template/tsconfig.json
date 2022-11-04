@@ -20,7 +20,13 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/vite-plugin"
+      "path": "../../../experimental/react-client-testing"
+    },
+    {
+      "path": "../../../deprecated/react-components"
+    },
+    {
+      "path": "../../../deprecated/react-toolkit"
     },
     {
       "path": "../../../sdk/client"
@@ -32,13 +38,7 @@
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-client-testing"
-    },
-    {
-      "path": "../../../sdk/react-components"
-    },
-    {
-      "path": "../../../sdk/react-toolkit"
+      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

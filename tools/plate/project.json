@@ -6,7 +6,10 @@
       "options": {
         "main": "tools/plate/src/index.ts",
         "outputPath": "tools/plate/dist",
-        "tsConfig": "tools/plate/tsconfig.json"
+        "tsConfig": "tools/plate/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "{options.outputPath}"
