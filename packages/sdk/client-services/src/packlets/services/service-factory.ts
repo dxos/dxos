@@ -25,7 +25,7 @@ export const createServices = ({
 }): ClientServices => {
   return {
     // SpacesService: new SpacesServiceImpl(),
-    // SpaceInvitationService: new SpaceInvitationsServiceImpl(context.spaceManager, context.spaceInvitations),
+    // SpaceInvitationsService: new SpaceInvitationsServiceImpl(context.spaceManager, context.spaceInvitations),
 
     DataService: context.dataService,
     HaloService: new HaloService(null, signer),

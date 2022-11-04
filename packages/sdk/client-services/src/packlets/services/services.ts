@@ -14,7 +14,7 @@ import { createServiceBundle } from '@dxos/rpc';
 
 export type ClientServices = {
   // SpacesService: SpacesService;
-  // SpaceInvitationService: InvitationService;
+  // SpaceInvitationsService: InvitationsService;
 
   DataService: DataService;
   HaloService: HaloService;
@@ -31,7 +31,7 @@ export type ClientServices = {
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   // New
   // SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  // SpaceInvitationService: schema.getService('dxos.client.services.InvitationService'),
+  // SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService'),
 
   // Old
   DataService: schema.getService('dxos.echo.service.DataService'),

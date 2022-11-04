@@ -28,8 +28,8 @@ import { InvitationEvents, InvitationsHandler } from './invitations';
  * - Listen for guest's credentials presentation (e.g., device key) then write credentials to the feed.
  *
  *  [Client] => SpaceInvitationProxy.createInvitation(): Observable
- *    <RPC:InvitationService>
- *      SpaceInvitationService => SpaceInvitations.createInvitation(): Observable
+ *    <RPC:InvitationsService>
+ *      SpaceInvitationsService => SpaceInvitations.createInvitation(): Observable
  *        SpaceGuestService.presentAdmissionOffer()
  *          [SpaceHostService.presentAdmissionCredentials] => write credentials.
  *
@@ -39,8 +39,8 @@ import { InvitationEvents, InvitationsHandler } from './invitations';
  * - Responds with credentials presentation.
  *
  * [Client] => SpaceInvitationProxy.acceptInvitation(): Observable
- *    <RPC:InvitationService>
- *      SpaceInvitationService => SpaceInvitations.acceptInvitation(): Observable
+ *    <RPC:InvitationsService>
+ *      SpaceInvitationsService => SpaceInvitations.acceptInvitation(): Observable
  *        [SpaceGuestService.presentAdmissionOffer] => SpaceHostService.presentAdmissionCredentials()
  *
  */

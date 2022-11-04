@@ -187,7 +187,7 @@ message AuthenticateResponse {
 }
 
 // TODO(burdon): Separate implementations for HALO/Data Spaces.
-service InvitationService {
+service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);

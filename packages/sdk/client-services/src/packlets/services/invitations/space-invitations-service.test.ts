@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ServiceContext } from '../service-context';
 import { closeAfterTest, createIdentity, createPeers } from '../testing';
@@ -20,11 +20,11 @@ describe('services/space-invitation-service', function () {
 
     assert(peer1.spaceManager);
     assert(peer1.spaceInvitations);
-    const service1: InvitationService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
+    const service1: InvitationsService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
 
     assert(peer2.spaceManager);
     assert(peer2.spaceInvitations);
-    const service2: InvitationService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
+    const service2: InvitationsService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
 
     const space1 = await peer1.spaceManager.createSpace();
 
@@ -64,11 +64,11 @@ describe('services/space-invitation-service', function () {
 
     assert(peer1.spaceManager);
     assert(peer1.spaceInvitations);
-    const service1: InvitationService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
+    const service1: InvitationsService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
 
     assert(peer2.spaceManager);
     assert(peer2.spaceInvitations);
-    const service2: InvitationService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
+    const service2: InvitationsService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
 
     const space1 = await peer1.spaceManager.createSpace();
     const cancelled = new Trigger();

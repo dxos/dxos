@@ -7,7 +7,7 @@ import assert from 'assert';
 import { CancellableObservable, CancellableObservableProvider, observableError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationEvents, InvitationsProxy } from './invitations';
 
@@ -19,7 +19,7 @@ import { InvitationEvents, InvitationsProxy } from './invitations';
 export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
   // prettier-ignore
   constructor(
-    private readonly _invitationService: InvitationService
+    private readonly _invitationsService: InvitationsService
   ) {}
 
   // TODO(burdon): Invitation type.
@@ -31,11 +31,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     let invitationId: string;
     const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       if (invitationId) {
-        await this._invitationService.cancelInvitation({ invitationId });
+        await this._invitationsService.cancelInvitation({ invitationId });
       }
     });
 
-    const stream: Stream<Invitation> = this._invitationService.createInvitation(this.createInvitationObject(context));
+    const stream: Stream<Invitation> = this._invitationsService.createInvitation(this.createInvitationObject(context));
 
     stream.subscribe(
       (invitation: Invitation) => {
@@ -83,11 +83,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     let invitationId: string;
     const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       if (invitationId) {
-        await this._invitationService.cancelInvitation({ invitationId });
+        await this._invitationsService.cancelInvitation({ invitationId });
       }
     });
 
-    const stream: Stream<Invitation> = this._invitationService.acceptInvitation(invitation);
+    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation(invitation);
 
     stream.subscribe(
       (invitation: Invitation) => {

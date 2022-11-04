@@ -8,14 +8,14 @@ import { CancellableObservable, TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { AuthenticateRequest, Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthenticateRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SpaceInvitationsHandler } from './space-invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
-export class SpaceInvitationsServiceImpl implements InvitationService {
+export class SpaceInvitationsServiceImpl implements InvitationsService {
   private readonly _createInvitations = new Map<string, CancellableObservable<any>>();
   private readonly _acceptInvitations = new Map<string, CancellableObservable<any>>();
 

@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from './invitations';
@@ -15,12 +15,12 @@ import { ServiceRegistry } from './service-registry';
 import { createServiceContext } from './testing';
 
 type TestServices = {
-  SpaceInvitationsService: InvitationService;
+  SpaceInvitationsService: InvitationsService;
 };
 
 const serviceBundle = createServiceBundle<TestServices>({
-  // HaloInvitationsService: schema.getService('dxos.client.services.InvitationService'),
-  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationService')
+  // HaloInvitationsService: schema.getService('dxos.client.services.InvitationsService'),
+  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
 });
 
 type Provider<T> = () => T | undefined;
@@ -74,7 +74,7 @@ describe.only('service registry', function () {
       return new SpaceInvitationsServiceImpl(serviceContext.spaceManager!, serviceContext.spaceInvitations!);
     };
 
-    const xxx: InvitationService = createProviderProxy(provider);
+    const xxx: InvitationsService = createProviderProxy(provider);
 
     const [proxyPort, serverPort] = createLinkedPorts();
 
@@ -102,7 +102,7 @@ describe.only('service registry', function () {
 
     const done = new Trigger(); // createRpcServer
     {
-      // proxy.rpc.SpaceInvitationService.createInvitation();
+      // proxy.rpc.SpaceInvitationsService.createInvitation();
       const spaceInvitationsProxy = new SpaceInvitationsProxy(proxy.rpc.SpaceInvitationsService);
       const observer = spaceInvitationsProxy.createInvitation(space.key);
       observer.subscribe({
