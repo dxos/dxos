@@ -19,6 +19,8 @@ export const uikit = {
   'username placeholder': 'Enter your preferred display name here',
   'invitation code label': 'Invitation code or URL',
   'invitation code placeholder': 'Paste the invitation code or URL here',
+  'invitation secret label': 'Verification PIN',
+  'invitation secret placeholder': 'Type or paste the verification PIN here',
   'seed phrase label': 'Seed phrase (space separated)',
   'seed phrase placeholder': 'Enter your seed phrase here',
   'back label': 'Back',

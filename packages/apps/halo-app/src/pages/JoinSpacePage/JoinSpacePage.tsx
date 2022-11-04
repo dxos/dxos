@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationWrapper, Party } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+import { PublicKey } from '@dxos/keys';
+import { useClient, useProfile } from '@dxos/react-client';
 import { Dialog, DialogProps, Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
-import { invitationCodeFromUrl } from '../../util';
+import { InvitationReducerStatus, useInvitation } from '../../experimental';
+import { InvitationStatus } from '../../experimental/InvitationStatus';
 
 /**
  *
@@ -38,54 +38,99 @@ export const JoinSpaceDialog = (props: Partial<DialogProps>) => {
 };
 
 // TODO(wittjosiah): Factor out.
-const JoinSpacePanel = () => {
+export const JoinSpacePanel = () => {
   const { t } = useTranslation();
-  const client = useClient();
+  const _client = useClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
+  const [invitationSecret, setInvitationSecret] = useState('');
+  const profile = useProfile();
 
-  const redeemInvitation = useCallback(() => {
-    const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-    const invitation = InvitationWrapper.decode(parsedInvitationCode);
-    const redeemeingInvitation = client.echo.acceptInvitation(invitation);
-    return redeemeingInvitation.getParty();
-  }, [navigate, invitationCode]);
+  const {
+    status,
+    haltedAt,
+    connect,
+    cancel,
+    validate,
+    error,
+    secret,
+    result: [space, _me]
+  } = useInvitation(profile!.publicKey);
 
-  const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
+  const onConnectNext = useCallback(() => {
+    void connect(PublicKey.fromHex(invitationCode));
+  }, [invitationCode]);
+
+  const onValidateNext = useCallback(() => {
+    void validate(invitationSecret);
+  }, [invitationSecret]);
 
   useEffect(() => {
     if (invitationParam) {
-      void call();
+      onConnectNext();
     }
   }, []);
 
   useEffect(() => {
-    if (status === 'success' && value) {
-      navigate(`#/spaces/${value.key.toHex()}`);
+    if (secret) {
+      console.log('[secret]', secret);
     }
-  }, [status, value]);
+  }, [secret]);
+
+  useEffect(() => {
+    if (status === InvitationReducerStatus.done && space) {
+      navigate(`#/spaces/${space.key.toHex()}`);
+    }
+  }, [status, space]);
+
+  const cursor = status < 0 ? haltedAt! : status;
 
   return (
-    <SingleInputStep
-      {...{
-        pending: status === 'loading',
-        inputLabel: t('invitation code label', { ns: 'uikit' }),
-        inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
-        inputProps: {
-          initialValue: invitationCode
-        },
-        onChange: setInvitationCode,
-        onNext: call,
-        onCancelPending: cancel,
-        ...(error && {
-          inputProps: {
-            validationMessage: error.message,
-            validationValence: 'error'
-          }
-        })
-      }}
-    />
+    <>
+      <InvitationStatus {...{ status, haltedAt }} className='mbs-3' />
+      {cursor < InvitationReducerStatus.ready ? (
+        <SingleInputStep
+          {...{
+            pending: status === InvitationReducerStatus.connecting,
+            inputLabel: t('invitation code label', { ns: 'uikit' }),
+            inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
+            inputProps: {
+              initialValue: invitationCode
+            },
+            onChange: setInvitationCode,
+            onNext: onConnectNext,
+            onCancelPending: cancel,
+            ...(error && {
+              inputProps: {
+                validationMessage: error.message,
+                validationValence: 'error'
+              }
+            })
+          }}
+        />
+      ) : (
+        <SingleInputStep
+          {...{
+            pending: status === InvitationReducerStatus.validating,
+            inputLabel: t('invitation secret label', { ns: 'uikit' }),
+            inputPlaceholder: t('invitation secret placeholder', { ns: 'uikit' }),
+            inputProps: {
+              initialValue: ''
+            },
+            onChange: setInvitationSecret,
+            onNext: onValidateNext,
+            onCancelPending: cancel,
+            ...(error && {
+              inputProps: {
+                validationMessage: error.message,
+                validationValence: 'error'
+              }
+            })
+          }}
+        />
+      )}
+    </>
   );
 };
