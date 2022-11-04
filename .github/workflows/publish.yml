@@ -48,7 +48,7 @@ jobs:
         run: pnpm nx run-many --target=build
 
       - name: Publish to NPM
-        run: pnpm --filter-prod="./packages/**" publish
+        run: pnpm --filter-prod="./packages/**" publish --no-git-checks
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
