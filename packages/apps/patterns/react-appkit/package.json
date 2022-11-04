@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-appkit",
-  "version": "0.0.1",
+  "version": "0.1.2",
   "description": "DXOS opinions for building React applications",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
