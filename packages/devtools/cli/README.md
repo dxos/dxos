@@ -23,11 +23,11 @@ $ ./bin/run config --json
 
 <!-- usage -->
 ```sh-session
-$ npm install -g @dxos/dx-cli
+$ npm install -g @dxos/cli
 $ dx COMMAND
 running command...
 $ dx (--version)
-@dxos/dx-cli/2.33.8 darwin-arm64 node-v16.14.0
+@dxos/cli/0.1.2 darwin-arm64 node-v16.14.0
 $ dx --help [COMMAND]
 USAGE
   $ dx COMMAND
