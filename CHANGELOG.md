@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.2](https://github.com/dxos/dxos/compare/v0.1.1...v0.1.2) (2022-11-04)
+
+
+### Features
+
+* **cli:** Reintroduce ([#1804](https://github.com/dxos/dxos/issues/1804)) ([3682a5a](https://github.com/dxos/dxos/commit/3682a5aea64473de45bf04ddedefd72da0c6a3ae))
+
+
+### Bug Fixes
+
+* **mocha:** Separate nyc_output per project ([#1805](https://github.com/dxos/dxos/issues/1805)) ([a87a266](https://github.com/dxos/dxos/commit/a87a2668338cd88db0aca9b6eb659e596ebe8d94))
+* skip existing in PublishRequest. ([#1780](https://github.com/dxos/dxos/issues/1780)) ([9beb849](https://github.com/dxos/dxos/commit/9beb849d735ca63d329dd82006f8bcbc9a005c11))
+
 ## [0.1.1](https://github.com/dxos/dxos/compare/v0.1.0...v0.1.1) (2022-11-04)
 
 
