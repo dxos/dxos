@@ -13,8 +13,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { ServiceContext } from '../service-context';
-import { ClientServiceHost } from '../service-host';
+import { ClientServicesHost, ServiceContext } from '../services';
 
 // TODO(burdon): Create test builder.
 
@@ -24,7 +23,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     transportFactory: MemoryTransportFactory
   });
 
-  return new ClientServiceHost({
+  return new ClientServicesHost({
     config,
     networkManager
   });

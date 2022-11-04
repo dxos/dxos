@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -10,53 +11,34 @@ import { schema } from '@dxos/protocols';
 import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 
-import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from './invitations';
-import { ServiceRegistry } from './service-registry';
-import { createServiceContext } from './testing';
+import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
+import { createServiceContext } from '../testing';
+import { createServiceProvider, ServiceRegistry } from './service-registry';
+
+// TODO(burdon): Create TestService (that doesn't require peers).
 
 type TestServices = {
   SpaceInvitationsService: InvitationsService;
 };
 
 const serviceBundle = createServiceBundle<TestServices>({
-  // HaloInvitationsService: schema.getService('dxos.client.services.InvitationsService'),
   SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
 });
 
-type Provider<T> = () => T | undefined;
-
-interface Test {
-  foo: number;
-  log: () => void;
-}
-
-const createProviderProxy = <T>(provider: Provider<T>): T => {
-  return new Proxy<Provider<T>>(provider, {
-    get(target: Provider<T>, prop) {
-      const value = provider();
-      if (value === undefined) {
-        throw new Error('Value undefined.');
-      }
-
-      const obj: { [i: string | symbol]: any } = value!;
-      return obj[prop];
-    }
-  }) as any as T;
-};
-
 describe.only('service registry', function () {
-  it('tests proxies', function () {
-    {
-      const value: Test = {
-        foo: 100,
-        log: () => {
-          console.log('xxx');
-        }
-      };
-
-      const proxy = createProviderProxy<Test>(() => value);
-      proxy.log();
+  it('creates a proxy', async function () {
+    interface Test {
+      value: number;
+      add: (...args: number[]) => Promise<number>;
     }
+
+    const proxy = createServiceProvider<Test>(() => ({
+      value: 100,
+      add: (...args: number[]) => Promise.resolve(args.reduce((result, value) => result + value, 0))
+    }));
+
+    expect(proxy.value).to.eq(100);
+    expect(await proxy.add(1, 2, 3)).to.eq(6);
   });
 
   it.only('builds a service registry', async function () {
@@ -68,19 +50,17 @@ describe.only('service registry', function () {
     assert(serviceContext.spaceInvitations);
     const space = await serviceContext.spaceManager.createSpace();
 
-    const serviceRegistry = new ServiceRegistry(serviceBundle);
-
-    const provider = () => {
-      return new SpaceInvitationsServiceImpl(serviceContext.spaceManager!, serviceContext.spaceInvitations!);
-    };
-
-    const xxx: InvitationsService = createProviderProxy(provider);
+    const serviceRegistry = new ServiceRegistry(serviceBundle, {
+      SpaceInvitationsService: createServiceProvider(() => {
+        return new SpaceInvitationsServiceImpl(serviceContext.spaceManager!, serviceContext.spaceInvitations!);
+      })
+    });
 
     const [proxyPort, serverPort] = createLinkedPorts();
 
     const proxy = createProtoRpcPeer({
       port: proxyPort,
-      requested: serviceRegistry.services,
+      requested: serviceRegistry.descriptors,
       exposed: {},
       handlers: {}
     });
@@ -88,19 +68,16 @@ describe.only('service registry', function () {
     const server = createProtoRpcPeer({
       port: serverPort,
       requested: {},
-      exposed: serviceRegistry.services,
-      handlers: {
-        SpaceInvitationsService: xxx
-      }
+      exposed: serviceRegistry.descriptors,
+      handlers: serviceRegistry.services
     });
 
     log('opening...');
     await Promise.all([proxy.open(), server.open()]);
     log('open');
 
-    // TODO(burdon): Create TestService (that doesn't require peers).
-
     const done = new Trigger(); // createRpcServer
+
     {
       // proxy.rpc.SpaceInvitationsService.createInvitation();
       const spaceInvitationsProxy = new SpaceInvitationsProxy(proxy.rpc.SpaceInvitationsService);
@@ -115,6 +92,7 @@ describe.only('service registry', function () {
         }
       });
     }
+
     await done.wait();
 
     // TODO(burdon): Error handling (create tests).

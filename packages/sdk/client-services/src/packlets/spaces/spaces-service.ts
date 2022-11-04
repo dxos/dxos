@@ -14,15 +14,15 @@ import {
  *
  */
 export class SpacesServiceImpl implements SpacesService {
-  async createSpace(request: void): Promise<Space> {
+  async createSpace(): Promise<Space> {
     throw new Error();
   }
 
-  querySpaces(request: void): Stream<Space> {
+  querySpaces(): Stream<Space> {
     throw new Error();
   }
 
-  queryMembers(request: QueryMembersRequest): Stream<QueryMembersResponse> {
+  queryMembers(query: QueryMembersRequest): Stream<QueryMembersResponse> {
     throw new Error();
   }
 }

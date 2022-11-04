@@ -9,7 +9,7 @@ import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { ServiceContext } from '../service-context';
+import { ServiceContext } from '../services';
 import { closeAfterTest, createIdentity, createPeers } from '../testing';
 import { SpaceInvitationsProxy } from './space-invitations-proxy';
 import { SpaceInvitationsServiceImpl } from './space-invitations-service';

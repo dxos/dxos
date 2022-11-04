@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
 import {
   ClearSnapshotsRequest,
   DevtoolsHost,
@@ -37,16 +37,15 @@ import {
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import {
-  DevtoolsHostEvents,
-  subscribeToNetworkStatus,
-  subscribeToSignalTrace,
-  subscribeToSwarmInfo,
-  subscribeToSpaces,
-  subscribeToFeedBlocks,
-  subscribeToFeeds
-} from '../../devtools';
-import { ServiceContext } from '../service-context';
+import { ServiceContext } from '../services';
+import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
+import { subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from './network';
+import { subscribeToSpaces } from './spaces';
+
+// TODO(burdon): Remove?
+export class DevtoolsHostEvents {
+  readonly ready = new AsyncEvent();
+}
 
 export type DevtoolsServiceParams = {
   events: DevtoolsHostEvents;
@@ -66,29 +65,29 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   getConfig(request: void): Promise<GetConfigResponse> {
-    todo();
+    throw new Error();
   }
 
   resetStorage(request: ResetStorageRequest): Promise<void> {
-    todo();
+    throw new Error();
   }
 
   enableDebugLogging(request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
-    todo();
+    throw new Error();
   }
 
   disableDebugLogging(request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToKeyringKeys(request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToCredentialMessages(
     request: SubscribeToCredentialMessagesRequest
   ): Stream<SubscribeToCredentialMessagesResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
@@ -96,7 +95,7 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToFeeds(request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
@@ -108,23 +107,23 @@ export class DevtoolsService implements DevtoolsHost {
   }
 
   getPartySnapshot(request: GetPartySnapshotRequest): Promise<GetPartySnapshotResponse> {
-    todo();
+    throw new Error();
   }
 
   savePartySnapshot(request: SavePartySnapshotRequest): Promise<SavePartySnapshotResponse> {
-    todo();
+    throw new Error();
   }
 
   clearSnapshots(request: ClearSnapshotsRequest): Promise<void> {
-    todo();
+    throw new Error();
   }
 
   getNetworkPeers(request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToNetworkTopics(request: void): Stream<SubscribeToNetworkTopicsResponse> {
-    todo();
+    throw new Error();
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {

@@ -3,35 +3,40 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import {
-  clientServiceBundle,
-  ClientServiceProvider,
-  ClientServices,
-  RemoteServiceConnectionTimeout
-} from '@dxos/client-services';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+
+import { RemoteServiceConnectionTimeout } from '../../errors';
+import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 
 /**
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
  */
-export class ClientServiceProxy implements ClientServiceProvider {
+export class ClientServicesProxy implements ClientServicesProvider {
   private readonly _client: ProtoRpcPeer<ClientServices>;
 
-  constructor(port: RpcPort, private readonly _timeout = 300) {
+  // prettier-ignore
+  constructor(
+    port: RpcPort,
+    private readonly _timeout = 300
+  ) {
     this._client = createProtoRpcPeer({
-      exposed: {},
       requested: clientServiceBundle,
+      exposed: {},
       handlers: {},
       port
     });
-
-    this.services = this._client.rpc;
   }
 
-  readonly services: ClientServices;
+  get descriptors() {
+    return clientServiceBundle;
+  }
 
-  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
+  get services() {
+    return this._client.rpc;
+  }
+
+  async open() {
     await asyncTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 

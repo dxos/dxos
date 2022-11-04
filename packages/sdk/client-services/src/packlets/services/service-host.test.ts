@@ -11,7 +11,7 @@ import { InvitationState } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
-import { createServiceHost } from './testing';
+import { createServiceHost } from '../testing';
 
 const defaultTestingConfig: ConfigProto = {
   version: 1
@@ -40,7 +40,7 @@ describe('services/service-host', function () {
     {
       await peer1.services.ProfileService.createProfile({});
       const stream = peer1.services.ProfileService.createInvitation();
-      stream.subscribe((msg) => {
+      stream.subscribe((msg: any) => {
         switch (msg.state) {
           case InvitationState.WAITING_FOR_CONNECTION: {
             invitationTrigger.wake(msg.descriptor!);
@@ -54,7 +54,7 @@ describe('services/service-host', function () {
     {
       const invitation = await invitationTrigger.wait();
       const stream = peer2.services.ProfileService.acceptInvitation(invitation);
-      stream.subscribe((msg) => {
+      stream.subscribe((msg: any) => {
         switch (msg.state) {
           case InvitationState.CONNECTED: {
             setAck();

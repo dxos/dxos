@@ -3,20 +3,16 @@
 //
 
 import assert from 'node:assert';
-import { v4 } from 'uuid';
 
-import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { raise, todo } from '@dxos/debug';
+import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
-  CreateInvitationRequest,
   CreateSnapshotRequest,
   GetPartyDetailsRequest,
-  InvitationState,
   Party,
   PartyDetails,
-  PartyService as PartyServiceRpc,
+  PartyService,
   SetPartyStateRequest,
   SubscribeMembersRequest,
   SubscribeMembersResponse,
@@ -24,17 +20,16 @@ import {
   SubscribePartyRequest,
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../invitations';
-import { ServiceContext } from '../service-context';
+import { InviteeInvitations } from '../invitations';
+import { ServiceContext } from '../services';
 
 /**
  * Party service implementation.
  * @deprecated
  */
-export class PartyService implements PartyServiceRpc {
+export class PartyServiceImpl implements PartyService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor(private readonly serviceContext: ServiceContext) {}
@@ -176,88 +171,6 @@ export class PartyService implements PartyServiceRpc {
     //   is_open: party.is_open,
     //   is_active: party.is_active
     // };
-  }
-
-  // TODO(burdon): Replace with Invitation stream.
-  createInvitation(request: CreateInvitationRequest): Stream<Invitation> {
-    const space =
-      this.serviceContext.spaceManager!.spaces.get(request.partyKey) ?? raise(new Error('Space not found.'));
-
-    return new Stream(({ next, close }) => {
-      setTimeout(async () => {
-        try {
-          let invitation: InvitationWrapper;
-          if (!request.inviteeKey) {
-            // const secret = Buffer.from(generatePasscode());
-            // const secretProvider = async () => {
-            //   next({ state: InvitationState.CONNECTED });
-            //   return Buffer.from(secret);
-            // };
-            invitation = await this.serviceContext.spaceInvitations.createInvitation(request.partyKey, () => {
-              next({ state: InvitationState.SUCCESS });
-              close();
-            });
-
-            assert(invitation.type === Invitation.Type.INTERACTIVE);
-            // invitation.secret = Buffer.from(secret);
-          } else {
-            todo();
-            // invitation = await party.invitationManager.createOfflineInvitation(request.invitee_key);
-          }
-
-          // TODO(burdon): Change stream type.
-          next({
-            state: InvitationState.WAITING_FOR_CONNECTION,
-            descriptor: invitation!.toProto()
-          });
-
-          // if (invitation.type === Invitation.Type.OFFLINE) {
-          //   close();
-          // }
-        } catch (err: any) {
-          next({ state: InvitationState.ERROR, error: err.message });
-          close();
-        }
-      });
-    });
-  }
-
-  // TODO(burdon): Replace with Invitation stream.
-  acceptInvitation(request: Invitation): Stream<Invitation> {
-    return new Stream(({ next, close }) => {
-      const id = v4();
-      const [, secretTrigger] = latch();
-      const inviteeInvitation: InviteeInvitation = { secretTrigger };
-
-      // Secret will be provided separately (in AuthenticateInvitation).
-      // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
-      // const secretProvider: SecretProvider = async () => {
-      //   await secretLatch;
-      //   const secret = inviteeInvitation.secret;
-      //   if (!secret) {
-      //     throw new Error('Secret not provided.');
-      //   }
-
-      //   return Buffer.from(secret);
-      // };
-
-      // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.spaceInvitations.acceptInvitation(InvitationWrapper.fromProto(request));
-      this.inviteeInvitations.set(id, inviteeInvitation);
-      next({ id, state: InvitationState.CONNECTED });
-
-      partyPromise
-        .then((party) => {
-          next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
-        })
-        .catch((err) => {
-          console.error(err);
-          next({ id, state: InvitationState.ERROR, error: String(err) });
-        })
-        .finally(() => {
-          close();
-        });
-    });
   }
 
   async authenticateInvitation(request: AuthenticateInvitationRequest) {

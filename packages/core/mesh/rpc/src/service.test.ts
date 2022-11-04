@@ -11,7 +11,7 @@ import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/exampl
 
 import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts } from './testutil';
+import { createLinkedPorts } from './testing';
 
 describe('Protobuf service', function () {
   it('Works with protobuf service', async function () {

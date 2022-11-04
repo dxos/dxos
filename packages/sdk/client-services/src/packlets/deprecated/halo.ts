@@ -18,7 +18,7 @@ import {
   GetPreferenceResponse
 } from '@dxos/protocols/proto/dxos/client';
 
-import { HaloSigner } from '../signer';
+import { HaloSigner } from '../services';
 
 /**
  * HALO service implementation.

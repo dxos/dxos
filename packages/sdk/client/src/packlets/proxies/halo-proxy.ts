@@ -3,7 +3,7 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServiceProvider, InvitationWrapper } from '@dxos/client-services';
+import { ClientServicesProvider, InvitationWrapper } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -32,7 +32,7 @@ export class HaloProxy implements Halo {
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
 
-  constructor(private readonly _serviceProvider: ClientServiceProvider) {}
+  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
 
   toString() {
     return `HaloProxy(${JSON.stringify(this.info)})`;

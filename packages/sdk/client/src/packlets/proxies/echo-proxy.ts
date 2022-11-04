@@ -2,11 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Event, EventSubscriptions, latch } from '@dxos/async';
-import { ClientServiceProvider, InvitationWrapper } from '@dxos/client-services';
-import { failUndefined } from '@dxos/debug';
+import { ClientServicesProvider, ClientServicesProxy, InvitationWrapper } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
@@ -15,9 +12,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { Echo, Party, PartyInvitation } from '../api';
 import { HaloProxy } from './halo-proxy';
-import { InvitationProxy } from './invitation-proxy';
 import { PartyProxy } from './party-proxy';
-import { ClientServiceProxy } from './service-proxy';
 
 /**
  * Client proxy to local/remote ECHO service.
@@ -29,7 +24,7 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
 
   constructor(
-    private readonly _serviceProvider: ClientServiceProvider,
+    private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _haloProxy: HaloProxy
   ) {}
@@ -43,7 +38,7 @@ export class EchoProxy implements Echo {
   }
 
   get networkManager() {
-    if (this._serviceProvider instanceof ClientServiceProxy) {
+    if (this._serviceProvider instanceof ClientServicesProxy) {
       throw new Error('Network Manager not available in service proxy.');
     }
 
@@ -178,7 +173,7 @@ export class EchoProxy implements Echo {
   }
 
   /**
-   *
+   * Query for all parties.
    */
   queryParties(): ResultSet<Party> {
     return new ResultSet<Party>(this._partiesChanged, () => Array.from(this._parties.values()));
@@ -186,28 +181,12 @@ export class EchoProxy implements Echo {
 
   /**
    * Joins an existing Party by invitation.
-   *
    * To be used with `party.createInvitation` on the inviter side.
    */
   acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation {
-    const invitationProcessStream = this._serviceProvider.services.PartyService.acceptInvitation(
-      invitationDescriptor.toProto()
-    );
-    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
-      stream: invitationProcessStream,
-      invitationDescriptor,
-      onAuthenticate: async (request) => {
-        await this._serviceProvider.services.PartyService.authenticateInvitation(request);
-      }
-    });
+    this._serviceProvider.services.SpaceInvitationsService.acceptInvitation(invitationDescriptor.toProto());
 
-    const waitForParty = async () => {
-      const process = await waitForFinish();
-      assert(process.partyKey);
-      await this._partiesChanged.waitForCondition(() => this._parties.has(process.partyKey!));
-      return this.getParty(process.partyKey) ?? failUndefined();
-    };
-
-    return new PartyInvitation(invitationDescriptor, waitForParty(), authenticate);
+    // TODO(burdon): Implement.
+    throw new Error();
   }
 }

@@ -15,6 +15,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/composer": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",

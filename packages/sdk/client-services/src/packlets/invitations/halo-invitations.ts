@@ -14,7 +14,7 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { Identity, IdentityManager } from '../../identity';
+import { Identity, IdentityManager } from '../identity';
 
 /**
  * Creates and processes Halo invitations between devices.

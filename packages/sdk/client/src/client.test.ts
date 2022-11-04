@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { clientServiceBundle, ClientServiceHost, InvitationWrapper } from '@dxos/client-services';
+import { ClientServicesHost, InvitationWrapper } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
@@ -19,7 +19,7 @@ import { TestModel } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
+import { createBundledRpcServer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
@@ -366,9 +366,12 @@ describe('Client', function () {
       await hostClient.initialize();
       afterTest(() => hostClient.destroy());
 
-      const server = createBundledRpcServer({
-        services: clientServiceBundle,
-        handlers: hostClient.services,
+      // TODO(burdon): Factor out with client.initializeRemote
+      const servicesHost = (hostClient as any)._clientServices;
+      const server = createProtoRpcPeer({
+        requested: {},
+        exposed: servicesHost.descriptors,
+        handlers: servicesHost.services,
         port: hostPort
       });
 
@@ -406,17 +409,13 @@ describe('Client', function () {
       });
 
       const [proxyPort, hostPort] = createLinkedPorts();
-      const hostClient = new ClientServiceHost({
-        config,
-        networkManager
-      });
-
-      await hostClient.open();
-      afterTest(() => hostClient.close());
+      const clientServicesHost = new ClientServicesHost({ config, networkManager });
+      await clientServicesHost.open();
+      afterTest(() => clientServicesHost.close());
 
       const server = createBundledRpcServer({
-        services: clientServiceBundle,
-        handlers: hostClient.services,
+        services: clientServicesHost.descriptors,
+        handlers: clientServicesHost.services,
         port: hostPort
       });
 

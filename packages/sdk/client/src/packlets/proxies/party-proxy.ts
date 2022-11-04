@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ClientServiceProvider } from '@dxos/client-services';
+import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -13,7 +13,6 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
 import { InvitationProxy } from './invitation-proxy';
-import { ClientServiceProxy } from './service-proxy';
 import { PARTY_ITEM_TYPE } from './stubs';
 
 export type ActivationOptions = any;
@@ -35,7 +34,7 @@ export class PartyProxy implements Party {
    * @internal
    */
   constructor(
-    private _serviceProvider: ClientServiceProvider,
+    private _clientServicesProvider: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     party: PartyProto,
     memberKey: PublicKey
@@ -50,7 +49,7 @@ export class PartyProxy implements Party {
     // if (true) { // TODO: Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
+      new RemoteDatabaseBackend(this._clientServicesProvider.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
@@ -106,7 +105,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy open.
    */
   async initialize() {
-    // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+    // if (this._database && this._serviceProvider instanceof ClientServicesProxy) {
     await this._database!.initialize();
     // }
 
@@ -118,7 +117,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy close.
    */
   async destroy() {
-    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+    if (this._database && this._clientServicesProvider instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
   }
@@ -132,13 +131,13 @@ export class PartyProxy implements Party {
   }
 
   async getDetails(): Promise<PartyDetails> {
-    return this._serviceProvider.services.PartyService.getPartyDetails({
+    return this._clientServicesProvider.services.PartyService.getPartyDetails({
       partyKey: this._key
     });
   }
 
   async _setOpen(open: boolean) {
-    await this._serviceProvider.services.PartyService.setPartyState({
+    await this._clientServicesProvider.services.PartyService.setPartyState({
       partyKey: this.key,
       open
     });
@@ -197,7 +196,7 @@ export class PartyProxy implements Party {
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers() {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.subscribeMembers({
+      this._clientServicesProvider.services.PartyService.subscribeMembers({
         partyKey: this.key
       }),
       (response) => response?.members ?? []
@@ -216,8 +215,12 @@ export class PartyProxy implements Party {
    *   but only the specified recipient can accept the invitation.
    */
   async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
-    return this._invitationProxy.createInvitationRequest({ stream });
+    this._clientServicesProvider.services.SpaceInvitationsService.createInvitation({
+      spaceKey: this.key
+    });
+
+    // TODO(burdon): Implement.
+    throw new Error();
   }
 
   /**

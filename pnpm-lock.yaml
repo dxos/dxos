@@ -267,6 +267,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/composer': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
@@ -306,6 +307,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/composer': link:../../experimental/composer
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
@@ -1563,6 +1565,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1574,6 +1577,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/debug': link:../../../common/debug
+      '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1804,6 +1808,108 @@ importers:
       babel-plugin-add-module-exports: 1.0.4
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+
+  packages/deprecated/wallet/wallet-extension:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/util': workspace:*
+      '@hot-loader/react-dom': 17.0.2
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/faker': ^5.5.9
+      '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/react-dom': ^18.0.6
+      '@types/uuid': ~8.3.3
+      '@types/webextension-polyfill': ^0.8.0
+      '@types/webpack-env': ^1.16.0
+      chalk: ^4.1.0
+      copy: ~0.3.2
+      faker: ^5.5.3
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      rmdir: ~1.2.0
+      uuid: ^8.3.2
+      webextension-polyfill: ^0.8.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/client-services': link:../../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-db': link:../../../core/echo/echo-db
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../react-components
+      '@dxos/react-toolkit': link:../../react-toolkit
+      '@dxos/rpc': link:../../../core/mesh/rpc
+      '@dxos/util': link:../../../common/util
+      '@hot-loader/react-dom': 17.0.2_react@18.2.0
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      react: 18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      webextension-polyfill: 0.8.0
+    devDependencies:
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
+      '@types/faker': 5.5.9
+      '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/react-dom': 18.0.6
+      '@types/uuid': 8.3.4
+      '@types/webextension-polyfill': 0.8.3
+      '@types/webpack-env': 1.18.0
+      chalk: 4.1.2
+      copy: 0.3.2
+      faker: 5.5.3
+      rmdir: 1.2.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
+
+  packages/deprecated/wallet/wallet-playground:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../react-components
+      '@dxos/react-toolkit': link:../../react-toolkit
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    devDependencies:
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
 
   packages/devtools/devtools:
     specifiers:
@@ -2894,106 +3000,6 @@ importers:
       mocha: 8.4.0
       ts-node: 10.9.1_gy6k6bedrshoc5b4zgt3uehy7q
       typescript: 4.8.4
-
-  packages/experimental/wallet-extension:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/util': workspace:*
-      '@hot-loader/react-dom': 17.0.2
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/faker': ^5.5.9
-      '@types/react': ^18.0.21
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/react-dom': ^18.0.6
-      '@types/uuid': ~8.3.3
-      '@types/webextension-polyfill': ^0.8.0
-      '@types/webpack-env': ^1.16.0
-      chalk: ^4.1.0
-      copy: ~0.3.2
-      faker: ^5.5.3
-      react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^18.2.0
-      rmdir: ~1.2.0
-      uuid: ^8.3.2
-      webextension-polyfill: ^0.8.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
-      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/util': link:../../common/util
-      '@hot-loader/react-dom': 17.0.2_react@18.2.0
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
-      react: 18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      webextension-polyfill: 0.8.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/faker': 5.5.9
-      '@types/react': 18.0.21
-      '@types/react-copy-to-clipboard': 5.0.4
-      '@types/react-dom': 18.0.6
-      '@types/uuid': 8.3.4
-      '@types/webextension-polyfill': 0.8.3
-      '@types/webpack-env': 1.18.0
-      chalk: 4.1.2
-      copy: 0.3.2
-      faker: 5.5.3
-      rmdir: 1.2.0
-      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-
-  packages/experimental/wallet-playground:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      react: ^18.2.0
-      react-dom: ^18.2.0
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
-      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
 
   packages/gravity/gravity-dashboard:
     specifiers:

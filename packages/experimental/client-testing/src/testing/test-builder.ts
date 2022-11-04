@@ -44,7 +44,7 @@ export class TestBuilder {
 
     await party.destroy();
     // TODO(burdon): Party and Database doesn't match.
-    //  party.destroy not called until ClientServiceProxy.
+    //  party.destroy not called until ClientServicesProxy.
     // console.log(party.database.state);
     // expect(party.is_active).toBeFalsy();
 

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { clientServiceBundle, ClientServices } from '@dxos/client';
+import { ClientServicesProvider } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -12,7 +12,7 @@ import { Callback } from '@dxos/util';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  services: ClientServices;
+  clientServices: ClientServicesProvider;
   systemPort: RpcPort;
   appPort: RpcPort;
   options?: {
@@ -24,33 +24,34 @@ export type WorkerSessionParams = {
  * Represents a tab connection within the worker.
  */
 export class WorkerSession {
-  private readonly _clientServices: ClientServices;
+  private readonly _clientServices: ClientServicesProvider;
   private readonly _appRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
-  public origin?: string;
 
+  public readonly onClose = new Callback<() => Promise<void>>();
+
+  public origin?: string;
   public bridgeService?: BridgeService;
 
-  public onClose = new Callback<() => Promise<void>>();
-
   constructor({
-    services,
+    clientServices,
     systemPort,
     appPort,
     options = {
       heartbeatInterval: 1000
     }
   }: WorkerSessionParams) {
-    this._clientServices = services;
+    this._clientServices = clientServices;
     this._options = options;
 
+    // TODO(burdon): Rename _clientRpc?
     this._appRpc = createProtoRpcPeer({
       requested: {},
-      exposed: clientServiceBundle,
-      handlers: this._clientServices,
+      exposed: clientServices.descriptors,
+      handlers: clientServices.services,
       port: appPort
     });
 

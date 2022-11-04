@@ -5,28 +5,37 @@
 import assert from 'assert';
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
+import { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
 import { Stream } from '@dxos/codec-protobuf';
+import { Config } from '@dxos/config';
 import { schema } from '@dxos/protocols';
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 
-import { config } from './config';
+import { config as defaultConfig } from './config';
 
 export class BackgroundServer {
-  // TODO(burdon): Configure signer adapter.
-  private readonly _client: Client = new Client(config);
+  private readonly _clientServices: ClientServicesHost;
 
   // Active and potentially closed connections.
   private readonly _connections = new Set<RpcPeer>();
 
+  constructor() {
+    // TODO(burdon): Configure signer adapter.
+    const config = new Config(defaultConfig);
+    this._clientServices = new ClientServicesHost({
+      config,
+      networkManager: createNetworkManager(config)
+    });
+  }
+
   public async open() {
-    await this._client.initialize();
+    await this._clientServices.open();
   }
 
   public async close() {
     await Promise.all(Array.from(this._connections).map((peer) => peer.close()));
-    await this._client.destroy();
+    await this._clientServices.close();
   }
 
   /**
@@ -38,12 +47,12 @@ export class BackgroundServer {
     const collector = new TraceCollector(tracer);
 
     const handlers: ClientServices = {
-      ...this._client.services,
+      ...this._clientServices.services,
 
       SystemService: {
-        ...this._client.services.SystemService,
+        ...this._clientServices.services.SystemService,
         reset: async () => {
-          await this._client.services.SystemService.reset();
+          await this._clientServices.services.SystemService.reset();
           // Override the Rest handler with a reload - Client does not recover properly after reset.
           window.location.reload();
         }
@@ -58,7 +67,7 @@ export class BackgroundServer {
     };
 
     const server = createBundledRpcServer({
-      services: clientServiceBundle,
+      services: this._clientServices.descriptors,
       handlers,
       port: tracer.port
     });

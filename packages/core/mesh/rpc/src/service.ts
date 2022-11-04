@@ -6,16 +6,19 @@ import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
+/**
+ * Map of service definitions.
+ */
 // TODO(burdon): Rename ServiceMap.
 export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
 
 /**
- * Groups multiple services together so they can be served over one RPC peer.
+ * Groups multiple services together to be served by a single RPC peer.
  */
 export const createServiceBundle = <Service>(services: ServiceBundle<Service>): ServiceBundle<Service> => services;
 
 /**
- * A type-safe RPC peer.
+ * Type-safe RPC peer.
  */
 export class ProtoRpcPeer<Service> {
   // prettier-ignore
@@ -33,7 +36,7 @@ export class ProtoRpcPeer<Service> {
   }
 }
 
-export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'> {
+export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
   /**
    * Services that are expected to be implemented by the counter-party.
    */
@@ -59,6 +62,8 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
  * Create type-safe RPC peer from a service bundle.
  * Can both handle and issue requests.
  */
+// TODO(burdon): Currently assumes that the proto service name is unique.
+//  There would likely be multiple instances of different interfaces (e.g., halo/space invitations).
 export const createProtoRpcPeer = <Client = {}, Server = {}>({
   requested,
   exposed,
@@ -66,6 +71,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   encodingOptions,
   ...rest
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
+  // Create map of RPCs.
   const exposedRpcs: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.
@@ -78,8 +84,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   const peer = new RpcPeer({
     ...rest,
 
-    // TODO(burdon): Rename calls.
-    messageHandler: (method, request) => {
+    callHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
       if (!exposedRpcs[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
@@ -115,17 +120,32 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   return new ProtoRpcPeer(requestedRpcs, peer);
 };
 
+const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
+  const separator = method.lastIndexOf('.');
+  const serviceName = method.slice(0, separator);
+  const methodName = method.slice(separator + 1);
+  if (serviceName.length === 0 || methodName.length === 0) {
+    throw new Error(`Invalid method: ${method}`);
+  }
+
+  return [serviceName, methodName];
+};
+
+//
+// TODO(burdon): Remove deprecated.
+//
+
 /**
  * Create a type-safe RPC client.
  * @deprecated Use createProtoRpcPeer instead.
  */
 export const createRpcClient = <S>(
   serviceDef: ServiceDescriptor<S>,
-  options: Omit<RpcPeerOptions, 'messageHandler'>
+  options: Omit<RpcPeerOptions, 'callHandler'>
 ): ProtoRpcPeer<S> => {
   const peer = new RpcPeer({
     ...options,
-    messageHandler: () => {
+    callHandler: () => {
       throw new Error('Requests to client are not supported.');
     }
   });
@@ -141,7 +161,7 @@ export const createRpcClient = <S>(
 /**
  * @deprecated
  */
-export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'callHandler'> {
   service: ServiceDescriptor<S>;
   handlers: S;
 }
@@ -154,7 +174,7 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
   const server = service.createServer(handlers);
   return new RpcPeer({
     ...rest,
-    messageHandler: server.call.bind(server),
+    callHandler: server.call.bind(server),
     streamHandler: server.callStream.bind(server)
   });
 };
@@ -165,7 +185,7 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
  */
 export const createBundledRpcClient = <S>(
   descriptors: ServiceBundle<S>,
-  options: Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'>
+  options: Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>
 ): ProtoRpcPeer<S> => {
   return createProtoRpcPeer({
     requested: descriptors,
@@ -178,7 +198,7 @@ export const createBundledRpcClient = <S>(
 /**
  * @deprecated
  */
-export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
+export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'callHandler'> {
   services: ServiceBundle<S>;
   handlers: S;
 }
@@ -199,7 +219,7 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
   return new RpcPeer({
     ...rest,
 
-    messageHandler: (method, request) => {
+    callHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
       if (!rpc[serviceName]) {
         throw new Error(`Service not supported: ${serviceName}`);
@@ -217,15 +237,4 @@ export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBu
       return rpc[serviceName].callStream(methodName, request);
     }
   });
-};
-
-const parseMethodName = (method: string): [serviceName: string, methodName: string] => {
-  const separator = method.lastIndexOf('.');
-  const serviceName = method.slice(0, separator);
-  const methodName = method.slice(separator + 1);
-  if (serviceName.length === 0 || methodName.length === 0) {
-    throw new Error(`Invalid method: ${method}`);
-  }
-
-  return [serviceName, methodName];
 };

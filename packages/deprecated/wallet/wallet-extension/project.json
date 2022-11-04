@@ -1,16 +1,16 @@
 {
-  "sourceRoot": "packages/experimental/wallet-extension/src",
+  "sourceRoot": "packages/deprecated/wallet/wallet-extension/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "assets": [
-          "packages/experimental/wallet-extension/*.md"
+          "packages/deprecated/wallet/wallet-extension/*.md"
         ],
-        "main": "packages/experimental/wallet-extension/src/index.ts",
-        "outputPath": "packages/experimental/wallet-extension/dist",
-        "tsConfig": "packages/experimental/wallet-extension/tsconfig.json",
+        "main": "packages/deprecated/wallet/wallet-extension/src/index.ts",
+        "outputPath": "packages/deprecated/wallet/wallet-extension/dist",
+        "tsConfig": "packages/deprecated/wallet/wallet-extension/tsconfig.json",
         "updateBuildableProjectDepsInPackageJson": false,
         "transformers": [
           "@dxos/log-hook/transformer"
@@ -24,7 +24,7 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "packages/experimental/wallet-extension/**/*.{ts,js}"
+          "packages/deprecated/wallet/wallet-extension/**/*.{ts,js}"
         ]
       },
       "outputs": [

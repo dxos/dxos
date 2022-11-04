@@ -2,42 +2,43 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ServiceDescriptor } from '@dxos/codec-protobuf';
+import { raise } from '@dxos/debug';
 import { ServiceBundle } from '@dxos/rpc';
 
-export type ServiceDefinition = {
-  serviceDescriptor: ServiceDescriptor<any>;
-  implementation: any;
-};
+export type ServiceProvider<T extends {}> = () => T | undefined;
 
-// TODO(burdon): Open/close services.
+/**
+ * Creates a proxy object for the delayed creation of services.
+ */
+export const createServiceProvider = <T extends {}>(provider: ServiceProvider<T>): T => {
+  let value: T;
+  return new Proxy<ServiceProvider<T>>(provider, {
+    get: (target: ServiceProvider<T>, prop) => {
+      if (value === undefined) {
+        value = provider() ?? raise(new Error('Value undefined.'));
+      }
+
+      const obj: { [i: string | symbol]: any } = value!;
+      return obj[prop];
+    }
+  }) as any as T;
+};
 
 /**
  * Registry of operational services.
  */
 export class ServiceRegistry<Services> {
-  // private readonly _serviceMap = new Map<Services, ServiceDefinition>();
-
   // prettier-ignore
   constructor (
-    private readonly _serviceBundle: ServiceBundle<Services>
+    private readonly _serviceBundle: ServiceBundle<Services>,
+    private readonly _handlers: Services
   ) {}
 
-  get services() {
+  get descriptors() {
     return this._serviceBundle;
   }
 
-  // registerService(type: Services, service: any) {
-  //   this._serviceMap.set(type, service);
-  // }
-
-  // getService<Service>(type: Services): Service {
-  //   const service = this._serviceMap.get(type);
-  //   throw new Error(`Service not available: ${type}`);
-  //   return service as Service;
-  // }
-
-  // getServiceProvider<T>(type: Services): Provider<T> {
-  //   return () => this.getService(type);
-  // }
+  get services() {
+    return this._handlers;
+  }
 }

@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { ServiceContext } from '../service-context';
+import { ServiceContext } from '../services';
 import { closeAfterTest, createIdentity, createPeers, syncItems } from '../testing';
 
 describe('services/spaces', function () {
@@ -56,7 +56,7 @@ describe('services/spaces', function () {
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
-          onSuccess: (invitation) => {
+          onSuccess: (invitation: Invitation) => {
             complete2.wake(invitation.spaceKey!);
           },
           onCancelled: () => raise(new Error()),

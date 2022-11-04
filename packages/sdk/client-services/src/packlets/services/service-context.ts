@@ -22,7 +22,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, SpaceInvitationsHandler } from './invitations';
+import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
 
 /**
  * Shared backend for all client services.

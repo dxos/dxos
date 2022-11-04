@@ -20,13 +20,8 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
-export {
-  clientServiceBundle,
-  ClientServiceHost,
-  ClientServices,
-  createNetworkManager,
-  InvitationWrapper
-} from '@dxos/client-services';
+// TODO(burdon): Remove.
+export { ClientServicesHost, ClientServices, createNetworkManager, InvitationWrapper } from '@dxos/client-services';
 
 export { PublicKey } from '@dxos/keys';
 

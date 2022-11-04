@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { clientServiceBundle, ClientServiceProvider } from '@dxos/client-services';
+import { ClientServicesProvider } from '@dxos/client-services';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { Client } from './client';
@@ -50,7 +50,7 @@ const port: RpcPort = {
 
 // Console debug access.
 // TODO(burdon): Debug only.
-export const createDevtoolsRpcServer = async (client: Client, serviceHost: ClientServiceProvider) => {
+export const createDevtoolsRpcServer = async (client: Client, clientServices: ClientServicesProvider) => {
   let server: RpcPeer;
   ((window as any).__DXOS__ as DevtoolsHook) = {
     client,
@@ -62,8 +62,8 @@ export const createDevtoolsRpcServer = async (client: Client, serviceHost: Clien
 
       log('Opening devtools client RPC server...');
       server = createBundledRpcServer({
-        services: clientServiceBundle,
-        handlers: serviceHost.services,
+        services: clientServices.descriptors,
+        handlers: clientServices.services,
         port
       });
 

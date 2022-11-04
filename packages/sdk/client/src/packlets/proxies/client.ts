@@ -7,13 +7,13 @@ import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import {
-  ClientServiceProvider,
-  ClientServices,
-  ClientServiceHost,
+  ClientServicesHost,
+  ClientServicesProxy,
   HaloSigner,
   InvalidConfigurationError,
   RemoteServiceConnectionTimeout,
-  createNetworkManager
+  createNetworkManager,
+  ClientServicesProvider
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
@@ -27,7 +27,6 @@ import { isNode } from '@dxos/util';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
-import { ClientServiceProxy } from './service-proxy';
 import { OpenProgress } from './stubs';
 import { DXOS_VERSION } from './version';
 
@@ -86,7 +85,7 @@ export class Client {
   private readonly _modelFactory = new ModelFactory().registerModel(ObjectModel);
 
   private _initialized = false;
-  private _serviceProvider!: ClientServiceProvider;
+  private _clientServices!: ClientServicesProvider;
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
 
@@ -139,6 +138,10 @@ export class Client {
     return this._initialized;
   }
 
+  get modelFactory() {
+    return this._modelFactory;
+  }
+
   /**
    * ECHO database.
    */
@@ -153,16 +156,6 @@ export class Client {
   get halo(): HaloProxy {
     assert(this._halo, 'Client not initialized.');
     return this._halo;
-  }
-
-  // TODO(burdon): Expose mesh for messaging?
-
-  /**
-   * Client services that can be proxied.
-   */
-  // TODO(burdon): Remove from API?
-  get services(): ClientServices {
-    return this._serviceProvider.services;
   }
 
   private get timeout() {
@@ -194,11 +187,11 @@ export class Client {
     }
 
     if (typeof window !== 'undefined') {
-      await createDevtoolsRpcServer(this, this._serviceProvider);
+      await createDevtoolsRpcServer(this, this._clientServices);
     }
 
-    this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider, this._modelFactory, this._halo);
+    this._halo = new HaloProxy(this._clientServices);
+    this._echo = new EchoProxy(this._clientServices, this._modelFactory, this._halo);
 
     await this._halo._open();
     await this._echo._open();
@@ -220,7 +213,7 @@ export class Client {
       return;
     }
 
-    await this._serviceProvider.close();
+    await this._clientServices.close();
     this._initialized = false;
   }
 
@@ -238,51 +231,6 @@ export class Client {
     });
   }
 
-  private async initializeRemote(onProgressCallback: Parameters<this['initialize']>[0]) {
-    if (!this._options.rpcPort && isNode()) {
-      throw new Error('RPC port is required to run client in remote mode on Node environment.');
-    }
-
-    log('Creating client proxy.');
-    this._serviceProvider = new ClientServiceProxy(
-      this._options.rpcPort ?? this.initializeIFramePort(),
-      this.timeout / 2
-    );
-    await this._serviceProvider.open(onProgressCallback);
-  }
-
-  // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
-  private async initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
-    log('Creating client host.');
-    this._serviceProvider = new ClientServiceHost({
-      config: this._config,
-      modelFactory: this._modelFactory,
-      signer: this._options.signer,
-      networkManager: createNetworkManager(this._config)
-    });
-
-    await this._serviceProvider.open(onProgressCallback);
-  }
-
-  private async initializeAuto(onProgressCallback: Parameters<this['initialize']>[0]) {
-    if (!this._options.rpcPort && isNode()) {
-      await this.initializeLocal(onProgressCallback);
-    } else {
-      try {
-        await this.initializeRemote(onProgressCallback);
-      } catch (err) {
-        if (err instanceof RemoteServiceConnectionTimeout) {
-          log('Failed to connect to remote services. Starting local services.');
-          document.getElementById(IFRAME_ID)?.remove();
-          await this._serviceProvider.close();
-          await this.initializeLocal(onProgressCallback);
-        } else {
-          throw err;
-        }
-      }
-    }
-  }
-
   /**
    * Resets and destroys client storage.
    * Warning: Inconsistent state after reset, do not continue to use this client instance.
@@ -291,7 +239,7 @@ export class Client {
   //   Recreate echo instance? Big impact on hooks. Test.
   @synchronized
   async reset() {
-    await this.services.SystemService.reset();
+    await this._clientServices.services?.SystemService.reset();
     this._halo.profileChanged.emit();
     this._initialized = false;
   }
@@ -304,5 +252,56 @@ export class Client {
   registerModel(constructor: ModelConstructor<any>): this {
     this._modelFactory.registerModel(constructor);
     return this;
+  }
+
+  //
+  // Client initialization.
+  // TODO(burdon): These should be separate bundles.
+  //
+
+  private async initializeAuto(onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      await this.initializeLocal(onProgressCallback);
+    } else {
+      try {
+        await this.initializeRemote(onProgressCallback);
+      } catch (err) {
+        if (err instanceof RemoteServiceConnectionTimeout) {
+          log('Failed to connect to remote services. Starting local services.');
+          document.getElementById(IFRAME_ID)?.remove();
+          await this._clientServices.close();
+          await this.initializeLocal(onProgressCallback);
+        } else {
+          throw err;
+        }
+      }
+    }
+  }
+
+  // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
+  private async initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
+    log('Creating client host.');
+    this._clientServices = new ClientServicesHost({
+      config: this._config,
+      modelFactory: this._modelFactory,
+      signer: this._options.signer,
+      networkManager: createNetworkManager(this._config)
+    });
+
+    await this._clientServices.open();
+  }
+
+  private async initializeRemote(onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      throw new Error('RPC port is required to run client in remote mode on Node environment.');
+    }
+
+    log('Creating client proxy.');
+    this._clientServices = new ClientServicesProxy(
+      this._options.rpcPort ?? this.initializeIFramePort(),
+      this.timeout / 2
+    );
+
+    await this._clientServices.open();
   }
 }
