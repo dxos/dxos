@@ -113,7 +113,7 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
-      - run: pnpm nx build dx-cli
+      - run: pnpm nx build cli
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
@@ -127,8 +127,8 @@ jobs:
           name: Deploy Docs
           working_directory: ./docs
           command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
+            ../.circleci/scripts/publish.sh production
+            ../.circleci/scripts/publish.sh
           no_output_timeout: 30m
           environment:
             NODE_ENV: production

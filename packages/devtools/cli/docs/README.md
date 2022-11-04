@@ -1,4 +1,4 @@
-# @dxos/dx-cli
+# @dxos/cli
 
 CLI Test using oclif.
 
@@ -17,8 +17,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 subgraph apps [apps]
   style apps fill:#ebfaf9,stroke:#333
-  dxos/dx-cli("@dxos/dx-cli"):::root
-  click dxos/dx-cli "dxos/dxos/tree/main/packages/apps/dx-cli/docs"
+  dxos/cli("@dxos/cli"):::root
+  click dxos/cli "dxos/dxos/tree/main/packages/apps/cli/docs"
 end
 
 subgraph common [common]
@@ -117,7 +117,7 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
-dxos/dx-cli --> dxos/client
+dxos/cli --> dxos/client
 dxos/client --> dxos/client-services
 dxos/client-services --> dxos/config
 dxos/config --> dxos/protocols
@@ -155,7 +155,7 @@ dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
-dxos/dx-cli --> dxos/plate
+dxos/cli --> dxos/plate
 dxos/plate --> dxos/file
 ```
 
