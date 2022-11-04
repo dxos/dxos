@@ -6,7 +6,8 @@ import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
-export type ServiceBundle<Service> = { [Key in keyof Service]: ServiceDescriptor<Service[Key]> };
+// TODO(burdon): Rename ServiceMap.
+export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
 
 /**
  * Groups multiple services together so they can be served over one RPC peer.
@@ -69,12 +70,15 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(handlers[serviceName] as any, encodingOptions);
+    const serviceHandlers = handlers[serviceName];
+    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceHandlers, encodingOptions);
   }
 
+  // Create peer.
   const peer = new RpcPeer({
     ...rest,
 
+    // TODO(burdon): Rename calls.
     messageHandler: (method, request) => {
       const [serviceName, methodName] = parseMethodName(method);
       if (!exposedRpcs[serviceName]) {
@@ -183,6 +187,7 @@ export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messag
  * Create type-safe RPC server from a service bundle.
  * @deprecated Use createProtoRpcPeer instead.
  */
+// TODO(burdon): Support late-binding via providers.
 export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
   const rpc: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {

@@ -4,7 +4,6 @@
 
 import { schema } from '@dxos/protocols';
 import { ProfileService, SystemService, HaloService } from '@dxos/protocols/proto/dxos/client';
-import { SpacesService, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle } from '@dxos/rpc';
@@ -14,8 +13,8 @@ import { createServiceBundle } from '@dxos/rpc';
 //
 
 export type ClientServices = {
-  SpacesService: SpacesService;
-  SpaceInvitationService: InvitationService;
+  // SpacesService: SpacesService;
+  // SpaceInvitationService: InvitationService;
 
   DataService: DataService;
   HaloService: HaloService;
@@ -26,10 +25,13 @@ export type ClientServices = {
   TracingService: TracingService;
 };
 
+/**
+ * Set of services that are multiplexed between the client and service backend.
+ */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   // New
-  SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  SpaceInvitationService: schema.getService('dxos.client.services.InvitationService'),
+  // SpacesService: schema.getService('dxos.client.services.SpacesService'),
+  // SpaceInvitationService: schema.getService('dxos.client.services.InvitationService'),
 
   // Old
   DataService: schema.getService('dxos.echo.service.DataService'),

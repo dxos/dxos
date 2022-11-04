@@ -11,7 +11,7 @@ import { createServiceContext } from '../testing';
 
 describe('services/halo', function () {
   it('creates identity', async function () {
-    const peer = await createServiceContext();
+    const peer = createServiceContext();
     await peer.open();
     afterTest(() => peer.close());
 
@@ -22,8 +22,8 @@ describe('services/halo', function () {
   it('invitations', async function () {
     const signalContext = new MemorySignalManagerContext();
 
-    const peer1 = await createServiceContext({ signalContext });
-    const peer2 = await createServiceContext({ signalContext });
+    const peer1 = createServiceContext({ signalContext });
+    const peer2 = createServiceContext({ signalContext });
     await peer1.open();
     await peer2.open();
     afterTest(() => peer1.close());

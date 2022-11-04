@@ -3,13 +3,14 @@
 //
 
 import assert from 'assert';
-import { SpaceInvitationsHandler } from 'packages/sdk/client-services/src/packlets/services/invitations/space-invitations-handler';
 
 import { CancellableObservable, TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { AuthenticateRequest, Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
+
+import { SpaceInvitationsHandler } from './space-invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -20,6 +21,7 @@ export class SpaceInvitationsServiceImpl implements InvitationService {
 
   // prettier-ignore
   constructor (
+    // TODO(burdon): Proxies
     private readonly _spaceManager: SpaceManager,
     private readonly _spaceInvitations: SpaceInvitationsHandler
   ) {}

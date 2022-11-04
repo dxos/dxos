@@ -30,7 +30,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
   });
 };
 
-export const createServiceContext = async ({
+export const createServiceContext = ({
   signalContext = new MemorySignalManagerContext(),
   storage = createStorage({ type: StorageType.RAM })
 }: {
@@ -51,7 +51,7 @@ export const createPeers = async (numPeers: number) => {
 
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalContext });
+      const peer = createServiceContext({ signalContext });
       await peer.open();
       return peer;
     })

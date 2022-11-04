@@ -95,9 +95,6 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   async close() {
     log('closing...');
-
-    // TODO(burdon): Close services individually.
-
     await this._context.close();
     log('closed');
   }

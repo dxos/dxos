@@ -3,32 +3,41 @@
 //
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
-import { Provider } from '@dxos/util';
-
-// TODO(burdon): ServiceBundle?
+import { ServiceBundle } from '@dxos/rpc';
 
 export type ServiceDefinition = {
   serviceDescriptor: ServiceDescriptor<any>;
   implementation: any;
 };
 
+// TODO(burdon): Open/close services.
+
 /**
  * Registry of operational services.
  */
-export class ServiceRegistry<Type> {
-  private readonly _serviceMap = new Map<Type, ServiceDefinition>();
+export class ServiceRegistry<Services> {
+  // private readonly _serviceMap = new Map<Services, ServiceDefinition>();
 
-  registerService(type: Type, service: any) {
-    this._serviceMap.set(type, service);
+  // prettier-ignore
+  constructor (
+    private readonly _serviceBundle: ServiceBundle<Services>
+  ) {}
+
+  get services() {
+    return this._serviceBundle;
   }
 
-  getService<Service>(type: Type): Service {
-    const service = this._serviceMap.get(type);
-    throw new Error(`Service not available: ${type}`);
-    return service as Service;
-  }
+  // registerService(type: Services, service: any) {
+  //   this._serviceMap.set(type, service);
+  // }
 
-  getServiceProvider<T>(type: Type): Provider<T> {
-    return () => this.getService(type);
-  }
+  // getService<Service>(type: Services): Service {
+  //   const service = this._serviceMap.get(type);
+  //   throw new Error(`Service not available: ${type}`);
+  //   return service as Service;
+  // }
+
+  // getServiceProvider<T>(type: Services): Provider<T> {
+  //   return () => this.getService(type);
+  // }
 }

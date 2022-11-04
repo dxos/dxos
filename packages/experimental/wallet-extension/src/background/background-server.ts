@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Event } from '@dxos/async';
+import { Event, EventSubscriptions } from '@dxos/async';
 import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
@@ -31,7 +31,6 @@ export class BackgroundServer {
 
   /**
    * Handle incoming connection on provided port.
-   *
    * Will block until connection handshake is completed.
    */
   public async handlePort(port: RpcPort) {
