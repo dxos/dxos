@@ -3,4 +3,3 @@
 //
 
 export * from './useSafeSpaceKey';
-export * from './useTelemetry';

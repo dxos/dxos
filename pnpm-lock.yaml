@@ -1911,6 +1911,96 @@ importers:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
 
+  packages/devtools/cli:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/plate': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
+      '@oclif/core': ^1.14.1
+      '@oclif/plugin-help': ^5.1.12
+      '@oclif/plugin-plugins': ^2.1.0
+      '@oclif/test': ^2.1.1
+      '@octokit/core': ^4.0.4
+      '@types/cli-progress': ^3.11.0
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/fs-extra': ^9.0.4
+      '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
+      chalk: ^4.1.0
+      cli-progress: ^3.11.2
+      debug: ^4.3.3
+      faker: ^5.5.3
+      fs-extra: ^8.1.0
+      get-folder-size: ^2.0.1
+      globby: ^11.1.0
+      inquirer: ~9.0.2
+      ipfs-http-client: ~56.0.1
+      isomorphic-ws: ^4.0.1
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
+      node-fetch: ^2.6.0
+      oclif: ^3.1.2
+      react: ^18.2.0
+      shx: ^0.3.3
+      uuid: ^8.3.2
+      ws: ^7.4.4
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/plate': link:../../../tools/plate
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/telemetry': link:../../common/telemetry
+      '@oclif/core': 1.18.0
+      '@oclif/plugin-help': 5.1.15
+      '@oclif/plugin-plugins': 2.1.4
+      '@octokit/core': 4.1.0
+      chalk: 4.1.2
+      cli-progress: 3.11.2
+      debug: 4.3.4
+      faker: 5.5.3
+      fs-extra: 8.1.0
+      get-folder-size: 2.0.1
+      inquirer: 9.0.2
+      ipfs-http-client: 56.0.3_node-fetch@2.6.7
+      isomorphic-ws: 4.0.1_ws@7.5.9
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      node-fetch: 2.6.7
+      oclif: 3.2.19
+      react: 18.2.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
+      ws: 7.5.9
+    devDependencies:
+      '@oclif/test': 2.2.4
+      '@types/cli-progress': 3.11.0
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/fs-extra': 9.0.13
+      '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/node': 16.11.66
+      '@types/node-fetch': 2.6.2
+      globby: 11.1.0
+      shx: 0.3.4
+
+  packages/devtools/cli/testing/app:
+    specifiers: {}
+
   packages/devtools/devtools:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2163,94 +2253,6 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
-
-  packages/devtools/dx-cli:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/plate': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/telemetry': workspace:*
-      '@oclif/core': ^1.14.1
-      '@oclif/plugin-help': ^5.1.12
-      '@oclif/plugin-plugins': ^2.1.0
-      '@oclif/test': ^2.1.1
-      '@octokit/core': ^4.0.4
-      '@types/cli-progress': ^3.11.0
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/fs-extra': ^9.0.4
-      '@types/js-yaml': ^4.0.5
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/node': ^16.11.58
-      chalk: ^4.1.0
-      cli-progress: ^3.11.2
-      debug: ^4.3.3
-      faker: ^5.5.3
-      fs-extra: ^8.1.0
-      get-folder-size: ^2.0.1
-      globby: ^11.1.0
-      inquirer: ~9.0.2
-      ipfs-http-client: ~56.0.1
-      isomorphic-ws: ^4.0.1
-      js-yaml: ^4.1.0
-      lodash.defaultsdeep: ^4.6.1
-      node-fetch: ^2.6.0
-      oclif: ^3.1.2
-      react: ^18.2.0
-      shx: ^0.3.3
-      uuid: ^8.3.2
-      ws: ^7.4.4
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/plate': link:../../../tools/plate
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/sentry': link:../../common/sentry
-      '@dxos/telemetry': link:../../common/telemetry
-      '@oclif/core': 1.18.0
-      '@oclif/plugin-help': 5.1.15
-      '@oclif/plugin-plugins': 2.1.4
-      '@octokit/core': 4.1.0
-      chalk: 4.1.2
-      cli-progress: 3.11.2
-      debug: 4.3.4
-      faker: 5.5.3
-      fs-extra: 8.1.0
-      get-folder-size: 2.0.1
-      inquirer: 9.0.2
-      ipfs-http-client: 56.0.3_node-fetch@2.6.7
-      isomorphic-ws: 4.0.1_ws@7.5.9
-      js-yaml: 4.1.0
-      lodash.defaultsdeep: 4.6.1
-      node-fetch: 2.6.7
-      oclif: 3.2.19
-      react: 18.2.0
-      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-      ws: 7.5.9
-    devDependencies:
-      '@oclif/test': 2.2.4
-      '@types/cli-progress': 3.11.0
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/fs-extra': 9.0.13
-      '@types/js-yaml': 4.0.5
-      '@types/lodash.defaultsdeep': 4.6.7
-      '@types/node': 16.11.66
-      globby: 11.1.0
-      shx: 0.3.4
-
-  packages/devtools/dx-cli/testing/app:
-    specifiers: {}
 
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
@@ -6858,6 +6860,7 @@ packages:
   /@npmcli/move-file/1.1.2:
     resolution: {integrity: sha512-1SUf/Cg2GzGDyaf15aR9St9TWlb+XvbZXWpDx8YKs7MLzMH/BCeopv+y9vzrzgkfykCGuWOlSu3mZhj2+FQcrg==}
     engines: {node: '>=10'}
+    deprecated: This functionality has been moved to @npmcli/fs
     dependencies:
       mkdirp: 1.0.4
       rimraf: 3.0.2
@@ -6865,6 +6868,7 @@ packages:
   /@npmcli/move-file/2.0.1:
     resolution: {integrity: sha512-mJd2Z5TjYWq/ttPLLGqArdtnC74J6bOzg4rMDnN+p1xTacZ2yPRCk2y0oSWQtygLR9YVQXgOcONrwtnk3JupxQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+    deprecated: This functionality has been moved to @npmcli/fs
     dependencies:
       mkdirp: 1.0.4
       rimraf: 3.0.2
@@ -11593,7 +11597,7 @@ packages:
   /@types/cli-progress/3.11.0:
     resolution: {integrity: sha512-XhXhBv1R/q2ahF3BM7qT5HLzJNlIL0wbcGyZVjqOTqAybAnsLisd7gy1UCyIqpL+5Iv6XhlSyzjLCnI2sIdbCg==}
     dependencies:
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
     dev: true
 
   /@types/color-hash/1.0.2:
@@ -11873,7 +11877,7 @@ packages:
   /@types/fs-extra/9.0.13:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
     dev: true
 
   /@types/geojson/7946.0.10:
@@ -12143,7 +12147,7 @@ packages:
   /@types/node-fetch/2.6.2:
     resolution: {integrity: sha512-DHqhlq5jeESLy19TYhLakJ07kNumXWjcDdxXsLUMJZ6ue8VZJj4kLPQVE/2mdHh3xZziNF1xppu5lwmS53HR+A==}
     dependencies:
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
       form-data: 3.0.1
     dev: true
 
@@ -12353,7 +12357,7 @@ packages:
     resolution: {integrity: sha512-ayJ0iOCDNHnKpKTgBG6Q6JOnHTj9zFta+3j2b8Ejza0e4cvRyMn0ZoLEmbPrTHe5YYRlDYPvPWVdV4cTaRyH7g==}
     dependencies:
       '@types/expect': 1.20.4
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
     dev: false
 
   /@types/web-bluetooth/0.0.16:
@@ -14797,7 +14801,7 @@ packages:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.1.13
+      ieee754: 1.2.1
       isarray: 1.0.0
 
   /buffer/5.1.0:
@@ -18928,7 +18932,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.3
       '@types/lodash': 4.14.186
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
       '@types/sinon': 10.0.13
       lodash: 4.17.21
       mock-stdin: 1.0.0
@@ -20983,6 +20987,7 @@ packages:
 
   /ieee754/1.1.13:
     resolution: {integrity: sha512-4vf7I2LYV/HaWerSo3XmlMkp5eZ83i+/CDluXi/IGTs/O1sejBNhTtnxzmRZfvOUqj7lZjqHkeTvpgSFDlWZTg==}
+    dev: false
 
   /ieee754/1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -27715,6 +27720,7 @@ packages:
 
   /readdir-scoped-modules/1.1.0:
     resolution: {integrity: sha512-asaikDeqAQg7JifRsZn1NJZXo9E+VwlyCfbkZhwyISinqk5zNS6266HS5kah6P0SaQKGF6SkNnZVHUzHFYxYDw==}
+    deprecated: This functionality has been moved to @npmcli/fs
     dependencies:
       debuglog: 1.0.1
       dezalgo: 1.0.4
@@ -28487,7 +28493,6 @@ packages:
 
   /sax/1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
-    dev: true
 
   /saxes/5.0.1:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}
@@ -32500,7 +32505,7 @@ packages:
   /xml2js/0.4.19:
     resolution: {integrity: sha512-esZnJZJOiJR9wWKMyuvSE1y6Dq5LCuJanqhxslH2bxM6duahNZ+HMpCLhBQGZkbX6xRf8x1Y2eJlgt2q3qo49Q==}
     dependencies:
-      sax: 1.2.1
+      sax: 1.2.4
       xmlbuilder: 9.0.7
     dev: false
 

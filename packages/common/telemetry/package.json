@@ -1,6 +1,6 @@
 {
   "name": "@dxos/telemetry",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Telemetry logging for product usage statistics",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

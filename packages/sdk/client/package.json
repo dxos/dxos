@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,8 +18,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-echo-graph",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Low level components using gem library.",
   "homepage": "https://dxos.org",
