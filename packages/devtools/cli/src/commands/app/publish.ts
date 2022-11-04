@@ -51,7 +51,12 @@ export default class Publish extends BaseCommand {
         }
       }
 
-      this.addToTelemetryContext({ bundleSize: moduleConfig.values.package!.modules?.map(({ bundle }) => bundle) });
+      this.addToTelemetryContext({
+        totalBundleSize: moduleConfig.values.package!.modules?.reduce(
+          (sum, { bundle }) => sum + (bundle?.length ?? 0),
+          0
+        )
+      });
 
       return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
         await publisher.rpc.publish({

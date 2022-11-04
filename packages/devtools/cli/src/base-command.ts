@@ -111,18 +111,14 @@ export abstract class BaseCommand extends Command {
     this.addToTelemetryContext({ command: this.id });
 
     setTimeout(async () => {
-      await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`)
-        .then((res) => res.json())
-        .then((data) => {
-          this.addToTelemetryContext({
-            city: data.city,
-            region: data.region,
-            country: data.country,
-            latitude: data.latitude,
-            longitude: data.longitude
-          });
-        })
-        .catch((err) => captureException(err));
+      try {
+        const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
+        const data = await res.json();
+        const { city, region, country, latitude, longitude } = data;
+        this.addToTelemetryContext({ city, region, country, latitude, longitude });
+      } catch (err) {
+        captureException(err);
+      }
     });
 
     // Load user config file.
@@ -158,9 +154,10 @@ export abstract class BaseCommand extends Command {
 
     Telemetry.event({
       installationId: this._telemetryContext?.installationId,
-      name: `dx-cli.command.${this._failing ? 'failure' : 'success'}`,
+      name: 'cli.command.run',
       properties: {
         ...this._telemetryContext,
+        status: this._failing ? 'failure' : 'success',
         duration: endTime.getTime() - this._startTime.getTime()
       }
     });

@@ -58,7 +58,7 @@ export const disableTelemetry = async (configDir: string) => {
   init({ apiKey: TELEMETRY_API_KEY, batchSize: 1, enable: true });
   event({
     installationId,
-    name: 'dx-cli:telemetry:disable'
+    name: 'cli.telemetry.disable'
   });
   await writeFile(path, '', 'utf-8');
 };
@@ -98,9 +98,9 @@ const validate = (contextString: string) => {
 };
 
 // TODO(wittjosiah): Factor out.
-const exists = async (filePath: string): Promise<boolean> => {
+const exists = async (...args: string[]): Promise<boolean> => {
   try {
-    const result = await stat(filePath);
+    const result = await stat(join(...args));
     return !!result;
   } catch (err: any) {
     if (/ENOENT/.test(err.message)) {
