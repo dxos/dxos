@@ -2,6 +2,18 @@
   "sourceRoot": "packages/devtools/devtools-extension/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "script": "build"
+      },
+      "outputs": [
+        "packages/devtools/devtools-extension/dist"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
