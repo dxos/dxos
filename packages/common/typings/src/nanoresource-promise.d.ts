@@ -3,7 +3,8 @@
 //
 
 /**
- * https://www.npmjs.com/package/nanomessage-promise
+ * https://www.npmjs.com/package/nanoresource-promise
+ * https://github.com/geut/nanoresource-promise#readme
  */
 declare module 'nanoresource-promise' {
   import { EventEmitter } from 'events';
@@ -18,5 +19,8 @@ declare module 'nanoresource-promise' {
 
     open(): Promise<any>;
     close(allowActive?: boolean): Promise<any>;
+
+    _open(): Promise<any>;
+    _close(): Promise<any>;
   }
 }

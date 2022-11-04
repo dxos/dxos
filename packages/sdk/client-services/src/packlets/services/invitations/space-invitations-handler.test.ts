@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
+import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -58,30 +59,18 @@ describe('services/spaces', function () {
           onSuccess: (invitation) => {
             complete2.wake(invitation.spaceKey!);
           },
-          onCancelled: () => {
-            throw new Error();
-          },
-          onTimeout: (err: any) => {
-            throw err;
-          },
-          onError: (err: any) => {
-            throw err;
-          }
+          onCancelled: () => raise(new Error()),
+          onTimeout: (err: Error) => raise(new Error(err.message)),
+          onError: (err: Error) => raise(new Error(err.message))
         });
       },
       onConnected: (invitation: Invitation) => {},
       onSuccess: (invitation: Invitation) => {
         complete1.wake(space1.key);
       },
-      onCancelled: () => {
-        throw new Error();
-      },
-      onTimeout: (err: any) => {
-        throw err;
-      },
-      onError: (err: any) => {
-        throw err;
-      }
+      onCancelled: () => raise(new Error()),
+      onTimeout: (err: Error) => raise(new Error(err.message)),
+      onError: (err: Error) => raise(new Error(err.message))
     });
 
     {
@@ -119,38 +108,20 @@ describe('services/spaces', function () {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
             connecting2.wake(invitation2);
           },
-          onConnected: async (invitation2: Invitation) => {
-            // TODO(burdon): Maybe connects?
-          },
-          onSuccess: () => {
-            throw new Error();
-          },
-          onCancelled: () => {
-            throw new Error();
-          },
-          onTimeout: (err: any) => {
-            throw err;
-          },
-          onError: (err: any) => {
-            throw err;
-          }
+          onConnected: async (invitation2: Invitation) => {},
+          onSuccess: () => {},
+          onCancelled: () => raise(new Error()),
+          onTimeout: (err: Error) => raise(new Error(err.message)),
+          onError: (err: Error) => raise(new Error(err.message))
         });
       },
-      onConnected: async (invitation1: Invitation) => {
-        // TODO(burdon): Maybe connects?
-      },
-      onSuccess: () => {
-        throw new Error();
-      },
+      onConnected: async (invitation1: Invitation) => {},
       onCancelled: () => {
         cancelled.wake();
       },
-      onTimeout: (err: any) => {
-        throw err;
-      },
-      onError: (err: any) => {
-        throw err;
-      }
+      onSuccess: () => raise(new Error()),
+      onTimeout: (err: Error) => raise(new Error(err.message)),
+      onError: (err: Error) => raise(new Error(err.message))
     });
 
     const invitation1 = await connecting1.wait();

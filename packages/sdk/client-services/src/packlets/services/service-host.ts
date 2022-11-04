@@ -58,7 +58,7 @@ export class ClientServiceHost implements ClientServiceProvider {
   private readonly _config: Config;
   private readonly _signer?: HaloSigner;
   private readonly _context: ServiceContext;
-  private _services!: ClientServices;
+  private readonly _services: ClientServices;
 
   constructor({
     config,
@@ -72,6 +72,13 @@ export class ClientServiceHost implements ClientServiceProvider {
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
     this._context = new ServiceContext(storage, networkManager, modelFactory);
+
+    // TODO(burdon): Create factory.
+    this._services = createServices({
+      config: this._config,
+      context: this._context,
+      signer: this._signer
+    });
   }
 
   get services() {
@@ -82,13 +89,6 @@ export class ClientServiceHost implements ClientServiceProvider {
   async open(onProgressCallback?: ((progress: any) => void) | undefined) {
     log('opening...');
     await this._context.open();
-
-    this._services = createServices({
-      config: this._config,
-      context: this._context,
-      signer: this._signer
-    });
-
     // this._devtoolsEvents.ready.emit();
     log('opened');
   }

@@ -11,9 +11,16 @@ import { HaloService, ProfileService, SystemService, TracingService } from './im
 import { DevtoolsService } from './impl/devtools';
 import { SpaceInvitationsServiceImpl } from './invitations';
 import { ServiceContext } from './service-context';
+import { ServiceRegistry } from './service-registry';
 import { ClientServices } from './services';
 import { HaloSigner } from './signer';
 import { SpacesServiceImpl } from './spaces';
+
+export enum ServiceType {
+  Halo,
+  Spaces,
+  SpaceInvitations
+}
 
 /**
  * Service factory.
@@ -27,7 +34,9 @@ export const createServices = ({
   context: ServiceContext;
   signer?: HaloSigner; // TODO(burdon): Deprecated.
 }): ClientServices => {
-  // TODO(burdon): Services must be created incrementally (e.g., may require profile).
+  // TODO(burdon): Return factory.
+  const serviceRegistry = new ServiceRegistry<ServiceType>();
+  serviceRegistry.registerService(ServiceType.Halo, new HaloService(null, signer));
 
   assert(context.spaceManager);
   assert(context.spaceInvitations);
@@ -37,7 +46,7 @@ export const createServices = ({
     SpaceInvitationService: new SpaceInvitationsServiceImpl(context.spaceManager, context.spaceInvitations),
 
     DataService: context.dataService,
-    HaloService: new HaloService(null, signer), // TODO(burdon): Remove.
+    HaloService: serviceRegistry.getService<HaloService>(ServiceType.Halo),
     ProfileService: new ProfileService(context),
     SystemService: new SystemService(config),
     TracingService: new TracingService(config),

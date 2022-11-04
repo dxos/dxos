@@ -18,7 +18,7 @@ import { InvitationEvents, InvitationsProxy } from './invitations';
 // TODO(burdon): Options (e.g., timeout).
 export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
   // prettier-ignore
-  protected constructor(
+  constructor(
     private readonly _invitationService: InvitationService
   ) {}
 

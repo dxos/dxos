@@ -9,6 +9,10 @@ import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtool
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle } from '@dxos/rpc';
 
+//
+// No impl dependencies.
+//
+
 export type ClientServices = {
   SpacesService: SpacesService;
   SpaceInvitationService: InvitationService;
