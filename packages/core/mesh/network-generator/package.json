@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Network generator.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/network-generator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
