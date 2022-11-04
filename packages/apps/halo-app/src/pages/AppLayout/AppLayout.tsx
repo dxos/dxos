@@ -114,7 +114,6 @@ export const AppLayout = () => {
           size={10}
           sideOffset={4}
           managingSpace={isManagingSpace}
-          createInvitationUrl={createInvitationUrl}
           onClickManageProfile={() => navigate('/identity')}
           onClickGoToSpace={() => navigate(`/spaces/${spaceHex}`)}
           onClickManageSpace={() => navigate(`/spaces/${spaceHex}/settings`)}

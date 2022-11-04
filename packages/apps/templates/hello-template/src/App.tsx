@@ -177,7 +177,7 @@ const SpaceView = () => {
           {/* 4. Sharing. */}
           <Presence
             profile={profile!}
-            party={space}
+            space={space}
             createInvitationUrl={createInvitationUrl}
             className='flex-none'
             size={10}

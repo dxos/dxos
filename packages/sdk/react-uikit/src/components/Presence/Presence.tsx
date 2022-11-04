@@ -33,16 +33,10 @@ export interface PresenceProps
   profile: NaturalProfile;
   space?: Party;
   closeLabel?: string;
-<<<<<<< HEAD:packages/sdk/react-uikit/src/components/Presence/Presence.tsx
   managingSpace?: boolean;
+  createInvitationUrl?: (invitationCode: string) => string;
   onClickManageSpace?: () => void;
   onClickGoToSpace?: () => void;
-=======
-  managingParty?: boolean;
-  createInvitationUrl?: (invitationCode: string) => string;
-  onClickManageParty?: () => void;
-  onClickGoToParty?: () => void;
->>>>>>> cde7153fd (fix(react-uikit): Re-add singleton invite):packages/common/react-uikit/src/components/Presence/Presence.tsx
   onClickManageProfile?: () => void;
 }
 
@@ -52,16 +46,10 @@ const ProfileMenu = (props: PresenceProps) => {
     onClickManageProfile,
     space: _space,
     closeLabel: _closeLabel,
-<<<<<<< HEAD:packages/sdk/react-uikit/src/components/Presence/Presence.tsx
+    createInvitationUrl: _createInvitationUrl,
     onClickManageSpace: _onClickManageSpace,
     managingSpace: _managingSpace,
     onClickGoToSpace: _onClickGoToSpace,
-=======
-    createInvitationUrl: _createInvitationUrl,
-    onClickManageParty: _onClickManageParty,
-    managingParty: _managingParty,
-    onClickGoToParty: _onClickGoToParty,
->>>>>>> cde7153fd (fix(react-uikit): Re-add singleton invite):packages/common/react-uikit/src/components/Presence/Presence.tsx
     sideOffset,
     collisionPadding,
     ...avatarProps
@@ -110,9 +98,9 @@ const PartyInviteSingleton = ({
 
   useEffect(() => {
     if (invitations.length < 1) {
-      void party.createInvitation();
+      void space.createInvitation();
     }
-  }, [party, invitations]);
+  }, [space, invitations]);
 
   // TODO(wittjosiah): This should re-generate once it is used.
   const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0].encode()), [invitations]);
@@ -150,14 +138,9 @@ const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-<<<<<<< HEAD:packages/sdk/react-uikit/src/components/Presence/Presence.tsx
+      {createInvitationUrl && <PartyInviteSingleton createInvitationUrl={createInvitationUrl} space={space} />}
       {onClickManageSpace && (
         <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
-=======
-      {createInvitationUrl && <PartyInviteSingleton createInvitationUrl={createInvitationUrl} party={party} />}
-      {onClickManageParty && (
-        <Button className='flex w-full gap-2' onClick={onClickManageParty}>
->>>>>>> cde7153fd (fix(react-uikit): Re-add singleton invite):packages/common/react-uikit/src/components/Presence/Presence.tsx
           <Gear className={getSize(5)} />
           <span>{t('manage party label')}</span>
         </Button>
