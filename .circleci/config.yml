@@ -113,7 +113,7 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
-      - run: pnpm nx build dx-cli
+      - run: pnpm nx build cli
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
