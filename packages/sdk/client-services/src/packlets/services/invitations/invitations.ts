@@ -16,3 +16,7 @@ export interface InvitationsHandler<T> {
   createInvitation(context: T): CancellableObservable<InvitationEvents>;
   acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
 }
+
+export interface InvitationsProxy<T> extends InvitationsHandler<T> {
+  createInvitationObject(context: T): Invitation;
+}

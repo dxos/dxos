@@ -11,7 +11,7 @@ import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client
 
 import { ServiceContext } from '../service-context';
 import { closeAfterTest, createIdentity, createPeers } from '../testing';
-import { SpaceInvitationProxy } from './space-invitations-proxy';
+import { SpaceInvitationsProxy } from './space-invitations-proxy';
 import { SpaceInvitationsServiceImpl } from './space-invitations-service';
 
 describe('services/space-invitation-service', function () {
@@ -32,11 +32,11 @@ describe('services/space-invitation-service', function () {
     const success2 = new Trigger<Invitation>();
 
     {
-      const proxy1 = new SpaceInvitationProxy(service1);
+      const proxy1 = new SpaceInvitationsProxy(service1);
       const observable1 = proxy1.createInvitation(space1.key);
       observable1.subscribe({
         onConnecting: (invitation: Invitation) => {
-          const proxy2 = new SpaceInvitationProxy(service2);
+          const proxy2 = new SpaceInvitationsProxy(service2);
           const observable2 = proxy2.acceptInvitation(invitation);
           observable2.subscribe({
             onSuccess: (invitation: Invitation) => {
@@ -74,11 +74,11 @@ describe('services/space-invitation-service', function () {
     const cancelled = new Trigger();
 
     {
-      const proxy = new SpaceInvitationProxy(service1);
+      const proxy = new SpaceInvitationsProxy(service1);
       const observable = proxy.createInvitation(space1.key);
       observable.subscribe({
         onConnecting: (invitation: Invitation) => {
-          const proxy2 = new SpaceInvitationProxy(service2);
+          const proxy2 = new SpaceInvitationsProxy(service2);
           proxy2.acceptInvitation(invitation);
         },
         onConnected: (invitation: Invitation) => {
