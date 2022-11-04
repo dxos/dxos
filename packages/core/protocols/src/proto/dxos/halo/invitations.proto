@@ -23,14 +23,11 @@ message InvitationDescriptor {
   /// Topic for network handshake.
   bytes swarm_key = 2;
 
-  /// TODO(burdon): Remove?
-  bytes invitation = 3;
-
   /// Only present if type === OFFLINE.
-  optional bytes identity_key = 4;
+  optional bytes identity_key = 3;
 
   /// Must be stripped out when passing to another peer.
-  optional bytes secret = 5;
+  optional bytes secret = 4;
 }
 
 //

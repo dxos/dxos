@@ -3,6 +3,4 @@
 //
 
 export * from './common';
-export * from './halo-invitations';
 export * from './invitation-wrapper';
-export * from './space-invitations';

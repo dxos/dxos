@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -17,7 +15,6 @@ import {
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -25,7 +22,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, InvitationWrapper, SpaceInvitations } from '../invitations';
+import { HaloInvitations, SpaceInvitations } from './invitations';
 
 /**
  * Shared backend for all client services.
@@ -103,21 +100,6 @@ export class ServiceContext {
     this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
-  }
-
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
-    assert(this.spaceManager);
-    assert(this.spaceInvitations);
-
-    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    const invitation = await this.spaceInvitations.createInvitation(space, { onFinish });
-    return InvitationWrapper.fromProto(invitation);
-  }
-
-  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
-    assert(this.spaceInvitations);
-
-    return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
   }
 
   private async _initialize() {

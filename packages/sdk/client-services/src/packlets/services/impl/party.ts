@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { todo } from '@dxos/debug';
+import { raise, todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
@@ -29,7 +29,7 @@ import {
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../../invitations';
+import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -52,6 +52,7 @@ export class PartyService implements PartyServiceRpc {
         }
       });
     });
+
     // const update = (next: (message: SubscribePartyResponse) => void) => {
     //   try {
     //     const party = this.echo.getParty(request.party_key);
@@ -180,6 +181,8 @@ export class PartyService implements PartyServiceRpc {
   }
 
   createInvitation(request: CreateInvitationRequest): Stream<InvitationRequest> {
+    const space =
+      this.serviceContext.spaceManager!.spaces.get(request.partyKey) ?? raise(new Error('Space not found.'));
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         try {
@@ -190,7 +193,7 @@ export class PartyService implements PartyServiceRpc {
             //   next({ state: InvitationState.CONNECTED });
             //   return Buffer.from(secret);
             // };
-            invitation = await this.serviceContext.createInvitation(request.partyKey, () => {
+            invitation = await this.serviceContext.spaceInvitations.createInvitation(request.partyKey, () => {
               next({ state: InvitationState.SUCCESS });
               close();
             });
@@ -238,7 +241,7 @@ export class PartyService implements PartyServiceRpc {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.acceptInvitation(InvitationWrapper.fromProto(request));
+      const partyPromise = this.serviceContext.spaceInvitations.acceptInvitation(InvitationWrapper.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

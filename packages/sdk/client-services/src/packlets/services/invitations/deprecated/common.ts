@@ -18,7 +18,7 @@ export const defaultInvitationAuthenticator: Required<InvitationAuthenticator> =
 };
 
 /**
- * Additional set of callbacks and options used in the invitation process.
+ * @deprecated
  */
 export interface InvitationOptions {
   /**
@@ -32,17 +32,28 @@ export interface InvitationOptions {
   expiration?: number;
 }
 
-// TODO(burdon): Remove/move to API.
+/**
+ * @deprecated
+ */
 export type InviterInvitation = {
   invitationCode: string;
   secret: Uint8Array | undefined;
 };
 
-// TODO(burdon): Remove/move to API.
+/**
+ * @deprecated
+ */
 export type InviteeInvitation = {
   secret?: Uint8Array | undefined; // Can be undefined initially, then set after receiving secret from the inviter.
   secretTrigger?: () => void; // Is triggered after supplying the secret.
 };
 
+/**
+ * @deprecated
+ */
 export type InviterInvitations = InviterInvitation[];
+
+/**
+ * @deprecated
+ */
 export type InviteeInvitations = Map<string, InviteeInvitation>;

@@ -19,12 +19,12 @@ const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 /**
  * A serialized version of InvitationWrapper that's suitable to be encoded as an URL query string.
  */
+// TODO(burdon): Remove (replace with Invitation struct).
 export interface InvitationQueryParameters {
-  hash: string;
-  swarmKey: string;
-  invitation: string;
-  identityKey?: string;
   type: string;
+  hash: string;
+  swarmKey: PublicKey;
+  identityKey?: PublicKey;
 }
 
 /**
@@ -32,10 +32,10 @@ export interface InvitationQueryParameters {
  *
  * Can be serialized to protobuf or JSON.
  * Invitations can be interactive or offline.
- *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
+ *
+ * @deprecated
  */
-// TODO(burdon): Move to Client API (and/or remove).
 export class InvitationWrapper {
   static decode(code: string): InvitationWrapper {
     const json = base62.decode(code).toString();
@@ -48,13 +48,8 @@ export class InvitationWrapper {
   }
 
   static fromQueryParameters(queryParameters: InvitationQueryParameters): InvitationWrapper {
-    const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
-    const descriptor = new InvitationWrapper(
-      parseInvitationType(type),
-      PublicKey.from(swarmKey),
-      PublicKey.bufferize(invitation),
-      identityKey ? PublicKey.from(identityKey) : undefined
-    );
+    const { hash, swarmKey, identityKey, type } = queryParameters;
+    const descriptor = new InvitationWrapper(parseInvitationType(type), swarmKey, identityKey);
 
     if (hash !== descriptor.hash) {
       throw new InvalidInvitationError();
@@ -66,12 +61,10 @@ export class InvitationWrapper {
   static fromProto(invitation: InvitationDescriptor): InvitationWrapper {
     assert(invitation.type !== undefined);
     assert(invitation.swarmKey, 'Missing swarm key');
-    assert(invitation.invitation);
 
     return new InvitationWrapper(
       invitation.type,
       PublicKey.from(invitation.swarmKey),
-      Buffer.from(invitation.invitation),
       invitation.identityKey ? PublicKey.from(invitation.identityKey) : undefined,
       invitation.secret ? Buffer.from(invitation.secret) : undefined
     );
@@ -80,13 +73,11 @@ export class InvitationWrapper {
   constructor(
     public readonly type: InvitationDescriptor.Type,
     public readonly swarmKey: PublicKey,
-    public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
     public secret?: Uint8Array
   ) {
     assert(type !== undefined);
     assert(PublicKey.isPublicKey(swarmKey));
-    assert(invitation instanceof Uint8Array);
     if (identityKey) {
       PublicKey.assertValidPublicKey(identityKey);
     }
@@ -104,7 +95,6 @@ export class InvitationWrapper {
     return {
       type: this.type,
       swarmKey: this.swarmKey.asUint8Array(),
-      invitation: this.invitation,
       identityKey: this.identityKey?.asUint8Array(),
       secret: this.secret
     };
@@ -112,13 +102,12 @@ export class InvitationWrapper {
 
   toQueryParameters(): InvitationQueryParameters {
     const query: Partial<InvitationQueryParameters> = {
-      swarmKey: this.swarmKey.toHex(),
-      invitation: PublicKey.stringify(this.invitation),
-      type: stringifyInvitationType(this.type)
+      type: stringifyInvitationType(this.type),
+      swarmKey: this.swarmKey
     };
 
     if (this.identityKey) {
-      query.identityKey = this.identityKey.toHex();
+      query.identityKey = this.identityKey;
     }
 
     query.hash = ripemd160(stableStringify(query));

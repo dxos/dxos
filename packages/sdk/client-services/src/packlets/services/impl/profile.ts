@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { InviteeInvitation, InviteeInvitations } from '../../invitations';
+import { InviteeInvitation, InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
