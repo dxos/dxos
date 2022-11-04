@@ -10,26 +10,6 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
-message InvitationDescriptor {
-  enum Type {
-    /// Both peers online at the same time.
-    INTERACTIVE = 0;
-    /// Invited peer's public key is known and invitation can be accepted by any valid peer.
-    OFFLINE = 1;
-  }
-
-  Type type = 1;
-
-  /// Topic for network handshake.
-  bytes swarm_key = 2;
-
-  /// Only present if type === OFFLINE.
-  optional bytes identity_key = 3;
-
-  /// Must be stripped out when passing to another peer.
-  optional bytes secret = 4;
-}
-
 //
 // HALO device invitations.
 //
