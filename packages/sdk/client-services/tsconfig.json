@@ -16,6 +16,10 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "// TODO(burdon): Remove",
+    "**/_*.*"
+  ],
   "references": [
     {
       "path": "../../common/async"

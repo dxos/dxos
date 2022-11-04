@@ -6,13 +6,12 @@ import { expect } from 'chai';
 
 import { latch, Trigger } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
-import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemorySignalManagerContext } from '@dxos/messaging';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
-import { ClientServiceHost } from './service-host';
+import { createServiceHost } from './testing';
 
 const defaultTestingConfig: ConfigProto = {
   version: 1
@@ -26,30 +25,18 @@ const defaultTestingConfig: ConfigProto = {
 };
 
 describe('services/service-host', function () {
-  // TODO(burdon): Factor out.
-  const createPeer = (signalManagerContext: MemorySignalManagerContext) => {
-    const networkManager = new NetworkManager({
-      signalManager: new MemorySignalManager(signalManagerContext),
-      transportFactory: MemoryTransportFactory
-    });
-
-    return new ClientServiceHost({
-      config: new Config(defaultTestingConfig),
-      networkManager
-    });
-  };
-
-  it('process device invitation', async function () {
+  it.skip('process device invitation', async function () {
+    const config = new Config(defaultTestingConfig);
     const signalManagerContext = new MemorySignalManagerContext();
 
-    const peer1 = createPeer(signalManagerContext);
-    const peer2 = createPeer(signalManagerContext);
+    const peer1 = createServiceHost(config, signalManagerContext);
+    const peer2 = createServiceHost(config, signalManagerContext);
     await peer1.open();
     await peer2.open();
     afterTest(() => peer1.close());
     afterTest(() => peer2.close());
 
-    const invitationTrigger = new Trigger<InvitationDescriptor>();
+    const invitationTrigger = new Trigger<Invitation>();
     {
       await peer1.services.ProfileService.createProfile({});
       const stream = peer1.services.ProfileService.createInvitation();

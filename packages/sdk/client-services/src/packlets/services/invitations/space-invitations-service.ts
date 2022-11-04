@@ -3,6 +3,7 @@
 //
 
 import assert from 'assert';
+import { SpaceInvitationsHandler } from 'packages/sdk/client-services/src/packlets/services/invitations/space-invitations-handler';
 
 import { CancellableObservable, TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -10,19 +11,17 @@ import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { AuthenticateRequest, Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { SpaceInvitations } from './space-invitations';
-
 /**
- * Spaces invitations service.
+ * Adapts invitation service observable to client/service stream.
  */
-export class SpaceInvitationServiceImpl implements InvitationService {
+export class SpaceInvitationsServiceImpl implements InvitationService {
   private readonly _createInvitations = new Map<string, CancellableObservable<any>>();
   private readonly _acceptInvitations = new Map<string, CancellableObservable<any>>();
 
   // prettier-ignore
   constructor (
     private readonly _spaceManager: SpaceManager,
-    private readonly _spaceInvitations: SpaceInvitations
+    private readonly _spaceInvitations: SpaceInvitationsHandler
   ) {}
 
   createInvitation(invitation: Invitation): Stream<Invitation> {
@@ -70,7 +69,7 @@ export class SpaceInvitationServiceImpl implements InvitationService {
         }
       });
 
-      return (err) => {
+      return (err?: Error) => {
         log('stream closed', { spaceKey: invitation.spaceKey, err });
         this._createInvitations.delete(invitation.invitationId!);
       };
@@ -120,7 +119,7 @@ export class SpaceInvitationServiceImpl implements InvitationService {
         }
       });
 
-      return (err) => {
+      return (err?: Error) => {
         log('stream closed', { spaceKey: invitation.spaceKey, err });
         this._acceptInvitations.delete(invitation.invitationId!);
       };

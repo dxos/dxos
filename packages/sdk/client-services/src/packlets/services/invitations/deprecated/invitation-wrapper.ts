@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { ripemd160 } from '@dxos/crypto';
 import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Move to Client API.
 
@@ -58,7 +58,7 @@ export class InvitationWrapper {
     return descriptor;
   }
 
-  static fromProto(invitation: InvitationDescriptor): InvitationWrapper {
+  static fromProto(invitation: Invitation): InvitationWrapper {
     assert(invitation.type !== undefined);
     assert(invitation.swarmKey, 'Missing swarm key');
 
@@ -71,7 +71,7 @@ export class InvitationWrapper {
   }
 
   constructor(
-    public readonly type: InvitationDescriptor.Type,
+    public readonly type: Invitation.Type,
     public readonly swarmKey: PublicKey,
     public readonly identityKey?: PublicKey,
     public secret?: Uint8Array
@@ -91,11 +91,11 @@ export class InvitationWrapper {
     return query.hash;
   }
 
-  toProto(): InvitationDescriptor {
+  toProto(): Invitation {
     return {
       type: this.type,
-      swarmKey: this.swarmKey.asUint8Array(),
-      identityKey: this.identityKey?.asUint8Array(),
+      swarmKey: this.swarmKey,
+      identityKey: this.identityKey,
       secret: this.secret
     };
   }
@@ -116,14 +116,11 @@ export class InvitationWrapper {
 }
 
 // TODO(burdon): Move to client API.
-const parseInvitationType = (str: string): InvitationDescriptor.Type => {
+const parseInvitationType = (str: string): Invitation.Type => {
   const type = parseInt(str);
-  assert(
-    type === InvitationDescriptor.Type.INTERACTIVE || type === InvitationDescriptor.Type.OFFLINE,
-    'Invalid invitation type'
-  );
+  assert(type === Invitation.Type.INTERACTIVE || type === Invitation.Type.OFFLINE, 'Invalid invitation type');
   return type;
 };
 
 // TODO(burdon): Move to client API.
-const stringifyInvitationType = (type: InvitationDescriptor.Type): string => type.toString();
+const stringifyInvitationType = (type: Invitation.Type): string => type.toString();

@@ -16,11 +16,10 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { AcceptInvitationEvents, CreateInvitationEvents, InvitationsBroker } from './invitations';
+import { InvitationEvents, InvitationsHandler } from './invitations';
 
 /**
- * Manages the life-cycle of Space invitations between peers.
- * Life of an invitation:
+ * Handles the life-cycle of Space invitations between peers.
  *
  * Host
  * - Creates an invitation containing the swarm topic (rendezvous key, which can be passed out-of-band to the guest).
@@ -45,7 +44,7 @@ import { AcceptInvitationEvents, CreateInvitationEvents, InvitationsBroker } fro
  *        [SpaceGuestService.presentAdmissionOffer] => SpaceHostService.presentAdmissionCredentials()
  *
  */
-export class SpaceInvitations implements InvitationsBroker<Space> {
+export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
   constructor(
     private readonly _spaceManager: SpaceManager,
     private readonly _networkManager: NetworkManager,
@@ -55,7 +54,7 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space): CancellableObservable<CreateInvitationEvents> {
+  createInvitation(space: Space): CancellableObservable<InvitationEvents> {
     let connection: SwarmConnection | undefined;
 
     const topic = PublicKey.random();
@@ -66,7 +65,7 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
     };
 
     // TODO(burdon): Stop anything pending.
-    const observable = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       await connection?.close();
     });
 
@@ -148,10 +147,10 @@ export class SpaceInvitations implements InvitationsBroker<Space> {
    * The local guest peer (invitee) then sends the local party invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: Invitation): CancellableObservable<AcceptInvitationEvents> {
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
     let connection: SwarmConnection | undefined;
 
-    const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       await connection?.close();
     });
 

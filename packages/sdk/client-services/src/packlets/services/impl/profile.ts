@@ -20,7 +20,7 @@ import {
   RedeemedInvitation,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InviteeInvitation, InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../service-context';
@@ -92,7 +92,7 @@ export class ProfileService implements ProfileServiceRpc {
     });
   }
 
-  acceptInvitation(invitation: InvitationDescriptor): Stream<RedeemedInvitation> {
+  acceptInvitation(invitation: Invitation): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();

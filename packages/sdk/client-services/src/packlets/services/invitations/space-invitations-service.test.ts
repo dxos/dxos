@@ -12,7 +12,7 @@ import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client
 import { ServiceContext } from '../service-context';
 import { closeAfterTest, createIdentity, createPeers } from '../testing';
 import { SpaceInvitationProxy } from './space-invitations-proxy';
-import { SpaceInvitationServiceImpl } from './space-invitations-service';
+import { SpaceInvitationsServiceImpl } from './space-invitations-service';
 
 describe('services/space-invitation-service', function () {
   it('creates space and invites peer', async function () {
@@ -20,11 +20,11 @@ describe('services/space-invitation-service', function () {
 
     assert(peer1.spaceManager);
     assert(peer1.spaceInvitations);
-    const service1: InvitationService = new SpaceInvitationServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
+    const service1: InvitationService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
 
     assert(peer2.spaceManager);
     assert(peer2.spaceInvitations);
-    const service2: InvitationService = new SpaceInvitationServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
+    const service2: InvitationService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
 
     const space1 = await peer1.spaceManager.createSpace();
 
@@ -64,11 +64,11 @@ describe('services/space-invitation-service', function () {
 
     assert(peer1.spaceManager);
     assert(peer1.spaceInvitations);
-    const service1: InvitationService = new SpaceInvitationServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
+    const service1: InvitationService = new SpaceInvitationsServiceImpl(peer1.spaceManager, peer1.spaceInvitations);
 
     assert(peer2.spaceManager);
     assert(peer2.spaceInvitations);
-    const service2: InvitationService = new SpaceInvitationServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
+    const service2: InvitationService = new SpaceInvitationsServiceImpl(peer2.spaceManager, peer2.spaceInvitations);
 
     const space1 = await peer1.spaceManager.createSpace();
     const cancelled = new Trigger();

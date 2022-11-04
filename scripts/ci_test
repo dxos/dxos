@@ -1,0 +1,5 @@
+#!/bin/sh
+
+pnpm nx run-many --target=lint
+pnpm nx run-many --target=build
+pnpm nx run-many --target=test

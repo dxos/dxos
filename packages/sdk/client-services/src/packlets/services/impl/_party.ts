@@ -13,12 +13,10 @@ import {
   CreateInvitationRequest,
   CreateSnapshotRequest,
   GetPartyDetailsRequest,
-  InvitationRequest,
   InvitationState,
   Party,
   PartyDetails,
   PartyService as PartyServiceRpc,
-  RedeemedInvitation,
   SetPartyStateRequest,
   SubscribeMembersRequest,
   SubscribeMembersResponse,
@@ -26,16 +24,16 @@ import {
   SubscribePartyRequest,
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { InvitationWrapper, InviteeInvitation, InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
  * Party service implementation.
+ * @deprecated
  */
-// TODO(burdon): Rename Space.
 export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
@@ -180,9 +178,11 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  createInvitation(request: CreateInvitationRequest): Stream<InvitationRequest> {
+  // TODO(burdon): Replace with Invitation stream.
+  createInvitation(request: CreateInvitationRequest): Stream<Invitation> {
     const space =
       this.serviceContext.spaceManager!.spaces.get(request.partyKey) ?? raise(new Error('Space not found.'));
+
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
         try {
@@ -198,7 +198,7 @@ export class PartyService implements PartyServiceRpc {
               close();
             });
 
-            assert(invitation.type === InvitationDescriptor.Type.INTERACTIVE);
+            assert(invitation.type === Invitation.Type.INTERACTIVE);
             // invitation.secret = Buffer.from(secret);
           } else {
             todo();
@@ -211,7 +211,7 @@ export class PartyService implements PartyServiceRpc {
             descriptor: invitation!.toProto()
           });
 
-          // if (invitation.type === InvitationDescriptor.Type.OFFLINE) {
+          // if (invitation.type === Invitation.Type.OFFLINE) {
           //   close();
           // }
         } catch (err: any) {
@@ -222,7 +222,8 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation(request: InvitationDescriptor): Stream<RedeemedInvitation> {
+  // TODO(burdon): Replace with Invitation stream.
+  acceptInvitation(request: Invitation): Stream<Invitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [, secretTrigger] = latch();

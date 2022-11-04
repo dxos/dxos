@@ -22,7 +22,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, SpaceInvitations } from './invitations';
+import { HaloInvitations, SpaceInvitationsHandler } from './invitations';
 
 /**
  * Shared backend for all client services.
@@ -42,7 +42,7 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public spaceInvitations?: SpaceInvitations;
+  public spaceInvitations?: SpaceInvitationsHandler;
 
   // prettier-ignore
   constructor(
@@ -126,7 +126,7 @@ export class ServiceContext {
     await spaceManager.open();
 
     this.spaceManager = spaceManager;
-    this.spaceInvitations = new SpaceInvitations(this.spaceManager, this.networkManager, signingContext);
+    this.spaceInvitations = new SpaceInvitationsHandler(this.spaceManager, this.networkManager, signingContext);
 
     this.initialized.wake();
   }

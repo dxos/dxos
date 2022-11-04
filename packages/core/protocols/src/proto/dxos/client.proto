@@ -6,10 +6,10 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/client/services.proto";
 import "dxos/config.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/invitations.proto";
 import "dxos/halo/keys.proto";
 import "dxos/keys.proto";
 
@@ -38,7 +38,7 @@ enum InvitationState {
 
 /// Invitation process created by sender.
 message InvitationRequest {
-  optional dxos.halo.invitations.InvitationDescriptor descriptor = 1;
+  optional dxos.client.services.Invitation descriptor = 1;
 
   InvitationState state = 2;
 
@@ -102,7 +102,7 @@ service ProfileService {
   rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
 
   rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
-  rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
+  rpc AcceptInvitation(dxos.client.services.Invitation) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
@@ -244,7 +244,7 @@ service PartyService {
 
   // TODO(burdon): Rename.
   rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
-  rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
+  rpc AcceptInvitation(dxos.client.services.Invitation) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 
   // TODO(rzadp): Remove and join with Subscribing to Party.

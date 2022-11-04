@@ -10,10 +10,10 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Invitation, InvitationService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { AcceptInvitationEvents, CreateInvitationEvents } from './invitations';
+import { InvitationEvents } from './invitations';
 
 /**
- * Client API for invitation services.
+ * Adapts invitation service observable to client/service stream.
  */
 // TODO(burdon): Make generic (factor out spaceKey and invitation generation).
 // TODO(burdon): Options (e.g., timeout).
@@ -27,7 +27,7 @@ export class SpaceInvitationProxy {
     assert(spaceKey);
 
     let invitationId: string;
-    const observable = new CancellableObservableProvider<CreateInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       if (invitationId) {
         await this._service.cancelInvitation({ invitationId });
       }
@@ -83,7 +83,7 @@ export class SpaceInvitationProxy {
     assert(invitation && invitation.spaceKey && invitation.swarmKey);
 
     let invitationId: string;
-    const observable = new CancellableObservableProvider<AcceptInvitationEvents>(async () => {
+    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       if (invitationId) {
         await this._service.cancelInvitation({ invitationId });
       }

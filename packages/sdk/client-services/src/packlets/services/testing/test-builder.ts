@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { Config } from '@dxos/config';
 import { Space } from '@dxos/echo-db';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
@@ -13,8 +14,21 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../service-context';
+import { ClientServiceHost } from '../service-host';
 
 // TODO(burdon): Create test builder.
+
+export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
+  const networkManager = new NetworkManager({
+    signalManager: new MemorySignalManager(signalManagerContext),
+    transportFactory: MemoryTransportFactory
+  });
+
+  return new ClientServiceHost({
+    config,
+    networkManager
+  });
+};
 
 export const createServiceContext = async ({
   signalContext = new MemorySignalManagerContext(),
