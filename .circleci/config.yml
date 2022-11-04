@@ -44,16 +44,16 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
+            - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
-            - run: pnpm nx run-many --target=lint
       - run:
           name: Upload to codecov.com
           command: ./.circleci/scripts/upload-codecov.sh
@@ -117,14 +117,18 @@ jobs:
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
-          command: ../../../.circleci/scripts/publish.sh
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
           environment:
             NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
           name: Deploy Docs
           working_directory: ./docs
-          command: ../.circleci/scripts/publish.sh
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
           no_output_timeout: 30m
           environment:
             NODE_ENV: production
