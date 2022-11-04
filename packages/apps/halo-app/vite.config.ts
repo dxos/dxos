@@ -14,7 +14,7 @@ import packageJson from './package.json';
 
 const env = (value?: string) => value ? `"${value}"` : undefined;
 const DX_RELEASE = process.env.NODE_ENV === 'production'
-  ? `halo-app@${packageJson.version}`
+  ? `@dxos/halo-app@${packageJson.version}`
   : undefined;
 
 // https://vitejs.dev/config/

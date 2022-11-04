@@ -127,8 +127,8 @@ jobs:
           name: Deploy Docs
           working_directory: ./docs
           command: |
-            ../../../.circleci/scripts/publish.sh production
-            ../../../.circleci/scripts/publish.sh
+            ../.circleci/scripts/publish.sh production
+            ../.circleci/scripts/publish.sh
           no_output_timeout: 30m
           environment:
             NODE_ENV: production
