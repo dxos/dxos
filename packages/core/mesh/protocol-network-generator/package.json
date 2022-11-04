@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-network-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Protocol network generator.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-network-generator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",

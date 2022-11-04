@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mesh-protocol",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MESH protocol framework.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/mesh-protocol#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
