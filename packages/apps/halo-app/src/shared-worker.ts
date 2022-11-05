@@ -5,8 +5,7 @@
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';
-
-import { WorkerRuntime } from './worker/worker-runtime';
+import { WorkerRuntime } from '@dxos/vault';
 
 log.config({ filter: 'info' });
 

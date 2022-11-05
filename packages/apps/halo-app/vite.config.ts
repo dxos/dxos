@@ -52,7 +52,8 @@ export default defineConfig({
       '@dxos/sentry',
       '@dxos/telemetry',
       '@dxos/text-model',
-      '@dxos/util'
+      '@dxos/util',
+      '@dxos/vault'
     ],
     esbuildOptions: {
       // TODO(wittjosiah): Remove.

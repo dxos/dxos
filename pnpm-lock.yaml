@@ -287,6 +287,7 @@ importers:
       '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
+      '@dxos/vault': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@react-hook/async': ^3.1.1
       '@sentry/react': ^7.17.2
@@ -326,6 +327,7 @@ importers:
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
+      '@dxos/vault': link:../../sdk/vault
       '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
@@ -3519,6 +3521,27 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
+  packages/sdk/vault:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/util': workspace:*
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/config': link:../config
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/util': link:../../common/util
+    devDependencies:
+      '@dxos/client-services': link:../client-services
+      '@dxos/network-manager': link:../../core/mesh/network-manager
 
   packages/sdk/vite-plugin:
     specifiers:

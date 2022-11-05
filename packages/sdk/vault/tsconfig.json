@@ -1,0 +1,43 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mest/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../client-services"
+    },
+    {
+      "path": "../config"
+    }
+  ]
+}

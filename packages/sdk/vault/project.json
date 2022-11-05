@@ -1,0 +1,74 @@
+{
+  "sourceRoot": "packages/sdk/vault/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/vault/src/index.ts",
+        "outputPath": "packages/sdk/vault/dist",
+        "tsConfig": "packages/sdk/vault/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "options": {
+        "bundlePackages": [
+          "@dxos/client-services",
+          "@dxos/network-manager"
+        ],
+        "entryPoints": [
+          "packages/sdk/vault/src/index.ts"
+        ],
+        "outdir": "packages/sdk/vault/dist/browser"
+      },
+      "outputs": [
+        "{options.outdir}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/vault/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "coveragePath": "coverage/packages/sdk/vault",
+        "outputPath": "tmp/mocha/packages/sdk/vault",
+        "resultsPath": "test-results/packages/sdk/vault",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "testPatterns": [
+          "packages/sdk/vault/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/sdk/vault/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

@@ -392,6 +392,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/vault/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/vite-plugin/package.json",
           "jsonpath": "$.version"
         },
