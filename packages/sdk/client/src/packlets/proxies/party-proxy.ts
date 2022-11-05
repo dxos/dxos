@@ -19,9 +19,6 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ActivationOptions, PARTY_ITEM_TYPE, PartyMember } from './stubs';
 
-/**
- * Party API.
- */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Party {
   get key(): PublicKey;
@@ -77,9 +74,6 @@ export interface Party {
   createSnapshot(): Promise<PartySnapshot>;
 }
 
-/**
- * Main public Party API.
- */
 export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
@@ -89,9 +83,7 @@ export class PartyProxy implements Party {
   private _isActive: boolean;
   private _item?: Item<ObjectModel>;
 
-  /**
-   * @internal
-   */
+  // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,

@@ -17,9 +17,6 @@ export interface HaloInfo {
   key?: PublicKey;
 }
 
-/**
- * HALO API.
- */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Halo {
   info: { key?: PublicKey };
@@ -45,9 +42,6 @@ export interface Halo {
   // getGlobalPreference(key: string): Promise<string | undefined>;
 }
 
-/**
- * Client proxy to local/remote HALO service.
- */
 export class HaloProxy implements Halo {
   private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new EventSubscriptions();

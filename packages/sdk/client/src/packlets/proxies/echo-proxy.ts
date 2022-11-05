@@ -19,9 +19,6 @@ import { ComplexMap } from '@dxos/util';
 import { HaloProxy } from './halo-proxy';
 import { Party, PartyProxy } from './party-proxy';
 
-/**
- * ECHO API.
- */
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Echo {
   info: { parties: number };
@@ -33,15 +30,13 @@ export interface Echo {
   acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
 }
 
-/**
- * Client proxy to local/remote ECHO service.
- */
 export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _partiesChanged = new Event();
 
+  // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _modelFactory: ModelFactory,
