@@ -16,9 +16,22 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { Echo, Party } from './echo';
 import { HaloProxy } from './halo-proxy';
-import { PartyProxy } from './party-proxy';
+import { Party, PartyProxy } from './party-proxy';
+
+/**
+ * ECHO API.
+ */
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Echo {
+  info: { parties: number };
+  registerModel(constructor: ModelConstructor<any>): void;
+  createParty(): Promise<Party>;
+  cloneParty(snapshot: PartySnapshot): Promise<Party>;
+  getParty(partyKey: PublicKey): Party | undefined;
+  queryParties(): ResultSet<Party>;
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
+}
 
 /**
  * Client proxy to local/remote ECHO service.

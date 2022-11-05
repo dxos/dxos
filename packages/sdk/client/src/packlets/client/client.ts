@@ -2,14 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import {
   ClientServicesHost,
   ClientServicesProxy,
-  HaloSigner,
   InvalidConfigurationError,
   RemoteServiceConnectionTimeout,
   createNetworkManager,
@@ -17,6 +15,7 @@ import {
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -27,34 +26,15 @@ import { isNode } from '@dxos/util';
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy, OpenProgress } from '../proxies';
-import { DEFAULT_CLIENT_ORIGIN, EXPECTED_CONFIG_VERSION, defaultConfig } from './config';
+import { DEFAULT_CLIENT_ORIGIN, EXPECTED_CONFIG_VERSION, IFRAME_ID, defaultConfig } from './config';
 
-const log = debug('dxos:client-proxy');
-
-const IFRAME_ID = '__DXOS_CLIENT__';
-
-export interface ClientInfo {
-  initialized: boolean;
-  echo: EchoProxy['info'];
-  halo: HaloProxy['info'];
-}
-
+// TODO(burdon): Move to config.
 export interface ClientOptions {
-  /**
-   * Only used when remote=true.
-   */
-  rpcPort?: RpcPort;
-
-  /**
-   *
-   */
-  signer?: HaloSigner;
-
-  /**
-   *
-   */
+  rpcPort?: RpcPort; // TODO(burdon): Expose via apollo-link like abstraction.
   timeout?: number;
 }
+
+// TODO(burdon): Define package-specific errors.
 
 /**
  * Main API.
@@ -63,9 +43,8 @@ export class Client {
   public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
-  private readonly _options: ClientOptions;
-  private readonly _mode: Runtime.Client.Mode;
-
+  private readonly _options: ClientOptions; // TODO(burdon): Remove.
+  private readonly _mode: Runtime.Client.Mode; // TODO(burdon): Remove.
   private readonly _modelFactory = new ModelFactory().registerModel(ObjectModel);
 
   private _initialized = false;
@@ -73,17 +52,14 @@ export class Client {
   private _halo!: HaloProxy;
   private _echo!: EchoProxy;
 
-  // TODO(burdon): Expose some kind of stable ID (e.g., from HALO, MESH).
-
   /**
    * Creates the client object based on supplied configuration.
    * Requires initialization after creating by calling `.initialize()`.
    */
-  // TODO(burdon): What are the defaults if `{}` is passed?
   // prettier-ignore
   constructor(
     config: ConfigProto | Config = defaultConfig,
-    options: ClientOptions = {}
+    options: ClientOptions = { timeout: 10_000 }
   ) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
@@ -102,11 +78,13 @@ export class Client {
     log(`mode=${Runtime.Client.Mode[this._mode]}`);
   }
 
+  // TODO(burdon): Use inspect.
   toString() {
     return `Client(${JSON.stringify(this.info)})`;
   }
 
-  get info(): ClientInfo {
+  // TODO(burdon): toJSON.
+  get info() {
     return {
       initialized: this.initialized,
       echo: this.echo.info,
@@ -122,12 +100,17 @@ export class Client {
    * Has the Client been initialized?
    * Initialize by calling `.initialize()`
    */
+  // TODO(burdon): Rename isOpen.
   get initialized() {
     return this._initialized;
   }
 
-  get modelFactory() {
-    return this._modelFactory;
+  /**
+   * HALO credentials.
+   */
+  get halo(): HaloProxy {
+    assert(this._halo, 'Client not initialized.');
+    return this._halo;
   }
 
   /**
@@ -139,15 +122,13 @@ export class Client {
   }
 
   /**
-   * HALO credentials.
+   * Registers a new ECHO model.
+   * @deprecated
    */
-  get halo(): HaloProxy {
-    assert(this._halo, 'Client not initialized.');
-    return this._halo;
-  }
-
-  private get timeout() {
-    return this._options.timeout ?? 10_000;
+  // TODO(burdon): Remove (moved to echo).
+  registerModel(constructor: ModelConstructor<any>): this {
+    this._modelFactory.registerModel(constructor);
+    return this;
   }
 
   /**
@@ -163,8 +144,8 @@ export class Client {
 
     const timeout = setTimeout(() => {
       // TODO(burdon): Tie to global error handling (or event).
-      throw new TimeoutError(`Initialize timed out after ${this.timeout}ms.`);
-    }, this.timeout);
+      throw new TimeoutError(`Initialize timed out after ${this._options.timeout}ms.`);
+    }, this._options.timeout);
 
     await this._initialize(onProgressCallback);
 
@@ -199,20 +180,6 @@ export class Client {
     this._initialized = false;
   }
 
-  private initializeIFramePort() {
-    const source = new URL(
-      this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
-      window.location.origin
-    );
-    const iframe = createIFrame(source.toString(), IFRAME_ID);
-    // TODO(wittjosiah): Use well-known channel constant.
-    return createIFramePort({
-      origin: source.origin,
-      iframe,
-      channel: 'dxos:app'
-    });
-  }
-
   /**
    * Resets and destroys client storage.
    * Warning: Inconsistent state after reset, do not continue to use this client instance.
@@ -226,20 +193,22 @@ export class Client {
     this._initialized = false;
   }
 
-  /**
-   * Registers a new ECHO model.
-   * @deprecated
-   */
-  // TODO(burdon): Remove (moved to echo).
-  registerModel(constructor: ModelConstructor<any>): this {
-    this._modelFactory.registerModel(constructor);
-    return this;
-  }
-
   //
   // Client initialization.
   // TODO(burdon): These should be separate bundles.
+  // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
   //
+
+  private _initializeIFramePort() {
+    const source = new URL(
+      this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
+      window.location.origin
+    );
+
+    // TODO(wittjosiah): Use well-known channel constant.
+    const iframe = createIFrame(source.toString(), IFRAME_ID);
+    return createIFramePort({ origin: source.origin, iframe, channel: 'dxos:app' });
+  }
 
   private async _initialize(onProgressCallback: Parameters<this['initialize']>[0]) {
     switch (this._mode) {
@@ -272,13 +241,12 @@ export class Client {
           await this._clientServices.close();
           await this._initializeLocal(onProgressCallback);
         } else {
-          throw err;
+          throw err; // TODO(burdon): Uncaught.
         }
       }
     }
   }
 
-  // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
   private async _initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
     this._clientServices = new ClientServicesHost({
@@ -297,8 +265,8 @@ export class Client {
 
     log('Creating client proxy.');
     this._clientServices = new ClientServicesProxy(
-      this._options.rpcPort ?? this.initializeIFramePort(),
-      this.timeout / 2
+      this._options.rpcPort ?? this._initializeIFramePort(),
+      this._options.timeout ?? 10_000 / 2
     );
 
     await this._clientServices.open();

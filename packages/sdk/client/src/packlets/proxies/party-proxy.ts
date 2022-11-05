@@ -10,17 +10,72 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Party } from './echo';
-import { PARTY_ITEM_TYPE } from './stubs';
+import { ActivationOptions, PARTY_ITEM_TYPE, PartyMember } from './stubs';
 
-export type ActivationOptions = any;
+/**
+ * Party API.
+ */
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Party {
+  get key(): PublicKey;
+  get isOpen(): boolean;
+  get isActive(): boolean;
+
+  // TODO(burdon): Verbs should be on same interface.
+  get database(): Database;
+  get select(): Database['select'];
+  get reduce(): Database['reduce'];
+
+  // TODO(burdon): Rename open/close.
+  initialize(): Promise<void>;
+  destroy(): Promise<void>;
+
+  open(): Promise<void>;
+  close(): Promise<void>;
+
+  /**
+   * @deprecated
+   */
+  setActive(active: boolean, options: ActivationOptions): Promise<void>;
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Change to `space.properties.title`.
+  setTitle(title: string): Promise<void>;
+  /**
+   * @deprecated
+   */
+  getTitle(): string;
+  /**
+   * @deprecated
+   */
+  getDetails(): Promise<PartyDetails>;
+  /**
+   * @deprecated
+   */
+  get properties(): ObjectProperties;
+  /**
+   * @deprecated
+   */
+  setProperty(key: string, value?: any): Promise<void>;
+  /**
+   * @deprecated
+   */
+  getProperty(key: string, defaultValue?: any): any;
+
+  queryMembers(): ResultSet<PartyMember>;
+  createInvitation(): CancellableObservable<InvitationEvents>;
+
+  createSnapshot(): Promise<PartySnapshot>;
+}
 
 /**
  * Main public Party API.

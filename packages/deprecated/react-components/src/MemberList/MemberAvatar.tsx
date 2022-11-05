@@ -9,7 +9,6 @@ import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
 import { PartyMember } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
-import { humanize } from '@dxos/util';
 
 const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
 const depth = 500;
@@ -68,8 +67,11 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
     );
   }
 
-  const color = getColor(member.publicKey);
-  const name = member.displayName || humanize(member.publicKey.toString());
+  // TODO(burdon): Fix definitions.
+  // const color = getColor(member.publicKey);
+  // const name = member.displayName || humanize(member.publicKey.toString());
+  const color = getColor(member.partyKey);
+  const name = 'Test User';
 
   return (
     <Tooltip title={name} placement='top'>

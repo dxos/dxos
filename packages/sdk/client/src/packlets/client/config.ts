@@ -5,6 +5,8 @@
 import { ConfigProto } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
+export const IFRAME_ID = '__DXOS_CLIENT__';
+
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
