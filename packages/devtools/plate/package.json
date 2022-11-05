@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plate",
   "version": "0.1.2",
-  "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
