@@ -15,7 +15,7 @@ import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataService } from '../database';
+import { Database, TrackingSet } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
@@ -41,7 +41,7 @@ export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
   keyring: Keyring;
-  dataService: DataService;
+  trackingSet: TrackingSet;
   modelFactory: ModelFactory;
   signingContext: SigningContext;
 };
@@ -57,7 +57,7 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
   private readonly _keyring: Keyring;
-  private readonly _dataService: DataService;
+  private readonly _trackingSet: TrackingSet;
   private readonly _modelFactory: ModelFactory;
   private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
 
@@ -66,7 +66,7 @@ export class SpaceManager {
     feedStore,
     networkManager,
     keyring,
-    dataService,
+    trackingSet,
     modelFactory,
     signingContext
   }: SpaceManagerParams) {
@@ -75,7 +75,7 @@ export class SpaceManager {
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._keyring = keyring;
-    this._dataService = dataService;
+    this._trackingSet = trackingSet;
     this._modelFactory = modelFactory;
     this._signingContext = signingContext;
   }
@@ -86,7 +86,7 @@ export class SpaceManager {
     for (const spaceMetadata of this._metadataStore.parties) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
-      this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
+      this._trackingSet.trackSpace(space.key, space.database!.createDataServiceHost());
       this.spaces.set(spaceMetadata.key, space);
     }
   }
@@ -159,7 +159,7 @@ export class SpaceManager {
   }
 
   private _insertSpace(space: Space) {
-    this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
+    this._trackingSet.trackSpace(space.key, space.database!.createDataServiceHost());
     this.spaces.set(space.key, space);
     this.update.emit();
   }

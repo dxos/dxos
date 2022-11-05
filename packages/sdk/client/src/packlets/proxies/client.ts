@@ -296,7 +296,6 @@ export class Client {
     this._clientServices = new ClientServicesHost({
       config: this._config,
       modelFactory: this._modelFactory,
-      signer: this._options.signer,
       networkManager: createNetworkManager(this._config)
     });
 

@@ -15,7 +15,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { ComplexMap } from '@dxos/util';
 
 import { TestFeedBuilder } from '../common';
-import { Database, DataService } from '../database';
+import { Database, TrackingSet } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
@@ -125,7 +125,7 @@ export class TestAgent {
       feedStore: this._feedBuilder.createFeedStore(),
       metadataStore: new MetadataStore(this._feedBuilder.storage.createDirectory('metadata')),
       networkManager: this._networkManagerProvider(),
-      dataService: new DataService(),
+      trackingSet: new TrackingSet(),
       modelFactory: new ModelFactory().registerModel(ObjectModel),
       signingContext: {
         // TODO(burdon): Util to convert to Identity in SpaceProtocol

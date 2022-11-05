@@ -15,7 +15,9 @@ import { afterTest } from '@dxos/testutils';
 
 import { ClientServicesHost, ServiceContext } from '../services';
 
-// TODO(burdon): Create test builder.
+//
+// TODO(burdon): Replace test builder.
+//
 
 export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
   const networkManager = new NetworkManager({

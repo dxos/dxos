@@ -3,19 +3,14 @@
 //
 
 import { Config } from '@dxos/config';
+import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import {
-  HaloServiceImpl,
-  PartyServiceImpl,
-  ProfileServiceImpl,
-  SystemServiceImpl,
-  TracingServiceImpl
-} from '../deprecated';
+import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { SpaceInvitationsServiceImpl } from '../invitations';
 import { SpacesServiceImpl } from '../spaces';
@@ -23,11 +18,9 @@ import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 import { createServiceProvider, ServiceRegistry } from './service-registry';
-import { HaloSigner } from './signer';
 
 type ClientServicesHostParams = {
   config: Config;
-  signer?: HaloSigner;
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
 };
@@ -45,7 +38,6 @@ export class ClientServicesHost implements ClientServicesProvider {
   constructor({
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
-    signer,
     networkManager
   }: ClientServicesHostParams) {
     // TODO(dmaretskyi): Remove keyStorage.
@@ -56,8 +48,6 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Move to open method?
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      HaloService: new HaloServiceImpl(null, signer),
-
       SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: createServiceProvider<InvitationsService>(() => {
         return new SpaceInvitationsServiceImpl(
@@ -67,7 +57,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       }),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
-      DataService: this._serviceContext.dataService,
+      DataService: new DataServiceImpl(this._serviceContext.trackingSet),
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),

@@ -8,10 +8,10 @@ import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
   valueEncoding,
-  DataService,
   MetadataStore,
   SpaceManager,
-  SigningContext
+  SigningContext,
+  TrackingSet
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -30,10 +30,7 @@ import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
-
-  // TODO(burdon): Factor out with other services.
-  public readonly dataService = new DataService();
-
+  public readonly trackingSet = new TrackingSet();
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
@@ -92,12 +89,13 @@ export class ServiceContext {
     await this.spaceManager?.close();
     await this.feedStore.close();
     await this.networkManager.destroy(); // TODO(burdon): Close.
+    this.trackingSet.clear();
     log('closed');
   }
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
+    this.trackingSet.trackSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -118,7 +116,7 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       keyring: this.keyring,
-      dataService: this.dataService,
+      trackingSet: this.trackingSet,
       modelFactory: this.modelFactory,
       signingContext
     });
