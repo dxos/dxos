@@ -1,12 +1,5 @@
 version: 1
 
-package:
-  modules:
-    - name: example:app/composer
-      type: dxos:type/app
-      build:
-        command: pnpm -w nx bundle composer
-
 runtime:
   client:
     mode: local
