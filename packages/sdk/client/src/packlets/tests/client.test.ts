@@ -21,7 +21,7 @@ import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
-import { Client } from './client';
+import { Client } from '../client';
 
 describe('Client', function () {
   //
