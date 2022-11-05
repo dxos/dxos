@@ -167,7 +167,7 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  // TODO(burdon): Rename open.
+  // TODO(burdon): Rename open; remove callback (return observer).
   async initialize(onProgressCallback?: (progress: OpenProgress) => void) {
     if (this._initialized) {
       return;
@@ -178,13 +178,7 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${this.timeout}ms.`);
     }, this.timeout);
 
-    if (this._mode === Runtime.Client.Mode.REMOTE) {
-      await this.initializeRemote(onProgressCallback);
-    } else if (this._mode === Runtime.Client.Mode.LOCAL) {
-      await this.initializeLocal(onProgressCallback);
-    } else {
-      await this.initializeAuto(onProgressCallback);
-    }
+    await this._initialize(onProgressCallback);
 
     if (typeof window !== 'undefined') {
       await createDevtoolsRpcServer(this, this._clientServices);
@@ -259,18 +253,36 @@ export class Client {
   // TODO(burdon): These should be separate bundles.
   //
 
-  private async initializeAuto(onProgressCallback: Parameters<this['initialize']>[0]) {
+  private async _initialize(onProgressCallback: Parameters<this['initialize']>[0]) {
+    switch (this._mode) {
+      case Runtime.Client.Mode.REMOTE: {
+        await this._initializeRemote(onProgressCallback);
+        break;
+      }
+
+      case Runtime.Client.Mode.LOCAL: {
+        await this._initializeLocal(onProgressCallback);
+        break;
+      }
+
+      default: {
+        await this._initializeAuto(onProgressCallback);
+      }
+    }
+  }
+
+  private async _initializeAuto(onProgressCallback: Parameters<this['initialize']>[0]) {
     if (!this._options.rpcPort && isNode()) {
-      await this.initializeLocal(onProgressCallback);
+      await this._initializeLocal(onProgressCallback);
     } else {
       try {
-        await this.initializeRemote(onProgressCallback);
+        await this._initializeRemote(onProgressCallback);
       } catch (err) {
         if (err instanceof RemoteServiceConnectionTimeout) {
           log('Failed to connect to remote services. Starting local services.');
           document.getElementById(IFRAME_ID)?.remove();
           await this._clientServices.close();
-          await this.initializeLocal(onProgressCallback);
+          await this._initializeLocal(onProgressCallback);
         } else {
           throw err;
         }
@@ -279,7 +291,7 @@ export class Client {
   }
 
   // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
-  private async initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
+  private async _initializeLocal(onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
     this._clientServices = new ClientServicesHost({
       config: this._config,
@@ -291,7 +303,7 @@ export class Client {
     await this._clientServices.open();
   }
 
-  private async initializeRemote(onProgressCallback: Parameters<this['initialize']>[0]) {
+  private async _initializeRemote(onProgressCallback: Parameters<this['initialize']>[0]) {
     if (!this._options.rpcPort && isNode()) {
       throw new Error('RPC port is required to run client in remote mode on Node environment.');
     }

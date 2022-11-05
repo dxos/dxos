@@ -14,23 +14,26 @@ export const CredentialMessagesPanel = () => {
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const parties = useParties();
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
 
-  const { messages } = useStream(
-    () => devtoolsHost.subscribeToCredentialMessages({ partyKey: selectedPartyKey }), {}, [selectedPartyKey]);
+  const { messages } = useStream(() => devtoolsHost.subscribeToCredentialMessages({ partyKey: selectedPartyKey }), {}, [
+    selectedPartyKey
+  ]);
 
   return (
-    <Panel controls={(
-      <KeySelect
-        label='Party'
-        keys={parties.map(({ key }) => key)}
-        selected={selectedPartyKey}
-        onChange={key => setSelectedPartyKey(key)}
-      />
-    )}>
-      <JsonTreeView
-        size='small'
-        data={messages}
-      />
+    <Panel
+      controls={
+        <KeySelect
+          label='Party'
+          keys={parties.map(({ key }) => key)}
+          selected={selectedPartyKey}
+          onChange={(key) => setSelectedPartyKey(key)}
+        />
+      }
+    >
+      <JsonTreeView size='small' data={messages} />
     </Panel>
   );
 };

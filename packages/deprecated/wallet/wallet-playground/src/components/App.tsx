@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Button } from '@mui/material';
 
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useProfile, useClientServices } from '@dxos/react-client';
 import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
 const App = () => {
@@ -18,14 +18,23 @@ const App = () => {
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
   const [haloSharingDialog, setHaloSharingDialog] = useState(false);
   const [remoteConfig, setRemoteConfig] = useState<string>('');
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
   useEffect(() => {
-    client.services.SystemService.getConfig().then(remote => setRemoteConfig(JSON.stringify(remote))).catch(setError);
+    services.SystemService.getConfig()
+      .then((remote) => setRemoteConfig(JSON.stringify(remote)))
+      .catch(setError);
   }, []);
 
   useEffect(() => {
-    const partyStream = client.services.PartyService.subscribeParties();
-    partyStream.subscribe(response => setParties(response.parties ?? []), error => setError(error));
+    const partyStream = services.PartyService.subscribeParties();
+    partyStream.subscribe(
+      (response) => setParties(response.parties ?? []),
+      (error) => setError(error)
+    );
     return () => partyStream.close();
   }, []);
 
@@ -57,7 +66,7 @@ const App = () => {
   const handleCreateParty = async () => {
     setInProgress(true);
     try {
-      await client.services.PartyService.createParty();
+      await services.PartyService.createParty();
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -68,10 +77,10 @@ const App = () => {
 
   if (error) {
     return (
-    <>
-      <p>Something went wrong.</p>
-      <details>{String(error)}</details>
-    </>
+      <>
+        <p>Something went wrong.</p>
+        <details>{String(error)}</details>
+      </>
     );
   }
 
@@ -88,11 +97,7 @@ const App = () => {
           onRestore={null as any}
           onJoinHalo={() => setJoinHaloDialog(true)}
         />
-        <JoinHaloDialog
-          open={joinHaloDialog}
-          closeOnSuccess
-          onClose={() => setJoinHaloDialog(false)}
-        />
+        <JoinHaloDialog open={joinHaloDialog} closeOnSuccess onClose={() => setJoinHaloDialog(false)} />
       </>
     );
   }
@@ -101,14 +106,17 @@ const App = () => {
     <div style={{ minWidth: 400 }}>
       <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
       <p>{profile.publicKey.toString()}</p>
-      <Button disabled={inProgress} onClick={handleReset} variant='outlined'>Reset</Button>
-      <Button disabled={inProgress} onClick={() => setHaloSharingDialog(true)} variant='outlined'>Share HALO</Button>
-      <HaloSharingDialog
-        open={haloSharingDialog}
-        onClose={() => setHaloSharingDialog(false)}
-      />
+      <Button disabled={inProgress} onClick={handleReset} variant='outlined'>
+        Reset
+      </Button>
+      <Button disabled={inProgress} onClick={() => setHaloSharingDialog(true)} variant='outlined'>
+        Share HALO
+      </Button>
+      <HaloSharingDialog open={haloSharingDialog} onClose={() => setHaloSharingDialog(false)} />
 
-      <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>Create party</Button>
+      <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>
+        Create party
+      </Button>
       <p>You have {parties.length} parties.</p>
 
       <details>

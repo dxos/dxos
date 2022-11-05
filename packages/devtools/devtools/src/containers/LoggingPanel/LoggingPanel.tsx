@@ -10,6 +10,10 @@ import { useDevtools } from '@dxos/react-client';
 
 export const LoggingPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const [enabled, setEnabled] = useState(false);
   const [namespaces, setNamespaces] = useState('');
 
@@ -62,8 +66,8 @@ export const LoggingPanel = () => {
       <TextField
         variant='outlined'
         value={namespaces}
-        onChange={event => setNamespaces(event.target.value)}
-        onKeyDown={event => {
+        onChange={(event) => setNamespaces(event.target.value)}
+        onKeyDown={(event) => {
           if (event.key === 'Escape') {
             setNamespaces('');
           }
@@ -78,10 +82,7 @@ export const LoggingPanel = () => {
         }}
       />
 
-      <FormControlLabel
-        control={<Switch value={enabled} onChange={handleEnabled} />}
-        label='Enabled'
-      />
+      <FormControlLabel control={<Switch value={enabled} onChange={handleEnabled} />} label='Enabled' />
     </Box>
   );
 };

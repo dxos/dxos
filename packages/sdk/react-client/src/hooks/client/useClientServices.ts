@@ -4,12 +4,12 @@
 
 import { useContext } from 'react';
 
+import { ClientServices } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { ClientContext } from '../client';
 
-export const useDevtools = (): DevtoolsHost | undefined => {
+export const useClientServices = (): ClientServices | undefined => {
   const { services } = useContext(ClientContext) ?? raise(new Error('Missing ClientContext.'));
-  return services?.DevtoolsHost;
+  return services;
 };
