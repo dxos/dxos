@@ -77,7 +77,6 @@ export class ClientServicesHost implements ClientServicesProvider {
   async open() {
     log('opening...');
     await this._serviceContext.open();
-    // this._devtoolsEvents.ready.emit();
     log('opened');
   }
 
