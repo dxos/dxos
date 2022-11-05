@@ -9,8 +9,14 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { HaloService, PartyServiceImpl, ProfileService, SystemService, TracingService } from '../deprecated';
-import { DevtoolsService, DevtoolsHostEvents } from '../devtools';
+import {
+  HaloServiceImpl,
+  PartyServiceImpl,
+  ProfileServiceImpl,
+  SystemServiceImpl,
+  TracingServiceImpl
+} from '../deprecated';
+import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { SpaceInvitationsServiceImpl } from '../invitations';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
@@ -50,19 +56,22 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Move to open method?
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
+      HaloService: new HaloServiceImpl(null, signer),
+
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider<InvitationsService>(
-        () =>
-          new SpaceInvitationsServiceImpl(this._serviceContext.spaceManager!, this._serviceContext.spaceInvitations!)
-      ),
+      SpaceInvitationsService: createServiceProvider<InvitationsService>(() => {
+        return new SpaceInvitationsServiceImpl(
+          this._serviceContext.spaceManager!,
+          this._serviceContext.spaceInvitations!
+        );
+      }),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: this._serviceContext.dataService,
-      HaloService: new HaloService(null, signer),
-      ProfileService: new ProfileService(this._serviceContext),
-      SystemService: new SystemService(config),
-      TracingService: new TracingService(config),
-      DevtoolsHost: new DevtoolsService({ events: new DevtoolsHostEvents(), config, context: this._serviceContext })
+      ProfileService: new ProfileServiceImpl(this._serviceContext),
+      SystemService: new SystemServiceImpl(config),
+      TracingService: new TracingServiceImpl(config),
+      DevtoolsHost: new DevtoolsServiceImpl({ events: new DevtoolsHostEvents(), config, context: this._serviceContext })
     });
   }
 

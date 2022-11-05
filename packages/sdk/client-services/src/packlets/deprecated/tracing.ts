@@ -3,12 +3,12 @@
 //
 
 import { Config } from '@dxos/config';
-import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools/host';
+import { TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 
 /**
  *
  */
-export class TracingService implements TracingServiceRpc {
+export class TracingServiceImpl implements TracingService {
   constructor(private readonly _config: Config) {}
 
   async setTracingOptions() {

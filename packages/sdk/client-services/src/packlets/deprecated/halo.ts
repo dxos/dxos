@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import {
   AddKeyRecordRequest,
   Contacts,
-  HaloService as HaloServiceRpc,
+  HaloService,
   SignRequest,
   SignResponse,
   SetPreferenceRequest,
@@ -23,7 +23,7 @@ import { HaloSigner } from '../services';
 /**
  * HALO service implementation.
  */
-export class HaloService implements HaloServiceRpc {
+export class HaloServiceImpl implements HaloService {
   constructor(
     private readonly echo: any, // TODO(burdon): Remove.
     private readonly signer?: HaloSigner

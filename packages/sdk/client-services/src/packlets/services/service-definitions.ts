@@ -14,16 +14,16 @@ import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 //
 
 export type ClientServices = {
-  SpacesService: SpacesService;
-  SpaceInvitationsService: InvitationsService;
-
+  HaloService: HaloService;
   PartyService: PartyService;
   DataService: DataService;
-  HaloService: HaloService;
   ProfileService: ProfileService;
   SystemService: SystemService;
   DevtoolsHost: DevtoolsHost;
   TracingService: TracingService;
+
+  SpacesService: SpacesService;
+  SpaceInvitationsService: InvitationsService;
 };
 
 /**
@@ -41,14 +41,14 @@ export interface ClientServicesProvider {
  * Services supported by host.
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
-  SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService'),
-
+  HaloService: schema.getService('dxos.client.HaloService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
-  HaloService: schema.getService('dxos.client.HaloService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   SystemService: schema.getService('dxos.client.SystemService'),
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-  TracingService: schema.getService('dxos.devtools.host.TracingService')
+  TracingService: schema.getService('dxos.devtools.host.TracingService'),
+
+  SpacesService: schema.getService('dxos.client.services.SpacesService'),
+  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
 });

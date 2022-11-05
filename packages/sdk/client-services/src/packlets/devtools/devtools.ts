@@ -7,7 +7,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import {
   ClearSnapshotsRequest,
-  DevtoolsHost,
+  DevtoolsHost, // TODO(burdon): Rename DevtoolsService
   EnableDebugLoggingRequest,
   EnableDebugLoggingResponse,
   Event,
@@ -53,7 +53,7 @@ export type DevtoolsServiceParams = {
   context: ServiceContext;
 };
 
-export class DevtoolsService implements DevtoolsHost {
+export class DevtoolsServiceImpl implements DevtoolsHost {
   constructor(private readonly params: DevtoolsServiceParams) {}
 
   events(request: void): Stream<Event> {

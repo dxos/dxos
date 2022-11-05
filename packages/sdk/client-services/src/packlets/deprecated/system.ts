@@ -4,9 +4,9 @@
 
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
-import { SystemService as SystemServiceRpc } from '@dxos/protocols/proto/dxos/client';
+import { SystemService } from '@dxos/protocols/proto/dxos/client';
 
-export class SystemService implements SystemServiceRpc {
+export class SystemServiceImpl implements SystemService {
   constructor(private readonly _config: Config) {}
 
   async getConfig(request: void) {

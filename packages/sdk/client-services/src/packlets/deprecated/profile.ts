@@ -15,7 +15,7 @@ import {
   InvitationRequest,
   InvitationState,
   Profile,
-  ProfileService as ProfileServiceRpc,
+  ProfileService,
   RecoverProfileRequest,
   RedeemedInvitation,
   SubscribeProfileResponse
@@ -28,7 +28,7 @@ import { ServiceContext } from '../services';
 /**
  * Profile service implementation.
  */
-export class ProfileService implements ProfileServiceRpc {
+export class ProfileServiceImpl implements ProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor(private readonly context: ServiceContext) {}
