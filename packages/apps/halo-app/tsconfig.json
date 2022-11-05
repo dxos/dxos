@@ -63,9 +63,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../experimental/composer"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -79,6 +76,9 @@
     },
     {
       "path": "../../experimental/react-client-testing"
+    },
+    {
+      "path": "../patterns/react-composer"
     }
   ]
 }
