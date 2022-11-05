@@ -22,7 +22,7 @@ export type ServiceWorkerToastProps = NeedRefreshToastProps | OfflineReadyToastP
 const isNeedRefreshToast = (props: any): props is NeedRefreshToastProps => props.variant === 'needRefresh';
 
 export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation('appkit');
   const { variant } = props;
   return (
     <Toast

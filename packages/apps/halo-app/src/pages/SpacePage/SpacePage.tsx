@@ -7,19 +7,18 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import type { Item } from '@dxos/client';
+import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useParty, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
 import { Button, getSize, Heading, Loading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import type { TextModel } from '@dxos/text-model';
 import { humanize } from '@dxos/util';
 
-import { useSafeSpaceKey } from '../../hooks';
-
 export const SpacePage = () => {
   const { t } = useTranslation('halo');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex);
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
   const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
 

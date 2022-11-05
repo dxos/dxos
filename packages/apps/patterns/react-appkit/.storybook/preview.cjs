@@ -1,7 +1,6 @@
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
-import { UiKitProvider } from '../src';
-import { ClientProvider } from '../src/testing';
+import { UiKitProvider } from '@dxos/react-uikit';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
