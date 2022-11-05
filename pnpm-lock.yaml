@@ -344,6 +344,37 @@ importers:
       vite-plugin-pwa: 0.12.8_vite@3.0.9
       workbox-window: 6.5.4
 
+  packages/apps/patterns/react-appkit:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-uikit': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      phosphor-react: ^1.4.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      storybook-dark-mode: ^1.1.2
+      vite: 3.0.9
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-uikit': link:../../../sdk/react-uikit
+    devDependencies:
+      '@dxos/vite-plugin': link:../../../sdk/vite-plugin
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
+      phosphor-react: 1.4.1_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
   packages/apps/templates/bare-template:
     specifiers:
       '@dxos/client': workspace:*
