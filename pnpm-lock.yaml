@@ -272,6 +272,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
@@ -311,6 +312,7 @@ importers:
       '@dxos/log': link:../../common/log
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-composer': link:../patterns/react-composer
@@ -348,23 +350,34 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
+      classnames: ^2.3.2
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
       storybook-dark-mode: ^1.1.2
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
+      '@dxos/keys': link:../../../common/keys
       '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/util': link:../../../common/util
+      classnames: 2.3.2
     devDependencies:
+      '@dxos/react-client-testing': link:../../../experimental/react-client-testing
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -372,6 +385,7 @@ importers:
       phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
@@ -450,13 +464,14 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
+      '@dxos/react-composer': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -468,26 +483,36 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
+      classnames: ^2.3.2
+      phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
       require-from-string: ^2.0.2
+      storybook-dark-mode: ^1.1.2
       typescript: ^4.8.4
+      url-join: ^5.0.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
+      '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-components': link:../../../deprecated/react-components
-      '@dxos/react-toolkit': link:../../../deprecated/react-toolkit
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@dxos/react-composer': link:../../patterns/react-composer
+      '@dxos/react-ui': link:../../../common/react-ui
+      '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/text-model': link:../../../core/echo/text-model
+      '@dxos/util': link:../../../common/util
+      classnames: 2.3.2
+      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+      url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/react-client-testing': link:../../../experimental/react-client-testing
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@storybook/addon-actions': 6.5.12_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.12_adidkwhvysrv6kbkczxkpx7kju
@@ -501,6 +526,7 @@ importers:
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
       require-from-string: 2.0.2
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
@@ -3371,6 +3397,7 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -3392,6 +3419,7 @@ importers:
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util
+      '@react-hook/async': 3.1.1_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
       i18next: 21.10.0

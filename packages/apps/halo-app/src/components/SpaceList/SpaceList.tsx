@@ -30,6 +30,7 @@ export interface SpaceListProps {
   onAction?: (space: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
+// TODO(wittjosiah): Unify with @dxos/react-appkit SpaceList.
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
   const { t } = useTranslation('halo');
   return (

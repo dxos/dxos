@@ -3,7 +3,6 @@
 //
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/keys';
 
@@ -12,8 +11,7 @@ import { PublicKey } from '@dxos/keys';
  *
  * Redirect to the home page if the key is invalid.
  */
-export const useSafeSpaceKey = (hex?: string): PublicKey | undefined => {
-  const navigate = useNavigate();
+export const useSafeSpaceKey = (hex?: string, onFailure?: () => void): PublicKey | undefined => {
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
   useEffect(() => {
@@ -21,7 +19,7 @@ export const useSafeSpaceKey = (hex?: string): PublicKey | undefined => {
       try {
         setSpaceKey(PublicKey.fromHex(hex));
       } catch {
-        navigate('/');
+        onFailure?.();
       }
     } else {
       setSpaceKey(undefined);
