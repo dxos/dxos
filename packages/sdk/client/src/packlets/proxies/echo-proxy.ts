@@ -184,9 +184,6 @@ export class EchoProxy implements Echo {
    * To be used with `party.createInvitation` on the inviter side.
    */
   acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation {
-    this._serviceProvider.services.SpaceInvitationsService.acceptInvitation(invitationDescriptor.toProto());
-
-    // TODO(burdon): Implement.
-    throw new Error();
+    return this._serviceProvider.services.SpaceInvitationsService.acceptInvitation(invitationDescriptor.toProto());
   }
 }

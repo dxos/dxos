@@ -539,6 +539,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/rpc': workspace:*
@@ -557,6 +558,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/debug': link:../../common/debug
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/util': link:../../common/util

@@ -19,7 +19,6 @@ export type ActivationOptions = any;
 
 /**
  * Main public Party API.
- * Proxies requests to local/remove services.
  */
 export class PartyProxy implements Party {
   private readonly _database?: Database;
@@ -46,7 +45,7 @@ export class PartyProxy implements Party {
       return;
     }
 
-    // if (true) { // TODO: Always run database in remote mode for now.
+    // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
       new RemoteDatabaseBackend(this._clientServicesProvider.services.DataService, this._key),
@@ -196,9 +195,7 @@ export class PartyProxy implements Party {
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers() {
     return streamToResultSet(
-      this._clientServicesProvider.services.PartyService.subscribeMembers({
-        partyKey: this.key
-      }),
+      this._clientServicesProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
       (response) => response?.members ?? []
     );
   }
@@ -206,21 +203,18 @@ export class PartyProxy implements Party {
   /**
    * Creates an invitation to a given party.
    * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `invitee_key` can be provide to not require the secret exchange.
+   * If the invitee is known ahead of time, `invitee_key` can be provided to not require the secret exchange.
    * The invitation flow is protected by a generated pin code.
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
    *
-   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
-   *   but only the specified recipient can accept the invitation.
+   * @param inviteeKey Public key of the invitee.
+   *  In this case no secret exchange is required, but only the specified recipient can accept the invitation.
    */
   async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
     this._clientServicesProvider.services.SpaceInvitationsService.createInvitation({
       spaceKey: this.key
     });
-
-    // TODO(burdon): Implement.
-    throw new Error();
   }
 
   /**

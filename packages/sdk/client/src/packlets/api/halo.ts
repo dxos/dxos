@@ -22,20 +22,17 @@ export interface Halo {
   get profile(): Profile | undefined;
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
+  subscribeToProfile(callback: (profile: Profile) => void): void;
+
+  queryDevices(): Promise<DeviceInfo[]>;
+  queryContacts(): ResultSet<Contact>;
+
+  createInvitation(): Promise<InvitationRequest>;
+  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
 
   // sign(request: SignRequest): Promise<SignResponse>;
   // addKeyRecord(keyRecord: KeyRecord): Promise<void>;
 
-  /**
-   * @deprecated
-   */
-  subscribeToProfile(callback: (profile: Profile) => void): void;
-
-  queryContacts(): ResultSet<Contact>;
-  createInvitation(): Promise<InvitationRequest>;
-  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
-
-  queryDevices(): Promise<DeviceInfo[]>;
   // setDevicePreference(key: string, value: string): Promise<void>;
   // getDevicePreference(key: string): Promise<string | undefined>;
 
