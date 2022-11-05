@@ -50,9 +50,9 @@ export type SpaceManagerParams = {
  * Manages a collection of ECHO (Data) Spaces.
  */
 export class SpaceManager {
-  public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   public readonly update = new Event();
 
+  private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _metadataStore: MetadataStore;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
@@ -80,6 +80,11 @@ export class SpaceManager {
     this._signingContext = signingContext;
   }
 
+  // TODO(burdon): Remove.
+  get spaces() {
+    return this._spaces;
+  }
+
   async open() {
     await this._metadataStore.load();
 
@@ -87,12 +92,12 @@ export class SpaceManager {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
       this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
-      this.spaces.set(spaceMetadata.key, space);
+      this._spaces.set(spaceMetadata.key, space);
     }
   }
 
   async close() {
-    await Promise.all([...this.spaces.values()].map((space) => space.close()));
+    await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
   /**
@@ -160,7 +165,7 @@ export class SpaceManager {
 
   private _insertSpace(space: Space) {
     this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
-    this.spaces.set(space.key, space);
+    this._spaces.set(space.key, space);
     this.update.emit();
   }
 
