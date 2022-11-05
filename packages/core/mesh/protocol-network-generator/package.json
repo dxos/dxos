@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/network-generator": "workspace:*",
+    "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "pump": "^3.0.0"
   },

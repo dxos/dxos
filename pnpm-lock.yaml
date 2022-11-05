@@ -1463,6 +1463,7 @@ importers:
   packages/core/mesh/network-generator:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/log': workspace:*
       '@types/assert': ^1.5.4
       '@types/end-of-stream': ^1.4.0
       '@types/pump': ^1.1.0
@@ -1472,6 +1473,7 @@ importers:
       ngraph.graph: ^19.0.1
     dependencies:
       '@dxos/async': link:../../../common/async
+      '@dxos/log': link:../../../common/log
       assert: 2.0.0
       end-of-stream: 1.4.4
       ngraph.generators: 19.3.1
@@ -1546,12 +1548,14 @@ importers:
 
   packages/core/mesh/protocol-network-generator:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-generator': workspace:*
       '@types/pump': ^1.1.0
       assert: ^2.0.0
       pump: ^3.0.0
     dependencies:
+      '@dxos/log': link:../../../common/log
       '@dxos/network-generator': link:../network-generator
       assert: 2.0.0
       pump: 3.0.0
@@ -3340,6 +3344,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3371,6 +3376,7 @@ importers:
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
