@@ -6,7 +6,6 @@
 
 import expect from 'expect';
 import assert from 'node:assert';
-import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { ClientServicesHost, InvitationWrapper } from '@dxos/client-services';
@@ -24,7 +23,7 @@ import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
-import { Client } from './packlets/proxies';
+import { Client } from './client';
 
 describe('Client', function () {
   //
@@ -217,6 +216,7 @@ describe('Client', function () {
         expect(invitee.halo.profile).not.toBeUndefined();
       }).timeout(5000);
 
+      /*
       it.skip('DXNS Account is synced between devices', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
@@ -240,6 +240,7 @@ describe('Client', function () {
           100
         );
       }).timeout(10_000);
+      */
     });
 
     describe('data', function () {

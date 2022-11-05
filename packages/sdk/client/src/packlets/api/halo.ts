@@ -5,9 +5,8 @@
 import { InvitationWrapper } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+import { Profile } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
-import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Contact, CreateProfileOptions } from '../proxies';
 import { InvitationChallenge } from './invitation-challenge';
@@ -24,8 +23,8 @@ export interface Halo {
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
 
-  sign(request: SignRequest): Promise<SignResponse>;
-  addKeyRecord(keyRecord: KeyRecord): Promise<void>;
+  // sign(request: SignRequest): Promise<SignResponse>;
+  // addKeyRecord(keyRecord: KeyRecord): Promise<void>;
 
   /**
    * @deprecated
@@ -37,9 +36,9 @@ export interface Halo {
   acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
 
   queryDevices(): Promise<DeviceInfo[]>;
-  setDevicePreference(key: string, value: string): Promise<void>;
-  getDevicePreference(key: string): Promise<string | undefined>;
+  // setDevicePreference(key: string, value: string): Promise<void>;
+  // getDevicePreference(key: string): Promise<string | undefined>;
 
-  setGlobalPreference(key: string, value: string): Promise<void>;
-  getGlobalPreference(key: string): Promise<string | undefined>;
+  // setGlobalPreference(key: string, value: string): Promise<void>;
+  // getGlobalPreference(key: string): Promise<string | undefined>;
 }

@@ -25,10 +25,7 @@ import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
 import { createDevtoolsRpcServer } from './devtools';
-import { EchoProxy } from './echo-proxy';
-import { HaloProxy } from './halo-proxy';
-import { OpenProgress } from './stubs';
-import { DXOS_VERSION } from './version';
+import { DXOS_VERSION, EchoProxy, HaloProxy, OpenProgress } from './packlets/proxies';
 
 const log = debug('dxos:client-proxy');
 

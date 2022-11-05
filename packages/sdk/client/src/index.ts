@@ -37,6 +37,9 @@ export { ObjectModel, OrderedList } from '@dxos/object-model';
 // TODO(wittjosiah): Remove.
 export { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 
+export * from './client';
+export * from './devtools';
 export * from './packlets/api';
 export * from './packlets/proxies';
+export * from './serializer';
 // export * from './packlets/devtools';

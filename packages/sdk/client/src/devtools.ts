@@ -29,6 +29,7 @@ const port: RpcPort = {
       },
       '*'
     ),
+
   subscribe: (callback) => {
     const handler = (event: MessageEvent<any>) => {
       if (event.source !== window) {

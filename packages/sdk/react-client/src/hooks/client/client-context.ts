@@ -9,6 +9,8 @@ import { ClientServices } from '@dxos/client-services';
 
 type ClientContextProps = {
   client: Client;
+
+  // Optionally expose services (e.g., for devtools).
   services?: ClientServices;
 };
 

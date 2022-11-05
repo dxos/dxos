@@ -4,8 +4,8 @@
 
 import { schema } from '@dxos/protocols';
 
-import { Party } from '../api';
 import { Client } from './client';
+import { Party } from './packlets/api';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
