@@ -25,21 +25,17 @@ export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/
 
 export { PublicKey } from '@dxos/keys';
 
+export { ObjectModel, OrderedList } from '@dxos/object-model';
+
 export { ItemID } from '@dxos/protocols';
 
 // TODO(burdon): Remove exported protos?
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-
 export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
-
-export { ObjectModel, OrderedList } from '@dxos/object-model';
 
 // TODO(wittjosiah): Remove.
 export { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 
-export * from './client';
-export * from './devtools';
-export * from './packlets/api';
-export * from './packlets/proxies';
-export * from './serializer';
-// export * from './packlets/devtools';
+// TODO(burdon): Cherry-pick developer-facings APIs.
+export * from './packlets/client';
+export * from './packlets/devtools';

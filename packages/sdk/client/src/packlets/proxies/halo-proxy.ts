@@ -10,8 +10,8 @@ import { PublicKey } from '@dxos/keys';
 import { Profile } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 
-import { InvitationWrapper, Halo, InvitationChallenge, InvitationRequest } from '../api';
-import { InvitationProxy } from './invitation-proxy';
+import { Halo } from './halo';
+import { InvitationProxy, InvitationWrapper, InvitationChallenge, InvitationRequest } from './invitations';
 import { Contact, CreateProfileOptions, PartyMember } from './stubs';
 
 export interface HaloInfo {
@@ -31,7 +31,10 @@ export class HaloProxy implements Halo {
   private _profile?: Profile;
   private _contacts: PartyMember[] = [];
 
-  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
+  // prettier-ignore
+  constructor(
+    private readonly _serviceProvider: ClientServicesProvider
+  ) {}
 
   toString() {
     return `HaloProxy(${JSON.stringify(this.info)})`;

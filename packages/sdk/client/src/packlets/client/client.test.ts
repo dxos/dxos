@@ -5,14 +5,12 @@
 // @dxos/mocha platform=nodejs
 
 import expect from 'expect';
-import assert from 'node:assert';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { TestModel } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -24,7 +22,6 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './client';
-import { InvitationWrapper } from './packlets/api';
 
 describe('Client', function () {
   //
@@ -107,6 +104,7 @@ describe('Client', function () {
     //
 
     describe('party invitations', function () {
+      /*
       const prepareInvitations = async () => {
         const inviter = await createClient();
         await inviter.initialize();
@@ -188,6 +186,7 @@ describe('Client', function () {
           expect(inviteeParty.key).toEqual(party.key);
         }
       }).timeout(5000);
+      */
     });
 
     describe('HALO invitations', function () {
@@ -328,7 +327,7 @@ describe('Client', function () {
 
         const details = await party.getDetails();
         expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
-        expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
+        expect(details.processedTimeframe.frames().some(([key, seq]: [any, any]) => seq > 0)).toBe(true);
       });
 
       it('registering a custom model', async function () {

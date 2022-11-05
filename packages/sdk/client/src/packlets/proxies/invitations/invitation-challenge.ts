@@ -7,6 +7,7 @@ import { InvitationWrapper } from './invitation-wrapper';
 /**
  * Invitation that is being redeemed.
  * It works in non-interactive mode and requires no authentication.
+ * @deprecated
  */
 export class InvitationChallenge<T = void> {
   constructor(

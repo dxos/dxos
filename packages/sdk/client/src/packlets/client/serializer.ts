@@ -4,16 +4,20 @@
 
 import { schema } from '@dxos/protocols';
 
+import { Party } from '../proxies';
 import { Client } from './client';
-import { Party } from './packlets/api';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
 /**
  * Import/export party.
+ * @deprecated
  */
 export class PartySerializer {
-  constructor(private readonly _client: Client) {}
+  // prettier-ignore
+  constructor(
+    private readonly _client: Client
+  ) {}
 
   async serializeParty(party: Party) {
     const snapshot = await party.createSnapshot();

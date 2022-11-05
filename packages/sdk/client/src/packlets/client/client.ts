@@ -24,30 +24,20 @@ import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
-import { createDevtoolsRpcServer } from './devtools';
-import { DXOS_VERSION, EchoProxy, HaloProxy, OpenProgress } from './packlets/proxies';
+import { DXOS_VERSION } from '../../version';
+import { createDevtoolsRpcServer } from '../devtools';
+import { EchoProxy, HaloProxy, OpenProgress } from '../proxies';
+import { DEFAULT_CLIENT_ORIGIN, EXPECTED_CONFIG_VERSION, defaultConfig } from './config';
 
 const log = debug('dxos:client-proxy');
 
-export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
 const IFRAME_ID = '__DXOS_CLIENT__';
-const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultConfig: ConfigProto = { version: 1 };
-
-export const defaultTestingConfig: ConfigProto = {
-  version: 1,
-  runtime: {
-    client: {
-      mode: Runtime.Client.Mode.LOCAL
-    },
-    services: {
-      signal: {
-        server: 'ws://localhost:4000/.well-known/dx/signal'
-      }
-    }
-  }
-};
+export interface ClientInfo {
+  initialized: boolean;
+  echo: EchoProxy['info'];
+  halo: HaloProxy['info'];
+}
 
 export interface ClientOptions {
   /**
@@ -64,12 +54,6 @@ export interface ClientOptions {
    *
    */
   timeout?: number;
-}
-
-export interface ClientInfo {
-  initialized: boolean;
-  echo: EchoProxy['info'];
-  halo: HaloProxy['info'];
 }
 
 /**
@@ -96,7 +80,11 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   // TODO(burdon): What are the defaults if `{}` is passed?
-  constructor(config: ConfigProto | Config = defaultConfig, options: ClientOptions = {}) {
+  // prettier-ignore
+  constructor(
+    config: ConfigProto | Config = defaultConfig,
+    options: ClientOptions = {}
+  ) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }

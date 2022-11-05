@@ -2,7 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
+import { CancellableObservable } from '@dxos/async';
+import {
+  ClientServicesProvider,
+  ClientServicesProxy,
+  InvitationEvents,
+  SpaceInvitationsProxy
+} from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -11,8 +17,7 @@ import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
-import { InvitationProxy } from './invitation-proxy';
+import { Party } from './echo';
 import { PARTY_ITEM_TYPE } from './stubs';
 
 export type ActivationOptions = any;
@@ -22,7 +27,7 @@ export type ActivationOptions = any;
  */
 export class PartyProxy implements Party {
   private readonly _database?: Database;
-  private readonly _invitationProxy = new InvitationProxy();
+  private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
   private _key: PublicKey;
   private _isOpen: boolean;
@@ -33,7 +38,7 @@ export class PartyProxy implements Party {
    * @internal
    */
   constructor(
-    private _clientServicesProvider: ClientServicesProvider,
+    private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
     party: PartyProto,
     memberKey: PublicKey
@@ -48,7 +53,7 @@ export class PartyProxy implements Party {
     // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._clientServicesProvider.services.DataService, this._key),
+      new RemoteDatabaseBackend(this._clientServices.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
@@ -116,7 +121,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy close.
    */
   async destroy() {
-    if (this._database && this._clientServicesProvider instanceof ClientServicesProxy) {
+    if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
   }
@@ -130,13 +135,13 @@ export class PartyProxy implements Party {
   }
 
   async getDetails(): Promise<PartyDetails> {
-    return this._clientServicesProvider.services.PartyService.getPartyDetails({
+    return this._clientServices.services.PartyService.getPartyDetails({
       partyKey: this._key
     });
   }
 
   async _setOpen(open: boolean) {
-    await this._clientServicesProvider.services.PartyService.setPartyState({
+    await this._clientServices.services.PartyService.setPartyState({
       partyKey: this.key,
       open
     });
@@ -195,26 +200,16 @@ export class PartyProxy implements Party {
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers() {
     return streamToResultSet(
-      this._clientServicesProvider.services.PartyService.subscribeMembers({ partyKey: this.key }),
+      this._clientServices.services.PartyService.subscribeMembers({ partyKey: this.key }),
       (response) => response?.members ?? []
     );
   }
 
   /**
-   * Creates an invitation to a given party.
-   * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `invitee_key` can be provided to not require the secret exchange.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param inviteeKey Public key of the invitee.
-   *  In this case no secret exchange is required, but only the specified recipient can accept the invitation.
+   * Creates an interactive invitation.
    */
-  async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    this._clientServicesProvider.services.SpaceInvitationsService.createInvitation({
-      spaceKey: this.key
-    });
+  createInvitation(): CancellableObservable<InvitationEvents> {
+    return this._invitationProxy.createInvitation(this.key);
   }
 
   /**

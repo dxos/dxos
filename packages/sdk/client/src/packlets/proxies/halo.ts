@@ -8,9 +8,7 @@ import { Profile } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 
 import { Contact, CreateProfileOptions } from '../proxies';
-import { InvitationChallenge } from './invitation-challenge';
-import { InvitationRequest } from './invitation-request';
-import { InvitationWrapper } from './invitation-wrapper';
+import { InvitationChallenge, InvitationRequest, InvitationWrapper } from './invitations';
 
 /**
  * HALO API.
@@ -28,7 +26,7 @@ export interface Halo {
   queryContacts(): ResultSet<Contact>;
 
   createInvitation(): Promise<InvitationRequest>;
-  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge;
+  acceptInvitation(invitation: InvitationWrapper): InvitationChallenge;
 
   // sign(request: SignRequest): Promise<SignResponse>;
   // addKeyRecord(keyRecord: KeyRecord): Promise<void>;

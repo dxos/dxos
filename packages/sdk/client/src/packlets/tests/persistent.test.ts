@@ -9,7 +9,7 @@ import 'source-map-support/register';
 
 import { createKeyPair } from '@dxos/crypto';
 
-import { Client } from './client';
+import { Client } from '../client';
 
 describe('Client - persistent', function () {
   it.skip('reset storage', async function () {

@@ -1,9 +1,8 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-export * from './echo';
-export * from './halo';
 export * from './invitation-challenge';
+export * from './invitation-proxy';
 export * from './invitation-request';
 export * from './invitation-wrapper';

@@ -10,6 +10,7 @@ import { InvitationWrapper } from './invitation-wrapper';
 
 /**
  * Invitation created by sender.
+ * @deprecated
  */
 export class InvitationRequest {
   private _hasConnected = false;

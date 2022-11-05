@@ -2,21 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
+import { CancellableObservable } from '@dxos/async';
+import { InvitationEvents } from '@dxos/client-services';
 import { Database, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
 import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ActivationOptions, PartyMember } from '../proxies';
-import { InvitationChallenge } from './invitation-challenge';
-import { InvitationRequest } from './invitation-request';
-import { InvitationWrapper } from './invitation-wrapper';
-
-export interface CreationInvitationOptions {
-  inviteeKey?: PublicKey;
-}
 
 /**
  * Party API.
@@ -32,19 +28,34 @@ export interface Party {
   get select(): Database['select'];
   get reduce(): Database['reduce'];
 
+  // TODO(burdon): Rename open/close.
   initialize(): Promise<void>;
   destroy(): Promise<void>;
 
   open(): Promise<void>;
   close(): Promise<void>;
+
+  /**
+   * @deprecated
+   */
   setActive(active: boolean, options: ActivationOptions): Promise<void>;
 
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Change to `space.properties.title`.
   setTitle(title: string): Promise<void>;
+  /**
+   * @deprecated
+   */
   getTitle(): string;
-
-  // TODO(burdon): Rename (info?)
+  /**
+   * @deprecated
+   */
   getDetails(): Promise<PartyDetails>;
-
+  /**
+   * @deprecated
+   */
   get properties(): ObjectProperties;
   /**
    * @deprecated
@@ -56,18 +67,9 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(options?: CreationInvitationOptions): Promise<InvitationRequest>;
+  createInvitation(): CancellableObservable<InvitationEvents>;
 
   createSnapshot(): Promise<PartySnapshot>;
-}
-
-export class PartyInvitation extends InvitationChallenge<Party> {
-  /**
-   * Wait for the invitation flow to complete and return the target party.
-   */
-  getParty(): Promise<Party> {
-    return this.wait();
-  }
 }
 
 /**
@@ -81,5 +83,5 @@ export interface Echo {
   cloneParty(snapshot: PartySnapshot): Promise<Party>;
   getParty(partyKey: PublicKey): Party | undefined;
   queryParties(): ResultSet<Party>;
-  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation;
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
 }

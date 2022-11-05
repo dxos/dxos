@@ -16,7 +16,12 @@ import {
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { RpcClosedError } from '@dxos/rpc';
 
-import { InvitationWrapper, InvitationRequest } from '../api';
+import { InvitationRequest } from './invitation-request';
+import { InvitationWrapper } from './invitation-wrapper';
+
+//
+// TODO(burdon): Deprecated.
+//
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>;
@@ -33,6 +38,9 @@ export interface HandleInvitationRedemptionResult {
   authenticate: (secret: Uint8Array) => void;
 }
 
+/**
+ * @deprecated
+ */
 export class InvitationProxy {
   readonly activeInvitations: InvitationRequest[] = [];
   readonly invitationsUpdate = new Event();

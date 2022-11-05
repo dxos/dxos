@@ -10,7 +10,7 @@ import 'source-map-support/register';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Client, defaultTestingConfig } from './client';
+import { Client, defaultTestingConfig } from '../client';
 
 describe('Client - non-persistent', function () {
   it('open & close', async function () {
@@ -52,6 +52,7 @@ describe('Client - non-persistent', function () {
     .timeout(10_000)
     .retries(10);
 
+  /*
   it('invitations', async function () {
     if (mochaExecutor.environment === 'webkit') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
@@ -141,4 +142,5 @@ describe('Client - non-persistent', function () {
   })
     .timeout(20_000)
     .retries(10);
+  */
 });

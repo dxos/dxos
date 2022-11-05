@@ -2,15 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, EventSubscriptions, latch } from '@dxos/async';
-import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
+import { CancellableObservable, Event, EventSubscriptions, latch } from '@dxos/async';
+import {
+  ClientServicesProvider,
+  ClientServicesProxy,
+  InvitationEvents,
+  SpaceInvitationsProxy
+} from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { InvitationWrapper, Echo, Party, PartyInvitation } from '../api';
+import { Echo, Party } from './echo';
 import { HaloProxy } from './halo-proxy';
 import { PartyProxy } from './party-proxy';
 
@@ -19,9 +25,9 @@ import { PartyProxy } from './party-proxy';
  */
 export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
-
-  private readonly _partiesChanged = new Event();
+  private readonly _invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
   private readonly _subscriptions = new EventSubscriptions();
+  private readonly _partiesChanged = new Event();
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
@@ -180,10 +186,9 @@ export class EchoProxy implements Echo {
   }
 
   /**
-   * Joins an existing Party by invitation.
-   * To be used with `party.createInvitation` on the inviter side.
+   * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitationDescriptor: InvitationWrapper): PartyInvitation {
-    return this._serviceProvider.services.SpaceInvitationsService.acceptInvitation(invitationDescriptor.toProto());
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
+    return this._invitationProxy.acceptInvitation(invitation);
   }
 }
