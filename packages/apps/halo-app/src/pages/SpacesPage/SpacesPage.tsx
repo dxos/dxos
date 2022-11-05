@@ -5,8 +5,8 @@
 import { Plus, Rocket } from 'phosphor-react';
 import React from 'react';
 
-import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
+import { DOCUMENT_TYPE } from '@dxos/react-composer';
 import { Button, getSize, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
