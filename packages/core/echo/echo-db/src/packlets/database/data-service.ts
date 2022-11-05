@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
@@ -22,20 +21,20 @@ import { ComplexMap } from '@dxos/util';
 import { SpaceNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
-const log = debug('dxos:echo-db:data-service-router');
-
-// TODO(burdon): Rename.
 // TODO(burdon): Clear on close.
-export class TrackingSet {
+export class DataServiceSubscriptions {
   private readonly _spaces = new ComplexMap<PublicKey, DataServiceHost>(PublicKey.hash);
 
   clear() {
     this._spaces.clear();
   }
 
-  trackSpace(spaceKey: PublicKey, host: DataServiceHost) {
-    log('tracking', { spaceKey });
+  registerSpace(spaceKey: PublicKey, host: DataServiceHost) {
     this._spaces.set(spaceKey, host);
+  }
+
+  unregisterSpace(spaceKey: PublicKey) {
+    this._spaces.delete(spaceKey);
   }
 
   getDataService(spaceKey: PublicKey) {
@@ -48,24 +47,27 @@ export class TrackingSet {
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
-  constructor(private readonly _spaces: TrackingSet) {}
+  constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
 
   subscribeEntitySet(request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
     assert(request.partyKey);
-    const host = this._spaces.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntitySet();
   }
 
   subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     assert(request.partyKey);
-    const host = this._spaces.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntityStream(request);
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
     assert(request.partyKey);
     assert(request.mutation);
-    const host = this._spaces.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    const host =
+      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.write(request.mutation);
   }
 }

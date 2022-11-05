@@ -57,7 +57,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       }),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
-      DataService: new DataServiceImpl(this._serviceContext.trackingSet),
+      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),

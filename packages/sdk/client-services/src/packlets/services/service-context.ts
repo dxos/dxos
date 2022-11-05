@@ -8,10 +8,10 @@ import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
   valueEncoding,
+  DataServiceSubscriptions,
   MetadataStore,
   SpaceManager,
-  SigningContext,
-  TrackingSet
+  SigningContext
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -30,7 +30,7 @@ import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
-  public readonly trackingSet = new TrackingSet();
+  public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
@@ -89,13 +89,13 @@ export class ServiceContext {
     await this.spaceManager?.close();
     await this.feedStore.close();
     await this.networkManager.destroy(); // TODO(burdon): Close.
-    this.trackingSet.clear();
+    this.dataServiceSubscriptions.clear();
     log('closed');
   }
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.trackingSet.trackSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
+    this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -116,7 +116,7 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       keyring: this.keyring,
-      trackingSet: this.trackingSet,
+      dataServiceSubscriptions: this.dataServiceSubscriptions,
       modelFactory: this.modelFactory,
       signingContext
     });
@@ -124,7 +124,6 @@ export class ServiceContext {
     await spaceManager.open();
     this.spaceManager = spaceManager;
     this.spaceInvitations = new SpaceInvitationsHandler(this.spaceManager, this.networkManager, signingContext);
-
     this.initialized.wake();
   }
 }

@@ -13,7 +13,7 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DataMirror } from './data-mirror';
-import { DataServiceImpl, TrackingSet } from './data-service';
+import { DataServiceImpl, DataServiceSubscriptions } from './data-service';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
@@ -42,13 +42,14 @@ describe('DataMirror', function () {
     );
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
-    const trackingSet = new TrackingSet();
-    const dataService = new DataServiceImpl(trackingSet);
-    const partyKey = PublicKey.random();
-    trackingSet.trackSpace(partyKey, dataServiceHost);
+    const dataServiceSubscriptions = new DataServiceSubscriptions();
+    const dataService = new DataServiceImpl(dataServiceSubscriptions);
+
+    const spaceKey = PublicKey.random();
+    dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
     const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
-    const dataMirror = new DataMirror(mirrorItemManager, dataService, partyKey);
+    const dataMirror = new DataMirror(mirrorItemManager, dataService, spaceKey);
 
     dataMirror.open();
 
