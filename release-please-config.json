@@ -27,6 +27,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/patterns/react-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
@@ -278,11 +283,6 @@
         {
           "type": "json",
           "path": "packages/experimental/client-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/composer/package.json",
           "jsonpath": "$.version"
         },
         {

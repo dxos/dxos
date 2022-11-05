@@ -3,4 +3,3 @@
 //
 
 export * from './Composer';
-export * from './ProviderFallback';
