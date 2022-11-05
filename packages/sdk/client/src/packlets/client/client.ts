@@ -186,7 +186,7 @@ export class Client {
    * Cleanup, release resources.
    */
   @synchronized
-  // TODO(burdon): Rename close.
+  // TODO(burdon): Rename close (make sure re-entrant).
   async destroy() {
     await this._echo._close();
     await this._halo._close();

@@ -10,29 +10,9 @@ import 'source-map-support/register';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Client, defaultTestingConfig } from '../client';
+import { Client, defaultTestingConfig } from '../../client';
 
-describe('Client - non-persistent', function () {
-  it('open & close', async function () {
-    const client = new Client(defaultTestingConfig);
-    await client.initialize();
-    await client.destroy();
-  }).retries(10);
-
-  it('create profile', async function () {
-    const client = new Client(defaultTestingConfig);
-    await client.initialize();
-    await client.halo.createProfile({
-      ...createKeyPair(),
-      username: 'test-user'
-    });
-
-    // const profile = client.halo.profile;
-    // expect(profile?.username).toEqual('DXOS test');
-
-    await client.destroy();
-  }).retries(10);
-
+describe.skip('Spaces', function () {
   it('create party', async function () {
     const client = new Client(defaultTestingConfig);
     await client.initialize();

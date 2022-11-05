@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Remove (create wrapper class).
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
@@ -19,22 +20,15 @@ export {
   SchemaField,
   SchemaRef
 } from '@dxos/echo-db';
+export { PublicKey } from '@dxos/keys';
+// TODO(burdon): Export form `@dxos/echo-db`.
+export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
+export { Profile } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Remove.
-export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
-
-export { PublicKey } from '@dxos/keys';
-
-export { ObjectModel, OrderedList } from '@dxos/object-model';
-
-export { ItemID } from '@dxos/protocols';
-
-// TODO(burdon): Remove exported protos?
-export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
-
-// TODO(wittjosiah): Remove.
-export { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
+// export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
+// export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+// export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';

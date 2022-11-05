@@ -15,6 +15,9 @@
   "include": [
     "src",
   ],
+  "exclude": [
+    "**/deprecated",
+  ],
   "references": [
     {
       "path": "../../../tools/deprecated/protocols-toolchain"
