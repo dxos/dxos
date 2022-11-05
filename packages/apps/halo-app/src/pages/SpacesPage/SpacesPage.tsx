@@ -4,18 +4,20 @@
 
 import { Plus, Rocket } from 'phosphor-react';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { DOCUMENT_TYPE } from '@dxos/composer';
 import { useClient, useParties } from '@dxos/react-client';
-import { Button, getSize, useTranslation } from '@dxos/react-uikit';
+import { DOCUMENT_TYPE } from '@dxos/react-composer';
+import { Button, getSize, JoinSpaceDialog, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
-import { JoinSpaceDialog } from '..';
-import { SpaceList, HeadingWithActions } from '../../components';
+import { HeadingWithActions, SpaceList } from '../../components';
+import { invitationCodeFromUrl } from '../../util';
 
 export const SpacesPage = () => {
   const client = useClient();
   const spaces = useParties();
+  const navigate = useNavigate();
   const { t } = useTranslation('halo');
 
   const handleCreateSpace = async () => {
@@ -36,12 +38,16 @@ export const SpacesPage = () => {
         actions={
           <>
             <JoinSpaceDialog
-              openTrigger={
-                <Button className='grow flex gap-1'>
-                  <Rocket className={getSize(5)} />
-                  {t('join space label', { ns: 'uikit' })}
-                </Button>
-              }
+              parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
+              onJoin={(space) => navigate(`/spaces/${space.key.toHex()}`)}
+              dialogProps={{
+                openTrigger: (
+                  <Button className='grow flex gap-1'>
+                    <Rocket className={getSize(5)} />
+                    {t('join space label', { ns: 'uikit' })}
+                  </Button>
+                )
+              }}
             />
             <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
               <Plus className={getSize(5)} />

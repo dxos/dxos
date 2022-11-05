@@ -19,6 +19,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@react-hook/async": "^3.1.1",
     "classnames": "^2.3.2",
     "debug": "^4.3.3",
     "i18next": "^21.10.0",

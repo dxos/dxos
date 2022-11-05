@@ -4,11 +4,11 @@
 
 import cx from 'classnames';
 import { UserPlus, UsersThree, UserCircleGear, Gear, Check } from 'phosphor-react';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Party, Profile as NaturalProfile } from '@dxos/client';
-import { useMembers } from '@dxos/react-client';
+import { useMembers, usePartyInvitations } from '@dxos/react-client';
 import {
   Avatar,
   AvatarProps,
@@ -18,8 +18,10 @@ import {
   defaultHover,
   defaultInlineSeparator,
   getSize,
+  Loading,
   Popover,
-  PopoverProps
+  PopoverProps,
+  QrCode
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
@@ -32,6 +34,7 @@ export interface PresenceProps
   space?: Party;
   closeLabel?: string;
   managingSpace?: boolean;
+  createInvitationUrl?: (invitationCode: string) => string;
   onClickManageSpace?: () => void;
   onClickGoToSpace?: () => void;
   onClickManageProfile?: () => void;
@@ -43,6 +46,7 @@ const ProfileMenu = (props: PresenceProps) => {
     onClickManageProfile,
     space: _space,
     closeLabel: _closeLabel,
+    createInvitationUrl: _createInvitationUrl,
     onClickManageSpace: _onClickManageSpace,
     managingSpace: _managingSpace,
     onClickGoToSpace: _onClickGoToSpace,
@@ -74,17 +78,49 @@ const ProfileMenu = (props: PresenceProps) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
-        <UserCircleGear className={getSize(5)} />
-        <span>{t('manage profile label')}</span>
-      </Button>
+      {onClickManageProfile && (
+        <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
+          <UserCircleGear className={getSize(5)} />
+          <span>{t('manage profile label')}</span>
+        </Button>
+      )}
       <UsernameInput profile={profile} />
     </Popover>
   );
 };
 
+const PartyInviteSingleton = ({
+  createInvitationUrl,
+  space
+}: Required<Pick<PresenceProps, 'createInvitationUrl' | 'space'>>) => {
+  const { t } = useTranslation();
+  const invitations = usePartyInvitations(space.key);
+
+  useEffect(() => {
+    if (invitations.length < 1) {
+      void space.createInvitation();
+    }
+  }, [space, invitations]);
+
+  // TODO(wittjosiah): This should re-generate once it is used.
+  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0].encode()), [invitations]);
+
+  return invitationUrl ? (
+    <QrCode
+      size={40}
+      value={invitationUrl}
+      label={<p className='w-20'>{t('copy party invite code label')}</p>}
+      side='left'
+      sideOffset={12}
+      className='w-full h-auto'
+    />
+  ) : (
+    <Loading label={t('generic loading label')} size='md' />
+  );
+};
+
 const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
-  const { space, onClickManageSpace, sideOffset, collisionPadding } = props;
+  const { space, createInvitationUrl, onClickManageSpace, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
   const members: NaturalProfile[] = useMembers(space);
 
@@ -102,10 +138,13 @@ const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
-        <Gear className={getSize(5)} />
-        <span>{t('manage party label')}</span>
-      </Button>
+      {createInvitationUrl && <PartyInviteSingleton createInvitationUrl={createInvitationUrl} space={space} />}
+      {onClickManageSpace && (
+        <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
+          <Gear className={getSize(5)} />
+          <span>{t('manage party label')}</span>
+        </Button>
+      )}
     </Popover>
   );
 };
