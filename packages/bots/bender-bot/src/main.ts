@@ -4,6 +4,7 @@
 
 import { Client } from '@dxos/client';
 import { failUndefined, raise } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { BotService } from '@dxos/protocols/proto/dxos/service/scheduler';
 
 import { BotRPCPeer } from './bot-rpc-peer';
@@ -22,20 +23,20 @@ const main = async () => {
   const rpc = new BotRPCPeer(wsEndpoint, botService);
   await rpc.connected.waitForCount(1);
 
-  console.log('Before get config');
+  log('Before get config');
 
   const botConfig = await rpc.rpc.getConfig();
-  console.log('Received bot config', JSON.stringify(botConfig));
+  log('Received bot config', JSON.stringify(botConfig));
   // assert(botConfig.spec.invitation['@type'] as keyof TYPES === 'dxos.echo.invitations.InvitationWrapper');
 
   const client = new Client(botConfig.clientConfig);
   await client.initialize();
-  console.log('Initialized');
+  log('Initialized');
 
   if (!client.halo.profile) {
     await client.halo.createProfile();
   }
-  console.log('Created profile');
+  log('Created profile');
 
   // if (!client.echo.getParty(PublicKey.from(botConfig.spec.partyKey))) {
   //   await client.echo.acceptInvitation(
@@ -46,7 +47,7 @@ const main = async () => {
   const profile = client.halo.profile ?? failUndefined();
   // const party = client.echo.getParty(PublicKey.from(botConfig.spec.partyKey));
 
-  console.log('Before send report');
+  log('Before send report');
   await rpc.rpc.sendReport({
     identityKey: profile.publicKey.asUint8Array()
   });

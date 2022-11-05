@@ -12,6 +12,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { log } from '@dxos/log';
 import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
 import { ClientProvider, useClient, useParties, useParty, useProfile, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
@@ -142,7 +143,7 @@ const invitationCodeFromUrl = (text: string) => {
     const invitation = searchParams.get('invitation');
     return invitation ?? text;
   } catch (err) {
-    console.log(err);
+    log.error(err);
     return text;
   }
 };

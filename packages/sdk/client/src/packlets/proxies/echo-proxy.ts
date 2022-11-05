@@ -3,14 +3,14 @@
 //
 
 import { Event, EventSubscriptions, latch } from '@dxos/async';
-import { ClientServicesProvider, ClientServicesProxy, InvitationWrapper } from '@dxos/client-services';
+import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
-import { Echo, Party, PartyInvitation } from '../api';
+import { InvitationWrapper, Echo, Party, PartyInvitation } from '../api';
 import { HaloProxy } from './halo-proxy';
 import { PartyProxy } from './party-proxy';
 

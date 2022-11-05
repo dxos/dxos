@@ -22,8 +22,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InviteeInvitation, InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../services';
+import { InviteeInvitation, InviteeInvitations } from './invitations';
 
 /**
  * Profile service implementation.

@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event, trigger } from '@dxos/async';
-import { InvitationWrapper } from '@dxos/client-services';
 import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
 import {
@@ -17,7 +16,7 @@ import {
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { RpcClosedError } from '@dxos/rpc';
 
-import { InvitationRequest } from '../api';
+import { InvitationWrapper, InvitationRequest } from '../api';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>;

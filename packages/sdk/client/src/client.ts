@@ -72,6 +72,9 @@ export interface ClientInfo {
   halo: HaloProxy['info'];
 }
 
+/**
+ * Main API.
+ */
 export class Client {
   public readonly version = DXOS_VERSION;
 

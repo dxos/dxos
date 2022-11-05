@@ -21,7 +21,7 @@ export {
 } from '@dxos/echo-db';
 
 // TODO(burdon): Remove.
-export { ClientServicesHost, ClientServices, createNetworkManager, InvitationWrapper } from '@dxos/client-services';
+export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
 
 export { PublicKey } from '@dxos/keys';
 

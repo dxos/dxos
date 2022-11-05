@@ -5,7 +5,8 @@
 import assert from 'node:assert';
 
 import { Event, until } from '@dxos/async';
-import { InvitationWrapper } from '@dxos/client-services';
+
+import { InvitationWrapper } from './invitation-wrapper';
 
 /**
  * Invitation created by sender.

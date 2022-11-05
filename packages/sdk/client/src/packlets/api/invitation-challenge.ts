@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationWrapper } from '@dxos/client-services';
+import { InvitationWrapper } from './invitation-wrapper';
 
 /**
  * Invitation that is being redeemed.

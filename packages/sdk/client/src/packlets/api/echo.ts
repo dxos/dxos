@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationWrapper } from '@dxos/client-services';
 import { Database, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -13,6 +12,7 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ActivationOptions, PartyMember } from '../proxies';
 import { InvitationChallenge } from './invitation-challenge';
 import { InvitationRequest } from './invitation-request';
+import { InvitationWrapper } from './invitation-wrapper';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey;

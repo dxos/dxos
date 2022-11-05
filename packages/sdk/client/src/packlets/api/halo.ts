@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationWrapper } from '@dxos/client-services';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Profile } from '@dxos/protocols/proto/dxos/client';
@@ -11,6 +10,7 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 import { Contact, CreateProfileOptions } from '../proxies';
 import { InvitationChallenge } from './invitation-challenge';
 import { InvitationRequest } from './invitation-request';
+import { InvitationWrapper } from './invitation-wrapper';
 
 /**
  * HALO API.

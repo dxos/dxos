@@ -8,7 +8,7 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { ClientServicesHost, InvitationWrapper } from '@dxos/client-services';
+import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
@@ -24,6 +24,7 @@ import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
 
 import { Client } from './client';
+import { InvitationWrapper } from './packlets/api';
 
 describe('Client', function () {
   //

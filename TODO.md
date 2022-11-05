@@ -8,11 +8,11 @@ Staging area for internal work-in-progress (written-up into GH issues).
 
 ## Client API
 
-- [ ] Remove `partyKey` vars, etc.
-- [ ] Halo key management (factor out usage by `@dxos/registry-client`.
 - [ ] Testing framework.
 - [ ] Move InvitationWrapper to client.
 - [ ] Remove re-exports from `@dxos/client`.
+- [ ] Remove `partyKey` vars, etc.
+- [ ] Halo key management (factor out usage by `@dxos/registry-client`.
 
 ## Invitations (https://github.com/dxos/dxos/issues/1745)
 

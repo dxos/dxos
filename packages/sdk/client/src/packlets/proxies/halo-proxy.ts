@@ -3,14 +3,14 @@
 //
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServicesProvider, InvitationWrapper } from '@dxos/client-services';
+import { ClientServicesProvider } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Profile } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 
-import { Halo, InvitationChallenge, InvitationRequest } from '../api';
+import { InvitationWrapper, Halo, InvitationChallenge, InvitationRequest } from '../api';
 import { InvitationProxy } from './invitation-proxy';
 import { Contact, CreateProfileOptions, PartyMember } from './stubs';
 

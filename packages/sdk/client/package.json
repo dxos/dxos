@@ -37,7 +37,9 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
+    "base-x": "~3.0.9",
     "debug": "^4.3.3",
+    "json-stable-stringify": "^1.0.1",
     "readable-stream": "^3.6.0"
   },
   "devDependencies": {
@@ -52,6 +54,7 @@
     "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
+    "@types/json-stable-stringify": "^1.0.32",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
   },

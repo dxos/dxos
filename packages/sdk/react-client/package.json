@@ -22,6 +22,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",

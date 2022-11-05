@@ -3179,9 +3179,12 @@ importers:
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
+      '@types/json-stable-stringify': ^1.0.32
       '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
+      base-x: ~3.0.9
       debug: ^4.3.3
+      json-stable-stringify: ^1.0.1
       readable-stream: ^3.6.0
       source-map-support: ^0.5.12
     dependencies:
@@ -3201,7 +3204,9 @@ importers:
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       assert: 2.0.0
+      base-x: 3.0.9
       debug: 4.3.4
+      json-stable-stringify: 1.0.1
       readable-stream: 3.6.0
     devDependencies:
       '@dxos/credentials': link:../../core/halo/credentials
@@ -3214,6 +3219,7 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
+      '@types/json-stable-stringify': 1.0.34
       '@types/readable-stream': 2.3.14
       source-map-support: 0.5.21
 
@@ -3242,14 +3248,11 @@ importers:
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
-      '@types/json-stable-stringify': ^1.0.32
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
       '@types/readable-stream': ^2.3.9
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
-      base-x: ~3.0.9
-      json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
@@ -3278,14 +3281,11 @@ importers:
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
-      base-x: 3.0.9
-      json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
-      '@types/json-stable-stringify': 1.0.34
       '@types/level-js': 4.0.2
       '@types/memdown': 3.0.0
       '@types/readable-stream': 2.3.14

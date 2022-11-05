@@ -6,3 +6,4 @@ export * from './echo';
 export * from './halo';
 export * from './invitation-challenge';
 export * from './invitation-request';
+export * from './invitation-wrapper';

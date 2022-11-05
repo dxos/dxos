@@ -3,6 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
+import { log } from '@dxos/log';
 
 void (async () => {
   const client = new Client({ runtime: { client: { mode: 2 /* remote */ } } });
@@ -12,5 +13,5 @@ void (async () => {
     await client.halo.createProfile();
   }
 
-  console.log(client.info);
+  log(client.info);
 })();

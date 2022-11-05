@@ -4,6 +4,10 @@
 
 import { defaultSecretProvider, defaultSecretValidator, SecretProvider, SecretValidator } from '@dxos/credentials';
 
+//
+// TODO(burdon): Deprecated pending new invitations.
+//
+
 /**
  * Defines a way for peers to authenticate each other through a side channel.
  */

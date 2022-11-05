@@ -22,8 +22,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InviteeInvitations } from '../invitations';
 import { ServiceContext } from '../services';
+import { InviteeInvitations } from './invitations';
 
 /**
  * Party service implementation.

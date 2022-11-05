@@ -8,6 +8,7 @@ import React, { Component, PropsWithChildren } from 'react';
 
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
+import { log } from '@dxos/log';
 
 import { ClientProvider } from '../../containers';
 import { useClient } from './useClient';
@@ -32,7 +33,7 @@ describe('Client hook', function () {
         }
 
         override componentDidCatch(err: Error) {
-          console.log({ err });
+          log.error(err);
           error = err;
         }
 
