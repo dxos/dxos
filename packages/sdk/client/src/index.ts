@@ -4,6 +4,7 @@
 
 // TODO(burdon): Remove (create wrapper class).
 export { generateSeedPhrase } from '@dxos/credentials';
+export { PublicKey } from '@dxos/keys';
 
 export {
   TYPE_SCHEMA,
@@ -20,10 +21,16 @@ export {
   SchemaField,
   SchemaRef
 } from '@dxos/echo-db';
-export { PublicKey } from '@dxos/keys';
+
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
-export { Profile } from '@dxos/protocols/proto/dxos/client';
+
+//
+// Protobuf definitions.
+//
+
+export { Party, Profile } from '@dxos/protocols/proto/dxos/client';
+export { PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 // TODO(burdon): Remove.
 // export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
