@@ -161,7 +161,7 @@ describe('Muxer', function () {
     });
   });
 
-  it.only('destroying muxers destroys open streams', async function () {
+  it('destroying muxers destroys open streams', async function () {
     const { peer1, peer2 } = setupPeers();
 
     const stream1 = peer1.createStream('example.extension/stream1', {

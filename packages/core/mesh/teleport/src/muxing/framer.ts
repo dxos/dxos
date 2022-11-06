@@ -89,7 +89,8 @@ export class Framer {
   }
 
   destroy() {
-    this._stream.end();
+    // TODO(dmaretskyi): Call stream.end() instead?
+    this._stream.destroy();
   }
 }
 

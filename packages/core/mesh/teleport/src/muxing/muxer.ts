@@ -85,7 +85,8 @@ export class Muxer {
       stream.push(data);
     };
     channel.destroy = (err) => {
-      stream.end(err);
+      // TODO(dmaretskyi): Call stream.end() instead?
+      stream.destroy(err);
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -130,7 +131,7 @@ export class Muxer {
         this._sendData(channel, data); // TODO(dmaretskyi): Error propagation?
         
         // TODO(dmaretskyi): Debugging.
-        appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
+        // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
       subscribe: (cb: (data: Uint8Array) => void) => {
         assert(!callback, 'Only one subscriber is allowed');

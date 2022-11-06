@@ -13,7 +13,12 @@ const setup = () => {
   const peer1 = new Teleport({ localPeerId: peerId1, remotePeerId: peerId2 });
   const peer2 = new Teleport({ localPeerId: peerId2, remotePeerId: peerId1 });
 
-  pipeline(peer1.stream, peer2.stream, peer1.stream, (err) => {
+  pipeline(peer1.stream, peer2.stream, (err) => {
+    if (err) {
+      console.error(err);
+    }
+  })
+  pipeline(peer2.stream, peer1.stream, (err) => {
     if (err) {
       console.error(err);
     }
