@@ -13,6 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
+  // TODO(burdon): Pass in parsed invitation?
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
   onJoin?: (space: Party) => void;
@@ -32,6 +33,7 @@ export const JoinSpacePanel = ({
     const partyPromise = new Trigger<Party>();
 
     // TODO(burdon): Custom hook.
+    // TODO(burdon): Convenience util to wrap observable with promise?
     // TODO(burdon): Unsubscribe on success/failure/cancelled.
     const unsubscribe = observable.subscribe({
       onSuccess: (invitation: Invitation) => {
