@@ -65,6 +65,14 @@ export class Teleport {
   }
 
   async destroy(err?: Error) {
+    for(const extension of this._extensions.values()) {
+      try {
+        await extension.onClose(err);
+      } catch(err: any) {
+        log.catch(err);
+      }
+    }
+
     this._muxer.destroy(err);
   }
 
