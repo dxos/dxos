@@ -18,7 +18,6 @@ import { SingleInputStep } from '../SingleInputStep';
 const awaitInvitation = async (observable: Observable<InvitationEvents>): Promise<PublicKey> => {
   const partyPromise = new Trigger<PublicKey>();
 
-  // TODO(burdon): Custom hook.
   // TODO(burdon): Unsubscribe on success/failure/cancelled.
   const unsubscribe = observable.subscribe({
     onSuccess: (invitation: Invitation) => {
