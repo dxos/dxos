@@ -1,24 +1,30 @@
-import { ExtensionContext, TeleportExtension } from "./teleport";
-import { TestService } from "@dxos/protocols/proto/example/testing/rpc";
-import { createProtoRpcPeer, ProtoRpcPeer } from "@dxos/rpc";
-import { schema } from "@dxos/protocols";
-import assert from "assert";
-import { promiseTimeout, Trigger } from "@dxos/async";
-import { log } from "@dxos/log";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
+import { promiseTimeout, Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
+import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+
+import { ExtensionContext, TeleportExtension } from './teleport';
 
 export class TestExtension implements TeleportExtension {
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
-  private _opened = new Trigger()
+  private _opened = new Trigger();
 
   async onOpen(context: ExtensionContext) {
-    log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId })
+    log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
       port: context.createPort('rpc'),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -27,13 +33,13 @@ export class TestExtension implements TeleportExtension {
           },
           testCall: async (request) => {
             return {
-              data: request.data,
+              data: request.data
             };
-          },
-        },
+          }
+        }
       },
-      timeout: 1000,
-    })
+      timeout: 1000
+    });
 
     await this._rpc.open();
 
@@ -41,7 +47,7 @@ export class TestExtension implements TeleportExtension {
   }
 
   async onClose(err?: Error) {
-    log('onClose')
+    log('onClose');
     await this._rpc.close();
   }
 

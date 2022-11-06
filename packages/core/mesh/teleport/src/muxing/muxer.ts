@@ -13,7 +13,6 @@ import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
-import { appendFileSync } from 'fs';
 
 const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 
@@ -129,7 +128,7 @@ export class Muxer {
     const port: RpcPort = {
       send: (data: Uint8Array) => {
         this._sendData(channel, data); // TODO(dmaretskyi): Error propagation?
-        
+
         // TODO(dmaretskyi): Debugging.
         // appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
