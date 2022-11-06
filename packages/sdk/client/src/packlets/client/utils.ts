@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-
-import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
+import { ClientServicesHost, ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
-import { WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { log } from '@dxos/log';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
+import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_ORIGIN, DEFAULT_CONFIG_CHANNEL, IFRAME_ID } from './config';
@@ -28,17 +29,37 @@ export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFI
 };
 
 /**
+ * Creates stand-alone services.
+ */
+export const fromDefaults = (config: Config | ConfigProto): ClientServicesProvider => {
+  const conf = fromConfig(config);
+  return new ClientServicesHost({
+    config: conf,
+    modelFactory: new ModelFactory().registerModel(ObjectModel),
+    networkManager: createNetworkManager(conf)
+  });
+};
+
+/**
  * Creates a WebRTC network manager connected to the specified signal server.
  */
 export const createNetworkManager = (config: Config): NetworkManager => {
   const signalServer = config.get('runtime.services.signal.server');
-  assert(signalServer);
+  if (signalServer) {
+    return new NetworkManager({
+      log: true,
+      signalManager: new WebsocketSignalManager([signalServer]),
+      transportFactory: createWebRTCTransportFactory({
+        iceServers: config.get('runtime.services.ice')
+      })
+    });
+  }
 
+  // TODO(burdon): Should not provide a memory signal manager since no shared context.
+  //  Use TestClientBuilder for shared memory tests.
+  log.warn('P2P network is not configured.');
   return new NetworkManager({
-    log: true,
-    signalManager: new WebsocketSignalManager([signalServer]),
-    transportFactory: createWebRTCTransportFactory({
-      iceServers: config.get('runtime.services.ice')
-    })
+    signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
+    transportFactory: MemoryTransportFactory
   });
 };

@@ -91,7 +91,7 @@ export const ClientProvider = ({
       } else {
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
-        const client = new Client(config, options);
+        const client = new Client({ config });
         await client.initialize();
         await done(client);
       }

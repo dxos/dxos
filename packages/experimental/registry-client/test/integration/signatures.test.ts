@@ -18,7 +18,6 @@ import { ConfigProto } from '@dxos/config';
 
 import {
   ClientSigner,
-  ClientSignerAdapter,
   SignTxFunction,
   createApiPromise,
   createKeyring,
@@ -77,9 +76,7 @@ describe.skip('Signatures', function () {
       }
     };
 
-    client = new Client(config, {
-      signer: new ClientSignerAdapter()
-    });
+    client = new Client({ config });
 
     await client.initialize();
     await client.halo.createProfile();

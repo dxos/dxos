@@ -113,11 +113,6 @@ export class PartyProxy implements Party {
     // }
   }
 
-  // TODO(burdon): Getter required by react hook.
-  get invitationProxy() {
-    return this._invitationProxy;
-  }
-
   get key() {
     return this._key;
   }
@@ -126,6 +121,7 @@ export class PartyProxy implements Party {
     return this._isOpen;
   }
 
+  // TODO(burdon): Remove (depends on properties).
   get isActive() {
     return this._isActive;
   }
@@ -142,6 +138,7 @@ export class PartyProxy implements Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
+  // TODO(burdon): Remove (use database).
   get select(): Database['select'] {
     return this.database.select.bind(this.database);
   }
@@ -149,6 +146,7 @@ export class PartyProxy implements Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
+  // TODO(burdon): Remove (use database).
   get reduce(): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }

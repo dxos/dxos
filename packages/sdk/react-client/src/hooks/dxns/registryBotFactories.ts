@@ -5,8 +5,8 @@
 import debug from 'debug';
 import { useState, useEffect } from 'react';
 
-import { useWNSRegistry } from './registry';
-import { QueryRecord, WRN_TYPE_BOT_FACTORY } from './types';
+import { QueryRecord, DXOS_TYPE_BOT_FACTORY } from './types';
+import { useRegistry } from './useRegistry';
 
 const log = debug('dxos:react-client');
 
@@ -14,6 +14,7 @@ const log = debug('dxos:react-client');
  * A hook returning all bot factories registered on the DXNS registry.
  * Bot factories are used for spawning bots into Parties.
  * See also: `useRegistryBots` hook.
+ * @deprecated
  */
 interface RegistryBotFactoryRecord {
   topic: string;
@@ -22,7 +23,7 @@ interface RegistryBotFactoryRecord {
 }
 
 export const useRegistryBotFactories = () => {
-  const registry = useWNSRegistry();
+  const registry = useRegistry();
   const [factories, setFactories] = useState<RegistryBotFactoryRecord[]>([]);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export const useRegistryBotFactories = () => {
       let factoriesResult: QueryRecord[];
       try {
         factoriesResult = await registry.queryRecords({
-          type: WRN_TYPE_BOT_FACTORY
+          type: DXOS_TYPE_BOT_FACTORY
         });
       } catch (e: any) {
         log('Querying bot factories unsuccessful.');

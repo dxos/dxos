@@ -8,6 +8,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:util": "util"
+  },
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",

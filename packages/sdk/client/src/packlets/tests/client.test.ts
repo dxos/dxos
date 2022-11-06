@@ -9,9 +9,7 @@ import { TestClientBuilder } from '../testing';
 
 describe('Client', function () {
   it('initialize and destroy multiple times', async function () {
-    const testBuilder = new TestClientBuilder();
-
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    const client = new Client();
     await client.initialize();
     await client.initialize();
     expect(client.initialized).to.be.true;

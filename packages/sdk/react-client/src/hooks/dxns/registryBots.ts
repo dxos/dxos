@@ -5,8 +5,8 @@
 import debug from 'debug';
 import { useState, useEffect } from 'react';
 
-import { useWNSRegistry } from './registry';
-import { QueryRecord, WRN_TYPE_BOT } from './types';
+import { QueryRecord, DXOS_TYPE_BOT } from './types';
+import { useRegistry } from './useRegistry';
 
 const log = debug('dxos:react-client');
 
@@ -27,10 +27,11 @@ export interface UseRegistryBotsProps {
  * See also: `useRegistryBotFactories` hook.
  * @param props.sortByKeywords sort the registries by keywords of interest
  * @returns an array of registered bots
+ * @deprecated
  */
 export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
   const { sortByKeywords } = props;
-  const registry = useWNSRegistry();
+  const registry = useRegistry();
   const [registryBots, setRegistryBots] = useState<RegistryBotRecord[]>([]);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export const useRegistryBots = (props: UseRegistryBotsProps = {}) => {
     const queryRegistry = async () => {
       let botsResult: QueryRecord[];
       try {
-        botsResult = await registry.queryRecords({ type: WRN_TYPE_BOT });
+        botsResult = await registry.queryRecords({ type: DXOS_TYPE_BOT });
       } catch (e: any) {
         log('Querying bots unsuccessful.');
         log(e);

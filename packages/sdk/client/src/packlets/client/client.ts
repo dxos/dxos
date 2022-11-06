@@ -16,12 +16,13 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { defaultConfig, EXPECTED_CONFIG_VERSION } from './config';
+import { fromDefaults } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
 export type ClientOptions = {
   config?: Config | ConfigProto;
-  services: ClientServicesProvider;
+  services?: ClientServicesProvider;
   // TODO(burdon): Clean-up ECHO runtime properties.
   modelFactory?: ModelFactory;
 };
@@ -45,9 +46,9 @@ export class Client {
     config,
     modelFactory,
     services
-  }: ClientOptions) {
+  }: ClientOptions = {}) {
     this._config = fromConfig(config ?? defaultConfig);
-    this._services = services;
+    this._services = services ?? fromDefaults(this._config);
     this._modelFactory = modelFactory ?? new ModelFactory().registerModel(ObjectModel);
 
     this._halo = new HaloProxy(this._services);

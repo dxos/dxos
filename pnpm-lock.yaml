@@ -3188,6 +3188,7 @@ importers:
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
       '@types/json-stable-stringify': ^1.0.32
+      '@types/node': ^16.11.58
       '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       base-x: ~3.0.9
@@ -3195,6 +3196,7 @@ importers:
       json-stable-stringify: ^1.0.1
       readable-stream: ^3.6.0
       source-map-support: ^0.5.12
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
@@ -3216,6 +3218,7 @@ importers:
       debug: 4.3.4
       json-stable-stringify: 1.0.1
       readable-stream: 3.6.0
+      util: 0.12.5
     devDependencies:
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -3228,6 +3231,7 @@ importers:
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/json-stable-stringify': 1.0.34
+      '@types/node': 16.11.66
       '@types/readable-stream': 2.3.14
       source-map-support: 0.5.21
 

@@ -59,7 +59,7 @@ describe('Client hook', function () {
       }
     };
 
-    const client = new Client(config);
+    const client = new Client({ config });
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(result.current).toEqual(client);

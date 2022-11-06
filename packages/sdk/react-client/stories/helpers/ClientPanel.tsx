@@ -28,7 +28,7 @@ export const ClientPanel = ({
         <JsonPanel value={client.config} />
       </Box>
       <Box sx={{ padding: 1 }}>
-        <JsonPanel value={client.info} />
+        <JsonPanel value={client.toJSON} />
       </Box>
       <Box sx={{ padding: 1 }}>
         <JsonPanel value={profile?.username} />

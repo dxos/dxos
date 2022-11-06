@@ -13,7 +13,7 @@ export interface ClientSetup {
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {
-  const client = new Client(config);
+  const client = new Client({ config });
   await client.initialize();
   await client.halo.createProfile({ username: 'Client' });
   const party = await client.echo.createParty();

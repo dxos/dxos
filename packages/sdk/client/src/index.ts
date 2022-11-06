@@ -29,8 +29,8 @@ export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 // Protobuf definitions.
 //
 
-export { Profile } from '@dxos/protocols/proto/dxos/client';
-export { PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Remove.
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
