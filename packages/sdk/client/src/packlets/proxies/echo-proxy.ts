@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { CancellableObservable, Event, EventSubscriptions, latch } from '@dxos/async';
 import {
   ClientServicesProvider,
@@ -9,9 +11,10 @@ import {
   InvitationEvents,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
+import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
+import { ModelFactory } from '@dxos/model-factory';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
@@ -19,10 +22,10 @@ import { ComplexMap } from '@dxos/util';
 import { HaloProxy } from './halo-proxy';
 import { Party, PartyProxy } from './party-proxy';
 
-// TODO(burdon): Separate public API form implementation (move comments here).
+/**
+ * TODO(burdon): Public API (move comments here).
+ */
 export interface Echo {
-  info: { parties: number };
-  registerModel(constructor: ModelConstructor<any>): void;
   createParty(): Promise<Party>;
   cloneParty(snapshot: PartySnapshot): Promise<Party>;
   getParty(partyKey: PublicKey): Party | undefined;
@@ -43,8 +46,15 @@ export class EchoProxy implements Echo {
     private readonly _haloProxy: HaloProxy
   ) {}
 
-  toString() {
-    return `EchoProxy(${JSON.stringify(this.info)})`;
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  // TODO(burdon): Include deviceId.
+  get toJSON() {
+    return {
+      parties: this._parties.size
+    };
   }
 
   get modelFactory(): ModelFactory {
@@ -58,18 +68,6 @@ export class EchoProxy implements Echo {
 
     // TODO(wittjosiah): Reconcile service provider host with interface.
     return (this._serviceProvider as any).echo.networkManager;
-  }
-
-  // TODO(burdon): Client ID?
-  get info() {
-    return {
-      parties: this._parties.size
-    };
-  }
-
-  registerModel(constructor: ModelConstructor<any>): this {
-    this._modelFactory.registerModel(constructor);
-    return this;
   }
 
   /**

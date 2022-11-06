@@ -11,16 +11,18 @@ import { ClientServicesProvider, ClientServices, clientServiceBundle } from './s
 /**
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export class ClientServicesProxy implements ClientServicesProvider {
-  private readonly _client: ProtoRpcPeer<ClientServices>;
+  private readonly _proxy: ProtoRpcPeer<ClientServices>;
 
   // prettier-ignore
   constructor(
     port: RpcPort,
     private readonly _timeout = 300
   ) {
-    this._client = createProtoRpcPeer({
+    this._proxy = createProtoRpcPeer({
       requested: clientServiceBundle,
       exposed: {},
       handlers: {},
@@ -28,19 +30,23 @@ export class ClientServicesProxy implements ClientServicesProvider {
     });
   }
 
+  get proxy() {
+    return this._proxy;
+  }
+
   get descriptors() {
     return clientServiceBundle;
   }
 
   get services() {
-    return this._client.rpc;
+    return this._proxy.rpc;
   }
 
   async open() {
-    await asyncTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
+    await asyncTimeout(this._proxy.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 
   async close() {
-    await this._client.close();
+    await this._proxy.close();
   }
 }

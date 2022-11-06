@@ -2,9 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { Event, EventSubscriptions } from '@dxos/async';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
+import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
@@ -19,10 +22,10 @@ type CreateProfileOptions = {
   seedphrase?: string;
 };
 
-// TODO(burdon): Separate public API form implementation (move comments here).
+/**
+ * TODO(burdon): Public API (move comments here).
+ */
 export interface Halo {
-  info: { key?: PublicKey };
-
   get profile(): Profile | undefined;
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
@@ -47,8 +50,8 @@ export interface Halo {
 export class HaloProxy implements Halo {
   private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new EventSubscriptions();
-
   private readonly _contactsChanged = new Event();
+
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
   private _profile?: Profile;
@@ -59,11 +62,12 @@ export class HaloProxy implements Halo {
     private readonly _serviceProvider: ClientServicesProvider
   ) {}
 
-  toString() {
-    return `HaloProxy(${JSON.stringify(this.info)})`;
+  [inspect.custom]() {
+    return inspectObject(this);
   }
 
-  get info() {
+  // TODO(burdon): Include deviceId.
+  get toJSON() {
     return {
       key: this._profile?.publicKey
     };
@@ -83,7 +87,7 @@ export class HaloProxy implements Halo {
   /**
    * @deprecated
    */
-  // TODO(burdon): Remove and expose event handler?
+  // TODO(burdon): Replaced with query/stream.
   subscribeToProfile(callback: (profile: Profile) => void): () => void {
     return this.profileChanged.on(() => callback(this._profile!));
   }
@@ -108,8 +112,8 @@ export class HaloProxy implements Halo {
     }
 
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({
-      publicKey: publicKey!.asUint8Array(),
-      secretKey: secretKey!.asUint8Array(),
+      publicKey: publicKey?.asUint8Array(),
+      secretKey: secretKey?.asUint8Array(),
       username
     });
 

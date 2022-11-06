@@ -33,7 +33,6 @@ export { Profile } from '@dxos/protocols/proto/dxos/client';
 export { PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 // TODO(burdon): Remove.
-// export { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
@@ -41,3 +40,4 @@ export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 export * from './packlets/client';
 export * from './packlets/devtools';
 export * from './packlets/proxies';
+export * from './packlets/testing';

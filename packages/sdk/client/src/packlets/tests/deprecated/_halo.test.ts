@@ -15,7 +15,7 @@ import { TestModel } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createBundledRpcServer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
 import { Timeframe } from '@dxos/timeframe';
@@ -202,6 +202,8 @@ describe.skip('Halo invitations', function () {
       await hostClient.initialize();
       afterTest(() => hostClient.destroy());
 
+      const host = new ClientServicesHost();
+
       // TODO(burdon): Factor out with client.initializeRemote
       const servicesHost = (hostClient as any)._clientServices;
       const server = createProtoRpcPeer({
@@ -249,8 +251,9 @@ describe.skip('Halo invitations', function () {
       await clientServicesHost.open();
       afterTest(() => clientServicesHost.close());
 
-      const server = createBundledRpcServer({
-        services: clientServicesHost.descriptors,
+      const server = createProtoRpcPeer({
+        requested: {},
+        exposed: clientServicesHost.descriptors,
         handlers: clientServicesHost.services,
         port: hostPort
       });

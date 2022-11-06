@@ -29,7 +29,15 @@ export type ClientServices = {
  * Provide access to client services definitions and service handler.
  */
 export interface ClientServicesProvider {
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   descriptors: ServiceBundle<ClientServices>;
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   services: ClientServices;
 
   open(): Promise<void>;

@@ -9,10 +9,12 @@ import { expect } from 'chai';
 import { waitForCondition } from '@dxos/async';
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
+import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
+import { TestClientBuilder } from '../testing';
 
-describe('Client', function () {
+describe('Halo', function () {
   it('reopens with persistent storage', async function () {
     const config: ConfigProto = {
       version: 1,
@@ -26,22 +28,26 @@ describe('Client', function () {
       }
     };
 
+    const testBuilder = new TestClientBuilder(config);
+
     {
-      const client = new Client(config);
+      const client = new Client({ config, services: testBuilder.createClientServicesHost() });
+      afterTest(() => client.destroy());
       await client.initialize();
+
       await client.halo.createProfile({ username: 'test-user' });
       expect(client.halo.profile).exist;
-      await client.destroy();
     }
 
     {
-      const client = new Client(config);
+      const client = new Client({ config, services: testBuilder.createClientServicesHost() });
+      afterTest(() => client.destroy());
       await client.initialize();
+
       await waitForCondition(() => !!client.halo.profile);
       expect(client.halo.profile).exist;
       // TODO(burdon): Not working.
       // expect(client.halo.profile!.username).to.eq('test-user');
-      await client.destroy();
     }
   });
 });

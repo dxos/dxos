@@ -5,11 +5,13 @@
 import { expect } from 'chai';
 
 import { Client } from '../client';
+import { TestClientBuilder } from '../testing';
 
 describe('Client', function () {
-  // TODO(burdon): Configure MemorySignalManager.
   it('initialize and destroy multiple times', async function () {
-    const client = new Client();
+    const testBuilder = new TestClientBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
     await client.initialize();
     expect(client.initialized).to.be.true;
@@ -20,7 +22,9 @@ describe('Client', function () {
   });
 
   it('closes and reopens', async function () {
-    const client = new Client();
+    const testBuilder = new TestClientBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
     expect(client.initialized).to.be.true;
 

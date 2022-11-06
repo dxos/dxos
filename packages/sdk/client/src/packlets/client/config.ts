@@ -3,26 +3,13 @@
 //
 
 import { ConfigProto } from '@dxos/config';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 export const IFRAME_ID = '__DXOS_CLIENT__';
+
+export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
 
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
-
-export const defaultTestingConfig: ConfigProto = {
-  version: 1,
-  runtime: {
-    client: {
-      mode: Runtime.Client.Mode.LOCAL
-    },
-    services: {
-      signal: {
-        server: 'ws://localhost:4000/.well-known/dx/signal'
-      }
-    }
-  }
-};

@@ -9,6 +9,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -38,6 +39,7 @@ export class ClientServicesHost implements ClientServicesProvider {
   constructor({
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
+    // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager
   }: ClientServicesHostParams) {
     // TODO(dmaretskyi): Remove keyStorage.
@@ -45,8 +47,6 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(storage, networkManager, modelFactory);
-
-    // TODO(burdon): Move to open method?
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: createServiceProvider<InvitationsService>(() => {
@@ -71,6 +71,15 @@ export class ClientServicesHost implements ClientServicesProvider {
 
   get services() {
     return this._serviceRegistry.services;
+  }
+
+  createPeer(port: RpcPort) {
+    return createProtoRpcPeer({
+      requested: clientServiceBundle,
+      exposed: this._serviceRegistry.descriptors,
+      handlers: this._serviceRegistry.services,
+      port
+    });
   }
 
   async open() {

@@ -15,10 +15,9 @@ const memorySignalManagerContext = new MemorySignalManagerContext();
 /**
  * @deprecated
  */
-// TODO(burdon): Move to dxos/network-manager?
+// TODO(burdon): Move util to NetworkManager
 export const createNetworkManager = (config: Config): NetworkManager => {
   const signalServer = config.get('runtime.services.signal.server');
-  // TODO(burdon): Remove.
   if (!signalServer) {
     log.warn('DEPRECATED: falling back to MemorySignalManager');
     return new NetworkManager({
