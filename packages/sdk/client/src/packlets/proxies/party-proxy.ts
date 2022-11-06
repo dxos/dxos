@@ -87,13 +87,14 @@ export class PartyProxy implements Party {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
-    party: PartyProto,
-    memberKey: PublicKey
+    private _party: PartyProto,
+    memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
-    this._key = party.publicKey;
-    this._isOpen = party.isOpen;
-    this._isActive = party.isActive;
-    if (!party.isOpen) {
+    // TODO(burdon): Don't shadow properties.
+    this._key = this._party.publicKey;
+    this._isOpen = this._party.isOpen;
+    this._isActive = this._party.isActive;
+    if (!this._party.isOpen) { // TODO(burdon): Assert?
       return;
     }
 
