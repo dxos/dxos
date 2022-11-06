@@ -179,6 +179,13 @@ message PartyDetails {
   dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
+// TODO(burdon): Reconcile with dxos.halo.credentials.PartyMember.
+// TODO(burdon): Reconcile with Profile.
+message PartyMember {
+  optional dxos.keys.PublicKey identity_key = 1;
+  optional string display_name = 2;
+}
+
 message SubscribePartyResponse {
   optional Party party = 1;
 }
@@ -212,11 +219,6 @@ message SubscribeMembersRequest {
 }
 
 message SubscribeMembersResponse {
-  message PartyMember {
-    dxos.keys.PublicKey public_key = 1;
-    optional string display_name = 2;
-  }
-
   repeated PartyMember members = 1;
 }
 

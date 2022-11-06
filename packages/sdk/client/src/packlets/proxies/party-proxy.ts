@@ -14,10 +14,10 @@ import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } f
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { Party as PartyProto, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { ActivationOptions, PARTY_ITEM_TYPE, PartyMember } from './stubs';
+import { ActivationOptions, PARTY_ITEM_TYPE } from './stubs';
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Party {

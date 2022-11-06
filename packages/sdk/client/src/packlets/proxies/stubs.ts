@@ -9,6 +9,5 @@ export type OpenProgress = any;
 
 // TODO(burdon): Replace with protocol buffer defs.
 export type ActivationOptions = any;
-export type PartyMember = any;
 export type CreateProfileOptions = any;
 export type Contact = any;

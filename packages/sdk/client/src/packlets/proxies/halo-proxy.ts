@@ -7,11 +7,11 @@ import { ClientServicesProvider } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Profile } from '@dxos/protocols/proto/dxos/client';
+import { Profile, PartyMember } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 
 import { InvitationProxy, InvitationWrapper, InvitationChallenge, InvitationRequest } from './invitations';
-import { Contact, CreateProfileOptions, PartyMember } from './stubs';
+import { Contact, CreateProfileOptions } from './stubs';
 
 export interface HaloInfo {
   key?: PublicKey;

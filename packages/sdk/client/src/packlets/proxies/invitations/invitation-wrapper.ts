@@ -11,13 +11,20 @@ import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-// TODO(burdon): Move to Client API.
-
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
+const parseInvitationType = (str: string): Invitation.Type => {
+  const type = parseInt(str);
+  assert(type === Invitation.Type.INTERACTIVE || type === Invitation.Type.OFFLINE, 'Invalid invitation type');
+  return type;
+};
+
+const stringifyInvitationType = (type: Invitation.Type): string => type.toString();
+
 /**
  * A serialized version of InvitationWrapper that's suitable to be encoded as an URL query string.
+ * @deprecated
  */
 // TODO(burdon): Remove (replace with Invitation struct).
 export interface InvitationQueryParameters {
@@ -114,13 +121,3 @@ export class InvitationWrapper {
     return query as InvitationQueryParameters;
   }
 }
-
-// TODO(burdon): Move to client API.
-const parseInvitationType = (str: string): Invitation.Type => {
-  const type = parseInt(str);
-  assert(type === Invitation.Type.INTERACTIVE || type === Invitation.Type.OFFLINE, 'Invalid invitation type');
-  return type;
-};
-
-// TODO(burdon): Move to client API.
-const stringifyInvitationType = (type: Invitation.Type): string => type.toString();

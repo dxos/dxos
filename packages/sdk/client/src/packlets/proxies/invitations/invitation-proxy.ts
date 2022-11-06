@@ -19,20 +19,25 @@ import { RpcClosedError } from '@dxos/rpc';
 import { InvitationRequest } from './invitation-request';
 import { InvitationWrapper } from './invitation-wrapper';
 
-//
-// TODO(burdon): Deprecated.
-//
-
+/**
+ * @deprecated
+ */
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>;
 }
 
+/**
+ * @deprecated
+ */
 export interface HandleInvitationRedemptionOpts {
   stream: Stream<RedeemedInvitationProto>;
   invitationDescriptor: InvitationWrapper;
   onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>;
 }
 
+/**
+ * @deprecated
+ */
 export interface HandleInvitationRedemptionResult {
   waitForFinish: () => Promise<RedeemedInvitationProto>;
   authenticate: (secret: Uint8Array) => void;
