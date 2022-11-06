@@ -3415,6 +3415,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
@@ -3438,6 +3439,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util

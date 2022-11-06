@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultTestingConfig, InvitationWrapper, Party } from '@dxos/client';
+import { defaultConfig, InvitationWrapper, Party } from '@dxos/client';
 import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -46,7 +46,7 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={defaultTestingConfig}>
+    <ClientProvider config={defaultConfig}>
       <Story />
     </ClientProvider>
   )
@@ -55,10 +55,10 @@ Default.decorators = [
 const SharingTemplate = () => {
   return (
     <>
-      <ClientProvider config={defaultTestingConfig}>
+      <ClientProvider config={defaultConfig}>
         <Template />
       </ClientProvider>
-      <ClientProvider config={defaultTestingConfig}>
+      <ClientProvider config={defaultConfig}>
         <Group label={{ children: 'Joiner' }} className='w-1/2'>
           <JoinPanel />
         </Group>
@@ -80,6 +80,7 @@ const JoinPanel = () => {
     const invitation = InvitationWrapper.decode(invitationCode);
     setShowPin(true);
     console.log({ invitation });
+    // TODO(burdon): Observable.
     const acceptedInvitation = await client.halo.acceptInvitation(invitation);
     console.log({ acceptedInvitation });
     const secret = await secretProvider();

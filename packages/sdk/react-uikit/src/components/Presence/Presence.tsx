@@ -34,7 +34,7 @@ export interface PresenceProps
   space?: Party;
   closeLabel?: string;
   managingSpace?: boolean;
-  createInvitationUrl?: (invitationCode: string) => string;
+  createInvitationUrl?: (invitationCode: string) => string; // TODO(burdon): Should take Invitation.
   onClickManageSpace?: () => void;
   onClickGoToSpace?: () => void;
   onClickManageProfile?: () => void;
@@ -89,21 +89,22 @@ const ProfileMenu = (props: PresenceProps) => {
   );
 };
 
+// TODO(burdon): To discuss.
 const PartyInviteSingleton = ({
   createInvitationUrl,
   space
 }: Required<Pick<PresenceProps, 'createInvitationUrl' | 'space'>>) => {
   const { t } = useTranslation();
   const invitations = usePartyInvitations(space.key);
-
   useEffect(() => {
     if (invitations.length < 1) {
       void space.createInvitation();
     }
   }, [space, invitations]);
 
+  // TODO(burdon): Update InvitationWrapper.
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0].encode()), [invitations]);
+  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0]), [invitations]);
 
   return invitationUrl ? (
     <QrCode

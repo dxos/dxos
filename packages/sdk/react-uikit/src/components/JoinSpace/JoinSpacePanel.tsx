@@ -3,13 +3,12 @@
 //
 
 import { useAsync } from '@react-hook/async';
-import { PublicKey } from 'packages/common/keys/src';
-import { InvitationEvents } from 'packages/sdk/client-services/src';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Observable, Trigger } from '@dxos/async';
-import { Invitation, InvitationWrapper, Party } from '@dxos/client';
+import { Invitation, InvitationEvents, InvitationWrapper, Party } from '@dxos/client';
+import { PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
 import { SingleInputStep } from '../SingleInputStep';
