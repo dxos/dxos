@@ -7,15 +7,17 @@ import { ClientServicesProvider } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Profile, PartyMember } from '@dxos/protocols/proto/dxos/client';
+import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 
 import { InvitationProxy, InvitationWrapper, InvitationChallenge, InvitationRequest } from './invitations';
-import { Contact, CreateProfileOptions } from './stubs';
 
-export interface HaloInfo {
-  key?: PublicKey;
-}
+type CreateProfileOptions = {
+  publicKey?: PublicKey;
+  secretKey?: PublicKey;
+  username?: string; // TODO(burdon): Display name.
+  seedphrase?: string;
+};
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Halo {
@@ -50,7 +52,7 @@ export class HaloProxy implements Halo {
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
   private _profile?: Profile;
-  private _contacts: PartyMember[] = [];
+  private _contacts: Contact[] = [];
 
   // prettier-ignore
   constructor(
@@ -61,7 +63,7 @@ export class HaloProxy implements Halo {
     return `HaloProxy(${JSON.stringify(this.info)})`;
   }
 
-  get info(): HaloInfo {
+  get info() {
     return {
       key: this._profile?.publicKey
     };
@@ -101,15 +103,16 @@ export class HaloProxy implements Halo {
 
     if (seedphrase) {
       const keyPair = keyPairFromSeedPhrase(seedphrase);
-      publicKey = keyPair.publicKey;
-      secretKey = keyPair.secretKey;
+      publicKey = PublicKey.from(keyPair.publicKey);
+      secretKey = PublicKey.from(keyPair.secretKey);
     }
 
     this._profile = await this._serviceProvider.services.ProfileService.createProfile({
-      publicKey,
-      secretKey,
+      publicKey: publicKey!.asUint8Array(),
+      secretKey: secretKey!.asUint8Array(),
       username
     });
+
     return this._profile;
   }
 

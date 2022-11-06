@@ -17,7 +17,7 @@ import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { ActivationOptions, PARTY_ITEM_TYPE } from './stubs';
+export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Party {
@@ -40,7 +40,7 @@ export interface Party {
   /**
    * @deprecated
    */
-  setActive(active: boolean, options: ActivationOptions): Promise<void>;
+  setActive(active: boolean): Promise<void>;
 
   /**
    * @deprecated
@@ -195,8 +195,7 @@ export class PartyProxy implements Party {
     });
   }
 
-  // TODO(burdon): Requires comment.
-  async setActive(active: boolean, options: ActivationOptions) {
+  async setActive(active: boolean) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
     // await this._serviceProvider.services.PartyService.setPartyState({
@@ -206,9 +205,6 @@ export class PartyProxy implements Party {
     // });
   }
 
-  /**
-   * TODO: Currently broken.
-   */
   get properties(): ObjectProperties {
     return this._item!.model;
   }

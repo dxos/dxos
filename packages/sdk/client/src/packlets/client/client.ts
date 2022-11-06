@@ -25,8 +25,11 @@ import { isNode } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
-import { EchoProxy, HaloProxy, OpenProgress } from '../proxies';
+import { EchoProxy, HaloProxy } from '../proxies';
 import { DEFAULT_CLIENT_ORIGIN, EXPECTED_CONFIG_VERSION, IFRAME_ID, defaultConfig } from './config';
+
+// TODO(burdon): Remove.
+type OpenProgress = () => void;
 
 // TODO(burdon): Move to config.
 export interface ClientOptions {

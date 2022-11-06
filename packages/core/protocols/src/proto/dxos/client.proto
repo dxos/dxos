@@ -78,7 +78,7 @@ message SubscribeProfileResponse {
 }
 
 message CreateProfileRequest {
-  optional string username = 1;
+  optional string username = 1; // TODO(burdon): Display name.
   optional bytes public_key = 2;
   optional bytes secret_key = 3;
 }
@@ -86,6 +86,7 @@ message CreateProfileRequest {
 message RecoverProfileRequest {
   string seed_phrase = 1;
 }
+
 message Contact {
   dxos.keys.PublicKey public_key = 1;
   optional string display_name = 2;
