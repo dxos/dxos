@@ -13,6 +13,7 @@ import { Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
 import { Framer } from './framer';
 import { RpcPort } from './rpc-port';
+import { appendFileSync } from 'fs';
 
 const codec = schema.getCodecForType('dxos.mesh.muxer.Command');
 
@@ -84,7 +85,7 @@ export class Muxer {
       stream.push(data);
     };
     channel.destroy = (err) => {
-      stream.destroy(err);
+      stream.end(err);
     };
 
     // NOTE: Make sure channel.push is set before sending the command.
@@ -127,6 +128,9 @@ export class Muxer {
     const port: RpcPort = {
       send: (data: Uint8Array) => {
         this._sendData(channel, data); // TODO(dmaretskyi): Error propagation?
+        
+        // TODO(dmaretskyi): Debugging.
+        appendFileSync('log.json', JSON.stringify(schema.getCodecForType('dxos.rpc.RpcMessage').decode(data), null, 2) + '\n')
       },
       subscribe: (cb: (data: Uint8Array) => void) => {
         assert(!callback, 'Only one subscriber is allowed');

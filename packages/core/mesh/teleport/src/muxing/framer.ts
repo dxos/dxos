@@ -89,7 +89,7 @@ export class Framer {
   }
 
   destroy() {
-    this._stream.destroy();
+    this._stream.end();
   }
 }
 
