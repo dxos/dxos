@@ -14,13 +14,13 @@ const setup = () => {
   const peer2 = new Teleport({ localPeerId: peerId2, remotePeerId: peerId1 });
 
   pipeline(peer1.stream, peer2.stream, (err) => {
-    if (err) {
-      console.error(err);
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err)
     }
   })
   pipeline(peer2.stream, peer1.stream, (err) => {
-    if (err) {
-      console.error(err);
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      log.catch(err)
     }
   })
   afterTest(() => peer1.close());
