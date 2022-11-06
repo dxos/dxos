@@ -5,7 +5,8 @@
 import assert from 'assert';
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServicesHost, ClientServices, createNetworkManager } from '@dxos/client-services';
+import { createNetworkManager } from '@dxos/client';
+import { ClientServicesHost, ClientServices } from '@dxos/client-services';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { schema } from '@dxos/protocols';
@@ -21,7 +22,6 @@ export class BackgroundServer {
   private readonly _connections = new Set<RpcPeer>();
 
   constructor() {
-    // TODO(burdon): Configure signer adapter.
     const config = new Config(defaultConfig);
     this._clientServices = new ClientServicesHost({
       config,

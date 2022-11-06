@@ -47,20 +47,21 @@ export class TestClientBuilder {
    */
   get networkManager() {
     const signalServer = this._config.get('runtime.services.signal.server');
-    if (!signalServer) {
+    if (signalServer) {
       return new NetworkManager({
         log: true,
-        signalManager: new MemorySignalManager(this._signalManagerContext),
-        transportFactory: MemoryTransportFactory
+        signalManager: new WebsocketSignalManager([signalServer]),
+        transportFactory: createWebRTCTransportFactory({
+          iceServers: this._config.get('runtime.services.ice')
+        })
       });
     }
 
+    // Memory transport with shared context.
     return new NetworkManager({
       log: true,
-      signalManager: new WebsocketSignalManager([signalServer]),
-      transportFactory: createWebRTCTransportFactory({
-        iceServers: this._config.get('runtime.services.ice')
-      })
+      signalManager: new MemorySignalManager(this._signalManagerContext),
+      transportFactory: MemoryTransportFactory
     });
   }
 

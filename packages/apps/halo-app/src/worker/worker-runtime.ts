@@ -3,7 +3,8 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesHost, createNetworkManager } from '@dxos/client-services';
+import { createNetworkManager } from '@dxos/client';
+import { ClientServicesHost } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
