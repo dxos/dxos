@@ -6,8 +6,8 @@ import { AsyncEvents, CancellableObservable, CancellableObservableEvents } from 
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
-  onConnecting(invitation: Invitation): void;
-  onConnected(invitation: Invitation): void;
+  onConnecting?(invitation: Invitation): void;
+  onConnected?(invitation: Invitation): void;
   onSuccess(invitation: Invitation): void;
 }
 

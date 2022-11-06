@@ -104,7 +104,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       await peer.open();
       log('connected'); // TODO(burdon): Peer id?
-      observable.callbacks?.onConnected(invitation);
+      observable.callbacks?.onConnected?.(invitation);
 
       try {
         log('sending admission offer', { spaceKey: space.key });
@@ -136,7 +136,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnecting(invitation);
+      observable.callbacks?.onConnecting?.(invitation);
     });
 
     return observable;
@@ -196,7 +196,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       await peer.open();
       log('connected'); // TODO(burdon): Peer id?
-      observable.callbacks?.onConnected(invitation);
+      observable.callbacks?.onConnected?.(invitation);
       await admitted.wait();
       await peer.close();
     });
@@ -213,7 +213,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnecting(invitation);
+      observable.callbacks?.onConnecting?.(invitation);
       const space = await admitted.wait();
       invitation.spaceKey = space.key;
       observable.callbacks?.onSuccess(invitation);

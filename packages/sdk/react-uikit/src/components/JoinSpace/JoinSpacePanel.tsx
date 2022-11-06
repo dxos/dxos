@@ -6,7 +6,8 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationWrapper, Party } from '@dxos/client';
+import { Trigger } from '@dxos/async';
+import { Invitation, InvitationWrapper, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { SingleInputStep } from '../SingleInputStep';
@@ -26,22 +27,41 @@ export const JoinSpacePanel = ({
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
   const redeemInvitation = useCallback(() => {
-    const parsedInvitationCode = parseInvitation(invitationCode);
-    const invitation = InvitationWrapper.decode(parsedInvitationCode);
-    const redeemeingInvitation = client.echo.acceptInvitation(invitation);
-    return redeemeingInvitation.getParty();
+    const invitation = InvitationWrapper.decode(parseInvitation(invitationCode));
+    const observable = client.echo.acceptInvitation(invitation.toProto());
+    const partyPromise = new Trigger<Party>();
+
+    // TODO(burdon): Custom hook.
+    // TODO(burdon): Unsubscribe on success/failure/cancelled.
+    const unsubscribe = observable.subscribe({
+      onSuccess: (invitation: Invitation) => {
+        const party = client.echo.getParty(invitation.spaceKey!);
+        partyPromise.wake(party!);
+        unsubscribe();
+      },
+      onError: (err: Error) => {
+        // TODO(burdon): Handler error.
+        console.error(err);
+        unsubscribe();
+      }
+    });
+
+    return partyPromise.wait();
   }, [invitationCode]);
   const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
+
   useEffect(() => {
     if (initialInvitationCode) {
       void call();
     }
   }, []);
+
   useEffect(() => {
     if (status === 'success' && value) {
       onJoin?.(value);
     }
   }, [status, value]);
+
   return (
     <SingleInputStep
       {...{

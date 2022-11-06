@@ -30,11 +30,9 @@ describe('observable', function () {
         clearTimeout(connectTimeout);
       });
 
-      // TODO(burdon): Use asyncTimeoutObservable and/or delegation.
-
       const timeout = setTimeout(() => {
         clearTimeout(connectTimeout);
-        observable.callbacks?.onTimeout(new TimeoutError(timeoutDelay));
+        observable.callbacks?.onTimeout?.(new TimeoutError(timeoutDelay));
       }, timeoutDelay);
 
       const connectTimeout = setTimeout(() => {
@@ -100,9 +98,9 @@ describe('observable', function () {
     expect(cancelled).to.be.true;
   });
 
-  it('times out', async function () {
+  it.only('times out', async function () {
     const { connected, cancelled, failed } = await runTest(50, 30, 20);
-    expect(failed).not.to.be.undefined;
+    expect(failed).to.exist;
     expect(connected).to.be.false;
     expect(cancelled).to.be.false;
   });

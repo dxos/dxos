@@ -47,7 +47,7 @@ describe('Client services', function () {
     expect(client.initialized).to.be.true;
   });
 
-  it('creates client with multiple peers connected via memory transport', async function () {
+  it('creates clients with multiple peers connected via memory transport', async function () {
     const testBuilder = new TestClientBuilder();
 
     {
@@ -61,6 +61,8 @@ describe('Client services', function () {
         await client1a.initialize();
         afterTest(() => Promise.all([client1a.destroy(), server1a.close()]));
         expect(client1a.initialized).to.be.true;
+
+        await client1a.halo.createProfile();
       }
       {
         const [client1b, server1b] = testBuilder.createClientServer(peer1);
@@ -68,6 +70,8 @@ describe('Client services', function () {
         await client1b.initialize();
         afterTest(() => Promise.all([client1b.destroy(), server1b.close()]));
         expect(client1b.initialized).to.be.true;
+
+        // TODO(burdon): Test profile is available.
       }
     }
 
@@ -82,8 +86,12 @@ describe('Client services', function () {
         await client2a.initialize();
         afterTest(() => Promise.all([client2a.destroy(), server2a.close()]));
         expect(client2a.initialized).to.be.true;
+
+        await client2a.halo.createProfile();
       }
     }
+
+    // TODO(burdon): Test party invitations.
   });
 
   // TODO(burdon): Browser-only.

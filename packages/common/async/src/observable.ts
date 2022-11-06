@@ -30,7 +30,7 @@ export class ObservableProvider<Events> implements Observable<Events> {
 }
 
 export interface CancellableObservableEvents {
-  onCancelled(): void;
+  onCancelled?(): void;
 }
 
 export interface CancellableObservable<Events extends CancellableObservableEvents> extends Observable<Events> {
@@ -63,7 +63,7 @@ export class CancellableObservableProvider<
 
     this._cancelled = true;
     await this._handleCancel?.();
-    this.callbacks?.onCancelled();
+    this.callbacks?.onCancelled?.();
 
     if (unsubscribe) {
       this.unsubscribe();
