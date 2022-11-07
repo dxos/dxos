@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Box, Button, Card, FormControlLabel, Switch, TextField } from '@mui/material';
 
