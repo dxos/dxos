@@ -20,7 +20,6 @@ export interface AsyncEvents<T = any> {
 }
 
 export const observableError = (observable: ObservableProvider<AsyncEvents>, err: any) => {
-  // TODO(burdon): Cannot know.
   if (err instanceof TimeoutError) {
     observable.callback.onTimeout?.(err);
   } else {

@@ -63,7 +63,6 @@ describe('service registry', function () {
     const done = new Trigger(); // createRpcServer
 
     {
-      // proxy.rpc.SpaceInvitationsService.createInvitation();
       const spaceInvitationsProxy = new SpaceInvitationsProxy(proxy.rpc.SpaceInvitationsService);
       const observer = spaceInvitationsProxy.createInvitation(space.key);
       observer.subscribe({
@@ -73,6 +72,12 @@ describe('service registry', function () {
         },
         onCancelled: () => {
           done.wake();
+        },
+        onSuccess: (invitation: Invitation) => {
+          throw new Error('Not not implemented.');
+        },
+        onError: (err: Error) => {
+          throw new Error('Not not implemented.');
         }
       });
     }

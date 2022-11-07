@@ -95,7 +95,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                   )
                 );
               } catch (err) {
-                observable.callbacks?.onError(err);
+                observable.callback.onError(err);
               }
             }
           }
@@ -104,7 +104,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       await peer.open();
       log('connected'); // TODO(burdon): Peer id?
-      observable.callbacks?.onConnected?.(invitation);
+      observable.callback.onConnected?.(invitation);
 
       try {
         log('sending admission offer', { spaceKey: space.key });
@@ -113,7 +113,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           genesisFeedKey: space.genesisFeedKey
         });
 
-        observable.callbacks?.onSuccess(invitation);
+        observable.callback.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
           log.error('RPC failed', err);
@@ -136,7 +136,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnecting?.(invitation);
+      observable.callback.onConnecting?.(invitation);
     });
 
     return observable;
@@ -196,7 +196,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       await peer.open();
       log('connected'); // TODO(burdon): Peer id?
-      observable.callbacks?.onConnected?.(invitation);
+      observable.callback.onConnected?.(invitation);
       await admitted.wait();
       await peer.close();
     });
@@ -213,10 +213,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         topology: new StarTopology(topic)
       });
 
-      observable.callbacks?.onConnecting?.(invitation);
+      observable.callback.onConnecting?.(invitation);
       const space = await admitted.wait();
       invitation.spaceKey = space.key;
-      observable.callbacks?.onSuccess(invitation);
+      observable.callback.onSuccess(invitation);
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       //  Implement mechanism for plugin to finalize (or remove itself).

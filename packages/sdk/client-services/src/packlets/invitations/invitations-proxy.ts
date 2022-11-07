@@ -43,22 +43,22 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
           case Invitation.State.CONNECTING: {
             assert(invitation.invitationId);
             invitationId = invitation.invitationId;
-            observable.callbacks?.onConnecting?.(invitation);
+            observable.callback.onConnecting?.(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observable.callbacks?.onConnected?.(invitation);
+            observable.callback.onConnected?.(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
-            observable.callbacks?.onSuccess?.(invitation);
+            observable.callback.onSuccess?.(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observable.callbacks?.onCancelled?.();
+            observable.callback.onCancelled?.();
             break;
           }
 
@@ -95,22 +95,22 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
-            observable.callbacks?.onConnecting?.(invitation);
+            observable.callback.onConnecting?.(invitation);
             break;
           }
 
           case Invitation.State.CONNECTED: {
-            observable.callbacks?.onConnected?.(invitation);
+            observable.callback.onConnected?.(invitation);
             break;
           }
 
           case Invitation.State.SUCCESS: {
-            observable.callbacks?.onSuccess?.(invitation);
+            observable.callback.onSuccess?.(invitation);
             break;
           }
 
           case Invitation.State.CANCELLED: {
-            observable.callbacks?.onCancelled?.();
+            observable.callback.onCancelled?.();
             break;
           }
 
