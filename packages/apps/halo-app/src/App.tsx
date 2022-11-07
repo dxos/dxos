@@ -12,7 +12,6 @@ import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { Heading, Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
-import { TextModel } from '@dxos/text-model';
 
 import { ErrorsProvider, FatalError } from './components';
 import {
@@ -119,13 +118,7 @@ export const App = () => {
       <ErrorsProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider
-            config={configProvider}
-            onInitialize={async (client) => {
-              client.echo.modelFactory.registerModel(TextModel);
-            }}
-            fallback={<ClientFallback />}
-          >
+          <ClientProvider config={configProvider} fallback={<ClientFallback />}>
             <HashRouter>
               <Routes />
               {needRefresh ? (

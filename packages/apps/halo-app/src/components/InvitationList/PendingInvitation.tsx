@@ -7,19 +7,19 @@ import { ProhibitInset } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationRequest } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { Avatar, QrCode, useTranslation, Tag, defaultGroup, Button, getSize } from '@dxos/react-uikit';
 
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  value: InvitationRequest; // TODO(burdon): Rename invitation.
+  invitation: Invitation;
 }
 
-export const PendingInvitation = ({ value }: PendingInvitationProps) => {
+export const PendingInvitation = ({ invitation }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
 
-  const onCancel = useCallback(() => value.cancel(), [value]);
+  const onCancel = useCallback(() => {}, [invitation]);
 
   return (
     <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
@@ -31,7 +31,7 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
           children: (
             <Avatar
               size={10}
-              fallbackValue={value.descriptor.hash}
+              fallbackValue={invitation.invitationId!}
               label={<Tag valence='warning'>{t('pending label')}</Tag>}
             />
           )
@@ -47,7 +47,7 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
       />
       <QrCode
         size={40}
-        value={createInvitationUrl(value.encode())}
+        value={createInvitationUrl(InvitationEncoder.encode(invitation))}
         label={<p className='w-20'>{t('copy halo invite code label')}</p>}
         side='top'
         sideOffset={12}

@@ -11,5 +11,6 @@ export const invitationCodeFromUrl = (text: string) => {
     return invitation ?? text;
   } catch (err) {
     log.catch(err);
+    return text;
   }
 };
