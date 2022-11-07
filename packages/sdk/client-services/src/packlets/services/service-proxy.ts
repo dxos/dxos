@@ -11,9 +11,7 @@ import { ClientServicesProvider, ClientServices, clientServiceBundle } from './s
 /**
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
- * @deprecated
  */
-// TODO(burdon): Remove.
 export class ClientServicesProxy implements ClientServicesProvider {
   private readonly _proxy: ProtoRpcPeer<ClientServices>;
 

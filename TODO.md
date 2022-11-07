@@ -8,8 +8,8 @@ Staging area for internal work-in-progress (written-up into GH issues).
 
 ## Client API
 
-- [ ] Testing framework.
-- [ ] Move InvitationWrapper to client.
+- [ ] Testing framework (factor out sync tests).
+- [x] Move InvitationWrapper to client.
 - [ ] Remove re-exports from `@dxos/client`.
 - [ ] Remove `partyKey` vars, etc.
 - [ ] Halo key management (factor out usage by `@dxos/registry-client`.

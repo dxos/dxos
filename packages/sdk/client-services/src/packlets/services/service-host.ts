@@ -26,7 +26,11 @@ type ClientServicesHostParams = {
   networkManager: NetworkManager;
 };
 
-// TODO(burdon): Normalize constructor of peer with ClientServicesProxy.
+// TODO(burdon): Factor out to spaces.
+// TODO(burdon): Defaults (with TextModel).
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(ObjectModel);
+};
 
 /**
  * Remote service implementation.
@@ -38,7 +42,7 @@ export class ClientServicesHost implements ClientServicesProvider {
 
   constructor({
     config,
-    modelFactory = new ModelFactory().registerModel(ObjectModel),
+    modelFactory = createDefaultModelFactory(),
     // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager
   }: ClientServicesHostParams) {
@@ -47,6 +51,8 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Break into components.
     this._serviceContext = new ServiceContext(storage, networkManager, modelFactory);
+
+    // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: createServiceProvider<InvitationsService>(() => {
@@ -73,9 +79,10 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
+  // TODO(burdon): Pass-through options.
   createPeer(port: RpcPort) {
     return createProtoRpcPeer({
-      requested: clientServiceBundle,
+      requested: {},
       exposed: this._serviceRegistry.descriptors,
       handlers: this._serviceRegistry.services,
       port

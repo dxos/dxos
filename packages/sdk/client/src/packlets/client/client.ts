@@ -6,11 +6,10 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
-import { InvalidConfigurationError, ClientServicesProvider } from '@dxos/client-services';
+import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -49,7 +48,8 @@ export class Client {
   }: ClientOptions = {}) {
     this._config = fromConfig(config ?? defaultConfig);
     this._services = services ?? fromDefaults(this._config);
-    this._modelFactory = modelFactory ?? new ModelFactory().registerModel(ObjectModel);
+    // NOTE: Defaults to the same as the backend services.
+    this._modelFactory = modelFactory ?? createDefaultModelFactory();
 
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);

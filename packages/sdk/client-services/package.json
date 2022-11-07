@@ -37,7 +37,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
@@ -49,6 +48,7 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
+    "@dxos/testutils": "workspace:*",
     "@types/level-js": "~4.0.1",
     "@types/memdown": "^3.0.0",
     "@types/readable-stream": "^2.3.9"

@@ -102,9 +102,7 @@ export const createPort = (peer: Protocol, receive: Event<SerializedObject>): Rp
   };
 };
 
-/**
- *
- */
+// TODO(burdon): What happens if undefined?
 export const getPeerId = (peer: Protocol) => {
   const { peerId } = peer.getSession() ?? {};
   return peerId as string;
@@ -119,6 +117,7 @@ export const createRpcPlugin = (onOpen: OnConnect, options: CreatePluginOptions 
   let count = 0;
   return new RpcPlugin(async (port, peerId) => {
     if (count >= options.maxConnections) {
+      // TODO(burdon): Propagate error to handler.
       log(`max connections reached: ${count}`);
       return;
     }

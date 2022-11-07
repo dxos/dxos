@@ -2,13 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesHost, ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
+import {
+  ClientServicesHost,
+  ClientServicesProvider,
+  ClientServicesProxy,
+  createDefaultModelFactory
+} from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_ORIGIN, DEFAULT_CONFIG_CHANNEL, IFRAME_ID } from './config';
@@ -24,7 +27,6 @@ export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFI
 
   const iframe = createIFrame(source.toString(), IFRAME_ID);
   const iframePort = createIFramePort({ origin: source.origin, iframe, channel });
-
   return new ClientServicesProxy(iframePort);
 };
 
@@ -35,7 +37,7 @@ export const fromDefaults = (config: Config | ConfigProto): ClientServicesProvid
   const conf = fromConfig(config);
   return new ClientServicesHost({
     config: conf,
-    modelFactory: new ModelFactory().registerModel(ObjectModel),
+    modelFactory: createDefaultModelFactory(),
     networkManager: createNetworkManager(conf)
   });
 };

@@ -9,7 +9,7 @@ import { afterTest } from '@dxos/testutils';
 import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
 
-describe('HALO', function () {
+describe('Halo', function () {
   it('creates a profile', async function () {
     const testBuilder = new TestClientBuilder();
 

@@ -46,6 +46,7 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
 
   if (options.file) {
     options = defaultsDeep(options, loadOptions(options.file));
+    console.log(JSON.stringify(options, undefined, 2));
   }
 
   const defaultProcessor =

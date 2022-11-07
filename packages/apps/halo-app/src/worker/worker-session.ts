@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesProvider } from '@dxos/client-services';
+import { ClientServicesHost } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -12,7 +12,7 @@ import { Callback } from '@dxos/util';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  clientServices: ClientServicesProvider;
+  clientServices: ClientServicesHost;
   systemPort: RpcPort;
   appPort: RpcPort;
   options?: {
@@ -23,9 +23,10 @@ export type WorkerSessionParams = {
 /**
  * Represents a tab connection within the worker.
  */
+// TODO(burdon): Move into `@dxos/client-services`.
 export class WorkerSession {
-  private readonly _clientServices: ClientServicesProvider;
-  private readonly _appRpc: ProtoRpcPeer<{}>;
+  private readonly _clientServices: ClientServicesHost;
+  private readonly _clientRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
@@ -47,8 +48,7 @@ export class WorkerSession {
     this._clientServices = clientServices;
     this._options = options;
 
-    // TODO(burdon): Rename _clientRpc?
-    this._appRpc = createProtoRpcPeer({
+    this._clientRpc = createProtoRpcPeer({
       requested: {},
       exposed: clientServices.descriptors,
       handlers: clientServices.services,
@@ -84,7 +84,7 @@ export class WorkerSession {
   }
 
   async open() {
-    await Promise.all([this._appRpc.open(), this._systemRpc.open()]);
+    await Promise.all([this._clientRpc.open(), this._systemRpc.open()]);
 
     await this._startTrigger.wait(); // TODO(dmaretskyi): Timeout.
 
@@ -112,6 +112,6 @@ export class WorkerSession {
       clearInterval(this._heartbeatTimer);
     }
 
-    await Promise.all([this._appRpc.close(), this._systemRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._systemRpc.close()]);
   }
 }

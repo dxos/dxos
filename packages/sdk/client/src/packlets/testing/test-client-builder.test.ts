@@ -11,14 +11,11 @@ import { createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
-import { TestClientBuilder } from './client-builder';
+import { TestClientBuilder } from './test-client-builder';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
 
-/**
- *
- */
 describe('Client services', function () {
   it('creates client with embedded services', async function () {
     const testBuilder = new TestClientBuilder();
@@ -38,7 +35,7 @@ describe('Client services', function () {
 
     const [proxyPort, hostPort] = createLinkedPorts();
     const server = peer.createPeer(hostPort);
-    server.open();
+    void server.open();
     afterTest(() => server.close());
 
     const client = new Client({ services: new ClientServicesProxy(proxyPort) });

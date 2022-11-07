@@ -7,13 +7,11 @@ import { expect } from 'chai';
 import { Config } from '@dxos/config';
 import { Space } from '@dxos/echo-db';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { ClientServicesHost, ServiceContext } from '../services';
+import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
 
 //
 // TODO(burdon): Replace test builder.
@@ -43,7 +41,7 @@ export const createServiceContext = ({
     transportFactory: MemoryTransportFactory
   });
 
-  const modelFactory = new ModelFactory().registerModel(ObjectModel);
+  const modelFactory = createDefaultModelFactory();
   return new ServiceContext(storage, networkManager, modelFactory);
 };
 
@@ -64,6 +62,7 @@ export const createIdentity = async (peer: ServiceContext) => {
   return peer;
 };
 
+// TODO(burdon): Move out of here.
 export const closeAfterTest = async (peer: ServiceContext) => {
   afterTest(() => peer.close());
   return peer;

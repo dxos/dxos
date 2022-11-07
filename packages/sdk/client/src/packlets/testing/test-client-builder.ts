@@ -2,12 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ClientServices, ClientServicesHost, ClientServicesProxy } from '@dxos/client-services';
+import {
+  ClientServices,
+  ClientServicesHost,
+  ClientServicesProxy,
+  createDefaultModelFactory
+} from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { createLinkedPorts, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client, defaultConfig } from '../client';
@@ -23,8 +26,6 @@ export const testConfigWithLocalSignal: ConfigProto = {
   }
 };
 
-const defaultModelFactory = new ModelFactory().registerModel(ObjectModel);
-
 // TODO(burdon): See feed-store builder pattern (for overrides).
 export class TestClientBuilder {
   private readonly _config: Config;
@@ -32,7 +33,7 @@ export class TestClientBuilder {
   // prettier-ignore
   constructor (
     config: Config | ConfigProto = defaultConfig,
-    private readonly _modelFactory = defaultModelFactory,
+    private readonly _modelFactory = createDefaultModelFactory(),
     private readonly _signalManagerContext = new MemorySignalManagerContext()
   ) {
     this._config = fromConfig(config);

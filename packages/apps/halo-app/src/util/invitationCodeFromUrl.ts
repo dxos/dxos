@@ -10,7 +10,6 @@ export const invitationCodeFromUrl = (text: string) => {
     const invitation = searchParams.get('invitation');
     return invitation ?? text;
   } catch (err) {
-    log.error(err);
-    return text;
+    log.catch(err);
   }
 };

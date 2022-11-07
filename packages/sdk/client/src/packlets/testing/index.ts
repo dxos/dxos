@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './client-builder';
+export * from './test-client-builder';
