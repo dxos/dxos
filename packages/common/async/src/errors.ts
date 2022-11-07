@@ -25,4 +25,6 @@ export const observableError = (observable: ObservableProvider<AsyncEvents>, err
   } else {
     observable.callbacks?.onError(toError(err));
   }
+
+  observable.unsubscribe();
 };

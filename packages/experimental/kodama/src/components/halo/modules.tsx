@@ -91,9 +91,8 @@ export const createHaloMenu = (client: Client): MenuItem => {
                     component: () => (
                       <Panel>
                         <Share
-                          onCreate={async () => {
-                            const observable = client.halo.createInvitation();
-                            throw new Error('Not implemented.');
+                          onCreate={() => {
+                            return client.halo.createInvitation();
                           }}
                         />
                       </Panel>

@@ -54,11 +54,13 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
           case Invitation.State.SUCCESS: {
             observable.callbacks?.onSuccess?.(invitation);
+            observable.unsubscribe();
             break;
           }
 
           case Invitation.State.CANCELLED: {
             observable.callbacks?.onCancelled?.();
+            observable.unsubscribe();
             break;
           }
 

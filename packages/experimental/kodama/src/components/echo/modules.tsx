@@ -67,9 +67,8 @@ export const createEchoMenu = (): MenuItem | undefined => {
                   component: () => (
                     <PartyPanel party={party}>
                       <Share
-                        onCreate={async () => {
-                          const observable = party.createInvitation();
-                          throw new Error('Not implemented.');
+                        onCreate={() => {
+                          return party.createInvitation();
                         }}
                       />
                     </PartyPanel>

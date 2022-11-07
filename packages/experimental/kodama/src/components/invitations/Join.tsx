@@ -24,35 +24,22 @@ export const Join: FC<{
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const party = useParty(partyKey);
 
-  // Sample code for testing.
-  // 2Jfg6YbVr56jMcKBfXefCkSfvAG73UIJYft2ORDOlNof0iAPCqNrvLH6A1lsZKVO9VGKzKzZlU60yjrlvNIfCsUdihG0sJsLesWHBSbyOs2flkEbQPaxPucsuBxalb7J5nGow5Dcn8rERUqOQEIBkve5hzATC60y9rooOnCflZ7k5MIOFjM7KZt7kkmGyOcNumzK0jayOV882TfEZuYrCOM0zilOnDDTZaOACEEMotiWYForVzdb9QtxnpxYcwbSdfZQeGTdZTSjTy9VYAwo0FYoDCNlpXSwCBto1vgJ2JV6kjFb9TLyN4SGbv0CHhkD6JziDHVk7vxo5ebll2P4psfSuLaw7Xxj9xRRnj2dxUp3yg5s4051fpRhli6b4D6tNKwgcEAtnSeRzazrArM85
-
   const handleDecode = () => {
-    try {
-      // TODO(burdon): Detect and parse URL.
-      // Decode JSON with both token and secret.
-      const invitation = InvitationEncoder.decode(invitationCode!);
-      // TODO(burdon): Errors not caught
-      const observable = client.echo.acceptInvitation(invitation);
-      // void handleSubmit(invitation, secret);
-      throw new Error('Not implemented.');
-    } catch (err) {
-      try {
-        // Decode regular token.
-        // const stripped = descriptor!.replace(/[\W]/g, '');
-        // const invitation = client.echo.acceptInvitation(InvitationEncoder.decode(stripped));
-        // setInvitation(invitation);
-      } catch (err) {
+    const invitation = InvitationEncoder.decode(invitationCode!);
+    const observable = client.echo.acceptInvitation(invitation);
+    observable.subscribe({
+      onSuccess: (invitation: Invitation) => {
+        setPartyKey(invitation.spaceKey);
+      },
+      onError: (err: Error) => {
         setStatus({ error: err as Error });
       }
-    }
+    });
   };
 
   const handleSubmit = async (invitation: Invitation, secret: string) => {
     try {
       setStatus({ processing: 'Authenticating...' });
-      // TODO(burdon): Exceptions not propagated to here (e.g., IDENTITY_NOT_INITIALIZED, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT)
-      //  https://github.com/dxos/dxos/issues/1423
       // await invitation!.authenticate(Buffer.from(secret));
       // const party = await invitation!.getParty();
       // setInvitation(undefined);
