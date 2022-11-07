@@ -9,9 +9,15 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../services';
-import { closeAfterTest, createIdentity, createPeers, syncItems } from '../testing';
+import { createIdentity, createPeers, syncItems } from '../testing';
+
+const closeAfterTest = async (peer: ServiceContext) => {
+  afterTest(() => peer.close());
+  return peer;
+};
 
 describe('services/spaces', function () {
   it('genesis', async function () {

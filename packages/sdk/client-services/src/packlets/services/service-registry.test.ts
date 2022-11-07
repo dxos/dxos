@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -26,22 +25,7 @@ const serviceBundle = createServiceBundle<TestServices>({
 });
 
 describe('service registry', function () {
-  it('creates a proxy', async function () {
-    interface Test {
-      value: number;
-      add: (...args: number[]) => Promise<number>;
-    }
-
-    const proxy = createServiceProvider<Test>(() => ({
-      value: 100,
-      add: (...args: number[]) => Promise.resolve(args.reduce((result, value) => result + value, 0))
-    }));
-
-    expect(proxy.value).to.eq(100);
-    expect(await proxy.add(1, 2, 3)).to.eq(6);
-  });
-
-  it('builds a service registry', async function () {
+  it.only('builds a service registry', async function () {
     const serviceContext = createServiceContext();
     await serviceContext.open();
     await serviceContext.createIdentity();

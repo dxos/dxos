@@ -9,12 +9,11 @@ import { Space } from '@dxos/echo-db';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
-import { afterTest } from '@dxos/testutils';
 
 import { createDefaultModelFactory, ClientServicesHost, ServiceContext } from '../services';
 
 //
-// TODO(burdon): Replace test builder.
+// TODO(burdon): Replace with test builder.
 //
 
 export const createServiceHost = (config: Config, signalManagerContext: MemorySignalManagerContext) => {
@@ -59,12 +58,6 @@ export const createPeers = async (numPeers: number) => {
 
 export const createIdentity = async (peer: ServiceContext) => {
   await peer.createIdentity();
-  return peer;
-};
-
-// TODO(burdon): Move out of here.
-export const closeAfterTest = async (peer: ServiceContext) => {
-  afterTest(() => peer.close());
   return peer;
 };
 

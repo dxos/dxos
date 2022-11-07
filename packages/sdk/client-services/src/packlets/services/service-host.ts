@@ -18,7 +18,7 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
-import { createLazyService, ServiceRegistry } from './service-registry';
+import { createServiceProvider, ServiceRegistry } from './service-registry';
 
 type ClientServicesHostParams = {
   config: Config;
@@ -55,12 +55,15 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createLazyService(schema.getService('dxos.client.services.InvitationsService'), () => {
-        return new SpaceInvitationsServiceImpl(
-          this._serviceContext.spaceManager!,
-          this._serviceContext.spaceInvitations!
-        );
-      }),
+      SpaceInvitationsService: createServiceProvider(
+        schema.getService('dxos.client.services.InvitationsService'),
+        () => {
+          return new SpaceInvitationsServiceImpl(
+            this._serviceContext.spaceManager!,
+            this._serviceContext.spaceInvitations!
+          );
+        }
+      ),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),

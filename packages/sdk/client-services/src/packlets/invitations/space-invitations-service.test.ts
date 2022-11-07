@@ -8,11 +8,17 @@ import { expect } from 'chai';
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../services';
-import { closeAfterTest, createIdentity, createPeers } from '../testing';
+import { createIdentity, createPeers } from '../testing';
 import { SpaceInvitationsProxy } from './space-invitations-proxy';
 import { SpaceInvitationsServiceImpl } from './space-invitations-service';
+
+const closeAfterTest = async (peer: ServiceContext) => {
+  afterTest(() => peer.close());
+  return peer;
+};
 
 describe('services/space-invitation-service', function () {
   it('creates space and invites peer', async function () {
