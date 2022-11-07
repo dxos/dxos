@@ -73,28 +73,26 @@ export const ClientProvider = ({
   );
 
   useAsyncEffect(async () => {
-    if (!client) {
-      const done = async (client: Client) => {
-        log(`Created client: ${client}`);
-        if (clientRef) {
-          clientRef.current = client;
-        }
-        await onInitialize?.(client);
-        setClient(client);
-        printBanner(client);
-      };
-
-      if (clientProvider) {
-        // Asynchornously request client.
-        const client = await getAsyncValue(clientProvider);
-        await done(client);
-      } else {
-        // Asynchronously construct client (config may be undefined).
-        const config = await getAsyncValue(configProvider);
-        const client = new Client(config, options);
-        await client.initialize();
-        await done(client);
+    const done = async (client: Client) => {
+      log(`Created client: ${client}`);
+      if (clientRef) {
+        clientRef.current = client;
       }
+      await onInitialize?.(client);
+      setClient(client);
+      printBanner(client);
+    };
+
+    if (clientProvider) {
+      // Asynchornously request client.
+      const client = await getAsyncValue(clientProvider);
+      await done(client);
+    } else {
+      // Asynchronously construct client (config may be undefined).
+      const config = await getAsyncValue(configProvider);
+      const client = new Client(config, options);
+      await client.initialize();
+      await done(client);
     }
   }, [clientProvider, configProvider, options]);
 

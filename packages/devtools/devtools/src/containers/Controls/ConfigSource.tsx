@@ -13,19 +13,17 @@ export type ConfigSourceProps = {
 };
 
 export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
-  const [remoteSource, setRemoteSource] = useState<string | undefined>();
+  const [remoteSource, setRemoteSource] = useState<string>(DEFAULT_CLIENT_ORIGIN);
 
   const [mode, setMode] = useState(1); // local = 1, remote = 2
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMode(event.target.checked ? 2 : 1);
-    setRemoteSource(event.target.checked ? DEFAULT_CLIENT_ORIGIN : undefined);
   };
 
   useEffect(() => {
-    console.log('onSource', { remoteSource, mode });
-    onSource({ remoteSource, mode });
-  }, [remoteSource, mode]);
+    onSource({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
+  }, [mode]);
 
   return (
     <Card sx={{ margin: 1 }}>
@@ -40,7 +38,7 @@ export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
           label='Remote Source'
           variant='standard'
           fullWidth
-          value={DEFAULT_CLIENT_ORIGIN}
+          value={remoteSource}
           onChange={(event) => setRemoteSource(event.target.value)}
         />
         <Button

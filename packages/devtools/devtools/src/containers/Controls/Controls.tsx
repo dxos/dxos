@@ -29,6 +29,7 @@ export const Controls = ({ onSource }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
+  console.log('Controls, client', client.config.values);
   const profile = useProfile();
   const parties = useParties();
 

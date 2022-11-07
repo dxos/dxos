@@ -9,6 +9,5 @@ import { JsonTreeView } from '@dxos/react-components';
 
 export const ConfigPanel = () => {
   const config = useConfig();
-  console.log('config', config);
   return <JsonTreeView size='small' depth={4} data={config.values} />;
 };

@@ -176,6 +176,7 @@ export class Client {
   @synchronized
   // TODO(burdon): Rename open.
   async initialize(onProgressCallback?: (progress: OpenProgress) => void) {
+    console.log('Client.initialize', this._config.values);
     if (this._initialized) {
       return;
     }
