@@ -35,11 +35,13 @@ export class Callback<T extends (...args: any[]) => any> {
   }
 }
 
+export type ArrayCallbacks<T> = { handlers: T[] };
+
 /**
  * Create a fan-out callback handler.
- * Creates a proxy to
+ * NOTE: Methods cannot return values.
  */
-export const createArrayCallback = <T extends {}>({ handlers }: { handlers: T[] }) => {
+export const createArrayCallback = <T extends {}>({ handlers }: ArrayCallbacks<T>) => {
   type Obj = { [i: string | symbol]: any };
   return new Proxy<any>(
     {

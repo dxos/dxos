@@ -3,6 +3,7 @@
 //
 
 export * from './binder';
+export * from './callback';
 export * from './complex';
 export * from './default-map';
 export * from './human-hash';
@@ -14,4 +15,3 @@ export * from './random';
 export * from './range';
 export * from './types';
 export * from './uint8array';
-export * from './callback';

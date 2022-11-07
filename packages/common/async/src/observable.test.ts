@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { AsyncEvents, TimeoutError } from './errors';
+import { AsyncEvents, observableError, TimeoutError } from './errors';
 import { latch } from './latch';
 import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable';
 
@@ -32,12 +32,12 @@ describe('observable', function () {
 
       const timeout = setTimeout(() => {
         clearTimeout(connectTimeout);
-        observable.callbacks?.onTimeout?.(new TimeoutError(timeoutDelay));
+        observableError(observable, new TimeoutError(timeoutDelay));
       }, timeoutDelay);
 
       const connectTimeout = setTimeout(() => {
         clearTimeout(timeout);
-        observable.callbacks?.onConnected('connection-1');
+        observable.callback.onConnected('connection-1');
       }, connectionDelay);
 
       return observable;
@@ -49,8 +49,7 @@ describe('observable', function () {
 
     const observable = openConnection();
 
-    // TODO(burdon): Auto unsubscribe on err?
-    const subscription = observable.subscribe({
+    const unsubscribe = observable.subscribe({
       onConnected: () => {
         connected = true;
         setDone();
@@ -79,7 +78,7 @@ describe('observable', function () {
       clearTimeout(cancelTimeout);
     }
 
-    subscription.unsubscribe();
+    unsubscribe();
 
     return { connected, cancelled, failed };
   };
@@ -98,7 +97,7 @@ describe('observable', function () {
     expect(cancelled).to.be.true;
   });
 
-  it.only('times out', async function () {
+  it('times out', async function () {
     const { connected, cancelled, failed } = await runTest(50, 30, 20);
     expect(failed).to.exist;
     expect(connected).to.be.false;

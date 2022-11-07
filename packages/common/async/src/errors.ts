@@ -14,17 +14,16 @@ export class TimeoutError extends Error {
 }
 
 export interface AsyncEvents<T = any> {
-  onSuccess?(result: T): T;
+  onSuccess?(result: T): void;
   onTimeout?(err: TimeoutError): void;
   onError(err: any): void;
 }
 
 export const observableError = (observable: ObservableProvider<AsyncEvents>, err: any) => {
-  if (err instanceof TimeoutError && observable.callbacks?.onTimeout) {
-    observable.callbacks?.onTimeout(err);
+  // TODO(burdon): Cannot know.
+  if (err instanceof TimeoutError) {
+    observable.callback.onTimeout?.(err);
   } else {
-    observable.callbacks?.onError(toError(err));
+    observable.callback.onError(toError(err));
   }
-
-  observable.unsubscribe();
 };

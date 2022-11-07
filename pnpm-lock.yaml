@@ -678,10 +678,12 @@ importers:
   packages/common/async:
     specifiers:
       '@dxos/debug': workspace:*
+      '@dxos/util': workspace:*
       assert: ^2.0.0
       events: ^3.3.0
     dependencies:
       '@dxos/debug': link:../debug
+      '@dxos/util': link:../util
       assert: 2.0.0
     devDependencies:
       events: 3.3.0
@@ -3287,7 +3289,6 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/testutils': link:../../common/testutils
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
@@ -3298,6 +3299,7 @@ importers:
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
+      '@dxos/testutils': link:../../common/testutils
       '@types/level-js': 4.0.2
       '@types/memdown': 3.0.0
       '@types/readable-stream': 2.3.14
@@ -24195,7 +24197,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1

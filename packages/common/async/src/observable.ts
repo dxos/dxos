@@ -2,17 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { createArrayCallback } from '@dxos/util';
+
 import { UnsubscribeCallback } from './events';
 
-export interface ObservableSubscription<Events> {
-  id: string;
-  events: Events;
-  unsubscribe: UnsubscribeCallback;
-}
-
 export interface Observable<Events> {
-  subscribe(callbacks: Events): ObservableSubscription<Events>;
-  unsubscribe(): void;
+  subscribe(callbacks: Events): UnsubscribeCallback;
 }
 
 /**
@@ -22,27 +17,19 @@ export interface Observable<Events> {
 //  https://betterprogramming.pub/compare-leading-javascript-functional-reactive-stream-libraries-544163c1ded6
 //  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
 //  https://github.com/mostjs/core
-export class ObservableProvider<Events> implements Observable<Events> {
-  protected _callbacks?: Events;
+export class ObservableProvider<Events extends {}> implements Observable<Events> {
+  protected _handlers: Events[] = [];
+  private _proxy = createArrayCallback<Events>({
+    handlers: this._handlers
+  });
 
-  // TODO(burdon): Remove.
-  get callbacks() {
-    return this._callbacks;
+  get callback(): Events {
+    return this._proxy;
   }
 
-  // TODO(burdon): Return handle.
-  subscribe(callbacks: Events): ObservableSubscription<Events> {
-    this._callbacks = callbacks;
-    return {
-      id: '',
-      events: callbacks,
-      unsubscribe: () => {}
-    };
-    // return () => this.unsubscribe();
-  }
-
-  unsubscribe() {
-    this._callbacks = undefined;
+  subscribe(handler: Events): UnsubscribeCallback {
+    this._handlers.push(handler);
+    return () => {};
   }
 }
 
@@ -73,17 +60,13 @@ export class CancellableObservableProvider<
     return this._cancelled;
   }
 
-  async cancel(unsubscribe = true) {
+  async cancel() {
     if (this._cancelled) {
       return;
     }
 
     this._cancelled = true;
     await this._handleCancel?.();
-    this.callbacks?.onCancelled?.();
-
-    if (unsubscribe) {
-      this.unsubscribe();
-    }
+    this.callback.onCancelled?.();
   }
 }
