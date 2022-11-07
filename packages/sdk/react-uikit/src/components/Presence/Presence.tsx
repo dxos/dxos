@@ -25,7 +25,7 @@ import {
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
-import { UsernameInput } from '../Profile';
+import { DisplayNameInput } from '../Profile';
 
 export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
@@ -84,7 +84,7 @@ const ProfileMenu = (props: PresenceProps) => {
           <span>{t('manage profile label')}</span>
         </Button>
       )}
-      <UsernameInput profile={profile} />
+      <DisplayNameInput profile={profile} />
     </Popover>
   );
 };

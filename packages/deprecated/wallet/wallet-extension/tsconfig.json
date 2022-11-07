@@ -17,8 +17,8 @@
   },
   "include": [
     "scripts",
-    "src",
-    "stories"
+    "__src",
+    "__stories"
   ],
   "references": [
     {

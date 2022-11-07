@@ -17,7 +17,7 @@ describe('HALO', function () {
     afterTest(() => client.destroy());
     await client.initialize();
 
-    await client.halo.createProfile({ username: 'test-user' });
+    await client.halo.createProfile({ displayName: 'test-user' });
     expect(client.halo.profile).exist;
   });
 });

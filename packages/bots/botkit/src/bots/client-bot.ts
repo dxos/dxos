@@ -32,7 +32,7 @@ export class Bot implements BotService {
     log('Client bot initialize');
     await this.client.initialize();
     log('Client bot create profile');
-    await this.client.halo.createProfile({ username: 'Bot' });
+    await this.client.halo.createProfile({ displayName: 'Bot' });
 
     // if (request.invitation) {
     //   assert(request.invitation.secret, 'Secret must be provided with invitation');

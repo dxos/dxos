@@ -68,7 +68,7 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
   }
 
   const color = getColor(member.identityKey!);
-  const letter = member.displayName?.slice(0, 1).toUpperCase() ?? '?';
+  const letter = member.profile?.displayName?.slice(0, 1).toUpperCase() ?? '?';
 
   return (
     <Tooltip title={letter} placement='top'>

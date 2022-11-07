@@ -29,11 +29,11 @@ export const Profile = () => {
       ]}
       rows={[
         {
-          property: 'Public key',
+          property: 'Identity key',
           value: truncateKey(profile.identityKey, 4)
         },
         {
-          property: 'Username',
+          property: 'Display name',
           value: profile.displayName
         }
       ]}

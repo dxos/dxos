@@ -17,7 +17,7 @@ describe('Spaces', function () {
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
     await client.initialize();
-    await client.halo.createProfile({ username: 'test-user' });
+    await client.halo.createProfile({ displayName: 'test-user' });
 
     // TODO(burdon): Test basic queries.
     {

@@ -11,6 +11,6 @@ void (async () => {
   await client.initialize();
 
   const element = document.createElement('pre');
-  element.innerText = JSON.stringify(client.info, null, 2);
+  element.innerText = JSON.stringify(client.toJSON(), null, 2);
   document.body.appendChild(element);
 })();

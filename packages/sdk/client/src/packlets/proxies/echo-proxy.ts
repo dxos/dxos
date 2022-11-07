@@ -51,7 +51,7 @@ export class EchoProxy implements Echo {
   }
 
   // TODO(burdon): Include deviceId.
-  get toJSON() {
+  toJSON() {
     return {
       parties: this._parties.size
     };

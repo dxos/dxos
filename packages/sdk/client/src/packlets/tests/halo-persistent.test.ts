@@ -35,7 +35,7 @@ describe('Halo', function () {
       afterTest(() => client.destroy());
       await client.initialize();
 
-      await client.halo.createProfile({ username: 'test-user' });
+      await client.halo.createProfile({ displayName: 'test-user' });
       expect(client.halo.profile).exist;
     }
 
@@ -47,7 +47,7 @@ describe('Halo', function () {
       await waitForCondition(() => !!client.halo.profile);
       expect(client.halo.profile).exist;
       // TODO(burdon): Not working.
-      // expect(client.halo.profile!.username).to.eq('test-user');
+      // expect(client.halo.profile!.displayName).to.eq('test-user');
     }
   });
 });

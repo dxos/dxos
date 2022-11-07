@@ -49,10 +49,10 @@ export const Main = () => {
     return () => partyStream.close();
   }, []);
 
-  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, username) => {
+  const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, displayName) => {
     setInProgress(true);
     try {
-      await client.halo.createProfile({ seedphrase, username });
+      await client.halo.createProfile({ seedphrase, displayName });
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -117,10 +117,10 @@ export const Main = () => {
 
   return (
     <div style={{ minWidth: 400 }}>
-      <p>Hello, {profile.username ?? profile.publicKey.toString()}</p>
+      <p>Hello, {profile.displayName ?? profile.identityKey.toString()}</p>
       {polkadotAddress && <p>Your Polkadot Address: {polkadotAddress}</p>}
       {DXNSAccount && <p>Your DXNS Account: {DXNSAccount}</p>}
-      <p>Your profile public key: {profile.publicKey.toString()}</p>
+      <p>Your profile public key: {profile.identityKey.toString()}</p>
       <Button disabled={inProgress} onClick={handleReset} variant='outlined'>
         Reset
       </Button>

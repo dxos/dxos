@@ -13,8 +13,8 @@
     "/node_modules/"
   ],
   "include": [
-    "src",
-    "stories"
+    "__src",
+    "__stories"
   ],
   "references": [
     {

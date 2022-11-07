@@ -31,7 +31,7 @@ export const Share: FC<{
       if (!clipped) {
         write(`Invitation (clipboard not available)\n${invitation.encode()}\n\n`);
       }
-      // qrcode.generate(invitation.descriptor.encode(), { small: true }, (str: string) => {
+      // qrcode.generate(invitation, { small: true }, (str: string) => {
       //   console.log(str);
       // });
 

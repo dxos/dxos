@@ -49,7 +49,7 @@ const main = async () => {
 
   log('Before send report');
   await rpc.rpc.sendReport({
-    identityKey: profile.publicKey.asUint8Array()
+    identityKey: profile.identityKey.asUint8Array()
   });
 };
 

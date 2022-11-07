@@ -23,9 +23,9 @@ export class TestBuilder {
     await client.initialize();
     expect(client.initialized).toBeTruthy();
 
-    await client.halo.createProfile({ username: 'test-user' });
-    // const { username } = client.halo.profile!;
-    // expect(username).toEqual('test-user');
+    await client.halo.createProfile({ displayName: 'test-user' });
+    // const { displayName } = client.halo.profile!;
+    // expect(displayName).toEqual('test-user');
 
     this._client = client;
   }

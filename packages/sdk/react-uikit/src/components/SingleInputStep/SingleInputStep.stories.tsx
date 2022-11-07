@@ -18,7 +18,7 @@ export default {
   argTypes: {
     onClickBack: { action: 'back' },
     onClickNext: { action: 'next' },
-    onChangeUsername: { action: 'change' }
+    onChangeDisplayName: { action: 'change' }
   }
 };
 
@@ -49,9 +49,9 @@ export const CreateProfile = templateForComponent(Template)({
 CreateProfile.args = {
   pending: false,
   rootLabel: 'create profile label',
-  inputLabel: 'username label',
-  inputPlaceholder: 'username placeholder',
-  inputProps: { autoComplete: 'username' }
+  inputLabel: 'displayName label',
+  inputPlaceholder: 'displayName placeholder',
+  inputProps: { autoComplete: 'displayName' }
 };
 
 export const JoinSpace = () => (

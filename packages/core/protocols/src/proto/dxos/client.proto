@@ -69,6 +69,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
+  // TODO(burdon): Remove identity from Profile (party of identity).
   dxos.keys.PublicKey identity_key = 1;
   optional string displayName = 2;
 }
@@ -78,9 +79,10 @@ message SubscribeProfileResponse {
 }
 
 message CreateProfileRequest {
-  optional string username = 1; // TODO(burdon): Display name.
-  optional bytes public_key = 2;
-  optional bytes secret_key = 3;
+  optional bytes public_key = 1;
+  optional bytes secret_key = 2;
+  // TODO(burdon): Profile.
+  optional string displayName = 3;
 }
 
 message RecoverProfileRequest {

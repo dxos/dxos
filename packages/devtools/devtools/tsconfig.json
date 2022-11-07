@@ -8,7 +8,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src"
+    "__src"
   ],
   "references": [
     {

@@ -13,7 +13,7 @@
     "/node_modules/"
   ],
   "include": [
-    "src"
+    "__src"
   ],
   "references": [
     {

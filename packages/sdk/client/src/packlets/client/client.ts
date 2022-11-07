@@ -65,7 +65,7 @@ export class Client {
     return inspectObject(this);
   }
 
-  get toJSON() {
+  toJSON() {
     return {
       initialized: this.initialized,
       echo: this.echo,

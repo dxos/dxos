@@ -24,11 +24,11 @@ const defaultCreateUrl = (invitationCode: string) => {
   return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
 };
 
-export const UsernameInput = ({ profile }: { profile: ProfileType }) => {
+export const DisplayNameInput = ({ profile }: { profile: ProfileType }) => {
   const { t } = useTranslation();
   return (
     <Input
-      label={t('username label')}
+      label={t('displayName label')}
       initialValue={profile.displayName}
       placeholder={humanize(profile.identityKey.toHex())}
       className='my-0'
@@ -68,7 +68,7 @@ export const Profile = (props: ProfileProps) => {
   const { t } = useTranslation();
   return (
     <div role='none' className='flex flex-col gap-4 items-center'>
-      <UsernameInput {...props} />
+      <DisplayNameInput {...props} />
       <HaloInviteSingleton {...props} />
       <Button variant='outline' className='w-full flex gap-2'>
         <Eraser className={getSize(5)} />
