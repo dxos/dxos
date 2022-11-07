@@ -2,26 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
-import { raise } from '@dxos/debug';
+import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { ServiceBundle } from '@dxos/rpc';
 
 export type ServiceProvider<T extends {}> = () => T | undefined;
 
 /**
- * Creates a proxy object for the delayed creation of services.
+ * Creates a delegated lazy-loaded service.
  */
-export const createServiceProvider = <T extends {}>(provider: ServiceProvider<T>): T => {
-  let value: T;
-  return new Proxy<ServiceProvider<T>>(provider, {
-    get: (target: ServiceProvider<T>, prop) => {
-      if (value === undefined) {
-        value = provider() ?? raise(new Error('Value undefined.'));
+export const createLazyService = <T extends {}>(descriptor: ServiceDescriptor<T>, provider: ServiceProvider<T>): T => {
+  const methods: Record<string, any> = {};
+  for (const method of descriptor.serviceProto.methodsArray) {
+    methods[method.name] = (request: unknown) => {
+      const service = provider();
+      if (!service) {
+        throw new Error('Service not available.');
       }
 
-      const obj: { [i: string | symbol]: any } = value!;
-      return obj[prop];
-    }
-  }) as any as T;
+      return (service[method.name as keyof T] as any)(request);
+    };
+  }
+
+  return methods as T;
 };
 
 /**

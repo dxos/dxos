@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
@@ -18,7 +18,7 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
-import { createServiceProvider, ServiceRegistry } from './service-registry';
+import { createLazyService, ServiceRegistry } from './service-registry';
 
 type ClientServicesHostParams = {
   config: Config;
@@ -49,7 +49,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._serviceContext = new ServiceContext(storage, networkManager, modelFactory);
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider<InvitationsService>(() => {
+      SpaceInvitationsService: createLazyService(schema.getService('dxos.client.services.InvitationsService'), () => {
         return new SpaceInvitationsServiceImpl(
           this._serviceContext.spaceManager!,
           this._serviceContext.spaceInvitations!
