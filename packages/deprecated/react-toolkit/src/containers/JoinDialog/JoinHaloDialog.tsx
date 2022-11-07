@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { invitationObserver } from '@dxos/client-services';
+import { invitationObservable } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { JoinDialog, JoinDialogProps } from './JoinDialog';
@@ -20,8 +20,8 @@ export const JoinHaloDialog = ({ onJoin, ...props }: JoinHaloDialogProps) => {
   const client = useClient();
 
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    const acceptedInvitation = await client.halo.acceptInvitation(invitation);
-    await invitationObserver(acceptedInvitation);
+    const observable = await client.halo.acceptInvitation(invitation);
+    await invitationObservable(observable);
     // const secret = await secretProvider();
     // await acceptedInvitation.authenticate(secret);
     await onJoin?.();

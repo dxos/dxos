@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { invitationObservable } from 'packages/sdk/client-services/src';
 import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
@@ -148,10 +149,11 @@ const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: stri
   useEffect(() => {
     setTimeout(async () => {
       const party = await client.echo.createParty();
-      const invitation = await party.createInvitation();
-      invitation.finished.on(() => setPin(''));
-      invitation.connected.on(() => setPin(invitation.secret.toString()));
-      onInvite(invitation.encode());
+      const observable = await party.createInvitation();
+      await invitationObservable(observable);
+      // invitation.finished.on(() => setPin(''));
+      // invitation.connected.on(() => setPin(invitation.secret.toString()));
+      // onInvite(invitation.encode());
     });
   }, []);
 

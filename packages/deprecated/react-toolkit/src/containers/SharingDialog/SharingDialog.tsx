@@ -8,7 +8,7 @@ import urlJoin from 'url-join';
 import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
-import { InvitationRequest, PartyMember } from '@dxos/client';
+import { Invitation, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 import { ResourceSet } from '@dxos/registry-client';
 
@@ -35,9 +35,9 @@ export interface SharingDialogProps {
   modal?: boolean;
   title: string;
   members?: PartyMember[]; // TODO(rzadp): Support HALO members as well (different devices).
-  invitations?: InvitationRequest[];
+  invitations?: Invitation[];
   onCreateInvitation: () => void;
-  onCancelInvitation: (invitation: InvitationRequest) => void;
+  onCancelInvitation: (invitation: Invitation) => void;
   onCreateOfflineInvitation?: () => void;
   onCreateBotInvitation?: (resource: ResourceSet) => void;
   onClose?: () => void;
@@ -154,8 +154,7 @@ export const SharingDialog = ({
             {invitations.map((invitation, i) => (
               <PendingInvitation
                 key={i}
-                invitationCode={invitation.encode()}
-                pin={invitation.hasConnected ? invitation.secret.toString() : undefined}
+                invitation={invitation}
                 createUrl={createUrl}
                 onCancel={() => onCancelInvitation(invitation)}
               />

@@ -5,7 +5,7 @@
 import { CliUx, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, invitationObserver, InvitationEncoder } from '@dxos/client';
+import { Client, invitationObservable, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';
@@ -36,7 +36,7 @@ export default class Join extends BaseCommand {
     return await this.execWithClient(async (client: Client) => {
       CliUx.ux.action.start('Waiting for peer to connect');
       const observable = client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
-      const invitation = await invitationObserver(observable);
+      const invitation = await invitationObservable(observable);
       const party = client.echo.getParty(invitation.spaceKey!)!;
       CliUx.ux.action.stop();
 

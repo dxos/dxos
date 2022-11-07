@@ -6,7 +6,7 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { invitationObserver, InvitationEncoder, Party } from '@dxos/client';
+import { invitationObservable, InvitationEncoder, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { SingleInputStep } from '../SingleInputStep';
@@ -29,7 +29,7 @@ export const JoinSpacePanel = ({
   const redeemInvitation = useCallback(async () => {
     // TODO(burdon): Implement observable to get other states (e.g., connecting...)
     const observable = client.echo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
-    const invitation = await invitationObserver(observable);
+    const invitation = await invitationObservable(observable);
     return client.echo.getParty(invitation.spaceKey!)!;
   }, [invitationCode]);
   const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);

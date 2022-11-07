@@ -26,7 +26,8 @@ export interface InvitationsProxy<T> extends InvitationsHandler<T> {
 /**
  * Util to wrap observable with promise.
  */
-export const invitationObserver = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
+// TODO(burdon): How to make interactive?
+export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({
       onSuccess: (invitation: Invitation) => {
