@@ -1,0 +1,53 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.mesh.teleport.replicator;
+
+message FeedInfo {
+  dxos.keys.PublicKey feed_key = 1;
+  
+  /// set if the peer whishes to download the data from the feed.
+  bool download = 2;
+
+  /// set if the peer whishes to updload the data from the feed.
+  bool upload = 3;
+}
+
+message UpdateFeedsRequest {
+  // All feeds that the peer is interesed in.
+  FeedInfo feeds = 1;
+}
+
+message StartReplicationRequest {
+  FeedInfo info = 1;
+}
+
+message StartReplicationResoponse {
+  /**
+   * Tag of the stream the peers will use for the replication. 
+   * Set to null or "" (empty string) of the peer does not wish to replicate the feed.
+   *
+   * A new stream must be open with unique tag to start replicating. Existing streams cannot be reused.
+   */
+  string stream_tag = 1;
+}
+
+message StopReplicationRequest {
+  FeedInfo info = 1;
+}
+
+
+/// Controls the lifycycle of the teleport session and its exentsions.
+service ReplicatorService {
+  /// Notify about available feeds.
+  rpc UpdateFeeds (UpdateFeedsRequest) returns (google.protobuf.Empty);
+
+  /// Start replicating feed. If this feed is already being replicated, the existing replication session must be stopped.
+  rpc StartReplication(StartReplicationRequest) returns (StartReplicationResoponse);
+
+  /// Stop replicating feed.
+  rpc StopReplication(StopReplicationRequest) returns (google.protobuf.Empty);
+}

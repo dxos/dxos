@@ -1646,15 +1646,44 @@ importers:
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
       varint: 6.0.0
     devDependencies:
       '@dxos/async': link:../../../common/async
-      '@dxos/rpc': link:../rpc
       '@dxos/testutils': link:../../../common/testutils
       '@types/varint': 6.0.0
+      typescript: 4.8.4
+      wait-for-expect: 3.0.2
+
+  packages/core/mesh/teleport-plugin-replicator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/teleport': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      assert: ^2.0.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/rpc': link:../rpc
+      '@dxos/teleport': link:../teleport
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+    devDependencies:
+      '@dxos/testutils': link:../../../common/testutils
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
