@@ -12,7 +12,6 @@ import {
   createApiPromise,
   createKeyring,
   ClientSigner,
-  ClientSignerAdapter,
   RegistryClient,
   SignTxFunction,
   PolkadotRegistry,
@@ -34,9 +33,7 @@ export const setupRegistryClient = async () => {
   const alice = (await createKeyring()).addFromUri('//Alice');
   const bob = (await createKeyring()).addFromUri('//Bob');
 
-  const client = new Client(defaultConfig, {
-    signer: new ClientSignerAdapter()
-  });
+  const client = new Client({ config: defaultConfig });
   await client.initialize();
   // await client.halo.addKeyRecord({
   //   publicKey: PublicKey.from(decodeAddress(alice.address)),

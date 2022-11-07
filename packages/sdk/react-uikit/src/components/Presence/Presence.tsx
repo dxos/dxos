@@ -7,7 +7,7 @@ import { UserPlus, UsersThree, UserCircleGear, Gear, Check } from 'phosphor-reac
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Party, Profile as NaturalProfile } from '@dxos/client';
+import type { Invitation, Party, Profile as ProfileType } from '@dxos/client';
 import { useMembers, usePartyInvitations } from '@dxos/react-client';
 import {
   Avatar,
@@ -30,11 +30,11 @@ import { UsernameInput } from '../Profile';
 export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
     Pick<PopoverProps, 'collisionPadding' | 'sideOffset'> {
-  profile: NaturalProfile;
+  profile: ProfileType;
   space?: Party;
   closeLabel?: string;
   managingSpace?: boolean;
-  createInvitationUrl?: (invitationCode: string) => string; // TODO(burdon): Should take Invitation.
+  createInvitationUrl?: (invitationCode: Invitation) => string;
   onClickManageSpace?: () => void;
   onClickGoToSpace?: () => void;
   onClickManageProfile?: () => void;
@@ -63,8 +63,8 @@ const ProfileMenu = (props: PresenceProps) => {
           size={7}
           variant='circle'
           {...avatarProps}
-          fallbackValue={profile.publicKey.toHex()}
-          label={<span className='sr-only'>{profile.username ?? humanize(profile.publicKey.toHex())}</span>}
+          fallbackValue={profile.identityKey.toHex()}
+          label={<span className='sr-only'>{profile.displayName ?? humanize(profile.identityKey.toHex())}</span>}
           className={cx(
             'bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer mis-2',
             defaultHover({}),
@@ -102,9 +102,9 @@ const PartyInviteSingleton = ({
     }
   }, [space, invitations]);
 
-  // TODO(burdon): Update InvitationWrapper.
+  // TODO(burdon): Update InvitationEncoder.
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0]), [invitations]);
+  const invitationUrl = useMemo(() => invitations.length && createInvitationUrl(invitations[0]), [invitations]);
 
   return invitationUrl ? (
     <QrCode
@@ -123,7 +123,7 @@ const PartyInviteSingleton = ({
 const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
   const { space, createInvitationUrl, onClickManageSpace, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
-  const members: NaturalProfile[] = useMembers(space);
+  const members = useMembers(space);
 
   return (
     <Popover

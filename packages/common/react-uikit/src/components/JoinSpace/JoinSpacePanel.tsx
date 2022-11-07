@@ -6,7 +6,7 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationWrapper, Party } from '@dxos/client';
+import { InvitationEncoder, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { SingleInputStep } from '../SingleInputStep';
@@ -28,7 +28,7 @@ export const JoinSpacePanel = ({
 
   const redeemInvitation = useCallback(() => {
     const parsedInvitationCode = parseInvitation(invitationCode);
-    const invitation = InvitationWrapper.decode(parsedInvitationCode);
+    const invitation = InvitationEncoder.decode(parsedInvitationCode);
     const redeemeingInvitation = client.echo.acceptInvitation(invitation);
     return redeemeingInvitation.getParty();
   }, [invitationCode]);

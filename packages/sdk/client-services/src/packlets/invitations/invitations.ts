@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AsyncEvents, CancellableObservable, CancellableObservableEvents } from '@dxos/async';
+import assert from 'assert';
+
+import { AsyncEvents, CancellableObservable, CancellableObservableEvents, Observable } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
@@ -20,3 +22,22 @@ export interface InvitationsHandler<T> {
 export interface InvitationsProxy<T> extends InvitationsHandler<T> {
   createInvitationObject(context: T): Invitation;
 }
+
+/**
+ * Util to wrap observable with promise.
+ */
+export const invitationObserver = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = observable.subscribe({
+      onSuccess: (invitation: Invitation) => {
+        assert(invitation.state === Invitation.State.SUCCESS);
+        unsubscribe();
+        resolve(invitation);
+      },
+      onError: (err: Error) => {
+        unsubscribe();
+        reject(err);
+      }
+    });
+  });
+};

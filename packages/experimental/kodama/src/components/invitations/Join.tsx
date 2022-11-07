@@ -5,7 +5,7 @@
 import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationWrapper, PartyInvitation } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useParty } from '@dxos/react-client';
 
@@ -33,13 +33,13 @@ export const Join: FC<{
       // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
       // TODO(burdon): Errors not caught
-      const invitation = client.echo.acceptInvitation(InvitationWrapper.decode(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(InvitationEncoder.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
       try {
         // Decode regular token.
         const stripped = descriptor!.replace(/[\W]/g, '');
-        const invitation = client.echo.acceptInvitation(InvitationWrapper.decode(stripped));
+        const invitation = client.echo.acceptInvitation(InvitationEncoder.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
         setStatus({ error: err as Error });
@@ -47,7 +47,7 @@ export const Join: FC<{
     }
   };
 
-  const handleSubmit = async (invitation: PartyInvitation, secret: string) => {
+  const handleSubmit = async (invitation: Invitation, secret: string) => {
     try {
       setStatus({ processing: 'Authenticating...' });
       // TODO(burdon): Exceptions not propagated to here (e.g., IDENTITY_NOT_INITIALIZED, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT)

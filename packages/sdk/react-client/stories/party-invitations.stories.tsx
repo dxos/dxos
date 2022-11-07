@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { Invitation, InvitationWrapper } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
@@ -111,7 +111,7 @@ const PartyJoinContainer = () => {
 
     try {
       // TODO(burdon): Observable.
-      client.echo.acceptInvitation(InvitationWrapper.decode(invitationCode));
+      client.echo.acceptInvitation(InvitationEncoder.decode(invitationCode));
       // const party = await invitation;
       // setStatus({ party: party.key.toHex() });
       throw new Error('Not implemented.');

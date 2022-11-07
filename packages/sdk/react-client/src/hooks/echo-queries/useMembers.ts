@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { Party, PartyMember } from '@dxos/client';
 
-export const useMembers = (party: Party | undefined) => {
+export const useMembers = (party: Party | undefined): PartyMember[] => {
   const [members, setMembers] = useState<PartyMember[]>([]);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export const useMembers = (party: Party | undefined) => {
       // TODO(wittjosiah): Remove interval.
       const update = setInterval(() => {
         const newMembers = party.queryMembers().value;
-        const isNameFilled = newMembers.every((m) => m.displayName);
+        const isNameFilled = newMembers.every((member) => member.profile?.displayName);
         setMembers(newMembers);
         if (isNameFilled) {
           clearInterval(update);

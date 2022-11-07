@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './encoder';
 export * from './halo-invitations';
 export * from './invitations';
 export * from './space-invitations-handler';

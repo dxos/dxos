@@ -9,10 +9,10 @@ import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
-import { defaultTestingConfig, Item, ObjectModel, OrderedList, Client } from '@dxos/client';
+import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 
 const createTestComponents = async () => {
-  const client = new Client(defaultTestingConfig);
+  const client = new Client();
   await client.initialize();
   await client.halo.createProfile();
 

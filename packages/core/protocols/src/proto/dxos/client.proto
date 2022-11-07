@@ -69,8 +69,8 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  dxos.keys.PublicKey public_key = 1;
-  optional string username = 2;
+  dxos.keys.PublicKey identity_key = 1;
+  optional string displayName = 2;
 }
 
 message SubscribeProfileResponse {
@@ -155,16 +155,11 @@ service HaloService {
 
 // TODO(burdon): Rename Space.
 message Party {
-  message Member {
-    dxos.keys.PublicKey public_key = 1;
-    optional string display_name = 2;
-  }
-
   dxos.keys.PublicKey public_key = 1;
   bool is_open = 2;
   bool is_active = 3;
 
-  repeated Member members = 4;
+  repeated PartyMember members = 4;
 }
 
 message SubscribePartyRequest {
@@ -183,8 +178,8 @@ message PartyDetails {
 // TODO(burdon): Reconcile with dxos.halo.credentials.PartyMember.
 // TODO(burdon): Reconcile with Profile.
 message PartyMember {
-  optional dxos.keys.PublicKey identity_key = 1;
-  optional string display_name = 2;
+  dxos.keys.PublicKey identity_key = 1;
+  optional Profile profile = 2;
 }
 
 message SubscribePartyResponse {

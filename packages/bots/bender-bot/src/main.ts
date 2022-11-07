@@ -27,9 +27,9 @@ const main = async () => {
 
   const botConfig = await rpc.rpc.getConfig();
   log('Received bot config', JSON.stringify(botConfig));
-  // assert(botConfig.spec.invitation['@type'] as keyof TYPES === 'dxos.echo.invitations.InvitationWrapper');
+  // assert(botConfig.spec.invitation['@type'] as keyof TYPES === 'dxos.echo.invitations.InvitationEncoder');
 
-  const client = new Client(botConfig.clientConfig);
+  const client = new Client({ config: botConfig.clientConfig });
   await client.initialize();
   log('Initialized');
 
@@ -40,7 +40,7 @@ const main = async () => {
 
   // if (!client.echo.getParty(PublicKey.from(botConfig.spec.partyKey))) {
   //   await client.echo.acceptInvitation(
-  //     InvitationWrapper.fromProto(botConfig.spec.invitation)
+  //     InvitationEncoder.fromProto(botConfig.spec.invitation)
   //   );
   // }
 

@@ -6,7 +6,7 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationWrapper } from '@dxos/client';
+import { InvitationEncoder } from '@dxos/client';
 import { useClient, useProfile } from '@dxos/react-client';
 import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
@@ -24,7 +24,7 @@ export const JoinIdentityPage = () => {
 
   const redeemInvitation = useCallback(() => {
     const parsedInvitationCode = invitationCodeFromUrl(invitationCode);
-    const invitation = InvitationWrapper.decode(parsedInvitationCode);
+    const invitation = InvitationEncoder.decode(parsedInvitationCode);
     const redeemeingInvitation = client.halo.acceptInvitation(invitation);
     return redeemeingInvitation.wait();
   }, [invitationCode]);

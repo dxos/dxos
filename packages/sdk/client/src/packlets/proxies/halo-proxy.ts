@@ -4,16 +4,15 @@
 
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServicesProvider } from '@dxos/client-services';
+import { CancellableObservable, Event, EventSubscriptions } from '@dxos/async';
+import { ClientServicesProvider, InvitationEvents } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
-
-import { InvitationProxy, InvitationWrapper, InvitationChallenge, InvitationRequest } from './invitations';
 
 type CreateProfileOptions = {
   publicKey?: PublicKey;
@@ -34,8 +33,8 @@ export interface Halo {
   queryDevices(): Promise<DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
-  createInvitation(): Promise<InvitationRequest>;
-  acceptInvitation(invitation: InvitationWrapper): InvitationChallenge;
+  createInvitation(): CancellableObservable<InvitationEvents>;
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
 
   // sign(request: SignRequest): Promise<SignResponse>;
   // addKeyRecord(keyRecord: KeyRecord): Promise<void>;
@@ -48,9 +47,8 @@ export interface Halo {
 }
 
 export class HaloProxy implements Halo {
-  private readonly _invitationProxy = new InvitationProxy();
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _contactsChanged = new Event();
+  private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
 
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
@@ -69,12 +67,8 @@ export class HaloProxy implements Halo {
   // TODO(burdon): Include deviceId.
   get toJSON() {
     return {
-      key: this._profile?.publicKey
+      key: this._profile?.identityKey
     };
-  }
-
-  get invitationProxy() {
-    return this._invitationProxy;
   }
 
   /**
@@ -137,46 +131,12 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  /**
-   * Creates an invitation to an existing HALO party.
-   * Used to authorize another device of the same user.
-   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.halo.joinHaloInvitation` on the invitee side.
-   */
-  async createInvitation(): Promise<InvitationRequest> {
-    const stream = await this._serviceProvider.services.ProfileService.createInvitation();
-    return this._invitationProxy.createInvitationRequest({ stream });
+  createInvitation(): CancellableObservable<InvitationEvents> {
+    throw new Error('Not implemented.');
   }
 
-  /**
-   * Joins an existing identity HALO by invitation.
-   * Used to authorize another device of the same user.
-   * The Invitation flow requires the inviter device and invitee device to be online at the same time.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.halo.createHaloInvitation` on the inviter side.
-   */
-  acceptInvitation(invitationDescriptor: InvitationWrapper): InvitationChallenge {
-    const invitationProcessStream = this._serviceProvider.services.ProfileService.acceptInvitation(
-      invitationDescriptor.toProto()
-    );
-
-    const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
-      stream: invitationProcessStream,
-      invitationDescriptor,
-      onAuthenticate: async (request) => {
-        await this._serviceProvider.services.ProfileService.authenticateInvitation(request);
-      }
-    });
-
-    const waitForHalo = async () => {
-      await waitForFinish();
-      await this.profileChanged.waitForCondition(() => !!this.profile?.publicKey);
-    };
-
-    return new InvitationChallenge(invitationDescriptor, waitForHalo(), authenticate);
+  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
+    throw new Error('Not implemented.');
   }
 
   // async sign(request: SignRequest) {
@@ -189,7 +149,6 @@ export class HaloProxy implements Halo {
   //   });
   // }
 
-  // TODO(burdon): Implement.
   async queryDevices(): Promise<DeviceInfo[]> {
     return [];
   }
@@ -259,6 +218,5 @@ export class HaloProxy implements Halo {
    */
   _close() {
     this._subscriptions.clear();
-    this._invitationProxy.close();
   }
 }

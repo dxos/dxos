@@ -67,14 +67,11 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
     );
   }
 
-  // TODO(burdon): Fix definitions.
-  // const color = getColor(member.publicKey);
-  // const name = member.displayName || humanize(member.publicKey.toString());
-  const color = getColor(member.partyKey);
-  const name = 'Test User';
+  const color = getColor(member.identityKey!);
+  const letter = member.displayName?.slice(0, 1).toUpperCase() ?? '?';
 
   return (
-    <Tooltip title={name} placement='top'>
+    <Tooltip title={letter} placement='top'>
       <Avatar
         sx={{
           ...avatarStyles,
@@ -82,7 +79,7 @@ export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement
           color: theme.palette.getContrastText(color)
         }}
       >
-        {name.slice(0, 1).toUpperCase()}
+        {letter}
       </Avatar>
     </Tooltip>
   );

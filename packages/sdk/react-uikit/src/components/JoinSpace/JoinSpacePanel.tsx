@@ -6,35 +6,13 @@ import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Observable, Trigger } from '@dxos/async';
-import { Invitation, InvitationEvents, InvitationWrapper, Party } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { invitationObserver, InvitationEncoder, Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 import { SingleInputStep } from '../SingleInputStep';
 
-// TODO(burdon): Convenience util to wrap observable with promise? How to expose state?
-const awaitInvitation = async (observable: Observable<InvitationEvents>): Promise<PublicKey> => {
-  const partyPromise = new Trigger<PublicKey>();
-
-  // TODO(burdon): Unsubscribe on success/failure/cancelled.
-  const unsubscribe = observable.subscribe({
-    onSuccess: (invitation: Invitation) => {
-      partyPromise.wake(invitation.spaceKey!);
-      unsubscribe();
-    },
-    onError: (err: Error) => {
-      // TODO(burdon): Handler error.
-      console.error(err);
-      unsubscribe();
-    }
-  });
-
-  return partyPromise.wait();
-};
-
 export interface JoinSpacePanelProps {
-  // TODO(burdon): Pass in parsed invitation?
+  // TODO(burdon): Use InvitationEncoder to parse/decode?
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
   onJoin?: (space: Party) => void;
@@ -49,10 +27,10 @@ export const JoinSpacePanel = ({
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
   const redeemInvitation = useCallback(async () => {
-    const invitation = InvitationWrapper.decode(parseInvitation(invitationCode));
-    const observable = client.echo.acceptInvitation(invitation.toProto());
-    const partyKey = await awaitInvitation(observable);
-    return client.echo.getParty(partyKey)!;
+    // TODO(burdon): Implement observable to get other states (e.g., connecting...)
+    const observable = client.echo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    const invitation = await invitationObserver(observable);
+    return client.echo.getParty(invitation.spaceKey!)!;
   }, [invitationCode]);
   const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
 

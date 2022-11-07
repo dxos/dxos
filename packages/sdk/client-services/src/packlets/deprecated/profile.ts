@@ -39,7 +39,7 @@ export class ProfileServiceImpl implements ProfileService {
         next({
           profile: this.context.identityManager.identity
             ? {
-                publicKey: this.context.identityManager.identity.identityKey
+                identityKey: this.context.identityManager.identity.identityKey
               }
             : undefined
         });
@@ -51,7 +51,7 @@ export class ProfileServiceImpl implements ProfileService {
 
   async createProfile(request: CreateProfileRequest): Promise<Profile> {
     await this.context.createIdentity();
-    return { publicKey: this.context.identityManager.identity!.identityKey };
+    return { identityKey: this.context.identityManager.identity!.identityKey };
   }
 
   async recoverProfile(request: RecoverProfileRequest): Promise<Profile> {

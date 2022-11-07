@@ -86,7 +86,7 @@ export class EchoProxy implements Echo {
             this._serviceProvider,
             this._modelFactory,
             party,
-            this._haloProxy.profile!.publicKey
+            this._haloProxy.profile!.identityKey
           );
           await partyProxy.initialize();
           this._parties.set(partyProxy.key, partyProxy);
