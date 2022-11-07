@@ -35,7 +35,6 @@ export type Section = {
 export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   const theme = useTheme();
   const client = useClient();
-  console.log('client, PanelsContainer', client.config.values);
   const [selected, setSelected] = useState(sections[0]?.items[0]?.id);
 
   // TODO(burdon): Factor out.
