@@ -4,8 +4,14 @@
 
 import { UnsubscribeCallback } from './events';
 
+export interface ObservableSubscription<Events> {
+  id: string;
+  events: Events;
+  unsubscribe: UnsubscribeCallback;
+}
+
 export interface Observable<Events> {
-  subscribe(callbacks: Events): UnsubscribeCallback;
+  subscribe(callbacks: Events): ObservableSubscription<Events>;
   unsubscribe(): void;
 }
 
@@ -19,13 +25,20 @@ export interface Observable<Events> {
 export class ObservableProvider<Events> implements Observable<Events> {
   protected _callbacks?: Events;
 
+  // TODO(burdon): Remove.
   get callbacks() {
     return this._callbacks;
   }
 
-  subscribe(callbacks: Events): UnsubscribeCallback {
+  // TODO(burdon): Return handle.
+  subscribe(callbacks: Events): ObservableSubscription<Events> {
     this._callbacks = callbacks;
-    return () => this.unsubscribe();
+    return {
+      id: '',
+      events: callbacks,
+      unsubscribe: () => {}
+    };
+    // return () => this.unsubscribe();
   }
 
   unsubscribe() {

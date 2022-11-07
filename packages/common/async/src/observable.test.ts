@@ -50,7 +50,7 @@ describe('observable', function () {
     const observable = openConnection();
 
     // TODO(burdon): Auto unsubscribe on err?
-    observable.subscribe({
+    const subscription = observable.subscribe({
       onConnected: () => {
         connected = true;
         setDone();
@@ -79,7 +79,7 @@ describe('observable', function () {
       clearTimeout(cancelTimeout);
     }
 
-    observable.unsubscribe();
+    subscription.unsubscribe();
 
     return { connected, cancelled, failed };
   };
