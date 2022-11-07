@@ -34,8 +34,8 @@ export const Join: FC<{
       const invitation = InvitationEncoder.decode(invitationCode!);
       // TODO(burdon): Errors not caught
       const observable = client.echo.acceptInvitation(invitation);
-      // await invitationObservable(observable);
       // void handleSubmit(invitation, secret);
+      throw new Error('Not implemented.');
     } catch (err) {
       try {
         // Decode regular token.

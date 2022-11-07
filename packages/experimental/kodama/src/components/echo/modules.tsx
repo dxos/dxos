@@ -5,7 +5,7 @@
 import { Box, useFocusManager } from 'ink';
 import React, { FC, ReactNode, useMemo } from 'react';
 
-import { invitationObservable, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
@@ -69,7 +69,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
                       <Share
                         onCreate={async () => {
                           const observable = party.createInvitation();
-                          return await invitationObservable(observable);
+                          throw new Error('Not implemented.');
                         }}
                       />
                     </PartyPanel>

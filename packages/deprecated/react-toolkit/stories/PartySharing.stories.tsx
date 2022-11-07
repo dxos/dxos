@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { invitationObservable } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useParties } from '@dxos/react-client';
@@ -150,7 +149,7 @@ const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: stri
     setTimeout(async () => {
       const party = await client.echo.createParty();
       const observable = await party.createInvitation();
-      await invitationObservable(observable);
+      throw new Error('Not implemented.');
       // invitation.finished.on(() => setPin(''));
       // invitation.connected.on(() => setPin(invitation.secret.toString()));
       // onInvite(invitation.encode());
