@@ -140,53 +140,12 @@ export class HaloProxy implements Halo {
     throw new Error('Not implemented.');
   }
 
-  // async sign(request: SignRequest) {
-  //   return await this._serviceProvider.services.HaloService.sign(request);
-  // }
-
-  // async addKeyRecord(keyRecord: KeyRecord) {
-  //   await this._serviceProvider.services.HaloService.addKeyRecord({
-  //     keyRecord
-  //   });
-  // }
-
   async queryDevices(): Promise<DeviceInfo[]> {
     return [];
   }
 
-  // async setDevicePreference(key: string, value: string): Promise<void> {
-  //   await this._serviceProvider.services.HaloService.setDevicePreference({
-  //     key,
-  //     value
-  //   });
-  // }
-
-  // async getDevicePreference(key: string): Promise<string | undefined> {
-  //   return (
-  //     await this._serviceProvider.services.HaloService.getDevicePreference({
-  //       key
-  //     })
-  //   ).value;
-  // }
-
-  // async setGlobalPreference(key: string, value: string): Promise<void> {
-  //   await this._serviceProvider.services.HaloService.setGlobalPreference({
-  //     key,
-  //     value
-  //   });
-  // }
-
-  // async getGlobalPreference(key: string): Promise<string | undefined> {
-  //   return (
-  //     await this._serviceProvider.services.HaloService.getGlobalPreference({
-  //       key
-  //     })
-  //   ).value;
-  // }
-
   /**
    * Allocate resources and set-up internal subscriptions.
-   *
    * @internal
    */
   async _open() {
@@ -214,7 +173,6 @@ export class HaloProxy implements Halo {
 
   /**
    * Destroy the instance and clean-up subscriptions.
-   *
    * @internal
    */
   _close() {

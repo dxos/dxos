@@ -254,11 +254,10 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
-      // TODO(burdon): Remove createTimeoutPromise below.
-      // const race = Promise.race([
-      //   responseReceived,
-      //   createTimeoutPromise(this._options.timeout ?? DEFAULT_TIMEOUT, new Error(`RPC call timed out: ${method}`))
-      // ]);
+      responseReceived.catch((err) => {
+        log.warn(err);
+      });
+
       // Send request call.
       const sending = this._sendMessage({
         request: {
@@ -269,12 +268,7 @@ export class RpcPeer {
         }
       });
 
-      // TODO(burdon): Seems sketchy.
-      // If a promise is rejected before it's awaited or an error handler is attached, node will print a warning.
-      // Here we're attaching a dummy handler that will not interfere with error handling to avoid that warning.
-      responseReceived.catch(() => {});
-
-      // Wait until send completes or throws an error (or response throws a timeout).
+      // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
       const waiting = asyncTimeout<any>(responseReceived, this._options.timeout ?? DEFAULT_TIMEOUT);
       await Promise.race([sending, waiting]);
       response = await waiting;

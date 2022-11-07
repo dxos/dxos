@@ -7,6 +7,7 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 
 import "dxos/config.proto";
+import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 
 // TODO(burdon): Restructure all services.
@@ -58,14 +59,9 @@ service SigningService {
 // Halo
 //
 
-// TODO(burdon): Identity.
 message Identity {
-  Profile profile = 1;
-}
-
-message Profile {
   dxos.keys.PublicKey identity_key = 1;
-  string display_name = 2;
+  halo.credentials.ProfileDocument profile = 2;
 }
 
 message RecoverProfileRequest {
@@ -73,18 +69,16 @@ message RecoverProfileRequest {
 }
 
 service HaloService {
-  rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
-  rpc UpdateProfile(Profile) returns (google.protobuf.Empty);
-  rpc QueryProfile(google.protobuf.Empty) returns (stream Profile); // TODO(burdon): Stream?
+  rpc RecoverProfile(RecoverProfileRequest) returns (Identity);
+  rpc UpdateProfile(Identity) returns (google.protobuf.Empty);
+  rpc QueryProfile(google.protobuf.Empty) returns (stream Identity);
 }
-
-// TODO(burdon): PreferencesService?
 
 //
 // Devices
 //
 
-// TODO(burdon): Preferences.
+// TODO(burdon): Preferences (in database).
 message Device {
   dxos.keys.PublicKey device_key = 1;
 }
@@ -99,7 +93,7 @@ service DevicesService {
 //
 
 message Contact {
-  Profile profile = 1;
+  halo.credentials.ProfileDocument profile = 1;
 }
 
 service ContactsService {
@@ -112,14 +106,15 @@ service ContactsService {
 // TODO(burdon): Move to dxos.echo? Or rename dxos.echo => dxos.database?
 //
 
-// TODO(burdon): Preferences.
+// TODO(burdon): Preferences (in database).
 message Space {
   dxos.keys.PublicKey space_key = 1;
 }
 
-// TODO(burdon): See PartyMember in halo.credentials.
 message QueryMembersRequest {}
-message QueryMembersResponse {}
+message QueryMembersResponse {
+  dxos.halo.credentials.IdentityProfile members = 1;
+}
 
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
