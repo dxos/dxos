@@ -7,23 +7,24 @@ import React, { useEffect, useState } from 'react';
 import { Box, Button, Card, FormControlLabel, Switch, TextField } from '@mui/material';
 
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
+import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
   onSource: (params: { remoteSource?: string; mode: number }) => void;
 };
 
 export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
-  const [remoteSource, setRemoteSource] = useState<string>(DEFAULT_CLIENT_ORIGIN);
+  const client = useClient();
+  const [remoteSource, setRemoteSource] = useState<string>(
+    client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
+  );
 
-  const [mode, setMode] = useState(1); // local = 1, remote = 2
+  const [mode, setMode] = useState(client.config.get('runtime.client.mode') ?? 1); // local = 1, remote = 2
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMode(event.target.checked ? 2 : 1);
-  };
-
-  useEffect(() => {
     onSource({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
-  }, [mode]);
+  };
 
   return (
     <Card sx={{ margin: 1 }}>

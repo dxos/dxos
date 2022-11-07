@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-async';
+import { ClientContext } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
@@ -16,10 +17,11 @@ import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-const REMOTE_CLIENT = false;
+const REMOTE_CLIENT = true;
+const HEADLESS_SOURCE = 'http://localhost:3967/headless.html';
 
 export const App = () => {
-  const [configProvider, setConfigProvider] = useState<Promise<Config>>();
+  const [client, setClient] = useState<Client>();
 
   const onSource = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
     const remoteSourceConfig = {
@@ -31,19 +33,21 @@ export const App = () => {
       }
     };
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
-    console.log('app config', config.values);
-
-    setConfigProvider(async () => config);
+    {
+      const newClient = new Client(config);
+      await newClient.initialize();
+      setClient(newClient);
+    }
   };
 
-  useEffect(() => {
-    void onSource({
-      remoteSource: REMOTE_CLIENT ? DEFAULT_CLIENT_ORIGIN : undefined,
+  useAsyncEffect(async () => {
+    await onSource({
+      remoteSource: REMOTE_CLIENT ? HEADLESS_SOURCE : undefined,
       mode: REMOTE_CLIENT ? 2 : 1
     });
   }, []);
 
-  if (!configProvider) {
+  if (!client) {
     return null;
   }
 
@@ -52,7 +56,7 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
-          <ClientProvider config={configProvider}>
+          <ClientContext.Provider value={{ client }}>
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
             </Box>
@@ -60,7 +64,7 @@ export const App = () => {
             <Box sx={{ display: 'flex', flexShrink: 0 }}>
               <Controls onSource={onSource} />
             </Box>
-          </ClientProvider>
+          </ClientContext.Provider>
         </FullScreen>
       </ThemeProvider>
     </ErrorBoundary>
