@@ -12,8 +12,8 @@ import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-compone
 
 export type PendingInvitationProps = {
   invitation: Invitation;
-  pin: string | undefined;
-  createUrl: (invitationCode: string) => string;
+  pin?: string | undefined;
+  createUrl: (invitation: Invitation) => string;
   onCancel: () => void;
 };
 
@@ -46,7 +46,7 @@ export const PendingInvitation = ({ invitation, pin, createUrl, onCancel }: Pend
       {!pin && (
         <>
           <IconButton size='small' title='Copy invitation.'>
-            <CopyToClipboard text={createUrl(InvitationEncoder.encode(invitation))} />
+            <CopyToClipboard text={createUrl(invitation)} />
           </IconButton>
           <IconButton size='small' onClick={(event) => setPopoverAnchor(event.currentTarget)}>
             <QRCodeIcon />
@@ -65,7 +65,7 @@ export const PendingInvitation = ({ invitation, pin, createUrl, onCancel }: Pend
             }}
           >
             <Box sx={{ padding: 1 }}>
-              <QRCode value={createUrl(InvitationEncoder.encode(invitation))} />
+              <QRCode value={createUrl(invitation)} />
             </Box>
           </Popover>
         </>

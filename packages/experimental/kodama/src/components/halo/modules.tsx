@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { invitationObservable, Client } from '@dxos/client';
 
 import { useModule } from '../../hooks';
 import { Join, Share } from '../invitations';
@@ -91,8 +91,9 @@ export const createHaloMenu = (client: Client): MenuItem => {
                     component: () => (
                       <Panel>
                         <Share
-                          onCreate={() => {
-                            return client.halo.createInvitation();
+                          onCreate={async () => {
+                            const observable = client.halo.createInvitation();
+                            return await invitationObservable(observable);
                           }}
                         />
                       </Panel>

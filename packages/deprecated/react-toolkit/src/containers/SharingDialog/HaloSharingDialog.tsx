@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { invitationObservable, Invitation } from '@dxos/client';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
@@ -20,15 +21,24 @@ export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const client = useClient();
   const invitations = useHaloInvitations(client);
 
+  const handleCreateInvitation = async () => {
+    const observable = client.halo.createInvitation();
+    // TODO(burdon): Add to invitations.
+    await invitationObservable(observable);
+  };
+
+  const handleCancelInvitation = async (invitation: Invitation) => {
+    // TODO(burdon): Get observable from useInvitations.
+    throw new Error('Not implemented.');
+  };
+
   return (
     <SharingDialog
       {...props}
       title='Halo Sharing'
       invitations={invitations}
-      onCreateInvitation={async () => {
-        await client.halo.createInvitation();
-      }}
-      onCancelInvitation={(invitation) => invitation.cancel()}
+      onCreateInvitation={handleCreateInvitation}
+      onCancelInvitation={handleCancelInvitation}
     />
   );
 };

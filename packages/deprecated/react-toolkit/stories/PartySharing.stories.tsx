@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { invitationObservable } from 'packages/sdk/client-services/src';
 import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
+import { invitationObservable } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useParties } from '@dxos/react-client';

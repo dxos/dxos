@@ -8,7 +8,7 @@ import urlJoin from 'url-join';
 import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
-import { Invitation, PartyMember } from '@dxos/client';
+import { InvitationEncoder, Invitation, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 import { ResourceSet } from '@dxos/registry-client';
 
@@ -16,10 +16,11 @@ import { MemberRow } from './MemberRow';
 import { PendingInvitation } from './PendingInvitation';
 import { SpawnBotPanel } from './SpawnBotPanel';
 
-const defaultCreateUrl = (invitationCode: string) => {
+const defaultCreateUrl = (invitation: Invitation) => {
   // TODO(burdon): By-pass keyhole with fake code.
+  const code = InvitationEncoder.encode(invitation);
   const kubeCode = [...new Array(6)].map(() => Math.floor(Math.random() * 10)).join('');
-  const invitationPath = `/invitation/${invitationCode}`; // App-specific.
+  const invitationPath = `/invitation/${code}`; // App-specific.
   const { origin, pathname } = window.location;
   return urlJoin(origin, pathname, `?code=${kubeCode}`, `/#${invitationPath}`);
 };
@@ -36,12 +37,12 @@ export interface SharingDialogProps {
   title: string;
   members?: PartyMember[]; // TODO(rzadp): Support HALO members as well (different devices).
   invitations?: Invitation[];
+  createUrl?: (invitation: Invitation) => string;
   onCreateInvitation: () => void;
+  onCreateOfflineInvitation?: () => void; // TODO(burdon): Pass type/identityKey into onCreateInvitation.
   onCancelInvitation: (invitation: Invitation) => void;
-  onCreateOfflineInvitation?: () => void;
   onCreateBotInvitation?: (resource: ResourceSet) => void;
   onClose?: () => void;
-  createUrl?: (invitationCode: string) => string;
 }
 
 /**
