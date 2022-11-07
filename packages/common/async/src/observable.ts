@@ -22,8 +22,8 @@ export interface Observable<Events> {
 //  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
 //  https://github.com/mostjs/core
 export class ObservableProvider<Events extends {}> implements Observable<Events> {
-  protected _handlers: Events[] = [];
-  private _proxy = createArrayDispatch<Events>({
+  protected readonly _handlers: Events[] = [];
+  private readonly _proxy = createArrayDispatch<Events>({
     handlers: this._handlers
   });
 
