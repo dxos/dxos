@@ -8,7 +8,6 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
@@ -55,15 +54,12 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider(
-        schema.getService('dxos.client.services.InvitationsService'),
-        () => {
-          return new SpaceInvitationsServiceImpl(
-            this._serviceContext.spaceManager!,
-            this._serviceContext.spaceInvitations!
-          );
-        }
-      ),
+      SpaceInvitationsService: createServiceProvider(() => {
+        return new SpaceInvitationsServiceImpl(
+          this._serviceContext.spaceManager!,
+          this._serviceContext.spaceInvitations!
+        );
+      }),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),

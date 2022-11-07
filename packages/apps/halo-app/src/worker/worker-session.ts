@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesHost } from '@dxos/client-services';
+import { ClientServicesHost, ClientServicesProvider } from '@dxos/client-services';
 import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -25,7 +25,7 @@ export type WorkerSessionParams = {
  */
 // TODO(burdon): Move into `@dxos/client-services`.
 export class WorkerSession {
-  private readonly _clientServices: ClientServicesHost;
+  private readonly _clientServices: ClientServicesProvider;
   private readonly _clientRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
