@@ -19,6 +19,7 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
 
+// TODO(burdon): Rename Space.
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Party {
   get key(): PublicKey;
