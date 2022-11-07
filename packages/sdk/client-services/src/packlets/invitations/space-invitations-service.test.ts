@@ -21,7 +21,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/space-invitation-service', function () {
-  it('creates space and invites peer', async function () {
+  it.only('creates space and invites peer', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(peer1.spaceManager);
@@ -63,6 +63,9 @@ describe('services/space-invitation-service', function () {
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
+
+    // TODO(burdon): Test credentials on both peers?
+    // TODO(burdon): Wait for space to by synced.
   });
 
   it('creates space and cancels invitation', async function () {

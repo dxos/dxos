@@ -138,12 +138,14 @@ message Invitation {
   }
 
   enum State {
-    CONNECTING = 0;
-    CONNECTED = 1;
-    SUCCESS = 2;
-    CANCELLED = 3;
-    TIMEOUT = 4;
-    ERROR = 5;
+    INIT = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+    AUTHENTICATING = 3;
+    SUCCESS = 4;
+    CANCELLED = 5;
+    TIMEOUT = 6;
+    ERROR = 7;
   }
 
   /// Local identifier.
@@ -159,7 +161,7 @@ message Invitation {
   optional int32 error_code = 4;
 
   /// Swarm rendezvous (random).
-  optional dxos.keys.PublicKey swarm_key = 5; // TODO(burdon): Bytes?
+  optional dxos.keys.PublicKey swarm_key = 5;
 
   /// Guest's identity (only present if OFFLINE).
   optional dxos.keys.PublicKey identity_key = 6;

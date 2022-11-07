@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { CancellableObservable } from '@dxos/async';
+import { Event } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationEvents,
+  InvitationObserver,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
@@ -14,7 +14,7 @@ import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } f
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { Party as PartyProto, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
+import { Party as PartyType, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
@@ -25,6 +25,7 @@ export interface Party {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
+  get invitations(): InvitationObserver[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -70,7 +71,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): CancellableObservable<InvitationEvents>;
+  createInvitation(): InvitationObserver;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -78,6 +79,11 @@ export interface Party {
 export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+
+  // TODO(burdon): Spy on stream.
+  // TODO(burdon): Event when updated.
+  private readonly _invitations: InvitationObserver[] = [];
+  public readonly invitationsUpdate = new Event<InvitationObserver>();
 
   private _key: PublicKey;
   private _isOpen: boolean;
@@ -88,7 +94,7 @@ export class PartyProxy implements Party {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
-    private _party: PartyProto,
+    private _party: PartyType,
     memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
     // TODO(burdon): Don't shadow properties.
@@ -208,6 +214,10 @@ export class PartyProxy implements Party {
     return this._item!.model;
   }
 
+  get invitations(): InvitationObserver[] {
+    return this._invitations;
+  }
+
   /**
    * @deprecated Use party.properties.
    */
@@ -251,8 +261,11 @@ export class PartyProxy implements Party {
   /**
    * Creates an interactive invitation.
    */
-  createInvitation(): CancellableObservable<InvitationEvents> {
-    return this._invitationProxy.createInvitation(this.key);
+  createInvitation() {
+    const observer = this._invitationProxy.createInvitation(this.key);
+    this._invitations.push(observer);
+    this.invitationsUpdate.emit(observer);
+    return observer;
   }
 
   /**
@@ -267,7 +280,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy to update this party instance.
    * @internal
    */
-  _processPartyUpdate(party: PartyProto) {
+  _processPartyUpdate(party: PartyType) {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;

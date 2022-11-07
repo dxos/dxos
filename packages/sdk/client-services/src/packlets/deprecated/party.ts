@@ -91,7 +91,7 @@ export class PartyServiceImpl implements PartyService {
 
   subscribeParties() {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
-      const update = () => {
+      const onUpdate = () => {
         next({
           parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
             publicKey: space.key,
@@ -108,8 +108,8 @@ export class PartyServiceImpl implements PartyService {
 
         await this.serviceContext.initialized.wait();
 
-        update();
-        return this.serviceContext.spaceManager!.update.on(update);
+        onUpdate();
+        return this.serviceContext.spaceManager!.updated.on(onUpdate);
       });
     });
   }

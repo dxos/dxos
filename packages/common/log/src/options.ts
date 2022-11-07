@@ -45,7 +45,7 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
   );
 
   if (options.file) {
-    options = defaultsDeep(options, loadOptions(options.file));
+    options = defaultsDeep({}, loadOptions(options.file), options);
     console.log(JSON.stringify(options, undefined, 2));
   }
 

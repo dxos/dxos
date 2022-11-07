@@ -25,7 +25,7 @@ const serviceBundle = createServiceBundle<TestServices>({
 });
 
 describe('service registry', function () {
-  it.only('builds a service registry', async function () {
+  it('builds a service registry', async function () {
     const serviceContext = createServiceContext();
     await serviceContext.open();
     await serviceContext.createIdentity();

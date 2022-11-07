@@ -8,6 +8,7 @@ import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -50,7 +51,7 @@ export type SpaceManagerParams = {
  * Manages a collection of ECHO (Data) Spaces.
  */
 export class SpaceManager {
-  public readonly update = new Event();
+  public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _metadataStore: MetadataStore;
@@ -116,6 +117,7 @@ export class SpaceManager {
       dataFeedKey
     };
 
+    log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
     await space.open();
 
@@ -154,8 +156,9 @@ export class SpaceManager {
       controlFeedKey: await this._keyring.createKey(),
       dataFeedKey: await this._keyring.createKey()
     };
-    const space = await this._constructSpace(metadata);
 
+    log('accepting space...', { spaceKey: opts.spaceKey });
+    const space = await this._constructSpace(metadata);
     await space.open();
 
     await this._metadataStore.addSpace(metadata);
@@ -166,10 +169,12 @@ export class SpaceManager {
   private _insertSpace(space: Space) {
     this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
     this._spaces.set(space.key, space);
-    this.update.emit();
+    this.updated.emit();
   }
 
   private async _constructSpace(metadata: PartyMetadata) {
+    log('constructing space...', { spaceKey: metadata.genesisFeedKey });
+
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
     const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 

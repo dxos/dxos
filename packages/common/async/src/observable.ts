@@ -12,6 +12,10 @@ export interface Observable<Events> {
 /**
  * Implements subscriptions.
  */
+// TODO(burdon): Support multiple subscribers.
+//  https://betterprogramming.pub/compare-leading-javascript-functional-reactive-stream-libraries-544163c1ded6
+//  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
+//  https://github.com/mostjs/core
 export class ObservableProvider<Events> implements Observable<Events> {
   protected _callbacks?: Events;
 

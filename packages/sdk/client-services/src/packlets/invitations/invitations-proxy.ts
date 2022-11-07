@@ -25,7 +25,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
   // TODO(burdon): Invitation type.
   abstract createInvitationObject(context: T): Invitation;
 
-  createInvitation(context: T): CancellableObservable<any> {
+  createInvitation(context: T): CancellableObservable<InvitationEvents> {
     assert(context);
 
     let invitationId: string;
@@ -54,13 +54,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
           case Invitation.State.SUCCESS: {
             observable.callbacks?.onSuccess?.(invitation);
-            observable.unsubscribe();
             break;
           }
 
           case Invitation.State.CANCELLED: {
             observable.callbacks?.onCancelled?.();
-            observable.unsubscribe();
             break;
           }
 
