@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { createArrayCallback } from './callback';
+import { createArrayDispatch } from './callback';
 
 type Callback = {
   foo: (value: number) => void;
@@ -19,7 +19,7 @@ describe('callbacks', function () {
     };
 
     const handlers: Callback[] = [];
-    const proxy: Callback = createArrayCallback<Callback>({ handlers });
+    const proxy: Callback = createArrayDispatch<Callback>({ handlers });
     proxy.foo(10);
     proxy.bar?.();
 

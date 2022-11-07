@@ -41,7 +41,7 @@ export type ArrayCallbacks<T> = { handlers: T[] };
  * Create a fan-out callback handler.
  * NOTE: Methods cannot return values.
  */
-export const createArrayCallback = <T extends {}>({ handlers }: ArrayCallbacks<T>) => {
+export const createArrayDispatch = <T extends {}>({ handlers }: ArrayCallbacks<T>) => {
   type Obj = { [i: string | symbol]: any };
   return new Proxy<any>(
     {
