@@ -22,7 +22,6 @@ import { fromDefaults } from './utils';
 export type ClientOptions = {
   config?: Config | ConfigProto;
   services?: ClientServicesProvider;
-  // TODO(burdon): Clean-up ECHO runtime properties.
   modelFactory?: ModelFactory;
 };
 

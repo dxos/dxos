@@ -85,7 +85,7 @@ export const ClientProvider = ({
       };
 
       if (clientProvider) {
-        // Asynchornously request client.
+        // Asynchronously request client.
         const client = await getAsyncValue(clientProvider);
         await done(client);
       } else {
