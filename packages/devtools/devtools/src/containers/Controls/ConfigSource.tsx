@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Box, Button, Card, FormControlLabel, Switch, TextField } from '@mui/material';
 
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
@@ -23,8 +24,11 @@ export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMode(event.target.checked ? 2 : 1);
-    onSource({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
   };
+
+  useAsyncEffect(async () => {
+    await onSource({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
+  }, [mode, remoteSource]);
 
   return (
     <Card sx={{ margin: 1 }}>

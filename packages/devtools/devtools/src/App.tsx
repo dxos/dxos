@@ -17,13 +17,17 @@ import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
-const REMOTE_CLIENT = true;
-const HEADLESS_SOURCE = 'http://localhost:3967/headless.html';
-
 export const App = () => {
   const [client, setClient] = useState<Client>();
 
   const onSource = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
+    if (
+      client?.config.values.runtime?.client?.mode === mode &&
+      client?.config.values.runtime?.client?.remoteSource === remoteSource
+    ) {
+      return;
+    }
+
     const remoteSourceConfig = {
       runtime: {
         client: {
@@ -33,7 +37,12 @@ export const App = () => {
       }
     };
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
+
     {
+      if (client) {
+        await client.destroy();
+        setClient(undefined);
+      }
       const newClient = new Client(config);
       await newClient.initialize();
       setClient(newClient);
@@ -42,8 +51,7 @@ export const App = () => {
 
   useAsyncEffect(async () => {
     await onSource({
-      remoteSource: REMOTE_CLIENT ? HEADLESS_SOURCE : undefined,
-      mode: REMOTE_CLIENT ? 2 : 1
+      mode: 1
     });
   }, []);
 
