@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationObserver,
+  InvitationObservable,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
@@ -25,7 +25,7 @@ export interface Party {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-  get invitations(): InvitationObserver[];
+  get invitations(): InvitationObservable[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -71,7 +71,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): InvitationObserver;
+  createInvitation(): InvitationObservable;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -82,8 +82,8 @@ export class PartyProxy implements Party {
 
   // TODO(burdon): Spy on stream.
   // TODO(burdon): Event when updated.
-  private readonly _invitations: InvitationObserver[] = [];
-  public readonly invitationsUpdate = new Event<InvitationObserver>();
+  private readonly _invitations: InvitationObservable[] = [];
+  public readonly invitationsUpdate = new Event<InvitationObservable>();
 
   private _key: PublicKey;
   private _isOpen: boolean;
@@ -214,7 +214,7 @@ export class PartyProxy implements Party {
     return this._item!.model;
   }
 
-  get invitations(): InvitationObserver[] {
+  get invitations(): InvitationObservable[] {
     return this._invitations;
   }
 

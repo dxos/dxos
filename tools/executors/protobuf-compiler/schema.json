@@ -17,11 +17,17 @@
       "description": "",
       "default": "gen"
     },
+    "typingsOutputPath": {
+      "type": "string",
+      "description": ""
+    },
     "substitutionsPath": {
       "type": "string",
       "description": "",
       "default": "substitutions.ts"
     }
   },
-  "required": ["basePath"]
+  "required": [
+    "basePath"
+  ]
 }

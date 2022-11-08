@@ -18,8 +18,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "gen-proto-defs": "ts-node ./scripts/gen-proto-defs.ts"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

@@ -13,7 +13,7 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
   onSuccess(invitation: Invitation): void;
 }
 
-export type InvitationObserver = CancellableObservable<InvitationEvents>;
+export type InvitationObservable = CancellableObservable<InvitationEvents>;
 
 // TODO(burdon): Create base class.
 export interface InvitationsHandler<T> {
