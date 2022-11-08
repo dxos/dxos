@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/keys.proto";
 
-package dxos.devtools.swarmLog;
+package dxos.devtools.swarm;
 
 message SwarmInfo {
   dxos.keys.PublicKey id = 1;

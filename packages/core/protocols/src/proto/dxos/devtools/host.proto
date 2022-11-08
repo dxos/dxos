@@ -4,8 +4,6 @@
 
 syntax = "proto3";
 
-import "dxos/devtools/swarmLog.proto";
-
 import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
 
