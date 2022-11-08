@@ -73,7 +73,7 @@ export const useInvitationStatus = () => {
         })
       } as InvitationReducerState),
     null,
-    (arg: null) => {
+    (_arg: null) => {
       return {
         status: Invitation.State.INIT,
         result: { spaceKey: null, identityKey: null, swarmKey: null },
@@ -117,23 +117,22 @@ export const useInvitationStatus = () => {
   // Handle unmount
 
   useEffect(() => {
-    if (state.invitationObservable) {
-      state.invitationObservable.subscribe({
-        onConnected,
-        onSuccess,
-        onError,
-        onCancelled,
-        onTimeout
-      });
-    }
-    return () => state.invitationObservable?.unsubscribe();
-  }, [state.invitationObservable]);
+    return state.invitationObservable?.subscribe({
+      onConnected,
+      onSuccess,
+      onError,
+      onCancelled,
+      onTimeout
+    });
+  }, [state.invitationObservable, onConnected, onSuccess, onError, onCancelled, onTimeout]);
 
-  //
+  // Return memoized callbacks & values
 
   const connect = useCallback((invitationObservable: InvitationObservable) => {
     dispatch({ status: Invitation.State.CONNECTING, invitationObservable });
   }, []);
+
+  const cancel = useCallback(async () => state.invitationObservable?.cancel(), [state.invitationObservable]);
 
   return useMemo(() => {
     return {
@@ -142,7 +141,7 @@ export const useInvitationStatus = () => {
       result: state.result,
       secret: state.secret,
       error: state.error,
-      cancel: async () => state.invitationObservable?.cancel(),
+      cancel,
       connect
     };
   }, [state, connect]);
