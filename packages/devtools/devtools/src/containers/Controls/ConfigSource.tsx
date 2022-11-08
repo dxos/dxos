@@ -11,10 +11,10 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
-  onSource: (params: { remoteSource?: string; mode: number }) => void;
+  onConfigChange: (params: { remoteSource?: string; mode: number }) => void;
 };
 
-export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
+export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
   const client = useClient();
   const [remoteSource, setRemoteSource] = useState<string>(
     client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
@@ -27,7 +27,7 @@ export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
   };
 
   useAsyncEffect(async () => {
-    await onSource({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
+    await onConfigChange({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
   }, [mode, remoteSource]);
 
   return (
@@ -49,7 +49,7 @@ export const ConfigSource = ({ onSource }: ConfigSourceProps) => {
         <Button
           disabled={mode === 1}
           variant='contained'
-          onClick={() => onSource({ remoteSource, mode })}
+          onClick={() => onConfigChange({ remoteSource, mode })}
           sx={{ marginLeft: 1 }}
         >
           Set

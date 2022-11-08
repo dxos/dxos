@@ -17,7 +17,7 @@ import { ConfigSource } from './ConfigSource';
 import { PartyCard } from './PartyCard';
 
 export type ControlsProps = {
-  onSource: (params: { remoteSource?: string; mode: number }) => void;
+  onConfigChange: (params: { remoteSource?: string; mode: number }) => void;
 };
 
 /**
@@ -25,7 +25,7 @@ export type ControlsProps = {
  * @param port
  * @constructor
  */
-export const Controls = ({ onSource }: ControlsProps) => {
+export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
@@ -120,7 +120,7 @@ export const Controls = ({ onSource }: ControlsProps) => {
         <JoinPartyDialog open={showJoinParty} onClose={() => setShowJoinParty(false)} closeOnSuccess />
       </>
 
-      <ConfigSource onSource={onSource} />
+      <ConfigSource onConfigChange={onConfigChange} />
 
       <Box
         sx={{

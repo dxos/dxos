@@ -70,7 +70,7 @@ export const App = () => {
             </Box>
 
             <Box sx={{ display: 'flex', flexShrink: 0 }}>
-              <Controls onSource={onConfigChange} />
+              <Controls onConfigChange={onConfigChange} />
             </Box>
           </ClientContext.Provider>
         </FullScreen>
