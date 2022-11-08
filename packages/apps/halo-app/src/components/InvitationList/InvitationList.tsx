@@ -5,13 +5,12 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { Invitation } from '@dxos/client';
-import { defaultDisabled, Group, useTranslation } from '@dxos/react-uikit';
+import { defaultDisabled, Group, InvitationWrapper, useTranslation } from '@dxos/react-uikit';
 
 import { PendingInvitation } from './PendingInvitation';
 
 export interface InvitationListProps {
-  invitations: Invitation[];
+  invitations: InvitationWrapper[];
 }
 
 export const InvitationList = ({ invitations }: InvitationListProps) => {
@@ -29,8 +28,8 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
     >
       {!empty && (
         <div role='none' className='grid grid-cols-[repeat(auto-fill,_minmax(12rem,1fr))] gap-4'>
-          {invitations.map((invitation) => (
-            <PendingInvitation key={invitation.invitationId} invitation={invitation} />
+          {invitations.map((wrapper) => (
+            <PendingInvitation key={wrapper.invitation.invitationId} wrapper={wrapper} />
           ))}
         </div>
       )}

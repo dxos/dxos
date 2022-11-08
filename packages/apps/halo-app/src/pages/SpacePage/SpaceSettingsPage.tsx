@@ -8,11 +8,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
-import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
+import { Button, getSize, Heading, useTranslation, Tooltip, InvitationWrapper } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 import { InvitationList, HeadingWithActions } from '../../components';
 import { ProfileList } from '../../components/ProfileList';
+
+const useSpaceInvitations = usePartyInvitations;
 
 export const SpaceSettingsPage = () => {
   const { t } = useTranslation('halo');
@@ -20,7 +22,7 @@ export const SpaceSettingsPage = () => {
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
-  const invitations = usePartyInvitations(spaceKey);
+  const invitations = useSpaceInvitations(spaceKey);
   const members = useMembers(space);
 
   const onCreateInvitation = useCallback(() => {
@@ -62,7 +64,7 @@ export const SpaceSettingsPage = () => {
           }
         />
         <ProfileList profiles={members} />
-        <InvitationList {...{ invitations }} />
+        <InvitationList invitations={invitations as unknown as InvitationWrapper[]} />
       </main>
     </>
   );
