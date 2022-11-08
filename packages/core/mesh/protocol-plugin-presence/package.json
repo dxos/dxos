@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence#readme",
   "bugs": "https://github.com/dxos/dxos/issues",

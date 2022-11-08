@@ -1,198 +1,476 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "bump-minor-pre-major": true,
-  "bump-patch-for-minor-pre-major": true,
-  "draft-pull-request": true,
-  "plugins": [
-    {
-      "type": "linked-versions",
-      "group-name": "dxos",
-      "components": [
-        "async",
-        "bare-template",
-        "beast",
-        "bender-bot",
-        "bot-factory-client",
-        "botkit",
-        "broadcast",
-        "client-services",
-        "client-testing",
-        "client",
-        "codec-protobuf",
-        "codemods",
-        "composer",
-        "config",
-        "credentials",
-        "crypto-names",
-        "crypto",
-        "debug",
-        "devtools-extension",
-        "devtools-mesh",
-        "devtools",
-        "docs",
-        "dx-cli",
-        "echo-db",
-        "esbuild",
-        "eslint-plugin",
-        "eslint-rules",
-        "feed-store",
-        "gem-core",
-        "gem-spore",
-        "gravity-dashboard",
-        "halo-app",
-        "hello-template",
-        "hypercore",
-        "kai",
-        "keyring",
-        "keys",
-        "kitchen-sink",
-        "kodama",
-        "log-hook",
-        "log",
-        "mesh-protocol",
-        "messaging",
-        "messenger-model",
-        "mocha",
-        "model-factory",
-        "network-generator",
-        "network-manager",
-        "object-model",
-        "orchestrator",
-        "plate",
-        "playwright",
-        "protobuf-compiler",
-        "protobuf-test",
-        "protocol-network-generator",
-        "protocol-plugin-presence",
-        "protocol-plugin-replicator",
-        "protocol-plugin-rpc",
-        "protocols-toolchain",
-        "protocols",
-        "random-access-storage",
-        "react-async",
-        "react-client-testing",
-        "react-client",
-        "react-components",
-        "react-echo-graph",
-        "react-ipfs",
-        "react-registry-client",
-        "react-toolkit",
-        "react-ui",
-        "react-uikit",
-        "registry-client",
-        "ridoculous",
-        "rpc-tunnel-e2e",
-        "rpc-tunnel",
-        "rpc",
-        "sentry",
-        "signal",
-        "spyglass",
-        "telemetry",
-        "testutils",
-        "text-model",
-        "timeframe",
-        "toolbox",
-        "toolchain-node-library",
-        "typedoc-plugin-plate",
-        "typings",
-        "util",
-        "vite-plugin",
-        "wallet-extension",
-        "wallet-playground"
+  "packages": {
+    ".": {
+      "component": "dxos",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "pull-request-title-pattern": "chore: release v${version}",
+      "extra-files": [
+        "packages/sdk/client/src/version.ts",
+        {
+          "type": "json",
+          "path": "docs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/halo-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/bare-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/bender-bot/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/bot-factory-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/botkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/async/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/codec-protobuf/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/crypto-names/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/crypto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/debug/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/feed-store/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/hypercore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/keys/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/log/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/random-access-storage/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/react-async/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/react-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/sentry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/telemetry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/testutils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/timeframe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/typings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/util/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-db/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/messenger-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/model-factory/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/object-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/text-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/halo/credentials/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/halo/keyring/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/broadcast/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/mesh-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/messaging/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/network-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/network-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-network-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-presence/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-replicator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-rpc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/rpc-tunnel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/rpc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/signal/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/protocols/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/react-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/react-toolkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools-extension/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools-mesh/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/e2e/rpc-tunnel-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/gem-core/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/gem-spore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kitchen-sink/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kodama/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-echo-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-ipfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-registry-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/registry-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/spyglass/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/wallet-extension/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/wallet-playground/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/gravity-dashboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/orchestrator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client-services/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/config/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-uikit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/vite-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/beast/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/codemods/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/deprecated/protocols-toolchain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/deprecated/toolchain-node-library/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-rules/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/esbuild/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/mocha/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/playwright/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/protobuf-compiler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/toolbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/log-hook/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/protobuf-test/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/typedoc-plugin-plate/package.json",
+          "jsonpath": "$.version"
+        }
       ]
     }
-  ],
-  "packages": {
-    "docs": { "component": "docs" },
-    "packages/apps/halo-app": { "component": "halo-app" },
-    "packages/apps/templates/bare-template": { "component": "bare-template" },
-    "packages/apps/templates/hello-template": { "component": "hello-template" },
-    "packages/bots/bender-bot": { "component": "bender-bot" },
-    "packages/bots/bot-factory-client": { "component": "bot-factory-client" },
-    "packages/bots/botkit": { "component": "botkit" },
-    "packages/common/async": { "component": "async" },
-    "packages/common/codec-protobuf": { "component": "codec-protobuf" },
-    "packages/common/crypto-names": { "component": "crypto-names" },
-    "packages/common/crypto": { "component": "crypto" },
-    "packages/common/debug": { "component": "debug" },
-    "packages/common/feed-store": { "component": "feed-store" },
-    "packages/common/hypercore": { "component": "hypercore" },
-    "packages/common/keys": { "component": "keys" },
-    "packages/common/log": { "component": "log" },
-    "packages/common/random-access-storage": { "component": "random-access-storage" },
-    "packages/common/react-async": { "component": "react-async" },
-    "packages/common/react-ui": { "component": "react-ui" },
-    "packages/common/sentry": { "component": "sentry" },
-    "packages/common/telemetry": { "component": "telemetry" },
-    "packages/common/testutils": { "component": "testutils" },
-    "packages/common/timeframe": { "component": "timeframe" },
-    "packages/common/typings": { "component": "typings" },
-    "packages/common/util": { "component": "util" },
-    "packages/core/echo/echo-db": { "component": "echo-db" },
-    "packages/core/echo/messenger-model": { "component": "messenger-model" },
-    "packages/core/echo/model-factory": { "component": "model-factory" },
-    "packages/core/echo/object-model": { "component": "object-model" },
-    "packages/core/echo/text-model": { "component": "text-model" },
-    "packages/core/halo/credentials": { "component": "credentials" },
-    "packages/core/halo/keyring": { "component": "keyring" },
-    "packages/core/mesh/broadcast": { "component": "broadcast" },
-    "packages/core/mesh/mesh-protocol": { "component": "mesh-protocol" },
-    "packages/core/mesh/messaging": { "component": "messaging" },
-    "packages/core/mesh/network-generator": { "component": "network-generator" },
-    "packages/core/mesh/network-manager": { "component": "network-manager" },
-    "packages/core/mesh/protocol-network-generator": { "component": "protocol-network-generator" },
-    "packages/core/mesh/protocol-plugin-presence": { "component": "protocol-plugin-presence" },
-    "packages/core/mesh/protocol-plugin-replicator": { "component": "protocol-plugin-replicator" },
-    "packages/core/mesh/protocol-plugin-rpc": { "component": "protocol-plugin-rpc" },
-    "packages/core/mesh/rpc-tunnel": { "component": "rpc-tunnel" },
-    "packages/core/mesh/rpc": { "component": "rpc" },
-    "packages/core/mesh/signal": { "component": "signal" },
-    "packages/core/protocols": { "component": "protocols" },
-    "packages/deprecated/react-components": { "component": "react-components" },
-    "packages/deprecated/react-toolkit": { "component": "react-toolkit" },
-    "packages/devtools/devtools-extension": { "component": "devtools-extension" },
-    "packages/devtools/devtools-mesh": { "component": "devtools-mesh" },
-    "packages/devtools/devtools": { "component": "devtools" },
-    "packages/devtools/dx-cli": { "component": "dx-cli" },
-    "packages/e2e/rpc-tunnel-e2e": { "component": "rpc-tunnel-e2e" },
-    "packages/experimental/client-testing": { "component": "client-testing" },
-    "packages/experimental/composer": { "component": "composer" },
-    "packages/experimental/gem-core": { "component": "gem-core" },
-    "packages/experimental/gem-spore": { "component": "gem-spore" },
-    "packages/experimental/kai": { "component": "kai" },
-    "packages/experimental/kitchen-sink": { "component": "kitchen-sink" },
-    "packages/experimental/kodama": { "component": "kodama" },
-    "packages/experimental/react-client-testing": { "component": "react-client-testing" },
-    "packages/experimental/react-echo-graph": { "component": "react-echo-graph" },
-    "packages/experimental/react-ipfs": { "component": "react-ipfs" },
-    "packages/experimental/react-registry-client": { "component": "react-registry-client" },
-    "packages/experimental/registry-client": { "component": "registry-client" },
-    "packages/experimental/spyglass": { "component": "spyglass" },
-    "packages/experimental/wallet-extension": { "component": "wallet-extension" },
-    "packages/experimental/wallet-playground": { "component": "wallet-playground" },
-    "packages/gravity/gravity-dashboard": { "component": "gravity-dashboard" },
-    "packages/gravity/orchestrator": { "component": "orchestrator" },
-    "packages/sdk/client-services": { "component": "client-services" },
-    "packages/sdk/client": { "component": "client" },
-    "packages/sdk/config": { "component": "config" },
-    "packages/sdk/react-client": { "component": "react-client" },
-    "packages/sdk/react-uikit": { "component": "react-uikit" },
-    "packages/sdk/vite-plugin": { "component": "vite-plugin" },
-    "tools/beast": { "component": "beast" },
-    "tools/codemods": { "component": "codemods" },
-    "tools/deprecated/protocols-toolchain": { "component": "protocols-toolchain" },
-    "tools/deprecated/toolchain-node-library": { "component": "toolchain-node-library" },
-    "tools/eslint-plugin": { "component": "eslint-plugin" },
-    "tools/eslint-rules": { "component": "eslint-rules" },
-    "tools/executors/esbuild": { "component": "esbuild" },
-    "tools/executors/mocha": { "component": "mocha" },
-    "tools/executors/playwright": { "component": "playwright" },
-    "tools/executors/protobuf-compiler": { "component": "protobuf-compiler" },
-    "tools/executors/toolbox": { "component": "toolbox" },
-    "tools/log-hook": { "component": "log-hook" },
-    "tools/plate": { "component": "plate" },
-    "tools/protobuf-test": { "component": "protobuf-test" },
-    "tools/ridoculous": { "component": "ridoculous" },
-    "tools/typedoc-plugin-plate": { "component": "typedoc-plugin-plate" }
   }
 }

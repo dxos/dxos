@@ -6,10 +6,9 @@ import { AddressBook, DiamondsFour, DeviceMobileCamera, Planet, SignOut } from '
 import React from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useParty, useProfile } from '@dxos/react-client';
 import { NavMenu, NavMenuSeparatorProps, Presence, useTranslation } from '@dxos/react-uikit';
-
-import { useSafeSpaceKey } from '../../hooks';
 
 const iconAttributes = { className: 'h-5 w-5' };
 
@@ -19,7 +18,7 @@ export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex);
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
 
   const pathSegments = location.pathname.split('/').length;

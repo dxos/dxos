@@ -8,13 +8,13 @@ import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { Heading, Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
-import { ErrorsProvider, FatalError, ServiceWorkerToast } from './components';
-import { useTelemetry } from './hooks';
+import { ErrorsProvider, FatalError } from './components';
 import {
   AppLayout,
   AppsPage,
@@ -31,6 +31,7 @@ import {
   SpacePage,
   SpacesPage
 } from './pages';
+import { useTelemetry } from './telemetry';
 import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());

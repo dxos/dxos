@@ -1,6 +1,6 @@
 {
   "name": "@dxos/typings",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Typescript defs.",
   "homepage": "https://dxos.org",

@@ -14,7 +14,7 @@ import packageJson from './package.json';
 
 const env = (value?: string) => value ? `"${value}"` : undefined;
 const DX_RELEASE = process.env.NODE_ENV === 'production'
-  ? `halo-app@${packageJson.version}`
+  ? `@dxos/halo-app@${packageJson.version}`
   : undefined;
 
 // https://vitejs.dev/config/
@@ -28,7 +28,8 @@ export default defineConfig({
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
-    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY)
+    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
+    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -37,10 +38,11 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/keys',
       '@dxos/log',
-      '@dxos/composer',
       '@dxos/config',
       '@dxos/protocols',
+      '@dxos/react-appkit',
       '@dxos/react-async',
+      '@dxos/react-composer',
       '@dxos/react-client',
       '@dxos/react-uikit',
       '@dxos/rpc',
