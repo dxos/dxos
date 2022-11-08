@@ -116,7 +116,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         observable.callback.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
-          log.error('RPC failed', err);
+          log.error(`RPC failed: ${err} `);
           observableError(observable, err);
         }
       }
@@ -182,7 +182,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
               } catch (err) {
                 // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
                 if (!observable.cancelled) {
-                  log.error('RPC failed', err);
+                  log.error(`RPC failed ${err}`);
                   observableError(observable, err);
                 }
               }
