@@ -14,23 +14,26 @@ export const build = async ({
   proto,
   substitutions,
   baseDir,
-  outDir
+  outDir,
+  verbose = false
 }: {
   proto: string[];
   substitutions?: string;
   baseDir: string | undefined;
   outDir: string;
+  verbose: boolean;
 }) => {
+  // TODO(burdon): Use context.cwd.
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
-  const outdirPath = resolve(process.cwd(), outDir);
+  const outDirPath = resolve(process.cwd(), outDir);
 
   // Initialize.
   registerResolver(baseDir);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDir, outdirPath);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outdirPath);
+  logger.logCompilationOptions(protoFilePaths, baseDir, outDirPath, verbose);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outDirPath, verbose);
 };

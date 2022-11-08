@@ -17,7 +17,8 @@ export const parseAndGenerateSchema = async (
   substitutionsModule: ModuleSpecifier | undefined,
   protoFiles: string[],
   baseDirPath: string | undefined,
-  outDirPath: string
+  outDirPath: string,
+  verbose = false
 ) => {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   const root = await pb.load(protoFiles);
@@ -28,7 +29,9 @@ export const parseAndGenerateSchema = async (
     }
   }
 
-  logger.logParsedSubstitutions(substitutions);
+  if (substitutionsModule) {
+    logger.logParsedSubstitutions(substitutionsModule, substitutions, verbose);
+  }
 
   await generateSchema({
     schema: root,

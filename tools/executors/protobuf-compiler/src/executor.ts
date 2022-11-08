@@ -9,23 +9,27 @@ import { join } from 'node:path';
 import { resolve } from 'path';
 
 import { build } from './build';
+import { TypingsGenerator } from './typings-generator';
 
 export interface GenerateExecutorOptions {
   basePath: string;
   srcPath: string;
   outputPath: string;
+  typingsOutputPath: string;
   substitutionsPath: string;
+  verbose: boolean;
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing generate...');
+  console.info('Executing protobuf generator...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
+  // TODO(burdon): Path options aren't "balanced".
   const src = join(options.basePath, options.srcPath);
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
-  const baseDir = resolve(process.cwd(), options.basePath);
+  const baseDir = resolve(context.cwd, options.basePath);
   const outDir = join(options.basePath, options.outputPath);
 
   try {
@@ -41,8 +45,22 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     proto,
     substitutions,
     baseDir,
-    outDir
+    outDir,
+    verbose: context.isVerbose
   });
+
+  // Typings.
+  if (options.typingsOutputPath) {
+    const typeGenerator = new TypingsGenerator({
+      files: proto,
+      baseDir: options.basePath,
+      outDir: join(context.cwd, options.typingsOutputPath),
+      // TODO(burdon): Fix definition and computation of relative paths.
+      genDir: '../../dist/src/proto/gen'
+    });
+
+    typeGenerator.generate(context.isVerbose);
+  }
 
   return { success: true };
 };
