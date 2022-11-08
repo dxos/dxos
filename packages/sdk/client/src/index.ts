@@ -29,7 +29,13 @@ export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 // Protobuf definitions.
 //
 
-export { invitationObservable, InvitationEvents, InvitationEncoder } from '@dxos/client-services';
+export {
+  ClientServicesHost,
+  ClientServicesProvider,
+  invitationObservable,
+  InvitationEvents,
+  InvitationEncoder
+} from '@dxos/client-services';
 
 export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';

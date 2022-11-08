@@ -16,7 +16,6 @@ package:
 
 runtime:
   client:
-    mode: remote
     remoteSource: /headless.html
     storage:
       persistent: true

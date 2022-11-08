@@ -38,7 +38,9 @@ const configProvider = async () => new Config(await Dynamics(), await Envs(), De
 
 const clientProvider = async () => {
   const config = await configProvider();
-  return new Client({ config, services: fromIFrame(config) });
+  const client = new Client({ config, services: fromIFrame(config) });
+  await client.initialize();
+  return client;
 };
 
 const Routes = () => {
