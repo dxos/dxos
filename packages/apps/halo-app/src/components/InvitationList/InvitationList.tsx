@@ -30,7 +30,7 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
       {!empty && (
         <div role='none' className='grid grid-cols-[repeat(auto-fill,_minmax(12rem,1fr))] gap-4'>
           {invitations.map((invitation) => (
-            <PendingInvitation key={invitation.invitationId} value={invitation} />
+            <PendingInvitation key={invitation.invitationId} invitation={invitation} />
           ))}
         </div>
       )}
