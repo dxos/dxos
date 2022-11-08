@@ -339,11 +339,11 @@ export class Protocol {
         });
         await extension.onHandshake();
       }
-    } catch (err) {
+    } catch (err: any) {
       if (this._stream.destroyed) {
         log.warn('handshake', toError(err).message);
       } else {
-        log.error(err);
+        log.catch(err);
       }
     }
 
