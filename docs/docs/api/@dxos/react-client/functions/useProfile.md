@@ -1,2 +1,0 @@
-# Function `useProfile`
-> Declared in [`packages/sdk/react-client/src/hooks/client/useProfile.ts:13`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useProfile.ts#L13)

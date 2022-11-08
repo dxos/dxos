@@ -1,64 +1,159 @@
 # Class `ObjectModel`
-> Declared in [`packages/core/echo/object-model/dist/src/object-model.d.ts:24`]()
+Declared in [`packages/core/echo/object-model/dist/src/object-model.d.ts:24`]()
 
 
 Object mutation model.
 
 ## Constructors
-```ts
-new ObjectModel (_meta: ModelMeta<any, any, any>, _itemId: string, _getState: function, _mutationWriter: MutationWriter<ObjectMutationSet>) => ObjectModel
-```
+### [`constructor`]()
+
+
+Returns: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
+
+Arguments: 
+
+`_meta`: `ModelMeta<any, any, any>`
+
+`_itemId`: `string`
+
+`_getState`: `function`
+
+`_mutationWriter`: `MutationWriter<ObjectMutationSet>`
 
 ## Properties
-### `_getState: function`
-### `update: Event<Model<ObjectModelState, ObjectMutationSet>>`
-### `meta: ModelMeta<any, any, any>`
-### `itemId:  get string`
-### `modelMeta:  get ModelMeta<any, any, any>`
-### `readOnly:  get boolean`
+### [`_getState`]()
+Type: `function`
+### [`update`]()
+Type: `Event<Model<ObjectModelState, ObjectMutationSet>>`
+### [`meta`]()
+Type: `ModelMeta<any, any, any>`
+### [`itemId`]()
+Type: `string`
+### [`modelMeta`]()
+Type: `ModelMeta<any, any, any>`
+### [`readOnly`]()
+Type: `boolean`
 
-## Functions
-```ts
-addToSet (key: string, value: any) => Promise<void>
-```
-```ts
-builder () => MutationBuilder
-```
-```ts
-get (key: string, defaultValue: unknown) => any
-```
-```ts
-getProperty (key: string, defaultValue: any) => any
-```
-```ts
-pushToArray (key: string, value: any) => Promise<void>
-```
-```ts
-removeFromSet (key: string, value: any) => Promise<void>
-```
-```ts
-set (key: string, value: unknown) => Promise<void>
-```
-```ts
-setProperties (properties: any) => Promise<void>
-```
-```ts
-setProperty (key: string, value: any) => Promise<void>
-```
-```ts
-subscribe (listener: function) => function
-```
-```ts
-toJSON () => object
-```
-```ts
-toObject () => ObjectModelState
-```
+## Methods
+### [`addToSet`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+
+`value`: `any`
+### [`builder`]()
+
+
+Returns: `MutationBuilder`
+
+Arguments: none
+### [`get`]()
+
+
+Returns: `any`
+
+Arguments: 
+
+`key`: `string`
+
+`defaultValue`: `unknown`
+### [`getProperty`]()
+
+
+Returns: `any`
+
+Arguments: 
+
+`key`: `string`
+
+`defaultValue`: `any`
+### [`pushToArray`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+
+`value`: `any`
+### [`removeFromSet`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+
+`value`: `any`
+### [`set`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+
+`value`: `unknown`
+### [`setProperties`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`properties`: `any`
+### [`setProperty`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`key`: `string`
+
+`value`: `any`
+### [`subscribe`]()
+
+
+Returns: `UnsubscribeCallback`
+
+Arguments: 
+
+`listener`: `function`
+### [`toJSON`]()
+
+
+Returns: `object`
+
+Arguments: none
+### [`toObject`]()
+
+
 Returns an immutable object.
-```ts
-toString () => string
-```
-```ts
-write (mutation: ObjectMutationSet) => Promise<MutationWriteReceipt>
-```
+
+Returns: `ObjectModelState`
+
+Arguments: none
+### [`toString`]()
+
+
+Returns: `string`
+
+Arguments: none
+### [`write`]()
+
+
 Writes the raw mutation to the output stream.
+
+Returns: `Promise<MutationWriteReceipt>`
+
+Arguments: 
+
+`mutation`: `ObjectMutationSet`

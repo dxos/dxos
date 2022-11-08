@@ -1,5 +1,5 @@
 # Class `PublicKey`
-> Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
+Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -7,77 +7,163 @@ Keys should be maintained as buffers in objects and proto definitions, and conve
 strings as late as possible (eg, to log/display).
 
 ## Constructors
-```ts
-new PublicKey (_value: Uint8Array) => PublicKey
-```
+### [`constructor`]()
+
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`_value`: `Uint8Array`
 
 ## Properties
 
 
-## Functions
-```ts
-[custom] (depth: number, options: InspectOptionsStylized) => string
-```
-Used by NodeJS to get textual representation of this object when it's printed with a  `console.log`  statement.
-```ts
-asBuffer () => Buffer
-```
-Covert this key to buffer.
-```ts
-asUint8Array () => Uint8Array
-```
-Return underlying Uint8Array representation.
-```ts
-equals (other: PublicKeyLike) => boolean
-```
+## Methods
+### [`[custom]`]()
+
+
+Used by Node.js to get textual representation of this object when it's printed with a  `console.log`  statement.
+
+Returns: `string`
+
+Arguments: 
+
+`depth`: `number`
+
+`options`: `InspectOptionsStylized`
+### [`asBuffer`]()
+
+
+Returns: `Buffer`
+
+Arguments: none
+### [`asUint8Array`]()
+
+
+Returns: `Uint8Array`
+
+Arguments: none
+### [`equals`]()
+
+
 Test this key for equality with some other key.
-```ts
-toHex () => string
-```
-Convert this key to hex-encoded string.
-```ts
-toJSON () => string
-```
-Same as  `PublicKey.humanize()` .
-```ts
-toString () => string
-```
-Same as  `PublicKey.humanize()` .
-```ts
-truncate (n: number) => string
-```
-```ts
-assertValidPublicKey (value: any) => asserts value is PublicKey
-```
+
+Returns: `boolean`
+
+Arguments: 
+
+`other`: `PublicKeyLike`
+### [`toHex`]()
+
+
+Returns: `string`
+
+Arguments: none
+### [`toJSON`]()
+
+
+Returns: `string`
+
+Arguments: none
+### [`toString`]()
+
+
+Returns: `string`
+
+Arguments: none
+### [`truncate`]()
+
+
+Returns: `string`
+
+Arguments: 
+
+`length`: `number`
+### [`assertValidPublicKey`]()
+
+
 Asserts that provided values is an instance of PublicKey.
-```ts
-bufferize (str: string) => Buffer
-```
-```ts
-equals (left: PublicKeyLike, right: PublicKeyLike) => boolean
-```
+
+Returns: `asserts value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`value`: `any`
+### [`bufferize`]()
+
+
+Returns: `Buffer`
+
+Arguments: 
+
+`str`: `string`
+### [`equals`]()
+
+
 Tests two keys for equality.
-```ts
-from (source: PublicKeyLike) => PublicKey
-```
+
+Returns: `boolean`
+
+Arguments: 
+
+`left`: `PublicKeyLike`
+
+`right`: `PublicKeyLike`
+### [`from`]()
+
+
 Creates new instance of PublicKey automatically determining the input format.
-```ts
-fromHex (hex: string) => PublicKey
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`source`: `PublicKeyLike`
+### [`fromHex`]()
+
+
 Creates new instance of PublicKey from hex string.
-```ts
-hash (key: PublicKey) => string
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`hex`: `string`
+### [`hash`]()
+
+
 To be used with ComplexMap and ComplexSet.
 Returns a scalar representation for this key.
-```ts
-isPublicKey (value: any) => value is PublicKey
-```
+
+Returns: `string`
+
+Arguments: 
+
+`key`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`isPublicKey`]()
+
+
 Tests if provided values is an instance of PublicKey.
-```ts
-random () => PublicKey
-```
+
+Returns: `value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: 
+
+`value`: `any`
+### [`random`]()
+
+
 Creates a new key.
-```ts
-stringify (key: Buffer | Uint8Array) => string
-```
+
+Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+
+Arguments: none
+### [`stringify`]()
+
+
+Returns: `string`
+
+Arguments: 
+
+`key`: `Uint8Array | Buffer`
