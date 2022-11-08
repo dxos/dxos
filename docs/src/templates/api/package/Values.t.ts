@@ -1,23 +1,15 @@
 import { ReflectionKind, JSONOutput as Schema } from 'typedoc';
-import {
-  Input,
-  TemplateFunction,
-  text,
-  File,
-  packagesInProject,
-  reflectionsOfKind,
-  Stringifier
-} from '..';
+import { TemplateFunction, text, File } from '@dxos/plate';
+import { Input } from '..';
+import { packagesInProject, reflectionsOfKind } from '../lib/utils';
+import { Stringifier } from '../lib/Stringifier';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
   const stringifier = new Stringifier(input);
   return packages
     .map((pkage) => {
-      const values = reflectionsOfKind(
-        pkage,
-        ReflectionKind.Variable
-      ) as Schema.DeclarationReflection[];
+      const values = reflectionsOfKind(pkage, ReflectionKind.Variable) as Schema.DeclarationReflection[];
 
       const dir = [outputDirectory, pkage.name];
 
@@ -36,7 +28,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
           
           ${stringifier.comment(avalue.comment)}
           `
-          )}
+        )}
         `
       });
     })

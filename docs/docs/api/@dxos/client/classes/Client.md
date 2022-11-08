@@ -1,11 +1,11 @@
 # Class `Client`
-Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:78`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L78)
+Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:79`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L79)
 
 
 
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L100)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L102)
 
 
 Creates the client object based on supplied configuration.
@@ -20,7 +20,7 @@ Arguments:
 `options`: [`ClientOptions`](/api/@dxos/client/interfaces/ClientOptions)
 
 ## Properties
-### [`version`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L79)
+### [`version`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L82)
 Type: `"2.33.8"`
 ### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L132)
 Type: `Config`
@@ -40,12 +40,12 @@ Type: `boolean`
 Has the Client been initialized?
 Initialize by calling  `.initialize()`
 ### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L166)
-Type: `ClientServices`
+Type: [`ClientServices`](/api/@dxos/client/types/ClientServices)
 
 Client services that can be proxied.
 
 ## Methods
-### [`destroy`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L265)
+### [`destroy`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L217)
 
 
 Cleanup, release resources.
@@ -53,7 +53,7 @@ Cleanup, release resources.
 Returns: `Promise<void>`
 
 Arguments: none
-### [`initialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L179)
+### [`initialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L180)
 
 
 Initializes internal resources in an idempotent way.
@@ -64,7 +64,7 @@ Returns: `Promise<void>`
 Arguments: 
 
 `onProgressCallback`: `function`
-### [`registerModel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L295)
+### [`registerModel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L314)
 
 
 Registers a new ECHO model.
@@ -74,7 +74,7 @@ Returns: [`Client`](/api/@dxos/client/classes/Client)
 Arguments: 
 
 `constructor`: `ModelConstructor<any>`
-### [`reset`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L284)
+### [`reset`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L303)
 
 
 Resets and destroys client storage.

@@ -35,6 +35,11 @@ const main = async () => {
       requiresArg: false,
       type: 'string'
     })
+    .option('exclude', {
+      description: 'A regex to exclude entries from the template',
+      requiresArg: false,
+      type: 'string'
+    })
     .option('glob', {
       description: 'Filter the template files by glob expression string',
       requiresArg: false,
@@ -49,7 +54,8 @@ const main = async () => {
         input,
         output = process.cwd(),
         filter,
-        glob
+        glob,
+        exclude
       }: {
         _: string[];
         dry: boolean;
@@ -57,6 +63,7 @@ const main = async () => {
         output: string;
         filter: string;
         glob: string;
+        exclude: string;
       }) => {
         const tstart = Date.now();
         const [template] = _;
@@ -66,14 +73,16 @@ const main = async () => {
         console.log('working directory', process.cwd());
         console.log(
           `executing template '${template}'...`,
-          filter ? `filter: '${filter}'` : ''
+          filter ? `filter: '${filter}'` : '',
+          exclude ? ` exclude: '${exclude}'` : ''
         );
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
           input: input ? JSON.parse((await fs.readFile(input)).toString()) : {},
           filterGlob: glob,
-          filterRegEx: new RegExp(filter)
+          filterRegEx: filter ? new RegExp(filter) : void 0,
+          filterExclude: exclude ? new RegExp(exclude) : void 0
         });
         if (!dry) {
           console.log(`output folder: ${output}`);

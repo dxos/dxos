@@ -23,8 +23,14 @@
     },
     "plate": {
       "executor": "nx:run-script",
+      "options": {
+        "script": "plate"
+      },
       "outputs": [
         "{options.outputFile}"
+      ],
+      "dependsOn": [
+        "^build"
       ]
     },
     "prerelease": {
@@ -46,7 +52,7 @@
         "default"
       ],
       "options": {
-        "script": "plate"
+        "script": "prerelease"
       },
       "outputs": [
         "docs/docs/.vuepress/dist",

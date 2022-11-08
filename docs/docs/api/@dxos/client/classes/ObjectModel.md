@@ -122,7 +122,7 @@ Arguments:
 ### [`subscribe`]()
 
 
-Returns: `function`
+Returns: `UnsubscribeCallback`
 
 Arguments: 
 

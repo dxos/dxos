@@ -1,5 +1,5 @@
 # Class `ClientServiceHost`
-Declared in [`packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts:15`]()
+Declared in [`packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts:16`]()
 
 
 Remote service implementation.
@@ -15,10 +15,8 @@ Arguments:
 `__namedParameters`: `ClientServiceHostParams`
 
 ## Properties
-### [`echo`]()
-Type: `never`
 ### [`services`]()
-Type: `ClientServices`
+Type: [`ClientServices`](/api/@dxos/client/types/ClientServices)
 
 ## Methods
 ### [`close`]()

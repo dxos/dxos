@@ -1,23 +1,14 @@
-import os from 'os';
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
-import {
-  Input,
-  TemplateFunction,
-  text,
-  File,
-  reflectionsOfKind,
-  packagesInProject,
-  Stringifier
-} from '../..';
+import { Input } from '../..';
+import { reflectionsOfKind, packagesInProject } from '../../lib/utils';
+import { Stringifier } from '../../lib/Stringifier';
 
+import { TemplateFunction, text, File } from '@dxos/plate';
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
   return packages
     .map((pkage) => {
-      const ifaces = reflectionsOfKind(
-        pkage,
-        ReflectionKind.Interface
-      ) as S.ContainerReflection[];
+      const ifaces = reflectionsOfKind(pkage, ReflectionKind.Interface) as S.ContainerReflection[];
       const stringifier = new Stringifier(input);
       const interfacesDir = [outputDirectory, pkage.name ?? '', 'interfaces'];
       return ifaces
@@ -33,7 +24,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
 
                 ${stringifier.comment(iface.comment)}
                 ## Properties
-                ${properties.map(p => stringifier.property(p))}
+                ${properties.map((p) => stringifier.property(p))}
               `
             })
           ];

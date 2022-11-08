@@ -1,5 +1,5 @@
-# Class `InvitationDescriptor`
-Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:21`]()
+# Class `InvitationWrapper`
+Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/invitation-wrapper.d.ts:21`]()
 
 
 Describes an issued invitation.
@@ -13,7 +13,7 @@ This descriptor might also have a bundled secret for authentication in interacti
 ### [`constructor`]()
 
 
-Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+Returns: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 
 Arguments: 
 
@@ -42,12 +42,6 @@ Type: `Type`
 Type: `string`
 
 ## Methods
-### [`encode`]()
-
-
-Returns: `string`
-
-Arguments: none
 ### [`toProto`]()
 
 
@@ -57,23 +51,29 @@ Arguments: none
 ### [`toQueryParameters`]()
 
 
-Exports an InvitationDescriptor to an object suitable for use as query parameters.
-
 Returns: `InvitationQueryParameters`
 
 Arguments: none
 ### [`decode`]()
 
 
-Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+Returns: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 
 Arguments: 
 
 `code`: `string`
+### [`encode`]()
+
+
+Returns: `string`
+
+Arguments: 
+
+`invitation`: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 ### [`fromProto`]()
 
 
-Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+Returns: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 
 Arguments: 
 
@@ -81,7 +81,7 @@ Arguments:
 ### [`fromQueryParameters`]()
 
 
-Returns: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+Returns: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 
 Arguments: 
 

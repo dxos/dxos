@@ -32,7 +32,7 @@ Type: `T[]`
 
 Subscribe for updates.
 
-Returns: `function`
+Returns: `UnsubscribeCallback`
 
 Arguments: 
 

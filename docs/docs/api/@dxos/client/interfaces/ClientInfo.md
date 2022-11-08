@@ -3,9 +3,9 @@
 
 
 ## Properties
-### [`echo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L74)
+### [`echo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L75)
 Type: `object`
-### [`halo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L75)
+### [`halo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L76)
 Type: [`HaloInfo`](/api/@dxos/client/interfaces/HaloInfo)
-### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L73)
+### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L74)
 Type: `boolean`

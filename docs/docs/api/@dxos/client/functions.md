@@ -12,6 +12,14 @@ Arguments:
 `client`: [`Client`](/api/@dxos/client/classes/Client)
 
 `serviceHost`: `ClientServiceProvider`
+### [`createNetworkManager`]()
+
+
+Returns: [`NetworkManager`](/api/@dxos/client/classes/NetworkManager)
+
+Arguments: 
+
+`config`: `Config`
 ### [`createWebRTCTransportFactory`]()
 
 

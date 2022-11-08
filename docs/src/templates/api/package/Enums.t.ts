@@ -1,18 +1,16 @@
 import { ReflectionKind, JSONOutput as S } from 'typedoc';
-import { Input, TemplateFunction, text, File } from '..';
+import { Input } from '../index';
+import { TemplateFunction, text, File } from '@dxos/plate';
+import { packagesInProject, reflectionsOfKind } from '../lib/utils';
+import { Stringifier } from '../lib/Stringifier';
 
-import { packagesInProject, reflectionsOfKind } from '..';
-import { Stringifier } from '..';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
   const stringifier = new Stringifier(input);
-  
+
   return packages.map((pkage) => {
-    const enums = reflectionsOfKind(
-      pkage,
-      ReflectionKind.Enum
-    ) as S.ContainerReflection[];
+    const enums = reflectionsOfKind(pkage, ReflectionKind.Enum) as S.ContainerReflection[];
     return new File({
       path: [outputDirectory, pkage.name ?? '', 'enums.md'],
       content: text`

@@ -1,5 +1,5 @@
 # Type `ItemID`
-Declared in [`packages/core/protocols/dist/src/types.d.ts:30`]()
+Declared in [`packages/core/protocols/dist/src/types.d.ts:31`]()
 
 
 

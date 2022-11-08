@@ -23,7 +23,7 @@ Returns: `Element`
 Arguments: 
 
 `__namedParameters`: [`ClientProviderProps`](/api/@dxos/react-client/interfaces/ClientProviderProps)
-### [`createBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L26)
+### [`createBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L27)
 
 
 Returns: `Promise<BotFactoryClient>`
@@ -31,7 +31,7 @@ Returns: `Promise<BotFactoryClient>`
 Arguments: 
 
 `config`: `Config`
-### [`useBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L15)
+### [`useBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L16)
 
 
 Returns: `undefined | BotFactoryClient`

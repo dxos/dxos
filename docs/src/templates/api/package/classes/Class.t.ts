@@ -1,40 +1,25 @@
-import { ReflectionKind, JSONOutput as S } from "typedoc";
-import {
-  Input,
-  TemplateFunction,
-  text,
-  File,
-  Stringifier,
-  packagesInProject,
-  reflectionsOfKind,
-} from "../..";
+import { ReflectionKind, JSONOutput as S } from 'typedoc';
+import { Input } from '../..';
+import { TemplateFunction, text, File } from '@dxos/plate';
+import { Stringifier } from '../../lib/Stringifier';
+import { packagesInProject, reflectionsOfKind } from '../../lib/utils';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
   const stringifier = new Stringifier(input);
   return packages
     .map((pkage) => {
-      const classes = reflectionsOfKind(
-        pkage,
-        ReflectionKind.Class
-      ) as S.ContainerReflection[];
+      const classes = reflectionsOfKind(pkage, ReflectionKind.Class) as S.ContainerReflection[];
       return classes
         .map((aclass) => {
-          const constructors = reflectionsOfKind(
-            aclass,
-            ReflectionKind.Constructor
+          const constructors = reflectionsOfKind(aclass, ReflectionKind.Constructor);
+          const properties = reflectionsOfKind(aclass, ReflectionKind.Property, ReflectionKind.Accessor).filter(
+            (r) => !r.flags.isPrivate
           );
-          const properties = reflectionsOfKind(
-            aclass,
-            ReflectionKind.Property,
-            ReflectionKind.Accessor
-          ).filter((r) => !r.flags.isPrivate);
-          const functions = reflectionsOfKind(
-            aclass,
-            ReflectionKind.Method,
-            ReflectionKind.Function
-          ).filter((r) => !r.flags.isPrivate);
-          const classesDir = [outputDirectory, pkage.name ?? "", "classes"];
+          const functions = reflectionsOfKind(aclass, ReflectionKind.Method, ReflectionKind.Function).filter(
+            (r) => !r.flags.isPrivate
+          );
+          const classesDir = [outputDirectory, pkage.name ?? '', 'classes'];
           return [
             new File({
               path: [...classesDir, `${aclass.name}.md`],
@@ -45,14 +30,14 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
                 ${stringifier.comment(aclass.comment)}
 
                 ## Constructors
-                ${constructors.map(c => stringifier.method(c))}
+                ${constructors.map((c) => stringifier.method(c))}
 
                 ## Properties
-                ${properties.map(p => stringifier.property(p))}
+                ${properties.map((p) => stringifier.property(p))}
 
                 ## Methods
-                ${functions.map(f => stringifier.method(f))}
-                `,
+                ${functions.map((f) => stringifier.method(f))}
+                `
             })
           ];
         })

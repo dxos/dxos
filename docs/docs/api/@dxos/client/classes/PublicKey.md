@@ -23,7 +23,7 @@ Arguments:
 ### [`[custom]`]()
 
 
-Used by NodeJS to get textual representation of this object when it's printed with a  `console.log`  statement.
+Used by Node.js to get textual representation of this object when it's printed with a  `console.log`  statement.
 
 Returns: `string`
 
@@ -35,15 +35,11 @@ Arguments:
 ### [`asBuffer`]()
 
 
-Covert this key to buffer.
-
 Returns: `Buffer`
 
 Arguments: none
 ### [`asUint8Array`]()
 
-
-Return underlying Uint8Array representation.
 
 Returns: `Uint8Array`
 
@@ -61,23 +57,17 @@ Arguments:
 ### [`toHex`]()
 
 
-Convert this key to hex-encoded string.
-
 Returns: `string`
 
 Arguments: none
 ### [`toJSON`]()
 
 
-Same as  `PublicKey.humanize()` .
-
 Returns: `string`
 
 Arguments: none
 ### [`toString`]()
 
-
-Same as  `PublicKey.humanize()` .
 
 Returns: `string`
 
@@ -89,7 +79,7 @@ Returns: `string`
 
 Arguments: 
 
-`n`: `number`
+`length`: `number`
 ### [`assertValidPublicKey`]()
 
 
@@ -176,4 +166,4 @@ Returns: `string`
 
 Arguments: 
 
-`key`: `Buffer | Uint8Array`
+`key`: `Uint8Array | Buffer`

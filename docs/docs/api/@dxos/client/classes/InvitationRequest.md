@@ -12,7 +12,7 @@ Returns: [`InvitationRequest`](/api/@dxos/client/classes/InvitationRequest)
 
 Arguments: 
 
-`_descriptor`: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
+`_descriptor`: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
 
 `connected`: `Event<void>`
 
@@ -35,17 +35,17 @@ Fired when there's an error in the invitation process.
 Type: `Event<void>`
 
 Fired when the invitation process completes successfully.
-### [`descriptor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L53)
-Type: [`InvitationDescriptor`](/api/@dxos/client/classes/InvitationDescriptor)
-### [`hasConnected`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L64)
+### [`descriptor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L48)
+Type: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
+### [`hasConnected`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L59)
 Type: `boolean`
 
 True if the connected event has been fired.
-### [`secret`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L57)
+### [`secret`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L52)
 Type: `Uint8Array`
 
 ## Methods
-### [`cancel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L82)
+### [`cancel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L84)
 
 
 Cancel the invitation.
@@ -53,13 +53,19 @@ Cancel the invitation.
 Returns: `void`
 
 Arguments: none
-### [`toString`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L88)
+### [`encode`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L63)
 
 
 Returns: `string`
 
 Arguments: none
-### [`wait`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L71)
+### [`toString`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L90)
+
+
+Returns: `string`
+
+Arguments: none
+### [`wait`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L70)
 
 
 Wait until connected.

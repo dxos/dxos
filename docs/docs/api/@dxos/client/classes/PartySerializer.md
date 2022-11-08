@@ -18,7 +18,7 @@ Arguments:
 
 
 ## Methods
-### [`deserializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L25)
+### [`deserializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L23)
 
 
 Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
@@ -26,7 +26,7 @@ Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
 Arguments: 
 
 `data`: `Uint8Array`
-### [`serializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L20)
+### [`serializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L18)
 
 
 Returns: `Promise<Blob>`

@@ -19,7 +19,7 @@ Type: `boolean`
 Type: `boolean`
 ### [`key`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L70)
 Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
-### [`properties`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L159)
+### [`properties`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L161)
 Type: `ObjectProperties`
 
 TODO: Currently broken.
@@ -33,7 +33,7 @@ Type: `function`
 Returns a selection context, which can be used to traverse the object graph.
 
 ## Methods
-### [`_setOpen`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L138)
+### [`_setOpen`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L140)
 
 
 Returns: `Promise<void>`
@@ -47,7 +47,7 @@ Arguments:
 Returns: `Promise<void>`
 
 Arguments: none
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L214)
+### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L218)
 
 
 Creates an invitation to a given party.
@@ -62,7 +62,7 @@ Returns: `Promise<`[`InvitationRequest`](/api/@dxos/client/classes/InvitationReq
 Arguments: 
 
 `inviteeKey`: [`CreationInvitationOptions`](/api/@dxos/client/interfaces/CreationInvitationOptions)
-### [`createSnapshot`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L222)
+### [`createSnapshot`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L226)
 
 
 Implementation method.
@@ -84,7 +84,7 @@ Arguments: none
 Returns: `Promise<PartyDetails>`
 
 Arguments: none
-### [`getProperty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L188)
+### [`getProperty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L190)
 
 
 Returns: `any`
@@ -94,7 +94,7 @@ Arguments:
 `key`: `string`
 
 `defaultValue`: `any`
-### [`getTitle`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L173)
+### [`getTitle`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L175)
 
 
 Returns: `never`
@@ -114,7 +114,7 @@ Arguments: none
 Returns: `Promise<void>`
 
 Arguments: none
-### [`queryMembers`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L196)
+### [`queryMembers`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L198)
 
 
 Return set of party members.
@@ -122,7 +122,7 @@ Return set of party members.
 Returns: [`ResultSet`](/api/@dxos/client/classes/ResultSet)`<PartyMember>`
 
 Arguments: none
-### [`setActive`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L146)
+### [`setActive`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L148)
 
 
 Returns: `Promise<void>`
@@ -132,7 +132,7 @@ Arguments:
 `active`: `boolean`
 
 `options`: `any`
-### [`setProperty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L181)
+### [`setProperty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L183)
 
 
 Returns: `Promise<void>`
@@ -142,7 +142,7 @@ Arguments:
 `key`: `string`
 
 `value`: `any`
-### [`setTitle`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L166)
+### [`setTitle`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L168)
 
 
 Returns: `Promise<void>`

@@ -13,14 +13,10 @@ const apiPath = path.resolve(__dirname, '../../docs/api');
 
 export const link = {
   package: (name: string) => `/api/${name}`,
-<<<<<<< HEAD
-  sectionItem: (pkg: string, section: string, name: string) => `/api/${pkg}/${section}/${name}`
-=======
   sectionItem: (pkg: string, section: string, name: string) =>
     `${link.package(pkg)}/${section}/${name}`,
   packageItem: (name: string, item: string) =>
     path.join(link.package(name), item)
->>>>>>> fee4ebd72 (wip docs generation)
 };
 
 type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;

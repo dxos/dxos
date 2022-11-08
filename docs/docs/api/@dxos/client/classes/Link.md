@@ -54,7 +54,7 @@ Type: `undefined | string`
 
 Subscribe for updates.
 
-Returns: `function`
+Returns: `UnsubscribeCallback`
 
 Arguments: 
 

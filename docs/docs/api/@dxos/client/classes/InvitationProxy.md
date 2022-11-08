@@ -19,7 +19,7 @@ Type: [`InvitationRequest`](/api/@dxos/client/classes/InvitationRequest)`[]`
 Type: `Event<void>`
 
 ## Methods
-### [`_removeInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L94)
+### [`_removeInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L97)
 
 
 Returns: `void`
@@ -41,7 +41,7 @@ Returns: `Promise<`[`InvitationRequest`](/api/@dxos/client/classes/InvitationReq
 Arguments: 
 
 `__namedParameters`: [`CreateInvitationRequestOpts`](/api/@dxos/client/interfaces/CreateInvitationRequestOpts)
-### [`handleInvitationRedemption`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L100)
+### [`handleInvitationRedemption`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L103)
 
 
 Returns: [`HandleInvitationRedemptionResult`](/api/@dxos/client/interfaces/HandleInvitationRedemptionResult)

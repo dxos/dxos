@@ -1,5 +1,5 @@
 # Class `NetworkManager`
-Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:25`]()
+Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:51`]()
 
 
 Manages connection to the swarm.
@@ -25,6 +25,16 @@ Type: `SignalManager`
 Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)`[]`
 
 ## Methods
+### [`closeSwarmConnection`]()
+
+
+Close the connection.
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
 ### [`destroy`]()
 
 
@@ -47,22 +57,16 @@ Returns: `undefined | SwarmMapper`
 Arguments: 
 
 `topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
-### [`joinProtocolSwarm`]()
+### [`openSwarmConnection`]()
 
 
-Returns: `Promise<function>`
+Join the swarm.
 
-Arguments: 
-
-`options`: `SwarmOptions`
-### [`leaveProtocolSwarm`]()
-
-
-Returns: `Promise<void>`
+Returns: `Promise<SwarmConnection>`
 
 Arguments: 
 
-`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+`__namedParameters`: `SwarmOptions`
 ### [`start`]()
 
 
