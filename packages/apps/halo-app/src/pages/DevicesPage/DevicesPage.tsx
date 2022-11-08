@@ -3,7 +3,7 @@
 //
 
 import { Plus } from 'phosphor-react';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
@@ -16,10 +16,14 @@ export const DevicesPage = () => {
   const client = useClient();
   const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);
   const invitations = useHaloInvitations(client);
+  const [creatingInvitation, setCreatingInvitation] = useState(false);
 
-  const handleInvite = () => {
-    void client.halo.createInvitation();
-  };
+  const onCreateInvitation = useCallback(() => {
+    setCreatingInvitation(true);
+    void (client.halo.createInvitation() as unknown as Promise<InvitationWrapper>).finally(() =>
+      setCreatingInvitation(false)
+    );
+  }, []);
 
   return (
     <main className='max-is-5xl mli-auto pli-7'>
@@ -27,7 +31,12 @@ export const DevicesPage = () => {
         className='mbe-6'
         heading={{ children: t('devices label') }}
         actions={
-          <Button variant='primary' className='grow flex gap-1' onClick={handleInvite}>
+          <Button
+            variant='primary'
+            className='grow flex gap-1'
+            onClick={onCreateInvitation}
+            disabled={creatingInvitation}
+          >
             <Plus className={getSize(5)} />
             {t('add device label')}
           </Button>
