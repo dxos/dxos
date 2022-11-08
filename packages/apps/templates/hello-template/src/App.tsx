@@ -10,7 +10,7 @@ import { HashRouter, Route, Routes, useNavigate, useParams, useSearchParams } fr
 import urlJoin from 'url-join';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Item } from '@dxos/client';
+import { Client, fromIFrame, InvitationEncoder, Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
@@ -34,6 +34,13 @@ import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
+const clientProvider = async () => {
+  const config = await configProvider();
+  const client = new Client({ config, services: fromIFrame(config) });
+  await client.initialize();
+  return client;
+};
+
 export const App = () => {
   const {
     offlineReady: [offlineReady, _setOfflineReady],
@@ -43,12 +50,7 @@ export const App = () => {
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider
-        config={configProvider}
-        onInitialize={async (client) => {
-          client.echo.modelFactory.registerModel(TextModel);
-        }}
-      >
+      <ClientProvider client={clientProvider}>
         <HashRouter>
           <Routes>
             <Route path='/' element={<SpacesView />} />
@@ -114,7 +116,7 @@ const SpacesView = () => {
           <JoinSpaceDialog
             initialInvitationCode={invitationParam ?? undefined}
             parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-            onJoin={(space) => navigate(`/${space.key.toHex()}`)}
+            onJoin={(space) => navigate(`/${space.toHex()}`)}
             dialogProps={{
               initiallyOpen: Boolean(invitationParam),
               openTrigger: (
@@ -179,7 +181,10 @@ const SpaceView = () => {
           <Presence
             profile={profile!}
             space={space}
-            createInvitationUrl={createInvitationUrl}
+            createInvitationUrl={(invitation) => {
+              const { origin, pathname } = window.location;
+              return urlJoin(origin, pathname, `/#?invitation=${InvitationEncoder.encode(invitation)}`);
+            }}
             className='flex-none'
             size={10}
             sideOffset={4}
@@ -189,9 +194,4 @@ const SpaceView = () => {
       {item ? <Composer item={item} className='z-0' /> : <Loading label={t('generic loading label')} size='md' />}
     </main>
   );
-};
-
-const createInvitationUrl = (invitationCode: string) => {
-  const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#?invitation=${invitationCode}`);
 };
