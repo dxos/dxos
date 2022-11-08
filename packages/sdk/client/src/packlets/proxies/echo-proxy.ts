@@ -57,10 +57,16 @@ export class EchoProxy implements Echo {
     };
   }
 
+  /**
+   * @deprecated
+   */
   get modelFactory(): ModelFactory {
     return this._modelFactory;
   }
 
+  /**
+   * @deprecated
+   */
   get networkManager() {
     if (this._serviceProvider instanceof ClientServicesProxy) {
       throw new Error('Network Manager not available in service proxy.');

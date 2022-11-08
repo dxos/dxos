@@ -122,7 +122,7 @@ export const App = () => {
           <ClientProvider
             config={configProvider}
             onInitialize={async (client) => {
-              client.echo.registerModel(TextModel);
+              client.echo.modelFactory.registerModel(TextModel);
             }}
             fallback={<ClientFallback />}
           >

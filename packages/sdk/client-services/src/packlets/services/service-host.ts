@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -79,9 +79,8 @@ export class ClientServicesHost implements ClientServicesProvider {
   }
 
   // TODO(burdon): Pass-through options.
-  createPeer(port: RpcPort) {
+  createPeer(port: RpcPort): ProtoRpcPeer<ClientServices> {
     return createProtoRpcPeer({
-      requested: {},
       exposed: this._serviceRegistry.descriptors,
       handlers: this._serviceRegistry.services,
       port

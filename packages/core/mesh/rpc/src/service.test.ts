@@ -18,7 +18,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -56,7 +55,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -104,7 +102,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -142,7 +139,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
@@ -222,7 +218,6 @@ describe('Protobuf service', function () {
       });
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: services,
         handlers: {
           TestService: {
@@ -311,7 +306,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
@@ -358,7 +352,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },

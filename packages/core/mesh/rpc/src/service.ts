@@ -40,7 +40,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Services that are expected to be implemented by the counter-party.
    */
-  requested: ServiceBundle<Client>; // TODO(burdon): Rename proxy.
+  requested?: ServiceBundle<Client>; // TODO(burdon): Rename proxy.
 
   /**
    * Services exposed to the counter-party.
@@ -104,17 +104,19 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   });
 
   const requestedRpcs: Client = {} as Client;
-  for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
+  if (requested) {
+    for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
+      // Get full service name with the package name without '.' at the beginning.
+      const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
 
-    requestedRpcs[serviceName] = requested[serviceName].createClient(
-      {
-        call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
-        callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
-      },
-      encodingOptions
-    );
+      requestedRpcs[serviceName] = requested[serviceName].createClient(
+        {
+          call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
+          callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
+        },
+        encodingOptions
+      );
+    }
   }
 
   return new ProtoRpcPeer(requestedRpcs, peer);

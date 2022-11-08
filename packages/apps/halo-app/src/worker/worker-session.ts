@@ -49,7 +49,6 @@ export class WorkerSession {
     this._options = options;
 
     this._clientRpc = createProtoRpcPeer({
-      requested: {},
       exposed: clientServices.descriptors,
       handlers: clientServices.services,
       port: appPort

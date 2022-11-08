@@ -44,8 +44,8 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
   };
 
   const handleTestData = async () => {
-    client.echo.registerModel(TextModel);
-    client.echo.registerModel(MessengerModel);
+    client.echo.modelFactory.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(MessengerModel);
 
     // Create party.
     const party = await client.echo.createParty();

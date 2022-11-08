@@ -43,17 +43,16 @@ describe('service registry', function () {
     const [proxyPort, serverPort] = createLinkedPorts();
 
     const proxy = createProtoRpcPeer({
-      port: proxyPort,
       requested: serviceRegistry.descriptors,
       exposed: {},
-      handlers: {}
+      handlers: {},
+      port: proxyPort
     });
 
     const server = createProtoRpcPeer({
-      port: serverPort,
-      requested: {},
       exposed: serviceRegistry.descriptors,
-      handlers: serviceRegistry.services
+      handlers: serviceRegistry.services,
+      port: serverPort
     });
 
     log('opening...');

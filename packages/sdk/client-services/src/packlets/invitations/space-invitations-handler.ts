@@ -71,7 +71,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
-        port,
         requested: {
           SpaceGuestService: schema.getService('dxos.halo.invitations.SpaceGuestService')
         },
@@ -99,7 +98,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
               }
             }
           }
-        }
+        },
+        port
       });
 
       await peer.open();
@@ -157,7 +157,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     const admitted = new Trigger<Space>();
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
-        port,
         requested: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
@@ -191,7 +190,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
               admitted.wake(space);
             }
           }
-        }
+        },
+        port
       });
 
       await peer.open();

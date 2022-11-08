@@ -34,7 +34,6 @@ export class HaloInvitations {
 
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
-        port,
         requested: {
           HaloGuestService: schema.getService('dxos.halo.invitations.HaloGuestService')
         },
@@ -63,7 +62,8 @@ export class HaloInvitations {
               // TODO(dmaretskyi): Admit guest's feeds otherwise messages from them won't be processed by the pipeline.
             }
           }
-        }
+        },
+        port
       });
 
       await peer.open();
@@ -105,7 +105,6 @@ export class HaloInvitations {
 
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
-        port,
         requested: {
           // TODO(burdon): Rename in-bound.
           HaloHostService: schema.getService('dxos.halo.invitations.HaloHostService')
@@ -137,7 +136,8 @@ export class HaloInvitations {
               admitted.wake(identity);
             }
           }
-        }
+        },
+        port
       });
 
       await peer.open();

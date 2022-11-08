@@ -27,7 +27,7 @@ const Template = (args: Omit<ComposerProps, 'item'>) => {
 
   useAsyncEffect(async () => {
     // TODO(burdon): Set in constructor (too late here).
-    client.echo.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(TextModel);
     // TODO(burdon): Observer.
     await client.halo.createProfile();
     // TODO(burdon): Observer.

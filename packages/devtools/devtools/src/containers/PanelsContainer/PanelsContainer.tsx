@@ -44,8 +44,8 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   // TODO(burdon): Factor out.
   // TODO(wittjosiah): Should this only be done in the app?
   useEffect(() => {
-    client.echo.registerModel(TextModel);
-    client.echo.registerModel(MessengerModel);
+    client.echo.modelFactory.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(MessengerModel);
   }, [client]);
 
   useEffect(() => {
