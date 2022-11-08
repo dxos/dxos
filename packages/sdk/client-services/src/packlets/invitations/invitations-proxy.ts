@@ -4,12 +4,12 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, CancellableObservableProvider, observableError } from '@dxos/async';
+import { observableError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationEvents, InvitationsProxy } from './invitations';
+import { InvitationsProxy, ObservableInvitation, ObservableInvitationProvider } from './invitations';
 
 /**
  * Adapts invitations service observable to client/service stream.
@@ -25,11 +25,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
   // TODO(burdon): Invitation type.
   abstract createInvitationObject(context: T): Invitation;
 
-  createInvitation(context: T): CancellableObservable<InvitationEvents> {
+  createInvitation(context: T): ObservableInvitation {
     assert(context);
 
     let invitationId: string;
-    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
+    const observable = new ObservableInvitationProvider(async () => {
       if (invitationId) {
         await this._invitationsService.cancelInvitation({ invitationId });
       }
@@ -39,6 +39,8 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
     stream.subscribe(
       (invitation: Invitation) => {
+        observable.setInvitation(invitation);
+
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
             assert(invitation.invitationId);
@@ -77,11 +79,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     return observable;
   }
 
-  acceptInvitation(invitation: Invitation): CancellableObservable<any> {
+  acceptInvitation(invitation: Invitation): ObservableInvitation {
     assert(invitation && invitation.swarmKey);
 
     let invitationId: string;
-    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
+    const observable = new ObservableInvitationProvider(async () => {
       if (invitationId) {
         await this._invitationsService.cancelInvitation({ invitationId });
       }
@@ -92,6 +94,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     stream.subscribe(
       (invitation: Invitation) => {
         assert(invitation.invitationId);
+        observable.setInvitation(invitation);
 
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {

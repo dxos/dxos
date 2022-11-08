@@ -7,6 +7,7 @@ import {
   ClientServicesProvider,
   ClientServicesProxy,
   InvitationObservable,
+  ObservableInvitation,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
@@ -25,7 +26,7 @@ export interface Party {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-  get invitations(): InvitationObservable[];
+  get invitations(): ObservableInvitation[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -71,7 +72,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): InvitationObservable;
+  createInvitation(): ObservableInvitation;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -80,9 +81,7 @@ export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
-  // TODO(burdon): Spy on stream.
-  // TODO(burdon): Event when updated.
-  private readonly _invitations: InvitationObservable[] = [];
+  private readonly _invitations: ObservableInvitation[] = [];
   public readonly invitationsUpdate = new Event<InvitationObservable>();
 
   private _key: PublicKey;
@@ -214,7 +213,7 @@ export class PartyProxy implements Party {
     return this._item!.model;
   }
 
-  get invitations(): InvitationObservable[] {
+  get invitations() {
     return this._invitations;
   }
 
@@ -263,7 +262,10 @@ export class PartyProxy implements Party {
    */
   createInvitation() {
     const observer = this._invitationProxy.createInvitation(this.key);
+
     this._invitations.push(observer);
+
+    // TODO(burdon): Replace with observable set (e.g., ResultSet).
     this.invitationsUpdate.emit(observer);
     return observer;
   }

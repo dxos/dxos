@@ -4,7 +4,13 @@
 
 import assert from 'assert';
 
-import { AsyncEvents, CancellableObservable, CancellableObservableEvents, Observable } from '@dxos/async';
+import {
+  AsyncEvents,
+  CancellableObservable,
+  CancellableObservableEvents,
+  Observable,
+  CancellableObservableProvider
+} from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
@@ -28,8 +34,7 @@ export interface InvitationsProxy<T> extends InvitationsHandler<T> {
 /**
  * Util to wrap observable with promise.
  */
-// TODO(burdon): How to make interactive?
-// TODO(burdon): This doesn't work for creating invitations.
+// TODO(burdon): Replace with ObservableInvitationProvider.
 export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({
@@ -45,3 +50,26 @@ export const invitationObservable = async (observable: Observable<InvitationEven
     });
   });
 };
+
+/**
+ * Observable that supports inspection of the current value.
+ */
+// TODO(burdon): Make generic and move to async/observable.
+export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
+  get invitation(): Invitation | undefined;
+}
+
+export class ObservableInvitationProvider
+  extends CancellableObservableProvider<InvitationEvents>
+  implements ObservableInvitation
+{
+  private _invitation?: Invitation;
+
+  get invitation(): Invitation | undefined {
+    return this._invitation;
+  }
+
+  setInvitation(invitation: Invitation) {
+    this._invitation = invitation;
+  }
+}

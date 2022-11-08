@@ -47,7 +47,8 @@ describe('services/space-invitation-service', function () {
           observable2.subscribe({
             onSuccess: (invitation: Invitation) => {
               success2.wake(invitation);
-            }
+            },
+            onError: (err: Error) => raise(new Error(err.message))
           });
         },
         onConnected: (invitation: Invitation) => {},
