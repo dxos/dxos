@@ -31,7 +31,7 @@
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
-        "typingsOutputPath": "packages/core/protocols/dist/typings"
+        "typingsOutputPath": "packages/core/protocols/typings"
       },
       "outputs": [
         "{options.basePath}/gen",

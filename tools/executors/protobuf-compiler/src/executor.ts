@@ -54,7 +54,9 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     const typeGenerator = new TypingsGenerator({
       files: proto,
       baseDir: options.basePath,
-      outDir: join(context.cwd, options.typingsOutputPath)
+      outDir: join(context.cwd, options.typingsOutputPath),
+      // TODO(burdon): Fix definition and computation of relative paths.
+      genDir: '../../dist/src/proto/gen'
     });
 
     typeGenerator.generate(context.isVerbose);

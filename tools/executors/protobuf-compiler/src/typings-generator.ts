@@ -16,6 +16,7 @@ export type TypingGeneratorOptions = {
   files: string[];
   baseDir: string;
   outDir: string;
+  genDir: string;
 };
 
 /**
@@ -58,13 +59,13 @@ export class TypingsGenerator {
 
       // Relative path.
       const exportFile = path.join(path.dirname(relativePath), filename);
-      const relative = path.join(path.relative(exportFile, '.'), this._options.outDir, exportFile);
+      const relativeFileDir = path.join(this._options.genDir, exportFile);
 
       // JS compiled output (required for tests).
-      fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relative}');\n`);
+      fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relativeFileDir}');\n`);
 
       // TS definitions.
-      fs.writeFileSync(tsOutFile, `${HEADER}\nexport * from '${relative}';\n`);
+      fs.writeFileSync(tsOutFile, `${HEADER}\nexport * from '${relativeFileDir}';\n`);
 
       // Source map definitions (enables IDE navigation in VSCode).
       // https://github.com/source-map/source-map-spec

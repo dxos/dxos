@@ -23,6 +23,7 @@ export const build = async ({
   outDir: string;
   verbose: boolean;
 }) => {
+  // TODO(burdon): Use context.cwd.
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
