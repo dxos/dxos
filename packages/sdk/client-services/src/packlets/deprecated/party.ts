@@ -24,6 +24,8 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ServiceContext } from '../services';
 import { InviteeInvitations } from './invitations';
+import { humanize } from '@dxos/util';
+import { EventSubscriptions } from '@dxos/async';
 
 /**
  * Party service implementation.
@@ -91,12 +93,21 @@ export class PartyServiceImpl implements PartyService {
 
   subscribeParties() {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
+      const subscriptions = new EventSubscriptions();
+
       const onUpdate = () => {
         next({
-          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
+          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space): Party => ({
             publicKey: space.key,
             isOpen: true,
-            isActive: true
+            isActive: true,
+            members: Array.from(space.partyState.members.values()).map(member => ({
+              identityKey: member.key,
+              profile: {
+                identityKey: member.key,
+                displayName: humanize(member.key)
+              }
+            }))
           }))
         });
       };
@@ -108,9 +119,17 @@ export class PartyServiceImpl implements PartyService {
 
         await this.serviceContext.initialized.wait();
 
+        subscriptions.add(this.serviceContext.spaceManager!.updated.on(() => {
+          this.serviceContext.spaceManager!.spaces.forEach(space => {
+            subscriptions.add(space.stateUpdate.on(onUpdate));
+          })
+          onUpdate();
+        }));
+
         onUpdate();
-        return this.serviceContext.spaceManager!.updated.on(onUpdate);
       });
+
+      return () => subscriptions.clear();
     });
   }
 
