@@ -103,3 +103,15 @@ export const createIFrame = (source: string, id: string) => {
 
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };
+
+/**
+ * Removes a hidden iframe created by createIFrame() function.
+ * If an element with the id does not exists it will do nothing.
+ * @param id DOM id of the iframe.
+ */
+export const removeIFrame = (id: string) => {
+  const iframe = document.getElementById(id) as HTMLIFrameElement;
+  if (iframe) {
+    document.body.removeChild(iframe);
+  }
+}

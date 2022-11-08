@@ -21,7 +21,7 @@ import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
-import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
+import { createIFrame, createIFramePort, removeIFrame } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
 import { createDevtoolsRpcServer } from './devtools';
@@ -219,6 +219,8 @@ export class Client {
     if (!this._initialized) {
       return;
     }
+
+    removeIFrame(IFRAME_ID);
 
     await this._serviceProvider.close();
     this._initialized = false;
