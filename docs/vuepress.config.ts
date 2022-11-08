@@ -15,7 +15,7 @@ const env = (value?: string) => (value ? `'${value}'` : undefined);
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
-  description: 'An Operating System for Decentralized Software',
+  description: 'The Operating System for Decentralized Software',
   pagePatterns: [
     // Defaults
     '**/*.md',

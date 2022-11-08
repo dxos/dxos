@@ -7,11 +7,11 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "typedoc",
+            "name": "debug plating",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run",
-                "generate:api"
+                "plate"
             ],
             "env": {
                 "NODE_OPTIONS": "--inspect-brk"

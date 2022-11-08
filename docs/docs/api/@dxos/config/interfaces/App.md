@@ -4,16 +4,24 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `org: string`
+### [`org`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `publicUrl: string`
+### [`publicUrl`]()
+Type: `string`
+
 Options:
   - (env) = "PUBLIC_URL"
   - proto3_optional = true
-### `theme: string`
+### [`theme`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `website: string`
+### [`website`]()
+Type: `string`
+
 Options:
   - proto3_optional = true

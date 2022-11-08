@@ -19,9 +19,18 @@
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
         ]
+      }
+    },
+    "plate": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "plate"
       },
       "outputs": [
         "{options.outputFile}"
+      ],
+      "dependsOn": [
+        "^build"
       ]
     },
     "prerelease": {
