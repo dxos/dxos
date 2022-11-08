@@ -4,15 +4,23 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `command: string`
+### [`command`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `outdir: string`
+### [`outdir`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `tag: string`
+### [`tag`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `version: string`
+### [`version`]()
+Type: `string`
+
 Options:
   - proto3_optional = true

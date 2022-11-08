@@ -1,0 +1,13 @@
+{
+  "name": "@dxos/readme",
+  "version": "0.1.0",
+  "description": "template for DXOS readme files",
+  "main": "bin/index.js",
+  "scripts": {
+    "dev": "plate ./src/template"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@dxos/plate": "workspace:*"
+  }
+}

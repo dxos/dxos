@@ -16,7 +16,8 @@
     "prepare": "husky install",
     "install-playwright": "playwright install",
     "changed-packages": "scripts/changed",
-    "lint-changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "lint": "nx run-many --target=lint --fix",
     "build": "nx run-many --target=build",
     "test": "nx run-many --target=test"
   },

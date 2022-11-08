@@ -1,5 +1,5 @@
-# Type alias `SchemaDef`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14`]()
+# Type `SchemaDef`
+Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14`]()
 
 
 
