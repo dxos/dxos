@@ -72,7 +72,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): ObservableInvitation;
+  createInvitation(): Promise<ObservableInvitation>;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -260,12 +260,25 @@ export class PartyProxy implements Party {
   /**
    * Creates an interactive invitation.
    */
-  createInvitation() {
-    const invitation = this._invitationProxy.createInvitation(this.key);
-    // TODO(burdon): Remove when completes or cancelled?
-    this._invitations.push(invitation);
-    this.invitationsUpdate.emit(invitation);
-    return invitation;
+  async createInvitation() {
+    return new Promise<ObservableInvitation>((resolve, reject) => {
+      const invitation = this._invitationProxy.createInvitation(this.key);
+      this._invitations.push(invitation);
+      const unsubscribe = invitation.subscribe({
+        onConnecting: () => {
+          this.invitationsUpdate.emit(invitation);
+          resolve(invitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
   }
 
   /**
