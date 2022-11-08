@@ -261,13 +261,11 @@ export class PartyProxy implements Party {
    * Creates an interactive invitation.
    */
   createInvitation() {
-    const observer = this._invitationProxy.createInvitation(this.key);
-
-    this._invitations.push(observer);
-
-    // TODO(burdon): Replace with observable set (e.g., ResultSet).
-    this.invitationsUpdate.emit(observer);
-    return observer;
+    const invitation = this._invitationProxy.createInvitation(this.key);
+    // TODO(burdon): Remove when completes or cancelled?
+    this._invitations.push(invitation);
+    this.invitationsUpdate.emit(invitation);
+    return invitation;
   }
 
   /**
