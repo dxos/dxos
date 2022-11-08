@@ -83,14 +83,18 @@ message Device {
   dxos.keys.PublicKey device_key = 1;
 }
 
+message QueryDevicesResponse {
+  repeated Device devices = 1;
+}
+
 service DevicesService {
   rpc UpdateDevice(google.protobuf.Empty) returns (Device);
-  rpc QueryDevices(google.protobuf.Empty) returns (stream Device);
+  rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
 }
 
 //
 // Contacts
-//
+//px
 
 message Contact {
   halo.credentials.ProfileDocument profile = 1;
