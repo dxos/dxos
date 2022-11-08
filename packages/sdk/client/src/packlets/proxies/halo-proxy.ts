@@ -146,17 +146,19 @@ export class HaloProxy implements Halo {
       const stream = this._serviceProvider.services.DevicesService.queryDevices();
       stream.subscribe(
         (devices) => {
-          resolve(devices.devices?.map((device) => ({
-            publicKey: device.deviceKey,
-            displayName: humanize(device.deviceKey),
-          })) ?? []);
+          resolve(
+            devices.devices?.map((device) => ({
+              publicKey: device.deviceKey,
+              displayName: humanize(device.deviceKey)
+            })) ?? []
+          );
           stream.close();
         },
         (error) => {
           reject(error);
           stream.close();
         }
-      )
+      );
     });
   }
 

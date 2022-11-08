@@ -4,11 +4,11 @@
 
 import { expect } from 'chai';
 
+import { Trigger } from '@dxos/async';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
-import { Trigger } from '@dxos/async';
 
 describe('Halo', function () {
   it('creates a profile', async function () {
@@ -43,17 +43,17 @@ describe('Halo', function () {
     const done = new Trigger();
     const invitation = client1.halo.createInvitation();
     invitation.subscribe({
-      onSuccess: async invitation => {
+      onSuccess: async (invitation) => {
         await client2.halo.acceptInvitation(invitation);
         done.wake();
       },
-      onError: error => {
+      onError: (error) => {
         throw error;
       }
-    })
+    });
 
     await done.wait();
-    
+
     expect(await client1.halo.queryDevices()).to.have.lengthOf(2);
     expect(await client2.halo.queryDevices()).to.have.lengthOf(2);
   });

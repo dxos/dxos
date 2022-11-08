@@ -11,7 +11,7 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -255,7 +255,7 @@ export class PartyProxy implements Party {
    */
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers(): ResultSet<PartyMember> {
-    return new ResultSet(this.stateUpdate, () => this._party.members ?? [])
+    return new ResultSet(this.stateUpdate, () => this._party.members ?? []);
   }
 
   /**
