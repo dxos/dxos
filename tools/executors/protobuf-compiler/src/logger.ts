@@ -9,38 +9,33 @@ import { SubstitutionsMap } from './parser';
 
 export class Logger {
   logCompilationOptions(
+    substitutionsModule: ModuleSpecifier | undefined,
     protoFilePaths: string[],
     baseDirPath: string | undefined,
-    outDirPath: string,
-    verbose = false
+    outDirPath: string
   ) {
-    if (verbose) {
-      console.log(chalk`Output: {bold ${outDirPath}}`);
-      console.log(chalk`Sources:`);
-      for (const file of protoFilePaths) {
-        console.log(chalk`{green ${file}}`);
+    console.log('Compiling protobuf definitions');
+    console.log('');
+    console.log(chalk`       Proto file(s): {bold ${protoFilePaths[0]}}`);
+    for (const file of protoFilePaths.slice(1)) {
+      console.log(chalk`                      {bold ${file}}`);
+    }
+    substitutionsModule && console.log(chalk`Substitution file: {bold ${substitutionsModule.resolve()}}`);
+    console.log(chalk` Output directory: {bold ${outDirPath}}`);
+    console.log();
+  }
+
+  logParsedSubstitutions(substitutions: SubstitutionsMap) {
+    if (Object.keys(substitutions).length > 0) {
+      console.log(chalk`Loaded {bold ${Object.keys(substitutions).length}} substitutions:`);
+      console.log();
+      for (const [protoType, tsType] of Object.entries(substitutions)) {
+        console.log(chalk`  {bold ${protoType}} -> {bold ${tsType}}`);
       }
       console.log();
-    }
-  }
-
-  logParsedSubstitutions(substitutionsModule: ModuleSpecifier, substitutions: SubstitutionsMap, verbose = false) {
-    console.log('Processing substitutions...');
-    if (verbose) {
-      console.log(chalk`Definitions: {bold ${substitutionsModule.resolve()}}`);
-      if (Object.keys(substitutions).length > 0) {
-        for (const [protoType, tsType] of Object.entries(substitutions)) {
-          console.log(chalk`- {green ${protoType}} -> {bold ${tsType}}`);
-        }
-        console.log();
-      }
-    }
-  }
-
-  logTypings(outDir: string, verbose = false) {
-    console.info('Generating typings...');
-    if (verbose) {
-      console.log(chalk`Output: {bold ${outDir}}`);
+    } else {
+      console.log('No substitutions loaded');
+      console.log();
     }
   }
 }

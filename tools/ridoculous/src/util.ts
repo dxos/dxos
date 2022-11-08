@@ -47,7 +47,7 @@ export const directiveRegex = regex([
 /**
  * Test if the node is a directive.
  */
-export const isDirective = (node: any) => {
+export const isDirective = (node) => {
   if (node.type === 'html') {
     const match = node.value.trim().match(directiveRegex);
     if (match) {
@@ -83,7 +83,7 @@ type ReplaceCallback = (node: any, index: number, parents: any) => ReplaceResult
  * Visit nodes and allow callback to replace nodes.
  */
 // TODO(burdon): Make recursive.
-export const visitAndReplace = (tree: any, callback: ReplaceCallback) => {
+export const visitAndReplace = (tree, callback: ReplaceCallback) => {
   arrayIterate(
     tree.children,
     (node, index) => {

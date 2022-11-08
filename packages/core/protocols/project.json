@@ -27,15 +27,22 @@
         "{options.outputFile}"
       ]
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "gen-proto-defs"
+      },
+      "outputs": [
+        "packages/core/protocols/proto"
+      ]
+    },
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
-        "basePath": "packages/core/protocols/src/proto",
-        "typingsOutputPath": "packages/core/protocols/typings"
+        "basePath": "packages/core/protocols/src/proto"
       },
       "outputs": [
-        "{options.basePath}/gen",
-        "{options.typingsOutputPath}"
+        "{options.basePath}/gen"
       ]
     },
     "test": {

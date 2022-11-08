@@ -27,17 +27,12 @@ const main = async () => {
   parser.add_argument('--baseDir', {
     help: 'Base path to resolve fully qualified packages'
   });
-  parser.add_argument('--basePath', {});
   parser.add_argument('-o', '--outDir', {
     help: 'Output directory path',
     required: true
   });
-  parser.add_argument('-t', '--typeDir', {
-    required: false,
-    default: false
-  });
 
-  const { proto, substitutions, baseDir, outDir, verbose } = parser.parse_args();
+  const { proto, substitutions, baseDir, outDir } = parser.parse_args();
 
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
   const substitutionsModule = substitutions
@@ -50,8 +45,8 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(protoFilePaths, baseDirPath, outDirPath, verbose);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, verbose);
+  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
 };
 
 void main();
