@@ -7,6 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { Client, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
@@ -34,6 +35,11 @@ import { useTelemetry } from './telemetry';
 import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
+
+const clientProvider = async () => {
+  const config = await configProvider();
+  return new Client({ config, services: fromIFrame(config) });
+};
 
 const Routes = () => {
   useTelemetry();
@@ -118,7 +124,7 @@ export const App = () => {
       <ErrorsProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} fallback={<ClientFallback />}>
+          <ClientProvider client={clientProvider} fallback={<ClientFallback />}>
             <HashRouter>
               <Routes />
               {needRefresh ? (
