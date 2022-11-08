@@ -35,7 +35,6 @@ import { DXOS_VERSION } from './version';
 const log = debug('dxos:client-proxy');
 
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
-const IFRAME_ID = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
@@ -78,6 +77,8 @@ export interface ClientInfo {
 }
 
 export class Client {
+  private _iframeId?: string;
+
   public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
@@ -221,8 +222,9 @@ export class Client {
       return;
     }
 
-    if (this._mode === Runtime.Client.Mode.REMOTE && !this._options.rpcPort) {
-      removeIFrame(IFRAME_ID);
+    if (this._iframeId) {
+      removeIFrame(this._iframeId);
+      this._iframeId = undefined;
     }
 
     await this._serviceProvider.close();
@@ -230,11 +232,12 @@ export class Client {
   }
 
   private initializeIFramePort() {
+    this._iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
     const source = new URL(
       this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
       window.location.origin
     );
-    const iframe = createIFrame(source.toString(), IFRAME_ID);
+    const iframe = createIFrame(source.toString(), this._iframeId);
     // TODO(wittjosiah): Use well-known channel constant.
     return createIFramePort({
       origin: source.origin,
@@ -278,7 +281,9 @@ export class Client {
       } catch (err) {
         if (err instanceof RemoteServiceConnectionTimeout) {
           log('Failed to connect to remote services. Starting local services.');
-          document.getElementById(IFRAME_ID)?.remove();
+          if (this._iframeId) {
+            document.getElementById(this._iframeId)?.remove();
+          }
           await this._serviceProvider.close();
           await this.initializeLocal(onProgressCallback);
         } else {

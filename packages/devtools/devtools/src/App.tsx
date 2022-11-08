@@ -20,7 +20,7 @@ import { theme } from './theme';
 export const App = () => {
   const [client, setClient] = useState<Client>();
 
-  const onSource = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
+  const onConfigChange = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
     if (
       client?.config.values.runtime?.client?.mode === mode &&
       client?.config.values.runtime?.client?.remoteSource === remoteSource
@@ -40,8 +40,8 @@ export const App = () => {
 
     {
       if (client) {
-        await client.destroy();
         setClient(undefined);
+        await client.destroy();
       }
       const newClient = new Client(config);
       await newClient.initialize();
@@ -50,7 +50,7 @@ export const App = () => {
   };
 
   useAsyncEffect(async () => {
-    await onSource({
+    await onConfigChange({
       mode: 1
     });
   }, []);
@@ -70,7 +70,7 @@ export const App = () => {
             </Box>
 
             <Box sx={{ display: 'flex', flexShrink: 0 }}>
-              <Controls onSource={onSource} />
+              <Controls onSource={onConfigChange} />
             </Box>
           </ClientContext.Provider>
         </FullScreen>

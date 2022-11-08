@@ -114,4 +114,4 @@ export const removeIFrame = (id: string) => {
   if (iframe) {
     document.body.removeChild(iframe);
   }
-}
+};
