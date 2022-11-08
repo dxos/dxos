@@ -5,9 +5,9 @@
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
 import { CancellableObservable, TimeoutError } from '@dxos/async';
-import { PublicKey, Invitation, InvitationEvents } from '@dxos/client';
+import { PublicKey, Invitation, InvitationEvents, InvitationEncoder } from '@dxos/client';
 
-type InvitationObservable = CancellableObservable<InvitationEvents>;
+export type InvitationObservable = CancellableObservable<InvitationEvents>;
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -22,7 +22,8 @@ interface InvitationReducerState {
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
-  secret?: string;
+  code?: string;
+  id?: string;
   error?: number;
   invitationObservable?: InvitationObservable;
 }
@@ -37,7 +38,8 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTED;
-      secret: string;
+      code: string;
+      id: string;
     }
   | {
       status: Invitation.State.SUCCESS;
@@ -60,7 +62,8 @@ export const useInvitationStatus = () => {
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
-        secret: action.status === Invitation.State.CONNECTED ? action.secret : prev.secret,
+        code: action.status === Invitation.State.CONNECTED ? action.code : prev.code,
+        id: action.status === Invitation.State.CONNECTED ? action.id : prev.id,
         invitationObservable:
           action.status === Invitation.State.CONNECTING ? action.invitationObservable : prev.invitationObservable,
         // `error` gets reset each time we leave the error state
@@ -76,9 +79,7 @@ export const useInvitationStatus = () => {
     (_arg: null) => {
       return {
         status: Invitation.State.INIT,
-        result: { spaceKey: null, identityKey: null, swarmKey: null },
-        error: undefined,
-        secret: undefined
+        result: { spaceKey: null, identityKey: null, swarmKey: null }
       };
     }
   );
@@ -86,7 +87,11 @@ export const useInvitationStatus = () => {
   // Observed event callbacks
 
   const onConnected = useCallback((invitation: Invitation) => {
-    dispatch({ status: Invitation.State.CONNECTED, secret: invitation.secret!.toString() });
+    dispatch({
+      status: Invitation.State.CONNECTED,
+      code: InvitationEncoder.encode(invitation),
+      id: invitation.invitationId!
+    });
   }, []);
 
   const onSuccess = useCallback(({ spaceKey, identityKey, swarmKey }: Invitation) => {
@@ -139,8 +144,9 @@ export const useInvitationStatus = () => {
       status: state.status,
       haltedAt: state.haltedAt,
       result: state.result,
-      secret: state.secret,
+      code: state.code,
       error: state.error,
+      id: state.id,
       cancel,
       connect
     };
