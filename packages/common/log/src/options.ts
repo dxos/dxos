@@ -32,7 +32,7 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
   });
 };
 
-const IS_BROWSER = typeof window !== 'undefined';
+const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
 
 export const getConfig = (_options?: LogOptions): LogConfig => {
   let options: LogOptions = defaultsDeep(
