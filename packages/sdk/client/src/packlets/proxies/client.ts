@@ -17,6 +17,7 @@ import {
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -34,7 +35,7 @@ import { DXOS_VERSION } from './version';
 const log = debug('dxos:client-proxy');
 
 export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
-const IFRAME_ID = '__DXOS_CLIENT__';
+const IFRAME_ID = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
@@ -220,7 +221,9 @@ export class Client {
       return;
     }
 
-    removeIFrame(IFRAME_ID);
+    if (this._mode === Runtime.Client.Mode.REMOTE && !this._options.rpcPort) {
+      removeIFrame(IFRAME_ID);
+    }
 
     await this._serviceProvider.close();
     this._initialized = false;
