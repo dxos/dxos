@@ -1,8 +1,7 @@
 import { ReflectionKind, JSONOutput as Schema } from 'typedoc';
 import { TemplateFunction, text, File } from '@dxos/plate';
 import { Input } from '..';
-import { packagesInProject, reflectionsOfKind } from '../lib/utils';
-import { Stringifier } from '../lib/Stringifier';
+import { packagesInProject, reflectionsOfKind, Stringifier } from '../util.t';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
