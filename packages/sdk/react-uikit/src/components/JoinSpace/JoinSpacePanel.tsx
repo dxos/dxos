@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { invitationObservable, InvitationEncoder, Party } from '@dxos/client';
+import { InvitationEncoder, PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
+import { useInvitationStatus, InvitationState } from '../../experimental';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
   // TODO(burdon): Use InvitationEncoder to parse/decode?
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
-  onJoin?: (space: Party) => void;
+  onJoin?: (spaceKey: PublicKey) => void;
 }
 
 export const JoinSpacePanel = ({
@@ -26,41 +26,40 @@ export const JoinSpacePanel = ({
   const { t } = useTranslation();
   const client = useClient();
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
-  const redeemInvitation = useCallback(async () => {
-    // TODO(burdon): Implement observable to get other states (e.g., connecting...)
-    const observable = client.echo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
-    const invitation = await invitationObservable(observable);
-    return client.echo.getParty(invitation.spaceKey!)!;
+
+  const { status, cancel, error, connect, result } = useInvitationStatus();
+
+  const redeemInvitation = useCallback(() => {
+    connect(client.halo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode))));
   }, [invitationCode]);
-  const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
 
   useEffect(() => {
     if (initialInvitationCode) {
-      void call();
+      void redeemInvitation();
     }
   }, []);
 
   useEffect(() => {
-    if (status === 'success' && value) {
-      onJoin?.(value);
+    if (status === InvitationState.SUCCESS && result.spaceKey) {
+      onJoin?.(result.spaceKey);
     }
-  }, [status, value]);
+  }, [status, result]);
 
   return (
     <SingleInputStep
       {...{
-        pending: status === 'loading',
+        pending: status === InvitationState.CONNECTING || status === InvitationState.AUTHENTICATING,
         inputLabel: t('invitation code label'),
         inputPlaceholder: t('invitation code placeholder'),
         inputProps: {
           initialValue: invitationCode
         },
         onChange: setInvitationCode,
-        onNext: call,
+        onNext: redeemInvitation,
         onCancelPending: cancel,
         ...(error && {
           inputProps: {
-            validationMessage: error.message,
+            validationMessage: error,
             validationValence: 'error'
           }
         })
