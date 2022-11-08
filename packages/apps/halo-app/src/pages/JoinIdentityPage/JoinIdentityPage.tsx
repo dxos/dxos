@@ -7,7 +7,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationEncoder } from '@dxos/client';
 import { useClient, useProfile } from '@dxos/react-client';
-import { Heading, SingleInputStep, useTranslation, useInvitationStatus, InvitationState } from '@dxos/react-uikit';
+import {
+  Heading,
+  SingleInputStep,
+  useTranslation,
+  useInvitationStatus,
+  InvitationState,
+  InvitationWrapper
+} from '@dxos/react-uikit';
 
 import { invitationCodeFromUrl } from '../../util';
 
@@ -24,7 +31,11 @@ export const JoinIdentityPage = () => {
   const { status, cancel, error, connect } = useInvitationStatus();
 
   const redeemInvitation = useCallback(() => {
-    connect(client.halo.acceptInvitation(InvitationEncoder.decode(invitationCodeFromUrl(invitationCode))));
+    connect(
+      client.halo.acceptInvitation(
+        InvitationEncoder.decode(invitationCodeFromUrl(invitationCode))
+      ) as unknown as InvitationWrapper
+    );
   }, [invitationCode]);
 
   useEffect(() => {
