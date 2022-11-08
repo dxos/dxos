@@ -1,7 +1,7 @@
 import path from 'path';
 import { TemplateFunction, File } from '@dxos/plate';
 import { Input } from '../index';
-import { packagesInProject } from '../lib/utils';
+import { packagesInProject } from '../util.t';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const modules = packagesInProject(input);
