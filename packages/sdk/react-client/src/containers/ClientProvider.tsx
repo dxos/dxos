@@ -102,5 +102,10 @@ export const ClientProvider = ({
     return fallback as JSX.Element;
   }
 
-  return <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
+  // prettier-ignore
+  return (
+    <ClientContext.Provider value={{ client }}>
+      {children}
+    </ClientContext.Provider>
+  );
 };

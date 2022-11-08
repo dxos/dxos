@@ -16,7 +16,7 @@ export interface BotFactoryClientProviderProps {
 }
 
 /**
- * BotFactoryClientProvider
+ * @deprecated
  */
 export const BotFactoryClientProvider = ({ children }: BotFactoryClientProviderProps) => {
   const config = useConfig();
@@ -39,5 +39,10 @@ export const BotFactoryClientProvider = ({ children }: BotFactoryClientProviderP
     return null;
   }
 
-  return <BotFactoryClientContext.Provider value={botFactoryClient}>{children}</BotFactoryClientContext.Provider>;
+  // prettier-ignore
+  return (
+    <BotFactoryClientContext.Provider value={botFactoryClient}>
+      {children}
+    </BotFactoryClientContext.Provider>
+  );
 };
