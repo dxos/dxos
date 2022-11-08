@@ -51,14 +51,13 @@ export const invitationObservable = async (observable: Observable<InvitationEven
   });
 };
 
-/**
- * Observable that supports inspection of the current value.
- */
-// TODO(burdon): Make generic and move to async/observable.
 export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
   get invitation(): Invitation | undefined;
 }
 
+/**
+ * Observable provider that supports inspection of the current value.
+ */
 export class ObservableInvitationProvider
   extends CancellableObservableProvider<InvitationEvents>
   implements ObservableInvitation
