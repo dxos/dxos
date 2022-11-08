@@ -12,12 +12,12 @@ import {
   Avatar,
   QrCode,
   useTranslation,
-  Tag,
   defaultGroup,
   Button,
   getSize,
   InvitationWrapper,
-  useInvitationStatus
+  useInvitationStatus,
+  InvitationStatus
 } from '@dxos/react-uikit';
 
 import { HeadingWithActions } from '../HeadingWithActions';
@@ -29,7 +29,7 @@ export interface PendingInvitationProps {
 export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
 
-  const { cancel } = useInvitationStatus(wrapper);
+  const { cancel, status, haltedAt } = useInvitationStatus(wrapper);
 
   return (
     <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
@@ -42,7 +42,7 @@ export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
             <Avatar
               size={10}
               fallbackValue={wrapper.invitation.invitationId!}
-              label={<Tag valence='warning'>{t('pending label')}</Tag>}
+              label={<InvitationStatus {...{ status, haltedAt }} />}
             />
           )
         }}

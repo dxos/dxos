@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Button, useTranslation, getSize } from '@dxos/react-uikit';
+import { Button, useTranslation, getSize, InvitationWrapper } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList, HeadingWithActions } from '../../components';
 
@@ -34,7 +34,7 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <InvitationList {...{ invitations }} />
+      <InvitationList invitations={invitations as unknown as InvitationWrapper[]} />
     </main>
   );
 };
