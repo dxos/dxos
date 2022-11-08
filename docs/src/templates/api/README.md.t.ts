@@ -1,7 +1,6 @@
 import { Input } from './index';
-import { packagesInProject } from "./lib/utils";
-import { TemplateFunction, text } from "@dxos/plate";
-import { href } from './lib/links';
+import { href, packagesInProject } from './util.t';
+import { TemplateFunction, text } from '@dxos/plate';
 
 const template: TemplateFunction<Input> = ({ input }) => {
   const modules = packagesInProject(input);

@@ -9,7 +9,7 @@ import readDir from 'recursive-readdir';
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\/lib\//, /index(\.d)?\.[tj]s/];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /index(\.d)?\.[tj]s/];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string;
