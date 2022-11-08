@@ -10,10 +10,10 @@ You can use ECHO and HALO with any application framework. DXOS offers a curated 
 
 ### Install the CLI
 
-Using your favorite package manager of choice like `npm`, `yarn`, or `pnpm`:
+Only `pnpm` is supported for now.
 
 ```bash
-npm i -g @dxos/cli
+pnpm i -g @dxos/cli
 ```
 
 ### Create and start the application
@@ -21,7 +21,8 @@ npm i -g @dxos/cli
 ```bash
 dx app create myapp
 cd myapp
-npm run dev
+pnpm install
+pnpm serve
 ```
 
 This will start the development server. :clap:
@@ -29,9 +30,10 @@ This will start the development server. :clap:
 Other available scripts:
 
 ```bash
-npm run build # build for production
-npm run check # print all errors
-npm run test  # run tests
+pnpm build # build with tsc
+pnpm bundle # production build
+pnpm preview # vite preview
+pnpm storybook  # run the storybook
 ```
 
 ## Templates
@@ -50,4 +52,4 @@ The templates available are all located in the `dxos` repository:
 | [`vite-plugin-pwa`](https://github.com/vite-pwa/vite-plugin-pwa) | Applications will work offline by default as Progressive Web Apps. |
 | [`typescript`]() | Static types make everything better. |
 | [`react`]() | Leading front end framework. |
-| [`mocha`]() | A cozy test framework |
+| [`mocha`]() | A cozy test framework which works in browser |
