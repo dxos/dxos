@@ -34,7 +34,7 @@ const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> =>
     compilerOptions: {
       strict: false,
       target: 'es5',
-      module: 'commonjs',
+      module: 'commonjs'
     }
   });
   let mod;

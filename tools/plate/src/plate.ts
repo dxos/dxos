@@ -81,8 +81,8 @@ const main = async () => {
           templateDirectory: template,
           input: input ? JSON.parse((await fs.readFile(input)).toString()) : {},
           filterGlob: glob,
-          filterRegEx: filter ? new RegExp(filter) : void 0,
-          filterExclude: exclude ? new RegExp(exclude) : void 0
+          filterRegEx: filter ? new RegExp(filter) : undefined,
+          filterExclude: exclude ? new RegExp(exclude) : undefined
         });
         if (!dry) {
           console.log(`output folder: ${output}`);
