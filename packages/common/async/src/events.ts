@@ -2,16 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { throwUnhandledRejection } from '@dxos/debug';
-
 export type UnsubscribeCallback = () => void;
 
 export type Effect = () => UnsubscribeCallback | undefined;
-
-/**
- * Like setTimeout but for async/await API. Useful for preserving stack-traces.
- */
-const waitImmediate = () => new Promise((resolve) => setTimeout(resolve));
 
 /**
  * Effect that's been added to a specific Event.
@@ -91,21 +84,20 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * Emit an event.
-   *
-   * In most cases should only be called by the class or enitity containing the event.
-   *
-   * All listeners are called in order of subscription with presistent ones first.
-   * Calls are performed asynchronously through `setImmeidate` callback.
+   * In most cases should only be called by the class or entity containing the event.
+   * All listeners are called in order of subscription with persistent ones first.
+   * Listeners are called synchronously in the same stack.
+   * A thrown exception in the listener will stop the event from being emitted to the rest of the listeners.
    *
    * @param data param that will be passed to all listeners.
    */
   emit(data: T) {
     for (const listener of this._listeners) {
-      void this._trigger(listener, data);
+      listener(data);
     }
 
     for (const listener of this._onceListeners) {
-      void this._trigger(listener, data);
+      listener(data);
       this._onceListeners.delete(listener);
     }
   }
@@ -297,16 +289,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return {
       listenerCount: this.listenerCount()
     };
-  }
-
-  private async _trigger(listener: (data: T) => void, data: T) {
-    try {
-      await waitImmediate(); // Acts like setTimeout but preserves the stack-trace.
-      listener(data);
-    } catch (err: any) {
-      // Stop error propagation.
-      throwUnhandledRejection(err);
-    }
   }
 
   private _runEffects() {
