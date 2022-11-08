@@ -282,7 +282,7 @@ export class Client {
         if (err instanceof RemoteServiceConnectionTimeout) {
           log('Failed to connect to remote services. Starting local services.');
           if (this._iframeId) {
-            document.getElementById(this._iframeId)?.remove();
+            removeIFrame(this._iframeId);
           }
           await this._serviceProvider.close();
           await this.initializeLocal(onProgressCallback);
