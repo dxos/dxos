@@ -2,35 +2,49 @@
 // Copyright 2022 DXOS.org
 //
 
+import { createArrayDispatch } from '@dxos/util';
+
 import { UnsubscribeCallback } from './events';
 
+/**
+ * Return type for processes that support cancellable subscriptions.
+ * The handler object implements the observable events.
+ */
 export interface Observable<Events> {
-  subscribe(callbacks: Events): UnsubscribeCallback;
-  unsubscribe(): void;
+  subscribe(handler: Events): UnsubscribeCallback;
 }
 
 /**
- * Implements subscriptions.
+ * Provider that manages a set of subscriptions.
  */
-export class ObservableProvider<Events> implements Observable<Events> {
-  protected _callbacks?: Events;
+// TODO(burdon): Support multiple subscribers.
+//  https://betterprogramming.pub/compare-leading-javascript-functional-reactive-stream-libraries-544163c1ded6
+//  https://github.com/apollographql/apollo-client/tree/main/src/utilities/observables
+//  https://github.com/mostjs/core
+export class ObservableProvider<Events extends {}> implements Observable<Events> {
+  protected readonly _handlers: Events[] = [];
+  private readonly _proxy = createArrayDispatch<Events>({
+    handlers: this._handlers
+  });
 
-  get callbacks() {
-    return this._callbacks;
+  /**
+   * Proxy used to dispatch callbacks to each subscription.
+   */
+  get callback(): Events {
+    return this._proxy;
   }
 
-  subscribe(callbacks: Events): UnsubscribeCallback {
-    this._callbacks = callbacks;
-    return () => this.unsubscribe();
-  }
-
-  unsubscribe() {
-    this._callbacks = undefined;
+  subscribe(handler: Events): UnsubscribeCallback {
+    this._handlers.push(handler);
+    return () => {
+      const idx = this._handlers.findIndex((h) => h === handler);
+      this._handlers.splice(idx, 1);
+    };
   }
 }
 
 export interface CancellableObservableEvents {
-  onCancelled(): void;
+  onCancelled?(): void;
 }
 
 export interface CancellableObservable<Events extends CancellableObservableEvents> extends Observable<Events> {
@@ -56,17 +70,13 @@ export class CancellableObservableProvider<
     return this._cancelled;
   }
 
-  async cancel(unsubscribe = true) {
+  async cancel() {
     if (this._cancelled) {
       return;
     }
 
     this._cancelled = true;
     await this._handleCancel?.();
-    this.callbacks?.onCancelled();
-
-    if (unsubscribe) {
-      this.unsubscribe();
-    }
+    this.callback.onCancelled?.();
   }
 }

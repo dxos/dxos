@@ -8,6 +8,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:util": "util"
+  },
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",
@@ -17,10 +20,12 @@
     "@dxos/async": "workspace:*",
     "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",

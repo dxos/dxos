@@ -4,8 +4,6 @@
 
 import expect from 'expect';
 
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import defaults from './testing/defaults.json';
 import envmap from './testing/envs-map.json';
@@ -151,17 +149,4 @@ it.skip('mapToKeyValuesping', function () {
     TEST_CLIENT_ID: 123,
     TEST_CLIENT_TAG: 'testing'
   });
-});
-
-it('string values for enums are parsed', function () {
-  const config = new Config({
-    version: 1,
-    runtime: {
-      client: {
-        mode: 'local'
-      }
-    }
-  } as any);
-
-  expect(config.get('runtime.client.mode')).toEqual(Runtime.Client.Mode.LOCAL);
 });

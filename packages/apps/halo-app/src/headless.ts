@@ -5,10 +5,10 @@
 import { RpcPort } from '@dxos/rpc';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
-import { IframeRuntime } from './worker/iframe-runtime';
+import { IFrameRuntime } from './worker/iframe-runtime';
 
 const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
-  const iframeRuntime = new IframeRuntime({
+  const iframeRuntime = new IFrameRuntime({
     systemPort: wrtcPort,
     appOrigin: origin
   });

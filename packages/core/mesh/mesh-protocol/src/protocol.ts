@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import eos from 'end-of-stream';
 import ProtocolStream, { ProtocolStreamOptions } from 'hypercore-protocol';
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, synchronized, toError } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import {
@@ -19,8 +20,6 @@ import {
 import { Extension } from './extension';
 import { ExtensionInit } from './extension-init';
 import { keyToHuman } from './utils';
-
-const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
@@ -120,7 +119,7 @@ export class Protocol {
           await this._initExtensions(options.userSession);
           this.extensionsInitialized.emit();
 
-          await this.streamOptions?.onhandshake?.(this as any); // TODO(burdon): Cast to this.
+          await this.streamOptions?.onhandshake?.(this as any);
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {
@@ -271,8 +270,7 @@ export class Protocol {
       await this.close();
     });
 
-    log(keyToHuman(this._stream.publicKey, 'node'), 'initialized');
-
+    log('open', { key: PublicKey.from(this._stream.publicKey) });
     this._isOpen = true;
   }
 
@@ -286,7 +284,7 @@ export class Protocol {
     this._stream.finalize();
     await this._extensionInit.close().catch((err: any) => this._handleError(err));
     for (const [name, extension] of this._extensionMap) {
-      log(`close extension "${name}"`);
+      log('close extension', { name, key: PublicKey.from(this._stream.publicKey) });
       await extension.close().catch((err: any) => this._handleError(err));
     }
 
@@ -301,7 +299,7 @@ export class Protocol {
     await this._extensionInit.openWithProtocol(this);
 
     for (const [name, extension] of this._extensionMap) {
-      log(`open extension "${name}": ${keyToHuman(this._stream.publicKey, 'node')}`);
+      log('open extension', { name, key: PublicKey.from(this._stream.publicKey) });
       await extension.openWithProtocol(this);
     }
   }
@@ -312,11 +310,11 @@ export class Protocol {
       await this._extensionInit.sendSession(userSession);
 
       for (const [name, extension] of this._extensionMap) {
-        log(
-          `init extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
-            this._stream.remotePublicKey
-          )}`
-        );
+        log('init extension', {
+          name,
+          key: PublicKey.from(this._stream.publicKey),
+          remote: PublicKey.from(this._stream.remotePublicKey)
+        });
         await extension.onInit();
       }
 
@@ -328,32 +326,38 @@ export class Protocol {
   }
 
   private async _handshakeExtensions() {
-    for (const handshake of this._handshakes) {
-      await handshake(this);
+    try {
+      for (const handshake of this._handshakes) {
+        await handshake(this);
+      }
+
+      for (const [name, extension] of this._extensionMap) {
+        log('handshake extension', {
+          name,
+          key: PublicKey.from(this._stream.publicKey),
+          remote: PublicKey.from(this._stream.remotePublicKey)
+        });
+        await extension.onHandshake();
+      }
+    } catch (err: any) {
+      if (this._stream.destroyed) {
+        log.warn('handshake', toError(err).message);
+      } else {
+        log.catch(err);
+      }
     }
 
-    for (const [name, extension] of this._extensionMap) {
-      log(
-        `handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
-          this._stream.remotePublicKey
-        )}`
-      );
-      await extension.onHandshake();
-    }
-
-    log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
     this.handshake.emit(this);
     this._connected = true;
 
-    // TODO: Redo this.
     this._stream.on('feed', async (discoveryKey: Buffer) => {
       try {
         for (const [name, extension] of this._extensionMap) {
-          log(
-            `feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(
-              this._stream.remotePublicKey
-            )}`
-          );
+          log('handshake feed', {
+            name,
+            key: PublicKey.from(this._stream.publicKey),
+            remote: PublicKey.from(this._stream.remotePublicKey)
+          });
           await extension.onFeed(discoveryKey);
         }
       } catch (err: any) {

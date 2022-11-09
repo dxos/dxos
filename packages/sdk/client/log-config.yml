@@ -1,0 +1,7 @@
+formatter:
+  column: 100
+
+filter:
+  - warn
+  - client:debug
+  - client-services:debug

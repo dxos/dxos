@@ -55,7 +55,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
   };
 
   const handlePartyActiveToggle = (party: Party) => {
-    void party.setActive(!party.isActive, { global: true });
+    void party.setActive(!party.isActive);
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +81,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
 
   const handleCreateItem = (party: Party) => {
     const { model, createItem } = (itemModel && modelTypes[itemModel]) || {};
-    client.echo.registerModel(model); // TODO(burdon): Test if already registered.
+    client.echo.modelFactory.registerModel(model); // TODO(burdon): Test if already registered.
     if (createItem) {
       createItem(party);
     }

@@ -16,15 +16,15 @@ export const CreateProfile: FC<{
   onCreate: (profile: Profile) => void;
 }> = ({ onCreate }) => {
   const client = useClient();
-  const [username, setUsername] = useState<string>();
+  const [displayName, setDisplayName] = useState<string>();
   const [focused, setFocused] = useState(false);
   const [clipped, setClipped] = useState(false);
 
   const handleSubmit = async (text: string) => {
-    const username = text.trim();
-    if (username.length) {
+    const displayName = text.trim();
+    if (displayName.length) {
       const seedphrase = generateSeedPhrase();
-      const profile = await client.halo.createProfile({ seedphrase, username });
+      const profile = await client.halo.createProfile({ seedphrase, displayName });
       const clipped = await copyToClipboard(seedphrase);
       setClipped(clipped);
       onCreate(profile);
@@ -34,11 +34,11 @@ export const CreateProfile: FC<{
   return (
     <Panel highlight={focused}>
       <TextInput
-        value={username ?? ''}
-        onChange={setUsername}
+        value={displayName ?? ''}
+        onChange={setDisplayName}
         onSubmit={handleSubmit}
         onFocus={setFocused}
-        placeholder='Enter username.'
+        placeholder='Enter a display name.'
       />
 
       {clipped && (

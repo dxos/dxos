@@ -28,7 +28,6 @@ const log = debug('dxos:echo-db:data-service-host');
 
 /**
  * Provides methods for DataService for a single party.
- *
  * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
  */
 // TODO(burdon): Move to client-services.

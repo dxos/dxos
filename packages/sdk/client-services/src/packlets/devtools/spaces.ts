@@ -24,6 +24,7 @@ export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: S
           const partyMetadata = context.metadataStore.parties.find((partyMetadata: PartyMetadata) =>
             partyMetadata.key.equals(party.key)
           );
+
           return {
             key: party.key,
             isOpen: party.isOpen,
@@ -38,7 +39,7 @@ export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: S
 
     setImmediate(async () => {
       await context.initialized.wait();
-      unsubscribe = context.spaceManager!.update.on(() => update());
+      unsubscribe = context.spaceManager!.updated.on(() => update());
 
       // Send initial parties.
       await update();

@@ -22,7 +22,7 @@ export const MemberList = ({ members }: { members: PartyMember[] }) => (
   >
     <AvatarGroup>
       {members.map((member) => (
-        <MemberAvatar key={member.publicKey.toString()} member={member} />
+        <MemberAvatar key={member.identityKey?.toHex()} member={member} />
       ))}
     </AvatarGroup>
   </Box>

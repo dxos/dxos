@@ -327,7 +327,7 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       '@react-hook/async': 3.1.1_react@18.2.0
-      '@sentry/react': 7.18.0_react@18.2.0
+      '@sentry/react': 7.17.2_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
       phosphor-react: 1.4.1_react@18.2.0
@@ -539,6 +539,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/rpc': workspace:*
@@ -557,6 +558,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/debug': link:../../common/debug
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/util': link:../../common/util
@@ -674,10 +676,12 @@ importers:
   packages/common/async:
     specifiers:
       '@dxos/debug': workspace:*
+      '@dxos/util': workspace:*
       assert: ^2.0.0
       events: ^3.3.0
     dependencies:
       '@dxos/debug': link:../debug
+      '@dxos/util': link:../util
       assert: 2.0.0
     devDependencies:
       events: 3.3.0
@@ -1009,8 +1013,8 @@ importers:
       '@sentry/types': ^7.16.0
       sentry-testkit: ^4.1.0
     dependencies:
-      '@sentry/browser': 7.18.0
-      '@sentry/node': 7.18.0
+      '@sentry/browser': 7.17.2
+      '@sentry/node': 7.17.2
     devDependencies:
       '@sentry/types': 7.16.0
       sentry-testkit: 4.1.0
@@ -1463,6 +1467,7 @@ importers:
   packages/core/mesh/network-generator:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/log': workspace:*
       '@types/assert': ^1.5.4
       '@types/end-of-stream': ^1.4.0
       '@types/pump': ^1.1.0
@@ -1472,6 +1477,7 @@ importers:
       ngraph.graph: ^19.0.1
     dependencies:
       '@dxos/async': link:../../../common/async
+      '@dxos/log': link:../../../common/log
       assert: 2.0.0
       end-of-stream: 1.4.4
       ngraph.generators: 19.3.1
@@ -1546,12 +1552,14 @@ importers:
 
   packages/core/mesh/protocol-network-generator:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-generator': workspace:*
       '@types/pump': ^1.1.0
       assert: ^2.0.0
       pump: ^3.0.0
     dependencies:
+      '@dxos/log': link:../../../common/log
       '@dxos/network-generator': link:../network-generator
       assert: 2.0.0
       pump: 3.0.0
@@ -1677,6 +1685,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1688,6 +1697,7 @@ importers:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
       '@dxos/debug': link:../../../common/debug
+      '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1918,6 +1928,108 @@ importers:
       babel-plugin-add-module-exports: 1.0.4
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+
+  packages/deprecated/wallet/wallet-extension:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/util': workspace:*
+      '@hot-loader/react-dom': 17.0.2
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/faker': ^5.5.9
+      '@types/react': ^18.0.21
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/react-dom': ^18.0.6
+      '@types/uuid': ~8.3.3
+      '@types/webextension-polyfill': ^0.8.0
+      '@types/webpack-env': ^1.16.0
+      chalk: ^4.1.0
+      copy: ~0.3.2
+      faker: ^5.5.3
+      react: ^18.2.0
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^18.2.0
+      rmdir: ~1.2.0
+      uuid: ^8.3.2
+      webextension-polyfill: ^0.8.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/client-services': link:../../../sdk/client-services
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/echo-db': link:../../../core/echo/echo-db
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../react-components
+      '@dxos/react-toolkit': link:../../react-toolkit
+      '@dxos/rpc': link:../../../core/mesh/rpc
+      '@dxos/util': link:../../../common/util
+      '@hot-loader/react-dom': 17.0.2_react@18.2.0
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      react: 18.2.0
+      react-copy-to-clipboard: 5.1.0_react@18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      webextension-polyfill: 0.8.0
+    devDependencies:
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
+      '@types/faker': 5.5.9
+      '@types/react': 18.0.21
+      '@types/react-copy-to-clipboard': 5.0.4
+      '@types/react-dom': 18.0.6
+      '@types/uuid': 8.3.4
+      '@types/webextension-polyfill': 0.8.3
+      '@types/webpack-env': 1.18.0
+      chalk: 4.1.2
+      copy: 0.3.2
+      faker: 5.5.3
+      rmdir: 1.2.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
+
+  packages/deprecated/wallet/wallet-playground:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../react-components
+      '@dxos/react-toolkit': link:../../react-toolkit
+      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
+      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    devDependencies:
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
 
   packages/devtools/cli:
     specifiers:
@@ -2958,106 +3070,6 @@ importers:
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
-  packages/experimental/wallet-extension:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/util': workspace:*
-      '@hot-loader/react-dom': 17.0.2
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/faker': ^5.5.9
-      '@types/react': ^18.0.21
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/react-dom': ^18.0.6
-      '@types/uuid': ~8.3.3
-      '@types/webextension-polyfill': ^0.8.0
-      '@types/webpack-env': ^1.16.0
-      chalk: ^4.1.0
-      copy: ~0.3.2
-      faker: ^5.5.3
-      react: ^18.2.0
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^18.2.0
-      rmdir: ~1.2.0
-      uuid: ^8.3.2
-      webextension-polyfill: ^0.8.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../../sdk/client
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../../sdk/config
-      '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
-      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/util': link:../../common/util
-      '@hot-loader/react-dom': 17.0.2_react@18.2.0
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
-      react: 18.2.0
-      react-copy-to-clipboard: 5.1.0_react@18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      webextension-polyfill: 0.8.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/faker': 5.5.9
-      '@types/react': 18.0.21
-      '@types/react-copy-to-clipboard': 5.0.4
-      '@types/react-dom': 18.0.6
-      '@types/uuid': 8.3.4
-      '@types/webextension-polyfill': 0.8.3
-      '@types/webpack-env': 1.18.0
-      chalk: 4.1.2
-      copy: 0.3.2
-      faker: 5.5.3
-      rmdir: 1.2.0
-      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-
-  packages/experimental/wallet-playground:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/react': ^18.0.21
-      '@types/react-dom': ^18.0.6
-      react: ^18.2.0
-      react-dom: ^18.2.0
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/config': link:../../sdk/config
-      '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-components': link:../../deprecated/react-components
-      '@dxos/react-toolkit': link:../../deprecated/react-toolkit
-      '@mui/icons-material': 5.10.9_6usjrp3ypnzobhq35dcwvjrt3m
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/react': 18.0.21
-      '@types/react-dom': 18.0.6
-
   packages/gravity/gravity-dashboard:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3175,11 +3187,15 @@ importers:
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
+      '@types/json-stable-stringify': ^1.0.32
+      '@types/node': ^18.11.9
       '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
+      json-stable-stringify: ^1.0.1
       readable-stream: ^3.6.0
       source-map-support: ^0.5.12
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
@@ -3198,7 +3214,9 @@ importers:
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
+      json-stable-stringify: 1.0.1
       readable-stream: 3.6.0
+      util: 0.12.5
     devDependencies:
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -3210,6 +3228,8 @@ importers:
       '@dxos/text-model': link:../../core/echo/text-model
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
+      '@types/json-stable-stringify': 1.0.34
+      '@types/node': 18.11.9
       '@types/readable-stream': 2.3.14
       source-map-support: 0.5.21
 
@@ -3236,16 +3256,15 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
-      '@types/json-stable-stringify': ^1.0.32
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
       '@types/readable-stream': ^2.3.9
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
       base-x: ~3.0.9
-      json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
@@ -3269,19 +3288,18 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/testutils': link:../../common/testutils
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
       base-x: 3.0.9
-      json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
       '@dxos/signal': link:../../core/mesh/signal
-      '@types/json-stable-stringify': 1.0.34
+      '@dxos/testutils': link:../../common/testutils
       '@types/level-js': 4.0.2
       '@types/memdown': 3.0.0
       '@types/readable-stream': 2.3.14
@@ -3330,11 +3348,13 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -3361,10 +3381,12 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
+      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
@@ -3395,6 +3417,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
@@ -3418,6 +3441,7 @@ importers:
       '@dxos/client': link:../client
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util
@@ -4351,7 +4375,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.12.9
-      '@babel/helper-plugin-utils': 7.19.0
+      '@babel/helper-plugin-utils': 7.10.4
       '@babel/plugin-syntax-object-rest-spread': 7.8.3_@babel+core@7.12.9
       '@babel/plugin-transform-parameters': 7.18.8_@babel+core@7.12.9
     dev: true
@@ -5361,7 +5385,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@types/react': 18.0.21
-      clsx: 1.2.1
+      clsx: 1.1.0
       focus-lock: 0.8.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -8578,32 +8602,32 @@ packages:
       '@ndhoule/map': 2.0.1
     dev: false
 
-  /@sentry/browser/7.18.0:
-    resolution: {integrity: sha512-dFNJshI5I9F2ff8X9dyN1b8UIx3h+62DOtigo+Vg2RfjplEX+rnzRWfV5QU5YBSH3AbDE3WXHuPWuYTbWg9i9w==}
+  /@sentry/browser/7.17.2:
+    resolution: {integrity: sha512-LICJvwnES+Jp7ShN7zkmTFYIQB9jWOg/s9U58CQWfwrkMTwE4zKylojF3OTtyNaMmekVv/y/1JjeS5KAK3IrHQ==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.18.0
-      '@sentry/types': 7.18.0
-      '@sentry/utils': 7.18.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/core/7.18.0:
-    resolution: {integrity: sha512-erDEMGM+9Msvz/fQaKlYHD8vXDs/Mv5trZc6rlS/gnlaIPQQ8cALH7UdH2UO0eoCLH3/pEYTsa4Qh8AMz6Y86w==}
+  /@sentry/core/7.17.2:
+    resolution: {integrity: sha512-mBFjngWJPN3V1A/tz/qa1jkQvmZtU07hhlWg+kmajD0nFulPHUWEvZhsi8NFveGcxMxc/wmaSSLcEOpKq5L29g==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.18.0
-      '@sentry/utils': 7.18.0
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       tslib: 1.14.1
     dev: false
 
-  /@sentry/node/7.18.0:
-    resolution: {integrity: sha512-bc/cta6hnyqaGKECl2Ycffb7L6b+Xy4wzDR5j49FepCCYkXC3CcR/879AIf3sb0/TXP2QMIyfGN8TKlHigX6bA==}
+  /@sentry/node/7.17.2:
+    resolution: {integrity: sha512-dMHff7C3MgKpIlbLkrEEtq1nX8o1Tiax/DWOtj5dLrPMsjQyivMs906GeS3GJkX7YeMMfy93j8gC+qIK54gqFw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/core': 7.18.0
-      '@sentry/types': 7.18.0
-      '@sentry/utils': 7.18.0
+      '@sentry/core': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       cookie: 0.4.2
       https-proxy-agent: 5.0.1
       lru_map: 0.3.3
@@ -8612,15 +8636,15 @@ packages:
       - supports-color
     dev: false
 
-  /@sentry/react/7.18.0_react@18.2.0:
-    resolution: {integrity: sha512-Cc3roRKtTT/5s7BJmQi2+KdmExWxLwRTpYvGtvDdzARXAnTr2BQUBLe7WZUE/bEnXFCUAc/yHc2Ziddvn2GQ1g==}
+  /@sentry/react/7.17.2_react@18.2.0:
+    resolution: {integrity: sha512-vE3JND7yPVWQkrFXxbzz6nfq+jn8YZL7kitr/ioTqWBvZJyxveIl8qg7w6dN0JpMmbV52dEumSSXk8rHLtCTyw==}
     engines: {node: '>=8'}
     peerDependencies:
       react: 15.x || 16.x || 17.x || 18.x
     dependencies:
-      '@sentry/browser': 7.18.0
-      '@sentry/types': 7.18.0
-      '@sentry/utils': 7.18.0
+      '@sentry/browser': 7.17.2
+      '@sentry/types': 7.17.2
+      '@sentry/utils': 7.17.2
       hoist-non-react-statics: 3.3.2
       react: 18.2.0
       tslib: 1.14.1
@@ -8631,16 +8655,16 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /@sentry/types/7.18.0:
-    resolution: {integrity: sha512-bOnyoK1S1chPJ+dAeWJo0srxZ9U48WE5dZFtvKeXoog6JNHY3nqAR/P/uxh9djB4bbwQRMdnGk1zm0bxhOOC6w==}
+  /@sentry/types/7.17.2:
+    resolution: {integrity: sha512-zxhNQ8Xt/hfP8bFZEV66ovJZK7aUqok5w1wjsHgkUz/S6/gkiMrDYT3OtRCRuY3mfQu9KmeBniM0xZkaxREJ1w==}
     engines: {node: '>=8'}
     dev: false
 
-  /@sentry/utils/7.18.0:
-    resolution: {integrity: sha512-nIIIF9FZ2rrw9OFIAfnSEK6TbHLii3ZtahVdcw6Jk9LscL2HMkgdmgroiNfFxhGYNqfWsaxVgMW+IdnkrHsqXQ==}
+  /@sentry/utils/7.17.2:
+    resolution: {integrity: sha512-l8t6qzyi+UUzD0a/oOYn4i+Eii+Ei29/TVwj/+9ogfJzBk6dSwSLvXievsyCRpcN3tftpWP0cHREcbZN64ZOWw==}
     engines: {node: '>=8'}
     dependencies:
-      '@sentry/types': 7.18.0
+      '@sentry/types': 7.17.2
       tslib: 1.14.1
     dev: false
 
@@ -11962,13 +11986,13 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
 
   /@types/glob/8.0.0:
     resolution: {integrity: sha512-l6NQsDDyQUVeoTynNpC9uRvCUint/gSUXQA2euwmTuWGvPY5LSDUu6tkCtJB2SvGQlJQzLaKqcGZP4//7EDveA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.11.0
+      '@types/node': 16.11.66
     dev: true
 
   /@types/got/8.3.6:
@@ -11980,7 +12004,7 @@ packages:
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
 
   /@types/har-format/1.2.9:
     resolution: {integrity: sha512-rffW6MhQ9yoa75bdNi+rjZBAvu2HhehWJXlhuWXnWdENeuKe82wUgAwxYOb7KRKKmxYN+D/iRKd2NDQMLqlUmg==}
@@ -14692,7 +14716,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       ansi-align: 3.0.1
-      camelcase: 6.3.0
+      camelcase: 6.2.0
       chalk: 4.1.2
       cli-boxes: 2.2.1
       string-width: 4.2.3
@@ -18494,7 +18518,7 @@ packages:
       optionator: 0.9.1
       progress: 2.0.3
       regexpp: 3.2.0
-      semver: 7.3.8
+      semver: 7.3.5
       strip-ansi: 6.0.1
       strip-json-comments: 3.1.1
       text-table: 0.2.0
@@ -20104,7 +20128,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 3.1.2
+      minimatch: 3.0.4
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -24178,7 +24202,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -31006,7 +31030,6 @@ packages:
   /unified/9.2.0:
     resolution: {integrity: sha512-vx2Z0vY+a3YoTj8+pttM3tiJHCwY5UFbYdiWrwBEbHmK8pvsPj2rtAX2BFfgXen8T39CJWblWRDT4L5WGXtDdg==}
     dependencies:
-      '@types/unist': 2.0.6
       bail: 1.0.5
       extend: 3.0.2
       is-buffer: 2.0.5

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "end-of-stream": "^1.4.1",
     "ngraph.generators": "^19.0.1",

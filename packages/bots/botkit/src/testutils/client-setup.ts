@@ -4,25 +4,21 @@
 
 import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export interface ClientSetup {
   client: Client;
   party: Party;
-  invitation: InvitationDescriptor;
+  invitation: Invitation;
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {
-  const client = new Client(config);
+  const client = new Client({ config });
   await client.initialize();
-  await client.halo.createProfile({ username: 'Client' });
+  await client.halo.createProfile({ displayName: 'Client' });
   const party = await client.echo.createParty();
 
-  const invitation = await party.createInvitation();
-
-  return {
-    client,
-    party,
-    invitation: invitation.descriptor.toProto()
-  };
+  // TODO(burdon): Observable.
+  await party.createInvitation();
+  throw new Error('Not implemented.');
 };

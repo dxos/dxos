@@ -1,6 +1,5 @@
 formatter:
-  column: 80
+  column: 100
 
 filter:
-  - feed-store:debug
-  - swarm:debug
+  - warn
