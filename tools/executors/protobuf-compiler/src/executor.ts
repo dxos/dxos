@@ -49,6 +49,13 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     verbose: context.isVerbose
   });
 
+  console.info({
+    cwd: context.cwd,
+    baseDir,
+    outDir,
+    options
+  });
+
   // Typings.
   if (options.typingsOutputPath) {
     const typeGenerator = new TypingsGenerator({
@@ -56,7 +63,7 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
       baseDir: options.basePath,
       outDir: join(context.cwd, options.typingsOutputPath),
       // TODO(burdon): Fix definition and computation of relative paths.
-      genDir: '../../dist/src/proto/gen'
+      distDir: '../dist/src/proto/gen'
     });
 
     typeGenerator.generate(context.isVerbose);

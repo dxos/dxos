@@ -21,6 +21,7 @@ const main = async () => {
     description: 'Protobuf compiler'
   });
 
+  // TODO(burdon): Match executor arguments.
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
   parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });

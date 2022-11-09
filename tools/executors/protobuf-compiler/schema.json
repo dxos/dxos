@@ -12,19 +12,19 @@
       "description": "",
       "default": "**/*.proto"
     },
+    "substitutionsPath": {
+      "type": "string",
+      "description": "",
+      "default": "substitutions.ts"
+    },
     "outputPath": {
       "type": "string",
       "description": "",
       "default": "gen"
     },
-    "typingsOutputPath": {
+    "typingsPath": {
       "type": "string",
       "description": ""
-    },
-    "substitutionsPath": {
-      "type": "string",
-      "description": "",
-      "default": "substitutions.ts"
     }
   },
   "required": [

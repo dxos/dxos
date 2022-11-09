@@ -16,7 +16,7 @@ export type TypingGeneratorOptions = {
   files: string[];
   baseDir: string;
   outDir: string;
-  genDir: string;
+  distDir: string;
 };
 
 /**
@@ -47,6 +47,14 @@ export class TypingsGenerator {
       const relativePath = file.substr(this._options.baseDir.length + 1);
       const relativeDir = path.join(this._options.outDir, path.dirname(relativePath));
 
+      console.log({
+        genDir: this._options.distDir,
+        outDir: this._options.outDir,
+        relativePath
+      });
+
+      process.exit();
+
       // Output file.
       const filename = path.basename(relativePath, '.proto');
       const jsOutFile = path.join(relativeDir, `${filename}.js`);
@@ -59,9 +67,10 @@ export class TypingsGenerator {
 
       // Relative path.
       const exportFile = path.join(path.dirname(relativePath), filename);
-      const relativeFileDir = path.join(this._options.genDir, exportFile);
+      const relativeFileDir = path.join(this._options.distDir, exportFile);
 
       // JS compiled output (required for tests).
+      // Relative path to the `dist/src/proto/gen` folder.
       fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relativeFileDir}');\n`);
 
       // TS definitions.
