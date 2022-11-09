@@ -26,6 +26,7 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
+      '@dxos/conform': workspace:^0.1.0
       '@dxos/esbuild': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/eslint-plugin': workspace:*
@@ -114,6 +115,7 @@ importers:
       wait-for-expect: ^3.0.2
       webpack: ^5.74.0
     dependencies:
+      '@dxos/conform': link:tools/conform
       execa: 5.1.1
       tslib: 2.4.0
     devDependencies:
@@ -3656,10 +3658,21 @@ importers:
   tools/conform:
     specifiers:
       '@dxos/plate': workspace:*
+      '@types/minimatch': ^5.1.2
+      '@types/recursive-readdir': ^2.2.0
+      '@types/yargs': ~16.0.1
+      minimatch: ^5.1.0
+      recursive-readdir: ^2.2.2
       yargs: ~16.2.0
     dependencies:
       '@dxos/plate': link:../../packages/devtools/plate
+      minimatch: 5.1.0
+      recursive-readdir: 2.2.2
       yargs: 16.2.0
+    devDependencies:
+      '@types/minimatch': 5.1.2
+      '@types/recursive-readdir': 2.2.1
+      '@types/yargs': 16.0.4
 
   tools/deprecated/protocols-toolchain:
     specifiers:

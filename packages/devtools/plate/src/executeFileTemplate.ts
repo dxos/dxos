@@ -55,6 +55,7 @@ export type ExecuteFileTemplateOptions<TInput = {}> = {
   templateRelativeTo?: string;
   outputDirectory: string;
   input?: TInput;
+  overwrite?: boolean;
 };
 
 export type TemplateContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
@@ -74,7 +75,7 @@ export type TemplateFunction<TInput = void> = Functor<TemplateContext<TInput>, T
 export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateFile, outputDirectory, templateRelativeTo } = options;
+  const { templateFile, outputDirectory, templateRelativeTo, overwrite } = options;
   const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath);
@@ -100,10 +101,14 @@ export const executeFileTemplate = async <TInput>(
       ? [
           new (getFileType(nominalOutputPath))({
             content: result,
-            path: nominalOutputPath
+            path: nominalOutputPath,
+            ...(typeof overwrite != 'undefined' ? { overwrite: !!overwrite } : {})
           })
         ]
-      : result;
+      : result.map((outfile) => {
+          if (overwrite === false) outfile.allowOverwrite = false;
+          return outfile;
+        });
   } catch (err) {
     console.error(`problem in template ${templateFullPath}`);
     throw err;

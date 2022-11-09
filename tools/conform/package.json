@@ -3,16 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "description": "A utility for conforming files across packages in a monorepo",
-  "main": "bin/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "conform": "dist/main.js"
+    "conform": "bin/index.js"
   },
   "scripts": {
-    "dev": "plate ./src/template --input ./package.json,./README.yml --output ."
+    "dev": "plate ./src/template --input ./package.json,./README.yml --output . --overwrite false"
   },
   "license": "MIT",
   "dependencies": {
     "@dxos/plate": "workspace:*",
-    "yargs": "~16.2.0"
+    "yargs": "~16.2.0",
+    "minimatch": "^5.1.0",
+    "recursive-readdir": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/yargs": "~16.0.1",
+    "@types/minimatch": "^5.1.2",
+    "@types/recursive-readdir": "^2.2.0"
   }
 }

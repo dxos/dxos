@@ -20,6 +20,7 @@ export type ExecuteDirectoryTemplateOptions<TInput> = {
   filterRegEx?: RegExp;
   filterExclude?: RegExp;
   verbose?: boolean;
+  overwrite?: boolean;
 };
 
 export const executeDirectoryTemplate = async <TInput>(
@@ -33,7 +34,8 @@ export const executeDirectoryTemplate = async <TInput>(
     input,
     filterGlob,
     parallel = true,
-    verbose = false
+    verbose = false,
+    overwrite
   } = options;
   const debug = logger(verbose);
   debug(options);
@@ -52,7 +54,8 @@ export const executeDirectoryTemplate = async <TInput>(
       templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       outputDirectory,
-      input
+      input,
+      overwrite
     })
   );
   const runner = runPromises({
@@ -69,7 +72,7 @@ export const executeDirectoryTemplate = async <TInput>(
   debug('templates executed.');
   const stringPath = (p: string | string[]) => (typeof p === 'string' ? p : path.join(...p));
   const isOverwrittenByTemplateOutput = (f: string): boolean => {
-    return templateOutputs.some((files) => files.some((file) => stringPath(file.path) === f));
+    return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
   return [
     ...regularFiles
@@ -78,7 +81,8 @@ export const executeDirectoryTemplate = async <TInput>(
         (r) =>
           new File({
             path: path.join(outputDirectory, r.slice(templateDirectory.length - 1)),
-            copyFrom: r
+            copyFrom: r,
+            overwrite
           })
       ),
     ...flatten(templateOutputs)

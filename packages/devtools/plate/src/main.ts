@@ -58,6 +58,11 @@ const main = async () => {
       type: 'boolean',
       alias: ['-v']
     })
+    .option('overwrite', {
+      description: 'allow overwriting existing files or not',
+      requiresArg: false,
+      type: 'boolean'
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -70,7 +75,8 @@ const main = async () => {
         glob,
         exclude,
         sequential = false,
-        verbose = false
+        verbose = false,
+        overwrite
       }: {
         _: string[];
         dry: boolean;
@@ -81,6 +87,7 @@ const main = async () => {
         exclude: string;
         sequential: boolean;
         verbose: boolean;
+        overwrite: boolean;
       }) => {
         const tstart = Date.now();
         const debug = logger(verbose);
@@ -122,7 +129,8 @@ const main = async () => {
           filterRegEx: filter ? new RegExp(filter) : undefined,
           filterExclude: exclude ? new RegExp(exclude) : undefined,
           parallel: !sequential,
-          verbose
+          verbose,
+          overwrite
         });
         if (!dry) {
           debug(`output folder: ${output}`);
@@ -135,7 +143,8 @@ const main = async () => {
                 info(!!saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
                 written += !!saved ? 1 : 0;
               } catch (err: any) {
-                debug('failed', f.shortDescription(process.cwd()));
+                info('failed', f?.shortDescription(process.cwd()) ?? f);
+                info(err);
               }
             })
           );
