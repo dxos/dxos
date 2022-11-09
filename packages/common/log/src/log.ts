@@ -22,7 +22,7 @@ interface Log extends Logger {
   warn: Logger;
   error: Logger;
 
-  catch: (error: Error, context?: LogContext, meta?: LogMetadata) => void;
+  catch: (error: Error | any, context?: LogContext, meta?: LogMetadata) => void;
 }
 
 interface LogImp extends Log {
@@ -46,7 +46,9 @@ const createLog = (): LogImp => {
   log.info = (...params) => processLog(LogLevel.INFO, ...params);
   log.warn = (...params) => processLog(LogLevel.WARN, ...params);
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
-  log.catch = (error: Error, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta, error);
+
+  // TODO(burdon): Not required since can determine value.
+  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta, error);
 
   /**
    * Process the current log call.

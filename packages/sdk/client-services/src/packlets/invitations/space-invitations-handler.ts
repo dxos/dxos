@@ -117,7 +117,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
-        log('connected', { host: this._signingContext.deviceKey });
+        log('host connected', { host: this._signingContext.deviceKey });
         observable.callback.onConnected?.(invitation);
         const deviceKey = await complete.wait(); // TODO(burdon): Timeout.
         log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
@@ -169,15 +169,12 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         requested: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
-        // TODO(burdon): Make these optional.
-        exposed: {},
-        handlers: {},
         port
       });
 
       try {
         await peer.open();
-        // TODO(burdon): Mitigate bug where guest may create multiple connections.
+        // TODO(burdon): Bug where guest may create multiple connections.
         if (++connectionCount > 1) {
           throw new Error(`multiple connections detected: ${connectionCount}`);
         }

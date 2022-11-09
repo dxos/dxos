@@ -91,6 +91,8 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   } else if (context && Object.keys(context).length > 0) {
     // Remove undefined fields.
     // https://nodejs.org/api/util.html#utilinspectobject-options
+    // Remove undefined fields.
+    // https://nodejs.org/api/util.html#utilinspectobject-options
     parts.context = inspect(
       pickBy(context, (value?: unknown) => value !== undefined),
       { depth: undefined, colors: true, maxArrayLength: 8, sorted: true }
