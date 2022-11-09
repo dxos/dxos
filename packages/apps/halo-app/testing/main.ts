@@ -3,7 +3,7 @@
 //
 
 import { Client, fromIFrame } from '@dxos/client';
-import { log } from '@dxos/log';
+// import { log } from '@dxos/log';
 
 void (async () => {
   const client = new Client({ services: fromIFrame({}) });
@@ -13,5 +13,5 @@ void (async () => {
     await client.halo.createProfile();
   }
 
-  log(client.toJSON());
+  // log(client.toJSON());
 })();

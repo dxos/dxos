@@ -116,7 +116,7 @@ describe('Client services', function () {
     const success2 = new Trigger<Invitation>();
 
     const party = await client1.echo.createParty();
-    const observable1 = party.createInvitation();
+    const observable1 = await party.createInvitation();
     observable1.subscribe({
       onConnecting: (invitation) => {
         const observable2 = client2.echo.acceptInvitation(invitation);
