@@ -120,7 +120,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           throw new Error(`multiple connections detected: ${count}`);
         }
 
-        log('connected'); // TODO(burdon): Peer id?
+        log('host connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
         const identityKey = await complete.wait(); // TODO(burdon): Timeout.
         log('admitted guest', { identityKey });
@@ -131,8 +131,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           observableError(observable, err);
         }
       } finally {
+        await sleep(100); // TODO(burdon): Don't close until RPC has complete.
         await peer.close();
-        await sleep(100);
         await swarmConnection!.close();
       }
     });
@@ -179,7 +179,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
-        log('connected'); // TODO(burdon): Peer id?
+        log('guest connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
 
         // 1. Send request.
@@ -187,7 +187,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
         // 2. Create local space.
-        // TODO(burdon): Abandon if does not complete.
+        // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
         const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
 
         // 3. Send admission credentials to host (with local space keys).
@@ -227,10 +227,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
       observable.callback.onConnecting?.(invitation);
       await complete.wait();
       observable.callback.onSuccess(invitation);
-
-      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
-      //  Implement mechanism for plugin to finalize (or remove itself).
-      await sleep(100);
       await swarmConnection.close();
     });
 

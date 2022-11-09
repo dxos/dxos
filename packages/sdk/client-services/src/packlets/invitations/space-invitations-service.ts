@@ -31,7 +31,10 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('stream opened', { identityKey: this._identityManager.identity?.identityKey, spaceKey: invitation.spaceKey });
+      log('host stream opened', {
+        identityKey: this._identityManager.identity?.identityKey,
+        spaceKey: invitation.spaceKey
+      });
       const space = this._spaceManager.spaces.get(invitation.spaceKey!);
       assert(space);
 
@@ -74,7 +77,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('stream closed', {
+        log('host stream closed', {
           identityKey: this._identityManager.identity?.identityKey,
           spaceKey: invitation.spaceKey,
           err
@@ -87,7 +90,10 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('stream opened', { identityKey: this._identityManager.identity?.identityKey, spaceKey: invitation.spaceKey });
+      log('guest stream opened', {
+        identityKey: this._identityManager.identity?.identityKey,
+        spaceKey: invitation.spaceKey
+      });
 
       let invitationId: string;
       const observable = this._spaceInvitations.acceptInvitation(invitation);
@@ -128,7 +134,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('stream closed', {
+        log('guest stream closed', {
           identityKey: this._identityManager.identity?.identityKey,
           spaceKey: invitation.spaceKey,
           err
