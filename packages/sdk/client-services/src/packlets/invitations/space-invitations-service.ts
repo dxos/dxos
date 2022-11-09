@@ -21,7 +21,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
 
   // prettier-ignore
   constructor (
-    // TODO(burdon): Proxies
+    // TODO(burdon): Replace with getters.
     private readonly _spaceManager: SpaceManager,
     private readonly _spaceInvitations: SpaceInvitationsHandler
   ) {}

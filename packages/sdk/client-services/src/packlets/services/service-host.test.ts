@@ -29,6 +29,7 @@ describe('services/service-host', function () {
     const config = new Config(defaultTestingConfig);
     const signalManagerContext = new MemorySignalManagerContext();
 
+    // TODO(burdon): Use builder.
     const peer1 = createServiceHost(config, signalManagerContext);
     const peer2 = createServiceHost(config, signalManagerContext);
     await peer1.open();

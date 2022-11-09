@@ -55,6 +55,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: createServiceProvider(() => {
+        // TODO(burdon): Replace with providers.
         return new SpaceInvitationsServiceImpl(
           this._serviceContext.spaceManager!,
           this._serviceContext.spaceInvitations!
@@ -63,6 +64,7 @@ export class ClientServicesHost implements ClientServicesProvider {
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),
@@ -78,7 +80,7 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
-  // TODO(burdon): Pass-through options.
+  // TODO(burdon): Remove.
   createPeer(port: RpcPort): ProtoRpcPeer<ClientServices> {
     return createProtoRpcPeer({
       exposed: this._serviceRegistry.descriptors,
