@@ -58,6 +58,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       SpaceInvitationsService: createServiceProvider(() => {
         // TODO(burdon): Replace with providers.
         return new SpaceInvitationsServiceImpl(
+          this._serviceContext.identityManager,
           this._serviceContext.spaceManager!,
           this._serviceContext.spaceInvitations!
         );

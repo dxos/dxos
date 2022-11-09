@@ -89,7 +89,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
-                log('processing admission request', { identityKey, deviceKey });
+                log('admitting guest', { identityKey, deviceKey });
                 await writeMessages(
                   space.controlPipeline.writer,
                   await createAdmissionCredentials(
@@ -191,7 +191,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
 
         // 3. Send admission credentials to host (with local space keys).
-        log('presenting admission credentials', { identityKey: this._signingContext.identityKey });
+        log('presenting admission credentials', { spaceKey: space.key, identityKey: this._signingContext.identityKey });
         await peer.rpc.SpaceHostService.presentAdmissionCredentials({
           identityKey: this._signingContext.identityKey,
           deviceKey: this._signingContext.deviceKey,
@@ -200,7 +200,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         });
 
         // 4. Success.
-        log('admitted by host', { identityKey: this._signingContext.identityKey });
+        log('admitted by host', { spaceKey: space.key, identityKey: this._signingContext.identityKey });
         complete.wake();
       } catch (err) {
         if (!observable.cancelled) {
