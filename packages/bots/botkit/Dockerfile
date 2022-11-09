@@ -1,4 +1,4 @@
-FROM node:16
+FROM node:18
 
 LABEL maintainer="admin@dxos.org"
 LABEL description="DXOS Bot Factory."
