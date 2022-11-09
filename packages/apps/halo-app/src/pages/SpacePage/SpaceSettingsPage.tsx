@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
 import { useMembers, useParty } from '@dxos/react-client';
-import { Button, getSize, Heading, useTranslation, Tooltip, ObservableInvitation } from '@dxos/react-uikit';
+import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 import { InvitationList, HeadingWithActions } from '../../components';
@@ -27,9 +27,7 @@ export const SpaceSettingsPage = () => {
   const onCreateInvitation = useCallback(() => {
     if (space) {
       setCreatingInvitation(true);
-      void (space.createInvitation() as unknown as Promise<ObservableInvitation>).finally(() =>
-        setCreatingInvitation(false)
-      );
+      void space.createInvitation().finally(() => setCreatingInvitation(false));
     }
   }, [space]);
 
