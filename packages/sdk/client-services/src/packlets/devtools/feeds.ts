@@ -27,14 +27,15 @@ export const subscribeToFeeds = (
     const feedMap = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
     const subscriptions = new EventSubscriptions();
 
-    const update = async () => {
-      const feeds = await feedStore.feeds;
+    const update = () => {
+      const feeds = feedStore.feeds;
       feeds
         .filter((feed) => !feedKeys?.length || feedKeys.some((feedKey) => feedKey.equals(feed.key)))
         .forEach((feed) => {
           if (!feedMap.has(feed.key)) {
             feedMap.set(feed.key, feed);
-            feed.on('close', update); // TODO(mykola): Unsubscribe.
+            feed.on('close', update);
+            subscriptions.add(feed.off('close', update));
           }
         });
       next({
@@ -42,10 +43,8 @@ export const subscribeToFeeds = (
       });
     };
 
-    setImmediate(async () => {
-      subscriptions.add(feedStore.feedOpened.on(update));
-      await update();
-    });
+    subscriptions.add(feedStore.feedOpened.on(update));
+    update();
 
     return () => {
       subscriptions.clear();
@@ -60,31 +59,36 @@ export const subscribeToFeedBlocks = (
     if (!feedKey) {
       return;
     }
-
-    const update = async (feed: FeedWrapper<FeedMessage>) => {
-      const iterator = new FeedIterator(feed);
-      await iterator.open();
-      const blocks = [];
-      for await (const block of iterator) {
-        blocks.push(block);
-        if (blocks.length >= feed.properties.length) {
-          break;
-        }
-      }
-      next({
-        blocks: blocks.slice(-maxBlocks)
-      });
-      await iterator.close();
-    };
+    const subscriptions = new EventSubscriptions();
 
     setImmediate(async () => {
-      const feed = await feedStore.getFeed(feedKey);
+      const feed = feedStore.getFeed(feedKey);
       if (!feed) {
         return;
       }
-      feed.on('append', () => update(feed)); // TODO(mykola): Unsubscribe.
-      feed.on('truncate', () => update(feed)); // TODO(mykola): Unsubscribe.
-      await update(feed);
+
+      const update = async () => {
+        const iterator = new FeedIterator(feed);
+        await iterator.open();
+        const blocks = [];
+        for await (const block of iterator) {
+          blocks.push(block);
+          if (blocks.length >= feed.properties.length) {
+            break;
+          }
+        }
+        next({
+          blocks: blocks.slice(-maxBlocks)
+        });
+        await iterator.close();
+      };
+
+      feed.on('append', update);
+      subscriptions.add(feed.off('append', update));
+
+      feed.on('truncate', update);
+      subscriptions.add(feed.off('truncate', update));
+      await update();
     });
 
     return () => {};

@@ -1,6 +1,8 @@
 ---
 position: 1
 label: "Why DXOS?"
+prev: README.md
+next: quick-start
 ---
 # Motivation
 
@@ -16,11 +18,24 @@ What if our software was built without the silos and moats around individual app
 
 What would have to be true for such a world to exist?
 - we need software to work offline first
-- We need solutions to decentralize peer discovery, consensus, state synchronization, service availability, and user identity problems. (why do we need this? is this just decent rammed down our throat?)
+- We need solutions to decentralize peer discovery, consensus, state synchronization, service availability, and user identity problems.
 - We also need to solve continuous integration, code management, and software trust for decentralized software.
 - We need a platform built around privacy by default without precluding public discord and reputation
 - We need a platform and community that enables developers to share code and infrastructure, and interoperate without repeating the same wheels in every application
 - We need a revenue model that supports the infrastructure and developers that make up this platform
 - There must be orders of mangnitude of productivity gains for developers when compared to building "siloed" applications. This will come from the interoperability with other data, and re-use of platform and community code and infrastructure
 
-DXOS is a developer platform aimed at all of the above. 
+::: tip The mission behind DXOS is to support the development and operation of privacy preserving, internet-scale applications.
+:::
+
+### [ECHO](echo)
+In order to build local-first and offline-first applications with peer-to-peer collaboration features, developers need a solution for state management with key attributes enabling offline-first and real-time collaboration. [Read more](echo)
+
+### [HALO](halo)
+Most applications need to understand, store, and protect the identity of the user using them. Users don't want to memorize new passwords for every application, and developers don't want to implement the hard parts of secure authentication. [Read more](halo)
+
+### [MESH](mesh)
+Legacy network topologies were designed for the world of client-server. NATs and firewalls make it harder for peers to locate each other. [Read more](mesh)
+
+### [KUBE](kube)
+Cloud providers have created too much gravity and complexity around the primitives of hosting code and running servers. You shouldn't have to understand and code against a complex cloud provider just to deploy and host a typical offline-first application. [Read more](kube)

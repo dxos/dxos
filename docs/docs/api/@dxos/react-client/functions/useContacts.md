@@ -1,2 +1,0 @@
-# Function `useContacts`
-> Declared in [`packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts:16`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts#L16)
