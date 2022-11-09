@@ -27,6 +27,7 @@ import { InvitationEvents, InvitationsHandler } from './invitations';
  * - Once connected to guest, send the admission offer (e.g., space keys).
  * - Listen for guest's credentials presentation (e.g., device key) then write credentials to the feed.
  *
+ *  TODO(burdon): Update (see below).
  *  [Client] => SpaceInvitationProxy.createInvitation(): Observable
  *    <RPC:InvitationsService>
  *      SpaceInvitationsService => SpaceInvitations.createInvitation(): Observable
