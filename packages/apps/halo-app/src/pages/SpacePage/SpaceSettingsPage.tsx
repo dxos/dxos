@@ -7,14 +7,12 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
-import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
-import { Button, getSize, Heading, useTranslation, Tooltip, InvitationWrapper } from '@dxos/react-uikit';
+import { useMembers, useParty } from '@dxos/react-client';
+import { Button, getSize, Heading, useTranslation, Tooltip, ObservableInvitation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 import { InvitationList, HeadingWithActions } from '../../components';
 import { ProfileList } from '../../components/ProfileList';
-
-const useSpaceInvitations = usePartyInvitations;
 
 export const SpaceSettingsPage = () => {
   const { t } = useTranslation('halo');
@@ -22,14 +20,14 @@ export const SpaceSettingsPage = () => {
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useParty(spaceKey);
-  const invitations = useSpaceInvitations(spaceKey);
+  const invitations = space?.invitations;
   const members = useMembers(space);
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const onCreateInvitation = useCallback(() => {
     if (space) {
       setCreatingInvitation(true);
-      void (space.createInvitation() as unknown as Promise<InvitationWrapper>).finally(() =>
+      void (space.createInvitation() as unknown as Promise<ObservableInvitation>).finally(() =>
         setCreatingInvitation(false)
       );
     }
@@ -69,7 +67,7 @@ export const SpaceSettingsPage = () => {
           }
         />
         <ProfileList profiles={members} />
-        <InvitationList invitations={invitations as unknown as InvitationWrapper[]} />
+        <InvitationList invitations={invitations} />
       </main>
     </>
   );

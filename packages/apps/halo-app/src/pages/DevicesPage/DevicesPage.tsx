@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Button, useTranslation, getSize, InvitationWrapper } from '@dxos/react-uikit';
+import { Button, useTranslation, getSize, ObservableInvitation } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList, HeadingWithActions } from '../../components';
 
@@ -20,7 +20,7 @@ export const DevicesPage = () => {
 
   const onCreateInvitation = useCallback(() => {
     setCreatingInvitation(true);
-    void (client.halo.createInvitation() as unknown as Promise<InvitationWrapper>).finally(() =>
+    void (client.halo.createInvitation() as unknown as Promise<ObservableInvitation>).finally(() =>
       setCreatingInvitation(false)
     );
   }, []);
@@ -43,7 +43,7 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <InvitationList invitations={invitations as unknown as InvitationWrapper[]} />
+      <InvitationList invitations={invitations as unknown as ObservableInvitation[] | undefined} />
     </main>
   );
 };

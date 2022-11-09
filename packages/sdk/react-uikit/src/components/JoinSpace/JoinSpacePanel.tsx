@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { InvitationEncoder, PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-import { useInvitationStatus, InvitationState, InvitationWrapper, InvitationStatus } from '../../experimental';
+import { useInvitationStatus, InvitationState, ObservableInvitation, InvitationStatus } from '../../experimental';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
@@ -19,7 +19,7 @@ export interface JoinSpacePanelProps {
 }
 
 interface JoinStep1Props extends JoinSpacePanelProps {
-  connect: (wrapper: InvitationWrapper) => void;
+  connect: (wrapper: ObservableInvitation) => void;
   status: InvitationState;
   cancel: () => void;
   error?: number;
@@ -48,7 +48,7 @@ const JoinStep1 = ({
     connect(
       client.echo.acceptInvitation(
         InvitationEncoder.decode(parseInvitation(invitationCode))
-      ) as unknown as InvitationWrapper
+      ) as unknown as ObservableInvitation
     );
   }, [invitationCode]);
 

@@ -13,7 +13,7 @@ import {
   useTranslation,
   useInvitationStatus,
   InvitationState,
-  InvitationWrapper
+  ObservableInvitation
 } from '@dxos/react-uikit';
 
 import { invitationCodeFromUrl } from '../../util';
@@ -30,11 +30,11 @@ export const JoinIdentityPage = () => {
 
   const { status, cancel, error, connect } = useInvitationStatus();
 
-  const redeemInvitation = useCallback(() => {
+  const acceptInvitation = useCallback(() => {
     connect(
       client.halo.acceptInvitation(
         InvitationEncoder.decode(invitationCodeFromUrl(invitationCode))
-      ) as unknown as InvitationWrapper
+      ) as unknown as ObservableInvitation
     );
   }, [invitationCode]);
 
@@ -46,7 +46,7 @@ export const JoinIdentityPage = () => {
 
   useEffect(() => {
     if (invitationParam) {
-      void redeemInvitation();
+      void acceptInvitation();
     }
   }, []);
 
@@ -62,7 +62,7 @@ export const JoinIdentityPage = () => {
             initialValue: invitationCode
           },
           onChange: setInvitationCode,
-          onNext: redeemInvitation,
+          onNext: acceptInvitation,
           onCancelPending: cancel,
           onBack: () => history.back(),
           ...(error && {

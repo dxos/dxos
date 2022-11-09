@@ -7,7 +7,9 @@ import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 import { CancellableObservable, TimeoutError } from '@dxos/async';
 import { PublicKey, Invitation, InvitationEvents, InvitationEncoder } from '@dxos/client';
 
-export type InvitationWrapper = CancellableObservable<InvitationEvents> & { invitation: Invitation };
+export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
+  get invitation(): Invitation | undefined;
+}
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -23,7 +25,7 @@ interface InvitationReducerState {
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
-  wrapper?: InvitationWrapper;
+  wrapper?: ObservableInvitation;
 }
 
 export type InvitationAction =
@@ -32,7 +34,7 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTING;
-      wrapper: InvitationWrapper;
+      wrapper: ObservableInvitation;
     }
   | {
       status: Invitation.State.CONNECTED;
@@ -53,7 +55,7 @@ export type InvitationAction =
       haltedAt: Invitation.State;
     };
 
-export const useInvitationStatus = (initialWrapper?: InvitationWrapper) => {
+export const useInvitationStatus = (initialWrapper?: ObservableInvitation) => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) =>
       ({
@@ -129,7 +131,7 @@ export const useInvitationStatus = (initialWrapper?: InvitationWrapper) => {
 
   // Return memoized callbacks & values
 
-  const connect = useCallback((wrapper: InvitationWrapper) => {
+  const connect = useCallback((wrapper: ObservableInvitation) => {
     dispatch({ status: Invitation.State.CONNECTING, wrapper });
   }, []);
 
@@ -143,8 +145,8 @@ export const useInvitationStatus = (initialWrapper?: InvitationWrapper) => {
       error: state.error,
       cancel,
       connect,
-      id: state.wrapper?.invitation.invitationId ?? null,
-      code: state.wrapper ? InvitationEncoder.encode(state.wrapper.invitation) : null
+      id: state.wrapper?.invitation?.invitationId ?? null,
+      code: state.wrapper?.invitation ? InvitationEncoder.encode(state.wrapper.invitation) : null
     };
   }, [state, connect]);
 };

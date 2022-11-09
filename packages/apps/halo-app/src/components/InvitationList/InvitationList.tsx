@@ -5,17 +5,17 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { defaultDisabled, Group, InvitationWrapper, useTranslation } from '@dxos/react-uikit';
+import { defaultDisabled, Group, ObservableInvitation, useTranslation } from '@dxos/react-uikit';
 
 import { PendingInvitation } from './PendingInvitation';
 
 export interface InvitationListProps {
-  invitations: InvitationWrapper[];
+  invitations?: ObservableInvitation[];
 }
 
 export const InvitationList = ({ invitations }: InvitationListProps) => {
   const { t } = useTranslation('halo');
-  const empty = invitations.length < 1;
+  const empty = !invitations || invitations.length < 1;
   return (
     <Group
       className='mbs-4'
@@ -28,8 +28,8 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
     >
       {!empty && (
         <div role='none' className='grid grid-cols-[repeat(auto-fill,_minmax(12rem,1fr))] gap-4'>
-          {invitations.map((wrapper) => (
-            <PendingInvitation key={wrapper.invitation.invitationId} wrapper={wrapper} />
+          {invitations.map((wrapper, index) => (
+            <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} />
           ))}
         </div>
       )}
