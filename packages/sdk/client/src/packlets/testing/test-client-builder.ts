@@ -2,12 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import {
-  ClientServices,
-  ClientServicesHost,
-  ClientServicesProxy,
-  createDefaultModelFactory
-} from '@dxos/client-services';
+import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -80,9 +75,7 @@ export class TestClientBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(
-    host: ClientServicesHost = this.createClientServicesHost()
-  ): [Client, ProtoRpcPeer<ClientServices>] {
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
     const server = host.createPeer(hostPort);
 

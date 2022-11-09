@@ -32,6 +32,8 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
   });
 };
 
+const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+
 export const getConfig = (_options?: LogOptions): LogConfig => {
   let options: LogOptions = defaultsDeep(
     {},
@@ -49,8 +51,7 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
     console.log(JSON.stringify(options, undefined, 2));
   }
 
-  const defaultProcessor =
-    typeof window !== 'undefined' && typeof window.document !== 'undefined' ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
+  const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
 
   return {
     options,

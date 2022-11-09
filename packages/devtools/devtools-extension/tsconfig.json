@@ -12,8 +12,7 @@
     "rootDir": "src"
   },
   "include": [
-    "__src",
-    "__stories"
+    "src"
   ],
   "references": [
     {

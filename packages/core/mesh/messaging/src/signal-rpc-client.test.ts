@@ -54,7 +54,7 @@ describe('SignalRPCClient', function () {
         },
         (error) => {
           if (error) {
-            log.error(error);
+            log.catch(error);
             throw error;
           }
         }

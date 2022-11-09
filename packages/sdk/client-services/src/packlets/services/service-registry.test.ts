@@ -72,10 +72,10 @@ describe('service registry', function () {
         onCancelled: () => {
           done.wake();
         },
-        onSuccess: (invitation: Invitation) => {
+        onSuccess: (_invitation: Invitation) => {
           throw new Error('Not not implemented.');
         },
-        onError: (err: Error) => {
+        onError: () => {
           throw new Error('Not not implemented.');
         }
       });

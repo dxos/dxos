@@ -55,7 +55,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
   };
 
   const handlePartyActiveToggle = (party: Party) => {
-    void party.setActive(!party.isActive, { global: true });
+    void party.setActive(!party.isActive);
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {

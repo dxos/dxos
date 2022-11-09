@@ -9,6 +9,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { TextModel } from '@dxos/text-model';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -28,7 +29,7 @@ type ClientServicesHostParams = {
 // TODO(burdon): Factor out to spaces.
 // TODO(burdon): Defaults (with TextModel).
 export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(ObjectModel);
+  return new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
 };
 
 /**

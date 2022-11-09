@@ -26,7 +26,7 @@ const main = async () => {
   log('Before get config');
 
   const botConfig = await rpc.rpc.getConfig();
-  log('Received bot config', JSON.stringify(botConfig));
+  log('Received bot config', { config: JSON.stringify(botConfig) });
   // assert(botConfig.spec.invitation['@type'] as keyof TYPES === 'dxos.echo.invitations.InvitationEncoder');
 
   const client = new Client({ config: botConfig.clientConfig });
