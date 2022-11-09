@@ -71,7 +71,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     });
 
     let count = 0;
-    const complete = new Trigger();
+    const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         exposed: {
@@ -102,7 +102,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                   )
                 );
 
-                complete.wake();
+                complete.wake(identityKey);
               } catch (err) {
                 // TODO(burdon): Generic RPC callback to report error to client.
                 observable.callback.onError(err);
@@ -122,7 +122,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
         log('connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
-        await complete.wait(); // TODO(burdon): Timeout.
+        const identityKey = await complete.wait(); // TODO(burdon): Timeout.
+        log('admitted guest', { identityKey });
         observable.callback.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
@@ -182,7 +183,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         observable.callback.onConnected?.(invitation);
 
         // 1. Send request.
-        log('sending admission request', { identityKey: invitation.identityKey });
+        log('sending admission request', { identityKey: this._signingContext.identityKey });
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
         // 2. Create local space.
@@ -190,7 +191,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
 
         // 3. Send admission credentials to host (with local space keys).
-        log('sending admission request', { identityKey: invitation.identityKey });
+        log('presenting admission credentials', { identityKey: this._signingContext.identityKey });
         await peer.rpc.SpaceHostService.presentAdmissionCredentials({
           identityKey: this._signingContext.identityKey,
           deviceKey: this._signingContext.deviceKey,
@@ -199,6 +200,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         });
 
         // 4. Success.
+        log('admitted by host', { identityKey: this._signingContext.identityKey });
         complete.wake();
       } catch (err) {
         if (!observable.cancelled) {
