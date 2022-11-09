@@ -36,7 +36,11 @@ describe('service registry', function () {
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SpaceInvitationsService: createServiceProvider(() => {
-        return new SpaceInvitationsServiceImpl(serviceContext.spaceManager!, serviceContext.spaceInvitations!);
+        return new SpaceInvitationsServiceImpl(
+          serviceContext.identityManager,
+          serviceContext.spaceManager!,
+          serviceContext.spaceInvitations!
+        );
       })
     });
 
