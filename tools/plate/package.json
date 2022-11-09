@@ -27,7 +27,7 @@
     "@types/lodash.flatten": "^4.4.6",
     "@types/lodash.zip": "^4.2.6",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/prettier": "^2.7.1",
     "@types/recursive-readdir": "^2.2.0",
     "@types/yargs": "~16.0.1",

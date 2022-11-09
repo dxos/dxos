@@ -20,7 +20,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",
     "ts-node": "10.9.1"
   }

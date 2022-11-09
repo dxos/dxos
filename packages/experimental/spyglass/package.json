@@ -36,7 +36,7 @@
   "devDependencies": {
     "@types/faker": "^5.5.9",
     "@types/isomorphic-fetch": "^0.0.36",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "faker": "^5.5.3",
     "mocha": "^8.4.0",
     "ts-node": "10.9.1",
