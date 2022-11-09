@@ -70,7 +70,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
       await swarmConnection?.close();
     });
 
-    let count = 0;
     const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
@@ -79,6 +78,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         },
         handlers: {
           SpaceHostService: {
+            // TODO(burdon): Send PIN.
             requestAdmission: async () => {
               log('responding with admission offer', { spaceKey: space.key });
               return {
@@ -90,6 +90,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
                 log('admitting guest', { identityKey, deviceKey });
+                // TODO(burdon): Check if already admitted.
                 await writeMessages(
                   space.controlPipeline.writer,
                   await createAdmissionCredentials(
@@ -116,10 +117,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
-        if (++count > 1) {
-          throw new Error(`multiple connections detected: ${count}`);
-        }
-
         log('host connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
         const identityKey = await complete.wait(); // TODO(burdon): Timeout.
@@ -138,11 +135,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     });
 
     setTimeout(async () => {
-      const peerId = PublicKey.random();
+      const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: topic, // TODO(burdon): Why not use peerId?
-        // peerId,
+        peerId: topic,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
       });
@@ -161,10 +157,12 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
   acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
     let swarmConnection: SwarmConnection | undefined;
 
+    // TODO(burdon): Callback for OTP, ec.
     const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
       await swarmConnection?.close();
     });
 
+    let connectionCount = 0;
     const complete = new Trigger();
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
@@ -179,6 +177,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
+        // TODO(burdon): Mitigate bug where guest may create multiple connections.
+        if (++connectionCount > 1) {
+          throw new Error(`multiple connections detected: ${connectionCount}`);
+        }
+
         log('guest connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
 
@@ -215,11 +218,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     setTimeout(async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
-      const peerId = PublicKey.random();
+      const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: PublicKey.random(), // TODO(burdon): Why not use peerId?
-        // peerId,
+        peerId: PublicKey.random(),
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
       });
