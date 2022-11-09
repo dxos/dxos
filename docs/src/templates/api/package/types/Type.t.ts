@@ -1,48 +1,31 @@
-import { ReflectionKind, JSONOutput as S } from "typedoc";
-import {
-  Input,
-  TemplateFunction,
-  text,
-  sources,
-  File,
-  JSONFile,
-  comment,
-  packagesInProject,
-  reflectionsOfKind,
-  stringifyType,
-} from "../..";
+import { ReflectionKind, JSONOutput as S } from 'typedoc';
+import { TemplateFunction, text, File } from '@dxos/plate';
+import { Input } from '../..';
+import { packagesInProject, reflectionsOfKind, Stringifier } from '../../util.t';
 
 const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
+  const stringifier = new Stringifier(input);
   const packages = packagesInProject(input);
   return packages
     .map((pkage) => {
-      const types = reflectionsOfKind(
-        pkage,
-        ReflectionKind.TypeAlias
-      ) as S.DeclarationReflection[];
+      const types = reflectionsOfKind(pkage, ReflectionKind.TypeAlias) as S.DeclarationReflection[];
       return types
         .map((atype) => {
-          const members = atype.children ?? [];
-          const sourceFileName = atype.sources?.[0]?.fileName;
-          const dir = [outputDirectory, pkage.name ?? "", "types"];
+          const dir = [outputDirectory, pkage.name ?? '', 'types'];
           return [
             new File({
               path: [...dir, `${atype.name}.md`],
               content: text`
-                # Type alias \`${atype.name}\`
-                ${sources(atype)}
+                # Type \`${atype.name}\`
+                ${stringifier.sources(atype)}
 
-                ${comment(atype.comment)}
+                ${stringifier.comment(atype.comment)}
 
                 \`\`\`ts
-                type ${atype.name} = ${stringifyType(atype.type!)}
+                type ${atype.name} = ${stringifier.txt.type(atype.type!)}
                 \`\`\`
-                `,
-            }),
-            // new JSONFile({
-            //   path: [...dir, `${atype.name}.json`],
-            //   content: atype,
-            // }),
+                `
+            })
           ];
         })
         .flat();

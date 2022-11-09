@@ -1,36 +1,75 @@
 # Class `NetworkManager`
-> Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:25`]()
+Declared in [`packages/core/mesh/network-manager/dist/src/network-manager.d.ts:51`]()
 
 
 Manages connection to the swarm.
 
 ## Constructors
-```ts
-new NetworkManager (__namedParameters: NetworkManagerOptions) => NetworkManager
-```
+### [`constructor`]()
+
+
+Returns: [`NetworkManager`](/api/@dxos/client/classes/NetworkManager)
+
+Arguments: 
+
+`__namedParameters`: `NetworkManagerOptions`
 
 ## Properties
-### `topicsUpdated: Event<void>`
-### `connectionLog:  get undefined | ConnectionLog`
-### `signal:  get SignalManager`
-### `topics:  get PublicKey[]`
+### [`topicsUpdated`]()
+Type: `Event<void>`
+### [`connectionLog`]()
+Type: `undefined | ConnectionLog`
+### [`signal`]()
+Type: `SignalManager`
+### [`topics`]()
+Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)`[]`
 
-## Functions
-```ts
-destroy () => Promise<void>
-```
-```ts
-getSwarm (topic: PublicKey) => undefined | Swarm
-```
-```ts
-getSwarmMap (topic: PublicKey) => undefined | SwarmMapper
-```
-```ts
-joinProtocolSwarm (options: SwarmOptions) => Promise<function>
-```
-```ts
-leaveProtocolSwarm (topic: PublicKey) => Promise<void>
-```
-```ts
-start () => Promise<void>
-```
+## Methods
+### [`closeSwarmConnection`]()
+
+
+Close the connection.
+
+Returns: `Promise<void>`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`destroy`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: none
+### [`getSwarm`]()
+
+
+Returns: `undefined | Swarm`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`getSwarmMap`]()
+
+
+Returns: `undefined | SwarmMapper`
+
+Arguments: 
+
+`topic`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`openSwarmConnection`]()
+
+
+Join the swarm.
+
+Returns: `Promise<SwarmConnection>`
+
+Arguments: 
+
+`__namedParameters`: `SwarmOptions`
+### [`start`]()
+
+
+Returns: `Promise<void>`
+
+Arguments: none

@@ -5,35 +5,32 @@
 import React, { useState } from 'react';
 
 import { AddCircleOutline as AddIcon, MoreVert as MenuIcon } from '@mui/icons-material';
-import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem, TextField } from '@mui/material';
+import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem } from '@mui/material';
 
-import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useClient, useParties, useProfile } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 import { TextModel } from '@dxos/text-model';
 
+import { ConfigSource } from './ConfigSource';
 import { PartyCard } from './PartyCard';
 
-export interface ControlsProps {
-  onRemoteSource: (remoteSource: string) => void;
-}
+export type ControlsProps = {
+  onConfigChange: (remoteSource?: string) => void;
+};
 
 /**
  * Devtools playground control.
  * @param port
  * @constructor
  */
-export const Controls = ({ onRemoteSource }: ControlsProps) => {
+export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
   const profile = useProfile();
   const parties = useParties();
-  const [remoteSource, setRemoteSource] = useState(
-    client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
-  );
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
@@ -123,31 +120,7 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
         <JoinPartyDialog open={showJoinParty} onClose={() => setShowJoinParty(false)} closeOnSuccess />
       </>
 
-      <Box
-        sx={{
-          paddingRight: 1
-        }}
-      >
-        <Card sx={{ margin: 1 }}>
-          <Box
-            sx={{
-              padding: 1,
-              display: 'flex'
-            }}
-          >
-            <TextField
-              label='Remote Source'
-              variant='standard'
-              fullWidth
-              value={remoteSource}
-              onChange={(event) => setRemoteSource(event.target.value)}
-            />
-            <Button variant='contained' onClick={() => onRemoteSource(remoteSource)} sx={{ marginLeft: 1 }}>
-              Set
-            </Button>
-          </Box>
-        </Card>
-      </Box>
+      <ConfigSource onConfigChange={onConfigChange} />
 
       <Box
         sx={{

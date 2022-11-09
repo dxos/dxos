@@ -30,7 +30,7 @@ export const Primary = () => {
     setClient(client);
   }, []);
 
-  const handleRemoteSource = async (remoteSource: string) => {
+  const onConfigChange = async (remoteSource?: string) => {
     console.log({ remoteSource });
 
     // Create new client instance on remote source change to simulate typical usage.
@@ -41,7 +41,7 @@ export const Primary = () => {
   return (
     <FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
       <ClientProvider client={client}>
-        <Controls onRemoteSource={handleRemoteSource} />
+        <Controls onConfigChange={onConfigChange} />
       </ClientProvider>
     </FullScreen>
   );

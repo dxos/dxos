@@ -85,8 +85,8 @@ export const sections: Section[] = [
     title: 'ECHO',
     items: [
       {
-        id: 'echo.parties',
-        title: 'Parties',
+        id: 'echo.spaces',
+        title: 'Spaces',
         icon: <PartiesIcon />,
         panel: <SpacesPanel />
       },

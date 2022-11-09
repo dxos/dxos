@@ -2,6 +2,7 @@
 position: 3
 label: Spaces
 ---
+# Spaces 
 
 ```tsx
 import { Party } from '@dxos/client';
