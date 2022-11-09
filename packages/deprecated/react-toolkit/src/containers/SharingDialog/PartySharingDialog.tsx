@@ -29,7 +29,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const botClient = useBotFactoryClient(false);
 
   const handleCreateInvitation = async () => {
-    const observable = party!.createInvitation();
+    await party!.createInvitation();
     throw new Error('Not implemented.');
   };
 
