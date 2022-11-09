@@ -1,0 +1,28 @@
+{
+  "name": "@dxos/context",
+  "version": "0.1.2",
+  "description": "Async utils.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "browser": {
+    "node:assert": "assert",
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "assert": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
