@@ -11,7 +11,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
-import { createRpcPlugin } from '@dxos/protocol-plugin-rpc';
+import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -27,6 +27,7 @@ import { InvitationEvents, InvitationsHandler } from './invitations';
  * - Once connected to guest, send the admission offer (e.g., space keys).
  * - Listen for guest's credentials presentation (e.g., device key) then write credentials to the feed.
  *
+ *  TODO(burdon): Update (see below).
  *  [Client] => SpaceInvitationProxy.createInvitation(): Observable
  *    <RPC:InvitationsService>
  *      SpaceInvitationsService => SpaceInvitations.createInvitation(): Observable
@@ -55,7 +56,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
   createInvitation(space: Space): CancellableObservable<InvitationEvents> {
-    let connection: SwarmConnection | undefined;
+    let swarmConnection: SwarmConnection | undefined;
 
     const topic = PublicKey.random();
     const invitation: Invitation = {
@@ -66,22 +67,30 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
     // TODO(burdon): Stop anything pending.
     const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
-      await connection?.close();
+      await swarmConnection?.close();
     });
 
-    const plugin = createRpcPlugin(async (port) => {
+    const complete = new Trigger<PublicKey>();
+    const plugin = new RpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
-        requested: {
-          SpaceGuestService: schema.getService('dxos.halo.invitations.SpaceGuestService')
-        },
         exposed: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
         handlers: {
           SpaceHostService: {
+            // TODO(burdon): Send PIN.
+            requestAdmission: async () => {
+              log('responding with admission offer', { spaceKey: space.key });
+              return {
+                spaceKey: space.key,
+                genesisFeedKey: space.genesisFeedKey
+              };
+            },
+
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
-                log('processing admission request', { identityKey, deviceKey });
+                log('admitting guest', { identityKey, deviceKey });
+                // TODO(burdon): Check if already admitted.
                 await writeMessages(
                   space.controlPipeline.writer,
                   await createAdmissionCredentials(
@@ -93,7 +102,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                     dataFeedKey
                   )
                 );
+
+                complete.wake(identityKey);
               } catch (err) {
+                // TODO(burdon): Generic RPC callback to report error to client.
                 observable.callback.onError(err);
                 throw err; // Propagate error to guest.
               }
@@ -105,15 +117,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
-        log('connected'); // TODO(burdon): Peer id?
+        log('host connected'); // TODO(burdon): Peer id?
         observable.callback.onConnected?.(invitation);
-
-        log('sending admission offer', { spaceKey: space.key });
-        await peer.rpc.SpaceGuestService.presentAdmissionOffer({
-          spaceKey: space.key,
-          genesisFeedKey: space.genesisFeedKey
-        });
-
+        const identityKey = await complete.wait(); // TODO(burdon): Timeout.
+        log('admitted guest', { identityKey });
         observable.callback.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
@@ -121,18 +128,17 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           observableError(observable, err);
         }
       } finally {
+        await sleep(100); // TODO(burdon): Don't close until RPC has complete.
         await peer.close();
-        await sleep(100);
-        await connection!.close();
+        await swarmConnection!.close();
       }
     });
 
     setTimeout(async () => {
-      const peerId = PublicKey.random();
-      connection = await this._networkManager.openSwarmConnection({
+      const peerId = PublicKey.random(); // Use anonymous key.
+      swarmConnection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: topic, // TODO(burdon): Why not use peerId?
-        // peerId,
+        peerId: topic,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
       });
@@ -149,80 +155,81 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
    * which then writes the guest's credentials to the space.
    */
   acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
-    let connection: SwarmConnection | undefined;
+    let swarmConnection: SwarmConnection | undefined;
 
+    // TODO(burdon): Callback for OTP, ec.
     const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
-      await connection?.close();
+      await swarmConnection?.close();
     });
 
-    const admitted = new Trigger<Space>();
+    let connectionCount = 0;
+    const complete = new Trigger();
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         requested: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
-        exposed: {
-          SpaceGuestService: schema.getService('dxos.halo.invitations.SpaceGuestService')
-        },
-        handlers: {
-          SpaceGuestService: {
-            presentAdmissionOffer: async ({ spaceKey, genesisFeedKey }) => {
-              log('processing admission offer', { spaceKey });
-              // Create local space.
-              const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
-
-              // Send local space's details to host (inviter).
-              try {
-                log('sending admission request', { identityKey: invitation.identityKey });
-                await peer.rpc.SpaceHostService.presentAdmissionCredentials({
-                  identityKey: this._signingContext.identityKey,
-                  deviceKey: this._signingContext.deviceKey,
-                  controlFeedKey: space.controlFeedKey,
-                  dataFeedKey: space.dataFeedKey
-                });
-              } catch (err) {
-                // TODO(burdon): Space is orphaned if we crash before other side ACKs. Retry from cold start possible?
-                if (!observable.cancelled) {
-                  log.error(`RPC failed ${err}`);
-                  observableError(observable, err);
-                }
-              }
-
-              admitted.wake(space);
-            }
-          }
-        },
+        // TODO(burdon): Make these optional.
+        exposed: {},
+        handlers: {},
         port
       });
 
-      await peer.open();
-      log('connected'); // TODO(burdon): Peer id?
-      observable.callback.onConnected?.(invitation);
-      await admitted.wait();
-      await peer.close();
+      try {
+        await peer.open();
+        // TODO(burdon): Mitigate bug where guest may create multiple connections.
+        if (++connectionCount > 1) {
+          throw new Error(`multiple connections detected: ${connectionCount}`);
+        }
+
+        log('guest connected'); // TODO(burdon): Peer id?
+        observable.callback.onConnected?.(invitation);
+
+        // 1. Send request.
+        log('sending admission request', { identityKey: this._signingContext.identityKey });
+        const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
+
+        // 2. Create local space.
+        // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
+        const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
+
+        // 3. Send admission credentials to host (with local space keys).
+        log('presenting admission credentials', { spaceKey: space.key, identityKey: this._signingContext.identityKey });
+        await peer.rpc.SpaceHostService.presentAdmissionCredentials({
+          identityKey: this._signingContext.identityKey,
+          deviceKey: this._signingContext.deviceKey,
+          controlFeedKey: space.controlFeedKey,
+          dataFeedKey: space.dataFeedKey
+        });
+
+        // 4. Success.
+        log('admitted by host', { spaceKey: space.key, identityKey: this._signingContext.identityKey });
+        complete.wake();
+      } catch (err) {
+        if (!observable.cancelled) {
+          log.error(`Connection failed ${err}`);
+          observableError(observable, err);
+        }
+      } finally {
+        await peer.close();
+      }
     });
 
     setTimeout(async () => {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
-      const peerId = PublicKey.random();
-      connection = await this._networkManager.openSwarmConnection({
+      const peerId = PublicKey.random(); // Use anonymous key.
+      swarmConnection = await this._networkManager.openSwarmConnection({
         topic,
-        peerId: PublicKey.random(), // TODO(burdon): Why not use peerId?
-        // peerId,
+        peerId: PublicKey.random(),
         protocol: createProtocolFactory(topic, peerId, [plugin]),
         topology: new StarTopology(topic)
       });
 
       observable.callback.onConnecting?.(invitation);
-      const space = await admitted.wait();
-      invitation.spaceKey = space.key;
+      await complete.wait();
       observable.callback.onSuccess(invitation);
-
-      // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
-      //  Implement mechanism for plugin to finalize (or remove itself).
-      await sleep(100);
-      await connection.close();
+      await swarmConnection.close();
     });
 
     return observable;

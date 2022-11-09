@@ -57,11 +57,11 @@ message SpaceAdmissionOffer {
 }
 
 service SpaceHostService {
-  /// Process admission request from guest.
+  /// Process admission request.
+  rpc RequestAdmission(google.protobuf.Empty) returns (SpaceAdmissionOffer);
+
+  /// Process admission credentials.
   rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
 }
 
-service SpaceGuestService {
-  /// Process admission offer from host.
-  rpc PresentAdmissionOffer(SpaceAdmissionOffer) returns (google.protobuf.Empty);
-}
+service SpaceGuestService {}

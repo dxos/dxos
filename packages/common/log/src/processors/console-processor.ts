@@ -3,6 +3,7 @@
 //
 
 import chalk from 'chalk';
+import pickBy from 'lodash.pickby';
 import { inspect } from 'node:util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
@@ -86,7 +87,12 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   if ((context && Object.keys(context).length > 0) || context instanceof Error) {
-    parts.context = inspect(context, false, undefined, true);
+    // Remove undefined fields.
+    // https://nodejs.org/api/util.html#utilinspectobject-options
+    parts.context = inspect(
+      pickBy(context, (value?: unknown) => value !== undefined),
+      { depth: undefined, colors: true, maxArrayLength: 8, sorted: true }
+    );
   }
 
   const line = formatter(config, parts).filter(Boolean).join(' ');
