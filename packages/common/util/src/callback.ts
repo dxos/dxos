@@ -18,7 +18,6 @@ export class Callback<T extends (...args: any[]) => any> {
 
   public call(...args: Parameters<T>): ReturnType<T> {
     assert(this._callback, 'Callback not set');
-
     return this._callback(...args);
   }
 
@@ -35,3 +34,30 @@ export class Callback<T extends (...args: any[]) => any> {
     return !!this._callback;
   }
 }
+
+export type ArrayCallbacks<T> = { handlers: T[] };
+
+/**
+ * Create a fan-out callback handler.
+ * NOTE: Methods cannot return values.
+ */
+export const createArrayDispatch = <T extends {}>({ handlers }: ArrayCallbacks<T>) => {
+  type Obj = { [i: string | symbol]: any };
+  return new Proxy<any>(
+    {
+      handlers
+    },
+    {
+      get: (target: Obj, prop) => {
+        return (...args: any[]) => {
+          handlers.forEach((handler: Obj) => {
+            const method = handler[prop];
+            if (method) {
+              method.apply(handler, args);
+            }
+          });
+        };
+      }
+    }
+  );
+};

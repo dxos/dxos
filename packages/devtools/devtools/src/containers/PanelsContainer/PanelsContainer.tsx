@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 
 import { MessengerModel } from '@dxos/messenger-model';
-import { useClient } from '@dxos/react-client';
+import { useClient, useClientServices } from '@dxos/react-client';
 import { TextModel } from '@dxos/text-model';
 
 export type SectionItem = {
@@ -36,18 +36,22 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   const theme = useTheme();
   const client = useClient();
   const [selected, setSelected] = useState(sections[0]?.items[0]?.id);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
   // TODO(burdon): Factor out.
   // TODO(wittjosiah): Should this only be done in the app?
   useEffect(() => {
-    client.echo.registerModel(TextModel);
-    client.echo.registerModel(MessengerModel);
+    client.echo.modelFactory.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(MessengerModel);
   }, [client]);
 
   useEffect(() => {
-    void client.services.TracingService.setTracingOptions({ enable: true });
+    void services.TracingService.setTracingOptions({ enable: true });
     return () => {
-      void client.services.TracingService.setTracingOptions({ enable: false });
+      void services.TracingService.setTracingOptions({ enable: false });
     };
   }, [client]);
 

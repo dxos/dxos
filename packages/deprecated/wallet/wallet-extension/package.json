@@ -1,0 +1,57 @@
+{
+  "name": "@dxos/wallet-extension",
+  "version": "0.1.2",
+  "private": true,
+  "description": "DXOS Wallet Extension",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "scripts": {
+    "book": "toolchain book",
+    "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist",
+    "bundle": "node scripts/build.js",
+    "check": "true",
+    "test:e2e": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@hot-loader/react-dom": "17.0.2",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/material": "^5.8.1",
+    "react": "^18.2.0",
+    "react-copy-to-clipboard": "^5.1.0",
+    "react-dom": "^18.2.0",
+    "webextension-polyfill": "^0.8.0"
+  },
+  "devDependencies": {
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/faker": "^5.5.9",
+    "@types/react": "^18.0.21",
+    "@types/react-copy-to-clipboard": "~5.0.1",
+    "@types/react-dom": "^18.0.6",
+    "@types/uuid": "~8.3.3",
+    "@types/webextension-polyfill": "^0.8.0",
+    "@types/webpack-env": "^1.16.0",
+    "chalk": "^4.1.0",
+    "copy": "~0.3.2",
+    "faker": "^5.5.3",
+    "rmdir": "~1.2.0",
+    "uuid": "^8.3.2"
+  },
+  "toolchain": {
+    "testingFramework": "mocha"
+  }
+}

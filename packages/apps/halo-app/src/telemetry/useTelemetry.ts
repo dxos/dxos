@@ -24,7 +24,7 @@ export const useTelemetry = () => {
   // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
   const client = useClient();
   const profile = useProfile();
-  const identityId = useMemo(() => profile && humanize(profile.publicKey), [profile]);
+  const identityId = useMemo(() => profile && humanize(profile.identityKey), [profile]);
 
   // TODO(wittjosiah): Store preference for disabling telemetry.
   //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.

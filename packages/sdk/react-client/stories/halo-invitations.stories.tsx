@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { InvitationChallenge, InvitationWrapper } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import { ClientProvider, useClient, useParties, useProfile } from '../src';
@@ -34,13 +34,8 @@ const HaloInvitationContainer = () => {
   const handleCreateInvitation = async () => {
     resetInvitations();
 
-    const invitation = await client.halo.createInvitation();
-    invitation.finished.on(() => resetInvitations());
-    invitation.connected.on(() => {
-      setPin(invitation.secret.toString());
-    });
-
-    setInvitationCode(invitation.encode());
+    // TODO(burdon): Handle observer.
+    await client.halo.createInvitation();
   };
 
   if (!client.halo.profile) {
@@ -71,7 +66,7 @@ const HaloInvitationContainer = () => {
 interface Status {
   error?: any;
   identity?: string;
-  invitation?: InvitationChallenge;
+  invitation?: Invitation;
 }
 
 /**
@@ -83,21 +78,16 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = InvitationWrapper.decode(invitationCode);
-      const invitation = await client.halo.acceptInvitation(invitationDescriptor);
-      setStatus({
-        identity: invitationDescriptor.identityKey?.toString(),
-        invitation
-      });
+      // TODO(burdon): Handle observer.
+      const invitation = InvitationEncoder.decode(invitationCode);
+      client.halo.acceptInvitation(invitation);
     } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });
     }
   };
 
-  const handleAuthenticate = async (pin: string) => {
-    await status.invitation?.authenticate(Buffer.from(pin));
-  };
+  const handleAuthenticate = async (pin: string) => {};
 
   return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
 };

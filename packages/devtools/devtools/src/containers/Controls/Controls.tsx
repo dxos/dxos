@@ -17,7 +17,7 @@ import { ConfigSource } from './ConfigSource';
 import { PartyCard } from './PartyCard';
 
 export type ControlsProps = {
-  onConfigChange: (params: { remoteSource?: string; mode: number }) => void;
+  onConfigChange: (remoteSource?: string) => void;
 };
 
 /**
@@ -41,8 +41,8 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
   };
 
   const handleTestData = async () => {
-    client.echo.registerModel(TextModel);
-    client.echo.registerModel(MessengerModel);
+    client.echo.modelFactory.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(MessengerModel);
 
     // Create party.
     const party = await client.echo.createParty();

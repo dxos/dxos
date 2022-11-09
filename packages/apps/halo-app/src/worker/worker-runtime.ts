@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServiceHost, createNetworkManager } from '@dxos/client';
+import { ClientServicesHost, createNetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
@@ -19,14 +19,14 @@ export type CreateSessionParams = {
 /**
  * Runtime for the shared worker.
  * Manages connections from proxies (in tabs).
- * Tabs make requests to the `ClientServiceHost`, and provide a WebRTC gateway.
+ * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
 export class WorkerRuntime {
   private readonly _transportFactory = new WebRTCTransportProxyFactory();
   private readonly _ready = new Trigger();
   private readonly sessions = new Set<WorkerSession>();
   private _sessionForNetworking?: WorkerSession;
-  private _clientServices!: ClientServiceHost;
+  private _clientServices!: ClientServicesHost;
   private _config!: Config;
 
   // prettier-ignore
@@ -36,7 +36,7 @@ export class WorkerRuntime {
 
   async start() {
     this._config = await this._configProvider();
-    this._clientServices = new ClientServiceHost({
+    this._clientServices = new ClientServicesHost({
       config: this._config,
       networkManager: createNetworkManager(this._config)
     });
@@ -57,9 +57,9 @@ export class WorkerRuntime {
     await this._ready.wait();
 
     const session = new WorkerSession({
+      clientServices: this._clientServices,
       appPort,
-      systemPort,
-      services: this._clientServices.services
+      systemPort
     });
 
     // When tab is closed.

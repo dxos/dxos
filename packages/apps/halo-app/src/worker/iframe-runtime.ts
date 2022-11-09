@@ -16,7 +16,7 @@ export type IframeRuntimeParams = {
 /**
  * Manages the client connection to the shared worker.
  */
-export class IframeRuntime {
+export class IFrameRuntime {
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
   private readonly _transportService = new WebRTCTransportService();
   private readonly _appOrigin: string;

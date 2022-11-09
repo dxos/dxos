@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -x
+
+pnpm nx run-many --target=lint
+pnpm nx run-many --target=build
+pnpm nx run-many --target=test
+pnpm nx run-many --target=test --coverage --xmlReport

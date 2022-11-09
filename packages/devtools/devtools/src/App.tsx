@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client } from '@dxos/client';
+import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
@@ -20,22 +20,19 @@ import { theme } from './theme';
 export const App = () => {
   const [client, setClient] = useState<Client>();
 
-  const onConfigChange = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
-    if (
-      client?.config.values.runtime?.client?.mode === mode &&
-      client?.config.values.runtime?.client?.remoteSource === remoteSource
-    ) {
+  const onConfigChange = async (remoteSource?: string) => {
+    if (client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
 
     const remoteSourceConfig = {
       runtime: {
         client: {
-          remoteSource,
-          mode
+          remoteSource
         }
       }
     };
+
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
 
     {
@@ -43,16 +40,14 @@ export const App = () => {
         setClient(undefined);
         await client.destroy();
       }
-      const newClient = new Client(config);
+      const newClient = new Client({ config, services: remoteSource ? fromIFrame(config) : fromDefaults(config) });
       await newClient.initialize();
       setClient(newClient);
     }
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange({
-      mode: 1
-    });
+    await onConfigChange();
   }, []);
 
   if (!client) {

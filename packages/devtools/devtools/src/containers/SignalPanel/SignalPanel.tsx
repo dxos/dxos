@@ -34,6 +34,10 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 
 export const SignalPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), {});
   const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace(), {});
   if (!servers || !events) {

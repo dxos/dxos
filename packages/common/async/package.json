@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
+    "@dxos/util": "workspace:*",
     "assert": "^2.0.0"
   },
   "devDependencies": {

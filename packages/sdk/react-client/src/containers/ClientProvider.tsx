@@ -85,13 +85,13 @@ export const ClientProvider = ({
       };
 
       if (clientProvider) {
-        // Asynchornously request client.
+        // Asynchronously request client.
         const client = await getAsyncValue(clientProvider);
         await done(client);
       } else {
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
-        const client = new Client(config, options);
+        const client = new Client({ config });
         await client.initialize();
         await done(client);
       }
@@ -102,5 +102,10 @@ export const ClientProvider = ({
     return fallback as JSX.Element;
   }
 
-  return <ClientContext.Provider value={{ client }}>{children}</ClientContext.Provider>;
+  // prettier-ignore
+  return (
+    <ClientContext.Provider value={{ client }}>
+      {children}
+    </ClientContext.Provider>
+  );
 };

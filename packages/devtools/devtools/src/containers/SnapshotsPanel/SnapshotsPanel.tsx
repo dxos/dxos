@@ -15,6 +15,10 @@ import { KeySelect, Panel } from '../../components';
 
 export const SnapshotsPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const parties = useParties();
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [snapshot, setSnapshot] = useState<PartySnapshot>();
@@ -41,32 +45,25 @@ export const SnapshotsPanel = () => {
   };
 
   return (
-    <Panel controls={(
-      <>
-        <Toolbar>
-          <Button
-            variant='outlined'
-            onClick={handleSaveSnapshot}
-            disabled={!selectedPartyKey}
-          >
-            Save Snapshot
-          </Button>
-          <Button onClick={handleClearSnapshots}>
-            Delete Snapshots
-          </Button>
-        </Toolbar>
-        <KeySelect
-          label='Party'
-          keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={handlePartyChange}
-        />
-      </>
-    )}>
-      <JsonTreeView
-        size='small'
-        data={snapshot}
-      />
+    <Panel
+      controls={
+        <>
+          <Toolbar>
+            <Button variant='outlined' onClick={handleSaveSnapshot} disabled={!selectedPartyKey}>
+              Save Snapshot
+            </Button>
+            <Button onClick={handleClearSnapshots}>Delete Snapshots</Button>
+          </Toolbar>
+          <KeySelect
+            label='Party'
+            keys={parties.map(({ key }) => key)}
+            selected={selectedPartyKey}
+            onChange={handlePartyChange}
+          />
+        </>
+      }
+    >
+      <JsonTreeView size='small' data={snapshot} />
     </Panel>
   );
 };

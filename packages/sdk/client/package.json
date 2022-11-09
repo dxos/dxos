@@ -10,6 +10,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
+    "node:util": "util",
     "./dist/src/index.js": "./dist/browser/index.js"
   },
   "types": "dist/src/index.d.ts",
@@ -38,7 +39,9 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "readable-stream": "^3.6.0"
+    "json-stable-stringify": "^1.0.1",
+    "readable-stream": "^3.6.0",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@dxos/credentials": "workspace:*",
@@ -52,6 +55,8 @@
     "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
+    "@types/json-stable-stringify": "^1.0.32",
+    "@types/node": "^18.11.9",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
   },

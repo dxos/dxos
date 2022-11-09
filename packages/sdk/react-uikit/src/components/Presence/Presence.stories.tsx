@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultTestingConfig, InvitationWrapper, Party } from '@dxos/client';
+import { defaultConfig, invitationObservable, InvitationEncoder, Party } from '@dxos/client';
 import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -27,7 +27,6 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
   const [profile, setProfile] = useState(() => client.halo.profile);
 
   useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
-
   useEffect(() => {
     if (client && !profile) {
       void client.halo.createProfile();
@@ -46,7 +45,7 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={defaultTestingConfig}>
+    <ClientProvider config={defaultConfig}>
       <Story />
     </ClientProvider>
   )
@@ -55,10 +54,10 @@ Default.decorators = [
 const SharingTemplate = () => {
   return (
     <>
-      <ClientProvider config={defaultTestingConfig}>
+      <ClientProvider config={defaultConfig}>
         <Template />
       </ClientProvider>
-      <ClientProvider config={defaultTestingConfig}>
+      <ClientProvider config={defaultConfig}>
         <Group label={{ children: 'Joiner' }} className='w-1/2'>
           <JoinPanel />
         </Group>
@@ -71,21 +70,18 @@ const SharingTemplate = () => {
 const JoinPanel = () => {
   const client = useClient();
   const profile = useProfile();
-  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
+  const [_secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
   const [invitationCode, setInvitationCode] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [showPin, setShowPin] = useState(false);
 
   const handleInvite = async () => {
-    const invitation = InvitationWrapper.decode(invitationCode);
     setShowPin(true);
-    console.log({ invitation });
-    const acceptedInvitation = await client.halo.acceptInvitation(invitation);
-    console.log({ acceptedInvitation });
-    const secret = await secretProvider();
-    console.log({ secret });
-    await acceptedInvitation.authenticate(secret);
-    console.log('accepted');
+    // TODO(burdon): Authenticate.
+    const observable = await client.halo.acceptInvitation(InvitationEncoder.decode(invitationCode));
+    await invitationObservable(observable);
+    // const secret = await secretProvider();
+    // await acceptedInvitation.authenticate(secret);
   };
 
   const handlePin = () => {
@@ -93,7 +89,7 @@ const JoinPanel = () => {
   };
 
   if (profile) {
-    return <>{humanize(profile.publicKey)}</>;
+    return <>{humanize(profile.identityKey)}</>;
   }
 
   if (showPin) {

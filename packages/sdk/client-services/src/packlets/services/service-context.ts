@@ -2,22 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
   valueEncoding,
-  DataService,
+  DataServiceSubscriptions,
   MetadataStore,
   SpaceManager,
   SigningContext
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -25,7 +22,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, InvitationWrapper, SpaceInvitations } from '../invitations';
+import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
 
 /**
  * Shared backend for all client services.
@@ -33,10 +30,7 @@ import { HaloInvitations, InvitationWrapper, SpaceInvitations } from '../invitat
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
-
-  // TODO(burdon): Factor out with other services.
-  public readonly dataService = new DataService();
-
+  public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
@@ -45,7 +39,7 @@ export class ServiceContext {
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public spaceInvitations?: SpaceInvitations;
+  public spaceInvitations?: SpaceInvitationsHandler;
 
   // prettier-ignore
   constructor(
@@ -95,29 +89,15 @@ export class ServiceContext {
     await this.spaceManager?.close();
     await this.feedStore.close();
     await this.networkManager.destroy(); // TODO(burdon): Close.
+    this.dataServiceSubscriptions.clear();
     log('closed');
   }
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
+    this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
-  }
-
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void): Promise<InvitationWrapper> {
-    assert(this.spaceManager);
-    assert(this.spaceInvitations);
-
-    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    const invitation = await this.spaceInvitations.createInvitation(space, { onFinish });
-    return InvitationWrapper.fromProto(invitation);
-  }
-
-  async acceptInvitation(invitationDescriptor: InvitationWrapper) {
-    assert(this.spaceInvitations);
-
-    return this.spaceInvitations.acceptInvitation(invitationDescriptor.toProto());
   }
 
   private async _initialize() {
@@ -136,16 +116,14 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       keyring: this.keyring,
-      dataService: this.dataService,
+      dataServiceSubscriptions: this.dataServiceSubscriptions,
       modelFactory: this.modelFactory,
       signingContext
     });
 
     await spaceManager.open();
-
     this.spaceManager = spaceManager;
-    this.spaceInvitations = new SpaceInvitations(this.spaceManager, this.networkManager, signingContext);
-
+    this.spaceInvitations = new SpaceInvitationsHandler(this.spaceManager, this.networkManager, signingContext);
     this.initialized.wake();
   }
 }

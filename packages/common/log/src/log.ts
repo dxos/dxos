@@ -66,7 +66,7 @@ const createLog = (): LogImp => {
  * Global logging function.
  */
 // TODO(burdon): Instance loggers? (e.g., provide additional displayed logging context/filtering).
-export const log = ((globalThis as any).dx_log ??= createLog());
+export const log: Log = ((globalThis as any).dx_log ??= createLog());
 
 declare global {
   // eslint-disable-next-line camelcase

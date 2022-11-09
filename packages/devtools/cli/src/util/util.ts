@@ -4,7 +4,7 @@
 
 import { CliUx } from '@oclif/core';
 
-import { Party } from '@dxos/client';
+import { Party, PartyMember } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
@@ -61,22 +61,22 @@ export const printSpaces = (parties: Party[], flags = {}) => {
 //
 
 // TODO(burdon): Export proto type.
-export const mapMembers = (members: any, truncateKeys = false) => {
-  return members.map((member: any) => ({
-    key: maybeTruncateKey(member.publicKey, truncateKeys),
-    name: member.displayName // TODO(burdon): Reconcile with username during HALO create.
+export const mapMembers = (members: PartyMember[], truncateKeys = false) => {
+  return members.map((member) => ({
+    key: maybeTruncateKey(member.identityKey, truncateKeys),
+    name: member.profile?.displayName
   }));
 };
 
-export const printMembers = (members: any, flags = {}) => {
+export const printMembers = (members: PartyMember[], flags = {}) => {
   CliUx.ux.table(
     mapMembers(members, true),
     {
       key: {
-        header: 'Member key'
+        header: 'Identity key'
       },
       name: {
-        header: 'Username'
+        header: 'Display name'
       }
     },
     {

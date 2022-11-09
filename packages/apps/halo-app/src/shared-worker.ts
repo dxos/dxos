@@ -3,28 +3,27 @@
 //
 
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
 import { WorkerRuntime } from './worker/worker-runtime';
 
-const workerRuntime = new WorkerRuntime(
-  async () =>
-    new Config(await Dynamics(), Defaults(), {
-      runtime: {
-        client: {
-          // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite.
-          //  Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
-          mode: 1 /* local */
-        }
-      }
-    })
+log.config({ filter: 'info' });
+
+const workerRuntime = new WorkerRuntime(async () => new Config(await Dynamics(), Defaults()));
+
+const start = Date.now();
+void workerRuntime.start().then(
+  () => {
+    log.info('worker ready', { initTimeMs: Date.now() - start });
+  },
+  (err) => {
+    log.catch(err);
+  }
 );
 
-void workerRuntime.start().catch((err) => {
-  console.error(err);
-});
-
 onconnect = async (event) => {
+  log.info('onconnect', { event });
   const muxer = new PortMuxer(event.ports[0]);
 
   await workerRuntime.createSession({

@@ -10,6 +10,10 @@ import { SpaceTable } from '../../components';
 
 export const SpacesPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const { parties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
   if (parties === undefined) {
     return null;

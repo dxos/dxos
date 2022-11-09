@@ -5,7 +5,7 @@
 import { CliUx, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationWrapper } from '@dxos/client';
+import { Client, invitationObservable, InvitationEncoder } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';
@@ -34,12 +34,10 @@ export default class Join extends BaseCommand {
     }
 
     return await this.execWithClient(async (client: Client) => {
-      const invitation = client.echo.acceptInvitation(InvitationWrapper.decode(encoded!));
-      await invitation.authenticate(Buffer.from(secret!));
-
-      // TODO(burdon): Change blocking call in API.
       CliUx.ux.action.start('Waiting for peer to connect');
-      const party = await invitation.getParty();
+      const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
+      const invitation = await invitationObservable(observable);
+      const party = client.echo.getParty(invitation.spaceKey!)!;
       CliUx.ux.action.stop();
 
       const { value: members } = party.queryMembers();

@@ -38,8 +38,8 @@ const main = async () => {
       description: 'Debug mode (run in-memory)',
       type: 'boolean'
     })
-    .option('username', {
-      description: 'Create initial profile',
+    .option('displayName', {
+      description: 'Create initial display name',
       type: 'string'
     })
     .option('skip-version-check', {
@@ -51,12 +51,12 @@ const main = async () => {
       command: '*',
       handler: async ({
         config: configFile,
-        username,
+        displayName,
         debug,
         skipVersionCheck
       }: {
         config: string;
-        username: string;
+        displayName: string;
         debug: boolean;
         skipVersionCheck: boolean;
       }) => {
@@ -71,11 +71,11 @@ const main = async () => {
 
         // Create client.
         const config: ConfigProto = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigProto;
-        const client = new Client(config);
+        const client = new Client({ config });
         await client.initialize();
 
-        if (username) {
-          await client.halo.createProfile({ username });
+        if (displayName) {
+          await client.halo.createProfile({ displayName });
         }
 
         clear();

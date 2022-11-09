@@ -203,7 +203,6 @@ describe('NetworkManager', function () {
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       const service = createProtoRpcPeer({
-        requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },

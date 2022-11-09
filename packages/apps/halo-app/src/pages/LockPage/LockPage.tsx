@@ -42,7 +42,7 @@ export const LockPage = () => {
         <>
           <p className='text-center'>
             {t('using halo as message', {
-              displayName: profile.username ?? humanize(profile.publicKey)
+              displayName: profile.displayName ?? humanize(profile.identityKey)
             })}
           </p>
         </>

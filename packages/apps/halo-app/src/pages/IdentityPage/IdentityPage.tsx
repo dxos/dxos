@@ -12,27 +12,27 @@ import { humanize } from '@dxos/util';
 export const IdentityPage = () => {
   const client = useClient();
   const profile = useProfile();
-  const [username, setUsername] = useState(profile?.username ?? '');
+  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const { t } = useTranslation('halo');
 
-  const confirmString = humanize(profile!.publicKey.toHex());
+  const confirmString = humanize(profile!.identityKey.toHex());
 
   return (
     <main className='flex flex-col items-center max-is-lg mli-auto pli-7'>
       {/* TODO(wittjosiah): Update with device invite. */}
       <QrCode label={t('copy qrcode label')} value='https://halo.dxos.org' side='left' />
       <Input
-        label={t('username label', { ns: 'uikit' })}
-        initialValue={username}
-        onChange={(nextValue) => setUsername(nextValue)}
+        label={t('displayName label', { ns: 'uikit' })}
+        initialValue={displayName}
+        onChange={(nextValue) => setDisplayName(nextValue)}
         className='w-full'
       />
-      {/* TODO(wittjosiah): Allow updating username. */}
-      {/* {username !== profile?.username && (
+      {/* TODO(wittjosiah): Allow updating displayName. */}
+      {/* {displayName !== profile?.displayName && (
           <Button
             variant='outlined'
             fullWidth
-            onClick={() => client.halo.setGlobalPreference('username', username)}
+            onClick={() => client.halo.setGlobalPreference('displayName', displayName)}
           >Update</Button>
         )} */}
       <AlertDialog

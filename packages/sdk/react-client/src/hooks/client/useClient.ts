@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { ClientContext } from './context';
+import { ClientContext } from './client-context';
 
 /**
  * Hook returning instance of DXOS client.
