@@ -13,6 +13,7 @@ export * from './Heading';
 export * from './Loading';
 export * from './Input';
 export * from './NavMenu';
+export * from './PinInput';
 export * from './Popover';
 export * from './QrCode';
 export * from './Tag';

@@ -970,6 +970,7 @@ importers:
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       qrcode.react: ^3.1.0
+      rci: ^0.0.3
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
@@ -996,6 +997,7 @@ importers:
       jdenticon: 3.2.0
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
+      rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       tailwindcss: 3.1.8
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
@@ -24216,7 +24218,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -27484,6 +27486,17 @@ packages:
       minimist: 1.2.7
       strip-json-comments: 2.0.1
     dev: true
+
+  /rci/0.0.3_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Rs71aR0YL/8pVNKkGLpTQgPOgn0vPelxzTmP2rChF3Ac30nzROVasilAWbONn5rzwm+1yp23SHyS/IsIU1Wnjw==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      use-code-input: 0.0.2_biqbaboplfbrettd7655fr4n2y
+    dev: false
 
   /react-copy-to-clipboard/5.1.0_react@18.2.0:
     resolution: {integrity: sha512-k61RsNgAayIJNoy9yDsYzDe/yAZAzEbEgcz3DZMhF686LEyukcE1hzurxe85JandPUG+yTfGVFzuEw3xt8WP/A==}
@@ -31402,6 +31415,16 @@ packages:
       '@types/react': 18.0.21
       react: 18.2.0
       tslib: 2.4.0
+    dev: false
+
+  /use-code-input/0.0.2_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-lDIUiRca0K8sF+c/KZ9cz5g6oPqlFiTmaDgwGzg0wlNSnFAvROtweKy0XpihEWJwo2tjETtgAxIh82RVGaBFHQ==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /use-isomorphic-layout-effect/1.1.2_iapumuv4e6jcjznwuxpf4tt22e:

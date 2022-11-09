@@ -7,15 +7,8 @@ import React, { ChangeEvent, ComponentProps, ReactNode, useCallback, useState, u
 
 import { useId } from '../../hooks';
 import { MessageValence } from '../../props';
-import {
-  defaultDescription,
-  defaultDisabled,
-  defaultFocus,
-  defaultHover,
-  defaultPlaceholder,
-  valenceColorText,
-  valenceInputBorder
-} from '../../styles';
+import { defaultDescription, valenceColorText } from '../../styles';
+import { defaultInput } from '../../styles/input';
 
 export type InputSize = 'md' | 'lg';
 
@@ -32,10 +25,10 @@ export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onC
   validationValence?: MessageValence;
 }
 
-const sizeMap = new Map<InputSize, string>([
-  ['md', ''],
-  ['lg', 'text-base']
-]);
+const sizeMap: Record<InputSize, string> = {
+  md: 'text-sm',
+  lg: 'text-base'
+};
 
 export const Input = ({
   label,
@@ -90,13 +83,9 @@ export const Input = ({
         id={inputId}
         {...inputProps}
         className={cx(
-          defaultFocus,
-          defaultPlaceholder,
-          defaultHover({ disabled }),
-          sizeMap.get(size ?? 'md'),
-          'bg-white/50 border text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:text-white',
-          valenceInputBorder(validationMessage ? validationValence : undefined),
-          disabled && defaultDisabled
+          defaultInput({ disabled, ...(validationMessage && { validationValence }) }),
+          'block w-full px-2.5 py-2',
+          sizeMap[size ?? 'md']
         )}
         {...(required && { required: true })}
         {...(disabled && { disabled: true })}

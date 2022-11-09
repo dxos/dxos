@@ -3,3 +3,4 @@
 //
 
 export * from './useId';
+export * from './useForwardedRef';
