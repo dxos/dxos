@@ -12,6 +12,7 @@ import yaml from 'yaml';
 import { hideBin } from 'yargs/helpers';
 import { logger } from './logger';
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
+import { loadInputs } from './loadInputs';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
 
@@ -102,29 +103,10 @@ const main = async () => {
           filter ? `filter: '${filter}'` : '',
           exclude ? ` exclude: '${exclude}'` : ''
         );
-        const loadInput = async (input: string): Promise<object> => {
-          if (!input) return {};
-          const parts = input.split(',');
-          const load = async (file: string) => {
-            if (!file) return {};
-            const isYaml = /\.ya?ml$/.test(file);
-            const isJSON = /\.json$/.test(file);
-            const content = (await fs.readFile(file)).toString();
-            return isYaml
-              ? yaml.parse(content)
-              : isJSON
-              ? JSON.parse(content)
-              : {
-                  error: `invalid file type ${file}`
-                };
-          };
-          const loadedParts = await Promise.all(parts.map(load));
-          return loadedParts.reduce((memo, next) => merge(memo, next), {});
-        };
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: await loadInput(input),
+          input: await loadInputs(input.split(','), { relativeTo: output }),
           filterGlob: glob,
           filterRegEx: filter ? new RegExp(filter) : undefined,
           filterExclude: exclude ? new RegExp(exclude) : undefined,

@@ -1,7 +1,9 @@
 import yargs from 'yargs';
+import { executeDirectoryTemplate, loadInputs } from '@dxos/plate';
 import { hideBin } from 'yargs/helpers';
 import minimatch from 'minimatch';
 import readDir from 'recursive-readdir';
+import path from 'path';
 
 const main = async () => {
   yargs(hideBin(process.argv))
@@ -10,10 +12,21 @@ const main = async () => {
       command: '*',
       describe: 'conform packages specified by glob',
       handler: async ({ _ }) => {
-        const glob = _?.[0] as string ?? '**/package.json';
+        const glob = (_?.[0] as string) ?? '**/package.json';
         const dirContents = await readDir(process.cwd(), [(file) => /node_modules/.test(file)]);
-        const packages = dirContents.filter((file) => minimatch(file, glob));
-        console.log(packages);
+        const packages = dirContents.filter((file) => minimatch(file, glob)).map((pkg) => path.dirname(pkg));
+        const promises = packages.map(async (pkg) =>
+          executeDirectoryTemplate({
+            outputDirectory: pkg,
+            templateDirectory: path.resolve(__dirname, './template'),
+            input: await loadInputs(['package.json', 'README.yml'], {
+              relativeTo: pkg
+            })
+          })
+        );
+        console.log(`conforming ${packages.length} packages ...`);
+        await Promise.all(promises);
+        console.log('conforming packages done');
       }
     })
     .help().argv;
