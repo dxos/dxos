@@ -55,7 +55,7 @@
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/json-stable-stringify": "^1.0.32",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
   },

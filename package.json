@@ -70,7 +70,7 @@
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/sharedworker": "0.0.80",
     "@types/uuid": "~8.3.3",
