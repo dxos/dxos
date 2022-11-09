@@ -8,7 +8,6 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { TextModel } from '@dxos/text-model';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
@@ -82,24 +81,17 @@ export class ClientServicesHost implements ClientServicesProvider {
     return this._serviceRegistry.services;
   }
 
-  // TODO(burdon): Remove.
-  createPeer(port: RpcPort): ProtoRpcPeer<ClientServices> {
-    return createProtoRpcPeer({
-      exposed: this._serviceRegistry.descriptors,
-      handlers: this._serviceRegistry.services,
-      port
-    });
-  }
-
   async open() {
-    log('opening...');
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('opening...', { deviceKey });
     await this._serviceContext.open();
-    log('opened');
+    log('opened', { deviceKey });
   }
 
   async close() {
-    log('closing...');
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('closing...', { deviceKey });
     await this._serviceContext.close();
-    log('closed');
+    log('closed', { deviceKey });
   }
 }

@@ -34,17 +34,19 @@ const createLog = (): LogImp => {
 
   log._config = getConfig();
 
+  // Set config.
   log.config = (options: LogOptions) => {
     log._config = getConfig(options);
   };
+
+  // TODO(burdon): API to set context and separate error object.
+  //  E.g., log.warn('failed', { key: 123 }, err);
 
   log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
   log.info = (...params) => processLog(LogLevel.INFO, ...params);
   log.warn = (...params) => processLog(LogLevel.WARN, ...params);
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
-
-  // TODO(burdon): Option to display/hide stack.
-  log.catch = (error: Error, context, meta) => processLog(LogLevel.ERROR, String(error.stack), context, meta, error);
+  log.catch = (error: Error, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta, error);
 
   /**
    * Process the current log call.
