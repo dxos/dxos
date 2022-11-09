@@ -1,7 +1,7 @@
 export type Input = {
   name: string;
   description: string;
-  installCommand: string;
+  install: string;
   usage: string;
   quickStartUrl: string;
   guideUrl: string;

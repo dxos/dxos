@@ -5,10 +5,12 @@
 //
 
 import { promises as fs } from 'fs';
-import * as process from 'process';
+import process from 'process';
 import yargs from 'yargs';
+import merge from 'lodash.merge';
+import yaml from 'yaml';
 import { hideBin } from 'yargs/helpers';
-
+import { logger } from './logger';
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
@@ -30,6 +32,32 @@ const main = async () => {
       requiresArg: true,
       type: 'string'
     })
+    .option('filter', {
+      description: 'Filter the template files by regular expression string',
+      requiresArg: false,
+      type: 'string'
+    })
+    .option('exclude', {
+      description: 'A regex to exclude entries from the template',
+      requiresArg: false,
+      type: 'string'
+    })
+    .option('glob', {
+      description: 'Filter the template files by glob expression string',
+      requiresArg: false,
+      type: 'string'
+    })
+    .option('sequential', {
+      description: 'Run templates one after the other instead of in parallel',
+      requiresArg: false,
+      type: 'boolean'
+    })
+    .option('verbose', {
+      description: 'Print debugging information',
+      requiresArg: false,
+      type: 'boolean',
+      alias: ['-v']
+    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -37,35 +65,74 @@ const main = async () => {
         _,
         dry,
         input,
-        output = process.cwd()
+        output = process.cwd(),
+        filter,
+        glob,
+        exclude,
+        sequential = false,
+        verbose = false
       }: {
         _: string[];
         dry: boolean;
         input: string;
         output: string;
+        filter: string;
+        glob: string;
+        exclude: string;
+        sequential: boolean;
+        verbose: boolean;
       }) => {
         const tstart = Date.now();
+        const debug = logger(verbose);
         const [template] = _;
         if (!template) {
           throw new Error('no template specified');
         }
-        console.log('working directory', process.cwd());
-        console.log(`executing template '${template}'...`);
+        debug('working directory', process.cwd());
+        debug(
+          `executing template '${template}'...`,
+          filter ? `filter: '${filter}'` : '',
+          exclude ? ` exclude: '${exclude}'` : ''
+        );
+        const loadInput = async (input: string): Promise<object> => {
+          if (!input) return {};
+          const parts = input.split(',');
+          const load = async (file: string) => {
+            if (!file) return {};
+            const isYaml = /\.ya?ml$/.test(file);
+            const isJSON = /\.json$/.test(file);
+            const content = (await fs.readFile(file)).toString();
+            return isYaml
+              ? yaml.parse(content)
+              : isJSON
+              ? JSON.parse(content)
+              : {
+                  error: `invalid file type ${file}`
+                };
+          };
+          const loadedParts = await Promise.all(parts.map(load));
+          return loadedParts.reduce((memo, next) => merge(memo, next), {});
+        };
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {}
+          input: await loadInput(input),
+          filterGlob: glob,
+          filterRegEx: filter ? new RegExp(filter) : undefined,
+          filterExclude: exclude ? new RegExp(exclude) : undefined,
+          parallel: !sequential,
+          verbose
         });
         if (!dry) {
-          console.log(`output folder: ${output}`);
-          console.log(`writing ${files.length} files...`);
+          debug(`output folder: ${output}`);
+          debug(`writing ${files.length} files...`);
           await Promise.all(
             files.map(async (f) => {
               try {
                 await f.save();
                 console.log('wrote', f.shortDescription(process.cwd()));
               } catch (err: any) {
-                console.warn('skipped', f.shortDescription(process.cwd()));
+                debug('skipped', f.shortDescription(process.cwd()));
               }
             })
           );

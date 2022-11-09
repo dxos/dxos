@@ -6,7 +6,7 @@ import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';
 
-import { File, MaybePromise, promise } from './file';
+import { File, getFileType, MaybePromise, promise } from './file';
 
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -98,7 +98,7 @@ export const executeFileTemplate = async <TInput>(
     );
     return typeof result === 'string'
       ? [
-          new File({
+          new (getFileType(nominalOutputPath))({
             content: result,
             path: nominalOutputPath
           })

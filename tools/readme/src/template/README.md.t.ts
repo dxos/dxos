@@ -6,7 +6,7 @@ const template: TemplateFunction<Input> = ({ input }) => {
     name,
     description,
     usage,
-    installCommand,
+    install,
     quickStartUrl,
     guideUrl,
     apiReferenceUrl,
@@ -19,24 +19,25 @@ const template: TemplateFunction<Input> = ({ input }) => {
 
   ## Installation
   \`\`\`bash
-  ${installCommand}
+  ${install}
   \`\`\`
 
   ## Usage
   ${usage}
 
   ## Documentation
-  ${quickStartUrl && `- [Quick Start](${quickStartUrl})`}
-  ${guideUrl && `- [Developer Guide](${guideUrl})`}
+  ${quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`}
+  ${guideUrl && `- [📖 Developer Guide](${guideUrl})`}
   ${apiReferenceUrl && `- [API Reference](${apiReferenceUrl})`}
   ${dependencyDiagramUrl && `- [Dependency Diagram](${dependencyDiagramUrl})`}
   ${codeCoverageUrl && `- [Code coverage report](${codeCoverageUrl})`}
 
   ## Resources
-  - DXOS [Website](https://dxos.org)
-  - DXOS [Blog](https://blog.dxos.org)
-  - DXOS [Roadmap](https://dxos.org/roadmap)
-  - DXOS [Events calendar](https://dxos.org/events)
+  - [Website](https://dxos.org)
+  - [Developer Documentation](https://docs.dxos.org)
+  - [Blog](https://blog.dxos.org)
+  - [Roadmap](https://docs.dxos.org/roadmap)
+  - [Events calendar](https://blog.dxos.org/events)
   - Hang out with the community on [Discord](https://dxos.org/discord)
   - Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with \`#dxos\`
   - Tag us on twitter [\`@dxos\`](https://twitter.com/dxos)
@@ -44,7 +45,7 @@ const template: TemplateFunction<Input> = ({ input }) => {
   ## Contributions
   Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](), the [issue guide](), and the [PR contribution guide](). If you would like to contribute to the design and implementation of DXOS, please [start here]().
 
-  [License: MIT](LICENSE.md) Copyright 2022 © DXOS
+  License: [MIT](./LICENSE.md) Copyright 2022 © DXOS
   `;
 };
 

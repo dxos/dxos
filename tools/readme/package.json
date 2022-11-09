@@ -1,10 +1,10 @@
 {
   "name": "@dxos/readme",
   "version": "0.1.0",
-  "description": "template for DXOS readme files",
+  "description": "A utility for templating readme files",
   "main": "bin/index.js",
   "scripts": {
-    "dev": "plate ./src/template"
+    "dev": "plate ./src/template --input ./package.json,./README.yml --output ."
   },
   "license": "MIT",
   "dependencies": {
