@@ -199,15 +199,12 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         });
 
         // 4. Success.
-        observable.callback.onSuccess(invitation);
         complete.wake();
       } catch (err) {
         if (!observable.cancelled) {
           log.error(`Connection failed ${err}`);
           observableError(observable, err);
         }
-
-        complete.wake(); // TODO(burdon): Timeout.
       } finally {
         await peer.close();
       }
@@ -227,6 +224,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       observable.callback.onConnecting?.(invitation);
       await complete.wait();
+      observable.callback.onSuccess(invitation);
 
       // TODO(burdon): Wait for other side to complete (otherwise immediately kills RPC).
       //  Implement mechanism for plugin to finalize (or remove itself).
