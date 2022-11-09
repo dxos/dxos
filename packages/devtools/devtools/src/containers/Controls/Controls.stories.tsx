@@ -16,13 +16,7 @@ export default {
 };
 
 const initClient = async () => {
-  const client = new Client({
-    runtime: {
-      client: {
-        mode: 1 /* local */
-      }
-    }
-  });
+  const client = new Client();
   await client.initialize();
   return client;
 };
