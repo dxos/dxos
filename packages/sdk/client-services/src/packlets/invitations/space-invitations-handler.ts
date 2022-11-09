@@ -95,6 +95,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                 );
               } catch (err) {
                 observable.callback.onError(err);
+                throw err; // Propagate error to guest.
               }
             }
           }
@@ -102,11 +103,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         port
       });
 
-      await peer.open();
-      log('connected'); // TODO(burdon): Peer id?
-      observable.callback.onConnected?.(invitation);
-
       try {
+        await peer.open();
+        log('connected'); // TODO(burdon): Peer id?
+        observable.callback.onConnected?.(invitation);
+
         log('sending admission offer', { spaceKey: space.key });
         await peer.rpc.SpaceGuestService.presentAdmissionOffer({
           spaceKey: space.key,
@@ -119,11 +120,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           log.error('RPC failed', err);
           observableError(observable, err);
         }
+      } finally {
+        await peer.close();
+        await sleep(100);
+        await connection!.close();
       }
-
-      await peer.close();
-      await sleep(100);
-      await connection!.close();
     });
 
     setTimeout(async () => {

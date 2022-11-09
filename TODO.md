@@ -8,6 +8,7 @@ Staging area for internal work-in-progress (written-up into GH issues).
 
 ## Client Services
 
+- [ ] Fix "double connect" mesh bug.
 - [ ] Replace service host proxy with getters for InvitationService.
 - [ ] RPC Streams error handling https://github.com/dxos/dxos/issues/1766.
 - [ ] Propagate error from `createRpcPlugin`.
