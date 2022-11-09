@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { ResourceSet } from '@dxos/registry-client';
@@ -27,8 +28,14 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const invitations = usePartyInvitations(partyKey);
   const botClient = useBotFactoryClient(false);
 
-  const handleInvitation = async () => {
+  const handleCreateInvitation = async () => {
     await party!.createInvitation();
+    throw new Error('Not implemented.');
+  };
+
+  const handleCancelInvitation = async (invitation: Invitation) => {
+    // TODO(burdon): Get observable from useInvitations.
+    throw new Error('Not implemented.');
   };
 
   const handleBotInvitation = botClient
@@ -47,8 +54,8 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
       title='Party Sharing'
       members={members}
       invitations={invitations}
-      onCreateInvitation={handleInvitation}
-      onCancelInvitation={(invitation) => invitation.cancel()}
+      onCreateInvitation={handleCreateInvitation}
+      onCancelInvitation={handleCancelInvitation}
       onCreateBotInvitation={handleBotInvitation}
     />
   );

@@ -17,7 +17,7 @@ export const setupWindowListeners = (client: Client) => {
   const getIdentifier = () => {
     const profile = client.halo.profile;
     if (profile) {
-      humanize(profile.publicKey);
+      humanize(profile.identityKey);
     }
 
     return undefined;

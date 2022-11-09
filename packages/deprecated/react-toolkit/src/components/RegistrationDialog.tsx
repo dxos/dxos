@@ -15,7 +15,7 @@ import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
 export enum RegistrationStage {
   START,
   RESTORE,
-  ENTER_USERNAME,
+  ENTER_DISPLAY_NAME,
   SHOW_SEED_PHRASE,
   CHECK_SEED_PHRASE
 }
@@ -42,7 +42,7 @@ export interface RegistrationDialogProps {
   modal?: boolean;
   debug?: boolean;
   onRestore: (seedPhrase: string) => void; // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void;
+  onComplete: (seedPhrase: string, displayName: string) => void;
   onJoinHalo?: () => void;
 }
 
@@ -63,8 +63,8 @@ export const RegistrationDialog = ({
   const [error, setError] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [seedPhrase] = useState(generateSeedPhrase());
-  const [username, setUsername] = useState('');
-  const usernameRef = useRef<HTMLInputElement>();
+  const [displayName, setDisplayName] = useState('');
+  const displayNameRef = useRef<HTMLInputElement>();
   const seedphraseRef = useRef<HTMLInputElement>();
   const seedRefs = [...new Array(numSeedWordTests)].map(() => useRef<HTMLInputElement>());
   const [seedWords, seedWordTestIndexes] = useMemo(() => useSeedWords(seedPhrase, numSeedWordTests), [seedPhrase]);
@@ -95,10 +95,10 @@ export const RegistrationDialog = ({
     setProcessing(false);
 
     switch (stage) {
-      case RegistrationStage.ENTER_USERNAME: {
-        const value = usernameRef.current!.value.trim();
+      case RegistrationStage.ENTER_DISPLAY_NAME: {
+        const value = displayNameRef.current!.value.trim();
         if (value.length > 0) {
-          setUsername(value);
+          setDisplayName(value);
           setStage(RegistrationStage.SHOW_SEED_PHRASE);
         }
         break;
@@ -109,7 +109,7 @@ export const RegistrationDialog = ({
           setStage(RegistrationStage.CHECK_SEED_PHRASE);
         } else {
           setProcessing(true);
-          await onComplete(seedPhrase, username);
+          await onComplete(seedPhrase, displayName);
           setProcessing(false);
         }
         break;
@@ -124,7 +124,7 @@ export const RegistrationDialog = ({
         const skipMatch = debug || event.shiftKey || !!isMobile;
         if (match || skipMatch) {
           setProcessing(true);
-          await onComplete(seedPhrase, username);
+          await onComplete(seedPhrase, displayName);
           setProcessing(false);
         } else {
           setStage(RegistrationStage.SHOW_SEED_PHRASE);
@@ -150,7 +150,7 @@ export const RegistrationDialog = ({
       }
 
       default: {
-        setStage(RegistrationStage.ENTER_USERNAME);
+        setStage(RegistrationStage.ENTER_DISPLAY_NAME);
       }
     }
   };
@@ -243,7 +243,7 @@ export const RegistrationDialog = ({
                   <Button
                     variant='contained'
                     color='primary'
-                    onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}
+                    onClick={() => setStage(RegistrationStage.ENTER_DISPLAY_NAME)}
                   >
                     Create Profile
                   </Button>
@@ -305,7 +305,7 @@ export const RegistrationDialog = ({
         };
       }
 
-      case RegistrationStage.ENTER_USERNAME: {
+      case RegistrationStage.ENTER_DISPLAY_NAME: {
         return {
           title: 'Create your profile',
           content: (
@@ -314,9 +314,9 @@ export const RegistrationDialog = ({
                 autoFocus
                 fullWidth
                 spellCheck={false}
-                inputRef={usernameRef}
+                inputRef={displayNameRef}
                 onKeyDown={handleKeyDown}
-                placeholder='Enter a username.'
+                placeholder='Enter your display name.'
               />
             </Box>
           ),
@@ -354,7 +354,7 @@ export const RegistrationDialog = ({
             <Box sx={{ display: 'flex', flex: 1 }}>
               <Button onClick={() => handleDownloadSeedPhrase(seedPhrase)}>Download</Button>
               <Box sx={{ flex: 1 }} />
-              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_DISPLAY_NAME)}>
                 Back
               </Button>
               <Button variant='contained' color='primary' onClick={handleNext}>
@@ -390,7 +390,7 @@ export const RegistrationDialog = ({
           ),
           actions: (
             <>
-              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_USERNAME)}>
+              <Button color='primary' onClick={() => setStage(RegistrationStage.ENTER_DISPLAY_NAME)}>
                 Back
               </Button>
               <Button variant='contained' color='primary' onClick={handleNext}>

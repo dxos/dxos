@@ -2,55 +2,112 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ClientServiceProvider } from '@dxos/client-services';
+import { Event } from '@dxos/async';
+import {
+  ClientServicesProvider,
+  ClientServicesProxy,
+  InvitationObservable,
+  ObservableInvitation,
+  SpaceInvitationsProxy
+} from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { Party as PartyType, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
-import { InvitationProxy } from './invitation-proxy';
-import { ClientServiceProxy } from './service-proxy';
-import { PARTY_ITEM_TYPE } from './stubs';
+export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
 
-export type ActivationOptions = any;
+// TODO(burdon): Rename Space.
+// TODO(burdon): Separate public API form implementation (move comments here).
+export interface Party {
+  get key(): PublicKey;
+  get isOpen(): boolean;
+  get isActive(): boolean;
+  get invitations(): ObservableInvitation[];
 
-/**
- * Main public Party API.
- * Proxies requests to local/remove services.
- */
+  // TODO(burdon): Verbs should be on same interface.
+  get database(): Database;
+  get select(): Database['select'];
+  get reduce(): Database['reduce'];
+
+  // TODO(burdon): Rename open/close.
+  initialize(): Promise<void>;
+  destroy(): Promise<void>;
+
+  open(): Promise<void>;
+  close(): Promise<void>;
+
+  /**
+   * @deprecated
+   */
+  setActive(active: boolean): Promise<void>;
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Change to `space.properties.title`.
+  setTitle(title: string): Promise<void>;
+  /**
+   * @deprecated
+   */
+  getTitle(): string;
+  /**
+   * @deprecated
+   */
+  getDetails(): Promise<PartyDetails>;
+  /**
+   * @deprecated
+   */
+  get properties(): ObjectProperties;
+  /**
+   * @deprecated
+   */
+  setProperty(key: string, value?: any): Promise<void>;
+  /**
+   * @deprecated
+   */
+  getProperty(key: string, defaultValue?: any): any;
+
+  queryMembers(): ResultSet<PartyMember>;
+  createInvitation(): Promise<ObservableInvitation>;
+
+  createSnapshot(): Promise<PartySnapshot>;
+}
+
 export class PartyProxy implements Party {
   private readonly _database?: Database;
-  private readonly _invitationProxy = new InvitationProxy();
+  private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
+
+  private readonly _invitations: ObservableInvitation[] = [];
+  public readonly invitationsUpdate = new Event<InvitationObservable>();
 
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
   private _item?: Item<ObjectModel>;
 
-  /**
-   * @internal
-   */
+  // prettier-ignore
   constructor(
-    private _serviceProvider: ClientServiceProvider,
+    private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
-    party: PartyProto,
-    memberKey: PublicKey
+    private _party: PartyType,
+    memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
-    this._key = party.publicKey;
-    this._isOpen = party.isOpen;
-    this._isActive = party.isActive;
-    if (!party.isOpen) {
+    // TODO(burdon): Don't shadow properties.
+    this._key = this._party.publicKey;
+    this._isOpen = this._party.isOpen;
+    this._isActive = this._party.isActive;
+    if (!this._party.isOpen) { // TODO(burdon): Assert?
       return;
     }
 
-    // if (true) { // TODO: Always run database in remote mode for now.
+    // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
+      new RemoteDatabaseBackend(this._clientServices.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
@@ -62,11 +119,6 @@ export class PartyProxy implements Party {
     // }
   }
 
-  // TODO(burdon): Getter required by react hook.
-  get invitationProxy() {
-    return this._invitationProxy;
-  }
-
   get key() {
     return this._key;
   }
@@ -75,6 +127,7 @@ export class PartyProxy implements Party {
     return this._isOpen;
   }
 
+  // TODO(burdon): Remove (depends on properties).
   get isActive() {
     return this._isActive;
   }
@@ -91,6 +144,7 @@ export class PartyProxy implements Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
+  // TODO(burdon): Remove (use database).
   get select(): Database['select'] {
     return this.database.select.bind(this.database);
   }
@@ -98,6 +152,7 @@ export class PartyProxy implements Party {
   /**
    * Returns a selection context, which can be used to traverse the object graph.
    */
+  // TODO(burdon): Remove (use database).
   get reduce(): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }
@@ -106,7 +161,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy open.
    */
   async initialize() {
-    // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+    // if (this._database && this._serviceProvider instanceof ClientServicesProxy) {
     await this._database!.initialize();
     // }
 
@@ -118,7 +173,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy close.
    */
   async destroy() {
-    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+    if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
   }
@@ -132,20 +187,19 @@ export class PartyProxy implements Party {
   }
 
   async getDetails(): Promise<PartyDetails> {
-    return this._serviceProvider.services.PartyService.getPartyDetails({
+    return this._clientServices.services.PartyService.getPartyDetails({
       partyKey: this._key
     });
   }
 
   async _setOpen(open: boolean) {
-    await this._serviceProvider.services.PartyService.setPartyState({
+    await this._clientServices.services.PartyService.setPartyState({
       partyKey: this.key,
       open
     });
   }
 
-  // TODO(burdon): Requires comment.
-  async setActive(active: boolean, options: ActivationOptions) {
+  async setActive(active: boolean) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
     // await this._serviceProvider.services.PartyService.setPartyState({
@@ -155,11 +209,12 @@ export class PartyProxy implements Party {
     // });
   }
 
-  /**
-   * TODO: Currently broken.
-   */
   get properties(): ObjectProperties {
     return this._item!.model;
+  }
+
+  get invitations() {
+    return this._invitations;
   }
 
   /**
@@ -197,27 +252,33 @@ export class PartyProxy implements Party {
   // TODO(burdon): Don't expose result object and provide type.
   queryMembers() {
     return streamToResultSet(
-      this._serviceProvider.services.PartyService.subscribeMembers({
-        partyKey: this.key
-      }),
+      this._clientServices.services.PartyService.subscribeMembers({ partyKey: this.key }),
       (response) => response?.members ?? []
     );
   }
 
   /**
-   * Creates an invitation to a given party.
-   * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `invitee_key` can be provide to not require the secret exchange.
-   * The invitation flow is protected by a generated pin code.
-   *
-   * To be used with `client.echo.acceptInvitation` on the invitee side.
-   *
-   * @param inviteeKey Public key of the invitee. In this case no secret exchange is required,
-   *   but only the specified recipient can accept the invitation.
+   * Creates an interactive invitation.
    */
-  async createInvitation({ inviteeKey }: CreationInvitationOptions = {}): Promise<InvitationRequest> {
-    const stream = this._serviceProvider.services.PartyService.createInvitation({ partyKey: this.key, inviteeKey });
-    return this._invitationProxy.createInvitationRequest({ stream });
+  async createInvitation() {
+    return new Promise<ObservableInvitation>((resolve, reject) => {
+      const invitation = this._invitationProxy.createInvitation(this.key);
+      this._invitations.push(invitation);
+      const unsubscribe = invitation.subscribe({
+        onConnecting: () => {
+          this.invitationsUpdate.emit(invitation);
+          resolve(invitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
   }
 
   /**
@@ -232,7 +293,7 @@ export class PartyProxy implements Party {
    * Called by EchoProxy to update this party instance.
    * @internal
    */
-  _processPartyUpdate(party: PartyProto) {
+  _processPartyUpdate(party: PartyType) {
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;

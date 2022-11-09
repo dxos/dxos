@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.1.2",
+  "version": "0.1.0",
   "description": "Vite plugin which configures a low-level design system for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

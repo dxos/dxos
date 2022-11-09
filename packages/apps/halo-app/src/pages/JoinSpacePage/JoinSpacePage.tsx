@@ -25,7 +25,7 @@ export const JoinSpacePage = () => {
       <JoinSpacePanel
         initialInvitationCode={invitationParam ?? undefined}
         parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-        onJoin={(space) => navigate(`/spaces/${space.key.toHex()}`)}
+        onJoin={(space) => navigate(`/spaces/${space.toHex()}`)}
       />
     </main>
   );

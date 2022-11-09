@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+// TODO(burdon): Remove (create wrapper class).
 export { generateSeedPhrase } from '@dxos/credentials';
+export { PublicKey } from '@dxos/keys';
 
 export {
   TYPE_SCHEMA,
@@ -20,28 +22,31 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
+// TODO(burdon): Export form `@dxos/echo-db`.
+export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
+
+//
+// Protobuf definitions.
+//
+
 export {
-  clientServiceBundle,
-  ClientServiceHost,
-  ClientServices,
-  createNetworkManager,
-  InvitationWrapper
+  ClientServicesHost,
+  ClientServicesProvider,
+  invitationObservable,
+  InvitationEvents,
+  InvitationEncoder,
+  ObservableInvitation
 } from '@dxos/client-services';
 
-export { PublicKey } from '@dxos/keys';
+export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export { ItemID } from '@dxos/protocols';
-
-// TODO(burdon): Remove exported protos?
+// TODO(burdon): Remove.
 export { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
-export { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
-
-export { ObjectModel, OrderedList } from '@dxos/object-model';
-
-// TODO(wittjosiah): Remove.
-export { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
-
-export * from './packlets/api';
+// TODO(burdon): Cherry-pick developer-facings APIs.
+export * from './packlets/client';
+export * from './packlets/devtools';
 export * from './packlets/proxies';
-// export * from './packlets/devtools';
+export * from './packlets/testing';

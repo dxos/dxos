@@ -19,7 +19,7 @@ describe('Schemas', function () {
   beforeEach(async function () {
     client = new Client();
     await client.initialize();
-    await client.halo.createProfile({ username: 'test-user' });
+    await client.halo.createProfile({ displayName: 'test-user' });
     party = await client.echo.createParty();
     builder = new SchemaBuilder(party.database);
   });

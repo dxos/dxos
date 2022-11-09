@@ -100,6 +100,11 @@ export class ExtensionInit extends Extension {
         throw new Error('Connection closed during handshake.');
       }
     } catch (err: any) {
+      if (this.closing) {
+        // Ignore error if closing.
+        return;
+      }
+
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }

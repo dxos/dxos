@@ -25,6 +25,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",

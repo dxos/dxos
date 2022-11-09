@@ -97,7 +97,7 @@ export class Extension extends Nanomessage {
 
     this[kCodec] = patchBufferCodec(codec);
 
-    this.on('error', (err: any) => log.error(err));
+    this.on('error', (err) => log.warn(err));
   }
 
   get name() {
@@ -198,6 +198,8 @@ export class Extension extends Nanomessage {
       assert(this._protocol);
       if (this._protocol.stream.destroyed) {
         throw new ERR_PROTOCOL_STREAM_CLOSED();
+        // this.emit('error', new ERR_PROTOCOL_STREAM_CLOSED());
+        // return await this.close();
       }
 
       if (this._handshakeHandler) {
@@ -210,8 +212,6 @@ export class Extension extends Nanomessage {
 
   /**
    * Feed event.
-   *
-   * @param {Buffer} discoveryKey
    */
   async onFeed(discoveryKey: Buffer) {
     try {
@@ -247,7 +247,6 @@ export class Extension extends Nanomessage {
     }
 
     const builtMessage = buildMessage(message);
-
     if (options.oneway) {
       return super.send(builtMessage);
     }
@@ -260,6 +259,11 @@ export class Extension extends Nanomessage {
 
       return { response };
     } catch (err: any) {
+      if (this.closing) {
+        // Ignore error if closing.
+        return;
+      }
+
       if (ERR_EXTENSION_RESPONSE_FAILED.equals(err)) {
         throw err;
       } else if (NMSG_ERR_TIMEOUT.equals(err)) {

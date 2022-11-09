@@ -11,13 +11,13 @@ export default class Create extends BaseCommand {
   static override description = 'Create HALO.';
   static override args = [
     {
-      name: 'username'
+      name: 'displayName'
     }
   ];
 
   async run(): Promise<any> {
     const { args } = await this.parse(Create);
-    const { username } = args; // TODO(burdon): Prompt.
+    const { displayName } = args; // TODO(burdon): Prompt.
 
     return await this.execWithClient(async (client: Client) => {
       let profile = client.halo.profile;
@@ -25,9 +25,9 @@ export default class Create extends BaseCommand {
         this.log('Profile already initialized.'); // TODO(burdon): Return as error?
       } else {
         const seedphrase = generateSeedPhrase();
-        profile = await client.halo.createProfile({ seedphrase, username });
+        profile = await client.halo.createProfile({ seedphrase, displayName });
         this.log(`IMPORTANT: Record your recover seed phrase:\n[${seedphrase}]`);
-        return { seedphrase, username: profile.username };
+        return { seedphrase, displayName };
       }
     });
   }

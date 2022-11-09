@@ -23,9 +23,9 @@ export class TestBuilder {
     await client.initialize();
     expect(client.initialized).toBeTruthy();
 
-    await client.halo.createProfile({ username: 'test-user' });
-    // const { username } = client.halo.profile!;
-    // expect(username).toEqual('test-user');
+    await client.halo.createProfile({ displayName: 'test-user' });
+    // const { displayName } = client.halo.profile!;
+    // expect(displayName).toEqual('test-user');
 
     this._client = client;
   }
@@ -44,7 +44,7 @@ export class TestBuilder {
 
     await party.destroy();
     // TODO(burdon): Party and Database doesn't match.
-    //  party.destroy not called until ClientServiceProxy.
+    //  party.destroy not called until ClientServicesProxy.
     // console.log(party.database.state);
     // expect(party.is_active).toBeFalsy();
 

@@ -54,7 +54,7 @@ export class Orchestrator {
       }
     });
 
-    this._client = new Client(this._config);
+    this._client = new Client({ config: this._config });
     await this._client.initialize();
     await this._client.halo.createProfile();
     this._party = await this._client.echo.createParty();

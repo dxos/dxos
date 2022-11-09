@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { PartyMember } from '@dxos/client';
+import { Contact } from '@dxos/client';
 
 import { useClient } from '../client';
 
@@ -15,7 +15,7 @@ import { useClient } from '../client';
  */
 export const useContacts = () => {
   const client = useClient();
-  const [contacts, setContacts] = useState<PartyMember[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
     const result = client.halo.queryContacts();
