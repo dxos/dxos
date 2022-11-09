@@ -80,7 +80,7 @@ const HaloAuthenticationContainer = () => {
     try {
       // TODO(burdon): Handle observer.
       const invitation = InvitationEncoder.decode(invitationCode);
-      client.halo.acceptInvitation(invitation);
+      await client.halo.acceptInvitation(invitation);
     } catch (err: any) {
       // TODO(burdon): Doesn't support retry. Provide hint (eg, should retry/cancel).
       setStatus({ error: err });

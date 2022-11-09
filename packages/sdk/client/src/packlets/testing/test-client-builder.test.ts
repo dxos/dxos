@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import { expect } from 'chai';
-import { Party } from 'packages/sdk/client/src/packlets/proxies';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
@@ -13,6 +12,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
+import { Party } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
 
 // TODO(burdon): Use as set-up for test suite.
