@@ -35,7 +35,7 @@ export default class Join extends BaseCommand {
 
     return await this.execWithClient(async (client: Client) => {
       CliUx.ux.action.start('Waiting for peer to connect');
-      const observable = client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
+      const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
       const invitation = await invitationObservable(observable);
       const party = client.echo.getParty(invitation.spaceKey!)!;
       CliUx.ux.action.stop();

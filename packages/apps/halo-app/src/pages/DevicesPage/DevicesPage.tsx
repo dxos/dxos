@@ -5,9 +5,10 @@
 import { Plus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
+import { ObservableInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
-import { Button, useTranslation, getSize, ObservableInvitation } from '@dxos/react-uikit';
+import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
 import { DeviceList, InvitationList, HeadingWithActions } from '../../components';
 
@@ -20,9 +21,7 @@ export const DevicesPage = () => {
 
   const onCreateInvitation = useCallback(() => {
     setCreatingInvitation(true);
-    void (client.halo.createInvitation() as unknown as Promise<ObservableInvitation>).finally(() =>
-      setCreatingInvitation(false)
-    );
+    void client.halo.createInvitation().finally(() => setCreatingInvitation(false));
   }, []);
 
   return (

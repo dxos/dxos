@@ -5,7 +5,8 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { defaultDisabled, Group, ObservableInvitation, useTranslation } from '@dxos/react-uikit';
+import { ObservableInvitation } from '@dxos/client';
+import { defaultDisabled, Group, useTranslation } from '@dxos/react-uikit';
 
 import { PendingInvitation } from './PendingInvitation';
 

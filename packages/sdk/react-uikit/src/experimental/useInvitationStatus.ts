@@ -4,12 +4,8 @@
 
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
-import { CancellableObservable, TimeoutError } from '@dxos/async';
-import { PublicKey, Invitation, InvitationEvents, InvitationEncoder } from '@dxos/client';
-
-export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
-  get invitation(): Invitation | undefined;
-}
+import { TimeoutError } from '@dxos/async';
+import { PublicKey, Invitation, InvitationEncoder, ObservableInvitation } from '@dxos/client';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;

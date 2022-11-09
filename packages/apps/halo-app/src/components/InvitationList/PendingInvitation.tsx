@@ -7,7 +7,7 @@ import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationEncoder } from '@dxos/client';
+import { InvitationEncoder, ObservableInvitation } from '@dxos/client';
 import {
   Avatar,
   QrCode,
@@ -17,8 +17,7 @@ import {
   Loading,
   getSize,
   useInvitationStatus,
-  InvitationStatus,
-  ObservableInvitation
+  InvitationStatus
 } from '@dxos/react-uikit';
 
 import { HeadingWithActions } from '../HeadingWithActions';

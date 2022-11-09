@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, PublicKey } from '@dxos/client';
+import { InvitationEncoder, ObservableInvitation, PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-import { useInvitationStatus, InvitationState, ObservableInvitation, InvitationStatus } from '../../experimental';
+import { useInvitationStatus, InvitationState, InvitationStatus } from '../../experimental';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
@@ -44,12 +44,9 @@ const JoinStep1 = ({
 
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
 
-  const onConnectNext = useCallback(() => {
-    connect(
-      client.echo.acceptInvitation(
-        InvitationEncoder.decode(parseInvitation(invitationCode))
-      ) as unknown as ObservableInvitation
-    );
+  const onConnectNext = useCallback(async () => {
+    const invitation = await client.echo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    connect(invitation);
   }, [invitationCode]);
 
   useEffect(() => {

@@ -464,7 +464,6 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
@@ -499,7 +498,6 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
-      '@dxos/log': link:../../../common/log
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-composer': link:../../patterns/react-composer

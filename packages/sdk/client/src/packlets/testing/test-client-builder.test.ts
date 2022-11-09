@@ -118,8 +118,8 @@ describe('Client services', function () {
     const party = await client1.echo.createParty();
     const observable1 = await party.createInvitation();
     observable1.subscribe({
-      onConnecting: (invitation) => {
-        const observable2 = client2.echo.acceptInvitation(invitation);
+      onConnecting: async (invitation) => {
+        const observable2 = await client2.echo.acceptInvitation(invitation);
         observable2.subscribe({
           onSuccess: (invitation) => {
             success2.wake(invitation);

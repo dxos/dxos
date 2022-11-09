@@ -5,15 +5,14 @@
 import { Box, Text, useStdout } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { CancellableObservable } from '@dxos/async';
-import { InvitationEvents, InvitationEncoder, Invitation } from '@dxos/client';
+import { InvitationEncoder, Invitation, ObservableInvitation } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
 import { clear, copyToClipboard } from '../../util';
 import { ActionStatus, StatusState } from '../util';
 
 export const Share: FC<{
-  onCreate: () => CancellableObservable<InvitationEvents>;
+  onCreate: () => Promise<ObservableInvitation>;
 }> = ({ onCreate }) => {
   const isMounted = useMounted();
   const [invitation, setInvitation] = useState<Invitation>();
