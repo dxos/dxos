@@ -7,9 +7,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert",
-  },
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
@@ -19,8 +16,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*",
-    "assert": "^2.0.0"
+    "@dxos/log": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
