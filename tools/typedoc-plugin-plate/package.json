@@ -9,7 +9,7 @@
   "main": "dist/src/index.js",
   "devDependencies": {
     "@dxos/plate": "workspace:*",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@vuepress/client": "^2.0.0-beta.53",
     "change-case": "^4.1.2",
     "typedoc": "0.23.15",
