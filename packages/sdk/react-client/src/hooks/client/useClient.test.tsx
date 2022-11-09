@@ -33,7 +33,7 @@ describe('Client hook', function () {
         }
 
         override componentDidCatch(err: Error) {
-          log.error(err);
+          log.catch(err);
           error = err;
         }
 

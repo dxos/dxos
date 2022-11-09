@@ -20,7 +20,7 @@ export const JoinPartyDialog = ({ onJoin, ...props }: JoinPartyDialogProps) => {
   const client = useClient();
 
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    const observable = client.echo.acceptInvitation(invitation);
+    const observable = await client.echo.acceptInvitation(invitation);
     await invitationObservable(observable);
     // acceptedInvitation.authenticate(await secretProvider());
     // const party = await acceptedInvitation.getParty();

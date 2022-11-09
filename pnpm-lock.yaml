@@ -269,7 +269,6 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -310,7 +309,6 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -468,7 +466,6 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
-      '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
@@ -503,7 +500,6 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
-      '@dxos/log': link:../../../common/log
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-composer': link:../../patterns/react-composer
@@ -3260,6 +3256,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/level-js': ~4.0.1
@@ -3291,6 +3288,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0

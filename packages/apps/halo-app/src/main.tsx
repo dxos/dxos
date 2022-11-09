@@ -13,7 +13,7 @@ import { FatalError } from './components';
 // import { log } from '@dxos/log'
 
 // debug.enable('dxos:*')
-// log.config.filter='debug'
+// log.config({ filter: 'debug' })
 
 const root = createRoot(document.getElementById('root')!);
 

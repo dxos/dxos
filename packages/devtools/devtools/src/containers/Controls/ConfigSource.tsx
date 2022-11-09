@@ -11,7 +11,7 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
-  onConfigChange: (params: { remoteSource?: string; mode: number }) => void;
+  onConfigChange: (remoteSource?: string) => void;
 };
 
 export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
@@ -20,15 +20,15 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
     client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
   );
 
-  const [mode, setMode] = useState(client.config.get('runtime.client.mode') ?? 1); // local = 1, remote = 2
+  const [remote, setRemote] = useState(Boolean(client.config.get('runtime.client.remoteSource')));
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMode(event.target.checked ? 2 : 1);
+    setRemote(event.target.checked);
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange({ remoteSource: mode === 2 ? remoteSource : undefined, mode });
-  }, [mode, remoteSource]);
+    await onConfigChange(remote ? remoteSource : undefined);
+  }, [remote, remoteSource]);
 
   return (
     <Card sx={{ margin: 1 }}>
@@ -38,7 +38,7 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
           display: 'flex'
         }}
       >
-        <FormControlLabel control={<Switch checked={mode === 2} onChange={onChange} />} label='Remote' />
+        <FormControlLabel control={<Switch checked={remote} onChange={onChange} />} label='Remote' />
         <TextField
           label='Remote Source'
           variant='standard'
@@ -46,12 +46,7 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
           value={remoteSource}
           onChange={(event) => setRemoteSource(event.target.value)}
         />
-        <Button
-          disabled={mode === 1}
-          variant='contained'
-          onClick={() => onConfigChange({ remoteSource, mode })}
-          sx={{ marginLeft: 1 }}
-        >
+        <Button disabled={!remote} variant='contained' onClick={() => onConfigChange()} sx={{ marginLeft: 1 }}>
           Set
         </Button>
       </Box>

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesHost, ClientServicesProvider } from '@dxos/client-services';
+import { ClientServicesHost, ClientServicesProvider } from '@dxos/client';
 import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';

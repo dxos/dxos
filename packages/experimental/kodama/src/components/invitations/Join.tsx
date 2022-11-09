@@ -19,14 +19,14 @@ export const Join: FC<{
   const [focused, setFocused] = useState(false);
   const [invitationCode, setInvitationCode] = useState<string>();
   const [secret, setSecret] = useState<string>();
-  const [invitation, setInvitation] = useState<Invitation>();
+  const [invitation, _setInvitation] = useState<Invitation>();
   const [status, setStatus] = useState<StatusState>();
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const party = useParty(partyKey);
 
-  const handleDecode = () => {
+  const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
-    const observable = client.echo.acceptInvitation(invitation);
+    const observable = await client.echo.acceptInvitation(invitation);
     observable.subscribe({
       onSuccess: (invitation: Invitation) => {
         setPartyKey(invitation.spaceKey);

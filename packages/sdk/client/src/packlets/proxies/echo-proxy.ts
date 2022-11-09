@@ -4,11 +4,11 @@
 
 import { inspect } from 'node:util';
 
-import { CancellableObservable, Event, EventSubscriptions, latch } from '@dxos/async';
+import { Event, EventSubscriptions, latch } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationEvents,
+  ObservableInvitation,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
@@ -30,7 +30,7 @@ export interface Echo {
   cloneParty(snapshot: PartySnapshot): Promise<Party>;
   getParty(partyKey: PublicKey): Party | undefined;
   queryParties(): ResultSet<Party>;
-  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
+  acceptInvitation(invitation: Invitation): Promise<ObservableInvitation>;
 }
 
 export class EchoProxy implements Echo {
@@ -200,7 +200,23 @@ export class EchoProxy implements Echo {
   /**
    * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
-    return this._invitationProxy.acceptInvitation(invitation);
+  acceptInvitation(invitation: Invitation): Promise<ObservableInvitation> {
+    return new Promise<ObservableInvitation>((resolve, reject) => {
+      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation);
+      // TODO(wittjosiah): Same as party.createInvitation, factor out?
+      const unsubscribe = acceptedInvitation.subscribe({
+        onConnecting: () => {
+          resolve(acceptedInvitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
   }
 }

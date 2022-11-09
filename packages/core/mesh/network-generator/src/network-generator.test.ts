@@ -43,7 +43,7 @@ describe('NetworkGenerator', function () {
       createPeer: async (id) => ({ id, name: `peer${id}` })
     });
 
-    generator.error.on((err) => log.error(err));
+    generator.error.on((err) => log.catch(err));
 
     const network = await generator.grid(10, 10);
     expect(network.peers.length).to.equal(100);
@@ -57,7 +57,7 @@ describe('NetworkGenerator', function () {
       createConnection: async (fromPeer, toPeer) => new PassThrough()
     });
 
-    generator.error.on((err) => log.error(err));
+    generator.error.on((err) => log.catch(err));
 
     const network = await generator.balancedBinTree(2);
     expect(network.peers.length).to.equal(7);
@@ -75,7 +75,7 @@ describe('NetworkGenerator', function () {
       createConnection: async (fromPeer, toPeer) => new PassThrough()
     });
 
-    generator.error.on((err) => log.error(err));
+    generator.error.on((err) => log.catch(err));
 
     const network = await generator.noLinks();
     expect(network.peers.length).to.equal(0);

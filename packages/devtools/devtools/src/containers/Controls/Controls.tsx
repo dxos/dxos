@@ -17,7 +17,7 @@ import { ConfigSource } from './ConfigSource';
 import { PartyCard } from './PartyCard';
 
 export type ControlsProps = {
-  onConfigChange: (params: { remoteSource?: string; mode: number }) => void;
+  onConfigChange: (remoteSource?: string) => void;
 };
 
 /**

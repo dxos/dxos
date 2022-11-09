@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
-
 import { expect } from 'chai';
 
+import { Trigger } from '@dxos/async';
 import { ClientServicesProxy } from '@dxos/client-services';
+import { raise } from '@dxos/debug';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -87,8 +88,53 @@ describe('Client services', function () {
         await client2a.halo.createProfile();
       }
     }
+  });
 
-    // TODO(burdon): Test party invitations.
+  it('exchanges party invitations between two peers', async function () {
+    const testBuilder = new TestClientBuilder();
+
+    // TODO(wittjosiah): Factor out to builder?
+    const peer1 = testBuilder.createClientServicesHost();
+    await peer1.open();
+    afterTest(() => peer1.close());
+    const [client1, server1] = testBuilder.createClientServer(peer1);
+    void server1.open();
+    await client1.initialize();
+    afterTest(() => Promise.all([client1.destroy(), server1.close()]));
+    await client1.halo.createProfile();
+
+    const peer2 = testBuilder.createClientServicesHost();
+    await peer2.open();
+    afterTest(() => peer2.close());
+    const [client2, server2] = testBuilder.createClientServer(peer2);
+    void server2.open();
+    await client2.initialize();
+    afterTest(() => Promise.all([client2.destroy(), server2.close()]));
+    await client2.halo.createProfile();
+
+    const success1 = new Trigger<Invitation>();
+    const success2 = new Trigger<Invitation>();
+
+    const party = await client1.echo.createParty();
+    const observable1 = await party.createInvitation();
+    const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
+
+    observable1.subscribe({
+      onSuccess: (invitation) => {
+        success1.wake(invitation);
+      },
+      onError: (err) => raise(err)
+    });
+    observable2.subscribe({
+      onSuccess: (invitation) => {
+        success2.wake(invitation);
+      },
+      onError: (err) => raise(err)
+    });
+
+    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
+    expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
+    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
   });
 
   // TODO(burdon): Browser-only.
