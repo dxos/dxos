@@ -63,7 +63,7 @@
     "protocols": "packages/core/protocols",
     "protocols-toolchain": "tools/deprecated/protocols-toolchain",
     "random-access-storage": "packages/common/random-access-storage",
-    "readme": "tools/readme",
+    "conform": "tools/conform",
     "react-appkit": "packages/apps/patterns/react-appkit",
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",

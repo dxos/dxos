@@ -116,23 +116,18 @@ export class File<D = string> {
     if (this.isCopy() && !this.transform) {
       await mkdirp(path.dirname(this.path));
       await fs.copyFile(this.copyFrom!, this.path);
+      return this;
     } else {
       await this.ensureLoaded();
       const serialized = await this.serialize();
       if (typeof serialized !== 'undefined') {
         if (!this.allowOverwrite) {
           const exists = await fileExists(this.path);
-          if (exists) {
-            throw new Error('file save failed, file exists: ' + this.path);
-          }
+          if (exists) return undefined;
         }
-        try {
-          await mkdirp(path.dirname(this.path));
-          await fs.writeFile(this.path, serialized);
-          return this;
-        } catch (err) {
-          console.error(err);
-        }
+        await mkdirp(path.dirname(this.path));
+        await fs.writeFile(this.path, serialized);
+        return this;
       }
     }
   }

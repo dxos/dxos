@@ -1,0 +1,18 @@
+{
+  "name": "@dxos/conform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A utility for conforming files across packages in a monorepo",
+  "main": "bin/index.js",
+  "bin": {
+    "conform": "dist/main.js"
+  },
+  "scripts": {
+    "dev": "plate ./src/template --input ./package.json,./README.yml --output ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@dxos/plate": "workspace:*",
+    "yargs": "~16.2.0"
+  }
+}

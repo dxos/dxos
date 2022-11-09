@@ -84,6 +84,7 @@ const main = async () => {
       }) => {
         const tstart = Date.now();
         const debug = logger(verbose);
+        const info = logger(true); // !quiet later
         const [template] = _;
         if (!template) {
           throw new Error('no template specified');
@@ -125,14 +126,16 @@ const main = async () => {
         });
         if (!dry) {
           debug(`output folder: ${output}`);
-          debug(`writing ${files.length} files...`);
+          info(`template generated ${files.length} files ...`);
+          let written = 0;
           await Promise.all(
             files.map(async (f) => {
               try {
-                await f.save();
-                console.log('wrote', f.shortDescription(process.cwd()));
+                const saved = await f.save();
+                info(!!saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
+                written += !!saved ? 1 : 0;
               } catch (err: any) {
-                debug('skipped', f.shortDescription(process.cwd()));
+                debug('failed', f.shortDescription(process.cwd()));
               }
             })
           );

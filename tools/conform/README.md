@@ -1,25 +1,25 @@
-# @dxos/readme
+# @dxos/conform
 
-A utility for templating readme files
+A utility for conforming files across packages in a monorepo
 
 ## Installation
 
 ```bash
-pnpm i @dxos/readme
+pnpm i @dxos/conform
 ```
 
 ## Usage
 
 The template is provided in `src/template` which can be executed with the `plate` executable from `@dxos/plate`. See the `dev` script in this package.
-Execute with:
+Execute conforming the conform package itself with:
 
 ```bash
-pnpm nx dev readme
+pnpm nx dev conform
 ```
 
 ## Documentation
 
-- [API Reference](https://docs.dxos.org/api/@dxos/readme)
+- [API Reference](https://docs.dxos.org/api/@dxos/conform)
 
 ## Resources
 

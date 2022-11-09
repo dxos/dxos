@@ -6,10 +6,10 @@ const template: TemplateFunction<Input> = ({ input }) => {
     name,
     description,
     usage,
-    install,
+    install = `pnpm i ${input?.name}`,
     quickStartUrl,
     guideUrl,
-    apiReferenceUrl,
+    apiReferenceUrl = `https://docs.dxos.org/api/${input?.name}`,
     dependencyDiagramUrl,
     codeCoverageUrl
   } = { ...input };

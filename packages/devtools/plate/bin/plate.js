@@ -4,4 +4,4 @@
 // Copyright 2022 DXOS.org
 //
 
-require('../dist/src/plate.js');
+require('../dist/src/main.js');

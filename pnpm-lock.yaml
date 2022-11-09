@@ -3653,6 +3653,14 @@ importers:
       '@types/jscodeshift': 0.11.5
       typescript: 4.8.4
 
+  tools/conform:
+    specifiers:
+      '@dxos/plate': workspace:*
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/plate': link:../../packages/devtools/plate
+      yargs: 16.2.0
+
   tools/deprecated/protocols-toolchain:
     specifiers:
       '@dxos/toolchain-node-library': workspace:*
@@ -3869,12 +3877,6 @@ importers:
 
   tools/protobuf-test:
     specifiers: {}
-
-  tools/readme:
-    specifiers:
-      '@dxos/plate': workspace:*
-    dependencies:
-      '@dxos/plate': link:../../packages/devtools/plate
 
   tools/ridoculous:
     specifiers:

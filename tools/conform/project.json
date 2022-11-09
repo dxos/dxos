@@ -1,13 +1,13 @@
 {
-  "sourceRoot": "tools/readme/src",
+  "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "tools/readme/dist",
-        "tsConfig": "tools/readme/tsconfig.json",
-        "main": "tools/readme/src/index.ts"
+        "outputPath": "tools/conform/dist",
+        "tsConfig": "tools/conform/tsconfig.json",
+        "main": "tools/conform/src/index.ts"
       }
     },
     "lint": {
@@ -15,7 +15,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "tools/readme/**/*.{ts,js}"
+          "tools/conform/**/*.{ts,js}"
         ]
       }
     },
