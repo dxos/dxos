@@ -8,13 +8,13 @@ import React from 'react';
 import urlJoin from 'url-join';
 
 import { InvitationEncoder } from '@dxos/client';
-import { Loading } from '@dxos/react-ui';
 import {
   Avatar,
   QrCode,
   useTranslation,
   defaultGroup,
   Button,
+  Loading,
   getSize,
   useInvitationStatus,
   InvitationStatus,
