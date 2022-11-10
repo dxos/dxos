@@ -3,6 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -12,12 +13,13 @@ import { TextModel } from '@dxos/text-model';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
+import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { SpaceInvitationsServiceImpl } from '../invitations';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
-import { createServiceProvider, ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry';
 
 type ClientServicesHostParams = {
   config: Config;
@@ -54,14 +56,11 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider(() => {
-        // TODO(burdon): Replace with providers.
-        return new SpaceInvitationsServiceImpl(
-          this._serviceContext.identityManager,
-          this._serviceContext.spaceManager!,
-          this._serviceContext.spaceInvitations!
-        );
-      }),
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
+      ),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
@@ -69,7 +68,12 @@ export class ClientServicesHost implements ClientServicesProvider {
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),
-      DevtoolsHost: new DevtoolsServiceImpl({ events: new DevtoolsHostEvents(), config, context: this._serviceContext })
+      DevtoolsHost: new DevtoolsServiceImpl({
+        events: new DevtoolsHostEvents(),
+        config,
+        context: this._serviceContext
+      }),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager)
     });
   }
 
