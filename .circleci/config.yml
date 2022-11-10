@@ -17,13 +17,13 @@ aliases:
   - &cache_restore
     restore_cache:
       keys:
-        - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
-        - pnpm-store-v1-{{ arch }}-
+        - pnpm-store-v2-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-v2-{{ arch }}-
   - &cache_save
     save_cache:
       paths:
-        - ~/.local/share/pnpm/store/v3
-      key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - /mnt/ramdisk/pnpm-store
+      key: pnpm-store-v2-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
   #
@@ -37,9 +37,10 @@ jobs:
     environment:
       DX_ENVIRONMENT: circleci
     
-    working_directory: /mnt/ramdisk
+    working_directory: /mnt/ramdisk/work
 
     steps:
+      - pnpm config set store-dir /mnt/ramdisk/pnpm-store
       - checkout
       - *cache_restore
       - run: pnpm install
