@@ -15,7 +15,8 @@ aliases:
       username: dxos-bot
       password: $GH_TOKEN
   - &cache_restore
-    keys:
+    restore_cache:
+      keys:
         - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
         - pnpm-store-v1-{{ arch }}-
   - &cache_save
