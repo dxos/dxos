@@ -28,7 +28,7 @@ const update = async () => {
           projectJson.targets.build.options.transformers = ['@dxos/log-hook/transformer'];
         }
 
-        if(projectJson.targets.lint) {
+        if (projectJson.targets.lint) {
           projectJson.targets.lint.options.format = 'unix';
         }
 
