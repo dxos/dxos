@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "tools/plate/src",
+  "sourceRoot": "packages/devtools/plate/src",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "tools/plate/src/index.ts",
-        "outputPath": "tools/plate/dist",
-        "tsConfig": "tools/plate/tsconfig.json",
+        "main": "packages/devtools/plate/src/index.ts",
+        "outputPath": "packages/devtools/plate/dist",
+        "tsConfig": "packages/devtools/plate/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
         ]
@@ -28,7 +28,7 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "tools/plate/**/*.{ts,js}"
+          "packages/devtools/plate/**/*.{ts,js}"
         ],
         "format": "unix"
       },
