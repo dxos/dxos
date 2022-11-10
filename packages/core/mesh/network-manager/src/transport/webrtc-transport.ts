@@ -18,12 +18,6 @@ import { wrtc } from './webrtc';
 export type WebRTCTransportParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-  // TODO(mykola): change signature to accept only Signal
-  sendSignal: (msg: SignalMessage) => void;
   webrtcConfig?: any;
 };
 
@@ -37,6 +31,8 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
+  readonly sendSignal = new Event<Signal>();
+
   constructor(private readonly params: WebRTCTransportParams) {
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
@@ -47,27 +43,17 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      try {
-        await this.params.sendSignal({
-          author: this.params.ownId,
-          recipient: this.params.remoteId,
-          sessionId: this.params.sessionId,
-          topic: this.params.topic,
-          data: { signal: { json: JSON.stringify(data) } }
-        });
-      } catch (err: any) {
-        this.errors.raise(err);
-      }
+      this.sendSignal.emit({ json: JSON.stringify(data) });
     });
 
     this._peer.on('connect', () => {
-      log('connected', { id: this.params.ownId, remoteId: this.params.remoteId });
+      log('connected');
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });
 
     this._peer.on('close', async () => {
-      log('closed', { id: this.params.ownId, remoteId: this.params.remoteId });
+      log('closed');
       await this._disconnectStreams();
       this.closed.emit();
     });
@@ -80,14 +66,6 @@ export class WebRTCTransport implements Transport {
 
   get peer() {
     return this._peer;
-  }
-
-  get remoteId() {
-    return this.params.remoteId;
-  }
-
-  get sessionId() {
-    return this.params.sessionId;
   }
 
   async close() {

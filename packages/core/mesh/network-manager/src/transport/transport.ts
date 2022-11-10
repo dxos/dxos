@@ -26,11 +26,6 @@ export type TransportOptions = {
    */
   initiator: boolean;
 
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-
   /**
    * Wire protocol.
    */

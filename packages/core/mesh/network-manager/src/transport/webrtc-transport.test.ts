@@ -15,17 +15,12 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
-describe('WebRTCTransport', function () {
+describe.only('WebRTCTransport', function () {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   it('open and close', async function () {
     const connection = new WebRTCTransport({
       initiator: true,
-      stream: new Duplex(),
-      ownId: PublicKey.random(),
-      remoteId: PublicKey.random(),
-      sessionId: PublicKey.random(),
-      topic: PublicKey.random(),
-      sendSignal: async (msg) => {}
+      stream: new Duplex()
     });
 
     let callsCounter = 0;
@@ -48,7 +43,6 @@ describe('WebRTCTransport', function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
-    const sessionId = PublicKey.random();
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
@@ -57,15 +51,11 @@ describe('WebRTCTransport', function () {
       stream: protocolProvider1({
         channel: discoveryKey(topic),
         initiator: true
-      }).stream,
-      ownId: peer1Id,
-      remoteId: peer2Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
-        await sleep(10);
-        await connection2.signal(msg.data.signal);
-      }
+      }).stream
+    });
+    connection1.sendSignal.on(async (signal) => {
+      await sleep(10);
+      await connection2.signal(signal);
     });
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -77,15 +67,11 @@ describe('WebRTCTransport', function () {
       stream: protocolProvider2({
         channel: discoveryKey(topic),
         initiator: false
-      }).stream,
-      ownId: peer2Id,
-      remoteId: peer1Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
-        await sleep(10);
-        await connection1.signal(msg.data.signal);
-      }
+      }).stream
+    });
+    connection2.sendSignal.on(async (signal) => {
+      await sleep(10);
+      await connection1.signal(signal);
     });
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
