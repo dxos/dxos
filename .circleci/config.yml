@@ -36,6 +36,9 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+    
+    working_directory: /mnt/ramdisk
+
     steps:
       - checkout
       - *cache_restore
