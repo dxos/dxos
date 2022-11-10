@@ -115,6 +115,8 @@ export class EchoProxy implements Echo {
           // });
 
           // this._subscriptions.add(() => partyStream.close());
+        } else {
+          this._parties.get(party.publicKey)!._processPartyUpdate(party);
         }
       }
 

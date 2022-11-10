@@ -24,22 +24,25 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   constructor (
     // TODO(burdon): Replace with getters.
     private readonly _identityManager: IdentityManager,
-    private readonly _spaceManager: SpaceManager,
-    private readonly _spaceInvitations: SpaceInvitationsHandler
+    private readonly _getSpaceManager: () => SpaceManager,
+    private readonly _getSpaceInvitations: () => SpaceInvitationsHandler
   ) {}
 
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
+      const spaceManager = this._getSpaceManager();
+      const spaceInvitations = this._getSpaceInvitations();
+
       assert(invitation.spaceKey);
       log('stream opened', {
         host: this._identityManager.identity?.deviceKey,
         spaceKey: invitation.spaceKey
       });
-      const space = this._spaceManager.spaces.get(invitation.spaceKey!);
+      const space = spaceManager.spaces.get(invitation.spaceKey!);
       assert(space);
 
       let invitationId: string;
-      const observable = this._spaceInvitations.createInvitation(space);
+      const observable = spaceInvitations.createInvitation(space);
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);
@@ -94,6 +97,8 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
 
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
+      const spaceInvitations = this._getSpaceInvitations();
+
       assert(invitation.spaceKey);
       log('stream opened', {
         guest: this._identityManager.identity?.deviceKey,
@@ -101,7 +106,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       let invitationId: string;
-      const observable = this._spaceInvitations.acceptInvitation(invitation);
+      const observable = spaceInvitations.acceptInvitation(invitation);
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);

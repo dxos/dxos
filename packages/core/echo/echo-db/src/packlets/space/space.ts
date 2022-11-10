@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -44,7 +44,8 @@ export type SpaceParams = {
  * Spaces are globally addressable databases with access control.
  */
 export class Space {
-  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
+  public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
+  public readonly stateUpdate = new Event();
 
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
@@ -103,7 +104,10 @@ export class Space {
       }
     });
 
-    this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
+    this._controlPipeline.onCredentialProcessed.set(async (credential) => {
+      await this.onCredentialProcessed.callIfSet(credential);
+      this.stateUpdate.emit();
+    });
 
     // Start replicating the genesis feed.
     this._protocol = protocol;
@@ -132,6 +136,10 @@ export class Space {
 
   get dataFeedKey() {
     return this._dataFeed.key;
+  }
+
+  get partyState() {
+    return this._controlPipeline.partyState;
   }
 
   /**
