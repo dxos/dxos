@@ -7,7 +7,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/eslint-rules/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

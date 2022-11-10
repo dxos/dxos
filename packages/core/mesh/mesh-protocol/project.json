@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/mesh-protocol/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

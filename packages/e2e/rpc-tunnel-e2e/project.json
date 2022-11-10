@@ -30,7 +30,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/e2e/rpc-tunnel-e2e/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

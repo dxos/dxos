@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/keys/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

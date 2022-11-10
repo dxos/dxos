@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/echo/model-factory/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

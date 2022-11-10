@@ -25,7 +25,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/deprecated/wallet/wallet-extension/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

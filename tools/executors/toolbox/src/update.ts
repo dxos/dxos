@@ -28,6 +28,10 @@ const update = async () => {
           projectJson.targets.build.options.transformers = ['@dxos/log-hook/transformer'];
         }
 
+        if(projectJson.targets.lint) {
+          projectJson.targets.lint.options.format = 'unix';
+        }
+
         fs.writeFileSync(filename, JSON.stringify(projectJson, undefined, 2) + '\n', 'utf-8');
         console.log(`Updated: ${filename}`);
       }
