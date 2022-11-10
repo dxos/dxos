@@ -140,6 +140,7 @@ describe('Client services', function () {
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
+    // TODO(burdon): Party should now be available?
     const trigger = new Trigger<Party>();
     await waitForExpect(() => {
       const party2 = client2.echo.getParty(invitation2.spaceKey!);

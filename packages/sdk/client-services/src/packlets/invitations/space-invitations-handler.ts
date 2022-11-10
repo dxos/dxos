@@ -190,7 +190,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
         // 2. Get authentication code.
         // TODO(burdon): Check if authentication is required on both side (options).
-        // TODO(burdon): Test timeout.
+        // TODO(burdon): Test timeout (options for timeouts at different steps).
         log('waiting for authentication code...');
         observable.callback.onAuthenticating?.(invitation);
         const authenticationCode = await authenticated.wait();
