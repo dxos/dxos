@@ -6,7 +6,7 @@ import { Box, Text } from 'ink';
 import * as process from 'process';
 import React, { useMemo } from 'react';
 
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 
 import { ModuleProvider, useAppState } from '../hooks';
 import { Config } from './Config';
@@ -21,7 +21,7 @@ import { MenuItem, Module, Panel } from './util';
  */
 export const App = () => {
   const client = useClient();
-  const profile = useProfile();
+  const profile = useIdentity();
   const [{ error }] = useAppState();
 
   // TODO(burdon): Allow selection of menu item within menu.

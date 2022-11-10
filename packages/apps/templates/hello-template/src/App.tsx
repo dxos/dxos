@@ -13,7 +13,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client, fromIFrame, InvitationEncoder, Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
-import { ClientProvider, useClient, useParties, useParty, useProfile, useSelection } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces, useSpace, useIdentity, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
 import {
   Button,
@@ -69,8 +69,8 @@ export const App = () => {
 
 const SpacesView = () => {
   const client = useClient();
-  const spaces = useParties();
-  const profile = useProfile();
+  const spaces = useSpaces();
+  const profile = useIdentity();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
@@ -154,8 +154,8 @@ const SpaceView = () => {
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useParty(spaceKey);
-  const profile = useProfile();
+  const space = useSpace(spaceKey);
+  const profile = useIdentity();
 
   // 3. Select items.
   const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];

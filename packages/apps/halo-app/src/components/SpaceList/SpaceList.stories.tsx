@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { ClientProvider, useClient, useParties } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { Button } from '@dxos/react-uikit';
 
@@ -16,7 +16,7 @@ export default {
 
 const Story = () => {
   const client = useClient();
-  const spaces = useParties();
+  const spaces = useSpaces();
 
   return (
     <div>

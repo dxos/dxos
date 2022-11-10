@@ -9,7 +9,7 @@ import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem } from '@mui
 
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
-import { useClient, useParties, useProfile } from '@dxos/react-client';
+import { useClient, useSpaces, useIdentity } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 import { TextModel } from '@dxos/text-model';
 
@@ -29,8 +29,8 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [showJoinParty, setShowJoinParty] = useState(false);
   const client = useClient();
-  const profile = useProfile();
-  const parties = useParties();
+  const profile = useIdentity();
+  const parties = useSpaces();
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();

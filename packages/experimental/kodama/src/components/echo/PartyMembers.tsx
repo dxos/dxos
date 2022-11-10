@@ -6,14 +6,14 @@ import React, { FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { useMembers, useParty } from '@dxos/react-client';
+import { useMembers, useSpace } from '@dxos/react-client';
 
 import { Table } from '../util';
 
 export const PartyMembers: FC<{
   partyKey: PublicKey;
 }> = ({ partyKey }) => {
-  const party = useParty(partyKey);
+  const party = useSpace(partyKey);
   const members = useMembers(party);
 
   return (

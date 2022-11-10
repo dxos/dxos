@@ -7,7 +7,7 @@ import React, { FC, useState } from 'react';
 
 import { InvitationEncoder, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useParty } from '@dxos/react-client';
+import { useClient, useSpace } from '@dxos/react-client';
 
 import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
@@ -22,7 +22,7 @@ export const Join: FC<{
   const [invitation, _setInvitation] = useState<Invitation>();
   const [status, setStatus] = useState<StatusState>();
   const [partyKey, setPartyKey] = useState<PublicKey>();
-  const party = useParty(partyKey);
+  const party = useSpace(partyKey);
 
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);

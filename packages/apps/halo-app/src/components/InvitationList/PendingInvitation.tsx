@@ -8,6 +8,7 @@ import React from 'react';
 import urlJoin from 'url-join';
 
 import { InvitationEncoder, ObservableInvitation } from '@dxos/client';
+import { useInvitationStatus } from '@dxos/react-client';
 import {
   Avatar,
   QrCode,
@@ -16,7 +17,6 @@ import {
   Button,
   Loading,
   getSize,
-  useInvitationStatus,
   InvitationStatus
 } from '@dxos/react-uikit';
 

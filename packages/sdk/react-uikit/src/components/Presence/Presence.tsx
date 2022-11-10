@@ -8,7 +8,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Invitation, Party, Profile as ProfileType } from '@dxos/client';
-import { useMembers, usePartyInvitations } from '@dxos/react-client';
+import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import {
   Avatar,
   AvatarProps,
@@ -95,7 +95,7 @@ const PartyInviteSingleton = ({
   space
 }: Required<Pick<PresenceProps, 'createInvitationUrl' | 'space'>>) => {
   const { t } = useTranslation();
-  const invitations = usePartyInvitations(space.key);
+  const invitations = useSpaceInvitations(space.key);
   useEffect(() => {
     if (invitations.length < 1) {
       void space.createInvitation();
@@ -104,7 +104,12 @@ const PartyInviteSingleton = ({
 
   // TODO(burdon): Update InvitationEncoder.
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations.length && createInvitationUrl(invitations[0]), [invitations]);
+  const invitationUrl = useMemo(() => {
+    const invitation = invitations[0]?.invitation;
+    if (invitation) {
+      return createInvitationUrl(invitation);
+    }
+  }, [invitations]);
 
   return invitationUrl ? (
     <QrCode

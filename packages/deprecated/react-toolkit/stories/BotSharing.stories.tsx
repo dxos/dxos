@@ -8,7 +8,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { ClientProvider, useClient, useParties } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
@@ -20,7 +20,7 @@ export default {
 };
 
 const Parties = () => {
-  const parties = useParties();
+  const parties = useSpaces();
 
   return (
     <Box>

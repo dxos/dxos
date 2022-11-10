@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
-import { useMembers, useParty } from '@dxos/react-client';
+import { useMembers, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
@@ -19,7 +19,7 @@ export const SpaceSettingsPage = () => {
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useParty(spaceKey);
+  const space = useSpace(spaceKey);
   const invitations = space?.invitations;
   const members = useMembers(space);
   const [creatingInvitation, setCreatingInvitation] = useState(false);

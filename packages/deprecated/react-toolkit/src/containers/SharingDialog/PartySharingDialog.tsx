@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
+import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
@@ -20,11 +20,12 @@ export interface PartySharingDialogProps
 
 /**
  * Manages the workflow for inviting a user to a party.
+ * @deprecated
  */
 export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogProps) => {
-  const party = useParty(partyKey);
+  const party = useSpace(partyKey);
   const members = useMembers(party);
-  const invitations = usePartyInvitations(partyKey);
+  const _invitations = useSpaceInvitations(partyKey);
   // const botClient = useBotFactoryClient(false);
 
   const handleCreateInvitation = async () => {
@@ -52,7 +53,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
       {...props}
       title='Party Sharing'
       members={members}
-      invitations={invitations}
+      invitations={[]}
       onCreateInvitation={handleCreateInvitation}
       onCancelInvitation={handleCancelInvitation}
       // onCreateBotInvitation={handleBotInvitation}

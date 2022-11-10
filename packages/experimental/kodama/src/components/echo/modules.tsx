@@ -6,7 +6,7 @@ import { Box, useFocusManager } from 'ink';
 import React, { FC, ReactNode, useMemo } from 'react';
 
 import { Party } from '@dxos/client';
-import { useParty } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
 import { Join, Share } from '../invitations';
@@ -38,7 +38,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
     label: 'ECHO',
     component: ({ parent }) => {
       const [{ partyKey }] = useAppState();
-      const party = useParty(partyKey);
+      const party = useSpace(partyKey);
       const partyItems = useMemo(
         () =>
           party
