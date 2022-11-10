@@ -9,6 +9,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
+import { asyncTimeout } from '@dxos/async';
 
 describe('Spaces', function () {
   it('creates a space', async function () {
@@ -25,6 +26,8 @@ describe('Spaces', function () {
       const item = await party.database.createItem({ model: ObjectModel });
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
+
+      await asyncTimeout(party.queryMembers().waitFor(members => members.length === 1), 500);
     }
   });
 });
