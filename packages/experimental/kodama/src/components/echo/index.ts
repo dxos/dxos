@@ -4,11 +4,11 @@
 
 export * from './modules';
 
-export * from './CreateParty';
+export * from './CreateSpace';
 export * from './ItemList';
 export * from './ItemTypeList';
-export * from './PartyFeeds';
-export * from './PartyInfo';
-export * from './PartyList';
-export * from './PartyView';
-export * from './PartyMembers';
+export * from './SpaceFeeds';
+export * from './SpaceInfo';
+export * from './SpaceList';
+export * from './SpaceView';
+export * from './SpaceMembers';

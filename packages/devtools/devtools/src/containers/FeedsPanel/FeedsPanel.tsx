@@ -15,30 +15,30 @@ export const FeedsPanel = () => {
     return null;
   }
 
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 
   const parties = useStream(() => devtoolsHost.subscribeToParties({}), {}).parties ?? [];
-  const partyFeeds = useMemo(() => {
-    if (!selectedPartyKey || !parties) {
+  const spaceFeeds = useMemo(() => {
+    if (!selectedSpaceKey || !parties) {
       return [];
     }
-    const party = parties.find((party) => party.key.equals(selectedPartyKey));
-    return party ? [party.genesisFeed, party.controlFeed, party.dataFeed] : [];
-  }, [parties, selectedPartyKey]);
+    const space = parties.find((space) => space.key.equals(selectedSpaceKey));
+    return space ? [space.genesisFeed, space.controlFeed, space.dataFeed] : [];
+  }, [parties, selectedSpaceKey]);
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
-    () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),
+    () => devtoolsHost.subscribeToFeedBlocks({ spaceKey: selectedSpaceKey, feedKey: selectedFeed }),
     {},
-    [selectedPartyKey, selectedFeed]
+    [selectedSpaceKey, selectedFeed]
   );
   useEffect(() => {
     setMessages(blocks ?? []);
   }, [blocks]);
 
-  const handlePartyChange = (key: PublicKey | undefined) => {
-    setSelectedPartyKey(key);
+  const handleSpaceChange = (key: PublicKey | undefined) => {
+    setSelectedSpaceKey(key);
     setSelectedFeed(undefined);
     setMessages([]);
   };
@@ -52,16 +52,16 @@ export const FeedsPanel = () => {
       controls={
         <>
           <KeySelect
-            id='party-select'
-            label='Party'
+            id='space-select'
+            label='Space'
             keys={parties.map(({ key }) => key)}
-            selected={selectedPartyKey}
-            onChange={handlePartyChange}
+            selected={selectedSpaceKey}
+            onChange={handleSpaceChange}
           />
           <KeySelect
             id='feed-select'
             label='Feed'
-            keys={partyFeeds}
+            keys={spaceFeeds}
             selected={selectedFeed}
             onChange={handleFeedChange}
           />

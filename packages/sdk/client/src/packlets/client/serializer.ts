@@ -4,27 +4,27 @@
 
 import { schema } from '@dxos/protocols';
 
-import { Party } from '../proxies';
+import { Space } from '../proxies';
 import { Client } from './client';
 
-const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
+const spaceCodec = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 
 /**
- * Import/export party.
+ * Import/export space.
  * @deprecated
  */
-export class PartySerializer {
+export class SpaceSerializer {
   // prettier-ignore
   constructor(
     private readonly _client: Client
   ) {}
 
-  async serializeParty(party: Party) {
-    const snapshot = await party.createSnapshot();
-    return new Blob([partyCodec.encode(snapshot)]);
+  async serializeSpace(space: Space) {
+    const snapshot = await space.createSnapshot();
+    return new Blob([spaceCodec.encode(snapshot)]);
   }
 
-  async deserializeParty(data: Uint8Array) {
-    return await this._client.echo.cloneParty(partyCodec.decode(data));
+  async deserializeSpace(data: Uint8Array) {
+    return await this._client.echo.cloneSpace(spaceCodec.decode(data));
   }
 }

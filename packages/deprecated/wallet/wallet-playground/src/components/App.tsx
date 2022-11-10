@@ -30,12 +30,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const partyStream = services.PartyService.subscribeParties();
-    partyStream.subscribe(
+    const spaceStream = services.SpaceService.subscribeParties();
+    spaceStream.subscribe(
       (response) => setParties(response.parties ?? []),
       (error) => setError(error)
     );
-    return () => partyStream.close();
+    return () => spaceStream.close();
   }, []);
 
   const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, displayName) => {
@@ -63,10 +63,10 @@ const App = () => {
     }
   };
 
-  const handleCreateParty = async () => {
+  const handleCreateSpace = async () => {
     setInProgress(true);
     try {
-      await services.PartyService.createParty();
+      await services.SpaceService.createSpace();
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -114,8 +114,8 @@ const App = () => {
       </Button>
       <HaloSharingDialog open={haloSharingDialog} onClose={() => setHaloSharingDialog(false)} />
 
-      <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>
-        Create party
+      <Button disabled={inProgress} onClick={handleCreateSpace} variant='outlined'>
+        Create space
       </Button>
       <p>You have {parties.length} parties.</p>
 

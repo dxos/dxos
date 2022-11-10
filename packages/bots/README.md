@@ -1,6 +1,6 @@
 # Bots
 
-Bots are long-running processes that can participate as full peers in a party.
+Bots are long-running processes that can participate as full peers in a space.
 The Bots framework allows you to create and deploy bots on a KUBE node. 
 
 <br />
@@ -8,7 +8,7 @@ The Bots framework allows you to create and deploy bots on a KUBE node.
 
 ## Core concepts
 
-* Bots don't have to, but are designed to contain DXOS client and be invited to a specific party.
+* Bots don't have to, but are designed to contain DXOS client and be invited to a specific space.
 * Bots are supposed to be up and running all the time unless explicitly stopped or removed.
   This also means that in most cases one would want to subscribe to some events in order for bot to be able to provide some service in response to those events.
 * Bot factory is a service that manages bots. It is supposed to be run on a KUBE.
@@ -129,16 +129,16 @@ Example:
 ➜ export NODE_PATH=/Users/username/.nodenv/versions/16.14.0/lib/node_modules
 ```
 
-To spawn a bot in a local development mode you need to create a party and open first:
+To spawn a bot in a local development mode you need to create a space and open first:
 
 ```bash
-dx party create
-dx party open
+dx space create
+dx space open
 ```
 
 This will enter the the interactive mode in the CLI. 
-From now on all commands will be executed in context of the party. 
-For instance bot spawned will be automatically invited to the party:
+From now on all commands will be executed in context of the space. 
+For instance bot spawned will be automatically invited to the space:
 
 ```bash
 bot spawn --localPath /path/to/custom-bot/entrypoint

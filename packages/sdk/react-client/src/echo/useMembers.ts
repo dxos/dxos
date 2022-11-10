@@ -4,13 +4,13 @@
 
 import { useEffect, useState } from 'react';
 
-import { PartyMember, PublicKey } from '@dxos/client';
+import { SpaceMember, PublicKey } from '@dxos/client';
 
 import { useSpace } from './useSpaces';
 
-export const useMembers = (spaceKey: PublicKey | undefined): PartyMember[] => {
+export const useMembers = (spaceKey: PublicKey | undefined): SpaceMember[] => {
   const space = useSpace(spaceKey);
-  const [members, setMembers] = useState<PartyMember[]>([]);
+  const [members, setMembers] = useState<SpaceMember[]>([]);
 
   useEffect(() => {
     if (!space) {

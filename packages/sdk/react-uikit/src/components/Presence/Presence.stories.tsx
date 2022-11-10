@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultConfig, invitationObservable, InvitationEncoder, Party } from '@dxos/client';
+import { defaultConfig, invitationObservable, InvitationEncoder, Space } from '@dxos/client';
 import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -101,15 +101,15 @@ Sharing.args = {};
 
 const WithinSpaceTemplate = () => {
   const client = useClient();
-  const [space, setSpace] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
 
   useEffect(() => {
     console.log('[client change]', space);
     if (client && !space) {
       console.log('[creating space]', space);
       void client.echo
-        .createParty()
-        .then((space: Party) => {
+        .createSpace()
+        .then((space: Space) => {
           console.log('[setting space]', space);
           setSpace(space);
         })

@@ -13,7 +13,7 @@ import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
-import { ErrorBoundary, PartySharingDialog } from '../src';
+import { ErrorBoundary, SpaceSharingDialog } from '../src';
 
 export default {
   title: 'react-toolkit/BotSharing'
@@ -24,9 +24,9 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map((party) => (
-        <Box key={party.key.toHex()}>
-          <CopyText value={party.key.toHex()} />
+      {parties.map((space) => (
+        <Box key={space.key.toHex()}>
+          <CopyText value={space.key.toHex()} />
         </Box>
       ))}
     </Box>
@@ -35,19 +35,19 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const [partyKey, setPartyKey] = useState<PublicKey>();
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
   const client = useClient();
 
-  const handleCreateParty = async () => {
-    const party = await client.echo.createParty();
-    setPartyKey(party.key);
+  const handleCreateSpace = async () => {
+    const space = await client.echo.createSpace();
+    setSpaceKey(space.key);
   };
 
   useEffect(() => {
-    void handleCreateParty();
+    void handleCreateSpace();
   }, []);
 
-  if (!partyKey) {
+  if (!spaceKey) {
     return null;
   }
 
@@ -55,10 +55,10 @@ const Sender = () => {
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
-        <Button onClick={handleCreateParty}>Create Party</Button>
+        <Button onClick={handleCreateSpace}>Create Space</Button>
       </Toolbar>
 
-      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={true} />
+      <SpaceSharingDialog open={open} spaceKey={spaceKey} onClose={() => setOpen(false)} modal={true} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />

@@ -10,38 +10,38 @@ import { useSpace } from '@dxos/react-client';
 import { useAppState } from '../../hooks';
 import { ItemList } from './ItemList';
 import { ItemTypeList } from './ItemTypeList';
-import { PartyList } from './PartyList';
+import { SpaceList } from './SpaceList';
 
-export const PartyView = () => {
+export const SpaceView = () => {
   const { focus } = useFocus({ isActive: false });
   const { focusNext } = useFocusManager();
-  const [{ partyKey }, { setPartyKey }] = useAppState();
+  const [{ spaceKey }, { setSpaceKey }] = useAppState();
   const [type, setType] = useState<string>();
-  const party = useSpace(partyKey);
+  const space = useSpace(spaceKey);
 
   return (
     <Box flexDirection='column' flexGrow={1}>
       <Box flexDirection='column' flexGrow={1}>
-        <PartyList
-          partyKey={party?.key}
-          onSelect={(partyKey) => {
-            setPartyKey(partyKey);
+        <SpaceList
+          spaceKey={space?.key}
+          onSelect={(spaceKey) => {
+            setSpaceKey(spaceKey);
             focusNext();
           }}
         />
       </Box>
 
-      {party && (
+      {space && (
         <Box flexDirection='column' flexGrow={1}>
           <ItemList
-            party={party}
+            space={space}
             type={type}
             onCancel={() => {
-              focus('party-list');
+              focus('space-list');
             }}
           />
 
-          <ItemTypeList party={party} onChange={setType} />
+          <ItemTypeList space={space} onChange={setType} />
 
           <Box padding={1}>
             <Text>ENTER to select ECHO Space; TAB/arrow keys to navigate; SHIFT-TAB to return.</Text>

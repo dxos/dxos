@@ -10,10 +10,10 @@ import { TreeItem, TreeView } from '@mui/lab';
 import { Item, ObjectModel } from '@dxos/client';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 
-import { ProfileInitializer, useTestParty } from '../src';
+import { ProfileInitializer, useTestSpace } from '../src';
 
 export default {
-  title: 'react-client-testing/TestParty'
+  title: 'react-client-testing/TestSpace'
 };
 
 // TODO(kaplanski): Factor out this component from devtools.
@@ -30,10 +30,10 @@ const ItemNode = ({ item }: { item: Item<ObjectModel> }) => {
 };
 
 const Story = () => {
-  const party = useTestParty();
+  const space = useTestSpace();
   const items =
     useSelection(
-      party?.select().filter((item) => !item.parent),
+      space?.select().filter((item) => !item.parent),
       []
     ) ?? [];
 

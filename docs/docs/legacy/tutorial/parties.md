@@ -1,31 +1,31 @@
 ---
 title: Managing realtime data
 sidebar_title: 3. Managing realtime data
-description: Creating and managing parties
+description: Creating and managing spaces
 ---
 
-DXOS applications store realtime data within secure ECHO database instances called parties.
+DXOS applications store realtime data within secure ECHO database instances called spaces.
 
-Parties can be shared between users and applications synchronize updates to parties in real time across the peer-to-peer MESH network.
+Spaces can be shared between users and applications synchronize updates to spaces in real time across the peer-to-peer MESH network.
 
-## Create a Party
+## Create a space
 
-In this example, each Party will represent a Task List that we'll share and invite other peers to collaborate on.
+In this example, each space will represent a Task List that we'll share and invite other peers to collaborate on.
 
-Party creation is handled through the `client.echo` object. After creating the party, we need to set the title property through the `setProperty` function.
+space creation is handled through the `client.echo` object. After creating the space, we need to set the title property through the `setProperty` function.
 
 Let's create a new dialog component to handle this logic:
 
-```jsx:title=src/components/PartySettings.js
+```jsx:title=src/components/spaceSettings.js
 import { useClient } from '@dxos/react-client';
 
-const PartySettings = ({ party_key = undefined, onClose }) => {
+const spaceSettings = ({ space_key = undefined, onClose }) => {
   const client = useClient();
   const [title, setTitle] = useState('');
 
   const handleSubmit = async () => {
-    const party = await client.echo.createParty({ title });
-    await party.setProperty('title', title);
+    const space = await client.echo.createspace({ title });
+    await space.setProperty('title', title);
     onClose();
   };
 
@@ -33,26 +33,26 @@ const PartySettings = ({ party_key = undefined, onClose }) => {
 };
 ```
 
-> You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/PartySettings.js) link to get the code of `Dialog`.
+> You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/spaceSettings.js) link to get the code of `Dialog`.
 
-Now, create a `PartyList` with a button to open the dialog (we will later display the created parties here):
+Now, create a `spaceList` with a button to open the dialog (we will later display the created spaces here):
 
-```jsx:title=src/components/PartyList.js
-import { useParties } from '@dxos/react-client';
+```jsx:title=src/components/spaceList.js
+import { useSpaces } from '@dxos/react-client';
 
-import PartySettings from './PartySettings';
+import spaceSettings from './spaceSettings';
 
-const PartyList = ({}) => {
+const spaceList = ({}) => {
   const [{ settingsDialog }, setSettingsDialog] = useState({});
 
-  const handleCreateParty = () => setSettingsDialog({ settingsDialog: true });
+  const handleCreatespace = () => setSettingsDialog({ settingsDialog: true });
 
   return (
     <div>
-      {settingsDialog && <PartySettings onClose={() => setSettingsDialog({})}/>}
+      {settingsDialog && <spaceSettings onClose={() => setSettingsDialog({})}/>}
 
       <div>
-        <Fab size='small' color='primary' aria-label='add' title='Create list' onClick={handleCreateParty}>
+        <Fab size='small' color='primary' aria-label='add' title='Create list' onClick={handleCreatespace}>
           <AddIcon />
         </Fab>
       </div>
@@ -68,21 +68,21 @@ Finally, create a [`Main`](https://github.com/dxos/tutorial-tasks-app/blob/maste
 
 Go to your `src/components/Root.js` and render the `Main` component on the created profile section.
 
-If you go to your app in the browser, you should be able to open the dialog and create a new party:
+If you go to your app in the browser, you should be able to open the dialog and create a new space:
 
-![party](images/party-01.png)
+![space](images/space-01.png)
 
-## Fetch Parties
+## Fetch Spaces
 
-You may have realized that even though we are able to create a party, there's no way to see it yet. So let's make it happen.
+You may have realized that even though we are able to create a space, there's no way to see it yet. So let's make it happen.
 
-We can fetch all the created Parties using the `useParties` hook provided by `@dxos/react-client`.
+We can fetch all the created Spaces using the `useSpaces` hook provided by `@dxos/react-client`.
 
-```jsx:title=src/components/PartyList.js
-import { useParties } from '@dxos/react-client';
+```jsx:title=src/components/spaceList.js
+import { useSpaces } from '@dxos/react-client';
 
-const PartyList = ({}) => {
-  const parties = useParties();
+const spaceList = ({}) => {
+  const spaces = useSpaces();
 
   // ...
 
@@ -91,9 +91,9 @@ const PartyList = ({}) => {
       {/* ...  */}
 
       <List disablePadding>
-        {parties.map((party) => (
-          <ListItem button key={party.key}>
-            <ListItemText primary={party.getProperty('title')} />
+        {spaces.map((space) => (
+          <ListItem button key={space.key}>
+            <ListItemText primary={space.getProperty('title')} />
           </ListItem>
         ))}
       </List>
@@ -104,60 +104,60 @@ const PartyList = ({}) => {
 };
 ```
 
-You should now be able to see your created party. You can add your own icons and styling to the list.
+You should now be able to see your created space. You can add your own icons and styling to the list.
 
-![party](images/party-02.png)
+![space](images/space-02.png)
 
-## Fetch Single Party
+## Fetch Single space
 
-Now that we have our party created and listed, let's add the possibility to update its name. For that to happen, we will slightly tweak our `PartySettings` dialog to also support modification apart from creation.
+Now that we have our space created and listed, let's add the possibility to update its name. For that to happen, we will slightly tweak our `spaceSettings` dialog to also support modification apart from creation.
 
-Take a look at the code below, we are using the `useParty` hook to be able to just fetch a single party:
+Take a look at the code below, we are using the `usespace` hook to be able to just fetch a single space:
 
-```jsx:title=src/components/PartySettings.js
-import { useClient, useParty } from '@dxos/react-client';
+```jsx:title=src/components/spaceSettings.js
+import { useClient, usespace } from '@dxos/react-client';
 
-const PartySettings = ({ party_key = undefined, onClose }) => {
+const spaceSettings = ({ space_key = undefined, onClose }) => {
   const client = useClient();
-  const party = useParty(party_key);
+  const space = usespace(space_key);
 
-  const [title, setTitle] = useState(party ? party.getProperty('title') : '');
+  const [title, setTitle] = useState(space ? space.getProperty('title') : '');
 
   const handleSubmit = async () => {
-    if (party) {
-      await party.setProperty('title', title);
+    if (space) {
+      await space.setProperty('title', title);
     } else {
-      const party = await client.echo.createParty({ title });
-      await party.setProperty('title', title);
+      const space = await client.echo.createspace({ title });
+      await space.setProperty('title', title);
     }
 
-    onClose({ party_key });
+    onClose({ space_key });
   };
 
   return <Dialog />;
 };
 ```
 
-You are going to need to add a button to each party to trigger the dialog and send the `party_key` of the selected party to the `PartySettings` dialog.
+You are going to need to add a button to each space to trigger the dialog and send the `space_key` of the selected space to the `spaceSettings` dialog.
 
-```jsx:title=src/components/PartyList.js
-import { useParties } from '@dxos/react-client';
+```jsx:title=src/components/spaceList.js
+import { useSpaces } from '@dxos/react-client';
 
-const PartyList = ({ onSelectParty }) => {
-  const [{ settingsDialog, settingsPartyKey }, setSettingsDialog] = useState({});
+const spaceList = ({ onSelectspace }) => {
+  const [{ settingsDialog, settingsspaceKey }, setSettingsDialog] = useState({});
 
-  const parties = useParties();
+  const spaces = useSpaces();
 
   // ...
 
   return (
     <div>
-      {settingsDialog && <PartySettings party_key={settingsPartyKey} onClose={() => setSettingsDialog({})} />}
+      {settingsDialog && <spaceSettings space_key={settingsspaceKey} onClose={() => setSettingsDialog({})} />}
 
       <List disablePadding>
-        {parties.map((party) => (
-          <ListItem button key={party.key} onClick={() => { onSelectParty(party.key) }}>
-            <ListItemText primary={party.getProperty('title')} />
+        {spaces.map((space) => (
+          <ListItem button key={space.key} onClick={() => { onSelectspace(space.key) }}>
+            <ListItemText primary={space.getProperty('title')} />
 
             <ListItemSecondaryAction className='actions'>
               <IconButton
@@ -165,7 +165,7 @@ const PartyList = ({ onSelectParty }) => {
                 edge='end'
                 aria-label='settings'
                 title='Settings'
-                onClick={() => setSettingsDialog({ settingsDialog: true, settingsPartyKey: party.key })}
+                onClick={() => setSettingsDialog({ settingsDialog: true, settingsspaceKey: space.key })}
               >
                 <SettingsIcon />
               </IconButton>
@@ -180,4 +180,4 @@ const PartyList = ({ onSelectParty }) => {
 };
 ```
 
-![party](images/party-03.png)
+![space](images/space-03.png)

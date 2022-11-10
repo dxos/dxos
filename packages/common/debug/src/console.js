@@ -3,7 +3,7 @@
 //
 
 /**
- * Filter third-party warnings from console log.
+ * Filter third-space warnings from console log.
  */
 export const filterConsole = (filters = {}) => {
   if (Object.keys(filters).length === 0) {

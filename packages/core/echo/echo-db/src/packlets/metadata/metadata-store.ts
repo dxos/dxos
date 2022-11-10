@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EchoMetadata, SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Directory } from '@dxos/random-access-storage';
 
@@ -19,7 +19,7 @@ import { Directory } from '@dxos/random-access-storage';
  */
 export const STORAGE_VERSION = 1;
 
-export interface AddPartyOptions {
+export interface AddSpaceOptions {
   key: PublicKey;
   genesisFeed: PublicKey;
 }
@@ -44,10 +44,10 @@ export class MetadataStore {
   }
 
   /**
-   * Returns a list of currently saved parties. The list and objects in it can be modified addParty and
-   * addPartyFeed functions.
+   * Returns a list of currently saved parties. The list and objects in it can be modified addSpace and
+   * addSpaceFeed functions.
    */
-  get parties(): PartyMetadata[] {
+  get parties(): SpaceMetadata[] {
     return this._metadata.parties ?? [];
   }
 
@@ -127,10 +127,10 @@ export class MetadataStore {
     await this._save();
   }
 
-  async addSpace(record: PartyMetadata) {
+  async addSpace(record: SpaceMetadata) {
     assert(
-      !(this._metadata.parties ?? []).find((party) => party.key === record.key),
-      'Cannot overwrite existing party in metadata'
+      !(this._metadata.parties ?? []).find((space) => space.key === record.key),
+      'Cannot overwrite existing space in metadata'
     );
 
     (this._metadata.parties ??= []).push(record);

@@ -33,13 +33,13 @@ export default class Members extends BaseCommand {
         key = await selectSpace(parties);
       }
 
-      const party = parties.find((party) => party.key.toHex().startsWith(key));
-      if (!party) {
+      const space = parties.find((space) => space.key.toHex().startsWith(key));
+      if (!space) {
         this.log('Invalid key');
         return;
       }
 
-      const { value: members = [] } = party.queryMembers();
+      const { value: members = [] } = space.queryMembers();
       if (!flags.json) {
         printMembers(members, flags);
       }

@@ -33,21 +33,21 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
 };
 
 export const ItemsPanel = () => {
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
   const parties = useSpaces();
-  const party = useSpace(selectedPartyKey);
-  const items = useSelection(party?.select().filter((item) => !item.parent)) ?? [];
+  const space = useSpace(selectedSpaceKey);
+  const items = useSelection(space?.select().filter((item) => !item.parent)) ?? [];
 
   return (
     <Panel
       controls={
         <KeySelect
-          label='Party'
+          label='Space'
           keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={(key) => setSelectedPartyKey(key)}
+          selected={selectedSpaceKey}
+          onChange={(key) => setSelectedSpaceKey(key)}
         />
       }
     >

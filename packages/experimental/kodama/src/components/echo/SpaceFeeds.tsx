@@ -10,16 +10,16 @@ import { useDevtools } from '@dxos/react-client';
 
 import { Table } from '../util';
 
-export const PartyFeeds: FC<{
-  partyKey: PublicKey;
-}> = ({ partyKey }) => {
+export const SpaceFeeds: FC<{
+  spaceKey: PublicKey;
+}> = ({ spaceKey }) => {
   return null;
   const devtoolsHost = useDevtools();
   if (!devtoolsHost) {
     return null;
   }
 
-  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ party_key }), {});
+  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ space_key }), {});
 
   return (
     <Table

@@ -14,11 +14,11 @@ import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { RegistryClient } from '@dxos/registry-client';
 
-import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
+import { ErrorBoundary, JoinSpaceDialog, SpaceSharingDialog } from '../src';
 import { Column, createMockRegistryWithBot } from './helpers';
 
 export default {
-  title: 'react-toolkit/PartySharing'
+  title: 'react-toolkit/SpaceSharing'
 };
 
 const Parties = () => {
@@ -26,9 +26,9 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map((party) => (
-        <Box key={party.key.toHex()}>
-          <CopyText value={party.key.toHex()} />
+      {parties.map((space) => (
+        <Box key={space.key.toHex()}>
+          <CopyText value={space.key.toHex()} />
         </Box>
       ))}
     </Box>
@@ -37,19 +37,19 @@ const Parties = () => {
 
 const Sender = () => {
   const [open, setOpen] = useState(true);
-  const [partyKey, setPartyKey] = useState<PublicKey>();
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
   const client = useClient();
 
-  const handleCreateParty = async () => {
-    const party = await client.echo.createParty();
-    setPartyKey(party.key);
+  const handleCreateSpace = async () => {
+    const space = await client.echo.createSpace();
+    setSpaceKey(space.key);
   };
 
   useEffect(() => {
-    void handleCreateParty();
+    void handleCreateSpace();
   }, []);
 
-  if (!partyKey) {
+  if (!spaceKey) {
     return null;
   }
 
@@ -57,10 +57,10 @@ const Sender = () => {
     <Box>
       <Toolbar>
         <Button onClick={() => setOpen(true)}>Open</Button>
-        <Button onClick={handleCreateParty}>Create Party</Button>
+        <Button onClick={handleCreateSpace}>Create Space</Button>
       </Toolbar>
 
-      <PartySharingDialog open={open} partyKey={partyKey} onClose={() => setOpen(false)} modal={false} />
+      <SpaceSharingDialog open={open} spaceKey={spaceKey} onClose={() => setOpen(false)} modal={false} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
         <Parties />
@@ -78,10 +78,10 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
         <Button onClick={() => setOpen(true)}>Open</Button>
       </Toolbar>
 
-      <JoinPartyDialog
+      <JoinSpaceDialog
         open={open}
         invitationCode={invitationCode}
-        onJoin={(party) => console.log(`Joined party: ${party.key.toHex()}`)}
+        onJoin={(space) => console.log(`Joined space: ${space.key.toHex()}`)}
         onClose={() => setOpen(false)}
         closeOnSuccess={true}
         modal={false}
@@ -147,8 +147,8 @@ const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: stri
 
   useEffect(() => {
     setTimeout(async () => {
-      const party = await client.echo.createParty();
-      await party.createInvitation();
+      const space = await client.echo.createSpace();
+      await space.createInvitation();
       throw new Error('Not implemented.');
       // invitation.finished.on(() => setPin(''));
       // invitation.connected.on(() => setPin(invitation.secret.toString()));

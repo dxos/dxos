@@ -4,7 +4,7 @@
 
 import { CliUx } from '@oclif/core';
 
-import { Party, PartyMember } from '@dxos/client';
+import { Space, SpaceMember } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
@@ -14,7 +14,7 @@ const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? trunc
 // Spaces
 //
 
-export const selectSpace = async (parties: Party[]) => {
+export const selectSpace = async (parties: Space[]) => {
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([
@@ -22,9 +22,9 @@ export const selectSpace = async (parties: Party[]) => {
       name: 'key',
       type: 'list',
       message: 'Select a space:',
-      choices: parties.map((party) => ({
-        name: `[${truncateKey(party.key, 8)}] ${party.getProperty('name')}`,
-        value: party.key
+      choices: parties.map((space) => ({
+        name: `[${truncateKey(space.key, 8)}] ${space.getProperty('name')}`,
+        value: space.key
       }))
     }
   ]);
@@ -32,14 +32,14 @@ export const selectSpace = async (parties: Party[]) => {
   return key;
 };
 
-export const mapSpaces = (parties: Party[], truncateKeys = false) => {
-  return parties.map((party) => ({
-    key: maybeTruncateKey(party.key, truncateKeys),
-    name: party.getProperty('name')
+export const mapSpaces = (parties: Space[], truncateKeys = false) => {
+  return parties.map((space) => ({
+    key: maybeTruncateKey(space.key, truncateKeys),
+    name: space.getProperty('name')
   }));
 };
 
-export const printSpaces = (parties: Party[], flags = {}) => {
+export const printSpaces = (parties: Space[], flags = {}) => {
   CliUx.ux.table(
     mapSpaces(parties, true),
     {
@@ -61,14 +61,14 @@ export const printSpaces = (parties: Party[], flags = {}) => {
 //
 
 // TODO(burdon): Export proto type.
-export const mapMembers = (members: PartyMember[], truncateKeys = false) => {
+export const mapMembers = (members: SpaceMember[], truncateKeys = false) => {
   return members.map((member) => ({
     key: maybeTruncateKey(member.identityKey, truncateKeys),
     name: member.profile?.displayName
   }));
 };
 
-export const printMembers = (members: PartyMember[], flags = {}) => {
+export const printMembers = (members: SpaceMember[], flags = {}) => {
   CliUx.ux.table(
     mapMembers(members, true),
     {

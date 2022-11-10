@@ -4,14 +4,14 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 
-export interface PartyState {
+export interface SpaceState {
   readonly genesisCredential: Credential | undefined;
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
@@ -19,13 +19,13 @@ export interface PartyState {
 }
 
 /**
- * Validates and processes credentials for a single party.
+ * Validates and processes credentials for a single space.
  * Keeps a list of members and feeds.
  * Keeps and in-memory index of credentials and allows to query them.
  */
-export class PartyStateMachine implements PartyState {
-  private readonly _members = new MemberStateMachine(this._partyKey);
-  private readonly _feeds = new FeedStateMachine(this._partyKey);
+export class SpaceStateMachine implements SpaceState {
+  private readonly _members = new MemberStateMachine(this._spaceKey);
+  private readonly _feeds = new FeedStateMachine(this._spaceKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
 
@@ -35,7 +35,7 @@ export class PartyStateMachine implements PartyState {
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get genesisCredential(): Credential | undefined {
@@ -65,42 +65,42 @@ export class PartyStateMachine implements PartyState {
     }
 
     switch (getCredentialAssertion(credential)['@type']) {
-      case 'dxos.halo.credentials.PartyGenesis':
+      case 'dxos.halo.credentials.SpaceGenesis':
         if (this._genesisCredential) {
-          log.warn('Party already has a genesis credential.');
+          log.warn('Space already has a genesis credential.');
           return false;
         }
-        if (!credential.issuer.equals(this._partyKey)) {
-          log.warn('Party genesis credential must be issued by party.');
+        if (!credential.issuer.equals(this._spaceKey)) {
+          log.warn('Space genesis credential must be issued by space.');
           return false;
         }
-        if (!credential.subject.id.equals(this._partyKey)) {
-          log.warn('Party genesis credential must be issued to party.');
+        if (!credential.subject.id.equals(this._spaceKey)) {
+          log.warn('Space genesis credential must be issued to space.');
           return false;
         }
         this._genesisCredential = credential;
         break;
-      case 'dxos.halo.credentials.PartyMember':
+      case 'dxos.halo.credentials.SpaceMember':
         if (!this._genesisCredential) {
-          log.warn('Party must have a genesis credential before adding members.');
+          log.warn('Space must have a genesis credential before adding members.');
           return false;
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(`Party member ${credential.issuer} is not authorized to invite new members.`);
+          log.warn(`Space member ${credential.issuer} is not authorized to invite new members.`);
           return false;
         }
         await this._members.process(credential);
         break;
       case 'dxos.halo.credentials.AdmittedFeed':
         if (!this._genesisCredential) {
-          log.warn('Party must have a genesis credential before admitting feeds.');
+          log.warn('Space must have a genesis credential before admitting feeds.');
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(`Party member ${credential.issuer} is not authorized to admit feeds.`);
+          log.warn(`Space member ${credential.issuer} is not authorized to admit feeds.`);
           return false;
         }
-        // TODO(dmaretskyi): Check that the feed owner is a member of the party.
+        // TODO(dmaretskyi): Check that the feed owner is a member of the space.
         await this._feeds.process(credential, fromFeed);
         break;
     }
@@ -112,11 +112,11 @@ export class PartyStateMachine implements PartyState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
-    return key.equals(this._partyKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
+    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
   }
 
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
-    return role === PartyMember.Role.MEMBER || role === PartyMember.Role.ADMIN;
+    return role === SpaceMember.Role.MEMBER || role === SpaceMember.Role.ADMIN;
   }
 }

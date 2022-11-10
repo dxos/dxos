@@ -180,7 +180,7 @@ export class HaloProxy implements Halo {
 
     // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
     // contactsStream.subscribe(data => {
-    //   this._contacts = data.contacts as PartyMember[];
+    //   this._contacts = data.contacts as SpaceMember[];
     //   this._contactsChanged.emit();
     // });
 

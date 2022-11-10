@@ -10,37 +10,37 @@ import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
   CreateSnapshotRequest,
-  GetPartyDetailsRequest,
-  Party,
-  PartyDetails,
-  PartyService,
-  SetPartyStateRequest,
+  GetSpaceDetailsRequest,
+  Space,
+  SpaceDetails,
+  SpaceService,
+  SetSpaceStateRequest,
   SubscribeMembersRequest,
   SubscribeMembersResponse,
   SubscribePartiesResponse,
-  SubscribePartyRequest,
-  SubscribePartyResponse
+  SubscribeSpaceRequest,
+  SubscribeSpaceResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { humanize } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { InviteeInvitations } from './invitations';
 
 /**
- * Party service implementation.
+ * Space service implementation.
  * @deprecated
  */
-export class PartyServiceImpl implements PartyService {
+export class SpaceServiceImpl implements SpaceService {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor(private readonly serviceContext: ServiceContext) {}
 
-  subscribeToParty(request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
+  subscribeToSpace(request: SubscribeSpaceRequest): Stream<SubscribeSpaceResponse> {
     return new Stream(({ next }) => {
       next({
-        party: {
-          publicKey: request.partyKey,
+        space: {
+          publicKey: request.spaceKey,
           isOpen: true,
           isActive: true,
           members: []
@@ -48,15 +48,15 @@ export class PartyServiceImpl implements PartyService {
       });
     });
 
-    // const update = (next: (message: SubscribePartyResponse) => void) => {
+    // const update = (next: (message: SubscribeSpaceResponse) => void) => {
     //   try {
-    //     const party = this.echo.getParty(request.party_key);
+    //     const space = this.echo.getSpace(request.space_key);
     //     next({
-    //       party: party && {
-    //         public_key: party.key,
-    //         is_open: party.is_open,
-    //         is_active: party.is_active,
-    //         members: party.queryMembers().value
+    //       space: space && {
+    //         public_key: space.key,
+    //         is_open: space.is_open,
+    //         is_active: space.is_active,
+    //         members: space.queryMembers().value
     //       }
     //     });
     //   } catch (err) {
@@ -68,16 +68,16 @@ export class PartyServiceImpl implements PartyService {
     //   }
     // };
 
-    // const party = this.serviceContext.brane.getParty(request.party_key);
-    // if (party) {
-    //   return new Stream(({ next }) => party.update.on(() => update(next)));
+    // const space = this.serviceContext.brane.getSpace(request.space_key);
+    // if (space) {
+    //   return new Stream(({ next }) => space.update.on(() => update(next)));
     // } else {
     //   return new Stream(({ next }) => {
-    //     let unsubscribeParty: () => void;
+    //     let unsubscribeSpace: () => void;
     //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const party = parties.find((party) => party.key.equals(request.party_key));
-    //       if (party && !unsubscribeParty) {
-    //         unsubscribeParty = party.update.on(() => update(next));
+    //       const space = parties.find((space) => space.key.equals(request.space_key));
+    //       if (space && !unsubscribeSpace) {
+    //         unsubscribeSpace = space.update.on(() => update(next));
     //       }
     //     });
 
@@ -85,7 +85,7 @@ export class PartyServiceImpl implements PartyService {
 
     //     return () => {
     //       unsubscribeParties();
-    //       unsubscribeParty?.();
+    //       unsubscribeSpace?.();
     //     };
     //   });
     // }
@@ -98,11 +98,11 @@ export class PartyServiceImpl implements PartyService {
       const onUpdate = () => {
         next({
           parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
-            (space): Party => ({
+            (space): Space => ({
               publicKey: space.key,
               isOpen: true,
               isActive: true,
-              members: Array.from(space.partyState.members.values()).map((member) => ({
+              members: Array.from(space.spaceState.members.values()).map((member) => ({
                 identityKey: member.key,
                 profile: {
                   identityKey: member.key,
@@ -137,15 +137,15 @@ export class PartyServiceImpl implements PartyService {
     });
   }
 
-  async getPartyDetails(request: GetPartyDetailsRequest): Promise<PartyDetails> {
+  async getSpaceDetails(request: GetSpaceDetailsRequest): Promise<SpaceDetails> {
     return todo();
-    // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
+    // const space = this.echo.getSpace(request.space_key) ?? raise(new SpaceNotFoundError(request.space_key));
     // return {
-    //   processedTimeframe: party.timeframe
+    //   processedTimeframe: space.timeframe
     // };
   }
 
-  async createParty(): Promise<Party> {
+  async createSpace(): Promise<Space> {
     await this.serviceContext.initialized.wait();
     const space = await this.serviceContext.spaceManager!.createSpace();
     return {
@@ -155,44 +155,44 @@ export class PartyServiceImpl implements PartyService {
     };
   }
 
-  async cloneParty(snapshot: PartySnapshot): Promise<Party> {
+  async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
     return todo();
-    // const party = await this.echo.cloneParty(snapshot);
+    // const space = await this.echo.cloneSpace(snapshot);
     // return {
-    //   public_key: party.key,
-    //   is_open: party.is_open,
-    //   is_active: party.is_active
+    //   public_key: space.key,
+    //   is_open: space.is_open,
+    //   is_active: space.is_active
     // };
   }
 
-  async setPartyState(request: SetPartyStateRequest) {
+  async setSpaceState(request: SetSpaceStateRequest) {
     return todo();
-    // const party = this.echo.getParty(request.party_key);
-    // if (!party) {
-    //   throw new Error('Party not found');
+    // const space = this.echo.getSpace(request.space_key);
+    // if (!space) {
+    //   throw new Error('Space not found');
     // }
 
     // if (request.open === true) {
-    //   await party.open();
+    //   await space.open();
     // } else if (request.open === false) {
-    //   await party.close();
+    //   await space.close();
     // } // Undefined preserves previous state.
 
     // if (request.active_global === true) {
-    //   await party.activate({ global: true });
+    //   await space.activate({ global: true });
     // } else if (request.active_global === false) {
-    //   await party.deactivate({ global: true });
+    //   await space.deactivate({ global: true });
     // } // Undefined preserves previous state.
 
     // if (request.active_device === true) {
-    //   await party.activate({ device: true });
+    //   await space.activate({ device: true });
     // } else if (request.active_device === false) {
-    //   await party.deactivate({ device: true });
+    //   await space.deactivate({ device: true });
     // } // Undefined preserves previous state.
     // return {
-    //   public_key: party.key,
-    //   is_open: party.is_open,
-    //   is_active: party.is_active
+    //   public_key: space.key,
+    //   is_open: space.is_open,
+    //   is_active: space.is_active
     // };
   }
 
@@ -213,16 +213,16 @@ export class PartyServiceImpl implements PartyService {
         members: []
       });
     });
-    // const party = this.echo.getParty(request.party_key);
-    // if (party) {
-    //   return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
+    // const space = this.echo.getSpace(request.space_key);
+    // if (space) {
+    //   return resultSetToStream(space.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
     // } else {
     //   return new Stream(({ next }) => {
     //     let unsubscribeMembers: () => void;
     //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const party = parties.find((party) => party.key.equals(request.party_key));
-    //       if (!unsubscribeMembers && party) {
-    //         const resultSet = party.queryMembers();
+    //       const space = parties.find((space) => space.key.equals(request.space_key));
+    //       if (!unsubscribeMembers && space) {
+    //         const resultSet = space.queryMembers();
     //         next({ members: resultSet.value });
     //         unsubscribeMembers = resultSet.update.on(() => next({ members: resultSet.value }));
     //       }
@@ -236,10 +236,10 @@ export class PartyServiceImpl implements PartyService {
     // }
   }
 
-  async createSnapshot(request: CreateSnapshotRequest): Promise<PartySnapshot> {
+  async createSnapshot(request: CreateSnapshotRequest): Promise<SpaceSnapshot> {
     return todo();
-    // assert(request.party_key);
-    // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
-    // return party.createSnapshot();
+    // assert(request.space_key);
+    // const space = this.echo.getSpace(request.space_key) ?? raise(new SpaceNotFoundError(request.space_key));
+    // return space.createSnapshot();
   }
 }

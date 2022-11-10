@@ -7,7 +7,7 @@ import React, { ReactElement } from 'react';
 import { Face as FaceIcon, Share as ShareIcon } from '@mui/icons-material';
 import { Avatar, Tooltip, colors, useTheme } from '@mui/material';
 
-import { PartyMember } from '@dxos/client';
+import { SpaceMember } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 
 const { red, pink, deepPurple, deepOrange, indigo, blue, cyan, teal, green, amber } = colors;
@@ -55,8 +55,8 @@ export const ShareButton = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-// TODO(burdon): Remove PartyMember dep and create type here.
-export const MemberAvatar = ({ member }: { member?: PartyMember }): ReactElement => {
+// TODO(burdon): Remove SpaceMember dep and create type here.
+export const MemberAvatar = ({ member }: { member?: SpaceMember }): ReactElement => {
   const theme = useTheme();
 
   if (!member) {

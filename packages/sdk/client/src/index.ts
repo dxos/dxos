@@ -36,7 +36,7 @@ export {
   AuthenticatingInvitationObservable
 } from '@dxos/client-services';
 
-export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';
+export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Remove.

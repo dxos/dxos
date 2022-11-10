@@ -135,7 +135,7 @@ export class Space implements ISpace {
 
   get database() {
     if (!this._database) {
-      throw new Error('Party not open.');
+      throw new Error('Space not open.');
     }
 
     return this._database;
@@ -153,8 +153,8 @@ export class Space implements ISpace {
     return this._dataFeed.key;
   }
 
-  get partyState() {
-    return this._controlPipeline.partyState;
+  get spaceState() {
+    return this._controlPipeline.spaceState;
   }
 
   /**
@@ -204,7 +204,7 @@ export class Space implements ISpace {
     {
       this._dataPipeline = new Pipeline(new Timeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
-      for (const feed of this._controlPipeline.partyState.feeds.values()) {
+      for (const feed of this._controlPipeline.spaceState.feeds.values()) {
         await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
     }
@@ -248,7 +248,7 @@ export class Space implements ISpace {
         try {
           const payload = data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
-            const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
+            const feedInfo = this._controlPipeline.spaceState.feeds.get(feedKey);
             if (!feedInfo) {
               log.error('Could not find feed.', { feedKey });
               continue;

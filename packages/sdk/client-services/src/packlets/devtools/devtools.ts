@@ -14,11 +14,11 @@ import {
   GetConfigResponse,
   GetNetworkPeersRequest,
   GetNetworkPeersResponse,
-  GetPartySnapshotRequest,
-  GetPartySnapshotResponse,
+  GetSpaceSnapshotRequest,
+  GetSpaceSnapshotResponse,
   ResetStorageRequest,
-  SavePartySnapshotRequest,
-  SavePartySnapshotResponse,
+  SaveSpaceSnapshotRequest,
+  SaveSpaceSnapshotResponse,
   SubscribeToCredentialMessagesRequest,
   SubscribeToCredentialMessagesResponse,
   SubscribeToFeedBlocksRequest,
@@ -106,11 +106,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request);
   }
 
-  getPartySnapshot(request: GetPartySnapshotRequest): Promise<GetPartySnapshotResponse> {
+  getSpaceSnapshot(request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
     throw new Error();
   }
 
-  savePartySnapshot(request: SavePartySnapshotRequest): Promise<SavePartySnapshotResponse> {
+  saveSpaceSnapshot(request: SaveSpaceSnapshotRequest): Promise<SaveSpaceSnapshotResponse> {
     throw new Error();
   }
 

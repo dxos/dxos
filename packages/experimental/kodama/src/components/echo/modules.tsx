@@ -5,26 +5,26 @@
 import { Box, useFocusManager } from 'ink';
 import React, { FC, ReactNode, useMemo } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { useSpace } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
 import { Join, Share } from '../invitations';
 import { MenuItem, Module, Panel } from '../util';
-import { CreateParty } from './CreateParty';
-import { PartyFeeds } from './PartyFeeds';
-import { PartyInfo } from './PartyInfo';
-import { PartyMembers } from './PartyMembers';
-import { PartyView } from './PartyView';
+import { CreateSpace } from './CreateSpace';
+import { SpaceFeeds } from './SpaceFeeds';
+import { SpaceInfo } from './SpaceInfo';
+import { SpaceMembers } from './SpaceMembers';
+import { SpaceView } from './SpaceView';
 
-const PartyPanel: FC<{
+const SpacePanel: FC<{
   children: ReactNode;
-  party: Party;
-}> = ({ children, party }) => {
+  space: Space;
+}> = ({ children, space }) => {
   return (
     <Panel>
       <Box flexDirection='column' marginBottom={1}>
-        <PartyInfo party={party} />
+        <SpaceInfo space={space} />
       </Box>
 
       {children}
@@ -37,46 +37,46 @@ export const createEchoMenu = (): MenuItem | undefined => {
     id: 'echo',
     label: 'ECHO',
     component: ({ parent }) => {
-      const [{ partyKey }] = useAppState();
-      const party = useSpace(partyKey);
-      const partyItems = useMemo(
+      const [{ spaceKey }] = useAppState();
+      const space = useSpace(spaceKey);
+      const spaceItems = useMemo(
         () =>
-          party
+          space
             ? [
                 {
                   id: 'members',
                   label: 'Members',
                   component: () => (
-                    <PartyPanel party={party}>
-                      <PartyMembers partyKey={party.key} />
-                    </PartyPanel>
+                    <SpacePanel space={space}>
+                      <SpaceMembers spaceKey={space.key} />
+                    </SpacePanel>
                   )
                 },
                 {
                   id: 'feeds',
                   label: 'Feeds',
                   component: () => (
-                    <PartyPanel party={party}>
-                      <PartyFeeds partyKey={party.key} />
-                    </PartyPanel>
+                    <SpacePanel space={space}>
+                      <SpaceFeeds spaceKey={space.key} />
+                    </SpacePanel>
                   )
                 },
                 {
                   id: 'share',
                   label: 'Share Space',
                   component: () => (
-                    <PartyPanel party={party}>
+                    <SpacePanel space={space}>
                       <Share
                         onCreate={() => {
-                          return party.createInvitation();
+                          return space.createInvitation();
                         }}
                       />
-                    </PartyPanel>
+                    </SpacePanel>
                   )
                 }
               ]
             : [],
-        [party]
+        [space]
       );
 
       return (
@@ -87,19 +87,19 @@ export const createEchoMenu = (): MenuItem | undefined => {
             {
               id: 'parties',
               label: 'Spaces',
-              component: () => <PartyView />
+              component: () => <SpaceView />
             },
-            ...partyItems,
+            ...spaceItems,
             {
               id: 'join',
               label: 'Join Space',
               component: () => {
-                const [, { setPartyKey }] = useAppState();
+                const [, { setSpaceKey }] = useAppState();
                 const { focusPrevious } = useFocusManager();
                 return (
                   <Join
-                    onJoin={(partyKey) => {
-                      setPartyKey(partyKey);
+                    onJoin={(spaceKey) => {
+                      setSpaceKey(spaceKey);
                       focusPrevious();
                     }}
                   />
@@ -110,12 +110,12 @@ export const createEchoMenu = (): MenuItem | undefined => {
               id: 'create',
               label: 'Create Space',
               component: () => {
-                const [, { setPartyKey }] = useAppState();
+                const [, { setSpaceKey }] = useAppState();
                 const { focusPrevious } = useFocusManager();
                 return (
-                  <CreateParty
-                    onCreate={(partyKey) => {
-                      setPartyKey(partyKey);
+                  <CreateSpace
+                    onCreate={(spaceKey) => {
+                      setSpaceKey(spaceKey);
                       focusPrevious();
                     }}
                   />

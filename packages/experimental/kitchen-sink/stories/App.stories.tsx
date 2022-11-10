@@ -8,13 +8,13 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
 import { Snackbar } from '@mui/material';
 
-import { InvitationEncoder, Party } from '@dxos/client';
-import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
+import { InvitationEncoder, Space } from '@dxos/client';
+import { SpaceBuilder, buildTestSpace } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
-import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
+import { CreateSpaceDialog, ExportAction, ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
-import { usePartySerializer } from '@dxos/react-toolkit';
+import { useSpaceSerializer } from '@dxos/react-toolkit';
 
 import { App } from '../src';
 // TODO(burdon): Lint issue.
@@ -31,12 +31,12 @@ export default {
  */
 export const Primary = () => {
   const Story = () => {
-    const party = useTestParty();
-    if (!party) {
+    const space = useTestSpace();
+    if (!space) {
       return null;
     }
 
-    return <App party={party} />;
+    return <App space={space} />;
   };
 
   return (
@@ -54,33 +54,33 @@ export const Primary = () => {
 export const Secondary = () => {
   const Story = () => {
     const client = useClient();
-    const [party, setParty] = useState<Party | null>();
+    const [space, setSpace] = useState<Space | null>();
     const [snackbarMessage, setSnackbarMessage] = useState<string | undefined>();
-    const partySerializer = usePartySerializer();
+    const spaceSerializer = useSpaceSerializer();
     const ipfsClient = useIpfsClient(client.config.get('runtime.services.ipfs.server'));
     const download = useFileDownload();
 
-    const handleCreateParty = async () => {
-      const party = await client.echo.createParty();
-      const builder = new PartyBuilder(party);
-      await buildTestParty(builder);
-      setParty(party);
+    const handleCreateSpace = async () => {
+      const space = await client.echo.createSpace();
+      const builder = new SpaceBuilder(space);
+      await buildTestSpace(builder);
+      setSpace(space);
     };
 
-    const handleJoinParty = async (invitationText: string) => {
+    const handleJoinSpace = async (invitationText: string) => {
       const { encodedInvitation } = JSON.parse(invitationText);
       await client.echo.acceptInvitation(InvitationEncoder.decode(encodedInvitation));
-      // TODO(wittjosiah): Get party.
+      // TODO(wittjosiah): Get space.
       // invitation.authenticate(Buffer.from(secret));
-      // const party = await invitation.getParty();
-      // setParty(party);
+      // const space = await invitation.getSpace();
+      // setSpace(space);
     };
 
-    const handleExportParty = async (action: ExportAction) => {
-      const blob = await partySerializer.serializeParty(party!);
+    const handleExportSpace = async (action: ExportAction) => {
+      const blob = await spaceSerializer.serializeSpace(space!);
       switch (action) {
         case ExportAction.EXPORT_IPFS: {
-          const file = new File([blob], `${party!.key.toHex()}.party`);
+          const file = new File([blob], `${space!.key.toHex()}.space`);
           const [ipfsFile] = await uploadFilesToIpfs(ipfsClient!, [file]);
           if (ipfsFile) {
             await navigator.clipboard.writeText(ipfsFile.cid);
@@ -90,13 +90,13 @@ export const Secondary = () => {
         }
 
         case ExportAction.EXPORT_FILE: {
-          download(blob, `${party!.key.toHex()}.party`);
+          download(blob, `${space!.key.toHex()}.space`);
           break;
         }
       }
     };
 
-    const handleImportParty = async (fileOrCID: File | string) => {
+    const handleImportSpace = async (fileOrCID: File | string) => {
       let data;
       if (fileOrCID instanceof File) {
         data = await new Uint8Array(await fileOrCID.arrayBuffer());
@@ -105,11 +105,11 @@ export const Secondary = () => {
         data = uint8ArrayConcat(await all(ipfsClient!.cat(fileOrCID)));
       }
 
-      setParty(await partySerializer.deserializeParty(data));
+      setSpace(await spaceSerializer.deserializeSpace(data));
     };
 
-    const handleInviteParty = async () => {
-      const { invitation } = await party!.createInvitation();
+    const handleInviteSpace = async () => {
+      const { invitation } = await space!.createInvitation();
       const encodedInvitation = InvitationEncoder.encode(invitation!);
       const text = JSON.stringify({
         encodedInvitation,
@@ -119,10 +119,10 @@ export const Secondary = () => {
       console.log(text); // Required for playwright tests.
     };
 
-    if (party) {
+    if (space) {
       return (
         <>
-          <App party={party} onInvite={handleInviteParty} onExport={handleExportParty} />
+          <App space={space} onInvite={handleInviteSpace} onExport={handleExportSpace} />
 
           <Snackbar
             open={Boolean(snackbarMessage)}
@@ -136,7 +136,7 @@ export const Secondary = () => {
     }
 
     return (
-      <CreatePartyDialog open onCreate={handleCreateParty} onJoin={handleJoinParty} onImport={handleImportParty} />
+      <CreateSpaceDialog open onCreate={handleCreateSpace} onJoin={handleJoinSpace} onImport={handleImportSpace} />
     );
   };
 

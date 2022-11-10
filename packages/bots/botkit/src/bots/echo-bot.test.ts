@@ -12,7 +12,7 @@ import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', function () {
   it('Starts a bot', async function () {
-    const { client, party, invitation } = await setupClient();
+    const { client, space, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 
     await bot.initialize({
@@ -27,7 +27,7 @@ describe('Echo Bot', function () {
       command
     });
 
-    const item = await party.database.waitForItem<ObjectModel>({
+    const item = await space.database.waitForItem<ObjectModel>({
       type: TEST_ECHO_TYPE
     });
     const payload = item.model.get('payload');

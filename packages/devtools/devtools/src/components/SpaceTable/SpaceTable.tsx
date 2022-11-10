@@ -25,11 +25,11 @@ const TimeFrame = ({ value }: { value: Timeframe }) => (
   </div>
 );
 
-export interface PartyTableProps {
-  parties: SubscribeToPartiesResponse.PartyInfo[];
+export interface SpaceTableProps {
+  parties: SubscribeToPartiesResponse.SpaceInfo[];
 }
 
-export const SpaceTable = ({ parties }: PartyTableProps) => (
+export const SpaceTable = ({ parties }: SpaceTableProps) => (
   <Table stickyHeader size='small'>
     <TableHead>
       <TableRow>

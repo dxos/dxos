@@ -33,9 +33,9 @@ const Parties = () => {
 
   return (
     <Box>
-      {parties.map((party) => (
-        <Box key={party.key.toHex()}>
-          <CopyText value={party.key.toHex()} />
+      {parties.map((space) => (
+        <Box key={space.key.toHex()}>
+          <CopyText value={space.key.toHex()} />
         </Box>
       ))}
     </Box>
