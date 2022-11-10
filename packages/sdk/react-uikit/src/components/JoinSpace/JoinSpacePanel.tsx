@@ -28,7 +28,7 @@ interface JoinStep1Props extends JoinSpacePanelProps {
 interface JoinStep2Props extends JoinSpacePanelProps {
   status: Invitation.State;
   cancel: () => void;
-  authenticate: (secret: string) => void;
+  authenticate: (secret: string) => Promise<void>;
   error?: number;
 }
 
@@ -81,17 +81,19 @@ const JoinStep1 = ({
 const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   const { t } = useTranslation();
   const [invitationSecret, setInvitationSecret] = useState('');
+  const [pending, setPending] = useState(false);
 
   console.log('[join step 2]', status);
 
   const onAuthenticateNext = useCallback(() => {
-    authenticate(invitationSecret);
+    setPending(true);
+    authenticate(invitationSecret).finally(() => setPending(false));
   }, [invitationSecret]);
 
   return (
     <SingleInputStep
       {...{
-        pending: status === Invitation.State.AUTHENTICATING,
+        pending,
         inputLabel: t('invitation secret label', { ns: 'uikit' }),
         inputProps: {
           size: 'pin',
