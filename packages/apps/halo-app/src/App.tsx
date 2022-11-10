@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame } from '@dxos/client';
+import { Client, fromDefaults } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
@@ -39,7 +39,8 @@ const configProvider = async () => new Config(await Dynamics(), await Envs(), De
 
 const clientProvider = async () => {
   const config = await configProvider();
-  const client = new Client({ config, services: fromIFrame(config) });
+  // const client = new Client({ config, services: fromIFrame(config) });
+  const client = new Client({ config, services: fromDefaults(config) });
   await client.initialize();
   return client;
 };
@@ -123,9 +124,7 @@ export const App = () => {
   });
 
   useEffect(() => {
-    log.config({ filter: 'debug' });
-    console.log('[deubug]', (log as any)._config);
-    log.warn('[hello]');
+    log.config({ filter: ['invitations:debug'] });
   }, []);
 
   return (

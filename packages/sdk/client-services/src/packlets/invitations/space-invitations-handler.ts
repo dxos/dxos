@@ -50,6 +50,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
     const invitation: Invitation = {
       type,
+      // type: Invitation.Type.INTERACTIVE_TESTING,
       invitationId: PublicKey.random().toHex(),
       swarmKey: PublicKey.random(),
       spaceKey: space.key,
