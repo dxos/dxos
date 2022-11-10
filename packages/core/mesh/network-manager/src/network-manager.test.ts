@@ -218,8 +218,6 @@ describe('NetworkManager', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: rpcPortB,
         noHandshake: true,
         encodingOptions: {

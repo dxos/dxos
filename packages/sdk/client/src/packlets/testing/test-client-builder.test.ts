@@ -2,16 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesProxy } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
+import { Party } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
 
 // TODO(burdon): Use as set-up for test suite.
@@ -34,12 +35,10 @@ describe('Client services', function () {
     await peer.open();
     afterTest(() => peer.close());
 
-    const [proxyPort, hostPort] = createLinkedPorts();
-    const server = peer.createPeer(hostPort);
+    const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
     afterTest(() => server.close());
 
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
     await client.initialize();
     afterTest(() => client.destroy());
     expect(client.initialized).to.be.true;
@@ -90,33 +89,37 @@ describe('Client services', function () {
     }
   });
 
-  it('exchanges party invitations between two peers', async function () {
+  it('synchronizes data between two spaces after competing invitation', async function () {
     const testBuilder = new TestClientBuilder();
 
-    // TODO(wittjosiah): Factor out to builder?
     const peer1 = testBuilder.createClientServicesHost();
-    await peer1.open();
-    afterTest(() => peer1.close());
-    const [client1, server1] = testBuilder.createClientServer(peer1);
-    void server1.open();
-    await client1.initialize();
-    afterTest(() => Promise.all([client1.destroy(), server1.close()]));
-    await client1.halo.createProfile();
-
     const peer2 = testBuilder.createClientServicesHost();
+
+    await peer1.open();
     await peer2.open();
-    afterTest(() => peer2.close());
+
+    const [client1, server1] = testBuilder.createClientServer(peer1);
     const [client2, server2] = testBuilder.createClientServer(peer2);
-    void server2.open();
-    await client2.initialize();
-    afterTest(() => Promise.all([client2.destroy(), server2.close()]));
-    await client2.halo.createProfile();
+
+    // Don't wait (otherwise will block).
+    {
+      void server1.open();
+      void server2.open();
+
+      await client1.initialize();
+      await client2.initialize();
+      await client1.halo.createProfile();
+      await client2.halo.createProfile();
+    }
+
+    afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
+    afterTest(() => Promise.all([client2.destroy(), server2.close(), peer2.close()]));
 
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const party = await client1.echo.createParty();
-    const observable1 = await party.createInvitation();
+    const party1 = await client1.echo.createParty();
+    const observable1 = await party1.createInvitation();
     const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
 
     observable1.subscribe({
@@ -125,6 +128,7 @@ describe('Client services', function () {
       },
       onError: (err) => raise(err)
     });
+
     observable2.subscribe({
       onSuccess: (invitation) => {
         success2.wake(invitation);
@@ -135,6 +139,30 @@ describe('Client services', function () {
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
+
+    const trigger = new Trigger<Party>();
+    await waitForExpect(() => {
+      const party2 = client2.echo.getParty(invitation2.spaceKey!);
+      assert(party2);
+      expect(party2).to.exist;
+      trigger.wake(party2);
+    });
+
+    const party2 = await trigger.wait();
+
+    // TODO(burdon): Factor out synchronization test.
+    // TODO(burdon): Reconcile with `@dxos/client-services` `syncItems` (reconcile PartyProxy, Space).
+    {
+      const item1 = await party1.database.createItem({ type: 'type-1' });
+      const item2 = await party2.database.waitForItem({ type: 'type-1' });
+      expect(item1.id).to.eq(item2.id);
+    }
+
+    {
+      const item1 = await party2.database.createItem({ type: 'type-2' });
+      const item2 = await party1.database.waitForItem({ type: 'type-2' });
+      expect(item1.id).to.eq(item2.id);
+    }
   });
 
   // TODO(burdon): Browser-only.
