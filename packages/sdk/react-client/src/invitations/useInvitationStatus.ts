@@ -5,7 +5,13 @@
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
-import { PublicKey, Invitation, InvitationEncoder, InvitationObservable } from '@dxos/client';
+import {
+  PublicKey,
+  Invitation,
+  InvitationEncoder,
+  InvitationObservable,
+  AuthenticatingInvitationObservable
+} from '@dxos/client';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -13,15 +19,12 @@ export type InvitationResult = {
   swarmKey: PublicKey | null;
 };
 
-export const InvitationState = Invitation.State;
-export type InvitationState = Invitation.State;
-
 interface InvitationReducerState {
   status: Invitation.State;
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
-  wrapper?: InvitationObservable;
+  observable?: InvitationObservable | AuthenticatingInvitationObservable;
 }
 
 export type InvitationAction =
@@ -30,7 +33,7 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTING;
-      wrapper: InvitationObservable;
+      observable: InvitationObservable;
     }
   | {
       status: Invitation.State.CONNECTED;
@@ -51,14 +54,14 @@ export type InvitationAction =
       haltedAt: Invitation.State;
     };
 
-export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
+export const useInvitationStatus = (initialObservable?: InvitationObservable) => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) =>
       ({
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
-        wrapper: action.status === Invitation.State.CONNECTING ? action.wrapper : prev.wrapper,
+        observable: action.status === Invitation.State.CONNECTING ? action.observable : prev.observable,
         // `error` gets reset each time we leave the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets reset each time we leave the error or cancelled state
@@ -73,7 +76,7 @@ export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
       return {
         status: Invitation.State.INIT,
         result: { spaceKey: null, identityKey: null, swarmKey: null },
-        wrapper: initialWrapper
+        observable: initialObservable
       };
     }
   );
@@ -106,6 +109,10 @@ export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
     dispatch({ status: Invitation.State.CANCELLED, haltedAt: state.status });
   }, [state.status]);
 
+  const onAuthenticating = useCallback(() => {
+    dispatch({ status: Invitation.State.AUTHENTICATING });
+  }, [state.status]);
+
   const onTimeout = useCallback(
     (_err: TimeoutError) => {
       dispatch({ status: Invitation.State.TIMEOUT, haltedAt: state.status });
@@ -116,22 +123,28 @@ export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
   // Handle unmount
 
   useEffect(() => {
-    return state.wrapper?.subscribe({
+    return state.observable?.subscribe({
       onConnected,
       onSuccess,
       onError,
       onCancelled,
+      onAuthenticating,
       onTimeout
     });
-  }, [state.wrapper, onConnected, onSuccess, onError, onCancelled, onTimeout]);
+  }, [state.observable, onConnected, onSuccess, onError, onCancelled, onAuthenticating, onTimeout]);
 
   // Return memoized callbacks & values
 
-  const connect = useCallback((wrapper: InvitationObservable) => {
-    dispatch({ status: Invitation.State.CONNECTING, wrapper });
+  const connect = useCallback((observable: InvitationObservable) => {
+    dispatch({ status: Invitation.State.CONNECTING, observable });
   }, []);
 
-  const cancel = useCallback(async () => state.wrapper?.cancel(), [state.wrapper]);
+  const authenticate = useCallback((secret: string) => {
+    console.log('[authenticate]', secret);
+    (state.observable as AuthenticatingInvitationObservable).authenticate(secret);
+  }, []);
+
+  const cancel = useCallback(async () => state.observable?.cancel(), [state.observable]);
 
   return useMemo(() => {
     return {
@@ -141,8 +154,9 @@ export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
       error: state.error,
       cancel,
       connect,
-      id: state.wrapper?.invitation?.invitationId ?? null,
-      code: state.wrapper?.invitation ? InvitationEncoder.encode(state.wrapper.invitation) : null
+      authenticate,
+      id: state.observable?.invitation?.invitationId ?? null,
+      code: state.observable?.invitation ? InvitationEncoder.encode(state.observable.invitation) : null
     };
-  }, [state, connect]);
+  }, [state, connect, authenticate]);
 };

@@ -33,7 +33,8 @@ export {
   ClientServicesProvider,
   InvitationEvents,
   InvitationEncoder,
-  InvitationObservable
+  InvitationObservable,
+  AuthenticatingInvitationObservable
 } from '@dxos/client-services';
 
 export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';

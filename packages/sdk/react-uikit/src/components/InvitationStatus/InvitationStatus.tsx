@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React, { ComponentProps, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationState } from '@dxos/react-client';
+import { Invitation } from '@dxos/client';
 import { defaultShimmer, getSize } from '@dxos/react-ui';
 
 const pip = cx('rounded-full flex-none', getSize(3));
@@ -22,30 +22,30 @@ export const InvitationStatus = ({
   haltedAt,
   ...rootProps
 }: ComponentProps<'div'> & {
-  status: InvitationState;
-  haltedAt?: InvitationState;
+  status: Invitation.State;
+  haltedAt?: Invitation.State;
 }) => {
   const { t } = useTranslation();
 
   const statusLabelMap = useMemo(
     () =>
-      new Map<InvitationState, string>([
-        [InvitationState.ERROR, t('failed status label')],
-        [InvitationState.CANCELLED, t('cancelled status label')],
-        [InvitationState.INIT, t('init status label')],
-        [InvitationState.CONNECTING, t('init status connecting')],
-        [InvitationState.CONNECTED, t('ready status connecting')],
-        [InvitationState.AUTHENTICATING, t('validating status connecting')],
-        [InvitationState.SUCCESS, t('done status connecting')]
+      new Map<Invitation.State, string>([
+        [Invitation.State.ERROR, t('failed status label')],
+        [Invitation.State.CANCELLED, t('cancelled status label')],
+        [Invitation.State.INIT, t('init status label')],
+        [Invitation.State.CONNECTING, t('init status connecting')],
+        [Invitation.State.CONNECTED, t('ready status connecting')],
+        [Invitation.State.AUTHENTICATING, t('validating status connecting')],
+        [Invitation.State.SUCCESS, t('done status connecting')]
       ]),
     [t]
   );
 
   const cursor = status < 0 ? haltedAt! - 1 : status;
   const resolvedColor =
-    status === InvitationState.ERROR
+    status === Invitation.State.ERROR
       ? errorColor
-      : status === InvitationState.CANCELLED || status === InvitationState.TIMEOUT
+      : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
       ? cancelledColor
       : successColor;
 
