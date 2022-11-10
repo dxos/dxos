@@ -38,7 +38,6 @@ export class WebRTCTransport implements Transport {
   readonly errors = new ErrorStream();
 
   constructor(private readonly params: WebRTCTransportParams) {
-
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
@@ -47,7 +46,7 @@ export class WebRTCTransport implements Transport {
     });
 
     this._peer.on('signal', async (data) => {
-      console.log('WebRTCTransport.signal');
+      log('signal', data);
       try {
         await this.params.sendSignal({
           author: this.params.ownId,
@@ -99,6 +98,7 @@ export class WebRTCTransport implements Transport {
   }
 
   async signal(signal: Signal) {
+    debugger;
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));

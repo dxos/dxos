@@ -37,10 +37,9 @@ export class WebRTCTransportService implements BridgeService {
 
     const duplex: Duplex = new Duplex({
       read: () => {
-        console.log('Duplex read');
+        log('Duplex: read');
       },
       write: function (chunk) {
-        console.log('Duplex write:', chunk);
         event.emit({ data: { payload: chunk } });
       }
     });
@@ -53,18 +52,12 @@ export class WebRTCTransportService implements BridgeService {
       sessionId: PublicKey.from(Buffer.from('')),
       topic: PublicKey.from(Buffer.from('')),
       sendSignal: (msg) => {
-        console.log('WebRTCTransport Signal', {
-          signal: { payload: msg.data.signal }
-        });
         event.emit({
           signal: { payload: msg.data.signal }
         });
       }
     });
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
-      console.log(
-        `Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
-      );
       next({
         connection: {
           state: ConnectionState.CONNECTING
@@ -108,13 +101,11 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    console.log('sendSignal', signal);
     assert(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.transport.signal(signal);
   }
 
   async sendData({ proxyId, payload }: DataRequest): Promise<void> {
-    console.log('Service.sendData', payload);
     assert(this.transports.has(proxyId));
     await this.transports.get(proxyId)!.stream.push(payload);
   }
