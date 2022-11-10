@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { humanize } from '@dxos/util';
 
 type CreateProfileOptions = {
   publicKey?: PublicKey;
@@ -141,7 +142,22 @@ export class HaloProxy implements Halo {
   }
 
   async queryDevices(): Promise<DeviceInfo[]> {
-    return [];
+    return new Promise((resolve, reject) => {
+      const stream = this._serviceProvider.services.DevicesService.queryDevices();
+      stream.subscribe(
+        (devices) => {
+          resolve(devices.devices?.map((device) => ({
+            publicKey: device.deviceKey,
+            displayName: humanize(device.deviceKey),
+          })) ?? []);
+          stream.close();
+        },
+        (error) => {
+          reject(error);
+          stream.close();
+        }
+      )
+    });
   }
 
   /**

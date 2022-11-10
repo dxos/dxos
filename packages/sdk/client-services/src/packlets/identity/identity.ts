@@ -15,6 +15,7 @@ import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
+import { Event } from '@dxos/async';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -30,9 +31,12 @@ export class Identity {
   private readonly _space: Space;
   private readonly _signer: Signer;
   private readonly _deviceStateMachine: DeviceStateMachine;
-
+  
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
+
+  public readonly stateUpdate = new Event();
+  
 
   constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
     this._space = space;
@@ -46,6 +50,7 @@ export class Identity {
     // Save device key chain credential when processed by the party state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);
+      this.stateUpdate.emit();
     });
   }
 

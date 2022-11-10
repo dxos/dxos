@@ -12,7 +12,7 @@ import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxo
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
 import { createServiceContext } from '../testing';
-import { createServiceProvider, ServiceRegistry } from './service-registry';
+import { createLazyLoadedService, ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 
