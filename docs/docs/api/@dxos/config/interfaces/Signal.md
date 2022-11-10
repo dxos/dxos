@@ -4,12 +4,18 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `api: string`
+### [`api`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `server: string`
+### [`server`]()
+Type: `string`
+
 Options:
   - proto3_optional = true
-### `status: string`
+### [`status`]()
+Type: `string`
+
 Options:
   - proto3_optional = true

@@ -38,15 +38,14 @@ export class WebRTCTransport implements Transport {
   readonly errors = new ErrorStream();
 
   constructor(private readonly params: WebRTCTransportParams) {
-    console.log(
-      `Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`
-    );
 
+    log('created connection', params);
     this._peer = new SimplePeerConstructor({
       initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc ?? raise(new Error('wrtc not available')),
       config: this.params.webrtcConfig
     });
+
     this._peer.on('signal', async (data) => {
       console.log('WebRTCTransport.signal');
       try {
@@ -61,19 +60,22 @@ export class WebRTCTransport implements Transport {
         this.errors.raise(err);
       }
     });
+
     this._peer.on('connect', () => {
-      console.log(`Connection established ${this.params.ownId} -> ${this.params.remoteId}`);
+      log('connected', { id: this.params.ownId, remoteId: this.params.remoteId });
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });
+
+    this._peer.on('close', async () => {
+      log('closed', { id: this.params.ownId, remoteId: this.params.remoteId });
+      await this._disconnectStreams();
+      this.closed.emit();
+    });
+
     this._peer.on('error', async (err) => {
       this.errors.raise(err);
       await this.close();
-    });
-    this._peer.on('close', async () => {
-      log(`Connection closed ${this.params.ownId} -> ${this.params.remoteId}`);
-      await this._disconnectStreams();
-      this.closed.emit();
     });
   }
 
@@ -89,16 +91,24 @@ export class WebRTCTransport implements Transport {
     return this.params.sessionId;
   }
 
+  async close() {
+    log('closing...');
+    await this._disconnectStreams();
+    this._peer!.destroy();
+    log('closed');
+  }
+
+  async close() {
+    log('closing...');
+    await this._disconnectStreams();
+    this._peer!.destroy();
+    log('closed');
+  }
+
   async signal(signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));
-  }
-
-  async close() {
-    await this._disconnectStreams();
-    this._peer!.destroy();
-    log('Closed.');
   }
 
   private async _disconnectStreams() {
@@ -107,6 +117,7 @@ export class WebRTCTransport implements Transport {
   }
 }
 
+// TODO(dmaretskyi): Convert to class.
 export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
   create: (params) =>
     new WebRTCTransport({

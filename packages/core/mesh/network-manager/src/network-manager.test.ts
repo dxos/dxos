@@ -34,11 +34,29 @@ import {
 // Signal server will be started by the setup script.
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
+// TODO(burdon): Remove global and replace with factories.
 const signalContext = new MemorySignalManagerContext();
+
+// const createMemoryNetworkManager = (signalContext: MemorySignalManagerContext) => {
+//   return new NetworkManager({
+//     signalManager: new MemorySignalManager(signalContext),
+//     transportFactory: MemoryTransportFactory
+//   });
+// };
+
+// const createWebRTCNetworkManager = async (config: any, peerId: PublicKey) => {
+//   const signalManager = new WebsocketSignalManager(signalHosts!);
+//   await signalManager.subscribeMessages(peerId);
+//
+//   return new NetworkManager({
+//     signalManager,
+//     transportFactory: createWebRTCTransportFactory(config)
+//   });
+// };
 
 interface CreatePeerOptions {
   topic: PublicKey;
-  peerId: PublicKey; // TODO(burdon): peerKey
+  peerId: PublicKey;
   topology?: Topology;
   signalHosts?: string[];
   transportFactory: TransportFactory;
@@ -47,6 +65,7 @@ interface CreatePeerOptions {
 /**
  * @deprecated
  */
+// TODO(burdon): Builder pattern.
 const createPeer = async ({
   topic,
   peerId,
@@ -65,7 +84,7 @@ const createPeer = async ({
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.openSwarmConnection({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -73,7 +92,7 @@ const createPeer = async ({
   };
 };
 
-describe('Network manager', function () {
+describe('NetworkManager', function () {
   describe('WebRTC transport', function () {
     let topic: PublicKey;
     let peer1Id: PublicKey;
@@ -91,6 +110,7 @@ describe('Network manager', function () {
       getTransportFactory: async () => createWebRTCTransportFactory()
     });
 
+    // TODO(burdon): Factor out config and remove consts.
     it.skip('two peers with different signal & turn servers', async function () {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
         topic,
@@ -124,8 +144,8 @@ describe('Network manager', function () {
         received.push(p, s);
         return undefined;
       };
-      plugin1.on('receive', mockReceive);
 
+      plugin1.on('receive', mockReceive);
       plugin2.on('connect', async () => {
         await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
       });
@@ -160,8 +180,8 @@ describe('Network manager', function () {
           received.push(p, s);
           return undefined;
         };
-        plugin1.on('receive', mockReceive);
 
+        plugin1.on('receive', mockReceive);
         plugin2.on('connect', async () => {
           await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
         });
@@ -171,6 +191,8 @@ describe('Network manager', function () {
           expect(received[0]).toBeInstanceOf(Protocol);
           expect(received[1]).toBe('{"message": "Hello"}');
         });
+
+        // TODO(burdon): Close.
       }).timeout(10_000);
     });
   }).timeout(10_000);
@@ -181,7 +203,6 @@ describe('Network manager', function () {
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       const service = createProtoRpcPeer({
-        requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
@@ -197,8 +218,6 @@ describe('Network manager', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: rpcPortB,
         noHandshake: true,
         encodingOptions: {
@@ -213,6 +232,7 @@ describe('Network manager', function () {
 
       return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService);
     };
+
     sharedTests({
       inMemory: false,
       signalUrl: SIGNAL_URL,
@@ -220,7 +240,7 @@ describe('Network manager', function () {
     });
   });
 
-  describe('In-memory transport', function () {
+  describe('memory transport', function () {
     sharedTests({
       inMemory: true,
       getTransportFactory: async () => MemoryTransportFactory
@@ -248,7 +268,6 @@ describe('Network manager', function () {
               plugin.on('connect', async (protocol: Protocol) => {
                 const { peerId } = protocol.getSession() ?? {};
                 const remoteId = PublicKey.from(peerId);
-
                 await plugin.send(remoteId.asBuffer(), 'ping');
               });
 
@@ -330,7 +349,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => !model.peers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.peers.add(this.peerId);
 
@@ -354,7 +372,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.peers.delete(this.peerId);
           model.joinedPeers.delete(this.peerId);
@@ -373,7 +390,6 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.joinedPeers.add(this.peerId);
 
@@ -383,7 +399,7 @@ describe('Network manager', function () {
           afterTest(() => presence.stop());
           const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-          await peer.networkManager.joinProtocolSwarm({
+          await peer.networkManager.openSwarmConnection({
             peerId: this.peerId, // TODO(burdon): `this`?
             topic: model.topic,
             protocol,
@@ -403,13 +419,12 @@ describe('Network manager', function () {
         constructor(readonly peerId: PublicKey) {}
 
         check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
-
         async run(model: Model, real: Real) {
           model.joinedPeers.delete(this.peerId);
 
           const peer = real.peers.get(this.peerId)!;
 
-          await peer.networkManager.leaveProtocolSwarm(model.topic);
+          await peer.networkManager.closeSwarmConnection(model.topic);
           peer.presence = undefined;
 
           await assertState(model, real);
@@ -419,7 +434,6 @@ describe('Network manager', function () {
       }
 
       const peerIds = range(10).map(() => PublicKey.random());
-
       const aPeerId = fc.constantFrom(...peerIds);
 
       const allCommands = [
@@ -519,11 +533,12 @@ function sharedTests({
       received.push(p, s);
       return undefined;
     };
-    plugin1.on('receive', mockReceive);
 
+    plugin1.on('receive', mockReceive);
     plugin2.on('connect', async () => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
+
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
@@ -552,20 +567,17 @@ function sharedTests({
     });
 
     await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
-
     log('Connected');
 
     const promise1 = Event.wrap(plugin1, 'disconnect').waitForCount(1);
     const promise2 = Event.wrap(plugin2, 'disconnect').waitForCount(1);
 
-    await networkManager1.leaveProtocolSwarm(topic);
+    await networkManager1.closeSwarmConnection(topic);
 
     await promise1;
-
     log('Peer1 disconnected');
 
     await promise2;
-
     log('Peer2 disconnected');
 
     await networkManager1.destroy();
@@ -594,8 +606,11 @@ function sharedTests({
       transportFactory: await getTransportFactory()
     });
 
-    await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
-
+    // prettier-ignore
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
     log('Connected');
 
     const disconnectPromises = Promise.all([
@@ -609,11 +624,11 @@ function sharedTests({
     ]);
 
     log('Disconnecting peer2');
-    await networkManager2.leaveProtocolSwarm(topic);
+    await networkManager2.closeSwarmConnection(topic);
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    await networkManager2.joinProtocolSwarm({
+    await networkManager2.openSwarmConnection({
       topic,
       peerId: newPeer2Id,
       protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
@@ -621,7 +636,6 @@ function sharedTests({
     });
 
     await disconnectPromises;
-
     await connectPromises;
 
     await networkManager1.destroy();
@@ -648,7 +662,7 @@ function sharedTests({
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
-      await networkManager.joinProtocolSwarm({
+      await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
@@ -667,7 +681,7 @@ function sharedTests({
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
-      await networkManager.joinProtocolSwarm({
+      await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
@@ -720,6 +734,7 @@ function sharedTests({
       return undefined;
     };
     pluginA1.on('receive', mockReceiveA);
+
     const receivedB: any[] = [];
     const mockReceiveB = (p: Protocol, s: string) => {
       receivedB.push(p, s);
@@ -728,19 +743,19 @@ function sharedTests({
     pluginB1.on('receive', mockReceiveB);
 
     pluginA2.on('connect', async () => {
-      await pluginA2.send(peerA1Id.asBuffer(), 'Foo A');
+      await pluginA2.send(peerA1Id.asBuffer(), 'Test A');
     });
     pluginB2.on('connect', async () => {
-      await pluginB2.send(peerB1Id.asBuffer(), 'Foo B');
+      await pluginB2.send(peerB1Id.asBuffer(), 'Test B');
     });
 
     await waitForExpect(() => {
       expect(receivedA.length).toBe(2);
       expect(receivedA[0]).toBeInstanceOf(Protocol);
-      expect(receivedA[1]).toBe('Foo A');
+      expect(receivedA[1]).toBe('Test A');
       expect(receivedB.length).toBe(2);
       expect(receivedB[0]).toBeInstanceOf(Protocol);
-      expect(receivedB[1]).toBe('Foo B');
+      expect(receivedB[1]).toBe('Test B');
     });
   });
 }

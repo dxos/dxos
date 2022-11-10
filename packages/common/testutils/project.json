@@ -4,25 +4,31 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/testutils/src/index.ts",
         "outputPath": "packages/common/testutils/dist",
         "tsConfig": "packages/common/testutils/tsconfig.json",
-        "main": "packages/common/testutils/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/testutils/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

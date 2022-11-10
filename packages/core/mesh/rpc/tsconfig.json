@@ -19,6 +19,12 @@
     },
     {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
     }
   ]
 }

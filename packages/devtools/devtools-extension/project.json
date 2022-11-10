@@ -1,17 +1,32 @@
 {
   "sourceRoot": "packages/devtools/devtools-extension/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "dependsOn": [
+        "^build"
+      ],
+      "options": {
+        "script": "build"
+      },
+      "outputs": [
+        "packages/devtools/devtools-extension/dist"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools-extension/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

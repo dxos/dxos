@@ -4,45 +4,53 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/mesh/network-generator/src/index.ts",
         "outputPath": "packages/core/mesh/network-generator/dist",
         "tsConfig": "packages/core/mesh/network-generator/tsconfig.json",
-        "main": "packages/core/mesh/network-generator/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/network-generator/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/network-generator",
+        "outputPath": "tmp/mocha/packages/core/mesh/network-generator",
+        "resultsPath": "test-results/packages/core/mesh/network-generator",
         "testPatterns": [
           "packages/core/mesh/network-generator/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/network-generator/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/network-generator",
-        "resultsPath": "test-results/packages/core/mesh/network-generator",
-        "coveragePath": "coverage/packages/core/mesh/network-generator"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

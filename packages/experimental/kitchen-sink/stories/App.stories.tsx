@@ -8,7 +8,7 @@ import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 
 import { Snackbar } from '@mui/material';
 
-import { InvitationDescriptor, Party } from '@dxos/client';
+import { InvitationEncoder, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
@@ -68,11 +68,12 @@ export const Secondary = () => {
     };
 
     const handleJoinParty = async (invitationText: string) => {
-      const { encodedInvitation, secret } = JSON.parse(invitationText);
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
-      invitation.authenticate(Buffer.from(secret));
-      const party = await invitation.getParty();
-      setParty(party);
+      const { encodedInvitation } = JSON.parse(invitationText);
+      await client.echo.acceptInvitation(InvitationEncoder.decode(encodedInvitation));
+      // TODO(wittjosiah): Get party.
+      // invitation.authenticate(Buffer.from(secret));
+      // const party = await invitation.getParty();
+      // setParty(party);
     };
 
     const handleExportParty = async (action: ExportAction) => {
@@ -108,11 +109,11 @@ export const Secondary = () => {
     };
 
     const handleInviteParty = async () => {
-      const invitation = await party!.createInvitation();
-      const encodedInvitation = invitation.descriptor.encode();
+      const { invitation } = await party!.createInvitation();
+      const encodedInvitation = InvitationEncoder.encode(invitation!);
       const text = JSON.stringify({
         encodedInvitation,
-        secret: invitation.secret.toString()
+        secret: invitation?.secret?.toString()
       });
       await navigator.clipboard.writeText(text);
       console.log(text); // Required for playwright tests.

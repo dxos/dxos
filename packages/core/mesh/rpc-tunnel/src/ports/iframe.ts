@@ -52,6 +52,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
         sendToParentWindow(origin, message);
       }
     },
+
     subscribe: (callback) => {
       const handler = (event: MessageEvent<unknown>) => {
         if (!iframe && event.source !== window.parent) {

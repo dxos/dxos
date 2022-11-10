@@ -1,26 +1,31 @@
 {
   "name": "@dxos/bender-bot",
-  "version": "2.33.8",
+  "version": "0.1.2",
+  "private": true,
   "description": "The bender bot.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
+  "author": "info@dxos.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
+    "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'",
     "check": "true",
-    "test": "toolchain test",
-    "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'"
+    "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -36,9 +41,6 @@
     "esbuild": "~0.14.1",
     "sodium-native": "^3.4.1",
     "sodium-universal": "^3.1.0",
-    "typescript": "^4.7.2"
-  },
-  "publishConfig": {
-    "access": "public"
+    "typescript": "^4.8.4"
   }
 }

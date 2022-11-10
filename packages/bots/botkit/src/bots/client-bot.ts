@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
-import { Client, Party, InvitationDescriptor } from '@dxos/client';
+import { Client, Party } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import {
   BotReport,
@@ -27,33 +26,27 @@ export class Bot implements BotService {
     log('Client bot start initializing');
 
     this.id = request.id;
-
-    this.client = new Client(request.config);
+    this.client = new Client({ config: request.config });
     log('Client config:', JSON.stringify(request.config));
 
     log('Client bot initialize');
     await this.client.initialize();
     log('Client bot create profile');
-    await this.client.halo.createProfile({ username: 'Bot' });
+    await this.client.halo.createProfile({ displayName: 'Bot' });
 
-    if (request.invitation) {
-      assert(request.invitation.secret, 'Secret must be provided with invitation');
-      const invitation = InvitationDescriptor.fromProto(request.invitation);
-      log('Client bot join party');
-      // TODO(yivlad): errors are not handled well in RPC.
-      try {
-        this.party = await this.client.echo.acceptInvitation(invitation).getParty();
-      } catch (e: unknown) {
-        throw new Error(`Failed to join party: ${e}`);
-      }
-    }
+    // if (request.invitation) {
+    //   assert(request.invitation.secret, 'Secret must be provided with invitation');
+    //   const observer = this.client.echo.acceptInvitation(request.invitation);
+    //   observer.subscribe({} as any);
+    // }
+
     log('Client bot onInit');
     await this.onStart(request);
   }
 
   async start(request: StartRequest) {
     log('Client bot start initilizing');
-    this.client = new Client(request.config);
+    this.client = new Client({ config: request.config });
 
     log('Client bot initialize');
     await this.client.initialize();

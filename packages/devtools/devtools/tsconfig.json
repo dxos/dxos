@@ -8,7 +8,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
+    "src"
   ],
   "references": [
     {
@@ -21,10 +21,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/feed-store"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/timeframe"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -45,10 +51,28 @@
       "path": "../../core/halo/credentials"
     },
     {
+      "path": "../../core/mesh/messaging"
+    },
+    {
       "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../experimental/react-registry-client"
+    },
+    {
+      "path": "../../experimental/registry-client"
     },
     {
       "path": "../../sdk/client"
@@ -63,16 +87,10 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-components"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
+      "path": "../../sdk/vite-plugin"
     },
     {
       "path": "../devtools-mesh"
-    },
-    {
-      "path": "./tsconfig.node.json"
     }
   ]
 }

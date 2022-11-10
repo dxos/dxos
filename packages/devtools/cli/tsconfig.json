@@ -1,0 +1,49 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src",
+    "src/util/telemetryrc.json"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/plate"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/telemetry"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    }
+  ]
+}

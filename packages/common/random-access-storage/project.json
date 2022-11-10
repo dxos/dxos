@@ -4,44 +4,50 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/random-access-storage/src/index.ts",
         "outputPath": "packages/common/random-access-storage/dist",
         "tsConfig": "packages/common/random-access-storage/tsconfig.json",
-        "main": "packages/common/random-access-storage/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/random-access-storage/**/*.ts"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/random-access-storage",
+        "outputPath": "tmp/mocha/packages/common/random-access-storage",
+        "resultsPath": "test-results/packages/common/random-access-storage",
         "testPatterns": [
           "packages/common/random-access-storage/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/random-access-storage/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/random-access-storage",
-        "resultsPath": "test-results/packages/common/random-access-storage",
-        "coveragePath": "coverage/packages/common/random-access-storage"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

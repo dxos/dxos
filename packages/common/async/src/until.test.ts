@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { sleep } from './async';
+import { sleep } from './timeout';
 import { until } from './until';
 
 describe('until', function () {

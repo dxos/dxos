@@ -1,0 +1,22 @@
+on:
+  push:
+    branches:
+      - main
+
+name: Release automation with Release Please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          release-type: node
+          command: github-release
+
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+          release-type: node
+          command: manifest-pr

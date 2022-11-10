@@ -1,0 +1,31 @@
+{
+  "sourceRoot": "packages/experimental/react-registry-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/react-registry-client/src/index.ts",
+        "outputPath": "packages/experimental/react-registry-client/dist",
+        "tsConfig": "packages/experimental/react-registry-client/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/react-registry-client/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  }
+}

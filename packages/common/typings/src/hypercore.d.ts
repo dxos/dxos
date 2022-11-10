@@ -36,23 +36,14 @@ declare module 'hypercore' {
     decode: (buffer: Buffer) => T;
   };
 
-  export type ValueEncoding<T> =
-    | 'json'
-    | 'utf-8'
-    | 'binary'
-    | AbstractValueEncoding<T>;
+  export type ValueEncoding<T> = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding<T>;
 
   /**
    * Crypto
    */
   export interface Crypto {
     sign: (data: any, secretKey: Buffer, cb: Callback<any>) => void;
-    verify: (
-      signature: any,
-      data: any,
-      key: Buffer,
-      cb: Callback<boolean>
-    ) => void;
+    verify: (signature: any, data: any, key: Buffer, cb: Callback<boolean>) => void;
   }
 
   /**
@@ -101,11 +92,7 @@ declare module 'hypercore' {
     noise?: boolean;
     keyPair?: { publicKey: Buffer; secretKey: Buffer };
     onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void;
-    onfeedauthenticate?: (
-      feed: Hypercore,
-      remotePublicKey: Buffer,
-      cb: () => void
-    ) => void;
+    onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void;
   };
 
   /**
@@ -194,7 +181,7 @@ declare module 'hypercore' {
    * Events: [`ready`, `error`, `download`, `upload`, `append`, `sync`, `close`]
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
    */
-  export interface Hypercore<T> extends Nanoresource, HypercoreProperties {
+  export interface Hypercore<T = any> extends Nanoresource, HypercoreProperties {
     // Alias for open.
     ready(cb: Callback<void>): void;
 
@@ -230,12 +217,7 @@ declare module 'hypercore' {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedgetbatchstart-end-options-callback
     /** @deprecated remove in v10 */
-    getBatch(
-      start: number,
-      end: number,
-      options?: GetOptions,
-      cb: Callback<T[]>
-    ): void;
+    getBatch(start: number, end: number, options?: GetOptions, cb: Callback<T[]>): void;
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
     download(range?: Range, cb?: Callback<number>): any;
@@ -248,10 +230,7 @@ declare module 'hypercore' {
 
     // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
-    registerExtension(
-      name: string,
-      handlers?: StreamExtensionHandlers<T>
-    ): StreamExtension;
+    registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
   }
 
   export type HypercoreConstructor = (
@@ -262,7 +241,7 @@ declare module 'hypercore' {
 
   // Default constructor.
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-  export function hypercore<T>(
+  export function hypercore<T = any>(
     storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
     options?: HypercoreOptions

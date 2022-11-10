@@ -4,25 +4,21 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/sdk/client/src/index.ts",
         "outputPath": "packages/sdk/client/dist",
         "tsConfig": "packages/sdk/client/tsconfig.json",
-        "main": "packages/sdk/client/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outdir}"
-      ],
       "options": {
-        "entryPoints": [
-          "packages/sdk/client/src/index.ts"
-        ],
-        "outdir": "packages/sdk/client/dist/browser",
         "bundlePackages": [
           "@dxos/client-services",
           "@dxos/credentials",
@@ -31,41 +27,51 @@
           "@dxos/feed-store",
           "@dxos/network-manager",
           "@dxos/object-model"
-        ]
-      }
+        ],
+        "entryPoints": [
+          "packages/sdk/client/src/index.ts"
+        ],
+        "outdir": "packages/sdk/client/dist/browser"
+      },
+      "outputs": [
+        "{options.outdir}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "checkLeaks": false,
+        "coveragePath": "coverage/packages/sdk/client",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/sdk/client",
+        "resultsPath": "test-results/packages/sdk/client",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
-          "packages/sdk/client/src/**/*.test.{ts,js}"
+          "packages/sdk/client/src/**/[!_]*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/sdk/client",
-        "resultsPath": "test-results/packages/sdk/client",
-        "coveragePath": "coverage/packages/sdk/client",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "checkLeaks": false,
-        "forceExit": true
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

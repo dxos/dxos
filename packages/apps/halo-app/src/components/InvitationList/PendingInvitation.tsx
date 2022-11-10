@@ -2,44 +2,78 @@
 // Copyright 2022 DXOS.org
 //
 
+import cx from 'classnames';
+import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationRequest } from '@dxos/client';
-import { Avatar, Group, QrCode, useTranslation } from '@dxos/react-uikit';
+import { InvitationEncoder, ObservableInvitation } from '@dxos/client';
+import {
+  Avatar,
+  QrCode,
+  useTranslation,
+  defaultGroup,
+  Button,
+  Loading,
+  getSize,
+  useInvitationStatus,
+  InvitationStatus
+} from '@dxos/react-uikit';
+
+import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  value: InvitationRequest;
+  wrapper: ObservableInvitation;
 }
 
-export const PendingInvitation = ({ value }: PendingInvitationProps) => {
-  const { t } = useTranslation('halo');
+const PendingInvitationSkeleton = ({ message }: { message: string }) => {
+  return <Loading label={message} />;
+};
+
+export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
+  const { t } = useTranslation('uikit');
+
+  const { cancel, status, haltedAt } = useInvitationStatus(wrapper);
 
   return (
-    <Group
-      label={{
-        level: 2,
-        className: 'text-lg font-body flex gap-2 items-center',
-        children: (
-          <Avatar
-            size={10}
-            fallbackValue={value.descriptor.hash}
-            label={<p>Pending...</p>}
+    <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
+      {wrapper.invitation ? (
+        <>
+          <HeadingWithActions
+            compact
+            heading={{
+              level: 2,
+              className: 'text-lg font-body flex gap-2 items-center',
+              children: (
+                <Avatar
+                  size={10}
+                  fallbackValue={wrapper.invitation.invitationId!}
+                  label={<InvitationStatus {...{ status, haltedAt }} />}
+                />
+              )
+            }}
+            actions={
+              <>
+                <Button className='grow flex gap-1 items-center' onClick={cancel}>
+                  <ProhibitInset className={getSize(5)} />
+                  <span>{t('cancel label')}</span>
+                </Button>
+              </>
+            }
           />
-        )
-      }}
-    >
-      <p className='w-64'>
-        <QrCode
-          size={40}
-          value={createInvitationUrl(value.descriptor.encode().toString())}
-          label={<p className='w-20'>{t('copy device invite code label')}</p>}
-          side='left'
-          sideOffset={12}
-          className='w-full h-auto'
-        />
-      </p>
-    </Group>
+          <QrCode
+            size={40}
+            value={createInvitationUrl(InvitationEncoder.encode(wrapper.invitation))}
+            label={<p className='w-20'>{t('copy halo invite code label')}</p>}
+            side='top'
+            sideOffset={12}
+            className='w-full h-auto mt-2'
+          />
+        </>
+      ) : (
+        <PendingInvitationSkeleton message={t('generic loading label')} />
+      )}
+    </div>
   );
 };
 
@@ -47,10 +81,5 @@ export const PendingInvitation = ({ value }: PendingInvitationProps) => {
 const createInvitationUrl = (invitationCode: string) => {
   const invitationPath = '/identity/join';
   const { origin, pathname } = window.location;
-  return urlJoin(
-    origin,
-    pathname,
-    `/#${invitationPath}`,
-    `?invitation=${invitationCode}`
-  );
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
 };

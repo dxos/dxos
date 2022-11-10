@@ -1,0 +1,94 @@
+{
+  "sourceRoot": "packages/devtools/cli/src",
+  "projectType": "application",
+  "targets": {
+    "bin": {
+      "executor": "nx:run-script",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "script": "bin"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/cli/src/index.ts",
+        "outputPath": "packages/devtools/cli/dist",
+        "tsConfig": "packages/devtools/cli/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/devtools/cli/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "inputs": [
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        "^production",
+        "default"
+      ],
+      "options": {
+        "script": "api-keys"
+      },
+      "outputs": [
+        "packages/devtools/cli/src/util/telemetryrc.json"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/devtools/cli",
+        "outputPath": "tmp/mocha/packages/devtools/cli",
+        "resultsPath": "test-results/packages/devtools/cli",
+        "testPatterns": [
+          "packages/devtools/cli/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/devtools/cli/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  }
+}

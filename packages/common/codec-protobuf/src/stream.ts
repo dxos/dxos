@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 const log = debug('dxos:codec-protobuf:stream');
 
-type Producer<T> = (callbacks: {
+type Callbacks<T> = {
   /**
    * Advises that the producer is ready to stream the data.
    * Called automatically with the first call to `next`.
@@ -23,10 +23,27 @@ type Producer<T> = (callbacks: {
    * Closes the stream.
    * Optional error can be provided.
    */
-  close: (error?: Error) => void;
-}) => (() => void) | void;
+  close: (err?: Error) => void;
+};
+
+type Producer<T> = (callbacks: Callbacks<T>) => ((err?: Error) => void) | void;
 
 export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; error?: Error };
+
+// TODO(burdon): Implement Observable<T> pattern to simplify callbacks.
+// stream.subscribe({
+//   onData: (data: CustomData) => {
+//   },
+//   onOpen: () => {
+//   },
+//   onClose: () => {
+//   },
+//   onError: () => {
+//   }
+// });
+//
+// stream.unsubscribe();
+// await stream.close90:
 
 /**
  * Represents a typed stream of data.
@@ -80,7 +97,7 @@ export class Stream<T> {
 
   private _isClosed = false;
   private _closeError: Error | undefined;
-  private _dispose: (() => void) | undefined;
+  private _onClose: ((err?: Error) => void) | undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
@@ -95,7 +112,7 @@ export class Stream<T> {
       this._resolveReadyPromise = resolve;
     });
 
-    const disposeCallback = producer({
+    const onClose = producer({
       ready: () => {
         this._markAsReady();
       },
@@ -128,7 +145,7 @@ export class Stream<T> {
 
         this._isClosed = true;
         this._closeError = err;
-        this._dispose?.();
+        this._onClose?.(err);
         try {
           this._closeHandler?.(err);
         } catch (err: any) {
@@ -138,8 +155,8 @@ export class Stream<T> {
       }
     });
 
-    if (disposeCallback) {
-      this._dispose = disposeCallback;
+    if (onClose) {
+      this._onClose = onClose;
     }
   }
 
@@ -151,7 +168,7 @@ export class Stream<T> {
     }
   }
 
-  subscribe(onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
+  subscribe(onMessage: (msg: T) => void, onClose?: (err?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -180,6 +197,7 @@ export class Stream<T> {
   /**
    * Resolves when stream is ready.
    */
+  // TODO(burdon): Gather all callbacks into single observer.
   waitUntilReady(): Promise<void> {
     return this._readyPromise;
   }
@@ -199,19 +217,20 @@ export class Stream<T> {
   /**
    * Close the stream and dispose of any resources.
    */
+  // TODO(burdon): Make async.
   close() {
     if (this._isClosed) {
       return;
     }
 
     this._isClosed = true;
-    this._dispose?.();
+    this._onClose?.();
     this._closeHandler?.(undefined);
 
     // Clear function pointers.
     this._messageHandler = undefined;
     this._closeHandler = undefined;
-    this._dispose = undefined;
+    this._onClose = undefined;
   }
 }
 

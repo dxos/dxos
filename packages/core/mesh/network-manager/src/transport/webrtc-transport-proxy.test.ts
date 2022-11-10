@@ -44,6 +44,8 @@ describe('WebRTCTransportProxy', function () {
 
     // Starting BridgeService
     const webRTCTransportService: BridgeService = new WebRTCTransportService();
+
+    // Starting BridgeService
     const rpcService = createProtoRpcPeer({
       requested: {},
       exposed: {
@@ -64,8 +66,6 @@ describe('WebRTCTransportProxy', function () {
       requested: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
       },
-      exposed: {},
-      handlers: {},
       port: port2,
       noHandshake: true,
       encodingOptions: {
@@ -185,7 +185,6 @@ describe('WebRTCTransportProxy', function () {
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       service = createProtoRpcPeer({
-        requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
@@ -202,8 +201,6 @@ describe('WebRTCTransportProxy', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: port2,
         noHandshake: true,
         encodingOptions: {
@@ -214,8 +211,8 @@ describe('WebRTCTransportProxy', function () {
     });
 
     after(async function () {
-      service?.close();
-      rpcClient?.close();
+      await service?.close();
+      await rpcClient?.close();
     });
 
     it('establish connection and send data through with protocol', async function () {

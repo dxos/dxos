@@ -6,41 +6,37 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
-import {
-  Main,
-  Heading,
-  SingleInputStep,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 export const CreateIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
-  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') ?? '/spaces';
   const onNext = useCallback(() => {
     setPending(true);
-    void client.halo.createProfile({ username }).then(
+    void client.halo.createProfile({ displayName }).then(
       () => navigate(redirect),
       (_rejection) => setPending(false)
     );
-  }, [username]);
+  }, [displayName]);
+
   return (
-    <Main className='max-w-lg mx-auto'>
+    <main className='max-is-5xl mli-auto pli-7 mbs-7'>
       <Heading>{t('create identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
           pending,
-          inputLabel: t('username label', { ns: 'uikit' }),
-          inputPlaceholder: t('username placeholder', { ns: 'uikit' }),
-          onChange: setUsername,
+          inputLabel: t('displayName label', { ns: 'uikit' }),
+          inputPlaceholder: t('displayName placeholder', { ns: 'uikit' }),
+          onChange: setDisplayName,
           onNext,
           onBack: () => history.back()
         }}
       />
-    </Main>
+    </main>
   );
 };

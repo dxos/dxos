@@ -2,14 +2,52 @@
   "sourceRoot": "packages/experimental/kodama/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/kodama/src/index.ts",
+        "outputPath": "packages/experimental/kodama/dist",
+        "tsConfig": "packages/experimental/kodama/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/experimental/kodama/**/*.{ts,tsx,js,jsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/kodama",
+        "outputPath": "tmp/mocha/packages/experimental/kodama",
+        "resultsPath": "test-results/packages/experimental/kodama",
+        "testPatterns": [
+          "packages/experimental/kodama/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kodama/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

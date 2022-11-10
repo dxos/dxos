@@ -5,10 +5,10 @@
 import { RpcPort } from '@dxos/rpc';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
-import { IframeRuntime } from './worker/iframe-runtime';
+import { IFrameRuntime } from './worker/iframe-runtime';
 
 const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
-  const iframeRuntime = new IframeRuntime({
+  const iframeRuntime = new IFrameRuntime({
     systemPort: wrtcPort,
     appOrigin: origin
   });
@@ -29,11 +29,8 @@ if (typeof SharedWorker !== 'undefined') {
     const windowAppPort = createIFramePort({
       channel: 'dxos:app',
       onOrigin: (origin) => {
-        // TODO(wittjosiah): Make debug logs.
-        console.log('IFrame port origin confirmed:', origin);
         setTimeout(async () => {
           await createRuntime(origin, wrtcPort);
-          console.log('Runtime created.');
         });
       }
     });

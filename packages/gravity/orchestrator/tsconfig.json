@@ -27,6 +27,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/testutils"
     },
     {
@@ -40,6 +43,9 @@
     },
     {
       "path": "../../core/echo/object-model"
+    },
+    {
+      "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"

@@ -11,7 +11,8 @@
  */
 declare module 'hypercore-protocol' {
   import type { ValueEncoding } from 'hypercore';
-  import type { Duplex } from 'streamx';
+  import type { Nanoresource } from 'nanoresource';
+  import { Duplex } from 'streamx';
 
   /**
    * A multiplexed message channel associated with a feed.
@@ -114,7 +115,7 @@ declare module 'hypercore-protocol' {
    * https://github.com/hypercore-protocol/hypercore-protocol#wire-protocol
    * https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js#L332
    */
-  export class ProtocolStream<T> extends Duplex {
+  export class ProtocolStream<T = any> extends Duplex implements Nanoresource {
     state: any;
     destroyed: boolean;
     publicKey: Buffer;
@@ -138,10 +139,7 @@ declare module 'hypercore-protocol' {
 
     // Define custom messages paths (unrelated to hypercore exchange), which are multiplexed on the stream.
     // https://github.com/hypercore-protocol/hypercore-protocol#stream-message-extensions
-    registerExtension(
-      name: string,
-      handlers?: StreamExtensionHandlers<T>
-    ): StreamExtension;
+    registerExtension(name: string, handlers?: StreamExtensionHandlers<T>): StreamExtension;
   }
 
   export = ProtocolStream;

@@ -27,7 +27,7 @@ describe('ClientProvider', function () {
   before(async function () {
     client = new Client();
     await client.initialize();
-    await client.halo.createProfile({ username: 'test-user' });
+    await client.halo.createProfile({ displayName: 'test-user' });
   });
 
   after(async function () {

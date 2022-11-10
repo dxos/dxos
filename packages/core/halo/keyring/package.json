@@ -1,12 +1,16 @@
 {
   "name": "@dxos/keyring",
-  "version": "2.33.8",
+  "version": "0.1.2",
   "description": "Halo Keyring.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -14,6 +18,9 @@
   "scripts": {
     "check": "true"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -28,11 +35,8 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.58"
+    "@types/node": "^18.11.9"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "publishConfig": {
     "access": "public"
   }

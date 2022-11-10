@@ -2,60 +2,75 @@
 // Copyright 2022 DXOS.org
 //
 
-import { until } from '@dxos/async';
+import { expect } from 'chai';
+
+import { latch, Trigger } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
-import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
+import { MemorySignalManagerContext } from '@dxos/messaging';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
-import { ClientServiceHost } from './service-host';
+import { createServiceHost } from '../testing';
 
 const defaultTestingConfig: ConfigProto = {
-  version: 1,
-  runtime: {
-    services: {
-      signal: {
-        server: 'ws://localhost:4000/.well-known/dx/signal'
-      }
-    }
-  }
+  version: 1
+  // runtime: {
+  //   services: {
+  //     signal: {
+  //       server: 'ws://localhost:4000/.well-known/dx/signal'
+  //     }
+  //   }
+  // }
 };
 
-describe('ServiceHost', function () {
-  it('process device invitation', async function () {
-    const peer1 = new ClientServiceHost({
-      config: new Config(defaultTestingConfig),
-      modelFactory: new ModelFactory().registerModel(ObjectModel)
-    });
-    await peer1.open();
-    afterTest(() => peer1.close());
+describe('services/service-host', function () {
+  it.skip('process device invitation', async function () {
+    const config = new Config(defaultTestingConfig);
+    const signalManagerContext = new MemorySignalManagerContext();
 
-    const peer2 = new ClientServiceHost({
-      config: new Config(defaultTestingConfig),
-      modelFactory: new ModelFactory().registerModel(ObjectModel)
-    });
+    // TODO(burdon): Use builder.
+    const peer1 = createServiceHost(config, signalManagerContext);
+    const peer2 = createServiceHost(config, signalManagerContext);
+    await peer1.open();
     await peer2.open();
+    afterTest(() => peer1.close());
     afterTest(() => peer2.close());
 
-    await peer1.services.ProfileService.createProfile({});
-    const invitation = await until<InvitationDescriptor>((resolve) => {
+    const invitationTrigger = new Trigger<Invitation>();
+    {
+      await peer1.services.ProfileService.createProfile({});
       const stream = peer1.services.ProfileService.createInvitation();
-      stream.subscribe((msg) => {
-        if (msg.descriptor) {
-          resolve(msg.descriptor);
+      stream.subscribe((msg: any) => {
+        switch (msg.state) {
+          case InvitationState.WAITING_FOR_CONNECTION: {
+            invitationTrigger.wake(msg.descriptor!);
+            break;
+          }
         }
       });
-    });
+    }
 
-    await until((resolve) => {
+    const [done, setAck] = latch({ count: 2 });
+    {
+      const invitation = await invitationTrigger.wait();
       const stream = peer2.services.ProfileService.acceptInvitation(invitation);
-      stream.subscribe((msg) => {
-        if (msg.state === InvitationState.SUCCESS) {
-          resolve();
+      stream.subscribe((msg: any) => {
+        switch (msg.state) {
+          case InvitationState.CONNECTED: {
+            setAck();
+            break;
+          }
+
+          case InvitationState.SUCCESS: {
+            expect(msg.partyKey).not.to.be.undefined;
+            setAck();
+            break;
+          }
         }
       });
-    });
+    }
+
+    await done();
   });
 });

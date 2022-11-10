@@ -3,12 +3,23 @@
 //
 
 import cx from 'classnames';
+import { SignIn, Gear } from 'phosphor-react';
 import React, { FunctionComponent } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { Avatar, defaultHover, defaultFocus } from '@dxos/react-uikit';
+import {
+  Avatar,
+  Group,
+  defaultGroup,
+  defaultHover,
+  defaultFocus,
+  useTranslation,
+  getSize,
+  Tooltip,
+  buttonStyles
+} from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
@@ -16,13 +27,12 @@ export interface SpaceListProps {
   selected?: PublicKey;
   actionIcon?: FunctionComponent<any>;
   onSelect?: (space: PublicKey) => void;
-  onAction?: (
-    space: PublicKey,
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => void;
+  onAction?: (space: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
+// TODO(wittjosiah): Unify with @dxos/react-appkit SpaceList.
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
+  const { t } = useTranslation('halo');
   return (
     <div role='none' className='m-0 flex flex-col gap-4'>
       {spaces.map((space) => {
@@ -30,21 +40,35 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
         const title = space.properties.get('title') ?? humanize(keyHex);
 
         return (
-          <Link
+          <Group
             key={keyHex}
-            to={`/spaces/${keyHex}`}
-            className={cx(
-              'flex items-center gap-2 p-2 rounded',
-              defaultFocus,
-              defaultHover({})
-            )}
+            label={{
+              level: 2,
+              children: (
+                <Link
+                  to={`/spaces/${keyHex}`}
+                  className={cx('flex gap-1 items-center pr-2 rounded', defaultHover({}), defaultFocus)}
+                >
+                  <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
+                </Link>
+              ),
+              className: 'grow flex items-center mb-0'
+            }}
+            className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
-            <Avatar
-              size={10}
-              fallbackValue={keyHex}
-              label={<p className='text-lg'>{title}</p>}
-            />
-          </Link>
+            <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
+              <Tooltip content={t('manage party label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
+                <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
+                  <Gear className={getSize(5)} />
+                </Link>
+              </Tooltip>
+              <Tooltip content={t('join label')} side='left' tooltipLabelsTrigger>
+                <Link to={`/spaces/${keyHex}`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
+                  <SignIn className={getSize(5)} />
+                </Link>
+              </Tooltip>
+            </div>
+          </Group>
         );
       })}
     </div>

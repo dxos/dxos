@@ -28,8 +28,9 @@ export const QrCode = ({ value, label, size, side, sideOffset, collisionPadding,
   return (
     <Tooltip content={label} {...{ side, sideOffset, collisionPadding }}>
       <Button
+        compact
         {...buttonProps}
-        className={cx('py-0 px-0 overflow-hidden', getSize(size ?? 32), buttonProps.className)}
+        className={cx('overflow-hidden p-0', getSize(size ?? 32), buttonProps.className)}
         onClick={copyValue}
       >
         <QRCodeSVG value={value} includeMargin role='none' className='w-full h-auto' />

@@ -10,6 +10,11 @@
   },
   "include": [
     "src",
-    "stories",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../gem/gem-core"
+    }
   ]
 }

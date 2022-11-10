@@ -2,17 +2,17 @@
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Specification](#2-specification)
-    *   [2.1. Identity and Device Management](#21-identity-and-device-management)
-    *   [2.2. Circles and Collaboration](#22-circles-and-collaboration)
-    *   [2.3. Branespace Exploration](#23-branespace-exploration)
-*   [3. Design Overview](#3-design-overview)
-    *   [3.1. Client Services](#31-client-services)
-    *   [3.2. Service Proxies](#32-service-proxies)
-    *   [3.3. Message Routing within the Browser](#33-message-routing-within-the-browser)
-    *   [3.4. Cross-domain Routing](#34-cross-domain-routing)
-*   [4. Reference](#4-reference)
+- [1. Introduction](#1-introduction)
+- [2. Specification](#2-specification)
+  - [2.1. Identity and Device Management](#21-identity-and-device-management)
+  - [2.2. Circles and Collaboration](#22-circles-and-collaboration)
+  - [2.3. Branespace Exploration](#23-branespace-exploration)
+- [3. Design Overview](#3-design-overview)
+  - [3.1. Client Services](#31-client-services)
+  - [3.2. Service Proxies](#32-service-proxies)
+  - [3.3. Message Routing within the Browser](#33-message-routing-within-the-browser)
+  - [3.4. Cross-domain Routing](#34-cross-domain-routing)
+- [4. Reference](#4-reference)
 
 ## 1. Introduction
 
@@ -65,12 +65,6 @@ Peers swarm with each other directly using a WebRTC transport, which handles NAT
 
 Applications incorporate pluggable services that depend on core modules (e.g., ECHO, HALO) that, in turn, depend on the WebRTC network stack.
 
-<br/>
-
-![Service Modules](./diagrams/client-services-modules.drawio.svg)
-
-<br/>
-
 Resilient WebRTC swarms are managed by the MESH [Signaling services](./mesh-spec.md) running on the KUBE network.
 
 ### 3.2. Service Proxies
@@ -78,7 +72,11 @@ Resilient WebRTC swarms are managed by the MESH [Signaling services](./mesh-spec
 The client accesses these resources via async RPCs defined as protobuf services, which may access the `SwarmManager`.
 The `ServiceHost` is an in-memory endpoint for multiple services, which may be accessed through the Client API via the `ServiceProxy`.
 
-![Browser architecture](./diagrams/client-services.drawio.svg)
+<br/>
+
+![Client Services](./diagrams/client-services.drawio.svg)
+
+<br/>
 
 ### 3.3. Message Routing within the Browser
 

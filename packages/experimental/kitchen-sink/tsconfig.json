@@ -17,16 +17,19 @@
     "strict": true,
     "target": "ES2018",
     "types": [
-      "node",
-      "mocha"
+      "mocha",
+      "node"
     ]
   },
   "include": [
+    "playwright",
     "src",
-    "stories",
-    "playwright"
+    "stories"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
     {
       "path": "../../common/async"
     },
@@ -43,10 +46,16 @@
       "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/client-testing"
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -55,19 +64,22 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-client-testing"
+      "path": "../client-testing"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../react-client-testing"
     },
     {
-      "path": "../../sdk/react-echo-graph"
+      "path": "../react-echo-graph"
     },
     {
-      "path": "../../sdk/react-ipfs"
+      "path": "../react-ipfs"
     },
     {
-      "path": "../../sdk/react-toolkit"
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
     }
   ]
 }

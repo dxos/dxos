@@ -10,6 +10,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+import packageJson from './package.json';
+
+const env = (value?: string) => value ? `"${value}"` : undefined;
+const DX_RELEASE = process.env.NODE_ENV === 'production'
+  ? `@dxos/halo-app@${packageJson.version}`
+  : undefined;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
@@ -17,23 +24,32 @@ export default defineConfig({
     host: true,
     port: 3967
   },
+  define: {
+    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+    'process.env.DX_RELEASE': env(DX_RELEASE),
+    'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
+    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
+    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
+  },
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/async',
       '@dxos/client',
-      '@dxos/client-services',
       '@dxos/keys',
       '@dxos/log',
-      '@dxos/composer',
       '@dxos/config',
       '@dxos/protocols',
+      '@dxos/react-appkit',
       '@dxos/react-async',
+      '@dxos/react-composer',
       '@dxos/react-client',
       '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
+      '@dxos/sentry',
+      '@dxos/telemetry',
       '@dxos/text-model',
       '@dxos/util'
     ],
@@ -75,7 +91,6 @@ export default defineConfig({
     }),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
       // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000

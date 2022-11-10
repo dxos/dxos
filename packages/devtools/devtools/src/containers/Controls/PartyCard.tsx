@@ -55,7 +55,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
   };
 
   const handlePartyActiveToggle = (party: Party) => {
-    void party.setActive(!party.isActive, { global: true });
+    void party.setActive(!party.isActive);
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +81,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
 
   const handleCreateItem = (party: Party) => {
     const { model, createItem } = (itemModel && modelTypes[itemModel]) || {};
-    client.echo.registerModel(model); // TODO(burdon): Test if already registered.
+    client.echo.modelFactory.registerModel(model); // TODO(burdon): Test if already registered.
     if (createItem) {
       createItem(party);
     }
@@ -89,28 +89,24 @@ export const PartyCard = ({ party }: { party: Party }) => {
 
   return (
     <>
-      <Menu
-        open={Boolean(menuAnchorEl)}
-        anchorEl={menuAnchorEl}
-        onClose={() => setMenuAnchorEl(null)}
-      >
-        <MenuItem onClick={() => {
-          setMenuAnchorEl(null);
-          setPartySharing(true);
-        }}>
+      <Menu open={Boolean(menuAnchorEl)} anchorEl={menuAnchorEl} onClose={() => setMenuAnchorEl(null)}>
+        <MenuItem
+          onClick={() => {
+            setMenuAnchorEl(null);
+            setPartySharing(true);
+          }}
+        >
           Share Party
         </MenuItem>
       </Menu>
 
-      <PartySharingDialog
-        open={partySharing}
-        onClose={() => setPartySharing(false)}
-        partyKey={party.key}
-      />
+      <PartySharingDialog open={partySharing} onClose={() => setPartySharing(false)} partyKey={party.key} />
 
-      <Card sx={{
-        margin: 1
-      }}>
+      <Card
+        sx={{
+          margin: 1
+        }}
+      >
         <CardHeader
           sx={{
             '.MuiCardHeader-avatar': {
@@ -120,27 +116,31 @@ export const PartyCard = ({ party }: { party: Party }) => {
               margin: 0
             }
           }}
-          avatar={(
+          avatar={
             <IconButton>
               <HashIcon value={party.key.toString()} />
             </IconButton>
-          )}
+          }
           title={<CopyText value={party.key.toString()} monospace variant='h6' length={8} />}
-          action={(
-            <IconButton onClick={event => setMenuAnchorEl(event.currentTarget)}>
+          action={
+            <IconButton onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
               <MenuIcon />
             </IconButton>
-          )}
+          }
         />
 
-        <CardContent sx={{
-          paddingTop: 1
-        }}>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'end',
-            marginBottom: 2
-          }}>
+        <CardContent
+          sx={{
+            paddingTop: 1
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'end',
+              marginBottom: 2
+            }}
+          >
             <TextField
               label='Key'
               variant='standard'
@@ -163,21 +163,20 @@ export const PartyCard = ({ party }: { party: Party }) => {
             </Box>
           </Box>
 
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'end',
-            marginBottom: 2
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'end',
+              marginBottom: 2
+            }}
+          >
             <FormControl fullWidth variant='standard'>
               <InputLabel id='model-select'>Model</InputLabel>
-              <Select
-                label='Item Model'
-                variant='standard'
-                value={itemModel || ''}
-                onChange={handleItemModelChange}
-              >
+              <Select label='Item Model' variant='standard' value={itemModel || ''} onChange={handleItemModelChange}>
                 {Object.keys(modelTypes).map((model) => (
-                  <MenuItem key={model} value={model}>{model}</MenuItem>
+                  <MenuItem key={model} value={model}>
+                    {model}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -190,12 +189,8 @@ export const PartyCard = ({ party }: { party: Party }) => {
         </CardContent>
 
         <CardActions>
-          <Button onClick={() => handlePartyOpenToggle(party)}>
-            {party.isOpen ? 'Close' : 'Open'}
-          </Button>
-          <Button onClick={() => handlePartyActiveToggle(party)}>
-            {party.isActive ? 'Deactivate' : 'Activate'}
-          </Button>
+          <Button onClick={() => handlePartyOpenToggle(party)}>{party.isOpen ? 'Close' : 'Open'}</Button>
+          <Button onClick={() => handlePartyActiveToggle(party)}>{party.isActive ? 'Deactivate' : 'Activate'}</Button>
         </CardActions>
       </Card>
     </>

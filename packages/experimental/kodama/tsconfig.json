@@ -17,28 +17,37 @@
   ],
   "references": [
     {
-      "path": "../../../packages/common/codec-protobuf"
+      "path": "../../../tools/deprecated/protocols-toolchain"
     },
     {
-      "path": "../../../packages/common/debug"
+      "path": "../../common/async"
     },
     {
-      "path": "../../../packages/common/react-async"
+      "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../../packages/core/protocols"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../../packages/sdk/client"
+      "path": "../../common/keys"
     },
     {
-      "path": "../../../packages/sdk/client-testing"
+      "path": "../../common/react-async"
     },
     {
-      "path": "../../../packages/sdk/config"
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../../packages/sdk/react-client"
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../client-testing"
     }
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "outDir": "dist"
+  },
+  "exclude": [
+    "/dist/",
+    "/node_modules/"
+  ],
+  "include": [
+    "__src",
+    "__stories"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
+    }
+  ]
+}

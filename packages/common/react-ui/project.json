@@ -4,42 +4,48 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
-        "outputPath": "packages/common/react-ui/dist",
-        "tsConfig": "packages/common/react-ui/tsconfig.json",
-        "main": "packages/common/react-ui/src/index.ts",
         "assets": [
           "packages/common/react-ui/src/theme.css"
+        ],
+        "main": "packages/common/react-ui/src/index.ts",
+        "outputPath": "packages/common/react-ui/dist",
+        "tsConfig": "packages/common/react-ui/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
-      "options": {
-        "uiFramework": "@storybook/react",
-        "config": {
-          "configFolder": "packages/common/react-ui/.storybook"
-        }
-      },
       "configurations": {
         "ci": {
           "quiet": true
         }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/common/react-ui/.storybook"
+        },
+        "uiFramework": "@storybook/react"
       }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

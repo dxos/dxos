@@ -1,0 +1,476 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "component": "dxos",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "pull-request-title-pattern": "chore: release v${version}",
+      "extra-files": [
+        "packages/sdk/client/src/version.ts",
+        {
+          "type": "json",
+          "path": "docs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/halo-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-appkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/patterns/react-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/bare-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/templates/hello-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/bender-bot/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/bot-factory-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/bots/botkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/async/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/codec-protobuf/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/crypto-names/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/crypto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/debug/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/feed-store/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/hypercore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/keys/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/log/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/random-access-storage/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/react-async/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/react-ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/sentry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/telemetry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/testutils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/timeframe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/typings/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/util/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-db/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/messenger-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/model-factory/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/object-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/text-model/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/halo/credentials/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/halo/keyring/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/broadcast/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/mesh-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/messaging/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/network-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/network-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-network-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-presence/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-replicator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/protocol-plugin-rpc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/rpc-tunnel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/rpc/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/signal/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/protocols/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/react-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/deprecated/react-toolkit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools-extension/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools-mesh/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/devtools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/e2e/rpc-tunnel-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/gem-core/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/gem-spore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kai/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kitchen-sink/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/kodama/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-client-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-echo-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-ipfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/react-registry-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/registry-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/spyglass/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/wallet-extension/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/wallet-playground/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/gravity-dashboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/gravity/orchestrator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client-services/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/config/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/react-uikit/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/vite-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/beast/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/codemods/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/deprecated/protocols-toolchain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/deprecated/toolchain-node-library/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-rules/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/esbuild/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/mocha/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/playwright/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/protobuf-compiler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/executors/toolbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/log-hook/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/protobuf-test/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/ridoculous/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/typedoc-plugin-plate/package.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

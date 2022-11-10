@@ -2,22 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
-import { failUndefined, raise } from '@dxos/debug';
+import { failUndefined } from '@dxos/debug';
 import {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
   valueEncoding,
-  DataService,
+  DataServiceSubscriptions,
   MetadataStore,
   SpaceManager,
   SigningContext
 } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -25,27 +22,24 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
+import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
 
 /**
- * @deprecated
+ * Shared backend for all client services.
  */
-// TODO(burdon): Temporary access to infra required by all services.
+// TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
-
-  // TODO(burdon): Factor out with other services.
-  public readonly dataService = new DataService();
-
+  public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
   public readonly identityManager: IdentityManager;
-  public readonly haloInvitations: HaloInvitations; // TODO(burdon): Move.
+  public readonly haloInvitations: HaloInvitations;
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
-  public dataInvitations?: DataInvitations; // TODO(burdon): Move.
+  public spaceInvitations?: SpaceInvitationsHandler;
 
   // prettier-ignore
   constructor(
@@ -53,6 +47,7 @@ export class ServiceContext {
     public readonly networkManager: NetworkManager,
     public readonly modelFactory: ModelFactory
   ) {
+    // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.keyring = new Keyring(storage.createDirectory('keyring'));
     this.feedStore = new FeedStore<FeedMessage>({
@@ -73,8 +68,8 @@ export class ServiceContext {
       modelFactory
     );
 
-    // TODO(burdon): Rename.
-    this.haloInvitations = new HaloInvitations(this.networkManager, this.identityManager, async () => {
+    // TODO(burdon): _initialize called in multiple places.
+    this.haloInvitations = new HaloInvitations(this.identityManager, this.networkManager, async () => {
       await this._initialize();
     });
   }
@@ -94,12 +89,13 @@ export class ServiceContext {
     await this.spaceManager?.close();
     await this.feedStore.close();
     await this.networkManager.destroy(); // TODO(burdon): Close.
+    this.dataServiceSubscriptions.clear();
     log('closed');
   }
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
-    this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
+    this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
   }
@@ -120,29 +116,14 @@ export class ServiceContext {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       keyring: this.keyring,
-      dataService: this.dataService,
+      dataServiceSubscriptions: this.dataServiceSubscriptions,
       modelFactory: this.modelFactory,
       signingContext
     });
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
-
-    this.dataInvitations = new DataInvitations(this.networkManager, signingContext, this.spaceManager);
-
+    this.spaceInvitations = new SpaceInvitationsHandler(this.spaceManager, this.networkManager, signingContext);
     this.initialized.wake();
-  }
-
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
-    assert(this.spaceManager);
-    assert(this.dataInvitations);
-
-    const space = this.spaceManager.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
-    return this.dataInvitations.createInvitation(space, { onFinish });
-  }
-
-  async joinSpace(invitationDescriptor: InvitationDescriptor) {
-    assert(this.dataInvitations);
-    return this.dataInvitations.acceptInvitation(invitationDescriptor);
   }
 }

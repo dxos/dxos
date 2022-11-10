@@ -8,7 +8,6 @@ package:
         command: pnpm -w nx bundle devtools
 
 runtime:
-  client:
-    # For local development uncomment:
-    remoteSource: http://localhost:3967/headless.html
-    mode: remote
+  services:
+    signal:
+      server: wss://kube.dxos.org/.well-known/dx/signal

@@ -32,6 +32,7 @@ export const createWorkerPort = ({ port, channel, subscribe }: WorkerPortOptions
       [payload]
     );
   },
+
   subscribe:
     subscribe ??
     ((callback) => {

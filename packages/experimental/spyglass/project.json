@@ -4,14 +4,20 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/experimental/spyglass/src/index.ts",
         "outputPath": "packages/experimental/spyglass/dist",
         "tsConfig": "packages/experimental/spyglass/tsconfig.json",
-        "main": "packages/experimental/spyglass/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

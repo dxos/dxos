@@ -16,7 +16,7 @@ const MAIN_BRANCH = 'main';
   const changedFiles = diff
     .split('\n')
     .filter((line) => rePkg.test(line) && existsSync(join(__dirname, '..', line)))
-   
+
   const changedProjects = Object.entries(projects).filter(([name, project]) => changedFiles.some(file => file.includes(project))).map(([name, project]) => name)
 
   console.log(changedProjects.join(','))

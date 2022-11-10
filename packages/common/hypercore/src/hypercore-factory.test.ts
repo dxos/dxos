@@ -4,15 +4,11 @@
 
 import { expect } from 'chai';
 import faker from 'faker';
-import util from 'node:util';
 
 import { createKeyPair } from '@dxos/crypto';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createDataItem } from './testing';
-
-// Bind function.
-const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
+import { createDataItem, py } from './testing';
 
 describe('HypercoreFactory', function () {
   it('appends to, and read from, multiple feeds', async function () {
@@ -25,9 +21,7 @@ describe('HypercoreFactory', function () {
     const feeds = await Promise.all(
       Array.from({ length: numFeeds }).map(async () => {
         const { publicKey, secretKey } = createKeyPair();
-        const feed = factory.createFeed(publicKey, { secretKey });
-        await feed.open();
-        return feed;
+        return await factory.openFeed(publicKey, { secretKey });
       })
     );
 

@@ -3,7 +3,8 @@
 //
 
 export * from './service-context';
-export * from './service-factory';
+export * from './service-definitions';
 export * from './service-host';
-export * from './services';
+export * from './service-proxy';
+export * from './service-registry';
 export * from './signer';

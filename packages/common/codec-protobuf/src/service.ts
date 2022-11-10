@@ -9,13 +9,23 @@ import { Any, EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 
+/**
+ * Service endpoint.
+ */
 export interface ServiceBackend {
   call(method: string, request: Any): Promise<Any>;
   callStream(method: string, request: Any): Stream<Any>;
 }
 
+/**
+ * Client/server service wrapper.
+ */
 export class ServiceDescriptor<S> {
-  constructor(private readonly _service: pb.Service, private readonly _schema: Schema<any>) {}
+  // prettier-ignore
+  constructor(
+    private readonly _service: pb.Service,
+    private readonly _schema: Schema<any>
+  ) {}
 
   get serviceProto(): pb.Service {
     return this._service;
@@ -30,8 +40,17 @@ export class ServiceDescriptor<S> {
   }
 }
 
+/**
+ * Represents service instance.
+ */
 export class Service {
-  constructor(backend: ServiceBackend, service: pb.Service, schema: Schema<any>, encodingOptions?: EncodingOptions) {
+  // prettier-ignore
+  constructor(
+    backend: ServiceBackend,
+    service: pb.Service,
+    schema: Schema<any>,
+    encodingOptions?: EncodingOptions
+  ) {
     for (const method of service.methodsArray) {
       method.resolve();
       assert(method.resolvedRequestType);
@@ -71,6 +90,9 @@ export class Service {
   }
 }
 
+/**
+ * Represents service endpoint implementation.
+ */
 export class ServiceHandler<S = {}> implements ServiceBackend {
   constructor(
     private readonly _service: pb.Service,
@@ -79,6 +101,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     private readonly _encodingOptions?: EncodingOptions
   ) {}
 
+  /**
+   * Request/response method call.
+   */
   async call(methodName: string, request: Any): Promise<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
@@ -99,6 +124,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     };
   }
 
+  /**
+   * Streaming method call.
+   */
   callStream(methodName: string, request: Any): Stream<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     assert(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
