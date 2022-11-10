@@ -11,7 +11,12 @@ import {
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import {
+  createWebRTCTransportFactory,
+  MemoryTransportFactory,
+  NetworkManager,
+  NetworkManagerOptions
+} from '@dxos/network-manager';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_ORIGIN, DEFAULT_CONFIG_CHANNEL, IFRAME_ID } from './config';
@@ -45,16 +50,18 @@ export const fromDefaults = (config: Config | ConfigProto): ClientServicesProvid
 /**
  * Creates a WebRTC network manager connected to the specified signal server.
  */
-export const createNetworkManager = (config: Config): NetworkManager => {
+export const createNetworkManager = (config: Config, options: Partial<NetworkManagerOptions> = {}): NetworkManager => {
   const signalServer = config.get('runtime.services.signal.server');
   if (signalServer) {
-    return new NetworkManager({
-      log: true,
-      signalManager: new WebsocketSignalManager([signalServer]),
-      transportFactory: createWebRTCTransportFactory({
+    const {
+      log = true,
+      signalManager = new WebsocketSignalManager([signalServer]),
+      transportFactory = createWebRTCTransportFactory({
         iceServers: config.get('runtime.services.ice')
       })
-    });
+    } = options;
+
+    return new NetworkManager({ log, signalManager, transportFactory });
   }
 
   // TODO(burdon): Should not provide a memory signal manager since no shared context.
