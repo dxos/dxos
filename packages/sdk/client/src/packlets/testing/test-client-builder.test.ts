@@ -130,10 +130,10 @@ describe('Client services', function () {
     });
 
     observable2.subscribe({
-      onSuccess: (invitation) => {
+      onSuccess: (invitation: Invitation) => {
         success2.wake(invitation);
       },
-      onError: (err) => raise(err)
+      onError: (err: Error) => raise(err)
     });
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);

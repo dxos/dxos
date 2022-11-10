@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServicesProvider, ObservableInvitation } from '@dxos/client-services';
+import { ClientServicesProvider, InvitationObservable } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
@@ -34,8 +34,8 @@ export interface Halo {
   queryDevices(): Promise<DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
-  createInvitation(): Promise<ObservableInvitation>;
-  acceptInvitation(invitation: Invitation): Promise<ObservableInvitation>;
+  createInvitation(): Promise<InvitationObservable>;
+  acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
 
   // sign(request: SignRequest): Promise<SignResponse>;
   // addKeyRecord(keyRecord: KeyRecord): Promise<void>;
@@ -133,11 +133,11 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  async createInvitation(): Promise<ObservableInvitation> {
+  async createInvitation(): Promise<InvitationObservable> {
     throw new Error('Not implemented.');
   }
 
-  async acceptInvitation(invitation: Invitation): Promise<ObservableInvitation> {
+  async acceptInvitation(invitation: Invitation): Promise<InvitationObservable> {
     throw new Error('Not implemented.');
   }
 

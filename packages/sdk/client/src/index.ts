@@ -22,6 +22,8 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
+export { PublicKey } from '@dxos/keys';
+
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
@@ -35,7 +37,7 @@ export {
   invitationObservable,
   InvitationEvents,
   InvitationEncoder,
-  ObservableInvitation
+  InvitationObservable
 } from '@dxos/client-services';
 
 export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';

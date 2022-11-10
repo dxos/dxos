@@ -20,7 +20,7 @@ import {
   AuthenticatingInvitationProvider,
   InvitationsHandler,
   InvitationObservable,
-  ObservableInvitationProvider
+  InvitationObservableProvider
 } from './invitations';
 
 /**
@@ -48,7 +48,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     };
 
     // TODO(burdon): Stop anything pending.
-    const observable = new ObservableInvitationProvider(async () => {
+    const observable = new InvitationObservableProvider(async () => {
       await swarmConnection?.close();
     });
 

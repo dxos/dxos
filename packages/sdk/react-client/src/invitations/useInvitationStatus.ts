@@ -5,7 +5,7 @@
 import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
-import { PublicKey, Invitation, InvitationEncoder, ObservableInvitation } from '@dxos/client';
+import { PublicKey, Invitation, InvitationEncoder, InvitationObservable } from '@dxos/client';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -21,7 +21,7 @@ interface InvitationReducerState {
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
-  wrapper?: ObservableInvitation;
+  wrapper?: InvitationObservable;
 }
 
 export type InvitationAction =
@@ -30,7 +30,7 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTING;
-      wrapper: ObservableInvitation;
+      wrapper: InvitationObservable;
     }
   | {
       status: Invitation.State.CONNECTED;
@@ -51,7 +51,7 @@ export type InvitationAction =
       haltedAt: Invitation.State;
     };
 
-export const useInvitationStatus = (initialWrapper?: ObservableInvitation) => {
+export const useInvitationStatus = (initialWrapper?: InvitationObservable) => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) =>
       ({
@@ -127,7 +127,7 @@ export const useInvitationStatus = (initialWrapper?: ObservableInvitation) => {
 
   // Return memoized callbacks & values
 
-  const connect = useCallback((wrapper: ObservableInvitation) => {
+  const connect = useCallback((wrapper: InvitationObservable) => {
     dispatch({ status: Invitation.State.CONNECTING, wrapper });
   }, []);
 

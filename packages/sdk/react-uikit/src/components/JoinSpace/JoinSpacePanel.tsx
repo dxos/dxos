@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, ObservableInvitation, PublicKey } from '@dxos/client';
+import { InvitationEncoder, InvitationObservable, PublicKey } from '@dxos/client';
 import { useClient, useInvitationStatus, InvitationState } from '@dxos/react-client';
 
 import { InvitationStatus } from '../InvitationStatus';
@@ -19,7 +19,7 @@ export interface JoinSpacePanelProps {
 }
 
 interface JoinStep1Props extends JoinSpacePanelProps {
-  connect: (wrapper: ObservableInvitation) => void;
+  connect: (wrapper: InvitationObservable) => void;
   status: InvitationState;
   cancel: () => void;
   error?: number;

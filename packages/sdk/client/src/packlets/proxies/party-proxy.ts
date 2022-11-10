@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  ObservableInvitation,
+  InvitationObservable,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
@@ -26,7 +26,7 @@ export interface Party {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-  get invitations(): ObservableInvitation[];
+  get invitations(): InvitationObservable[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -72,7 +72,7 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): Promise<ObservableInvitation>;
+  createInvitation(): Promise<InvitationObservable>;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -81,8 +81,8 @@ export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
-  private readonly _invitations: ObservableInvitation[] = [];
-  public readonly invitationsUpdate = new Event<ObservableInvitation>();
+  private readonly _invitations: InvitationObservable[] = [];
+  public readonly invitationsUpdate = new Event<InvitationObservable>();
   public readonly stateUpdate = new Event();
 
   private _key: PublicKey;
@@ -261,7 +261,7 @@ export class PartyProxy implements Party {
    * Creates an interactive invitation.
    */
   async createInvitation() {
-    return new Promise<ObservableInvitation>((resolve, reject) => {
+    return new Promise<InvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key);
       this._invitations.push(invitation);
       const unsubscribe = invitation.subscribe({

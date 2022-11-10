@@ -38,7 +38,7 @@ export interface InvitationObservable extends CancellableObservable<InvitationEv
   get invitation(): Invitation | undefined;
 }
 
-export class ObservableInvitationProvider
+export class InvitationObservableProvider
   extends CancellableObservableProvider<InvitationEvents>
   implements InvitationObservable
 {
@@ -71,7 +71,7 @@ export interface AuthenticatingInvitationProviderActions {
 }
 
 export class AuthenticatingInvitationProvider
-  extends ObservableInvitationProvider
+  extends InvitationObservableProvider
   implements AuthenticatingInvitationObservable
 {
   // prettier-ignore
@@ -128,7 +128,7 @@ export interface InvitationsProxy<T> extends InvitationsHandler<T> {
  * Util to wrap observable with promise.
  * @deprecated
  */
-// TODO(burdon): Replace with ObservableInvitationProvider.
+// TODO(burdon): Replace with InvitationObservableProvider.
 export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({

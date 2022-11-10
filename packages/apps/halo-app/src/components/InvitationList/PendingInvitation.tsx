@@ -7,7 +7,7 @@ import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationEncoder, ObservableInvitation } from '@dxos/client';
+import { InvitationEncoder, InvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import {
   Avatar,
@@ -23,7 +23,7 @@ import {
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  wrapper: ObservableInvitation;
+  wrapper: InvitationObservable;
 }
 
 const PendingInvitationSkeleton = ({ message }: { message: string }) => {

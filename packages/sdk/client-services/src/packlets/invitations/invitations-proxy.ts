@@ -14,7 +14,7 @@ import {
   AuthenticatingInvitationProvider,
   InvitationsProxy,
   InvitationObservable,
-  ObservableInvitationProvider
+  InvitationObservableProvider
 } from './invitations';
 
 /**
@@ -34,7 +34,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     assert(context);
 
     let invitationId: string;
-    const observable = new ObservableInvitationProvider(async () => {
+    const observable = new InvitationObservableProvider(async () => {
       if (invitationId) {
         await this._invitationsService.cancelInvitation({ invitationId });
       }
