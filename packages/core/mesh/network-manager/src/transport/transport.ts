@@ -12,7 +12,6 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 export interface Transport {
   closed: Event;
   connected: Event;
-  sendSignal: Event<Signal>;
   errors: ErrorStream;
   signal(signal: Signal): Promise<void>; // TODO(burdon): Remove async?
   close(): Promise<void>;
@@ -28,6 +27,11 @@ export type TransportOptions = {
    * Wire protocol.
    */
   stream: NodeJS.ReadWriteStream;
+
+  /**
+   * Send a signal message to remote peer.
+   */
+  sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
 };
 
 export interface TransportFactory {
