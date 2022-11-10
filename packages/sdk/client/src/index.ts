@@ -27,14 +27,10 @@ export { PublicKey } from '@dxos/keys';
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
-//
-// Protobuf definitions.
-//
-
 export {
+  invitationObservable,
   ClientServicesHost,
   ClientServicesProvider,
-  invitationObservable,
   InvitationEvents,
   InvitationEncoder,
   InvitationObservable

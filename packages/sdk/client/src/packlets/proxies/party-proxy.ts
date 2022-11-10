@@ -15,6 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyType, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
@@ -80,8 +81,8 @@ export interface Party {
 export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
-
   private readonly _invitations: InvitationObservable[] = [];
+
   public readonly invitationsUpdate = new Event<InvitationObservable>();
   public readonly stateUpdate = new Event();
 
@@ -262,7 +263,11 @@ export class PartyProxy implements Party {
    */
   async createInvitation() {
     return new Promise<InvitationObservable>((resolve, reject) => {
-      const invitation = this._invitationProxy.createInvitation(this.key);
+      const testing = false;
+      const invitation = this._invitationProxy.createInvitation(this.key, {
+        type: testing ? Invitation.Type.INTERACTIVE_TESTING : Invitation.Type.INTERACTIVE
+      });
+
       this._invitations.push(invitation);
       const unsubscribe = invitation.subscribe({
         onConnecting: () => {

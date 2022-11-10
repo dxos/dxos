@@ -12,6 +12,7 @@ import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/clien
 import {
   AuthenticatingInvitationObservable,
   AuthenticatingInvitationProvider,
+  CreateInvitationsOptions,
   InvitationsProxy,
   InvitationObservable,
   InvitationObservableProvider
@@ -21,7 +22,6 @@ import {
  * Adapts invitations service observable to client/service stream.
  * Used by both HALO and Spaces client/service interfaces.
  */
-// TODO(burdon): Options (e.g., timeout).
 export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
   // prettier-ignore
   constructor(
@@ -30,7 +30,8 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
   abstract createInvitationObject(context: T): Invitation;
 
-  createInvitation(context: T): InvitationObservable {
+  // TODO(burdon): Options (e.g., timeout).
+  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable {
     assert(context);
 
     let invitationId: string;
@@ -40,7 +41,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
       }
     });
 
-    const invitation = this.createInvitationObject(context);
+    const invitation = { ...this.createInvitationObject(context), ...options };
     const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
 
     stream.subscribe(

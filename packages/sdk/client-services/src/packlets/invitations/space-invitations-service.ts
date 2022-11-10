@@ -43,7 +43,8 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       assert(space);
 
       let invitationId: string;
-      const observable = spaceInvitations.createInvitation(space);
+      const { type } = invitation;
+      const observable = spaceInvitations.createInvitation(space, { type });
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);

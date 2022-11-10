@@ -18,9 +18,11 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
   AuthenticatingInvitationProvider,
+  CreateInvitationsOptions,
   InvitationsHandler,
   InvitationObservable,
-  InvitationObservableProvider
+  InvitationObservableProvider,
+  AUTHENTICATION_CODE_LENGTH
 } from './invitations';
 
 /**
@@ -36,15 +38,18 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space): InvitationObservable {
+  createInvitation(space: Space, options?: CreateInvitationsOptions): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
+    const { type } = options ?? {};
+    assert(type === undefined || type !== Invitation.Type.OFFLINE);
 
     const topic = PublicKey.random();
     const invitation: Invitation = {
+      type,
       invitationId: PublicKey.random().toHex(),
       swarmKey: topic,
       spaceKey: space.key,
-      authenticationCode: generatePasscode(6)
+      authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
 
     // TODO(burdon): Stop anything pending.

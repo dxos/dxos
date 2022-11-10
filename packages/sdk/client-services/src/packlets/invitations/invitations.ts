@@ -13,6 +13,12 @@ import {
 } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
+export const AUTHENTICATION_CODE_LENGTH = 6;
+
+export type CreateInvitationsOptions = {
+  type?: Invitation.Type;
+};
+
 /**
  * Common invitation events (callbacks) for creating and accepting invitations.
  */
@@ -23,12 +29,6 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
   onAuthenticating?(invitation: Invitation): void;
   onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
 }
-
-// TODO(burdon): Mixins.
-//  - observable / provider.
-//  - invitation property (proxies).
-//  - cancel
-//  - authenticate
 
 /**
  * Base class for all invitation observables and providers.
@@ -87,7 +87,7 @@ export class AuthenticatingInvitationProvider
 }
 
 /**
- * Common interface for Halo and Space invitation handlers.
+ * Common interface for Halo and Space invitation proxies and handlers.
  * Handles the life-cycle of Space invitations between peers.
  *
  * Host
@@ -103,6 +103,8 @@ export class AuthenticatingInvitationProvider
  * - If Space handler then creates a local cloned space (with genesis block).
  * - Sends admission credentials (containing local device and feed keys).
  *
+ * TODO(burdon): Show proxy/service relationship and reference design doc/diagram.
+ *
  *  ```
  *  [Guest]                                                  [Host]
  *   |-------------------------------------RequestAdmission-->|
@@ -113,7 +115,7 @@ export class AuthenticatingInvitationProvider
  */
 export interface InvitationsHandler<T> {
   // TODO(burdon): Pass in options.
-  createInvitation(context: T): InvitationObservable;
+  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
 
