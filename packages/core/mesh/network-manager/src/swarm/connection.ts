@@ -132,16 +132,16 @@ export class Connection {
     assert(!this._transport);
     this._transport = this._transportFactory.create({
       initiator: this.initiator,
-      stream: this._protocol.stream
-    });
-    this._transport.sendSignal.on(async (signal) => {
-      await this._signalMessaging.signal({
-        author: this.ownId,
-        recipient: this.remoteId,
-        sessionId: this.sessionId,
-        topic: this.topic,
-        data: { signal }
-      });
+      stream: this._protocol.stream,
+      sendSignal: async (signal) => {
+        await this._signalMessaging.signal({
+          author: this.ownId,
+          recipient: this.remoteId,
+          sessionId: this.sessionId,
+          topic: this.topic,
+          data: { signal }
+        });
+      }
     });
 
     this._transport.connected.once(() => {
