@@ -144,16 +144,16 @@ export class SpaceProxy implements Space {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
+   * @deprecated Use database accessor.
    */
-  // TODO(burdon): Remove (use database).
   get select(): Database['select'] {
     return this.database.select.bind(this.database);
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
+   * @deprecated Use database accessor.
    */
-  // TODO(burdon): Remove (use database).
   get reduce(): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }
@@ -162,9 +162,7 @@ export class SpaceProxy implements Space {
    * Called by EchoProxy open.
    */
   async initialize() {
-    // if (this._database && this._serviceProvider instanceof ClientServicesProxy) {
     await this._database!.initialize();
-    // }
 
     // Root item for properties.
     this._item = await this._database?.createItem({ type: SPACE_ITEM_TYPE });
