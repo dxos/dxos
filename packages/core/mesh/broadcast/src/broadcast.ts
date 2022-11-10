@@ -26,7 +26,13 @@ export type SubscribeFn<P> = (
 export type LookupFn<P> = () => Promise<P[]>;
 
 export interface Middleware<P extends Peer = Peer> {
+  /**
+   * Defines how to send the packet builded by the broadcast.
+   */
   readonly send: SendFn<P>;
+  /**
+   * Defines how to subscribe to incoming packets and peers update.
+   */
   readonly subscribe: SubscribeFn<P>;
   /**
    * @deprecated
@@ -51,12 +57,17 @@ export interface CacheOptions {
 
 export interface Options extends CacheOptions {
   /**
-   * Defines an id for the current peer.
+   * Defines an id for the current peer. Default: `crypto.randomBytes(32)`
    */
   id?: Buffer;
 }
-
+/**
+ * The options of a publish request
+ */
 export interface PublishOptions {
+  /**
+   * Defines a custom seqno for the message. Default: `crypto.randomBytes(32)`.
+   */
   seq?: Buffer;
 }
 
@@ -87,6 +98,11 @@ export class Broadcast<P extends Peer = Peer> {
   readonly packet = new Event<Packet>();
   readonly subscribeError = new Event<Error>();
 
+  /**
+   * Creates a broadcast
+   * @param middleware The middleware defines an interface to connect the broadcast to any request/response solution
+   * @param options Broadcast options
+   */
   constructor(middleware: Middleware<P>, options: Options = {}) {
     assert(middleware);
     assert(middleware.send);
@@ -108,6 +124,8 @@ export class Broadcast<P extends Peer = Peer> {
 
   /**
    * Broadcast a flooding message to the peers neighbors.
+   * @param data Any data you want to broadcast
+   * @param options Broadcast options 
    */
   async publish(data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
     const { seq = randomBytes(32) } = options;
@@ -158,6 +176,9 @@ export class Broadcast<P extends Peer = Peer> {
     }
   }
 
+  /**
+   * Initialize the cache and runs the defined subscription.
+   */
   open() {
     if (this._isOpen) {
       return;
@@ -169,6 +190,9 @@ export class Broadcast<P extends Peer = Peer> {
     log('running %h', this._id);
   }
 
+  /**
+   * Clear the cache and unsubscribe from incoming messages.
+   */
   close() {
     if (!this._isOpen) {
       return;

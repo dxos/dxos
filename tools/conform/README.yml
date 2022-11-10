@@ -1,10 +1,7 @@
-usage: >
+usage: |
   The template is provided in `src/template` which can be executed with the `plate` executable from `@dxos/plate`. See the `dev` script in this package.
   
   Execute conforming the conform package itself with:
-
   ```bash
-
   pnpm nx dev conform
-
   ```

@@ -106,7 +106,7 @@ const main = async () => {
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: await loadInputs(input.split(','), { relativeTo: output }),
+          input: await loadInputs(input.split(',')),
           filterGlob: glob,
           filterRegEx: filter ? new RegExp(filter) : undefined,
           filterExclude: exclude ? new RegExp(exclude) : undefined,

@@ -10,7 +10,7 @@
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
     "clean:plate": "rm -rf docs/api",
     "docs:build": "vuepress build docs",
-    "plate": "plate src/templates/api --input docs/api.json --output docs/api",
+    "plate": "plate src/templates/api --input docs/api.json --output docs/api --sequential --verbose",
     "prerelease": "pnpm run typedoc && pnpm run clean:plate && pnpm run plate && pnpm run docs:build",
     "serve": "vuepress dev docs",
     "typedoc": "typedoc"

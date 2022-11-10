@@ -22,14 +22,18 @@ const main = async () => {
             templateDirectory: path.resolve(__dirname, './template'),
             input: await loadInputs(['package.json', 'README.yml'], {
               relativeTo: pkg
-            }),
+            })
           })
         );
         console.log(`conforming ${packages.length} packages ...`);
         const results = await Promise.all(promises);
-        console.log('conforming packages done');
         console.log(results.length, 'results');
-        results.forEach((r) => r.map((r) => console.log(r.shortDescription(process.cwd()))));
+        const savePromises = results.flat().map(async (file) => {
+          const result = await file.save();
+          console.log(result ? 'wrote' : 'skipped', file.shortDescription(process.cwd()));
+        });
+        await Promise.all(savePromises);
+        console.log(packages.length, 'packages conformed');
       }
     })
     .help().argv;

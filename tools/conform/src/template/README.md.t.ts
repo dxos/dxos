@@ -1,7 +1,10 @@
-import { TemplateFunction, text } from '@dxos/plate';
+import path from 'path';
+import { TemplateFunction, text, fileExists } from '@dxos/plate';
 import { Input } from './index';
 
-const template: TemplateFunction<Input> = ({ input }) => {
+const template: TemplateFunction<Input> = async ({ input, outputDirectory }) => {
+  const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
+  const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
   const {
     name,
     description,
@@ -10,29 +13,47 @@ const template: TemplateFunction<Input> = ({ input }) => {
     quickStartUrl,
     guideUrl,
     apiReferenceUrl = `https://docs.dxos.org/api/${input?.name}`,
-    dependencyDiagramUrl,
-    codeCoverageUrl
-  } = { ...input };
+    dependencyDiagramUrl = defaultDepDiagramUrl,
+    codeCoverageUrl,
+    twitter = `dxos_org`,
+    issuesUrl = 'https://github.com/dxos/dxos/issues',
+    conductUrl,
+    contributionGuideUrl,
+    prGuideUrl,
+    features,
+    diagram,
+    badges,
+    storybooks,
+    background
+  } = input;
+
+  const section = (header: string, content: string, emitFlag?: any) => {
+    return (typeof emitFlag != 'undefined' ? !!emitFlag : !!content?.trim?.()) ? `## ${header}\n${content}\n\n` : '';
+  };
+
+  const code = (code: string, lang?: string) => `\`\`\`${lang ?? ''}\n${code}\n\`\`\``;
+
   return text`
   # ${name}
+  ${badges?.length ? badges.join('\n') + '\n' : ''}
   ${description}
-
-  ## Installation
-  \`\`\`bash
-  ${install}
-  \`\`\`
-
-  ## Usage
-  ${usage}
-
-  ## Documentation
-  ${quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`}
-  ${guideUrl && `- [📖 Developer Guide](${guideUrl})`}
-  ${apiReferenceUrl && `- [API Reference](${apiReferenceUrl})`}
-  ${dependencyDiagramUrl && `- [Dependency Diagram](${dependencyDiagramUrl})`}
-  ${codeCoverageUrl && `- [Code coverage report](${codeCoverageUrl})`}
-
-  ## Resources
+  ${section('Background', background)}
+  ${section('Installation', code(install, 'bash'), !!install)}
+  ${section('Features', features?.map((f) => `- [x] ${f}`).join('\n'), features?.length)}
+  ${section('Usage', usage)}
+  ${section('Diagram', diagram)}
+  ${section(
+    'Documentation',
+    text`
+    ${quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`}
+    ${guideUrl && `- [📖 Developer Guide](${guideUrl})`}
+    ${apiReferenceUrl && `- [📚 API Reference](${apiReferenceUrl})`}
+    ${dependencyDiagramUrl && `- [🧩 Dependency Diagram](${dependencyDiagramUrl})`}
+    ${codeCoverageUrl && `- [👖 Code coverage report](${codeCoverageUrl})`}`,
+    quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl
+  )}
+  ${section('Storybooks', storybooks?.join('\n\n') + '\n', !!storybooks?.length)}
+  ## DXOS Resources
   - [Website](https://dxos.org)
   - [Developer Documentation](https://docs.dxos.org)
   - [Blog](https://blog.dxos.org)
@@ -40,10 +61,10 @@ const template: TemplateFunction<Input> = ({ input }) => {
   - [Events calendar](https://blog.dxos.org/events)
   - Hang out with the community on [Discord](https://dxos.org/discord)
   - Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with \`#dxos\`
-  - Tag us on twitter [\`@dxos\`](https://twitter.com/dxos)
+  ${twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`}
 
   ## Contributions
-  Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](), the [issue guide](), and the [PR contribution guide](). If you would like to contribute to the design and implementation of DXOS, please [start here]().
+  Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](${conductUrl}), the [issue guide](${issuesUrl}), and the [PR contribution guide](${prGuideUrl}). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](${contributionGuideUrl}).
 
   License: [MIT](./LICENSE.md) Copyright 2022 © DXOS
   `;

@@ -7,6 +7,7 @@ This is reference documentation that was [generated automatically](/guide/contri
 To get started with DXOS components and learn how to use them, check out the [guide](/guide).
 
 ## Packages:
+
 - [@dxos/client](/api/@dxos/client)
 - [@dxos/config](/api/@dxos/config)
 - [@dxos/react-client](/api/@dxos/react-client)

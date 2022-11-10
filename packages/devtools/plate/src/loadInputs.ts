@@ -10,25 +10,23 @@ export type LoadOptions = {
 export const loadInputs = async (fileNames: string[], options?: LoadOptions): Promise<object> => {
   const { relativeTo } = { ...options };
   if (!fileNames) return {};
+  const errors: any[] = [];
   const load = async (file: string) => {
     if (!file) return {};
     const isYaml = /\.ya?ml$/.test(file);
     const isJSON = /\.json$/.test(file);
     try {
       const content = (await fs.readFile(relativeTo ? path.resolve(relativeTo, file) : file)).toString();
-      return isYaml
-        ? yaml.parse(content)
-        : isJSON
-        ? JSON.parse(content)
-        : {
-            error: `invalid file type ${file}`
-          };
+      return isYaml ? yaml.parse(content) : isJSON ? JSON.parse(content) : undefined;
     } catch (err) {
-      return {
-        error: err?.toString()
-      };
+      errors.push(err);
     }
   };
   const loadedParts = await Promise.all(fileNames.map(load));
-  return loadedParts.reduce((memo, next) => merge(memo, next), {});
+  const squashed = loadedParts.reduce((memo, next) => merge(memo, next), {});
+  if (Object.keys(squashed).length < 1)
+    throw new Error(
+      [`unable to load inputs from ${fileNames.join(', ')}`, ...errors?.map((e) => e.toString())].join('\n')
+    );
+  return squashed;
 };
