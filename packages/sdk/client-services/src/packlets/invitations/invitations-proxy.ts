@@ -30,7 +30,6 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
   abstract createInvitationObject(context: T): Invitation;
 
-  // TODO(burdon): Options (e.g., timeout).
   createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable {
     assert(context);
 

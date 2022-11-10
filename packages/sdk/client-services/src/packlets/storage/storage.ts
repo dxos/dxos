@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import jsondown from 'jsondown';
+import jsondown from 'jsondown'; // TODO(burdon): Uses custom implementation.
 import leveljs from 'level-js';
 import memdown from 'memdown';
 

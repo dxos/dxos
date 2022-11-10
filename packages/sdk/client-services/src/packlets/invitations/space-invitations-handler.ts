@@ -45,8 +45,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
    */
   createInvitation(space: Space, options?: CreateInvitationsOptions): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
-    const { type } = options ?? {};
-    assert(type === undefined || type !== Invitation.Type.OFFLINE);
+    const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
+    assert(type !== Invitation.Type.OFFLINE);
 
     const invitation: Invitation = {
       type,
@@ -133,7 +133,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         await peer.open();
         log('connected', { host: this._signingContext.deviceKey });
         observable.callback.onConnected?.(invitation);
-        const deviceKey = await complete.wait({ timeout: INVITATION_TIMEOUT });
+        const deviceKey = await complete.wait({ timeout });
         log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
         observable.callback.onSuccess(invitation);
       } catch (err) {

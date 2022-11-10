@@ -17,6 +17,7 @@ export const AUTHENTICATION_CODE_LENGTH = 6;
 
 export type CreateInvitationsOptions = {
   type?: Invitation.Type;
+  timeout?: number;
 };
 
 /**
