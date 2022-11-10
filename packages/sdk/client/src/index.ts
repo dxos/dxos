@@ -3,7 +3,6 @@
 //
 
 // TODO(burdon): Remove (create wrapper class).
-
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {

@@ -7,15 +7,15 @@ import {
   ClientServicesProvider,
   ClientServicesProxy,
   InvitationObservable,
-  SpaceInvitationsProxy
+  SpaceInvitationsProxy,
+  CreateInvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
+import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyType, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
@@ -23,7 +23,7 @@ export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
 // TODO(burdon): Rename Space.
 // TODO(burdon): Match params to @dxos/echo-db Space.
 // TODO(burdon): Separate public API form implementation (move comments here).
-export interface Party {
+export interface Party extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
@@ -31,10 +31,11 @@ export interface Party {
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
+  // TODO(burdon): Move to Database.
   get select(): Database['select'];
   get reduce(): Database['reduce'];
 
-  // TODO(burdon): Rename open/close.
+  // TODO(burdon): Reconcile with open/close.
   initialize(): Promise<void>;
   destroy(): Promise<void>;
 
@@ -75,7 +76,7 @@ export interface Party {
   queryMembers(): ResultSet<PartyMember>;
 
   // TODO(burdon): Remove this option (for testing only).
-  createInvitation(testing?: boolean): Promise<InvitationObservable>;
+  createInvitation(options?: CreateInvitationsOptions): Promise<InvitationObservable>;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -263,11 +264,9 @@ export class PartyProxy implements Party {
   /**
    * Creates an interactive invitation.
    */
-  async createInvitation(testing = false) {
+  async createInvitation(options?: CreateInvitationsOptions) {
     return new Promise<InvitationObservable>((resolve, reject) => {
-      const invitation = this._invitationProxy.createInvitation(this.key, {
-        type: testing ? Invitation.Type.INTERACTIVE_TESTING : Invitation.Type.INTERACTIVE
-      });
+      const invitation = this._invitationProxy.createInvitation(this.key, options);
 
       this._invitations.push(invitation);
       const unsubscribe = invitation.subscribe({
