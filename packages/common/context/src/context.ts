@@ -1,4 +1,8 @@
-import { log } from '@dxos/log'
+//
+// Copyright 2022 DXOS.org
+//
+
+import { log } from '@dxos/log';
 
 export type ContextErrorHandler = (error: Error) => void;
 
@@ -6,7 +10,7 @@ export type DisposeCallback = () => void | Promise<void>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
-}
+};
 
 export class Context {
   // Marker for the isContext method.
@@ -26,10 +30,10 @@ export class Context {
   constructor({
     onError = (error) => {
       void this.dispose();
-    
+
       // Will generate an unhandled rejection.
       throw error;
-    },
+    }
   }: CreateContextParams = {}) {
     this._onError = onError;
   }
@@ -40,7 +44,7 @@ export class Context {
    * Throwing an error inside the callback will result in the error being logged, but not re-thrown.
    */
   onDispose(callback: DisposeCallback) {
-    if(this._isDisposed) {
+    if (this._isDisposed) {
       throw new Error('Context is already disposed');
     }
 
@@ -56,20 +60,22 @@ export class Context {
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    */
   dispose(): Promise<void> {
-    if(this._isDisposed) {
+    if (this._isDisposed) {
       throw new Error('Context is already disposed');
     }
     this._isDisposed = true;
 
     const promises = [];
-    for(const callback of this._disposeCallbacks.reverse()) {
-      promises.push((async () => {
-        try {
-          await callback();
-        } catch (error: any) {
-          log.catch(error)
-        }
-      })())
+    for (const callback of this._disposeCallbacks.reverse()) {
+      promises.push(
+        (async () => {
+          try {
+            await callback();
+          } catch (error: any) {
+            log.catch(error);
+          }
+        })()
+      );
     }
     this._disposeCallbacks.length = 0;
 
@@ -82,23 +88,23 @@ export class Context {
    * IF the error handler is not set, the error will dispose the context and cause an unhandled rejection.
    */
   raise(error: Error): void {
-    if(this._isDisposed) {
+    if (this._isDisposed) {
       log.error(`Error in disposed context: ${error}`);
       return;
     }
-    
+
     try {
       this._onError(error);
     } catch (err) {
       // Generate an unhandled rejection and stop the error propagation.
-      Promise.reject(err);
+      void Promise.reject(err);
     }
   }
 
   derive({ onError }: CreateContextParams): Context {
     const newCtx = new Context({
       onError: async (error) => {
-        if(!onError) {
+        if (!onError) {
           this.raise(error);
         } else {
           try {

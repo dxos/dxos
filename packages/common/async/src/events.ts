@@ -4,6 +4,7 @@
 
 import { Context } from '@dxos/context';
 import { throwUnhandledRejection } from '@dxos/debug';
+
 import { runInContextAsync } from './task-scheduling';
 
 export type UnsubscribeCallback = () => void;
@@ -123,9 +124,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   on(callback: (data: T) => void): UnsubscribeCallback;
   on(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
   on(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
-    const [ctx, callback] = Context.isContext(_ctx)
-      ? [_ctx, _callback]
-      : [new Context(), _ctx];
+    const [ctx, callback] = Context.isContext(_ctx) ? [_ctx, _callback] : [new Context(), _ctx];
 
     const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
 
@@ -134,7 +133,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     if (this.listenerCount() === 1) {
       this._runEffects();
     }
-    
+
     ctx.onDispose(() => this.off(callback));
     return () => this.off(callback);
   }
@@ -164,13 +163,11 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-   once(callback: (data: T) => void): UnsubscribeCallback;
-   once(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
-   once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
-     const [ctx, callback] = Context.isContext(_ctx)
-       ? [_ctx, _callback]
-       : [new Context(), _ctx];
- 
+  once(callback: (data: T) => void): UnsubscribeCallback;
+  once(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
+  once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+    const [ctx, callback] = Context.isContext(_ctx) ? [_ctx, _callback] : [new Context(), _ctx];
+
     if (this._listeners.has(callback)) {
       return () => {
         /* No-op. */

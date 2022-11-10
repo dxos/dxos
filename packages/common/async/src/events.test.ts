@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { expect } from 'chai';
+
+import { Context } from '@dxos/context';
 
 import { Event } from './events';
 import { sleep } from './timeout';
@@ -46,31 +47,31 @@ describe('Event', function () {
     expect(debounceCount).to.equal(1);
   });
 
-  it('subscribe context', async () => {
+  it('subscribe context', async function () {
     const event = new Event<number>();
     const ctx = new Context();
 
-    let received: number[] = []
-    event.on(ctx, num => {
+    const received: number[] = [];
+    event.on(ctx, (num) => {
       received.push(num);
     });
 
     event.emit(1);
     event.emit(2);
-    ctx.dispose();
+    void ctx.dispose();
     event.emit(3);
     event.emit(4);
 
     await sleep(2);
 
     expect(received).to.deep.equal([1, 2]);
-  })
+  });
 
-  it('errors are propagated to context', async () => {
+  it('errors are propagated to context', async function () {
     const event = new Event<number>();
     let error!: Error;
     const ctx = new Context({
-      onError: err => {
+      onError: (err) => {
         error = err;
       }
     });
@@ -84,5 +85,5 @@ describe('Event', function () {
     await sleep(2);
 
     expect(error.message).to.equal('test');
-  })
+  });
 });

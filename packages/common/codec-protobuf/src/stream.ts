@@ -4,12 +4,13 @@
 
 import debug from 'debug';
 import assert from 'node:assert';
+
 import { Context } from '@dxos/context';
 
 const log = debug('dxos:codec-protobuf:stream');
 
 type Callbacks<T> = {
-  ctx: Context
+  ctx: Context;
 
   /**
    * Advises that the producer is ready to stream the data.
@@ -117,7 +118,7 @@ export class Stream<T> {
     });
 
     this._ctx = new Context({
-      onError: err => {
+      onError: (err) => {
         if (this._isClosed) {
           return;
         }
@@ -126,12 +127,12 @@ export class Stream<T> {
         this._closeError = err;
         this._producerCleanup?.(err);
         this._closeHandler?.(err);
-        this._ctx.dispose();
+        void this._ctx.dispose();
       }
     });
     this._ctx.onDispose(() => {
       this.close();
-    })
+    });
 
     try {
       const producerCleanup = producer({
@@ -176,14 +177,14 @@ export class Stream<T> {
             // Stop error propagation.
             throwUnhandledRejection(err);
           }
-          this._ctx.dispose();
+          void this._ctx.dispose();
         }
       });
 
       if (producerCleanup) {
         this._producerCleanup = producerCleanup;
       }
-    } catch(err: any) {
+    } catch (err: any) {
       this._ctx.raise(err);
     }
   }
@@ -254,7 +255,7 @@ export class Stream<T> {
     this._isClosed = true;
     this._producerCleanup?.();
     this._closeHandler?.(undefined);
-    this._ctx.dispose();
+    void this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;
