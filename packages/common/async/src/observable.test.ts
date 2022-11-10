@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { AsyncEvents, observableError, TimeoutError } from './errors';
+import { AsyncEvents, TimeoutError } from './errors';
 import { latch } from './latch';
 import { CancellableObservable, CancellableObservableEvents, CancellableObservableProvider } from './observable';
 
@@ -32,7 +32,7 @@ describe('observable', function () {
 
       const timeout = setTimeout(() => {
         clearTimeout(connectTimeout);
-        observableError(observable, new TimeoutError(timeoutDelay));
+        observable.callback.onTimeout?.(new TimeoutError(timeoutDelay));
       }, timeoutDelay);
 
       const connectTimeout = setTimeout(() => {

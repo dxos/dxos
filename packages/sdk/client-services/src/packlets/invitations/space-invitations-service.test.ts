@@ -21,7 +21,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/space-invitation-service', function () {
-  it.only('creates space and invites peer', async function () {
+  it('creates space and invites peer', async function () {
     const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(peer1.spaceManager);

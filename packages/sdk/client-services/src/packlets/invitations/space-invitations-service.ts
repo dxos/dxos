@@ -31,8 +31,8 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('host stream opened', {
-        identityKey: this._identityManager.identity?.identityKey,
+      log('stream opened', {
+        host: this._identityManager.identity?.deviceKey,
         spaceKey: invitation.spaceKey
       });
       const space = this._spaceManager.spaces.get(invitation.spaceKey!);
@@ -77,11 +77,16 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('host stream closed', {
-          identityKey: this._identityManager.identity?.identityKey,
-          spaceKey: invitation.spaceKey,
-          err
-        });
+        const context = {
+          guest: this._identityManager.identity?.deviceKey,
+          spaceKey: invitation.spaceKey
+        };
+        if (err) {
+          log.warn('stream closed', { ...context, err });
+        } else {
+          log('stream closed', context);
+        }
+
         this._createInvitations.delete(invitation.invitationId!);
       };
     });
@@ -90,8 +95,8 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('guest stream opened', {
-        identityKey: this._identityManager.identity?.identityKey,
+      log('stream opened', {
+        guest: this._identityManager.identity?.deviceKey,
         spaceKey: invitation.spaceKey
       });
 
@@ -134,11 +139,16 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('guest stream closed', {
-          identityKey: this._identityManager.identity?.identityKey,
-          spaceKey: invitation.spaceKey,
-          err
-        });
+        const context = {
+          guest: this._identityManager.identity?.deviceKey,
+          spaceKey: invitation.spaceKey
+        };
+        if (err) {
+          log.warn('stream closed', { ...context, err });
+        } else {
+          log('stream closed', context);
+        }
+
         this._acceptInvitations.delete(invitation.invitationId!);
       };
     });

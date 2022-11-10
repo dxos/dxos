@@ -43,12 +43,12 @@ const PartyInvitationContainer = () => {
     });
   };
 
-  const handleCreateInvitation = () => {
+  const handleCreateInvitation = async () => {
     setTimeout(async () => {
       resetInvitations();
       // TODO(burdon): Observer.
       const party = await client.echo.getParty(partyKey!)!;
-      party.createInvitation();
+      await party.createInvitation();
 
       // invitation.finished.on(() => resetInvitations());
       // if (!contact) {
@@ -110,8 +110,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      // TODO(burdon): Observable.
-      client.echo.acceptInvitation(InvitationEncoder.decode(invitationCode));
+      await client.echo.acceptInvitation(InvitationEncoder.decode(invitationCode));
       // const party = await invitation;
       // setStatus({ party: party.key.toHex() });
       throw new Error('Not implemented.');

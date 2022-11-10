@@ -6,7 +6,7 @@ import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } fr
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { createLinkedPorts, ProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client, defaultConfig } from '../client';
 
@@ -77,7 +77,11 @@ export class TestClientBuilder {
    */
   createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
-    const server = host.createPeer(hostPort);
+    const server = createProtoRpcPeer({
+      exposed: host.descriptors,
+      handlers: host.services,
+      port: hostPort
+    });
 
     const client = new Client({ services: new ClientServicesProxy(proxyPort) });
     return [client, server];
