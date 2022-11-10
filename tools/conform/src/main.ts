@@ -18,6 +18,7 @@ const main = async () => {
         const promises = packages.map(async (pkg) =>
           executeDirectoryTemplate({
             outputDirectory: pkg,
+            overwrite: false,
             templateDirectory: path.resolve(__dirname, './template'),
             input: await loadInputs(['package.json', 'README.yml'], {
               relativeTo: pkg
@@ -25,8 +26,10 @@ const main = async () => {
           })
         );
         console.log(`conforming ${packages.length} packages ...`);
-        await Promise.all(promises);
+        const results = await Promise.all(promises);
         console.log('conforming packages done');
+        console.log(results.length, 'results');
+        results.forEach((r) => r.map((r) => console.log(r.shortDescription(process.cwd()))));
       }
     })
     .help().argv;

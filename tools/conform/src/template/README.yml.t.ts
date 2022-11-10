@@ -1,15 +1,15 @@
-import { TemplateFunction, File, text } from '@dxos/plate';
+// import { TemplateFunction, File, text } from '@dxos/plate';
 
-const template: TemplateFunction = ({ outputDirectory, defaultOutputFile }) => {
-  return [
-    new File({
-      overwrite: false,
-      path: [outputDirectory, defaultOutputFile],
-      content: text`
-        usage: >
-        `
-    })
-  ];
-};
+// const template: TemplateFunction = ({ outputDirectory, defaultOutputFile }) => {
+//   return [
+//     new File({
+//       overwrite: false,
+//       path: [outputDirectory, defaultOutputFile],
+//       content: text`
+//         usage: >
+//         `
+//     })
+//   ];
+// };
 
-export default template;
+// export default template;
