@@ -3,32 +3,15 @@
 //
 
 import cx from 'classnames';
-import React, { ChangeEvent, ComponentProps, ReactNode, useCallback, useState, useTransition } from 'react';
+import React, { ChangeEvent, useCallback, useState, useTransition } from 'react';
 
 import { useId } from '../../hooks';
-import { MessageValence } from '../../props';
 import { defaultDescription, valenceColorText } from '../../styles';
-import { defaultInput } from '../../styles/input';
+import { BarePinInput } from './BarePinInput';
+import { BareTextInput } from './BareTextInput';
+import { InputProps as NaturalInputProps } from './InputProps';
 
-export type InputSize = 'md' | 'lg';
-
-export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
-  label: ReactNode;
-  labelVisuallyHidden?: boolean;
-  description?: ReactNode;
-  descriptionVisuallyHidden?: boolean;
-  initialValue?: string;
-  onChange?: (value: string) => void;
-  disabled?: boolean;
-  size?: InputSize;
-  validationMessage?: ReactNode;
-  validationValence?: MessageValence;
-}
-
-const sizeMap: Record<InputSize, string> = {
-  md: 'text-sm',
-  lg: 'text-base'
-};
+export type InputProps = NaturalInputProps;
 
 export const Input = ({
   label,
@@ -42,6 +25,7 @@ export const Input = ({
   disabled,
   className,
   size,
+  length = 6,
   validationMessage,
   validationValence,
   ...inputProps
@@ -49,6 +33,8 @@ export const Input = ({
   const inputId = inputProps.id || useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
+
+  const isInvalid = !!validationMessage && validationValence === 'error';
 
   const [_isPending, startTransition] = useTransition();
 
@@ -66,7 +52,27 @@ export const Input = ({
     [onChange]
   );
 
-  const isInvalid = !!validationMessage && validationValence === 'error';
+  const bareInputBaseProps = {
+    ...inputProps,
+    id: inputId,
+    ...(required && { required: true }),
+    ...(disabled && { disabled: true }),
+    ...(description && { 'aria-describedby': descriptionId }),
+    ...(isInvalid && {
+      'aria-invalid': 'true' as const,
+      'aria-errormessage': validationId
+    }),
+    ...(placeholder && { placeholder }),
+    value: internalValue,
+    onChange: onInternalChange
+  };
+
+  const bareInput =
+    size === 'pin' ? (
+      <BarePinInput {...bareInputBaseProps} length={length} />
+    ) : (
+      <BareTextInput {...bareInputBaseProps} />
+    );
 
   return (
     <div className={cx('my-4', className)} role='none'>
@@ -79,25 +85,7 @@ export const Input = ({
       >
         {label}
       </label>
-      <input
-        id={inputId}
-        {...inputProps}
-        className={cx(
-          defaultInput({ disabled, ...(validationMessage && { validationValence }) }),
-          'block w-full px-2.5 py-2',
-          sizeMap[size ?? 'md']
-        )}
-        {...(required && { required: true })}
-        {...(disabled && { disabled: true })}
-        {...(placeholder && { placeholder })}
-        {...(description && { 'aria-describedby': descriptionId })}
-        {...(isInvalid && {
-          'aria-invalid': 'true',
-          'aria-errormessage': validationId
-        })}
-        value={internalValue}
-        onChange={onInternalChange}
-      />
+      {bareInput}
       {(description || validationMessage) && (
         <p
           {...(!isInvalid && { id: descriptionId })}
