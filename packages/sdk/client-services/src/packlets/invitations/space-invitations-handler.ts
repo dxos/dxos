@@ -79,9 +79,14 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
-                // TODO(burdon): Check match.
-                if (authenticationCode !== invitation.authenticationCode) {
-                  log.warn('authentication code not set');
+                // Check authenticated.
+                if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+                  if (
+                    invitation.authenticationCode === undefined ||
+                    authenticationCode !== invitation.authenticationCode
+                  ) {
+                    throw new Error('authentication code not set');
+                  }
                 }
 
                 log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
@@ -189,13 +194,14 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
         // 2. Get authentication code.
-        // TODO(burdon): Check if authentication is required on both side (options).
         // TODO(burdon): Test timeout (options for timeouts at different steps).
-        log('waiting for authentication code...');
-        observable.callback.onAuthenticating?.(invitation);
-        const authenticationCode = await authenticated.wait();
-        log('sending authentication request');
-        await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+        if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
+          log('waiting for authentication code...');
+          observable.callback.onAuthenticating?.(invitation);
+          const authenticationCode = await authenticated.wait();
+          log('sending authentication request');
+          await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+        }
 
         // 3. Create local space.
         // TODO(burdon): Abandon if does not complete (otherwise retry will fail).

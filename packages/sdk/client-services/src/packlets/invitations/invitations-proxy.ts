@@ -40,7 +40,8 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
       }
     });
 
-    const stream: Stream<Invitation> = this._invitationsService.createInvitation(this.createInvitationObject(context));
+    const invitation = this.createInvitationObject(context);
+    const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
 
     stream.subscribe(
       (invitation: Invitation) => {

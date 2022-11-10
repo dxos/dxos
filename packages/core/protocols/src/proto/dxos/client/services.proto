@@ -131,10 +131,12 @@ service SpacesService {
  */
 message Invitation {
   enum Type {
-    /// Requires both to be online to complete key exchange.
+    /// Requires both to be online with OTP to complete key exchange.
     INTERACTIVE = 0;
+    /// Interactive without OTP.
+    INTERACTIVE_TESTING = 1;
     /// Guest's identity key is known; invitation can be accepted by any valid peer.
-    OFFLINE = 1;
+    OFFLINE = 2;
   }
 
   enum State {

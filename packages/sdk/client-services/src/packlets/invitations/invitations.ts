@@ -112,6 +112,7 @@ export class AuthenticatingInvitationProvider
  *  ```
  */
 export interface InvitationsHandler<T> {
+  // TODO(burdon): Pass in options.
   createInvitation(context: T): InvitationObservable;
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
 }
