@@ -30,7 +30,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/devtools/cli/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

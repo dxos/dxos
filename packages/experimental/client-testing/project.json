@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/experimental/client-testing/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

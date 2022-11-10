@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/halo/keyring/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
