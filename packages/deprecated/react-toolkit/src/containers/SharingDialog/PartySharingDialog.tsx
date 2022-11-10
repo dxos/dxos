@@ -6,8 +6,7 @@ import React from 'react';
 
 import { Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
-import { ResourceSet } from '@dxos/registry-client';
+import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
@@ -26,7 +25,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
   const party = useParty(partyKey);
   const members = useMembers(party);
   const invitations = usePartyInvitations(partyKey);
-  const botClient = useBotFactoryClient(false);
+  // const botClient = useBotFactoryClient(false);
 
   const handleCreateInvitation = async () => {
     await party!.createInvitation();
@@ -38,11 +37,11 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
     throw new Error('Not implemented.');
   };
 
-  const handleBotInvitation = botClient
-    ? async (resource: ResourceSet) => {
-        await botClient!.spawn({ name: resource.name.toString() }, party!);
-      }
-    : undefined;
+  // const handleBotInvitation = botClient
+  //   ? async (resource: ResourceSet) => {
+  //       await botClient!.spawn({ name: resource.name.toString() }, party!);
+  //     }
+  //   : undefined;
 
   if (!party) {
     return null;
@@ -56,7 +55,7 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
       invitations={invitations}
       onCreateInvitation={handleCreateInvitation}
       onCancelInvitation={handleCancelInvitation}
-      onCreateBotInvitation={handleBotInvitation}
+      // onCreateBotInvitation={handleBotInvitation}
     />
   );
 };

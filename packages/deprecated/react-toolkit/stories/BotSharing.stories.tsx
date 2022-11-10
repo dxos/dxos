@@ -8,7 +8,7 @@ import { Box, Button, Toolbar } from '@mui/material';
 
 import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { ClientProvider, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
+import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
@@ -98,13 +98,13 @@ export const Primary = () => {
       <ErrorBoundary>
         <RegistryProvider config={config}>
           <ClientProvider config={config}>
-            <BotFactoryClientProvider>
-              <ProfileInitializer>
-                <Box sx={{ margin: 2, width: 600 }}>
-                  <Sender />
-                </Box>
-              </ProfileInitializer>
-            </BotFactoryClientProvider>
+            {/* <BotFactoryClientProvider> */}
+            <ProfileInitializer>
+              <Box sx={{ margin: 2, width: 600 }}>
+                <Sender />
+              </Box>
+            </ProfileInitializer>
+            {/* </BotFactoryClientProvider> */}
           </ClientProvider>
         </RegistryProvider>
       </ErrorBoundary>

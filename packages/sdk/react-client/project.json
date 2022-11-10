@@ -36,6 +36,21 @@
         "{options.outputFile}"
       ]
     },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/sdk/react-client/.storybook"
+        },
+        "open": false,
+        "uiFramework": "@storybook/react"
+      }
+    },
     "test": {
       "executor": "@dxos/mocha:mocha",
       "options": {

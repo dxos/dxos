@@ -408,14 +408,11 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
       prosemirror-model: ^1.7.1
       prosemirror-view: ^1.9.10
       react: ^18.2.0
       react-dom: ^18.2.0
-      vite: 3.0.9
-      vite-plugin-pwa: ^0.12.4
       y-protocols: ^1.0.5
       yjs: ^13.5.41
     dependencies:
@@ -442,9 +439,6 @@ importers:
     devDependencies:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
 
   packages/apps/templates/bare-template:
     specifiers:
@@ -497,6 +491,7 @@ importers:
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
@@ -531,8 +526,9 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       webpack: 5.74.0
+      workbox-window: 6.5.4
 
   packages/bots/bender-bot:
     specifiers:
@@ -2188,6 +2184,7 @@ importers:
       typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2240,7 +2237,8 @@ importers:
       faker: 5.5.3
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
     specifiers:
@@ -3366,17 +3364,16 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
-      '@mui/material': ^5.8.1
+      '@dxos/vite-plugin': workspace:*
       '@testing-library/dom': ^8.17.1
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^14.4.3
@@ -3411,9 +3408,8 @@ importers:
       debug: 4.3.4
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@mui/material': 5.10.9_rj7ozvcq3uehdlnj3cbwzbi5ce
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/vite-plugin': link:../vite-plugin
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
@@ -6660,6 +6656,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 18.2.0
       react-transition-group: 4.4.5_biqbaboplfbrettd7655fr4n2y
+    dev: false
 
   /@mui/private-theming/5.10.9_iapumuv4e6jcjznwuxpf4tt22e:
     resolution: {integrity: sha512-BN7/CnsVPVyBaQpDTij4uV2xGYHHHhOgpdxeYLlIu+TqnsVM7wUeF+37kXvHovxM6xmL5qoaVUD98gDC0IZnHg==}
@@ -6716,6 +6713,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/system/5.10.9_h33l6npc22g7vcra72cibfsrvm:
     resolution: {integrity: sha512-B6fFC0sK06hNmqY7fAUfwShQv594+u/DT1YEFHPtK4laouTu7V4vSGQWi1WJT9Bjs9Db5D1bRDJ+Yy+tc3QOYA==}
@@ -6772,6 +6770,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/types/7.2.0_@types+react@18.0.21:
     resolution: {integrity: sha512-lGXtFKe5lp3UxTBGqKI1l7G8sE2xBik8qCfrLHD5olwP/YU0/ReWoWT7Lp1//ri32dK39oPMrJN8TgbkCSbsNA==}
@@ -31704,24 +31703,6 @@ packages:
     dev: false
 
   /vite-plugin-pwa/0.12.8_f7se6o6eqkwcix4u3svh6mkvda:
-    resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
-    peerDependencies:
-      vite: ^2.0.0 || ^3.0.0-0
-      workbox-window: ^6.4.0
-    dependencies:
-      debug: 4.3.4
-      fast-glob: 3.2.12
-      pretty-bytes: 6.0.0
-      rollup: 2.79.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      workbox-build: 6.5.4
-      workbox-window: 6.5.4
-    transitivePeerDependencies:
-      - '@types/babel__core'
-      - supports-color
-    dev: true
-
-  /vite-plugin-pwa/0.12.8_vite@3.0.9:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
