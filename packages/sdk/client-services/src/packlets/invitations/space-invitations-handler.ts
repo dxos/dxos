@@ -198,11 +198,12 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
         // 2. Get authentication code.
-        // TODO(burdon): Async callback to request authentication code.
-        //  NOTE: Can't use `callback` since that does fan-out. Use trigger and wait for call?
-        //  Or specialize CancellableObservable. Draw this out.
+        // TODO(burdon): Extend CancellableObservable.
+        // TODO(burdon): Check if authentication is required on both side (options).
+        // TODO(burdon): Test timeout.
         log('requesting authentication code...');
-        const authenticationCode = await observable.authenticate();
+        observable.callback.onAuthenticating?.(invitation);
+        const authenticationCode = await observable.authenticate(invitation.invitationId);
         await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
 
         // 3. Create local space.

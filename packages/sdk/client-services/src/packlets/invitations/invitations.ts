@@ -13,9 +13,11 @@ import {
 } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
+// TODO(burdon): Remove optionals.
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
   onConnecting?(invitation: Invitation): void;
   onConnected?(invitation: Invitation): void;
+  onAuthenticating?(invitation: Invitation): void;
   onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
 }
 
@@ -72,4 +74,8 @@ export class ObservableInvitationProvider
   setInvitation(invitation: Invitation) {
     this._invitation = invitation;
   }
+}
+
+export class AuthenticatingInvitationProvider extends ObservableInvitationProvider {
+  async authenticate(): Promise<string> {}
 }
