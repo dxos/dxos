@@ -675,11 +675,13 @@ importers:
 
   packages/common/async:
     specifiers:
+      '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/util': workspace:*
       assert: ^2.0.0
       events: ^3.3.0
     dependencies:
+      '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/util': link:../util
       assert: 2.0.0
