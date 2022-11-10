@@ -7,7 +7,7 @@ import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationEncoder, ObservableInvitation } from '@dxos/client';
+import { Invitation, InvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import {
   Avatar,
@@ -23,7 +23,7 @@ import {
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  wrapper: ObservableInvitation;
+  wrapper: InvitationObservable;
 }
 
 const PendingInvitationSkeleton = ({ message }: { message: string }) => {
@@ -33,7 +33,7 @@ const PendingInvitationSkeleton = ({ message }: { message: string }) => {
 export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
 
-  const { cancel, status, haltedAt } = useInvitationStatus(wrapper);
+  const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
 
   return (
     <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
@@ -61,14 +61,18 @@ export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
               </>
             }
           />
-          <QrCode
-            size={40}
-            value={createInvitationUrl(InvitationEncoder.encode(wrapper.invitation))}
-            label={<p className='w-20'>{t('copy halo invite code label')}</p>}
-            side='top'
-            sideOffset={12}
-            className='w-full h-auto mt-2'
-          />
+          {status === Invitation.State.AUTHENTICATING ? (
+            <p className='text-xl text-center text-success-500 dark:text-success-300'>{authenticationCode}</p>
+          ) : (
+            <QrCode
+              size={40}
+              value={createInvitationUrl(invitationCode!)}
+              label={<p className='w-20'>{t('copy halo invite code label')}</p>}
+              side='top'
+              sideOffset={12}
+              className='w-full h-auto mt-2'
+            />
+          )}
         </>
       ) : (
         <PendingInvitationSkeleton message={t('generic loading label')} />
