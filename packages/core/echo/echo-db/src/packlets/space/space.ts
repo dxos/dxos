@@ -46,7 +46,7 @@ export type SpaceParams = {
 export class Space {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
-  
+
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedWrapper<FeedMessage>;
   private readonly _controlFeed: FeedWrapper<FeedMessage>;
