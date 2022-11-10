@@ -166,24 +166,26 @@ message Invitation {
   /// Guest's identity (only present if OFFLINE).
   optional dxos.keys.PublicKey identity_key = 6;
 
+  /// Authentication code created by host.
+  optional string authentication_code = 7;
+
   /// Space key (if data invitation).
-  optional dxos.keys.PublicKey space_key = 7;
+  optional dxos.keys.PublicKey space_key = 8;
+}
+
+message AuthenticationRequest {
+  string invitation_id = 1;
+  string authentication_code = 2;
 }
 
 message CancelInvitationRequest {
   string invitation_id = 1;
 }
 
-// TODO(burdon): Move to `credentials.proto`.
-message AuthenticateRequest {
-  string invitation_id = 1;
-  string code = 2;
-}
-
 // TODO(burdon): Separate implementations for HALO/Data Spaces.
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
-  rpc Authenticate(Invitation) returns (google.protobuf.Empty);
 }

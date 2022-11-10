@@ -59,7 +59,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     const invitation: Invitation = {
       invitationId: PublicKey.random().toHex(),
       swarmKey: topic,
-      spaceKey: space.key
+      spaceKey: space.key,
+      authenticationCode: '123456'
     };
 
     // TODO(burdon): Stop anything pending.
@@ -67,6 +68,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
       await swarmConnection?.close();
     });
 
+    let authenticationCode: string;
     const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
@@ -86,11 +88,18 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
               };
             },
 
-            // TODO(burdon): Send PIN.
-            authenticate: async () => {},
+            authenticate: async ({ authenticationCode: code }) => {
+              log('received authentication code', { authenticationCode: code });
+              authenticationCode = code;
+            },
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
+                // TODO(burdon): Check match.
+                if (authenticationCode !== invitation.authenticationCode) {
+                  log.warn('authentication code not set');
+                }
+
                 log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
                 // TODO(burdon): Check if already admitted.
                 await writeMessages(
@@ -188,16 +197,19 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         log('sending admission request', { guest: this._signingContext.deviceKey });
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
+        // 2. Get authentication code.
         // TODO(burdon): Async callback to request authentication code.
-        //  NOTE: Can't use `callback` since that does fan-out.
-        const code = await observable.authenticate();
-        await peer.rpc.SpaceHostService.authenticate(code);
+        //  NOTE: Can't use `callback` since that does fan-out. Use trigger and wait for call?
+        //  Or specialize CancellableObservable. Draw this out.
+        log('requesting authentication code...');
+        const authenticationCode = await observable.authenticate();
+        await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
 
-        // 2. Create local space.
+        // 3. Create local space.
         // TODO(burdon): Abandon if does not complete (otherwise retry will fail).
         const space = await this._spaceManager.acceptSpace({ spaceKey, genesisFeedKey });
 
-        // 3. Send admission credentials to host (with local space keys).
+        // 4. Send admission credentials to host (with local space keys).
         log('presenting admission credentials', { guest: this._signingContext.deviceKey, spaceKey: space.key });
         await peer.rpc.SpaceHostService.presentAdmissionCredentials({
           identityKey: this._signingContext.identityKey,
@@ -206,7 +218,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           dataFeedKey: space.dataFeedKey
         });
 
-        // 4. Success.
+        // 5. Success.
         log('admitted by host', { guest: this._signingContext.deviceKey, spaceKey: space.key });
         complete.wake();
       } catch (err) {

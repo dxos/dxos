@@ -10,6 +10,10 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
+message AuthenticationRequest {
+  string authentication_code = 1;
+}
+
 //
 // HALO device invitations.
 //
@@ -60,11 +64,9 @@ service SpaceHostService {
   /// Process admission request.
   rpc RequestAdmission(google.protobuf.Empty) returns (SpaceAdmissionOffer);
 
-  /// TODO(burdon): Reconcile with services definition.
-  rpc Authenticate(google.protobuf.Empty) returns (google.protobuf.Empty);
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
 
   /// Process admission credentials.
   rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
 }
-
-service SpaceGuestService {}

@@ -8,7 +8,7 @@ import { CancellableObservable, TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { AuthenticateRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { IdentityManager } from '../identity';
 import { SpaceInvitationsHandler } from './space-invitations-handler';
@@ -154,15 +154,17 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
     });
   }
 
+  async authenticate({ authenticationCode }: AuthenticationRequest): Promise<void> {
+    console.log(authenticationCode);
+    // this._spaceInvitations.a
+    throw new Error();
+  }
+
   async cancelInvitation(invitation: Invitation): Promise<void> {
     log('cancelling...');
     assert(invitation.invitationId);
     const observable =
       this._createInvitations.get(invitation.invitationId) ?? this._acceptInvitations.get(invitation.invitationId);
     await observable?.cancel();
-  }
-
-  async authenticate(request: AuthenticateRequest): Promise<Invitation> {
-    throw new Error();
   }
 }
