@@ -12,6 +12,7 @@ import {
   InvitationObservable,
   AuthenticatingInvitationObservable
 } from '@dxos/client';
+import { log } from '@dxos/log';
 
 export type InvitationResult = {
   spaceKey: PublicKey | null;
@@ -60,8 +61,9 @@ export type InvitationAction =
 
 export const useInvitationStatus = (initialObservable?: InvitationObservable) => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
-    (prev, action) =>
-      ({
+    (prev, action) => {
+      log('useInvitationStatus', { action });
+      return {
         status: action.status,
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
@@ -78,7 +80,8 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
           action.status === Invitation.State.TIMEOUT) && {
           haltedAt: action.haltedAt
         })
-      } as InvitationReducerState),
+      } as InvitationReducerState;
+    },
     null,
     (_arg: null) => {
       return {
@@ -148,10 +151,13 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
     dispatch({ status: Invitation.State.CONNECTING, observable });
   }, []);
 
-  const authenticate = useCallback((secret: string) => {
-    console.log('[authenticate]', secret);
-    (state.observable as AuthenticatingInvitationObservable).authenticate(secret);
-  }, []);
+  const authenticate = useCallback(
+    (authenticationCode: string) => {
+      log('authenticating...', { authenticationCode });
+      return (state.observable as AuthenticatingInvitationObservable).authenticate(authenticationCode);
+    },
+    [state.observable]
+  );
 
   const cancel = useCallback(async () => state.observable?.cancel(), [state.observable]);
 
@@ -164,9 +170,9 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
       cancel,
       connect,
       authenticate,
-      id: state.id ?? null,
-      invitationCode: state.invitationCode ?? null,
-      authenticationCode: state.authenticationCode ?? null
+      id: state.observable?.invitation?.invitationId ?? null,
+      invitationCode: state.observable?.invitation ? InvitationEncoder.encode(state.observable?.invitation) : null,
+      authenticationCode: state.observable?.invitation?.authenticationCode ?? null
     };
   }, [state, connect, authenticate]);
 };

@@ -7,7 +7,7 @@ import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 import urlJoin from 'url-join';
 
-import { InvitationObservable } from '@dxos/client';
+import { Invitation, InvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import {
   Avatar,
@@ -61,7 +61,7 @@ export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
               </>
             }
           />
-          {authenticationCode ? (
+          {status === Invitation.State.AUTHENTICATING ? (
             <p className='text-xl text-center text-success-500 dark:text-success-300'>{authenticationCode}</p>
           ) : (
             <QrCode

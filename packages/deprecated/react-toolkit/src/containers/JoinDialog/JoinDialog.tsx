@@ -116,9 +116,9 @@ export const JoinDialog = ({
     handleDone();
   };
 
-  const handleAuthenticate = (pin: string) => {
+  const handleAuthenticate = (authenticationCode: string) => {
     setProcessing(true);
-    // secretResolver(Buffer.from(pin));
+    // secretResolver(Buffer.from(authenticationCode));
   };
 
   useEffect(() => {

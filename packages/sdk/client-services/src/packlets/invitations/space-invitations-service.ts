@@ -58,6 +58,11 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
           invitation.state = Invitation.State.CONNECTED;
           next(invitation);
         },
+        onAuthenticating: (invitation) => {
+          assert(invitation.invitationId);
+          invitation.state = Invitation.State.AUTHENTICATING;
+          next(invitation);
+        },
         onSuccess: (invitation) => {
           assert(invitation.invitationId);
           invitation.state = Invitation.State.SUCCESS;

@@ -61,6 +61,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
             break;
           }
 
+          case Invitation.State.AUTHENTICATING: {
+            observable.callback.onAuthenticating?.(invitation);
+            break;
+          }
+
           case Invitation.State.SUCCESS: {
             observable.callback.onSuccess?.(invitation);
             break;
