@@ -51,6 +51,7 @@
     "typescript": "^4.8.4",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4",
-    "webpack": "^5.74.0"
+    "webpack": "^5.74.0",
+    "workbox-window": "^6.5.4"
   }
 }

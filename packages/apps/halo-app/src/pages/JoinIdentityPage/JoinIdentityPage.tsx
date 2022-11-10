@@ -6,15 +6,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { InvitationEncoder } from '@dxos/client';
-import { useClient, useProfile } from '@dxos/react-client';
-import { Heading, SingleInputStep, useTranslation, useInvitationStatus, InvitationState } from '@dxos/react-uikit';
+import { useClient, useIdentity, useInvitationStatus, InvitationState } from '@dxos/react-client';
+import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 import { invitationCodeFromUrl } from '../../util';
 
 export const JoinIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
-  const profile = useProfile();
+  const profile = useIdentity();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') ?? '/spaces';

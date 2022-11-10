@@ -7,7 +7,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/deprecated/protocols-toolchain/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

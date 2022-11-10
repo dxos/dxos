@@ -10,7 +10,7 @@ import {
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, ResultSet, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -83,6 +83,7 @@ export class PartyProxy implements Party {
 
   private readonly _invitations: ObservableInvitation[] = [];
   public readonly invitationsUpdate = new Event<ObservableInvitation>();
+  public readonly stateUpdate = new Event();
 
   private _key: PublicKey;
   private _isOpen: boolean;
@@ -167,6 +168,8 @@ export class PartyProxy implements Party {
 
     // Root item for properties.
     this._item = await this._database?.createItem({ type: PARTY_ITEM_TYPE });
+
+    this.stateUpdate.emit();
   }
 
   /**
@@ -250,11 +253,8 @@ export class PartyProxy implements Party {
    * Return set of party members.
    */
   // TODO(burdon): Don't expose result object and provide type.
-  queryMembers() {
-    return streamToResultSet(
-      this._clientServices.services.PartyService.subscribeMembers({ partyKey: this.key }),
-      (response) => response?.members ?? []
-    );
+  queryMembers(): ResultSet<PartyMember> {
+    return new ResultSet(this.stateUpdate, () => this._party.members ?? []);
   }
 
   /**
@@ -294,8 +294,11 @@ export class PartyProxy implements Party {
    * @internal
    */
   _processPartyUpdate(party: PartyType) {
+    console.log('Party._processPartyUpdate', party);
+    this._party = party;
     this._key = party.publicKey;
     this._isOpen = party.isOpen;
     this._isActive = party.isActive;
+    this.stateUpdate.emit();
   }
 }

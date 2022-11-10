@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/log-hook/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

@@ -18,7 +18,8 @@
       "options": {
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       }
     },
     "plate": {

@@ -16,7 +16,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/experimental/kitchen-sink/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

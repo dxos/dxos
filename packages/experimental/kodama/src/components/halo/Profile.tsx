@@ -5,12 +5,12 @@
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { useProfile } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { Table } from '../util';
 
 export const Profile = () => {
-  const profile = useProfile();
+  const profile = useIdentity();
   if (!profile) {
     return null;
   }

@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

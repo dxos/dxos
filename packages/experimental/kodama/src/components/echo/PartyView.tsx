@@ -5,7 +5,7 @@
 import { Box, Text, useFocus, useFocusManager } from 'ink';
 import React, { useState } from 'react';
 
-import { useParty } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
 import { ItemList } from './ItemList';
@@ -17,7 +17,7 @@ export const PartyView = () => {
   const { focusNext } = useFocusManager();
   const [{ partyKey }, { setPartyKey }] = useAppState();
   const [type, setType] = useState<string>();
-  const party = useParty(partyKey);
+  const party = useSpace(partyKey);
 
   return (
     <Box flexDirection='column' flexGrow={1}>

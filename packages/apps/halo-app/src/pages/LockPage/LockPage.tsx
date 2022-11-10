@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Client, Party } from '@dxos/client';
-import { useProfile } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 import { AuthChoices, Button, Heading, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
@@ -19,7 +19,7 @@ export interface RegistrationPageProps {
  */
 export const LockPage = () => {
   const { t } = useTranslation('halo');
-  const profile = useProfile();
+  const profile = useIdentity();
 
   const navigate = useNavigate();
 

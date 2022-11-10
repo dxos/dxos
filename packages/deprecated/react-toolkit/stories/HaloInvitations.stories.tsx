@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Box, Button, Toolbar } from '@mui/material';
 
 import { defaultConfig } from '@dxos/client';
-import { ClientProvider, useParties, useProfile } from '@dxos/react-client';
+import { ClientProvider, useSpaces, useIdentity } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
@@ -19,7 +19,7 @@ export default {
 };
 
 const RemoteParties = () => {
-  const parties = useParties();
+  const parties = useSpaces();
 
   return (
     <Box>
@@ -29,7 +29,7 @@ const RemoteParties = () => {
 };
 
 const Parties = () => {
-  const parties = useParties();
+  const parties = useSpaces();
 
   return (
     <Box>
@@ -51,7 +51,7 @@ interface UserProps {
 const User = ({ sharing, joining, remote }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
-  const profile = useProfile();
+  const profile = useIdentity();
 
   return (
     <Box>
