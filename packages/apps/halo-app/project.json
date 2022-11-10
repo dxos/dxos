@@ -44,6 +44,9 @@
           "env": "DX_ENVIRONMENT"
         },
         {
+          "env": "DX_RELEASE"
+        },
+        {
           "env": "NODE_ENV"
         },
         {
@@ -51,6 +54,9 @@
         },
         {
           "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
         },
         "^production",
         "production"
