@@ -14,8 +14,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { Transport, TransportFactory } from './transport';
 
-type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
-
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
 
@@ -36,16 +34,15 @@ const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
 // TODO(burdon): Remove static variables.
 export class MemoryTransport implements Transport {
   // TODO(burdon): Remove global properties.
-  private static readonly _connections = new ComplexMap<ConnectionKey, MemoryTransport>(
-    ([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex()
-  );
+  private static readonly _connections = new ComplexMap<PublicKey, MemoryTransport>(PublicKey.hash);
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  private readonly _ownKey: ConnectionKey;
-  private readonly _remoteKey: ConnectionKey;
+  private readonly _ownId = PublicKey.random();
+  private _remoteId!: PublicKey;
+  private readonly _remote = new Event<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
@@ -53,54 +50,48 @@ export class MemoryTransport implements Transport {
   private _remoteConnection?: MemoryTransport;
 
   constructor(
-    private readonly _ownId: PublicKey,
-    private readonly _remoteId: PublicKey,
-    private readonly _sessionId: PublicKey,
-    private readonly _topic: PublicKey,
-    private readonly _stream: NodeJS.ReadWriteStream
+    private readonly params: { stream: NodeJS.ReadWriteStream; sendSignal: (signal: Signal) => Promise<void> }
   ) {
-    log('creating', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
+    log('creating', this._ownId);
 
-    this._ownKey = [this._topic, this._ownId, this._remoteId];
-    this._remoteKey = [this._topic, this._remoteId, this._ownId];
+    void this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` });
 
-    assert(!MemoryTransport._connections.has(this._ownKey), 'Duplicate memory connection');
-    MemoryTransport._connections.set(this._ownKey, this);
+    assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
+    MemoryTransport._connections.set(this._ownId, this);
 
-    this._remoteConnection = MemoryTransport._connections.get(this._remoteKey);
-    if (this._remoteConnection) {
-      this._remoteConnection._remoteConnection = this;
+    this._remote.once((remoteId) => {
+      this._remoteId = remoteId;
+      this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
+      if (this._remoteConnection) {
+        this._remoteConnection._remoteConnection = this;
 
-      log('connected', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
-      this._stream
-        .pipe(this._outgoingDelay)
-        .pipe(this._remoteConnection._stream)
-        .pipe(this._incomingDelay)
-        .pipe(this._stream);
+        log('connected', { ownId: this._ownId, remoteId: this._remoteId });
+        this.params.stream
+          .pipe(this._outgoingDelay)
+          .pipe(this._remoteConnection.params.stream)
+          .pipe(this._incomingDelay)
+          .pipe(this.params.stream);
 
-      this.connected.emit();
-      this._remoteConnection.connected.emit();
-    }
-  }
-
-  get remoteId(): PublicKey {
-    return this._remoteId;
-  }
-
-  get sessionId(): PublicKey {
-    return this._sessionId;
+        this.connected.emit();
+        this._remoteConnection.connected.emit();
+      }
+    });
   }
 
   async signal(signal: Signal) {
-    // No-op.
+    const { json } = signal;
+    if (json) {
+      const { transportId } = JSON.parse(json);
+      this._remote.emit(PublicKey.from(transportId));
+    }
   }
 
   async close(): Promise<void> {
-    log('closing', { topic: this._topic, peerId: this._ownId, remoteId: this._remoteId });
+    log('closing', this._ownId);
 
-    MemoryTransport._connections.delete(this._ownKey);
+    MemoryTransport._connections.delete(this._ownId);
     if (this._remoteConnection) {
-      MemoryTransport._connections.delete(this._remoteKey);
+      MemoryTransport._connections.delete(this._remoteId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
       //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
@@ -119,10 +110,10 @@ export class MemoryTransport implements Transport {
     }
 
     this.closed.emit();
-    log('closed', { topic: this._topic });
+    log('closed', this._ownId);
   }
 }
 
 export const MemoryTransportFactory: TransportFactory = {
-  create: (opts) => new MemoryTransport(opts.ownId, opts.remoteId, opts.sessionId, opts.topic, opts.stream)
+  create: (params) => new MemoryTransport(params)
 };

@@ -5,9 +5,11 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { Event, sleep, Trigger } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
@@ -22,30 +24,28 @@ const createPair = () => {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();
   const peer2Id = PublicKey.random();
-  const sessionId = PublicKey.random();
+
+  let signal1: Signal;
 
   const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
   const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-  const connection1 = new MemoryTransport(
-    peer1Id,
-    peer2Id,
-    sessionId,
-    topic,
-    protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream
-  );
+  const connection1 = new MemoryTransport({
+    stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+    sendSignal: async (signal) => {
+      signal1 = signal;
+    }
+  });
 
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
   const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-  const connection2 = new MemoryTransport(
-    peer2Id,
-    peer1Id,
-    sessionId,
-    topic,
-    protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream
-  );
+  const connection2 = new MemoryTransport({
+    stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+    sendSignal: async () => {}
+  });
+  void connection2.signal(signal1!);
 
   afterTest(() => connection2.close());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -61,7 +61,7 @@ const createPair = () => {
   };
 };
 
-describe('MemoryTransport', function () {
+describe.only('MemoryTransport', function () {
   it('establish connection and send data through with protocol', async function () {
     const { plugin1, plugin2, peer1Id } = createPair();
 
