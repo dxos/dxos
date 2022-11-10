@@ -23,7 +23,7 @@ export type ClientServices = {
 
   SpacesService: SpacesService;
   SpaceInvitationsService: InvitationsService;
-  DevicesService: DevicesService,
+  DevicesService: DevicesService;
 };
 
 /**

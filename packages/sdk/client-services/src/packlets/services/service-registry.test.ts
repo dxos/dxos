@@ -36,10 +36,10 @@ describe('service registry', function () {
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
-          serviceContext.identityManager,
-          () => serviceContext.spaceManager!,
-          () => serviceContext.spaceInvitations!
-        ),
+        serviceContext.identityManager,
+        () => serviceContext.spaceManager!,
+        () => serviceContext.spaceInvitations!
+      )
     });
 
     const [proxyPort, serverPort] = createLinkedPorts();

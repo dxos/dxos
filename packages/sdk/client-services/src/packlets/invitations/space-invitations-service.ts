@@ -98,7 +98,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       const spaceInvitations = this._getSpaceInvitations();
-      
+
       assert(invitation.spaceKey);
       log('stream opened', {
         guest: this._identityManager.identity?.deviceKey,

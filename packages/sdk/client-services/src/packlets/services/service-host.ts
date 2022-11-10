@@ -57,9 +57,9 @@ export class ClientServicesHost implements ClientServicesProvider {
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
-          this._serviceContext.identityManager,
-          () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
-          () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
       ),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
@@ -68,8 +68,12 @@ export class ClientServicesHost implements ClientServicesProvider {
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),
-      DevtoolsHost: new DevtoolsServiceImpl({ events: new DevtoolsHostEvents(), config, context: this._serviceContext }),
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+      DevtoolsHost: new DevtoolsServiceImpl({
+        events: new DevtoolsHostEvents(),
+        config,
+        context: this._serviceContext
+      }),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager)
     });
   }
 
