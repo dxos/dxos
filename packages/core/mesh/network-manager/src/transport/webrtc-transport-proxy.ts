@@ -18,6 +18,7 @@ export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   bridgeService: BridgeService;
+  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export class WebRTCTransportProxy implements Transport {
@@ -25,7 +26,6 @@ export class WebRTCTransportProxy implements Transport {
   private _closed = false;
   readonly connected = new Event();
 
-  readonly sendSignal = new Event<Signal>();
   readonly errors = new ErrorStream();
 
   private _serviceStream!: Stream<BridgeEvent>;
@@ -90,7 +90,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
-    this.sendSignal.emit(signalEvent.payload);
+    await this._params.sendSignal(signalEvent.payload);
   }
 
   async signal(signal: Signal): Promise<void> {

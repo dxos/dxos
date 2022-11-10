@@ -43,13 +43,12 @@ export class WebRTCTransportService implements BridgeService {
 
       const transport = new WebRTCTransport({
         initiator: request.initiator,
-        stream: duplex
-      });
-
-      transport.sendSignal.on((siganl) => {
-        next({
-          signal: { payload: siganl }
-        });
+        stream: duplex,
+        sendSignal: async (signal) => {
+          next({
+            signal: { payload: signal }
+          });
+        }
       });
 
       next({

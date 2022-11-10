@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
-describe.only('WebRTCTransport', function () {
+describe('WebRTCTransport', function () {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   it('open and close', async function () {
     const connection = new WebRTCTransport({
