@@ -24,6 +24,18 @@ aliases:
       paths:
         - ~/.local/share/pnpm/store/v3
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &ram_cache_configure
+    run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
+  - &ram_cache_restore
+    restore_cache:
+      keys:
+        - pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-ram-v1-{{ arch }}-
+  - &ram_cache_save
+    save_cache:
+      paths:
+        - /mnt/ramdisk/pnpm-store
+      key: pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
   #
@@ -36,12 +48,18 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+    
+    # Run the job on ramdisk for optimal performance.
+    # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
+    working_directory: /mnt/ramdisk/work
+
     steps:
+      - *ram_cache_configure
       - checkout
-      - *cache_restore
-      - run: pnpm install
+      - *ram_cache_restore
+      - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
-      - *cache_save
+      - *ram_cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
