@@ -188,8 +188,8 @@ message SubscribeSpaceResponse {
   optional Space space = 1;
 }
 
-message SubscribePartiesResponse {
-  repeated Space parties = 1;
+message SubscribeSpacesResponse {
+  repeated Space spaces = 1;
 }
 
 message CreateInvitationRequest {
@@ -230,7 +230,7 @@ message CreateSnapshotRequest {
 
 service SpaceService {
   rpc SubscribeToSpace (SubscribeSpaceRequest) returns (stream SubscribeSpaceResponse);
-  rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
+  rpc SubscribeSpaces (google.protobuf.Empty) returns (stream SubscribeSpacesResponse);
 
   rpc GetSpaceDetails(GetSpaceDetailsRequest) returns (SpaceDetails);
 

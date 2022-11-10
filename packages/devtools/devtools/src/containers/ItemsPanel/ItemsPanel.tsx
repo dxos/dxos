@@ -36,7 +36,7 @@ export const ItemsPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const parties = useSpaces();
+  const spaces = useSpaces();
   const space = useSpace(selectedSpaceKey);
   const items = useSelection(space?.select().filter((item) => !item.parent)) ?? [];
 
@@ -45,7 +45,7 @@ export const ItemsPanel = () => {
       controls={
         <KeySelect
           label='Space'
-          keys={parties.map(({ key }) => key)}
+          keys={spaces.map(({ key }) => key)}
           selected={selectedSpaceKey}
           onChange={(key) => setSelectedSpaceKey(key)}
         />

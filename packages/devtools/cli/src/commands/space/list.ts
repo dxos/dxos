@@ -21,12 +21,12 @@ export default class List extends BaseCommand {
     const { flags } = await this.parse(List);
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: parties = [] } = await client.echo.queryParties();
+      const { value: spaces = [] } = await client.echo.querySpaces();
       if (!flags.json) {
-        printSpaces(parties, flags);
+        printSpaces(spaces, flags);
       }
 
-      return mapSpaces(parties);
+      return mapSpaces(spaces);
     });
   }
 }

@@ -89,7 +89,7 @@ export class SpaceManager {
   async open() {
     await this._metadataStore.load();
 
-    for (const spaceMetadata of this._metadataStore.parties) {
+    for (const spaceMetadata of this._metadataStore.spaces) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
       this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());

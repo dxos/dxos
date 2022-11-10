@@ -12,7 +12,7 @@ import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDial
 const App = () => {
   const client = useClient();
   const profile = useIdentity();
-  const [parties, setParties] = useState<any[]>([]);
+  const [spaces, setSpaces] = useState<any[]>([]);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
@@ -30,9 +30,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const spaceStream = services.SpaceService.subscribeParties();
+    const spaceStream = services.SpaceService.subscribeSpaces();
     spaceStream.subscribe(
-      (response) => setParties(response.parties ?? []),
+      (response) => setSpaces(response.spaces ?? []),
       (error) => setError(error)
     );
     return () => spaceStream.close();
@@ -117,7 +117,7 @@ const App = () => {
       <Button disabled={inProgress} onClick={handleCreateSpace} variant='outlined'>
         Create space
       </Button>
-      <p>You have {parties.length} parties.</p>
+      <p>You have {spaces.length} spaces.</p>
 
       <details>
         <summary>Local Client config</summary>

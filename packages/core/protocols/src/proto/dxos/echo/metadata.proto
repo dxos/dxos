@@ -26,8 +26,8 @@ message EchoMetadata {
   // TODO(dmaretskyi): Store the device key associated with the identity.
   optional dxos.halo.credentials.IdentityRecord identity = 10;
 
-  /// List of the data parties.
-  repeated SpaceMetadata parties = 11;
+  /// List of the data spaces.
+  repeated SpaceMetadata spaces = 11;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.

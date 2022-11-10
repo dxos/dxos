@@ -17,7 +17,7 @@ import {
   SetSpaceStateRequest,
   SubscribeMembersRequest,
   SubscribeMembersResponse,
-  SubscribePartiesResponse,
+  SubscribeSpacesResponse,
   SubscribeSpaceRequest,
   SubscribeSpaceResponse
 } from '@dxos/protocols/proto/dxos/client';
@@ -74,8 +74,8 @@ export class SpaceServiceImpl implements SpaceService {
     // } else {
     //   return new Stream(({ next }) => {
     //     let unsubscribeSpace: () => void;
-    //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const space = parties.find((space) => space.key.equals(request.space_key));
+    //     const unsubscribeSpaces = this.echo.querySpaces().subscribe((spaces) => {
+    //       const space = spaces.find((space) => space.key.equals(request.space_key));
     //       if (space && !unsubscribeSpace) {
     //         unsubscribeSpace = space.update.on(() => update(next));
     //       }
@@ -84,20 +84,20 @@ export class SpaceServiceImpl implements SpaceService {
     //     update(next);
 
     //     return () => {
-    //       unsubscribeParties();
+    //       unsubscribeSpaces();
     //       unsubscribeSpace?.();
     //     };
     //   });
     // }
   }
 
-  subscribeParties() {
-    return new Stream<SubscribePartiesResponse>(({ next }) => {
+  subscribeSpaces() {
+    return new Stream<SubscribeSpacesResponse>(({ next }) => {
       const subscriptions = new EventSubscriptions();
 
       const onUpdate = () => {
         next({
-          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
+          spaces: Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
             (space): Space => ({
               publicKey: space.key,
               isOpen: true,
@@ -116,7 +116,7 @@ export class SpaceServiceImpl implements SpaceService {
 
       setTimeout(async () => {
         if (!this.serviceContext.spaceManager) {
-          next({ parties: [] });
+          next({ spaces: [] });
         }
 
         await this.serviceContext.initialized.wait();
@@ -219,8 +219,8 @@ export class SpaceServiceImpl implements SpaceService {
     // } else {
     //   return new Stream(({ next }) => {
     //     let unsubscribeMembers: () => void;
-    //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const space = parties.find((space) => space.key.equals(request.space_key));
+    //     const unsubscribeSpaces = this.echo.querySpaces().subscribe((spaces) => {
+    //       const space = spaces.find((space) => space.key.equals(request.space_key));
     //       if (!unsubscribeMembers && space) {
     //         const resultSet = space.queryMembers();
     //         next({ members: resultSet.value });
@@ -229,7 +229,7 @@ export class SpaceServiceImpl implements SpaceService {
     //     });
 
     //     return () => {
-    //       unsubscribeParties();
+    //       unsubscribeSpaces();
     //       unsubscribeMembers();
     //     };
     //   });

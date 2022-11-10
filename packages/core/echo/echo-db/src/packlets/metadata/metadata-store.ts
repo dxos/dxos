@@ -26,7 +26,7 @@ export interface AddSpaceOptions {
 
 const emptyEchoMetadata = (): EchoMetadata => ({
   version: STORAGE_VERSION,
-  parties: [],
+  spaces: [],
   created: new Date(),
   updated: new Date()
 });
@@ -44,11 +44,11 @@ export class MetadataStore {
   }
 
   /**
-   * Returns a list of currently saved parties. The list and objects in it can be modified addSpace and
+   * Returns a list of currently saved spaces. The list and objects in it can be modified addSpace and
    * addSpaceFeed functions.
    */
-  get parties(): SpaceMetadata[] {
-    return this._metadata.parties ?? [];
+  get spaces(): SpaceMetadata[] {
+    return this._metadata.spaces ?? [];
   }
 
   /**
@@ -129,11 +129,11 @@ export class MetadataStore {
 
   async addSpace(record: SpaceMetadata) {
     assert(
-      !(this._metadata.parties ?? []).find((space) => space.key === record.key),
+      !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
       'Cannot overwrite existing space in metadata'
     );
 
-    (this._metadata.parties ??= []).push(record);
+    (this._metadata.spaces ??= []).push(record);
     await this._save();
   }
 }

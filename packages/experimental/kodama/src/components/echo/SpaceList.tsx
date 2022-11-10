@@ -17,7 +17,7 @@ export const SpaceList: FC<{
   spaceKey, // TODO(burdon): Selection not set.
   onSelect
 }) => {
-  const parties = useSpaces();
+  const spaces = useSpaces();
 
   return (
     <List
@@ -25,7 +25,7 @@ export const SpaceList: FC<{
       focusId='space-list'
       showCount
       onSelect={(spaceKey) => onSelect(PublicKey.from(spaceKey))}
-      items={parties.map((space) => ({
+      items={spaces.map((space) => ({
         id: space.key.toHex(),
         key: truncateKey(space.key, 4),
         text: space.getProperty('title')

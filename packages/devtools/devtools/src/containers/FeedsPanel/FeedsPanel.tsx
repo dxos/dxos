@@ -18,14 +18,14 @@ export const FeedsPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 
-  const parties = useStream(() => devtoolsHost.subscribeToParties({}), {}).parties ?? [];
+  const spaces = useStream(() => devtoolsHost.subscribeToSpaces({}), {}).spaces ?? [];
   const spaceFeeds = useMemo(() => {
-    if (!selectedSpaceKey || !parties) {
+    if (!selectedSpaceKey || !spaces) {
       return [];
     }
-    const space = parties.find((space) => space.key.equals(selectedSpaceKey));
+    const space = spaces.find((space) => space.key.equals(selectedSpaceKey));
     return space ? [space.genesisFeed, space.controlFeed, space.dataFeed] : [];
-  }, [parties, selectedSpaceKey]);
+  }, [spaces, selectedSpaceKey]);
   // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
@@ -54,7 +54,7 @@ export const FeedsPanel = () => {
           <KeySelect
             id='space-select'
             label='Space'
-            keys={parties.map(({ key }) => key)}
+            keys={spaces.map(({ key }) => key)}
             selected={selectedSpaceKey}
             onChange={handleSpaceChange}
           />

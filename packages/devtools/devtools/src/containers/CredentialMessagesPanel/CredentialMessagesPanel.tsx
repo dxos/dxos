@@ -12,7 +12,7 @@ import { KeySelect, Panel } from '../../components';
 
 export const CredentialMessagesPanel = () => {
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
-  const parties = useSpaces();
+  const spaces = useSpaces();
   const devtoolsHost = useDevtools();
   if (!devtoolsHost) {
     return null;
@@ -27,7 +27,7 @@ export const CredentialMessagesPanel = () => {
       controls={
         <KeySelect
           label='Space'
-          keys={parties.map(({ key }) => key)}
+          keys={spaces.map(({ key }) => key)}
           selected={selectedSpaceKey}
           onChange={(key) => setSelectedSpaceKey(key)}
         />

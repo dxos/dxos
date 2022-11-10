@@ -19,7 +19,7 @@ export const SnapshotsPanel = () => {
     return null;
   }
 
-  const parties = useSpaces();
+  const spaces = useSpaces();
   const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [snapshot, setSnapshot] = useState<SpaceSnapshot>();
 
@@ -56,7 +56,7 @@ export const SnapshotsPanel = () => {
           </Toolbar>
           <KeySelect
             label='Space'
-            keys={parties.map(({ key }) => key)}
+            keys={spaces.map(({ key }) => key)}
             selected={selectedSpaceKey}
             onChange={handleSpaceChange}
           />

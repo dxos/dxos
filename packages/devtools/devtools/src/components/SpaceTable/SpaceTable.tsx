@@ -7,7 +7,7 @@ import React from 'react';
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
-import { SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { CopyText, HashIcon } from '@dxos/react-components';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -26,10 +26,10 @@ const TimeFrame = ({ value }: { value: Timeframe }) => (
 );
 
 export interface SpaceTableProps {
-  parties: SubscribeToPartiesResponse.SpaceInfo[];
+  spaces: SubscribeToSpacesResponse.SpaceInfo[];
 }
 
-export const SpaceTable = ({ parties }: SpaceTableProps) => (
+export const SpaceTable = ({ spaces }: SpaceTableProps) => (
   <Table stickyHeader size='small'>
     <TableHead>
       <TableRow>
@@ -43,7 +43,7 @@ export const SpaceTable = ({ parties }: SpaceTableProps) => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {parties.map(({ key, isOpen, genesisFeed, controlFeed, dataFeed, timeframe }) => (
+      {spaces.map(({ key, isOpen, genesisFeed, controlFeed, dataFeed, timeframe }) => (
         <TableRow key={key!.toHex()}>
           <TableCell>
             <HashIcon value={key!.toHex()!} />

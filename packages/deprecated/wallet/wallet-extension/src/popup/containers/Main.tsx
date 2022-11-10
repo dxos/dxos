@@ -12,7 +12,7 @@ import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dx
 
 export const Main = () => {
   const client = useClient();
-  const [parties, setParties] = useState<any[]>([]);
+  const [spaces, setSpaces] = useState<any[]>([]);
   const profile = useIdentity();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
@@ -41,9 +41,9 @@ export const Main = () => {
   }, []);
 
   useEffect(() => {
-    const spaceStream = services.SpaceService.subscribeParties();
+    const spaceStream = services.SpaceService.subscribeSpaces();
     spaceStream.subscribe(
-      (response: any) => setParties(response.parties ?? []),
+      (response: any) => setSpaces(response.spaces ?? []),
       (error: Error) => setError(error)
     );
     return () => spaceStream.close();
@@ -130,7 +130,7 @@ export const Main = () => {
       <Button disabled={inProgress} onClick={handleCreateSpace} variant='outlined'>
         Create space
       </Button>
-      <p>You have {parties.length} parties.</p>
+      <p>You have {spaces.length} spaces.</p>
     </div>
   );
 };

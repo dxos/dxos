@@ -22,12 +22,12 @@ export default class Invite extends BaseCommand {
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: parties = [] } = await client.echo.queryParties();
+      const { value: spaces = [] } = await client.echo.querySpaces();
       if (!key) {
-        key = await selectSpace(parties);
+        key = await selectSpace(spaces);
       }
 
-      const space = parties.find((space) => space.key.toHex().startsWith(key));
+      const space = spaces.find((space) => space.key.toHex().startsWith(key));
       if (!space) {
         this.log(`Invalid key: ${truncateKey(key)}`);
       }

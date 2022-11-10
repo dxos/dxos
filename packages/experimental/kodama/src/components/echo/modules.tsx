@@ -85,7 +85,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
           parent={parent}
           items={[
             {
-              id: 'parties',
+              id: 'spaces',
               label: 'Spaces',
               component: () => <SpaceView />
             },

@@ -19,12 +19,12 @@ export default {
   title: 'react-toolkit/BotSharing'
 };
 
-const Parties = () => {
-  const parties = useSpaces();
+const Spaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      {parties.map((space) => (
+      {spaces.map((space) => (
         <Box key={space.key.toHex()}>
           <CopyText value={space.key.toHex()} />
         </Box>
@@ -61,7 +61,7 @@ const Sender = () => {
       <SpaceSharingDialog open={open} spaceKey={spaceKey} onClose={() => setOpen(false)} modal={true} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
+        <Spaces />
       </Box>
     </Box>
   );

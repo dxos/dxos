@@ -89,7 +89,7 @@ export class SpaceProxy implements Space {
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
-  private _item?: Item<ObjectModel>;
+  private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
 
   // prettier-ignore
   constructor(

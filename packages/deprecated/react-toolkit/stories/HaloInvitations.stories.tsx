@@ -18,22 +18,22 @@ export default {
   title: 'react-toolkit/HaloInvitations'
 };
 
-const RemoteParties = () => {
-  const parties = useSpaces();
+const RemoteSpaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      <p>You have {parties.length} parties.</p>
+      <p>You have {spaces.length} spaces.</p>
     </Box>
   );
 };
 
-const Parties = () => {
-  const parties = useSpaces();
+const Spaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      {parties.map((space) => (
+      {spaces.map((space) => (
         <Box key={space.key.toHex()}>
           <CopyText value={space.key.toHex()} />
         </Box>
@@ -72,7 +72,7 @@ const User = ({ sharing, joining, remote }: UserProps) => {
 
       <JoinHaloDialog open={joinOpen} onClose={() => setJoinOpen(false)} modal={false} closeOnSuccess={true} />
 
-      <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteParties /> : <Parties />}</Box>
+      <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteSpaces /> : <Spaces />}</Box>
 
       <Box sx={{ padding: 1 }}>
         <p>{profile?.displayName ?? 'Profile not created.'}</p>

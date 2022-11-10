@@ -27,7 +27,7 @@ export const useSpaces = () => {
   const [spaces, setSpaces] = useState<Space[]>([]);
 
   useEffect(() => {
-    const result = client.echo.queryParties();
+    const result = client.echo.querySpaces();
     setSpaces(result.value);
 
     const unsubscribe = result.subscribe(() => {

@@ -29,15 +29,15 @@ export interface Echo {
   createSpace(): Promise<Space>;
   cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
   getSpace(spaceKey: PublicKey): Space | undefined;
-  queryParties(): ResultSet<Space>;
+  querySpaces(): ResultSet<Space>;
   acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
 }
 
 export class EchoProxy implements Echo {
-  private readonly _parties = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
+  private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _partiesChanged = new Event();
+  private readonly _spacesChanged = new Event();
 
   // prettier-ignore
   constructor(
@@ -53,7 +53,7 @@ export class EchoProxy implements Echo {
   // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      parties: this._parties.size
+      spaces: this._spaces.size
     };
   }
 
@@ -80,12 +80,12 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async _open() {
-    const gotParties = this._partiesChanged.waitForCount(1);
+    const gotSpaces = this._spacesChanged.waitForCount(1);
 
-    const partiesStream = this._serviceProvider.services.SpaceService.subscribeParties();
-    partiesStream.subscribe(async (data) => {
-      for (const space of data.parties ?? []) {
-        if (!this._parties.has(space.publicKey)) {
+    const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
+    spacesStream.subscribe(async (data) => {
+      for (const space of data.spaces ?? []) {
+        if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
           const spaceProxy = new SpaceProxy(
@@ -94,13 +94,14 @@ export class EchoProxy implements Echo {
             space,
             this._haloProxy.profile!.identityKey
           );
+
           await spaceProxy.initialize();
-          this._parties.set(spaceProxy.key, spaceProxy);
+          this._spaces.set(spaceProxy.key, spaceProxy);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on(entity => {
           //   if (entity.type === SPACE_ITEM_TYPE) {
-          //     this._partiesChanged.emit(); // Trigger for `queryParties()` when a space is updated.
+          //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
           // });
 
@@ -111,28 +112,28 @@ export class EchoProxy implements Echo {
           //   }
 
           //   spaceProxy._processSpaceUpdate(space);
-          //   this._partiesChanged.emit();
+          //   this._spacesChanged.emit();
           // });
 
           // this._subscriptions.add(() => spaceStream.close());
         } else {
-          this._parties.get(space.publicKey)!._processSpaceUpdate(space);
+          this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
         }
       }
 
-      this._partiesChanged.emit();
+      this._spacesChanged.emit();
     });
 
-    this._subscriptions.add(() => partiesStream.close());
+    this._subscriptions.add(() => spacesStream.close());
 
-    await gotParties;
+    await gotSpaces;
   }
 
   /**
    * @internal
    */
   async _close() {
-    for (const space of this._parties.values()) {
+    for (const space of this._spaces.values()) {
       await space.destroy();
     }
 
@@ -140,7 +141,7 @@ export class EchoProxy implements Echo {
   }
 
   //
-  // Parties.
+  // Spaces.
   //
 
   /**
@@ -151,17 +152,17 @@ export class EchoProxy implements Echo {
 
     const space = await this._serviceProvider.services.SpaceService.createSpace();
     const handler = () => {
-      if (this._parties.has(space.publicKey)) {
+      if (this._spaces.has(space.publicKey)) {
         spaceReceived();
       }
     };
 
-    this._partiesChanged.on(handler);
+    this._spacesChanged.on(handler);
     handler();
     await done();
 
-    this._partiesChanged.off(handler);
-    return this._parties.get(space.publicKey)!;
+    this._spacesChanged.off(handler);
+    return this._spaces.get(space.publicKey)!;
   }
 
   /**
@@ -172,31 +173,31 @@ export class EchoProxy implements Echo {
 
     const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
     const handler = () => {
-      if (this._parties.has(space.publicKey)) {
+      if (this._spaces.has(space.publicKey)) {
         spaceReceived();
       }
     };
 
-    this._partiesChanged.on(handler);
+    this._spacesChanged.on(handler);
     handler();
     await done();
 
-    this._partiesChanged.off(handler);
-    return this._parties.get(space.publicKey)!;
+    this._spacesChanged.off(handler);
+    return this._spaces.get(space.publicKey)!;
   }
 
   /**
    * Returns an individual space by its key.
    */
   getSpace(spaceKey: PublicKey): Space | undefined {
-    return this._parties.get(spaceKey);
+    return this._spaces.get(spaceKey);
   }
 
   /**
-   * Query for all parties.
+   * Query for all spaces.
    */
-  queryParties(): ResultSet<Space> {
-    return new ResultSet<Space>(this._partiesChanged, () => Array.from(this._parties.values()));
+  querySpaces(): ResultSet<Space> {
+    return new ResultSet<Space>(this._spacesChanged, () => Array.from(this._spaces.values()));
   }
 
   /**

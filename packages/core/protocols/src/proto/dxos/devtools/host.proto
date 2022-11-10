@@ -48,7 +48,7 @@ service DevtoolsHost {
   // ECHO
   //
 
-  rpc SubscribeToParties(SubscribeToPartiesRequest) returns (stream SubscribeToPartiesResponse);
+  rpc SubscribeToSpaces(SubscribeToSpacesRequest) returns (stream SubscribeToSpacesResponse);
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
   rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
   rpc SubscribeToFeedBlocks(SubscribeToFeedBlocksRequest) returns (stream SubscribeToFeedBlocksResponse);
@@ -142,13 +142,13 @@ message GetNetworkPeersResponse {
   repeated PeerInfo peers = 1;
 }
 
-// SubscribeToParties
+// SubscribeToSpaces
 
-message SubscribeToPartiesRequest {
+message SubscribeToSpacesRequest {
   repeated dxos.keys.PublicKey space_keys = 1;
 }
 
-message SubscribeToPartiesResponse {
+message SubscribeToSpacesResponse {
   message SpaceInfo {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
@@ -158,7 +158,7 @@ message SubscribeToPartiesResponse {
     dxos.keys.PublicKey dataFeed = 6;
   }
 
-  repeated SpaceInfo parties = 1;
+  repeated SpaceInfo spaces = 1;
 }
 
 // SubscribeToItems

@@ -14,10 +14,10 @@ export const SpacesPanel = () => {
     return null;
   }
 
-  const { parties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
-  if (parties === undefined) {
+  const { spaces } = useStream(() => devtoolsHost.subscribeToSpaces({}), {});
+  if (spaces === undefined) {
     return null;
   }
 
-  return <SpaceTable parties={parties} />;
+  return <SpaceTable spaces={spaces} />;
 };

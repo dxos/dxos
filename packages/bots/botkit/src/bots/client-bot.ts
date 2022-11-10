@@ -51,11 +51,11 @@ export class Bot implements BotService {
     log('Client bot initialize');
     await this.client.initialize();
 
-    const parties = this.client.echo.queryParties().value;
-    if (parties.length === 0) {
+    const spaces = this.client.echo.querySpaces().value;
+    if (spaces.length === 0) {
       throw new Error('Bot is not in any space');
     }
-    this.space = parties[0];
+    this.space = spaces[0];
 
     log('Client bot onInit');
     await this.onStart(request);

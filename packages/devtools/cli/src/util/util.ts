@@ -14,7 +14,7 @@ const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? trunc
 // Spaces
 //
 
-export const selectSpace = async (parties: Space[]) => {
+export const selectSpace = async (spaces: Space[]) => {
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([
@@ -22,7 +22,7 @@ export const selectSpace = async (parties: Space[]) => {
       name: 'key',
       type: 'list',
       message: 'Select a space:',
-      choices: parties.map((space) => ({
+      choices: spaces.map((space) => ({
         name: `[${truncateKey(space.key, 8)}] ${space.getProperty('name')}`,
         value: space.key
       }))
@@ -32,16 +32,16 @@ export const selectSpace = async (parties: Space[]) => {
   return key;
 };
 
-export const mapSpaces = (parties: Space[], truncateKeys = false) => {
-  return parties.map((space) => ({
+export const mapSpaces = (spaces: Space[], truncateKeys = false) => {
+  return spaces.map((space) => ({
     key: maybeTruncateKey(space.key, truncateKeys),
     name: space.getProperty('name')
   }));
 };
 
-export const printSpaces = (parties: Space[], flags = {}) => {
+export const printSpaces = (spaces: Space[], flags = {}) => {
   CliUx.ux.table(
-    mapSpaces(parties, true),
+    mapSpaces(spaces, true),
     {
       key: {
         header: 'Space key'

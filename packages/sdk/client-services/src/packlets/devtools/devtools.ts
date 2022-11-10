@@ -30,8 +30,8 @@ import {
   SubscribeToKeyringKeysRequest,
   SubscribeToKeyringKeysResponse,
   SubscribeToNetworkTopicsResponse,
-  SubscribeToPartiesRequest,
-  SubscribeToPartiesResponse,
+  SubscribeToSpacesRequest,
+  SubscribeToSpacesResponse,
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse,
   SubscribeToSwarmInfoResponse
@@ -90,7 +90,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  subscribeToParties(request: SubscribeToPartiesRequest): Stream<SubscribeToPartiesResponse> {
+  subscribeToSpaces(request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
     return subscribeToSpaces(this.params.context, request);
   }
 

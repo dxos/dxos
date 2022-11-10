@@ -21,12 +21,12 @@ export default {
   title: 'react-toolkit/SpaceSharing'
 };
 
-const Parties = () => {
-  const parties = useSpaces();
+const Spaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      {parties.map((space) => (
+      {spaces.map((space) => (
         <Box key={space.key.toHex()}>
           <CopyText value={space.key.toHex()} />
         </Box>
@@ -63,7 +63,7 @@ const Sender = () => {
       <SpaceSharingDialog open={open} spaceKey={spaceKey} onClose={() => setOpen(false)} modal={false} />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
+        <Spaces />
       </Box>
     </Box>
   );
@@ -88,7 +88,7 @@ const Receiver = ({ invitationCode }: { invitationCode?: string }) => {
       />
 
       <Box sx={{ marginTop: 2, padding: 1 }}>
-        <Parties />
+        <Spaces />
       </Box>
     </Box>
   );

@@ -30,7 +30,7 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [showJoinSpace, setShowJoinSpace] = useState(false);
   const client = useClient();
   const profile = useIdentity();
-  const parties = useSpaces();
+  const spaces = useSpaces();
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
@@ -153,7 +153,7 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
         }}
       >
         <Box>
-          {parties.map((space) => (
+          {spaces.map((space) => (
             <SpaceCard key={space.key.toHex()} space={space} />
           ))}
         </Box>

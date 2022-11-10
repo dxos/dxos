@@ -37,7 +37,7 @@ export interface JoinDialogProps {
 }
 
 /**
- * Manages joining HALO and parties.
+ * Manages joining HALO and spaces.
  * Not exported for the end user.
  * See JoinSpaceDialog and JoinHaloDialog.
  * @deprecated
