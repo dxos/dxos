@@ -241,6 +241,7 @@ service PartyService {
   rpc SetPartyState(SetPartyStateRequest) returns (Party);
 
   // TODO(rzadp): Remove and join with Subscribing to Party.
+  // Deprecated.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
   rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.PartySnapshot);

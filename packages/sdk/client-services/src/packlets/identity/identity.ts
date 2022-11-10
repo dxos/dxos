@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import {
   DeviceStateMachine,
   CredentialSigner,
@@ -34,6 +35,8 @@ export class Identity {
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
 
+  public readonly stateUpdate = new Event();
+
   constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
     this._space = space;
     this._signer = signer;
@@ -46,6 +49,7 @@ export class Identity {
     // Save device key chain credential when processed by the party state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);
+      this.stateUpdate.emit();
     });
   }
 
