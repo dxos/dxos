@@ -4,13 +4,13 @@ Config utilities
 
 ## Installation
 
-```sh
+```bash
 pnpm i @dxos/config
 ```
 
 ## Documentation
 
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/config.html)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/config)
 - [🧩 Dependency Diagram](./docs/README.md)
 
 ## DXOS Resources

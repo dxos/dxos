@@ -1,5 +1,5 @@
 # Type `ClientProvider`
-Declared in [`packages/sdk/react-client/src/containers/ClientProvider.tsx:18`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L18) and [`packages/sdk/react-client/src/containers/ClientProvider.tsx:62`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L62)
+Declared in [`packages/sdk/react-client/src/client/ClientContext.tsx:29`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L29) and [`packages/sdk/react-client/src/client/ClientContext.tsx:82`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L82)
 
 
 

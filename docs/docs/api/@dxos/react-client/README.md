@@ -35,7 +35,7 @@ createRoot(document.getElementById('root')!)
 
 ## Documentation
 
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/react-client.html)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/react-client)
 - [🧩 Dependency Diagram](./docs/README.md)
 
 ## Storybooks

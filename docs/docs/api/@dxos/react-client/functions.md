@@ -2,17 +2,7 @@
 title: Functions
 ---
 # Functions
-### [`BotFactoryClientProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L21)
-
-
-BotFactoryClientProvider
-
-Returns: `"null" | Element`
-
-Arguments: 
-
-`__namedParameters`: [`BotFactoryClientProviderProps`](/api/@dxos/react-client/interfaces/BotFactoryClientProviderProps)
-### [`ClientProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/containers/ClientProvider.tsx#L18)
+### [`ClientProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L29)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -23,23 +13,7 @@ Returns: `Element`
 Arguments: 
 
 `__namedParameters`: [`ClientProviderProps`](/api/@dxos/react-client/interfaces/ClientProviderProps)
-### [`createBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L27)
-
-
-Returns: `Promise<BotFactoryClient>`
-
-Arguments: 
-
-`config`: `Config`
-### [`useBotFactoryClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L16)
-
-
-Returns: `undefined | BotFactoryClient`
-
-Arguments: 
-
-`required`: `boolean`
-### [`useClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useClient.ts#L15)
+### [`useClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L35)
 
 
 Hook returning instance of DXOS client.
@@ -48,7 +22,13 @@ Requires ClientContext to be set via ClientProvider.
 Returns: `Client`
 
 Arguments: none
-### [`useConfig`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useConfig.ts#L15)
+### [`useClientServices`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useClientServices.ts#L12)
+
+
+Returns: `undefined | ClientServices`
+
+Arguments: none
+### [`useConfig`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useConfig.ts#L15)
 
 
 Hook returning config object used to initialize the DXOS client instance.
@@ -57,76 +37,68 @@ Requires ClientContext to be set via ClientProvider.
 Returns: `Config`
 
 Arguments: none
-### [`useContacts`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts#L16)
+### [`useContacts`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useContacts.ts#L16)
 
 
-Returns all known Contacts across all Parties.
-Contacts are known members of a common Party.
+Returns all known Contacts across all Spaces.
+Contacts are known members of a common Space.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `any[]`
+Returns: `Contact[]`
 
 Arguments: none
-### [`useDevtools`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useDevtools.ts#L9)
+### [`useDevices`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useDevices.ts#L12)
 
 
-Returns: `DevtoolsHost`
-
-Arguments: none
-### [`useHaloInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/invitations/useHaloInvitations.ts#L9)
-
-
-Returns: `InvitationRequest[]`
-
-Arguments: 
-
-`client`: `Client`
-### [`useMembers`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx#L9)
-
-
-Returns: `any[]`
-
-Arguments: 
-
-`party`: `undefined | Party`
-### [`useParties`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L25)
-
-
-Get all Parties available to current user.
-Requires ClientContext to be set via ClientProvider.
-
-Returns: `Party[]`
+Returns: `DeviceInfo[]`
 
 Arguments: none
-### [`useParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L16)
+### [`useDevtools`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useDevtools.ts#L12)
 
 
-Get a specific Party.
-Requires ClientContext to be set via ClientProvider.
+Returns: `undefined | DevtoolsHost`
 
-Returns: `undefined | Party`
-
-Arguments: 
-
-`partyKey`: `PublicKeyLike`
-### [`usePartyInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/invitations/usePartyInvitations.ts#L11)
+Arguments: none
+### [`useHaloInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L26)
 
 
-Returns: `InvitationRequest[]`
+Returns: `object`
 
 Arguments: 
 
-`partyKey`: `PublicKey`
-### [`useProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/client/useProfile.ts#L13)
+`invitationId`: `string`
+### [`useHaloInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L13)
 
 
-Hook returning DXOS user profile object, renders HALO auth screen if no profile exists yet.
+Returns: `InvitationObservable[]`
+
+Arguments: none
+### [`useIdentity`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L13)
+
+
+Hook returning DXOS identity object.
 Requires ClientContext to be set via ClientProvider.
 
 Returns: `undefined | Profile`
 
 Arguments: none
-### [`useReducer`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L54)
+### [`useInvitationStatus`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L62)
+
+
+Returns: `object`
+
+Arguments: 
+
+`initialObservable`: `InvitationObservable`
+### [`useMembers`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
+
+
+Returns: `PartyMember[]`
+
+Arguments: 
+
+`spaceKey`: `undefined | PublicKey`
+### [`useReducer`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L54)
 
 
 Hook to process selection reducer.
@@ -140,25 +112,7 @@ Arguments:
 `value`: `R`
 
 `deps`: `readonly any[]`
-### [`useRegistryBotFactories`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registryBotFactories.ts#L24)
-
-
-Returns: `RegistryBotFactoryRecord[]`
-
-Arguments: none
-### [`useRegistryBots`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L31)
-
-
-A hook returning all bots registered on the DXNS registry.
-Bots can be spawned into Parties through bot factories.
-See also:  `useRegistryBotFactories`  hook.
-
-Returns: `RegistryBotRecord[]`
-
-Arguments: 
-
-`props`: [`UseRegistryBotsProps`](/api/@dxos/react-client/interfaces/UseRegistryBotsProps)
-### [`useResultSet`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/util/useResultSet.ts#L17)
+### [`useResultSet`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useResultSet.ts#L17)
 
 
 A convenience hook used for subscribing to changing values of a result set.
@@ -169,25 +123,7 @@ Returns: `T[]`
 Arguments: 
 
 `resultSet`: `ResultSet<T>`
-### [`useSearchSelection`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-selections/search.ts#L16)
-
-
-A Selector used for finding items based on a search pattern.
-
-Returns: `undefined | Item<any>[]`
-
-Arguments: 
-
-`party`: `Party`
-
-`search`: `any`
-### [`useSecretProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/invitations/useSecretProvider.ts#L13)
-
-
-Returns: `[Provider<T>, Resolver<T>, Reset]`
-
-Arguments: none
-### [`useSelection`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L21)
+### [`useSelection`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
 
 
 Hook to generate values from a selection using a selector function.
@@ -204,7 +140,45 @@ Arguments:
 `selection`: `Selection<T, void> | SelectionResult<T, any> | Falsy`
 
 `deps`: `readonly any[]`
-### [`useStream`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/util/useStream.ts#L12)
+### [`useSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
+
+
+Get a specific Space.
+Requires ClientContext to be set via ClientProvider.
+
+Returns: `undefined | Party`
+
+Arguments: 
+
+`spaceKey`: `PublicKeyLike`
+### [`useSpaceInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L30)
+
+
+Returns: `object`
+
+Arguments: 
+
+`spaceKey`: `PublicKey`
+
+`invitationId`: `string`
+### [`useSpaceInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L13)
+
+
+Returns: `InvitationObservable[]`
+
+Arguments: 
+
+`spaceKey`: `PublicKey`
+### [`useSpaces`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L25)
+
+
+Get all Spaces available to current user.
+Requires ClientContext to be set via ClientProvider.
+
+Returns: `Party[]`
+
+Arguments: none
+### [`useStream`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useStream.ts#L12)
 
 
 Subscribe to service API streams.
@@ -218,12 +192,3 @@ Arguments:
 `defaultValue`: `T`
 
 `deps`: `DependencyList`
-### [`useWNSRegistry`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/hooks/wns/registry.ts#L10)
-
-
-Low-level hook returning WNS registry object.
-See  `useRegistryBots`  and  `useBotFactories`  for higher-level hooks.
-
-Returns: `any`
-
-Arguments: none

@@ -1,51 +1,46 @@
 # Class `Client`
-Declared in [`packages/sdk/client/src/packlets/proxies/client.ts:79`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L79)
+Declared in [`packages/sdk/client/src/packlets/client/client.ts:31`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L31)
 
 
-
+The Client class encapsulates DXOS's core client-side API.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L102)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L43)
 
-
-Creates the client object based on supplied configuration.
-Requires initialization after creating by calling  `.initialize()` .
 
 Returns: [`Client`](/api/@dxos/client/classes/Client)
 
 Arguments: 
 
-`config`: `Config | Config`
-
-`options`: [`ClientOptions`](/api/@dxos/client/interfaces/ClientOptions)
+`__namedParameters`: [`ClientOptions`](/api/@dxos/client/types/ClientOptions)
 
 ## Properties
-### [`version`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L82)
-Type: `"2.33.8"`
-### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L132)
+### [`version`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L32)
+Type: `"0.1.2"`
+### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L75)
 Type: `Config`
-### [`echo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L147)
+### [`echo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L99)
 Type: [`EchoProxy`](/api/@dxos/client/classes/EchoProxy)
 
 ECHO database.
-### [`halo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L155)
+### [`halo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L91)
 Type: [`HaloProxy`](/api/@dxos/client/classes/HaloProxy)
 
 HALO credentials.
-### [`info`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L124)
-Type: [`ClientInfo`](/api/@dxos/client/interfaces/ClientInfo)
-### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L140)
+### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L84)
 Type: `boolean`
 
 Has the Client been initialized?
 Initialize by calling  `.initialize()`
-### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L166)
-Type: [`ClientServices`](/api/@dxos/client/types/ClientServices)
-
-Client services that can be proxied.
 
 ## Methods
-### [`destroy`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L217)
+### [`[custom]`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L63)
+
+
+Returns: `string`
+
+Arguments: none
+### [`destroy`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L134)
 
 
 Cleanup, release resources.
@@ -53,7 +48,7 @@ Cleanup, release resources.
 Returns: `Promise<void>`
 
 Arguments: none
-### [`initialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L180)
+### [`initialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L110)
 
 
 Initializes internal resources in an idempotent way.
@@ -61,20 +56,8 @@ Required before using the Client instance.
 
 Returns: `Promise<void>`
 
-Arguments: 
-
-`onProgressCallback`: `function`
-### [`registerModel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L314)
-
-
-Registers a new ECHO model.
-
-Returns: [`Client`](/api/@dxos/client/classes/Client)
-
-Arguments: 
-
-`constructor`: `ModelConstructor<any>`
-### [`reset`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L303)
+Arguments: none
+### [`reset`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L153)
 
 
 Resets and destroys client storage.
@@ -83,9 +66,9 @@ Warning: Inconsistent state after reset, do not continue to use this client inst
 Returns: `Promise<void>`
 
 Arguments: none
-### [`toString`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L120)
+### [`toJSON`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/client.ts#L67)
 
 
-Returns: `string`
+Returns: `object`
 
 Arguments: none

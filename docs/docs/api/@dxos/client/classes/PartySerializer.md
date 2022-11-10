@@ -1,11 +1,11 @@
 # Class `PartySerializer`
-Declared in [`packages/sdk/client/src/packlets/proxies/serializer.ts:15`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L15)
+Declared in [`packages/sdk/client/src/packlets/client/serializer.ts:16`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L16)
 
 
 Import/export party.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L16)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L18)
 
 
 Returns: [`PartySerializer`](/api/@dxos/client/classes/PartySerializer)
@@ -18,7 +18,7 @@ Arguments:
 
 
 ## Methods
-### [`deserializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L23)
+### [`deserializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L27)
 
 
 Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
@@ -26,7 +26,7 @@ Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
 Arguments: 
 
 `data`: `Uint8Array`
-### [`serializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/serializer.ts#L18)
+### [`serializeParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L22)
 
 
 Returns: `Promise<Blob>`

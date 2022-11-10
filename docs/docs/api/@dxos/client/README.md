@@ -21,7 +21,7 @@ const client = new Client();
 
 - [⚡️ Quick Start](https://docs.dxos.org/quick-start)
 - [📖 Developer Guide](https://docs.dxos.org/guide/echo)
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/client.html)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 - [🧩 Dependency Diagram](./docs/README.md)
 
 ## DXOS Resources
