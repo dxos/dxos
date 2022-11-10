@@ -1,13 +1,6 @@
 import { log } from '@dxos/log'
 
-export type ContextErrorHandler = (ctx: Context, error: Error) => void;
-
-const DEFAULT_ERROR_HANDLER: ContextErrorHandler = (ctx, error) => {
-  void ctx.dispose();
-
-  // Will generate an unhandled rejection.
-  throw error;
-};
+export type ContextErrorHandler = (error: Error) => void;
 
 export type DisposeCallback = () => void | Promise<void>;
 
@@ -31,7 +24,12 @@ export class Context {
   private _isDisposed = false;
 
   constructor({
-    onError = DEFAULT_ERROR_HANDLER
+    onError = (error) => {
+      void this.dispose();
+    
+      // Will generate an unhandled rejection.
+      throw error;
+    },
   }: CreateContextParams = {}) {
     this._onError = onError;
   }
@@ -90,7 +88,7 @@ export class Context {
     }
     
     try {
-      this._onError(this, error);
+      this._onError(error);
     } catch (err) {
       // Generate an unhandled rejection and stop the error propagation.
       Promise.reject(err);
@@ -99,12 +97,12 @@ export class Context {
 
   derive({ onError }: CreateContextParams): Context {
     const newCtx = new Context({
-      onError: async (ctx, error) => {
+      onError: async (error) => {
         if(!onError) {
           this.raise(error);
         } else {
           try {
-            await onError(ctx, error);
+            await onError(error);
           } catch {
             this.raise(error);
           }

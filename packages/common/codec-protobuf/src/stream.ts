@@ -4,10 +4,13 @@
 
 import debug from 'debug';
 import assert from 'node:assert';
+import { Context } from '@dxos/context';
 
 const log = debug('dxos:codec-protobuf:stream');
 
 type Callbacks<T> = {
+  ctx: Context
+
   /**
    * Advises that the producer is ready to stream the data.
    * Called automatically with the first call to `next`.
@@ -91,13 +94,14 @@ export class Stream<T> {
     });
   }
 
+  private readonly _ctx: Context;
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
   private _readyHandler?: () => void;
 
   private _isClosed = false;
   private _closeError: Error | undefined;
-  private _onClose: ((err?: Error) => void) | undefined;
+  private _producerCleanup: ((err?: Error) => void) | undefined;
   private _readyPromise: Promise<void>;
   private _resolveReadyPromise!: () => void;
   private _isReady = false;
@@ -112,51 +116,75 @@ export class Stream<T> {
       this._resolveReadyPromise = resolve;
     });
 
-    const onClose = producer({
-      ready: () => {
-        this._markAsReady();
-      },
-
-      next: (msg) => {
-        if (this._isClosed) {
-          log('Stream is closed, dropping message.');
-          return;
-        }
-
-        this._markAsReady();
-
-        if (this._messageHandler) {
-          try {
-            this._messageHandler(msg);
-          } catch (err: any) {
-            // Stop error propagation.
-            throwUnhandledRejection(err);
-          }
-        } else {
-          assert(this._buffer);
-          this._buffer.push(msg);
-        }
-      },
-
-      close: (err) => {
+    this._ctx = new Context({
+      onError: err => {
         if (this._isClosed) {
           return;
         }
 
         this._isClosed = true;
         this._closeError = err;
-        this._onClose?.(err);
-        try {
-          this._closeHandler?.(err);
-        } catch (err: any) {
-          // Stop error propagation.
-          throwUnhandledRejection(err);
-        }
+        this._producerCleanup?.(err);
+        this._closeHandler?.(err);
+        this._ctx.dispose();
       }
     });
+    this._ctx.onDispose(() => {
+      this.close();
+    })
 
-    if (onClose) {
-      this._onClose = onClose;
+    try {
+      const producerCleanup = producer({
+        ctx: this._ctx,
+
+        ready: () => {
+          this._markAsReady();
+        },
+
+        next: (msg) => {
+          if (this._isClosed) {
+            log('Stream is closed, dropping message.');
+            return;
+          }
+
+          this._markAsReady();
+
+          if (this._messageHandler) {
+            try {
+              this._messageHandler(msg);
+            } catch (err: any) {
+              // Stop error propagation.
+              throwUnhandledRejection(err);
+            }
+          } else {
+            assert(this._buffer);
+            this._buffer.push(msg);
+          }
+        },
+
+        close: (err) => {
+          if (this._isClosed) {
+            return;
+          }
+
+          this._isClosed = true;
+          this._closeError = err;
+          this._producerCleanup?.(err);
+          try {
+            this._closeHandler?.(err);
+          } catch (err: any) {
+            // Stop error propagation.
+            throwUnhandledRejection(err);
+          }
+          this._ctx.dispose();
+        }
+      });
+
+      if (producerCleanup) {
+        this._producerCleanup = producerCleanup;
+      }
+    } catch(err: any) {
+      this._ctx.raise(err);
     }
   }
 
@@ -224,13 +252,14 @@ export class Stream<T> {
     }
 
     this._isClosed = true;
-    this._onClose?.();
+    this._producerCleanup?.();
     this._closeHandler?.(undefined);
+    this._ctx.dispose();
 
     // Clear function pointers.
     this._messageHandler = undefined;
     this._closeHandler = undefined;
-    this._onClose = undefined;
+    this._producerCleanup = undefined;
   }
 }
 

@@ -70,7 +70,7 @@ describe('Event', function () {
     const event = new Event<number>();
     let error!: Error;
     const ctx = new Context({
-      onError: (ctx, err) => {
+      onError: err => {
         error = err;
       }
     });

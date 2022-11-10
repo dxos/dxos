@@ -9,7 +9,7 @@ describe('task-scheduling', () => {
     it('errors get propagated', async () => {
       let error!: Error;
       const ctx = new Context({
-        onError: (ctx, err) => {
+        onError: err => {
           error = err;
         }
       });

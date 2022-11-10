@@ -70,6 +70,30 @@ describe('Stream', function () {
     nextCb('second');
     expect(received).to.deep.equal(['first', 'second']);
   });
+
+  it('closing stream disposes the context', () => {
+    let disposed = false;
+    const stream = new Stream<string>(({ ctx }) => {
+      ctx.onDispose(() => {
+        disposed = true;
+      })
+    });
+    expect(disposed).to.be.false;
+    stream.close();
+    expect(disposed).to.be.true;
+  })
+
+  it('thrown errors are caught be context', () => {
+    const stream = new Stream<string>(({ ctx }) => {
+      throw new Error('test');
+    });
+    
+    let error!: Error;
+    stream.subscribe(() => {}, err => {
+      error = err!;
+    })
+    expect(error.message).to.equal('test');
+  })
 });
 
 // To not introduce a dependency on @dxos/async.

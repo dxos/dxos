@@ -690,6 +690,7 @@ importers:
 
   packages/common/codec-protobuf:
     specifiers:
+      '@dxos/context': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
       assert: ^2.0.0
@@ -698,6 +699,7 @@ importers:
       path-browserify: ^1.0.1
       protobufjs: ^6.9.0
     dependencies:
+      '@dxos/context': link:../context
       assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2
