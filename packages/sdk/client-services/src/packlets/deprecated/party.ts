@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
 import {
@@ -21,6 +22,7 @@ import {
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { humanize } from '@dxos/util';
 
 import { ServiceContext } from '../services';
 import { InviteeInvitations } from './invitations';
@@ -91,13 +93,24 @@ export class PartyServiceImpl implements PartyService {
 
   subscribeParties() {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
+      const subscriptions = new EventSubscriptions();
+
       const onUpdate = () => {
         next({
-          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
-            publicKey: space.key,
-            isOpen: true,
-            isActive: true
-          }))
+          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
+            (space): Party => ({
+              publicKey: space.key,
+              isOpen: true,
+              isActive: true,
+              members: Array.from(space.partyState.members.values()).map((member) => ({
+                identityKey: member.key,
+                profile: {
+                  identityKey: member.key,
+                  displayName: humanize(member.key)
+                }
+              }))
+            })
+          )
         });
       };
 
@@ -108,9 +121,19 @@ export class PartyServiceImpl implements PartyService {
 
         await this.serviceContext.initialized.wait();
 
+        subscriptions.add(
+          this.serviceContext.spaceManager!.updated.on(() => {
+            this.serviceContext.spaceManager!.spaces.forEach((space) => {
+              subscriptions.add(space.stateUpdate.on(onUpdate));
+            });
+            onUpdate();
+          })
+        );
+
         onUpdate();
-        return this.serviceContext.spaceManager!.updated.on(onUpdate);
       });
+
+      return () => subscriptions.clear();
     });
   }
 

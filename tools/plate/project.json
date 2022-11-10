@@ -29,7 +29,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/plate/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

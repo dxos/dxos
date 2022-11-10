@@ -20,7 +20,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/typedoc-plugin-plate/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

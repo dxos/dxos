@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/protocol-network-generator/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

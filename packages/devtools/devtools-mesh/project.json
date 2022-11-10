@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools-mesh/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
