@@ -6,9 +6,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { InvitationEncoder, ObservableInvitation, PublicKey } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+import { useClient, useInvitationStatus, InvitationState } from '@dxos/react-client';
 
-import { useInvitationStatus, InvitationState, InvitationStatus } from '../../experimental';
+import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {

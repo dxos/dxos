@@ -5,13 +5,13 @@
 import { Eraser } from 'phosphor-react';
 import React, { useState } from 'react';
 
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 import { QrCode, useTranslation, Button, getSize, Input, AlertDialog } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export const IdentityPage = () => {
   const client = useClient();
-  const profile = useProfile();
+  const profile = useIdentity();
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const { t } = useTranslation('halo');
 

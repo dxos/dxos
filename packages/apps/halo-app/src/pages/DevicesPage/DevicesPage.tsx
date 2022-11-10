@@ -16,7 +16,7 @@ export const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
   const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);
-  const invitations = useHaloInvitations(client);
+  const invitations = useHaloInvitations();
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const onCreateInvitation = useCallback(() => {

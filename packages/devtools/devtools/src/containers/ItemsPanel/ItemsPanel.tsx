@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useParties, useParty, useSelection } from '@dxos/react-client';
+import { useSpaces, useSpace, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
@@ -36,8 +36,8 @@ export const ItemsPanel = () => {
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const parties = useParties();
-  const party = useParty(selectedPartyKey);
+  const parties = useSpaces();
+  const party = useSpace(selectedPartyKey);
   const items = useSelection(party?.select().filter((item) => !item.parent)) ?? [];
 
   return (

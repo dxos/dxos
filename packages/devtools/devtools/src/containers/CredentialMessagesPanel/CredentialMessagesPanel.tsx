@@ -5,14 +5,14 @@
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useParties, useStream } from '@dxos/react-client';
+import { useDevtools, useSpaces, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { KeySelect, Panel } from '../../components';
 
 export const CredentialMessagesPanel = () => {
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
-  const parties = useParties();
+  const parties = useSpaces();
   const devtoolsHost = useDevtools();
   if (!devtoolsHost) {
     return null;

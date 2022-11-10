@@ -8,7 +8,7 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 
 import { Party, InvitationEncoder } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
-import { useSecretProvider } from '@dxos/react-client';
+// import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
@@ -40,6 +40,7 @@ export interface JoinDialogProps {
  * Manages joining HALO and parties.
  * Not exported for the end user.
  * See JoinPartyDialog and JoinHaloDialog.
+ * @deprecated
  */
 export const JoinDialog = ({
   open,
@@ -54,14 +55,14 @@ export const JoinDialog = ({
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
-  const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
+  // const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
     setError(undefined);
     setProcessing(false);
     setInvitationCode('');
-    resetSecret();
+    // resetSecret();
     setState(PartyJoinState.INIT);
   };
 
@@ -82,11 +83,11 @@ export const JoinDialog = ({
       return;
     }
 
-    let invitation: InvitationEncoder;
+    // let invitation: InvitationEncoder;
     try {
       // Parse URL.
-      const invitationCode = invitationCodeFromUrl(text);
-      invitation = InvitationEncoder.decode(invitationCode);
+      // const invitationCode = invitationCodeFromUrl(text);
+      // invitation = InvitationEncoder.decode(invitationCode);
     } catch (err: any) {
       setError('Invalid invitation code.');
       setState(PartyJoinState.ERROR);
@@ -95,7 +96,7 @@ export const JoinDialog = ({
 
     try {
       setState(PartyJoinState.AUTHENTICATE);
-      await onJoin({ invitation, secretProvider });
+      // await onJoin({ invitation, secretProvider });
     } catch (err: any) {
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
@@ -117,7 +118,7 @@ export const JoinDialog = ({
 
   const handleAuthenticate = (pin: string) => {
     setProcessing(true);
-    secretResolver(Buffer.from(pin));
+    // secretResolver(Buffer.from(pin));
   };
 
   useEffect(() => {
