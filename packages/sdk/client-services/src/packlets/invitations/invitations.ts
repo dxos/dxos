@@ -81,8 +81,8 @@ export class AuthenticatingInvitationProvider
     super(() => this._actions.onCancel());
   }
 
-  async authenticate(code: string): Promise<void> {
-    return this._actions.onAuthenticate(code);
+  async authenticate(authenticationCode: string): Promise<void> {
+    return this._actions.onAuthenticate(authenticationCode);
   }
 }
 

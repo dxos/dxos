@@ -21,29 +21,31 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/space-invitation-service', function () {
-  it('creates space and invites peer', async function () {
-    const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+  it.only('creates space and invites peer', async function () {
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    assert(peer1.spaceManager);
-    assert(peer1.spaceInvitations);
+    assert(host.spaceManager);
+    assert(host.spaceInvitations);
     const service1: InvitationsService = new SpaceInvitationsServiceImpl(
-      peer1.identityManager,
-      peer1.spaceManager,
-      peer1.spaceInvitations
+      host.identityManager,
+      host.spaceManager,
+      host.spaceInvitations
     );
 
-    assert(peer2.spaceManager);
-    assert(peer2.spaceInvitations);
+    assert(guest.spaceManager);
+    assert(guest.spaceInvitations);
     const service2: InvitationsService = new SpaceInvitationsServiceImpl(
-      peer2.identityManager,
-      peer2.spaceManager,
-      peer2.spaceInvitations
+      guest.identityManager,
+      guest.spaceManager,
+      guest.spaceInvitations
     );
 
-    const space1 = await peer1.spaceManager.createSpace();
+    const space1 = await host.spaceManager.createSpace();
 
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
+
+    const authenticationCode = new Trigger<string>();
 
     {
       const proxy1 = new SpaceInvitationsProxy(service1);
@@ -53,13 +55,19 @@ describe('services/space-invitation-service', function () {
           const proxy2 = new SpaceInvitationsProxy(service2);
           const observable2 = proxy2.acceptInvitation(invitation);
           observable2.subscribe({
+            onAuthenticating: async (invitation2: Invitation) => {
+              await observable2.authenticate(await authenticationCode.wait());
+            },
             onSuccess: (invitation: Invitation) => {
               success2.wake(invitation);
             },
             onError: (err: Error) => raise(new Error(err.message))
           });
         },
-        onConnected: (invitation: Invitation) => {},
+        onConnected: (invitation: Invitation) => {
+          assert(invitation.authenticationCode);
+          authenticationCode.wake(invitation.authenticationCode);
+        },
         onSuccess: (invitation: Invitation) => {
           success1.wake(invitation);
         },
@@ -75,25 +83,25 @@ describe('services/space-invitation-service', function () {
   });
 
   it('creates space and cancels invitation', async function () {
-    const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    assert(peer1.spaceManager);
-    assert(peer1.spaceInvitations);
+    assert(host.spaceManager);
+    assert(host.spaceInvitations);
     const service1: InvitationsService = new SpaceInvitationsServiceImpl(
-      peer1.identityManager,
-      peer1.spaceManager,
-      peer1.spaceInvitations
+      host.identityManager,
+      host.spaceManager,
+      host.spaceInvitations
     );
 
-    assert(peer2.spaceManager);
-    assert(peer2.spaceInvitations);
+    assert(guest.spaceManager);
+    assert(guest.spaceInvitations);
     const service2: InvitationsService = new SpaceInvitationsServiceImpl(
-      peer2.identityManager,
-      peer2.spaceManager,
-      peer2.spaceInvitations
+      guest.identityManager,
+      guest.spaceManager,
+      guest.spaceInvitations
     );
 
-    const space1 = await peer1.spaceManager.createSpace();
+    const space1 = await host.spaceManager.createSpace();
     const cancelled = new Trigger();
 
     {

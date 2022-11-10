@@ -73,7 +73,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
             },
 
             authenticate: async ({ authenticationCode: code }) => {
-              log('received authentication code', { authenticationCode: code });
+              log('received authentication request', { authenticationCode: code });
               authenticationCode = code;
             },
 
@@ -112,7 +112,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
       try {
         await peer.open();
-        log('host connected', { host: this._signingContext.deviceKey });
+        log('connected', { host: this._signingContext.deviceKey });
         observable.callback.onConnected?.(invitation);
         const deviceKey = await complete.wait(); // TODO(burdon): Timeout.
         log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
@@ -191,9 +191,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         // 2. Get authentication code.
         // TODO(burdon): Check if authentication is required on both side (options).
         // TODO(burdon): Test timeout.
-        log('requesting authentication code...');
+        log('waiting for authentication code...');
         observable.callback.onAuthenticating?.(invitation);
         const authenticationCode = await authenticated.wait();
+        log('sending authentication request');
         await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
 
         // 3. Create local space.

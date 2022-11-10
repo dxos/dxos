@@ -19,7 +19,7 @@ import {
 
 /**
  * Adapts invitations service observable to client/service stream.
- * NOTE: Both HALO and Data Spaces use the same client/service interfaces.
+ * Used by both HALO and Spaces client/service interfaces.
  */
 // TODO(burdon): Options (e.g., timeout).
 export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
@@ -87,15 +87,18 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
     assert(invitation && invitation.swarmKey);
 
-    let invitationId: string;
     const observable = new AuthenticatingInvitationProvider({
       onCancel: async () => {
-        if (invitationId) {
-          await this._invitationsService.cancelInvitation({ invitationId });
-        }
+        const invitationId = observable.invitation?.invitationId;
+        assert(invitationId);
+        await this._invitationsService.cancelInvitation({ invitationId });
       },
 
-      onAuthenticate: async (code: string) => {}
+      onAuthenticate: async (authenticationCode: string) => {
+        const invitationId = observable.invitation?.invitationId;
+        assert(invitationId);
+        await this._invitationsService.authenticate({ invitationId, authenticationCode });
+      }
     });
 
     const stream: Stream<Invitation> = this._invitationsService.acceptInvitation(invitation);
