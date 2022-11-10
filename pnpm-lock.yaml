@@ -442,6 +442,7 @@ importers:
 
   packages/apps/templates/bare-template:
     specifiers:
+      '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
@@ -451,6 +452,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
     devDependencies:
+      '@dxos/cli': link:../../../devtools/cli
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
@@ -458,6 +460,7 @@ importers:
   packages/apps/templates/hello-template:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -510,6 +513,7 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/cli': link:../../../devtools/cli
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@storybook/addon-actions': 6.5.12_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.12_adidkwhvysrv6kbkczxkpx7kju
