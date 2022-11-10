@@ -13,7 +13,7 @@ import { Table } from '../util';
 export const PartyMembers: FC<{
   partyKey: PublicKey;
 }> = ({ partyKey }) => {
-  const party = useSpace(partyKey);
+  const _party = useSpace(partyKey);
   const members = useMembers(partyKey);
 
   return (
