@@ -22,7 +22,6 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     private readonly _invitationsService: InvitationsService
   ) {}
 
-  // TODO(burdon): Invitation type.
   abstract createInvitationObject(context: T): Invitation;
 
   createInvitation(context: T): ObservableInvitation {

@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationObservable,
   ObservableInvitation,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
@@ -83,7 +82,7 @@ export class PartyProxy implements Party {
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
 
   private readonly _invitations: ObservableInvitation[] = [];
-  public readonly invitationsUpdate = new Event<InvitationObservable>();
+  public readonly invitationsUpdate = new Event<ObservableInvitation>();
 
   private _key: PublicKey;
   private _isOpen: boolean;

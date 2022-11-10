@@ -75,7 +75,6 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         },
         handlers: {
           SpaceHostService: {
-            // TODO(burdon): Send PIN.
             requestAdmission: async () => {
               log('responding with admission offer', {
                 host: this._signingContext.deviceKey,
@@ -86,6 +85,9 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                 genesisFeedKey: space.genesisFeedKey
               };
             },
+
+            // TODO(burdon): Send PIN.
+            authenticate: async () => {},
 
             presentAdmissionCredentials: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
@@ -185,6 +187,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         // 1. Send request.
         log('sending admission request', { guest: this._signingContext.deviceKey });
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
+
+        // TODO(burdon): Async callback to request authentication code.
+        //  NOTE: Can't use `callback` since that does fan-out.
+        const code = await observable.authenticate();
+        await peer.rpc.SpaceHostService.authenticate(code);
 
         // 2. Create local space.
         // TODO(burdon): Abandon if does not complete (otherwise retry will fail).

@@ -19,9 +19,6 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
   onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
 }
 
-export type InvitationObservable = CancellableObservable<InvitationEvents>;
-
-// TODO(burdon): Create base class.
 export interface InvitationsHandler<T> {
   createInvitation(context: T): CancellableObservable<InvitationEvents>;
   acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
@@ -33,6 +30,7 @@ export interface InvitationsProxy<T> extends InvitationsHandler<T> {
 
 /**
  * Util to wrap observable with promise.
+ * @deprecated
  */
 // TODO(burdon): Replace with ObservableInvitationProvider.
 export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
@@ -51,6 +49,9 @@ export const invitationObservable = async (observable: Observable<InvitationEven
   });
 };
 
+// TODO(burdon): Add authenticate method.
+//  Call authenticate on this object (on State.AUTHENTICATING) to send RPC.
+//  Set timeouts end-to-end.
 export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
   get invitation(): Invitation | undefined;
 }
