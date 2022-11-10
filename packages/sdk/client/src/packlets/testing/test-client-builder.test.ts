@@ -119,7 +119,7 @@ describe('Client services', function () {
     const success2 = new Trigger<Invitation>();
 
     const party1 = await client1.echo.createParty();
-    const observable1 = await party1.createInvitation(true); // TODO(burdon): How should we set this?
+    const observable1 = await party1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
     const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
 
     observable1.subscribe({
