@@ -24,11 +24,11 @@ aliases:
         - ~/.local/share/pnpm/store/v3
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
   - &ram_cache_restore
-    - run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
-    - restore_cache:
-        keys:
-          - pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
-          - pnpm-store-ram-v1-{{ arch }}-
+    run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
+    restore_cache:
+      keys:
+        - pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-ram-v1-{{ arch }}-
   - &ram_cache_save
     save_cache:
       paths:
@@ -52,7 +52,6 @@ jobs:
     working_directory: /mnt/ramdisk/work
 
     steps:
-      - run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
       - checkout
       - *ram_cache_restore
       - run: pnpm install
