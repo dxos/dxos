@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/async",
+  "name": "@dxos/context",
   "version": "0.1.2",
   "description": "Async utils.",
   "homepage": "https://dxos.org",
@@ -7,10 +7,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert",
-    "node:events": "events"
-  },
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
@@ -20,13 +16,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "assert": "^2.0.0"
-  },
-  "devDependencies": {
-    "events": "^3.3.0"
+    "@dxos/log": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

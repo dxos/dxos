@@ -17,6 +17,7 @@
     "config": "packages/sdk/config",
     "credentials": "packages/core/halo/credentials",
     "crypto": "packages/common/crypto",
+    "context": "packages/common/context",
     "crypto-names": "packages/common/crypto-names",
     "debug": "packages/common/debug",
     "devtools": "packages/devtools/devtools",
