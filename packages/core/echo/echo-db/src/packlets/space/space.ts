@@ -41,9 +41,20 @@ export type SpaceParams = {
 };
 
 /**
+ * Common interface with client.
+ */
+export interface ISpace {
+  key: PublicKey;
+  isOpen: boolean;
+  database: Database;
+  open(): Promise<void>;
+  close(): Promise<void>;
+}
+
+/**
  * Spaces are globally addressable databases with access control.
  */
-export class Space {
+export class Space implements ISpace {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
 
@@ -118,12 +129,16 @@ export class Space {
     return this._key;
   }
 
-  get database() {
-    return this._database;
-  }
-
   get isOpen() {
     return this._isOpen;
+  }
+
+  get database() {
+    if (!this._database) {
+      throw new Error('Party not open.');
+    }
+
+    return this._database;
   }
 
   get genesisFeedKey(): PublicKey {

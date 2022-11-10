@@ -11,7 +11,7 @@ import {
   CreateInvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
+import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -23,7 +23,7 @@ export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
 // TODO(burdon): Rename Space.
 // TODO(burdon): Match params to @dxos/echo-db Space.
 // TODO(burdon): Separate public API form implementation (move comments here).
-export interface Party {
+export interface Party extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
@@ -31,10 +31,11 @@ export interface Party {
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
+  // TODO(burdon): Move to Database.
   get select(): Database['select'];
   get reduce(): Database['reduce'];
 
-  // TODO(burdon): Rename open/close.
+  // TODO(burdon): Reconcile with open/close.
   initialize(): Promise<void>;
   destroy(): Promise<void>;
 
