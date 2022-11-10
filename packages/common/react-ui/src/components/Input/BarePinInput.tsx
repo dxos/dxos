@@ -19,7 +19,7 @@ const bareInputStyleProps = {
 export type BarePinInputProps = Omit<InputProps, 'ref' | 'label' | 'onChange'> &
   Pick<ComponentProps<typeof CodeInput>, 'onChange' | 'value' | 'length'>;
 
-// todo: supplying a `value` prop to CodeInput does not yield correct controlled input interactivity; this may be an issue with RCI.
+// TODO(thure): supplying a `value` prop to CodeInput does not yield correct controlled input interactivity; this may be an issue with RCI (filed as https://github.com/leonardodino/rci/issues/25).
 export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
   ({ initialValue, size, validationMessage, validationValence, value, ...inputProps }, ref) => {
     const width = getSegmentCssWidth('13px');
