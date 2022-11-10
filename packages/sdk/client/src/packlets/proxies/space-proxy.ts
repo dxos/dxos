@@ -20,8 +20,6 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
-// TODO(burdon): Rename Space.
-// TODO(burdon): Match params to @dxos/echo-db Space.
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space extends ISpace {
   get key(): PublicKey;
@@ -75,7 +73,6 @@ export interface Space extends ISpace {
 
   queryMembers(): ResultSet<SpaceMember>;
 
-  // TODO(burdon): Remove this option (for testing only).
   createInvitation(options?: CreateInvitationsOptions): Promise<InvitationObservable>;
 
   createSnapshot(): Promise<SpaceSnapshot>;
@@ -137,7 +134,6 @@ export class SpaceProxy implements Space {
     return this._isActive;
   }
 
-  // TODO(burdon): Invert space/database? (e.g., const db = client.connect()).
   get database(): Database {
     if (!this._database) {
       throw new Error('Space not open.');
