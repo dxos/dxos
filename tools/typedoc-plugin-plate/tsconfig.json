@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "path": "../plate"
+      "path": "../../packages/devtools/plate"
     }
   ]
 }
