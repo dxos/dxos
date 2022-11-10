@@ -37,8 +37,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -78,8 +76,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -121,8 +117,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -166,8 +160,6 @@ describe('Protobuf service', function () {
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -236,8 +228,6 @@ describe('Protobuf service', function () {
 
       const client = createProtoRpcPeer({
         requested: services,
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -330,8 +320,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -380,8 +368,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort,
         encodingOptions: {
           preserveAny: true
