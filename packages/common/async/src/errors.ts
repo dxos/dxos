@@ -5,6 +5,7 @@
 import { ObservableProvider } from './observable';
 
 // TODO(burdon): Move to debug.
+//  Use: https://nodejs.org/api/errors.html
 export const toError = (err: any) => (err === undefined || typeof err === 'string' ? new Error(err) : err);
 
 export class TimeoutError extends Error {

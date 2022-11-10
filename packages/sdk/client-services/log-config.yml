@@ -1,0 +1,6 @@
+formatter:
+  column: 100
+
+filter:
+  - warn
+  - space-invitations:debug

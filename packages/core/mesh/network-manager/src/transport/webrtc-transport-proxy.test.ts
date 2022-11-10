@@ -64,8 +64,6 @@ describe('WebRTCTransportProxy', function () {
       requested: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
       },
-      exposed: {},
-      handlers: {},
       port: port2,
       noHandshake: true,
       encodingOptions: {
@@ -203,8 +201,6 @@ describe('WebRTCTransportProxy', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: port2,
         noHandshake: true,
         encodingOptions: {

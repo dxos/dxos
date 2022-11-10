@@ -10,6 +10,7 @@ import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { AuthenticateRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
+import { IdentityManager } from '../identity';
 import { SpaceInvitationsHandler } from './space-invitations-handler';
 
 /**
@@ -22,6 +23,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   // prettier-ignore
   constructor (
     // TODO(burdon): Replace with getters.
+    private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _spaceInvitations: SpaceInvitationsHandler
   ) {}
@@ -29,7 +31,10 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('stream opened', { spaceKey: invitation.spaceKey });
+      log('stream opened', {
+        host: this._identityManager.identity?.deviceKey,
+        spaceKey: invitation.spaceKey
+      });
       const space = this._spaceManager.spaces.get(invitation.spaceKey!);
       assert(space);
 
@@ -72,7 +77,16 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('stream closed', { spaceKey: invitation.spaceKey, err });
+        const context = {
+          guest: this._identityManager.identity?.deviceKey,
+          spaceKey: invitation.spaceKey
+        };
+        if (err) {
+          log.warn('stream closed', { ...context, err });
+        } else {
+          log('stream closed', context);
+        }
+
         this._createInvitations.delete(invitation.invitationId!);
       };
     });
@@ -81,7 +95,10 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       assert(invitation.spaceKey);
-      log('stream opened', { spaceKey: invitation.spaceKey });
+      log('stream opened', {
+        guest: this._identityManager.identity?.deviceKey,
+        spaceKey: invitation.spaceKey
+      });
 
       let invitationId: string;
       const observable = this._spaceInvitations.acceptInvitation(invitation);
@@ -122,7 +139,16 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       return (err?: Error) => {
-        log('stream closed', { spaceKey: invitation.spaceKey, err });
+        const context = {
+          guest: this._identityManager.identity?.deviceKey,
+          spaceKey: invitation.spaceKey
+        };
+        if (err) {
+          log.warn('stream closed', { ...context, err });
+        } else {
+          log('stream closed', context);
+        }
+
         this._acceptInvitations.delete(invitation.invitationId!);
       };
     });
