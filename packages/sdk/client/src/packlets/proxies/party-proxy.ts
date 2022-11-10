@@ -7,9 +7,9 @@ import {
   ClientServicesProvider,
   ClientServicesProxy,
   InvitationObservable,
-  SpaceInvitationsProxy
+  SpaceInvitationsProxy,
+  CreateInvitationsOptions
 } from '@dxos/client-services';
-import { CreateInvitationsOptions } from '@dxos/client-services/src';
 import { todo } from '@dxos/debug';
 import { Database, Item, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
