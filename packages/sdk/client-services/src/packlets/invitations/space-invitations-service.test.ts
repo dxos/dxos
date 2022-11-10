@@ -35,7 +35,7 @@ describe('services/space-invitation-service', function () {
     assert(guest.spaceManager);
     assert(guest.spaceInvitations);
     const service2: InvitationsService = new SpaceInvitationsServiceImpl(
-      guest.identityManager!,
+      guest.identityManager,
       () => guest.spaceManager!,
       () => guest.spaceInvitations!
     );
