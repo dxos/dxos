@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { useParties } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client';
 
 import { List } from '../util';
 
@@ -17,7 +17,7 @@ export const PartyList: FC<{
   partyKey, // TODO(burdon): Selection not set.
   onSelect
 }) => {
-  const parties = useParties();
+  const parties = useSpaces();
 
   return (
     <List

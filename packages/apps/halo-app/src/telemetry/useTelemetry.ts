@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
@@ -23,8 +23,8 @@ export const useTelemetry = () => {
   // TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
   // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
   const client = useClient();
-  const profile = useProfile();
-  const identityId = useMemo(() => profile && humanize(profile.identityKey), [profile]);
+  const identity = useIdentity();
+  const identityId = useMemo(() => identity && humanize(identity.identityKey), [identity]);
 
   // TODO(wittjosiah): Store preference for disabling telemetry.
   //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.

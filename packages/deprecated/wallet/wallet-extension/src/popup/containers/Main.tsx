@@ -7,13 +7,13 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 
 import { Config } from '@dxos/config';
-import { useClient, useProfile, useClientServices } from '@dxos/react-client';
+import { useClient, useIdentity, useClientServices } from '@dxos/react-client';
 import { JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
 export const Main = () => {
   const client = useClient();
   const [parties, setParties] = useState<any[]>([]);
-  const profile = useProfile();
+  const profile = useIdentity();
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);

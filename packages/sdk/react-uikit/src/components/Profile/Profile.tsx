@@ -7,21 +7,21 @@ import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import urlJoin from 'url-join';
 
-import type { Profile as ProfileType } from '@dxos/client';
+import { Invitation, InvitationEncoder, Profile as ProfileType } from '@dxos/client';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, getSize, Input, Loading, QrCode } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export interface ProfileProps {
   profile: ProfileType;
-  createInvitationUrl?: (invitationCode: string) => string;
+  createInvitationUrl?: (invitation: Invitation) => string;
 }
 
 // TODO(wittjosiah): Remove.
-const defaultCreateUrl = (invitationCode: string) => {
+const defaultCreateUrl = (invitation: Invitation) => {
   const invitationPath = '/profile/invite-device'; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${InvitationEncoder.encode(invitation)}`);
 };
 
 export const DisplayNameInput = ({ profile }: { profile: ProfileType }) => {
@@ -39,7 +39,7 @@ export const DisplayNameInput = ({ profile }: { profile: ProfileType }) => {
 export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: ProfileProps) => {
   const { t } = useTranslation();
   const client = useClient();
-  const invitations = useHaloInvitations(client);
+  const invitations = useHaloInvitations();
 
   useEffect(() => {
     if (invitations.length < 1) {
@@ -48,7 +48,12 @@ export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: 
   }, [client, invitations]);
 
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0]), [invitations]);
+  const invitationUrl = useMemo(() => {
+    const invitation = invitations[0]?.invitation;
+    if (invitation) {
+      return createInvitationUrl(invitation);
+    }
+  }, [invitations]);
 
   return invitationUrl ? (
     <QrCode

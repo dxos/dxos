@@ -19,7 +19,7 @@ export type HaloSharingDialogProps = Omit<
  */
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const client = useClient();
-  const invitations = useHaloInvitations(client);
+  const _invitations = useHaloInvitations();
 
   const handleCreateInvitation = async () => {
     await client.halo.createInvitation();
@@ -35,7 +35,7 @@ export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
     <SharingDialog
       {...props}
       title='Halo Sharing'
-      invitations={invitations}
+      invitations={[]}
       onCreateInvitation={handleCreateInvitation}
       onCancelInvitation={handleCancelInvitation}
     />

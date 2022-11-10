@@ -6,7 +6,7 @@ import { Plus, Rocket } from 'phosphor-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useClient, useParties } from '@dxos/react-client';
+import { useClient, useSpaces } from '@dxos/react-client';
 import { DOCUMENT_TYPE } from '@dxos/react-composer';
 import { Button, getSize, JoinSpaceDialog, useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
@@ -16,7 +16,7 @@ import { invitationCodeFromUrl } from '../../util';
 
 export const SpacesPage = () => {
   const client = useClient();
-  const spaces = useParties();
+  const spaces = useSpaces();
   const navigate = useNavigate();
   const { t } = useTranslation('halo');
 
