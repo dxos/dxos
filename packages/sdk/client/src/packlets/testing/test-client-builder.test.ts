@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import { syncItems } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
@@ -151,19 +152,7 @@ describe('Client services', function () {
 
     const party2 = await trigger.wait();
 
-    // TODO(burdon): Factor out synchronization test.
-    // TODO(burdon): Reconcile with `@dxos/client-services` `syncItems` (reconcile PartyProxy, Space).
-    {
-      const item1 = await party1.database.createItem({ type: 'type-1' });
-      const item2 = await party2.database.waitForItem({ type: 'type-1' });
-      expect(item1.id).to.eq(item2.id);
-    }
-
-    {
-      const item1 = await party2.database.createItem({ type: 'type-2' });
-      const item2 = await party1.database.waitForItem({ type: 'type-2' });
-      expect(item1.id).to.eq(item2.id);
-    }
+    await syncItems(party1, party2);
   });
 
   // TODO(burdon): Browser-only.
