@@ -57,7 +57,7 @@ jobs:
       - *ram_cache_configure
       - checkout
       - *ram_cache_restore
-      - run: pnpm install
+      - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
       - *ram_cache_save
       - nx/set-shas
