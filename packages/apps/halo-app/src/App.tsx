@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromDefaults } from '@dxos/client';
+import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
@@ -39,8 +39,8 @@ const configProvider = async () => new Config(await Dynamics(), await Envs(), De
 
 const clientProvider = async () => {
   const config = await configProvider();
-  // const client = new Client({ config, services: fromIFrame(config) });
-  const client = new Client({ config, services: fromDefaults(config) });
+  const services = process.env.DX_VAULT === 'false' ? fromDefaults(config) : fromIFrame(config);
+  const client = new Client({ config, services });
   await client.initialize();
   return client;
 };
