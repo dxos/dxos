@@ -22,10 +22,10 @@
       "path": "../packages/common/telemetry"
     },
     {
-      "path": "../packages/sdk/react-client"
+      "path": "../packages/devtools/plate"
     },
     {
-      "path": "../tools/plate"
+      "path": "../packages/sdk/react-client"
     },
     {
       "path": "../tools/typedoc-plugin-plate"
