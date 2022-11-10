@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
+
 import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
@@ -40,17 +42,19 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Services that are expected to be implemented by the counter-party.
    */
-  requested?: ServiceBundle<Client>; // TODO(burdon): Rename proxy.
+  // TODO(burdon): Rename proxy.
+  requested?: ServiceBundle<Client>;
 
   /**
    * Services exposed to the counter-party.
    */
-  exposed: ServiceBundle<Server>; // TODO(burdon): Rename service/impl.
+  // TODO(burdon): Rename service.
+  exposed?: ServiceBundle<Server>;
 
   /**
    * Handlers for the exposed services
    */
-  handlers: Server;
+  handlers?: Server;
 
   /**
    * Encoding options passed to the underlying proto codec.
@@ -63,7 +67,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
  * Can both handle and issue requests.
  */
 // TODO(burdon): Currently assumes that the proto service name is unique.
-//  There would likely be multiple instances of different interfaces (e.g., halo/space invitations).
+//  Support multiple instances services definitions (e.g., halo/space invitations).
 export const createProtoRpcPeer = <Client = {}, Server = {}>({
   requested,
   exposed,
@@ -73,11 +77,14 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   // Create map of RPCs.
   const exposedRpcs: Record<string, ServiceHandler<any>> = {};
-  for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-    const serviceHandlers = handlers[serviceName];
-    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceHandlers, encodingOptions);
+  if (exposed) {
+    assert(handlers);
+    for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
+      // Get full service name with the package name without '.' at the beginning.
+      const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
+      const serviceHandlers = handlers[serviceName];
+      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceHandlers, encodingOptions);
+    }
   }
 
   // Create peer.
@@ -134,7 +141,7 @@ const parseMethodName = (method: string): [serviceName: string, methodName: stri
 };
 
 //
-// TODO(burdon): Remove deprecated.
+// TODO(burdon): Remove deprecated (only bot factory).
 //
 
 /**
@@ -191,8 +198,6 @@ export const createBundledRpcClient = <S>(
 ): ProtoRpcPeer<S> => {
   return createProtoRpcPeer({
     requested: descriptors,
-    exposed: {},
-    handlers: {},
     ...options
   });
 };

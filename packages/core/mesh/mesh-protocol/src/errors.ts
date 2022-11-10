@@ -4,6 +4,8 @@
 
 import nanoerror from 'nanoerror';
 
+// TODO(burdon): Reconcile with `@dxos/debug`.
+
 export const ERR_PROTOCOL_STREAM_CLOSED = nanoerror('ERR_PROTOCOL_STREAM_CLOSED', 'protocol closed');
 export const ERR_PROTOCOL_INIT_INVALID = nanoerror('ERR_PROTOCOL_INIT_INVALID', 'protocol initialization invalid');
 export const ERR_PROTOCOL_HANDSHAKE_FAILED = nanoerror(

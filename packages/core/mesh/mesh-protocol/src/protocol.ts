@@ -6,7 +6,7 @@ import eos from 'end-of-stream';
 import ProtocolStream, { ProtocolStreamOptions } from 'hypercore-protocol';
 import assert from 'node:assert';
 
-import { Event, synchronized, toError } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import type { Codec } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -341,7 +341,7 @@ export class Protocol {
       }
     } catch (err: any) {
       if (this._stream.destroyed) {
-        log.warn('handshake', toError(err).message);
+        log.warn('handshake', err);
       } else {
         log.catch(err);
       }
