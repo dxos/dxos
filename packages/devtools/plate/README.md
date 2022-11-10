@@ -1,4 +1,5 @@
 # Templates in TypeScript
+
 This package is for templating files and folders on disk using purely TypeScript (as opposed to some other language like handlebars, cjs, ... etc).
 
 Template literal strings are a great way to express templates in TypeScript, while enjoying all the type safety benefits. With certain extensions to `vscode` even dual-syntax highlighting can become possible. (e.g. see [`zjcompt.es6-string-javascript`](https://marketplace.visualstudio.com/items?itemName=zjcompt.es6-string-javascript))
@@ -27,6 +28,7 @@ See below for [`TemplateContext`](#templatecontext)
 This package offers two entry points:
 
 ### `executeFileTemplate(options: Options<TInput>): Promise<TemplatingResult>`
+
 This API executes a single `t.ts` file and returns the intended list of Files to write to disk.
 
 Where:
@@ -51,6 +53,7 @@ await Promise.all(
 ```
 
 ### `executeDirectoryTemplate()`
+
 This API walks all files in a given directory recursively, identifies all the `t.ts` templates, executes them, and produces a final result of `File[]` which represent the work to copy all non-template files as-is and combine them with the files resulting from templating.
 
 > Note that template outputs take precedence over copies of non-template files. I.e. if `package.json.t.ts` intends to produce `package.json` it will override the regular copy of `package.json` should one exist in the template folder next to `package.json.t.ts`
@@ -69,6 +72,7 @@ const result = await executeDirectoryTemplate({
 ## Types
 
 ### `TemplateContext`
+
 ```typescript
 type TemplateContext<T> = {
   // the path to the currently executing t.ts template file
