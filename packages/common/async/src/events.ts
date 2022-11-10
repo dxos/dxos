@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { throwUnhandledRejection } from '@dxos/debug';
+import { runInContextAsync } from './task-scheduling';
 
 export type UnsubscribeCallback = () => void;
 
@@ -85,8 +87,8 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return event;
   }
 
-  private readonly _listeners = new Set<(data: T) => void>();
-  private readonly _onceListeners = new Set<(data: T) => void>();
+  private readonly _listeners = new Map<(data: T) => void, (data: T) => void>();
+  private readonly _onceListeners = new Map<(data: T) => void, (data: T) => void>();
   private readonly _effects = new Set<MaterializedEffect>();
 
   /**
@@ -100,13 +102,13 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param data param that will be passed to all listeners.
    */
   emit(data: T) {
-    for (const listener of this._listeners) {
+    for (const [_key, listener] of this._listeners) {
       void this._trigger(listener, data);
     }
 
-    for (const listener of this._onceListeners) {
+    for (const [_key, listener] of this._onceListeners) {
       void this._trigger(listener, data);
-      this._onceListeners.delete(listener);
+      this._onceListeners.delete(_key);
     }
   }
 
@@ -118,17 +120,22 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): UnsubscribeCallback {
-    if (this._onceListeners.has(callback)) {
-      this._onceListeners.delete(callback);
-    }
+  on(callback: (data: T) => void): UnsubscribeCallback;
+  on(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
+  on(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+    const [ctx, callback] = Context.isContext(_ctx)
+      ? [_ctx, _callback]
+      : [new Context(), _ctx];
 
-    this._listeners.add(callback);
+    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
+
+    this._listeners.set(callback, runCallback);
 
     if (this.listenerCount() === 1) {
       this._runEffects();
     }
-
+    
+    ctx.onDispose(() => this.off(callback));
     return () => this.off(callback);
   }
 
@@ -157,14 +164,22 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): UnsubscribeCallback {
+   once(callback: (data: T) => void): UnsubscribeCallback;
+   once(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
+   once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+     const [ctx, callback] = Context.isContext(_ctx)
+       ? [_ctx, _callback]
+       : [new Context(), _ctx];
+ 
     if (this._listeners.has(callback)) {
       return () => {
         /* No-op. */
       };
     }
 
-    this._onceListeners.add(callback);
+    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
+
+    this._onceListeners.set(callback, runCallback);
     if (this.listenerCount() === 1) {
       this._runEffects();
     }
