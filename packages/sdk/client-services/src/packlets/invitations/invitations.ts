@@ -104,11 +104,11 @@ export class AuthenticatingInvitationProvider
  * - Sends admission credentials (containing local device and feed keys).
  *
  *  ```
- *  [Guest]                                        [Host]
- *   |---------------------------RequestAdmission-->|
- *   |<--AdmissionOffer-----------------------------|
+ *  [Guest]                                                  [Host]
+ *   |-------------------------------------RequestAdmission-->|
+ *   |<--AdmissionOffer---------------------------------------|
  *   |
- *   |----------------PresentAdmissionCredentials-->|
+ *   |--------------------------PresentAdmissionCredentials-->|
  *  ```
  */
 export interface InvitationsHandler<T> {
