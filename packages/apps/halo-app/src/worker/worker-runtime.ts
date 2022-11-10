@@ -38,7 +38,7 @@ export class WorkerRuntime {
     this._config = await this._configProvider();
     this._clientServices = new ClientServicesHost({
       config: this._config,
-      networkManager: createNetworkManager(this._config)
+      networkManager: createNetworkManager(this._config, { transportFactory: this._transportFactory })
     });
 
     await this._clientServices.open();

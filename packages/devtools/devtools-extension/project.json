@@ -8,7 +8,10 @@
         "^build"
       ],
       "options": {
-        "script": "build"
+        "script": "build",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
       },
       "outputs": [
         "packages/devtools/devtools-extension/dist"
@@ -19,7 +22,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools-extension/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

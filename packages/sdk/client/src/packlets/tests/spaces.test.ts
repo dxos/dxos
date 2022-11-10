@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { asyncTimeout } from '@dxos/async';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
@@ -25,6 +26,11 @@ describe('Spaces', function () {
       const item = await party.database.createItem({ model: ObjectModel });
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
+
+      await asyncTimeout(
+        party.queryMembers().waitFor((members) => members.length === 1),
+        500
+      );
     }
   });
 });

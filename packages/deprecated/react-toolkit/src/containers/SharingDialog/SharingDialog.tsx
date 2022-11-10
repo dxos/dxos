@@ -49,6 +49,7 @@ export interface SharingDialogProps {
  * Reusable sharing logic for inviting to a regular party and to a HALO party.
  * Not exported for the end user.
  * See PartySharingDialog and DeviceSharingDialog.
+ * @deprecated
  */
 export const SharingDialog = ({
   open,

@@ -12,7 +12,7 @@ import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxo
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
 import { createServiceContext } from '../testing';
-import { createServiceProvider, ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 
@@ -35,13 +35,11 @@ describe('service registry', function () {
     const space = await serviceContext.spaceManager.createSpace();
 
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
-      SpaceInvitationsService: createServiceProvider(() => {
-        return new SpaceInvitationsServiceImpl(
-          serviceContext.identityManager,
-          serviceContext.spaceManager!,
-          serviceContext.spaceInvitations!
-        );
-      })
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        serviceContext.identityManager,
+        () => serviceContext.spaceManager!,
+        () => serviceContext.spaceInvitations!
+      )
     });
 
     const [proxyPort, serverPort] = createLinkedPorts();
