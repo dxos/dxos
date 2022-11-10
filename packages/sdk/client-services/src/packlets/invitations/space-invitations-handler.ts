@@ -25,6 +25,11 @@ import {
   AUTHENTICATION_CODE_LENGTH
 } from './invitations';
 
+// TODO(burdon): Don't close until RPC has complete.
+const ON_CLOSE_DELAY = 500;
+const CREDENTIALS_UPDATE_TIMEOUT = 500;
+const AUTHENTICATION_TIMEOUT = 3 * 60_000; // 3 mins.
+
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
@@ -43,11 +48,10 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     const { type } = options ?? {};
     assert(type === undefined || type !== Invitation.Type.OFFLINE);
 
-    const topic = PublicKey.random();
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
-      swarmKey: topic,
+      swarmKey: PublicKey.random(),
       spaceKey: space.key,
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
@@ -58,7 +62,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     });
 
     let authenticationCode: string;
-    const complete = new Trigger<PublicKey>();
+    const credentialsWritten = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         exposed: {
@@ -108,7 +112,8 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
                   )
                 );
 
-                complete.wake(deviceKey);
+                // Updating credentials complete.
+                credentialsWritten.wake(deviceKey);
               } catch (err) {
                 // TODO(burdon): Generic RPC callback to report error to client.
                 observable.callback.onError(err);
@@ -124,7 +129,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         await peer.open();
         log('connected', { host: this._signingContext.deviceKey });
         observable.callback.onConnected?.(invitation);
-        const deviceKey = await complete.wait(); // TODO(burdon): Timeout.
+        const deviceKey = await credentialsWritten.wait({ timeout: CREDENTIALS_UPDATE_TIMEOUT });
         log('admitted guest', { host: this._signingContext.deviceKey, guest: deviceKey });
         observable.callback.onSuccess(invitation);
       } catch (err) {
@@ -133,13 +138,14 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
           observable.callback.onError(err);
         }
       } finally {
-        await sleep(100); // TODO(burdon): Don't close until RPC has complete.
+        await sleep(ON_CLOSE_DELAY);
         await peer.close();
         await swarmConnection!.close();
       }
     });
 
     setTimeout(async () => {
+      const topic = invitation.swarmKey!;
       const peerId = PublicKey.random(); // Use anonymous key.
       swarmConnection = await this._networkManager.openSwarmConnection({
         topic,
@@ -203,7 +209,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
           log('waiting for authentication code...');
           observable.callback.onAuthenticating?.(invitation);
-          const authenticationCode = await authenticated.wait();
+          const authenticationCode = await authenticated.wait({ timeout: AUTHENTICATION_TIMEOUT });
           log('sending authentication request');
           await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
         }
