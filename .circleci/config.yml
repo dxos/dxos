@@ -54,7 +54,7 @@ jobs:
     steps:
       - run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
       - checkout
-      *ram_cache_restore
+      - *ram_cache_restore
       - run: pnpm install
       - run: pnpm install-playwright
       - *ram_cache_save
