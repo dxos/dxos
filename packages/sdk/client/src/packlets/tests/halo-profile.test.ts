@@ -41,7 +41,7 @@ describe('Halo', function () {
     await client2.initialize();
 
     const done = new Trigger();
-    const invitation = client1.halo.createInvitation();
+    const invitation = await client1.halo.createInvitation();
     invitation.subscribe({
       onSuccess: async (invitation) => {
         await client2.halo.acceptInvitation(invitation);
