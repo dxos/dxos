@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/experimental/gem-core/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
