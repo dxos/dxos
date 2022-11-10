@@ -69,7 +69,7 @@ export class ProfileServiceImpl implements ProfileService {
   createInvitation(): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
-        const secret = Buffer.from(generatePasscode());
+        const authenticationCode = generatePasscode();
         // TODO(burdon): Not used.
         // const secretProvider = async () => {
         //   next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
@@ -82,7 +82,7 @@ export class ProfileServiceImpl implements ProfileService {
             close();
           }
         });
-        invitation.secret = secret;
+        invitation.authenticationCode = authenticationCode;
 
         next({
           state: InvitationState.WAITING_FOR_CONNECTION,

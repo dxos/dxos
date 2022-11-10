@@ -119,7 +119,7 @@ describe('Client services', function () {
     const success2 = new Trigger<Invitation>();
 
     const party1 = await client1.echo.createParty();
-    const observable1 = await party1.createInvitation();
+    const observable1 = await party1.createInvitation(true); // TODO(burdon): How should we set this?
     const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
 
     observable1.subscribe({
@@ -130,16 +130,17 @@ describe('Client services', function () {
     });
 
     observable2.subscribe({
-      onSuccess: (invitation) => {
+      onSuccess: (invitation: Invitation) => {
         success2.wake(invitation);
       },
-      onError: (err) => raise(err)
+      onError: (err: Error) => raise(err)
     });
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
+    // TODO(burdon): Party should now be available?
     const trigger = new Trigger<Party>();
     await waitForExpect(() => {
       const party2 = client2.echo.getParty(invitation2.spaceKey!);

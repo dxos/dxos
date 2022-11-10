@@ -143,7 +143,7 @@ export const Primary = () => {
  */
 const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: string) => void }) => {
   const client = useClient();
-  const [pin, _setPin] = useState('');
+  const [authenticationCode, _setAuthenticationCode] = useState('');
 
   useEffect(() => {
     setTimeout(async () => {
@@ -156,7 +156,7 @@ const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: stri
     });
   }, []);
 
-  return <Box>{pin && <Passcode value={pin} />}</Box>;
+  return <Box>{authenticationCode && <Passcode value={authenticationCode} />}</Box>;
 };
 
 export const Secondary = () => {
