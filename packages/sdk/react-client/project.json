@@ -30,7 +30,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-client/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/network-manager/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

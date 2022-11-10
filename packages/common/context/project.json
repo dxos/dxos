@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/context/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
