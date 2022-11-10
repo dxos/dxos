@@ -1,4 +1,5 @@
 import { Context } from '@dxos/context';
+import { MaybePromise } from '@dxos/util';
 
 export const runInContext = (ctx: Context, fn: () => void) => {
   try {
@@ -8,7 +9,7 @@ export const runInContext = (ctx: Context, fn: () => void) => {
   }
 }
 
-export const runInContextAsync = async (ctx: Context, fn: () => Promise<void>) => {
+export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<void>) => {
   try {
     await fn();
   } catch(err: any) {
@@ -16,7 +17,7 @@ export const runInContextAsync = async (ctx: Context, fn: () => Promise<void>) =
   }
 }
 
-export const scheduleTask = (ctx: Context, fn: () => Promise<void>, afterMs?: number) => {
+export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
   const timeout = setTimeout(async () => {
     await runInContextAsync(ctx, fn);
   }, afterMs);
