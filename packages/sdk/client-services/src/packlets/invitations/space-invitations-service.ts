@@ -4,21 +4,22 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, TimeoutError } from '@dxos/async';
+import { TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
 import { IdentityManager } from '../identity';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
 import { SpaceInvitationsHandler } from './space-invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class SpaceInvitationsServiceImpl implements InvitationsService {
-  private readonly _createInvitations = new Map<string, CancellableObservable<any>>();
-  private readonly _acceptInvitations = new Map<string, CancellableObservable<any>>();
+  private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
+  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
 
   // prettier-ignore
   constructor (
@@ -159,10 +160,15 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
     });
   }
 
-  async authenticate({ authenticationCode }: AuthenticationRequest): Promise<void> {
-    console.log(authenticationCode);
-    // this._spaceInvitations.a
-    throw new Error();
+  async authenticate({ invitationId, authenticationCode }: AuthenticationRequest): Promise<void> {
+    log('authenticating...');
+    assert(invitationId);
+    const observable = this._acceptInvitations.get(invitationId);
+    if (!observable) {
+      log.warn('invalid invitation', { invitationId });
+    } else {
+      await observable.authenticate(authenticationCode);
+    }
   }
 
   async cancelInvitation(invitation: Invitation): Promise<void> {
@@ -170,6 +176,10 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
     assert(invitation.invitationId);
     const observable =
       this._createInvitations.get(invitation.invitationId) ?? this._acceptInvitations.get(invitation.invitationId);
-    await observable?.cancel();
+    if (!observable) {
+      log.warn('invalid invitation', { invitationId: invitation.invitationId });
+    } else {
+      await observable?.cancel();
+    }
   }
 }

@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, CancellableObservableProvider, sleep, Trigger } from '@dxos/async';
-import { createAdmissionCredentials } from '@dxos/credentials';
+import { sleep, Trigger } from '@dxos/async';
+import { createAdmissionCredentials, generatePasscode } from '@dxos/credentials';
 import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -16,31 +16,15 @@ import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { InvitationEvents, InvitationsHandler } from './invitations';
+import {
+  AuthenticatingInvitationProvider,
+  InvitationsHandler,
+  InvitationObservable,
+  ObservableInvitationProvider
+} from './invitations';
 
 /**
  * Handles the life-cycle of Space invitations between peers.
- *
- *
- * Host
- * - Creates an invitation containing a swarm topic.
- * - Joins the swarm with the topic and waits for guest's admission request.
- * - Responds with admission offer then waits for guest's credentials.
- * - Writes credentials to control feed then exits.
- *
- * Guest
- * - Joins the swarm with the topic.
- * - NOTE: The topic is transmitted out-of-band (e.g., via a QR code).
- * - Sends an admission request.
- * - Creates a local cloned space (with genesis block).
- * - Sends admission credentials (containing local device and feed keys).
- *
- * [Guest]                              [Host]
- *  |-----------------RequestAdmission-->|
- *  |<--AdmissionOffer-------------------|
- *  |
- *  |------PresentAdmissionCredentials-->|
- *
  */
 export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
   constructor(
@@ -52,7 +36,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space): CancellableObservable<InvitationEvents> {
+  createInvitation(space: Space): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
 
     const topic = PublicKey.random();
@@ -60,11 +44,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
       invitationId: PublicKey.random().toHex(),
       swarmKey: topic,
       spaceKey: space.key,
-      authenticationCode: '123456'
+      authenticationCode: generatePasscode(6)
     };
 
     // TODO(burdon): Stop anything pending.
-    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
+    const observable = new ObservableInvitationProvider(async () => {
       await swarmConnection?.close();
     });
 
@@ -165,12 +149,19 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
    * The local guest peer (invitee) then sends the local party invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents> {
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationProvider {
     let swarmConnection: SwarmConnection | undefined;
 
-    // TODO(burdon): Callback for OTP, ec.
-    const observable = new CancellableObservableProvider<InvitationEvents>(async () => {
-      await swarmConnection?.close();
+    const authenticated = new Trigger<string>();
+    const observable = new AuthenticatingInvitationProvider({
+      onCancel: async () => {
+        await swarmConnection?.close();
+      },
+
+      // TODO(burdon): Consider retry.
+      onAuthenticate: async (code: string) => {
+        authenticated.wake(code);
+      }
     });
 
     let connectionCount = 0;
@@ -198,12 +189,11 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
 
         // 2. Get authentication code.
-        // TODO(burdon): Extend CancellableObservable.
         // TODO(burdon): Check if authentication is required on both side (options).
         // TODO(burdon): Test timeout.
         log('requesting authentication code...');
         observable.callback.onAuthenticating?.(invitation);
-        const authenticationCode = await observable.authenticate(invitation.invitationId);
+        const authenticationCode = await authenticated.wait();
         await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
 
         // 3. Create local space.

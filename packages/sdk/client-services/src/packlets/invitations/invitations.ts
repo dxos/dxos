@@ -13,6 +13,9 @@ import {
 } from '@dxos/async';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
+/**
+ * Common invitation events (callbacks) for creating and accepting invitations.
+ */
 // TODO(burdon): Remove optionals.
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
   onConnecting?(invitation: Invitation): void;
@@ -21,11 +24,101 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
   onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
 }
 
-export interface InvitationsHandler<T> {
-  createInvitation(context: T): CancellableObservable<InvitationEvents>;
-  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
+// TODO(burdon): Mixins.
+//  - observable / provider.
+//  - invitation property (proxies).
+//  - cancel
+//  - authenticate
+
+/**
+ * Base class for all invitation observables and providers.
+ * Observable that supports inspection of the current value.
+ */
+export interface InvitationObservable extends CancellableObservable<InvitationEvents> {
+  get invitation(): Invitation | undefined;
 }
 
+export class ObservableInvitationProvider
+  extends CancellableObservableProvider<InvitationEvents>
+  implements InvitationObservable
+{
+  private _invitation?: Invitation;
+
+  get invitation(): Invitation | undefined {
+    return this._invitation;
+  }
+
+  setInvitation(invitation: Invitation) {
+    this._invitation = invitation;
+  }
+}
+
+/**
+ * Cancelable observer.
+ */
+export type CancellableInvitationObservable = InvitationObservable;
+
+/**
+ * Cancelable observer that relays authentication requests.
+ */
+export interface AuthenticatingInvitationObservable extends CancellableInvitationObservable {
+  authenticate(code: string): Promise<void>;
+}
+
+export interface AuthenticatingInvitationProviderActions {
+  onCancel(): Promise<void>;
+  onAuthenticate(code: string): Promise<void>;
+}
+
+export class AuthenticatingInvitationProvider
+  extends ObservableInvitationProvider
+  implements AuthenticatingInvitationObservable
+{
+  // prettier-ignore
+  constructor(
+    private readonly _actions: AuthenticatingInvitationProviderActions
+  ) {
+    super(() => this._actions.onCancel());
+  }
+
+  async authenticate(code: string): Promise<void> {
+    return this._actions.onAuthenticate(code);
+  }
+}
+
+/**
+ * Common interface for Halo and Space invitation handlers.
+ * Handles the life-cycle of Space invitations between peers.
+ *
+ * Host
+ * - Creates an invitation containing a swarm topic.
+ * - Joins the swarm with the topic and waits for guest's admission request.
+ * - Responds with admission offer then waits for guest's credentials.
+ * - Writes credentials to control feed then exits.
+ *
+ * Guest
+ * - Joins the swarm with the topic.
+ * - NOTE: The topic is transmitted out-of-band (e.g., via a QR code).
+ * - Sends an admission request.
+ * - If Space handler then creates a local cloned space (with genesis block).
+ * - Sends admission credentials (containing local device and feed keys).
+ *
+ *  ```
+ *  [Guest]                                        [Host]
+ *   |---------------------------RequestAdmission-->|
+ *   |<--AdmissionOffer-----------------------------|
+ *   |
+ *   |----------------PresentAdmissionCredentials-->|
+ *  ```
+ */
+export interface InvitationsHandler<T> {
+  createInvitation(context: T): InvitationObservable;
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+}
+
+/**
+ * Common interface for Halo and Space proxies.
+ */
 export interface InvitationsProxy<T> extends InvitationsHandler<T> {
   createInvitationObject(context: T): Invitation;
 }
@@ -50,32 +143,3 @@ export const invitationObservable = async (observable: Observable<InvitationEven
     });
   });
 };
-
-// TODO(burdon): Add authenticate method.
-//  Call authenticate on this object (on State.AUTHENTICATING) to send RPC.
-//  Set timeouts end-to-end.
-export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
-  get invitation(): Invitation | undefined;
-}
-
-/**
- * Observable provider that supports inspection of the current value.
- */
-export class ObservableInvitationProvider
-  extends CancellableObservableProvider<InvitationEvents>
-  implements ObservableInvitation
-{
-  private _invitation?: Invitation;
-
-  get invitation(): Invitation | undefined {
-    return this._invitation;
-  }
-
-  setInvitation(invitation: Invitation) {
-    this._invitation = invitation;
-  }
-}
-
-export class AuthenticatingInvitationProvider extends ObservableInvitationProvider {
-  async authenticate(): Promise<string> {}
-}

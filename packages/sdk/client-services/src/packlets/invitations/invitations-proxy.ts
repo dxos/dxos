@@ -9,7 +9,13 @@ import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationsProxy, ObservableInvitation, ObservableInvitationProvider } from './invitations';
+import {
+  AuthenticatingInvitationObservable,
+  AuthenticatingInvitationProvider,
+  InvitationsProxy,
+  InvitationObservable,
+  ObservableInvitationProvider
+} from './invitations';
 
 /**
  * Adapts invitations service observable to client/service stream.
@@ -24,7 +30,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
   abstract createInvitationObject(context: T): Invitation;
 
-  createInvitation(context: T): ObservableInvitation {
+  createInvitation(context: T): InvitationObservable {
     assert(context);
 
     let invitationId: string;
@@ -78,14 +84,18 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     return observable;
   }
 
-  acceptInvitation(invitation: Invitation): ObservableInvitation {
+  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
     assert(invitation && invitation.swarmKey);
 
     let invitationId: string;
-    const observable = new ObservableInvitationProvider(async () => {
-      if (invitationId) {
-        await this._invitationsService.cancelInvitation({ invitationId });
-      }
+    const observable = new AuthenticatingInvitationProvider({
+      onCancel: async () => {
+        if (invitationId) {
+          await this._invitationsService.cancelInvitation({ invitationId });
+        }
+      },
+
+      onAuthenticate: async (code: string) => {}
     });
 
     const stream: Stream<Invitation> = this._invitationsService.acceptInvitation(invitation);
@@ -103,6 +113,11 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
           case Invitation.State.CONNECTED: {
             observable.callback.onConnected?.(invitation);
+            break;
+          }
+
+          case Invitation.State.AUTHENTICATING: {
+            observable.callback.onAuthenticating?.(invitation);
             break;
           }
 
