@@ -94,11 +94,11 @@ export class WebRTCTransport implements Transport {
     log('closing...');
     await this._disconnectStreams();
     this._peer!.destroy();
+    this.closed.emit();
     log('closed');
   }
 
   async signal(signal: Signal) {
-    debugger;
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));

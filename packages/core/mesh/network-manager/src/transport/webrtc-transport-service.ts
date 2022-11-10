@@ -5,7 +5,6 @@
 import assert from 'assert';
 import { Duplex } from 'stream';
 
-import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,40 +32,36 @@ export class WebRTCTransportService implements BridgeService {
   ) {}
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
-    const event = new Event<BridgeEvent>();
-
-    const duplex: Duplex = new Duplex({
-      read: () => {
-        log('Duplex: read');
-      },
-      write: function (chunk) {
-        event.emit({ data: { payload: chunk } });
-      }
-    });
-
-    const transport = new WebRTCTransport({
-      initiator: request.initiator,
-      stream: duplex,
-      ownId: PublicKey.from(Buffer.from('')),
-      remoteId: PublicKey.from(Buffer.from('')),
-      sessionId: PublicKey.from(Buffer.from('')),
-      topic: PublicKey.from(Buffer.from('')),
-      sendSignal: (msg) => {
-        event.emit({
-          signal: { payload: msg.data.signal }
-        });
-      }
-    });
     const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
+      const duplex: Duplex = new Duplex({
+        read: () => {},
+        write: function (chunk, _, callback) {
+          next({ data: { payload: chunk } });
+          callback();
+        }
+      });
+
+      const transport = new WebRTCTransport({
+        initiator: request.initiator,
+        stream: duplex,
+        ownId: PublicKey.from(Buffer.from('')),
+        remoteId: PublicKey.from(Buffer.from('')),
+        sessionId: PublicKey.from(Buffer.from('')),
+        topic: PublicKey.from(Buffer.from('')),
+        sendSignal: (msg) => {
+          next({
+            signal: { payload: msg.data.signal }
+          });
+        }
+      });
+
       next({
         connection: {
           state: ConnectionState.CONNECTING
         }
       });
 
-      event.on((data) => next(data));
-
-      transport.connected.on(async () => {
+      transport.connected.on(() => {
         next({
           connection: {
             state: ConnectionState.CONNECTED
@@ -74,7 +69,7 @@ export class WebRTCTransportService implements BridgeService {
         });
       });
 
-      transport.errors.handle(async (err) => {
+      transport.errors.handle((err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
@@ -84,7 +79,7 @@ export class WebRTCTransportService implements BridgeService {
         close(err);
       });
 
-      transport.closed.on(async () => {
+      transport.closed.on(() => {
         next({
           connection: {
             state: ConnectionState.CLOSED
@@ -94,9 +89,9 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       ready();
+      this.transports.set(request.proxyId, { transport, stream: duplex });
     });
 
-    this.transports.set(request.proxyId, { transport, stream: duplex });
     return rpcStream;
   }
 
