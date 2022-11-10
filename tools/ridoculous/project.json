@@ -7,7 +7,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/ridoculous/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

@@ -20,7 +20,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/executors/esbuild/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
