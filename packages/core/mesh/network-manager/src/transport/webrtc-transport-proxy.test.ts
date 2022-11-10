@@ -174,7 +174,7 @@ describe('WebRTCTransportProxy', function () {
       expect(received[1]).toBe('{"message": "Hello"}');
     });
   })
-    .timeout(10_000)
+    .timeout(2_000)
     .retries(3);
 
   describe('Multiplexing', function () {
