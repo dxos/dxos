@@ -19,6 +19,7 @@ export const uikit = {
   'displayName placeholder': 'Enter your preferred display name here',
   'invitation code label': 'Invitation code or URL',
   'invitation code placeholder': 'Paste the invitation code or URL here',
+  'invitation secret label': 'Authentication code',
   'seed phrase label': 'Seed phrase (space separated)',
   'seed phrase placeholder': 'Enter your seed phrase here',
   'back label': 'Back',

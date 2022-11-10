@@ -3,12 +3,13 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Client, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { Heading, Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
@@ -120,6 +121,12 @@ export const App = () => {
       console.error(err);
     }
   });
+
+  useEffect(() => {
+    log.config({ filter: 'debug' });
+    console.log('[deubug]', (log as any)._config);
+    log.warn('[hello]');
+  }, []);
 
   return (
     <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
