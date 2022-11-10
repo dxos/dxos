@@ -113,7 +113,7 @@ export const Secondary = () => {
       const encodedInvitation = InvitationEncoder.encode(invitation!);
       const text = JSON.stringify({
         encodedInvitation,
-        secret: invitation?.secret?.toString()
+        secret: invitation?.authenticationCode
       });
       await navigator.clipboard.writeText(text);
       console.log(text); // Required for playwright tests.

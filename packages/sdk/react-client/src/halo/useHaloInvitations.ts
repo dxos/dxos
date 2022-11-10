@@ -4,15 +4,15 @@
 
 import { useMemo, useState } from 'react';
 
-import { ObservableInvitation } from '@dxos/client';
+import { InvitationObservable } from '@dxos/client';
 
 import { useInvitationStatus } from '../invitations';
 
 // import { useClient } from '../client';
 
-export const useHaloInvitations = (): ObservableInvitation[] => {
+export const useHaloInvitations = (): InvitationObservable[] => {
   // const client = useClient();
-  const [invitations, _setInvitations] = useState<ObservableInvitation[]>([]);
+  const [invitations, _setInvitations] = useState<InvitationObservable[]>([]);
 
   // useEffect(() => {
   //   return client.halo.invitationsUpdate.on(() => {

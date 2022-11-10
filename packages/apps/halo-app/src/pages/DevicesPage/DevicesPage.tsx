@@ -5,7 +5,7 @@
 import { Plus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import { ObservableInvitation } from '@dxos/client';
+import { InvitationObservable } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
@@ -42,7 +42,7 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <InvitationList invitations={invitations as unknown as ObservableInvitation[] | undefined} />
+      <InvitationList invitations={invitations as unknown as InvitationObservable[] | undefined} />
     </main>
   );
 };

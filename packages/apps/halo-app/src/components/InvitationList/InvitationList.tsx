@@ -5,13 +5,13 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { ObservableInvitation } from '@dxos/client';
+import { InvitationObservable } from '@dxos/client';
 import { defaultDisabled, Group, useTranslation } from '@dxos/react-uikit';
 
 import { PendingInvitation } from './PendingInvitation';
 
 export interface InvitationListProps {
-  invitations?: ObservableInvitation[];
+  invitations?: InvitationObservable[];
 }
 
 export const InvitationList = ({ invitations }: InvitationListProps) => {

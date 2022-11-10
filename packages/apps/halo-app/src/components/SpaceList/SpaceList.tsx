@@ -57,12 +57,12 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
             <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
-              <Tooltip content={t('manage party label', { ns: 'uikit' })} side='left' tooltipLabelsTrigger>
+              <Tooltip content={t('manage party label', { ns: 'uikit' })} side='top' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
                   <Gear className={getSize(5)} />
                 </Link>
               </Tooltip>
-              <Tooltip content={t('join label')} side='left' tooltipLabelsTrigger>
+              <Tooltip content={t('join label')} side='top' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
                   <SignIn className={getSize(5)} />
                 </Link>

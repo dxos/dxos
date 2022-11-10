@@ -5,8 +5,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { InvitationEncoder } from '@dxos/client';
-import { useClient, useIdentity, useInvitationStatus, InvitationState } from '@dxos/react-client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
+import { useClient, useIdentity, useInvitationStatus } from '@dxos/react-client';
 import { Heading, SingleInputStep, useTranslation } from '@dxos/react-uikit';
 
 import { invitationCodeFromUrl } from '../../util';
@@ -47,7 +47,7 @@ export const JoinIdentityPage = () => {
       <Heading>{t('join identity label', { ns: 'uikit' })}</Heading>
       <SingleInputStep
         {...{
-          pending: status === InvitationState.CONNECTING || status === InvitationState.AUTHENTICATING,
+          pending: status === Invitation.State.CONNECTING || status === Invitation.State.AUTHENTICATING,
           inputLabel: t('invitation code label', { ns: 'uikit' }),
           inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
           inputProps: {

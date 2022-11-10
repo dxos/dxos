@@ -3,8 +3,8 @@
 //
 
 // TODO(burdon): Remove (create wrapper class).
+
 export { generateSeedPhrase } from '@dxos/credentials';
-export { PublicKey } from '@dxos/keys';
 
 export {
   TYPE_SCHEMA,
@@ -22,20 +22,19 @@ export {
   SchemaRef
 } from '@dxos/echo-db';
 
+export { PublicKey } from '@dxos/keys';
+
 // TODO(burdon): Export form `@dxos/echo-db`.
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
-//
-// Protobuf definitions.
-//
-
 export {
+  invitationObservable,
   ClientServicesHost,
   ClientServicesProvider,
-  invitationObservable,
   InvitationEvents,
   InvitationEncoder,
-  ObservableInvitation
+  InvitationObservable,
+  AuthenticatingInvitationObservable
 } from '@dxos/client-services';
 
 export { Contact, PartyMember, Profile } from '@dxos/protocols/proto/dxos/client';
