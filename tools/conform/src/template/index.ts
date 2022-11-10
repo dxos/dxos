@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 export type Input = {
   name: string;
   background: string;
@@ -18,4 +22,4 @@ export type Input = {
   issuesUrl: string;
   prGuideUrl: string;
   contributionGuideUrl: string;
-}
+};

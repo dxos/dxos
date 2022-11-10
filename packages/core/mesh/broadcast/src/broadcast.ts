@@ -125,7 +125,7 @@ export class Broadcast<P extends Peer = Peer> {
   /**
    * Broadcast a flooding message to the peers neighbors.
    * @param data Any data you want to broadcast
-   * @param options Broadcast options 
+   * @param options Broadcast options
    */
   async publish(data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
     const { seq = randomBytes(32) } = options;

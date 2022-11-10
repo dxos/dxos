@@ -102,11 +102,13 @@ export const executeFileTemplate = async <TInput>(
           new (getFileType(nominalOutputPath))({
             content: result,
             path: nominalOutputPath,
-            ...(typeof overwrite != 'undefined' ? { overwrite: !!overwrite } : {})
+            ...(typeof overwrite !== 'undefined' ? { overwrite: !!overwrite } : {})
           })
         ]
       : result.map((outfile) => {
-          if (overwrite === false) outfile.allowOverwrite = false;
+          if (overwrite === false) {
+            outfile.allowOverwrite = false;
+          }
           return outfile;
         });
   } catch (err) {

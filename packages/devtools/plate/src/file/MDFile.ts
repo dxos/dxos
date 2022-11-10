@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File } from './File';
 import prettier from 'prettier';
+
+import { File } from './File';
 
 export class MDFile extends File<string> {
   protected override async serialize(): Promise<string> {

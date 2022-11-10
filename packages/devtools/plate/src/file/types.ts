@@ -1,5 +1,9 @@
-import { MDFile } from './MDFile';
+//
+// Copyright 2022 DXOS.org
+//
+
 import { File } from './File';
+import { MDFile } from './MDFile';
 
 export const fileTypes: {
   [extension: string]: new (...args: any[]) => any;
@@ -8,7 +12,7 @@ export const fileTypes: {
 };
 
 export const getFileType = (path: string) => {
-  for (let key in fileTypes) {
+  for (const key in fileTypes) {
     if (new RegExp(`${key.replace('.', '\\.')}$`).test(path)) {
       return fileTypes[key];
     }

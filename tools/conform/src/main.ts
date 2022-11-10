@@ -1,9 +1,14 @@
-import yargs from 'yargs';
-import { executeDirectoryTemplate, loadInputs } from '@dxos/plate';
-import { hideBin } from 'yargs/helpers';
+//
+// Copyright 2022 DXOS.org
+//
+
 import minimatch from 'minimatch';
-import readDir from 'recursive-readdir';
 import path from 'path';
+import readDir from 'recursive-readdir';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+
+import { executeDirectoryTemplate, loadInputs } from '@dxos/plate';
 
 const main = async () => {
   yargs(hideBin(process.argv))
@@ -39,4 +44,4 @@ const main = async () => {
     .help().argv;
 };
 
-main();
+void main();

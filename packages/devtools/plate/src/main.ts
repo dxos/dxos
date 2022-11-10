@@ -4,15 +4,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { promises as fs } from 'fs';
 import process from 'process';
 import yargs from 'yargs';
-import merge from 'lodash.merge';
-import yaml from 'yaml';
 import { hideBin } from 'yargs/helpers';
-import { logger } from './logger';
+
 import { executeDirectoryTemplate } from './executeDirectoryTemplate';
 import { loadInputs } from './loadInputs';
+import { logger } from './logger';
 
 const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d / 1000) * 1000}s`;
 
@@ -122,8 +120,8 @@ const main = async () => {
             files.map(async (f) => {
               try {
                 const saved = await f.save();
-                info(!!saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
-                written += !!saved ? 1 : 0;
+                info(saved ? 'wrote' : 'skipped', f.shortDescription(process.cwd()));
+                written += saved ? 1 : 0;
               } catch (err: any) {
                 info('failed', f?.shortDescription(process.cwd()) ?? f);
                 info(err);

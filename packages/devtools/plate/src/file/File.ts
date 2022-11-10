@@ -55,7 +55,7 @@ export class File<D = string> {
     }
     const { root, base, dir, ext, name } = path.parse(this.path);
     Object.assign(this, { root, base, dir, ext, name });
-    this.allowOverwrite = typeof overwrite != 'undefined' ? !!overwrite : true;
+    this.allowOverwrite = typeof overwrite !== 'undefined' ? !!overwrite : true;
   }
 
   shortDescription(cwd?: string) {
@@ -116,7 +116,9 @@ export class File<D = string> {
     if (this.isCopy() && !this.transform) {
       if (!this.allowOverwrite) {
         const exists = await fileExists(this.path);
-        if (exists) return undefined;
+        if (exists) {
+          return undefined;
+        }
       }
       await mkdirp(path.dirname(this.path));
       await fs.copyFile(this.copyFrom!, this.path);
@@ -127,7 +129,9 @@ export class File<D = string> {
       if (typeof serialized !== 'undefined') {
         if (!this.allowOverwrite) {
           const exists = await fileExists(this.path);
-          if (exists) return undefined;
+          if (exists) {
+            return undefined;
+          }
         }
         await mkdirp(path.dirname(this.path));
         await fs.writeFile(this.path, serialized);

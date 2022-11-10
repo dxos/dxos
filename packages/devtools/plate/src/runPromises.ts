@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 export const runPromises = ({
   before,
   after
@@ -5,7 +9,7 @@ export const runPromises = ({
   before: (p: Promise<any>, i: string) => any;
   after: (p: Promise<any>, i: string) => any;
 }) => ({
-  async inSequence<T>(promises: Promise<T>[]): Promise<T[]> {
+  inSequence: async <T>(promises: Promise<T>[]): Promise<T[]> => {
     const results: any[] = [];
     for (const index in promises) {
       const promise = promises[index];
@@ -15,14 +19,13 @@ export const runPromises = ({
     }
     return results;
   },
-  async inParallel<T>(promises: Promise<T>[]): Promise<T[]> {
-    return Promise.all(
+  inParallel: async <T>(promises: Promise<T>[]): Promise<T[]> =>
+    Promise.all(
       promises.map(async (p, i) => {
         before?.(p, i.toString());
         const r = await p;
         after?.(p, i.toString());
         return r;
       })
-    );
-  }
+    )
 });

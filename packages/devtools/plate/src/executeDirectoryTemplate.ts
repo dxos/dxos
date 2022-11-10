@@ -4,10 +4,11 @@
 import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
-import { runPromises } from './runPromises';
+
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
-import { logger } from "./logger";
+import { logger } from './logger';
+import { runPromises } from './runPromises';
 
 export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /^index(\.d)?\.[tj]s/];
 
@@ -60,10 +61,10 @@ export const executeDirectoryTemplate = async <TInput>(
     })
   );
   const runner = runPromises({
-    before(_p, i) {
+    before: (_p, i) => {
       debug(`${templateFiles[Number(i)]} ... `);
     },
-    after(_p, i) {
+    after: (_p, i) => {
       debug(`${templateFiles[Number(i)]} done`);
     }
   });
