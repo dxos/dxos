@@ -20,7 +20,8 @@ describe.only('WebRTCTransport', function () {
   it('open and close', async function () {
     const connection = new WebRTCTransport({
       initiator: true,
-      stream: new Duplex()
+      stream: new Duplex(),
+      sendSignal: async () => {}
     });
 
     let callsCounter = 0;
@@ -51,11 +52,11 @@ describe.only('WebRTCTransport', function () {
       stream: protocolProvider1({
         channel: discoveryKey(topic),
         initiator: true
-      }).stream
-    });
-    connection1.sendSignal.on(async (signal) => {
-      await sleep(10);
-      await connection2.signal(signal);
+      }).stream,
+      sendSignal: async (signal) => {
+        await sleep(10);
+        await connection2.signal(signal);
+      }
     });
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -67,11 +68,11 @@ describe.only('WebRTCTransport', function () {
       stream: protocolProvider2({
         channel: discoveryKey(topic),
         initiator: false
-      }).stream
-    });
-    connection2.sendSignal.on(async (signal) => {
-      await sleep(10);
-      await connection1.signal(signal);
+      }).stream,
+      sendSignal: async (signal) => {
+        await sleep(10);
+        await connection1.signal(signal);
+      }
     });
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());

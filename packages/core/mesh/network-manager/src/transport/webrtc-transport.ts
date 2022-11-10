@@ -17,6 +17,7 @@ export type WebRTCTransportParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
   webrtcConfig?: any;
+  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 /**
@@ -29,8 +30,6 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  readonly sendSignal = new Event<Signal>();
-
   constructor(private readonly params: WebRTCTransportParams) {
     log('created connection', params);
     this._peer = new SimplePeerConstructor({
@@ -41,7 +40,7 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      this.sendSignal.emit({ json: JSON.stringify(data) });
+      await this.params.sendSignal({ json: JSON.stringify(data) });
     });
 
     this._peer.on('connect', () => {
