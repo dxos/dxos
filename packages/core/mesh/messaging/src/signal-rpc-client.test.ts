@@ -6,6 +6,7 @@ import { expect } from 'earljs';
 
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
@@ -53,7 +54,7 @@ describe('SignalRPCClient', function () {
         },
         (error) => {
           if (error) {
-            console.log(error);
+            log.catch(error);
             throw error;
           }
         }
@@ -82,7 +83,7 @@ describe('SignalRPCClient', function () {
         },
         (error: any) => {
           if (error) {
-            console.log(error);
+            log.error(error);
             throw error;
           }
         }

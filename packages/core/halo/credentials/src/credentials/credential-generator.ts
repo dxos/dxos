@@ -133,7 +133,7 @@ export const createAdmissionCredentials = async (
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: spaceKey,
-        role: PartyMember.Role.ADMIN
+        role: PartyMember.Role.ADMIN // TODO(burdon): Configure.
       }
     }),
 

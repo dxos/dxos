@@ -15,6 +15,5 @@ export const useProfile = () => {
   const [profile, setProfile] = useState(() => client.halo.profile);
 
   useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
-
   return profile;
 };

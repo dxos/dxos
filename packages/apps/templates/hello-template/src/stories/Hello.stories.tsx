@@ -6,7 +6,6 @@ import '@dxosTheme';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import React from 'react';
 
-import { defaultTestingConfig } from '@dxos/client';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 import { Button } from '@dxos/react-uikit';
 
@@ -32,7 +31,7 @@ export const Primary = Template.bind({});
 Primary.args = {};
 Primary.decorators = [
   (Story) => (
-    <ClientProvider config={defaultTestingConfig}>
+    <ClientProvider>
       <Story />
     </ClientProvider>
   )

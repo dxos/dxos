@@ -106,13 +106,15 @@ export class BotFactoryClient {
       assert(this._rpcClient, 'Not started.');
     }
 
-    const invitation = await party.createInvitation();
-    const { id } = await this._rpcClient.rpc.spawnBot({
-      package: spec,
-      partyKey: party.key,
-      invitation: invitation.descriptor.toProto()
-    });
+    throw new Error('Not implemented.');
 
-    return new BotHandle(id!, this._rpcClient);
+    // const invitation = await party.createInvitation();
+    // const { id } = await this._rpcClient.rpc.spawnBot({
+    //   package: spec,
+    //   partyKey: party.key,
+    //   invitation
+    // });
+
+    // return new BotHandle(id!, this._rpcClient);
   }
 }

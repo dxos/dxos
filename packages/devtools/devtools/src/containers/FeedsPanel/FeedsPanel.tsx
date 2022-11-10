@@ -11,6 +11,10 @@ import { KeySelect, MessageTable, Panel } from '../../components';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
   const [selectedFeed, setSelectedFeed] = useState<PublicKey>();
 

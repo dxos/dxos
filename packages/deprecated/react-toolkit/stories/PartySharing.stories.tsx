@@ -143,15 +143,16 @@ export const Primary = () => {
  */
 const AutoInvitationGenerator = ({ onInvite }: { onInvite: (invitationCode: string) => void }) => {
   const client = useClient();
-  const [pin, setPin] = useState('');
+  const [pin, _setPin] = useState('');
 
   useEffect(() => {
     setTimeout(async () => {
       const party = await client.echo.createParty();
-      const invitation = await party.createInvitation();
-      invitation.finished.on(() => setPin(''));
-      invitation.connected.on(() => setPin(invitation.secret.toString()));
-      onInvite(invitation.encode());
+      await party.createInvitation();
+      throw new Error('Not implemented.');
+      // invitation.finished.on(() => setPin(''));
+      // invitation.connected.on(() => setPin(invitation.secret.toString()));
+      // onInvite(invitation.encode());
     });
   }, []);
 

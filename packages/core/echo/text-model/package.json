@@ -25,7 +25,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "assert": "^2.0.0",
     "yjs": "^13.5.41"
   },

@@ -21,7 +21,7 @@ export const PartyMembers: FC<{
       showHeader
       columns={[
         {
-          key: 'public_key',
+          key: 'identity_key',
           value: (key) => truncateKey(key, 4),
           width: 20,
           color: 'green',
@@ -29,7 +29,7 @@ export const PartyMembers: FC<{
         },
         {
           key: 'display_name',
-          label: 'username'
+          label: 'displayName'
         }
       ]}
       rows={members}

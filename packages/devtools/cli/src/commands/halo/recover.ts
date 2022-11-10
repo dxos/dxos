@@ -27,9 +27,9 @@ export default class Recover extends BaseCommand {
         // TODO(burdon): Needs to be connected to peer?
         this.log('Recovering...', seedphrase);
         profile = await client.halo.recoverProfile(seedphrase);
-        const { username } = profile;
+        const { displayName } = profile;
         this.log('Profile', profile);
-        return { seedphrase, username };
+        return { seedphrase, displayName };
       }
     });
   }

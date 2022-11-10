@@ -39,7 +39,7 @@ export const SpacesPage = () => {
           <>
             <JoinSpaceDialog
               parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-              onJoin={(space) => navigate(`/spaces/${space.key.toHex()}`)}
+              onJoin={(space) => navigate(`/spaces/${space.toHex()}`)}
               dialogProps={{
                 openTrigger: (
                   <Button className='grow flex gap-1'>

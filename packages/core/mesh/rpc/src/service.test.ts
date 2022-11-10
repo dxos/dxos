@@ -11,14 +11,13 @@ import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/exampl
 
 import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts } from './testutil';
+import { createLinkedPorts } from './testing';
 
 describe('Protobuf service', function () {
   it('Works with protobuf service', async function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -38,8 +37,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -56,7 +53,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -80,8 +76,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -104,7 +98,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -124,8 +117,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -142,7 +133,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
@@ -170,8 +160,6 @@ describe('Protobuf service', function () {
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -222,7 +210,6 @@ describe('Protobuf service', function () {
       });
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: services,
         handlers: {
           TestService: {
@@ -241,8 +228,6 @@ describe('Protobuf service', function () {
 
       const client = createProtoRpcPeer({
         requested: services,
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -311,7 +296,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
@@ -336,8 +320,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -358,7 +340,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
@@ -387,8 +368,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort,
         encodingOptions: {
           preserveAny: true

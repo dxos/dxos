@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
-import chalk from 'chalk';
-
-import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { printMembers, selectSpace } from '../../util';
+import { selectSpace } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
@@ -22,9 +18,8 @@ export default class Invite extends BaseCommand {
   ];
 
   async run(): Promise<any> {
-    const { args, flags } = await this.parse(Invite);
+    const { args } = await this.parse(Invite);
     let { key } = args;
-    const { timeout } = flags;
 
     return await this.execWithClient(async (client: Client) => {
       const { value: parties = [] } = await client.echo.queryParties();
@@ -35,9 +30,9 @@ export default class Invite extends BaseCommand {
       const party = parties.find((party) => party.key.toHex().startsWith(key));
       if (!party) {
         this.log(`Invalid key: ${truncateKey(key)}`);
-        return;
       }
 
+      /*
       const invitation = await party.createInvitation();
       const descriptor = invitation.encode();
       const secret = invitation.secret.toString();
@@ -60,6 +55,7 @@ export default class Invite extends BaseCommand {
 
         invitation.cancel();
       }
+      */
     });
   }
 }

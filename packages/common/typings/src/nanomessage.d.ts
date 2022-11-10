@@ -12,12 +12,8 @@ declare module 'nanomessage' {
   export declare class Nanomessage extends NanoresourcePromise {
     constructor(...args: any[]);
 
-    _open(): Promise<any>;
-    _close(): Promise<any>;
-
     _send(buffer: any): Promise<any>;
     _subscribe(next: (data: any) => Promise<void>): void;
-
     _onMessage(data: any, opts?: any): Promise<any>;
 
     send(buffer: any): Promise<any>;

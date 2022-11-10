@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { InvitationWrapper, PartyInvitation } from '@dxos/client';
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
@@ -43,20 +43,19 @@ const PartyInvitationContainer = () => {
     });
   };
 
-  const handleCreateInvitation = () => {
+  const handleCreateInvitation = async () => {
     setTimeout(async () => {
       resetInvitations();
+      // TODO(burdon): Observer.
+      const party = await client.echo.getParty(partyKey!)!;
+      await party.createInvitation();
 
-      const invitation = await client.echo.getParty(partyKey!)!.createInvitation({
-        inviteeKey: contact ? PublicKey.fromHex(contact!) : undefined
-      });
-
-      invitation.finished.on(() => resetInvitations());
-      if (!contact) {
-        invitation.connected.on(() => setPin(invitation.secret.toString()));
-      }
-
-      setInvitationCode(invitation.encode());
+      // invitation.finished.on(() => resetInvitations());
+      // if (!contact) {
+      //   invitation.connected.on(() => setPin(invitation.secret.toString()));
+      // }
+      //
+      // setInvitationCode(invitation.encode());
     });
   };
 
@@ -97,7 +96,7 @@ const PartyInvitationContainer = () => {
 interface Status {
   error?: any;
   party?: string;
-  invitation?: PartyInvitation;
+  invitation?: Invitation;
 }
 
 /**
@@ -111,18 +110,19 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(InvitationWrapper.decode(invitationCode));
-      setStatus({ invitation });
-
-      const party = await invitation.getParty();
-      setStatus({ party: party.key.toHex() });
+      await client.echo.acceptInvitation(InvitationEncoder.decode(invitationCode));
+      // const party = await invitation;
+      // setStatus({ party: party.key.toHex() });
+      throw new Error('Not implemented.');
     } catch (err: any) {
       setStatus({ error: err });
     }
   };
 
   const handleAuthenticate = async (pin: string) => {
-    await status.invitation?.authenticate(Buffer.from(pin));
+    // TODO(burdon): Implement.
+    // await status.invitation?.authenticate(Buffer.from(pin));
+    throw new Error('Not implemented.');
   };
 
   return <PartyJoinPanel status={status} onSubmit={handleSubmit} onAuthenticate={handleAuthenticate} />;
