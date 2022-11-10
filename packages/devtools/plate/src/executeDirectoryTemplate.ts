@@ -42,6 +42,7 @@ export const executeDirectoryTemplate = async <TInput>(
   const allFiles = (await readDir(templateDirectory)).filter(
     (file) => !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(path.relative(templateDirectory, file)))
   );
+  debug('all files:\n', allFiles.join('\n'));
   const templateFiles = allFiles.filter(isTemplateFile);
   const regularFiles = allFiles.filter((file) => !isTemplateFile(file));
   debug(`${templateFiles.length} template files:`);

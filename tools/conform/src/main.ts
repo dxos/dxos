@@ -22,7 +22,7 @@ const main = async () => {
             templateDirectory: path.resolve(__dirname, './template'),
             input: await loadInputs(['package.json', 'README.yml'], {
               relativeTo: pkg
-            })
+            }),
           })
         );
         console.log(`conforming ${packages.length} packages ...`);
