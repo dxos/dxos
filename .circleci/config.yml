@@ -40,7 +40,7 @@ jobs:
     working_directory: /mnt/ramdisk/work
 
     steps:
-      - pnpm config set store-dir /mnt/ramdisk/pnpm-store
+      - run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
       - checkout
       - *cache_restore
       - run: pnpm install
