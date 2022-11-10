@@ -128,7 +128,7 @@ const PartyInviteSingleton = ({
 const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
   const { space, createInvitationUrl, onClickManageSpace, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
-  const members = useMembers(space);
+  const members = useMembers(space.key);
 
   return (
     <Popover

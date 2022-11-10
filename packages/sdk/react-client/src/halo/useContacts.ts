@@ -21,15 +21,9 @@ export const useContacts = () => {
     const result = client.halo.queryContacts();
     setContacts(result.value);
 
-    const unsubscribe = result.subscribe(() => {
+    return result.subscribe(() => {
       setContacts(result.value);
     });
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
   }, []);
 
   return contacts;

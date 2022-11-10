@@ -24,7 +24,7 @@ export interface PartySharingDialogProps
  */
 export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogProps) => {
   const party = useSpace(partyKey);
-  const members = useMembers(party);
+  const members = useMembers(partyKey);
   const _invitations = useSpaceInvitations(partyKey);
   // const botClient = useBotFactoryClient(false);
 

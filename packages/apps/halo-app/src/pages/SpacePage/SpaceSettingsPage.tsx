@@ -21,7 +21,7 @@ export const SpaceSettingsPage = () => {
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useSpace(spaceKey);
   const invitations = space?.invitations;
-  const members = useMembers(space);
+  const members = useMembers(spaceKey);
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const onCreateInvitation = useCallback(() => {

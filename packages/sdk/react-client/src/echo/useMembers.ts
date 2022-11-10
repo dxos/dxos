@@ -4,9 +4,12 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party, PartyMember } from '@dxos/client';
+import { PartyMember, PublicKey } from '@dxos/client';
 
-export const useMembers = (space: Party | undefined): PartyMember[] => {
+import { useSpace } from './useSpaces';
+
+export const useMembers = (spaceKey: PublicKey | undefined): PartyMember[] => {
+  const space = useSpace(spaceKey);
   const [members, setMembers] = useState<PartyMember[]>([]);
 
   useEffect(() => {
@@ -18,15 +21,7 @@ export const useMembers = (space: Party | undefined): PartyMember[] => {
     setMembers(result.value);
 
     return result.subscribe(() => {
-      // TODO(wittjosiah): Remove interval.
-      const update = setInterval(() => {
-        const newMembers = space.queryMembers().value;
-        const isNameFilled = newMembers.every((member) => member.profile?.displayName);
-        setMembers(newMembers);
-        if (isNameFilled) {
-          clearInterval(update);
-        }
-      }, 1000);
+      setMembers(result.value);
     });
   }, [space?.key.toString()]);
 

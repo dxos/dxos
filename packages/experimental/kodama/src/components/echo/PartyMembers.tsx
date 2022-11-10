@@ -14,7 +14,7 @@ export const PartyMembers: FC<{
   partyKey: PublicKey;
 }> = ({ partyKey }) => {
   const party = useSpace(partyKey);
-  const members = useMembers(party);
+  const members = useMembers(partyKey);
 
   return (
     <Table
