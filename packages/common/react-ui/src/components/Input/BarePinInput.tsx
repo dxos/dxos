@@ -30,12 +30,16 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
       ({ state, index }) => (
         <div
           key={index}
-          className={staticInput({ focused: inputFocused && !!state })}
+          className={staticInput({
+            focused: inputFocused && !!state,
+            disabled: inputProps.disabled,
+            ...(validationMessage && { validationValence })
+          })}
           data-state={state}
           style={{ width, height: '100%' }}
         />
       ),
-      [inputFocused]
+      [inputFocused, validationValence, validationMessage, inputProps.disabled]
     );
 
     return (
@@ -45,7 +49,11 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
           ...inputProps,
           ...bareInputStyleProps,
           inputRef,
-          className: cx('font-mono selection:bg-transparent', inputProps.className),
+          className: cx(
+            'font-mono selection:bg-transparent',
+            inputProps.disabled && 'cursor-not-allowed',
+            inputProps.className
+          ),
           renderSegment
         }}
       />

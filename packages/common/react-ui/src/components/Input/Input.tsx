@@ -64,7 +64,9 @@ export const Input = ({
     }),
     ...(placeholder && { placeholder }),
     value: internalValue,
-    onChange: onInternalChange
+    onChange: onInternalChange,
+    validationMessage,
+    validationValence
   };
 
   const bareInput =
