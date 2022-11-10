@@ -73,7 +73,9 @@ export interface Party {
   getProperty(key: string, defaultValue?: any): any;
 
   queryMembers(): ResultSet<PartyMember>;
-  createInvitation(): Promise<InvitationObservable>;
+
+  // TODO(burdon): Remove this option (for testing only).
+  createInvitation(testing?: boolean): Promise<InvitationObservable>;
 
   createSnapshot(): Promise<PartySnapshot>;
 }
@@ -261,9 +263,8 @@ export class PartyProxy implements Party {
   /**
    * Creates an interactive invitation.
    */
-  async createInvitation() {
+  async createInvitation(testing = false) {
     return new Promise<InvitationObservable>((resolve, reject) => {
-      const testing = false;
       const invitation = this._invitationProxy.createInvitation(this.key, {
         type: testing ? Invitation.Type.INTERACTIVE_TESTING : Invitation.Type.INTERACTIVE
       });
