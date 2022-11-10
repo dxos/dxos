@@ -94,7 +94,7 @@ service DevicesService {
 
 //
 // Contacts
-//px
+//
 
 message Contact {
   halo.credentials.ProfileDocument profile = 1;

@@ -3,13 +3,13 @@
 //
 
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { schema } from '@dxos/protocols';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { TextModel } from '@dxos/text-model';
 
 import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
@@ -19,7 +19,7 @@ import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
-import { createLazyLoadedService, ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry';
 
 type ClientServicesHostParams = {
   config: Config;
@@ -56,14 +56,11 @@ export class ClientServicesHost implements ClientServicesProvider {
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider(() => {
-        // TODO(burdon): Replace with providers.
-        return new SpaceInvitationsServiceImpl(
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
           this._serviceContext.identityManager,
-          this._serviceContext.spaceManager!,
-          this._serviceContext.spaceInvitations!
-        );
-      }),
+          () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
+          () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
+      ),
 
       PartyService: new PartyServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
