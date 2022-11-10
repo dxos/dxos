@@ -25,6 +25,9 @@ interface InvitationReducerState {
   result: InvitationResult;
   error?: number;
   observable?: InvitationObservable | AuthenticatingInvitationObservable;
+  id?: string;
+  invitationCode?: string;
+  authenticationCode?: string;
 }
 
 export type InvitationAction =
@@ -37,8 +40,9 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTED;
-      code: string;
       id: string;
+      invitationCode: string;
+      authenticationCode?: string;
     }
   | {
       status: Invitation.State.SUCCESS;
@@ -62,6 +66,10 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
         observable: action.status === Invitation.State.CONNECTING ? action.observable : prev.observable,
+        id: action.status === Invitation.State.CONNECTED ? action.id : prev.id,
+        invitationCode: action.status === Invitation.State.CONNECTED ? action.invitationCode : prev.invitationCode,
+        authenticationCode:
+          action.status === Invitation.State.CONNECTED ? action.authenticationCode : prev.authenticationCode,
         // `error` gets reset each time we leave the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets reset each time we leave the error or cancelled state
@@ -86,8 +94,9 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
   const onConnected = useCallback((invitation: Invitation) => {
     dispatch({
       status: Invitation.State.CONNECTED,
-      code: InvitationEncoder.encode(invitation),
-      id: invitation.invitationId!
+      id: invitation.invitationId!,
+      invitationCode: InvitationEncoder.encode(invitation),
+      authenticationCode: invitation.authenticationCode
     });
   }, []);
 
@@ -155,8 +164,9 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
       cancel,
       connect,
       authenticate,
-      id: state.observable?.invitation?.invitationId ?? null,
-      code: state.observable?.invitation ? InvitationEncoder.encode(state.observable.invitation) : null
+      id: state.id ?? null,
+      invitationCode: state.invitationCode ?? null,
+      authenticationCode: state.authenticationCode ?? null
     };
   }, [state, connect, authenticate]);
 };
