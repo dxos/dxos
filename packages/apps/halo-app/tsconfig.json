@@ -75,9 +75,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/vault"
-    },
-    {
       "path": "../../experimental/react-client-testing"
     },
     {

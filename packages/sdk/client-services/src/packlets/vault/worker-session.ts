@@ -3,12 +3,12 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { ClientServicesHost, ClientServicesProvider } from '@dxos/client';
 import { log } from '@dxos/log';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
+import { ClientServicesHost } from '../services';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
@@ -23,9 +23,7 @@ export type WorkerSessionParams = {
 /**
  * Represents a tab connection within the worker.
  */
-// TODO(burdon): Move into `@dxos/client-services`.
 export class WorkerSession {
-  private readonly _clientServices: ClientServicesProvider;
   private readonly _clientRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
@@ -45,7 +43,6 @@ export class WorkerSession {
       heartbeatInterval: 1000
     }
   }: WorkerSessionParams) {
-    this._clientServices = clientServices;
     this._options = options;
 
     this._clientRpc = createProtoRpcPeer({

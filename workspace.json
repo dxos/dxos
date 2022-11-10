@@ -91,7 +91,6 @@
     "typedoc-plugin-plate": "tools/typedoc-plugin-plate",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
-    "vault": "packages/sdk/vault",
     "vite-plugin": "packages/sdk/vite-plugin",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
     "wallet-playground": "packages/deprecated/wallet/wallet-playground"
