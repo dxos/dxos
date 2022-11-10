@@ -71,7 +71,7 @@ export const Input = ({
     size === 'pin' ? (
       <BarePinInput {...bareInputBaseProps} length={length} />
     ) : (
-      <BareTextInput {...bareInputBaseProps} />
+      <BareTextInput {...bareInputBaseProps} size={size} />
     );
 
   return (
