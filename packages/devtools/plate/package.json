@@ -13,6 +13,7 @@
     "dev": "plate"
   },
   "dependencies": {
+    "@swc/core": "^1.3.9",
     "esbuild": "~0.14.1",
     "lodash.flatten": "^4.4.0",
     "lodash.zip": "^4.2.0",

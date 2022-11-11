@@ -4,7 +4,7 @@
 
 import { TemplateFunction } from '@dxos/plate';
 
-import rootTsconfig from '../../../tsconfig.json';
+import rootTsconfig from '../../../../tsconfig.json';
 
 export type Input = {
   monorepo?: boolean
@@ -24,38 +24,63 @@ const template: TemplateFunction<Input> = ({ input }) => {
   };
 
   const include = [
-    'src',
-    'playwright'
+    'src'
+  ];
+
+  const exclude = [
+    'vite.config.ts'
+  ];
+
+  const references = [
+    {
+      path: './tsconfig.node.json'
+    }
   ];
 
   const tsconfig = input.monorepo ? {
-    extends: '../../../tsconfig.json',
+    extends: '../../../../tsconfig.json',
     compilerOptions,
     include,
+    exclude: [
+      ...exclude,
+      '*.t.ts'
+    ],
     references: [
+      ...references,
       {
-        'path': '../../../packages/sdk/client'
+        path: '../../../experimental/react-client-testing'
       },
       {
-        'path': '../../../packages/sdk/config'
+        path: '../../../deprecated/react-components'
       },
       {
-        'path': '../../../packages/sdk/react-client'
+        path: '../../../deprecated/react-toolkit'
       },
       {
-        'path': '../../../packages/sdk/react-client-testing'
+        path: '../../../sdk/client'
       },
       {
-        'path': '../../../packages/sdk/react-components'
+        path: '../../../sdk/config'
       },
       {
-        'path': '../../../packages/sdk/react-toolkit'
+        path: '../../../sdk/react-client'
+      },
+      {
+        path: '../../../sdk/vite-plugin'
+      },
+      {
+        path: './tsconfig.plate.json'
       }
     ]
   } : {
     ...rootTsconfig,
     compilerOptions,
-    include
+    include,
+    exclude: [
+      ...rootTsconfig.exclude,
+      'vite.config.ts'
+    ],
+    references
   };
 
   return JSON.stringify(tsconfig, null, 2);
