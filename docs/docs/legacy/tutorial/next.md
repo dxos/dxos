@@ -9,7 +9,7 @@ You're now ready to dive into each individual part of the DXOS platform.
 
 Let's review what we've covered:
 
-- How to create a basic app by creating an instance of `Client`, creating the user profile, and creating parties.
+- How to create a basic app by creating an instance of `Client`, creating the user profile, and creating spaces.
 - The React hooks which provide convenient access to the ECHO database.
 - The mechanism for inviting peers to enable peer-to-peer collaboration.
 

@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, ObservableInvitation, PublicKey } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+import { InvitationEncoder, InvitationObservable, PublicKey, Invitation } from '@dxos/client';
+import { useClient, useInvitationStatus } from '@dxos/react-client';
 
-import { useInvitationStatus, InvitationState, InvitationStatus } from '../../experimental';
+import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
@@ -19,15 +19,16 @@ export interface JoinSpacePanelProps {
 }
 
 interface JoinStep1Props extends JoinSpacePanelProps {
-  connect: (wrapper: ObservableInvitation) => void;
-  status: InvitationState;
+  connect: (wrapper: InvitationObservable) => void;
+  status: Invitation.State;
   cancel: () => void;
   error?: number;
 }
 
 interface JoinStep2Props extends JoinSpacePanelProps {
-  status: InvitationState;
+  status: Invitation.State;
   cancel: () => void;
+  authenticate: (secret: string) => Promise<void>;
   error?: number;
 }
 
@@ -58,7 +59,7 @@ const JoinStep1 = ({
   return (
     <SingleInputStep
       {...{
-        pending: status === InvitationState.CONNECTING,
+        pending: status === Invitation.State.CONNECTING,
         inputLabel: t('invitation code label', { ns: 'uikit' }),
         inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
@@ -77,21 +78,24 @@ const JoinStep1 = ({
   );
 };
 
-const JoinStep2 = ({ status, error, cancel }: JoinStep2Props) => {
+const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   const { t } = useTranslation();
   const [invitationSecret, setInvitationSecret] = useState('');
+  const [pending, setPending] = useState(false);
 
   const onAuthenticateNext = useCallback(() => {
-    console.warn('[onAuthenticateNext]', 'not implemented', invitationSecret);
+    setPending(true);
+    authenticate(invitationSecret).finally(() => setPending(false));
   }, [invitationSecret]);
 
   return (
     <SingleInputStep
       {...{
-        pending: status === InvitationState.AUTHENTICATING,
+        pending,
         inputLabel: t('invitation secret label', { ns: 'uikit' }),
-        inputPlaceholder: t('invitation secret placeholder', { ns: 'uikit' }),
         inputProps: {
+          size: 'pin',
+          length: 6,
           initialValue: '',
           autoFocus: true,
           ...(error && {
@@ -108,26 +112,26 @@ const JoinStep2 = ({ status, error, cancel }: JoinStep2Props) => {
 };
 
 export const JoinSpacePanel = (props: JoinSpacePanelProps) => {
-  const { status, cancel, error, connect, result, haltedAt } = useInvitationStatus();
+  const { status, cancel, error, connect, authenticate, result, haltedAt } = useInvitationStatus();
 
   useEffect(() => {
-    if (status === InvitationState.SUCCESS && result.spaceKey) {
+    if (status === Invitation.State.SUCCESS && result.spaceKey) {
       props.onJoin?.(result.spaceKey);
     }
   }, [status, result]);
 
   const cursor =
-    status === InvitationState.ERROR || status === InvitationState.TIMEOUT || status === InvitationState.CANCELLED
+    status === Invitation.State.ERROR || status === Invitation.State.TIMEOUT || status === Invitation.State.CANCELLED
       ? haltedAt!
       : status;
 
   return (
     <>
       <InvitationStatus {...{ status, haltedAt }} className='mbs-3' />
-      {cursor < InvitationState.CONNECTED ? (
+      {cursor < Invitation.State.CONNECTED ? (
         <JoinStep1 {...props} {...{ connect, status, cancel, error }} />
       ) : (
-        <JoinStep2 {...props} {...{ connect, status, cancel, error }} />
+        <JoinStep2 {...props} {...{ connect, authenticate, status, cancel, error }} />
       )}
     </>
   );

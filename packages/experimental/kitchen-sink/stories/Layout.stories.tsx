@@ -6,7 +6,7 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider } from '@dxos/react-client';
-import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
@@ -21,11 +21,11 @@ faker.seed(100);
 // TODO(burdon): Devtools mesh.
 // TODO(burdon): createItem defaults.
 // TODO(burdon): useSelection ?? [] (create default).
-// TODO(burdon): dxos:item/party (replace or change slash).
+// TODO(burdon): dxos:item/space (replace or change slash).
 
 const App = () => {
-  const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const space = useTestSpace();
+  const model = useGraphModel(space, [(item) => Boolean(item.type?.startsWith('example:'))]);
 
   return (
     <FullScreen>

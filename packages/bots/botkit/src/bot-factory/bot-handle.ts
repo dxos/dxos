@@ -25,7 +25,7 @@ const ATTEMPT_DELAY = 3_000;
 interface BotHandleOptions {
   config?: Config;
   packageSpecifier?: BotPackageSpecifier;
-  partyKey?: PublicKey;
+  spaceKey?: PublicKey;
 }
 
 /**
@@ -51,13 +51,13 @@ export class BotHandle {
     private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
-    const { config = new Config({ version: 1 }), packageSpecifier, partyKey } = options;
+    const { config = new Config({ version: 1 }), packageSpecifier, spaceKey } = options;
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
       desiredState: Bot.Status.RUNNING,
       packageSpecifier,
-      partyKey,
+      spaceKey,
       attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);

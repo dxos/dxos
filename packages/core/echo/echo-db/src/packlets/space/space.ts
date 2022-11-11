@@ -41,9 +41,20 @@ export type SpaceParams = {
 };
 
 /**
+ * Common interface with client.
+ */
+export interface ISpace {
+  key: PublicKey;
+  isOpen: boolean;
+  database: Database;
+  open(): Promise<void>;
+  close(): Promise<void>;
+}
+
+/**
  * Spaces are globally addressable databases with access control.
  */
-export class Space {
+export class Space implements ISpace {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
 
@@ -118,12 +129,16 @@ export class Space {
     return this._key;
   }
 
-  get database() {
-    return this._database;
-  }
-
   get isOpen() {
     return this._isOpen;
+  }
+
+  get database() {
+    if (!this._database) {
+      throw new Error('Space not open.');
+    }
+
+    return this._database;
   }
 
   get genesisFeedKey(): PublicKey {
@@ -138,8 +153,8 @@ export class Space {
     return this._dataFeed.key;
   }
 
-  get partyState() {
-    return this._controlPipeline.partyState;
+  get spaceState() {
+    return this._controlPipeline.spaceState;
   }
 
   /**
@@ -189,7 +204,7 @@ export class Space {
     {
       this._dataPipeline = new Pipeline(new Timeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
-      for (const feed of this._controlPipeline.partyState.feeds.values()) {
+      for (const feed of this._controlPipeline.spaceState.feeds.values()) {
         await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
     }
@@ -233,7 +248,7 @@ export class Space {
         try {
           const payload = data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
-            const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
+            const feedInfo = this._controlPipeline.spaceState.feeds.get(feedKey);
             if (!feedInfo) {
               log.error('Could not find feed.', { feedKey });
               continue;

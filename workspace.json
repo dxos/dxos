@@ -51,7 +51,7 @@
     "network-manager": "packages/core/mesh/network-manager",
     "object-model": "packages/core/echo/object-model",
     "orchestrator": "packages/gravity/orchestrator",
-    "plate": "tools/plate",
+    "plate": "packages/devtools/plate",
     "playwright": "tools/executors/playwright",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",

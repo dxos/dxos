@@ -11,7 +11,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
-import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
+import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { SpaceInvitationsServiceImpl } from '../invitations';
@@ -62,7 +62,7 @@ export class ClientServicesHost implements ClientServicesProvider {
         () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
       ),
 
-      PartyService: new PartyServiceImpl(this._serviceContext),
+      SpaceService: new SpaceServiceImpl(this._serviceContext),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
       ProfileService: new ProfileServiceImpl(this._serviceContext),

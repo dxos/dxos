@@ -107,29 +107,29 @@ $ Bob
 
 ### 2.2. Decentralized Data (ECHO)
 
-Create a new ECHO party and create some data.
+Create a new ECHO space and create some data.
 
 ```bash
-> dx echo party create --data '{ "title": "Things we should do." }'
-> dx echo party list
+> dx echo space create --data '{ "title": "Things we should do." }'
+> dx echo space list
 QmPEKipMh6LsXzvtLxunSPP7ZsBM8y9xQ2SQQwBXy5UY6e *
 Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u
 
-> The party is identified by an IPNS name.
+> The space is identified by an IPNS name.
 
-> dx echo party select Qmd28
-> dx echo party list
+> dx echo space select Qmd28
+> dx echo space list
 QmPEKipMh6LsXzvtLxunSPP7ZsBM8y9xQ2SQQwBXy5UY6e
 Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u *
 
-> dx echo party append --data '{ "title": "Join the circus" }'
-> dx echo party append --data '{ "title": "Remember the milk!" }'
+> dx echo space append --data '{ "title": "Join the circus" }'
+> dx echo space append --data '{ "title": "Remember the milk!" }'
 ```
 
-List the contents of the party.
+List the contents of the space.
 
 ```bash
-> dx echo party list --json
+> dx echo space list --json
 {
   "key": "Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u",
   "items": [
@@ -149,9 +149,9 @@ List the contents of the party.
 }
 ```
 
-> The `dx echo` command remembers the context of the most recently accessed party.
+> The `dx echo` command remembers the context of the most recently accessed space.
 
-Invite your friend to the party.
+Invite your friend to the space.
 
 ```bash
 > dx halo lookup Bob
@@ -160,7 +160,7 @@ QmW2WQi7j6c7UgJTarActp7tDNikE4B2qXtFCfLPdsgaTQ
 > dx echo invite --user QmW2WQi7j6c7UgJTarActp7tDNikE4B2qXtFCfLPdsgaTQ
 ```
 
-Get the access list of the party.
+Get the access list of the space.
 
 ```bash
 > dx echo members
@@ -168,7 +168,7 @@ Alice
 Bob
 ```
 
-Create a read-only feed for the party.
+Create a read-only feed for the space.
 
 ```bash
 > dx echo feed

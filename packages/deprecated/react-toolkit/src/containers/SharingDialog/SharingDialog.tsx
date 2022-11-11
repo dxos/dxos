@@ -8,7 +8,7 @@ import urlJoin from 'url-join';
 import { Face as NewIcon, Contacts as AddressIcon, Adb as BotIcon } from '@mui/icons-material';
 import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
-import { InvitationEncoder, Invitation, PartyMember } from '@dxos/client';
+import { InvitationEncoder, Invitation, SpaceMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 import { ResourceSet } from '@dxos/registry-client';
 
@@ -35,7 +35,7 @@ export interface SharingDialogProps {
   open: boolean;
   modal?: boolean;
   title: string;
-  members?: PartyMember[]; // TODO(rzadp): Support HALO members as well (different devices).
+  members?: SpaceMember[]; // TODO(rzadp): Support HALO members as well (different devices).
   invitations?: Invitation[];
   createUrl?: (invitation: Invitation) => string;
   onCreateInvitation: () => void;
@@ -46,9 +46,10 @@ export interface SharingDialogProps {
 }
 
 /**
- * Reusable sharing logic for inviting to a regular party and to a HALO party.
+ * Reusable sharing logic for inviting to a regular space and to a HALO space.
  * Not exported for the end user.
- * See PartySharingDialog and DeviceSharingDialog.
+ * See SpaceSharingDialog and DeviceSharingDialog.
+ * @deprecated
  */
 export const SharingDialog = ({
   open,
@@ -96,7 +97,7 @@ export const SharingDialog = ({
       content={
         <>
           <Typography variant='body2' sx={{ marginBottom: 2 }}>
-            {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the party.`}
+            {`Add collaborators ${onCreateBotInvitation ? 'and bots' : ''} to the space.`}
           </Typography>
 
           <Box

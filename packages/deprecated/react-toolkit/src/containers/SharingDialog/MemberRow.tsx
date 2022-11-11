@@ -7,16 +7,16 @@ import React from 'react';
 import { Clear as CancelIcon } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 
-import { PartyMember } from '@dxos/client';
+import { SpaceMember } from '@dxos/client';
 import { MemberAvatar } from '@dxos/react-components';
 
 export interface MemberRowProps {
-  member: PartyMember;
+  member: SpaceMember;
   onRemove?: () => void;
 }
 
 /**
- * Party member row.
+ * Space member row.
  */
 export const MemberRow = ({ member, onRemove }: MemberRowProps) => (
   <Box

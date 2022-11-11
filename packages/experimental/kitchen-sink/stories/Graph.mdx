@@ -18,8 +18,8 @@ This can be generated using simple hooks to create the model.
 ```tsx
 export const App = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
-  const model = useGraphModel(party);
+  const [space, setspace] = useState<space>();
+  const model = useGraphModel(space);
 
   return (
     <EchoGraph model={model} />

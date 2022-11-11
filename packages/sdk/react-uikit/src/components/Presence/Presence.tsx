@@ -7,8 +7,8 @@ import { UserPlus, UsersThree, UserCircleGear, Gear, Check } from 'phosphor-reac
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Invitation, Party, Profile as ProfileType } from '@dxos/client';
-import { useMembers, usePartyInvitations } from '@dxos/react-client';
+import type { Invitation, Space, Profile as ProfileType } from '@dxos/client';
+import { useMembers, useSpaceInvitations } from '@dxos/react-client';
 import {
   Avatar,
   AvatarProps,
@@ -31,7 +31,7 @@ export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
     Pick<PopoverProps, 'collisionPadding' | 'sideOffset'> {
   profile: ProfileType;
-  space?: Party;
+  space?: Space;
   closeLabel?: string;
   managingSpace?: boolean;
   createInvitationUrl?: (invitationCode: Invitation) => string;
@@ -90,12 +90,12 @@ const ProfileMenu = (props: PresenceProps) => {
 };
 
 // TODO(burdon): To discuss.
-const PartyInviteSingleton = ({
+const SpaceInviteSingleton = ({
   createInvitationUrl,
   space
 }: Required<Pick<PresenceProps, 'createInvitationUrl' | 'space'>>) => {
   const { t } = useTranslation();
-  const invitations = usePartyInvitations(space.key);
+  const invitations = useSpaceInvitations(space.key);
   useEffect(() => {
     if (invitations.length < 1) {
       void space.createInvitation();
@@ -104,13 +104,18 @@ const PartyInviteSingleton = ({
 
   // TODO(burdon): Update InvitationEncoder.
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations.length && createInvitationUrl(invitations[0]), [invitations]);
+  const invitationUrl = useMemo(() => {
+    const invitation = invitations[0]?.invitation;
+    if (invitation) {
+      return createInvitationUrl(invitation);
+    }
+  }, [invitations]);
 
   return invitationUrl ? (
     <QrCode
       size={40}
       value={invitationUrl}
-      label={<p className='w-20'>{t('copy party invite code label')}</p>}
+      label={<p className='w-20'>{t('copy space invite code label')}</p>}
       side='left'
       sideOffset={12}
       className='w-full h-auto'
@@ -120,10 +125,10 @@ const PartyInviteSingleton = ({
   );
 };
 
-const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
+const SpaceMenu = (props: Omit<PresenceProps, 'space'> & { space: Space }) => {
   const { space, createInvitationUrl, onClickManageSpace, sideOffset, collisionPadding } = props;
   const { t } = useTranslation();
-  const members = useMembers(space);
+  const members = useMembers(space.key);
 
   return (
     <Popover
@@ -139,22 +144,22 @@ const PartyMenu = (props: Omit<PresenceProps, 'space'> & { space: Party }) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
-      {createInvitationUrl && <PartyInviteSingleton createInvitationUrl={createInvitationUrl} space={space} />}
+      {createInvitationUrl && <SpaceInviteSingleton createInvitationUrl={createInvitationUrl} space={space} />}
       {onClickManageSpace && (
         <Button className='flex w-full gap-2' onClick={onClickManageSpace}>
           <Gear className={getSize(5)} />
-          <span>{t('manage party label')}</span>
+          <span>{t('manage space label')}</span>
         </Button>
       )}
     </Popover>
   );
 };
 
-const PartyLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>) => {
+const SpaceLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>) => {
   const { t } = useTranslation('halo');
   return (
     <Button compact className='flex w-full gap-1 pli-2' onClick={onClickGoToSpace}>
-      <span className='text-xs'>{t('go to party label')}</span>
+      <span className='text-xs'>{t('go to space label')}</span>
       <Check className={getSize(4)} weight='bold' />
     </Button>
   );
@@ -163,7 +168,7 @@ const PartyLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>
 export const Presence = (props: PresenceProps) => {
   return (
     <div role='none' className='flex items-center'>
-      {props.space && (props.managingSpace ? <PartyLink {...props} /> : <PartyMenu {...props} space={props.space!} />)}
+      {props.space && (props.managingSpace ? <SpaceLink {...props} /> : <SpaceMenu {...props} space={props.space!} />)}
       <ProfileMenu {...props} />
     </div>
   );

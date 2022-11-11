@@ -10,7 +10,7 @@ import yaml from 'js-yaml';
 
 import { truncate, truncateKey } from '@dxos/debug';
 
-import { buildTestParty, PartyBuilder, TestType } from './builders';
+import { buildTestSpace, SpaceBuilder, TestType } from './builders';
 import { treeLogger, TreeRoot } from './logging';
 import { TestBuilder, testCallback } from './testing';
 
@@ -39,22 +39,22 @@ describe.only('Builders', function () {
   it.only('sanity', async function () {
     const builder = new TestBuilder();
     await builder.initialize();
-    const party = await builder.createParty();
-    await builder.destroyParty(party);
+    const space = await builder.createSpace();
+    await builder.destroySpace(space);
   });
 
   it('tree logger', function () {
-    return testCallback(async (client, party) => {
-      await buildTestParty(new PartyBuilder(party));
+    return testCallback(async (client, space) => {
+      await buildTestSpace(new SpaceBuilder(space));
 
-      const { entities } = await party.database
+      const { entities } = await space.database
         .select()
         .filter(({ type }) => type === TestType.Org)
         .exec();
 
       {
-        log('Party:', party.key.toHex());
-        const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
+        log('Space:', space.key.toHex());
+        const output = treeLogger(new TreeRoot(space.key.toHex(), entities));
         log(output, '\n');
       }
 
@@ -74,18 +74,18 @@ describe.only('Builders', function () {
     {
       const builder = new TestBuilder();
       await builder.initialize();
-      const party = await builder.createParty();
-      await buildTestParty(new PartyBuilder(party), {
+      const space = await builder.createSpace();
+      await buildTestSpace(new SpaceBuilder(space), {
         numOrgs: 3,
         numPeople: 5
       });
 
-      const { entities: orgs } = await party.database
+      const { entities: orgs } = await space.database
         .select()
         .filter(({ type }) => type === TestType.Org)
         .exec();
 
-      const { entities: people } = await party.database
+      const { entities: people } = await space.database
         .select()
         .filter(({ type }) => type === TestType.Person)
         .exec();
@@ -109,20 +109,20 @@ describe.only('Builders', function () {
       fs.writeFileSync(filename, text);
       log(`Output: ${filename}`);
 
-      await builder.destroyParty(party);
+      await builder.destroySpace(space);
     }
 
     {
       const builder = new TestBuilder();
       await builder.initialize();
-      const party = await builder.createParty();
+      const space = await builder.createSpace();
 
       const raw = fs.readFileSync(filename, 'utf8');
       const data: DataType = yaml.load(raw) as DataType;
 
       const orgs = new Map();
       for (const org of data[TestType.Org]) {
-        const item = await party.database.createItem({
+        const item = await space.database.createItem({
           type: org.type,
           props: {
             name: org.name
@@ -133,7 +133,7 @@ describe.only('Builders', function () {
       }
 
       for (const person of data[TestType.Person]) {
-        await party.database.createItem({
+        await space.database.createItem({
           type: person.type,
           parent: orgs.get(person.org),
           props: {
@@ -143,13 +143,13 @@ describe.only('Builders', function () {
       }
 
       {
-        const { entities } = await party.database
+        const { entities } = await space.database
           .select()
           .filter(({ type }) => type === TestType.Org)
           .exec();
 
         // Log tree.
-        const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
+        const output = treeLogger(new TreeRoot(space.key.toHex(), entities));
         log(output, '\n');
 
         // Log table.
@@ -168,7 +168,7 @@ describe.only('Builders', function () {
       }
 
       {
-        const { entities } = await party.database
+        const { entities } = await space.database
           .select()
           .filter(({ type }) => type === TestType.Person)
           .exec();
@@ -189,7 +189,7 @@ describe.only('Builders', function () {
         log('\n' + rows + '\n');
       }
 
-      await builder.destroyParty(party);
+      await builder.destroySpace(space);
     }
   });
 });

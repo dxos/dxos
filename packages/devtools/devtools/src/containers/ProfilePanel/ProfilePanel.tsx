@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { useProfile } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 export const ProfilePanel = () => {
-  const profile = useProfile();
+  const profile = useIdentity();
 
   return (
     <JsonTreeView

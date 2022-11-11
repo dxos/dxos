@@ -19,7 +19,7 @@ enum KeyType {
   UNKNOWN = 0;
   IDENTITY = 1;
   DEVICE = 2;
-  PARTY = 3;
+  SPACE = 3;
   FEED = 4;
   DXNS_ADDRESS = 5;
 }
@@ -47,7 +47,7 @@ message KeyRecord {
 
   /**
    * Determines if this is our key?
-   * Usually true if `secret_key` is present; may be false for "inception keys" such as the Party key.
+   * Usually true if `secret_key` is present; may be false for "inception keys" such as the Space key.
    */
   optional bool own = 5; // TODO(burdon): Rename "local" or "private".
 

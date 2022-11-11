@@ -22,18 +22,18 @@ export default class Invite extends BaseCommand {
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: parties = [] } = await client.echo.queryParties();
+      const { value: spaces = [] } = await client.echo.querySpaces();
       if (!key) {
-        key = await selectSpace(parties);
+        key = await selectSpace(spaces);
       }
 
-      const party = parties.find((party) => party.key.toHex().startsWith(key));
-      if (!party) {
+      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      if (!space) {
         this.log(`Invalid key: ${truncateKey(key)}`);
       }
 
       /*
-      const invitation = await party.createInvitation();
+      const invitation = await space.createInvitation();
       const descriptor = invitation.encode();
       const secret = invitation.secret.toString();
 
@@ -45,7 +45,7 @@ export default class Invite extends BaseCommand {
         await invitation.wait(timeout * 1_000);
         CliUx.ux.action.stop();
 
-        const { value: members } = party.queryMembers();
+        const { value: members } = space.queryMembers();
         printMembers(members);
 
         // TODO(burdon): Wait to replicate.

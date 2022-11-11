@@ -277,6 +277,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
@@ -448,11 +453,6 @@
         {
           "type": "json",
           "path": "tools/log-hook/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/plate/package.json",
           "jsonpath": "$.version"
         },
         {

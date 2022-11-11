@@ -20,7 +20,7 @@ enum State {
 message Bot {
   message Spec {
     message Echo {
-      bytes party_key = 1;
+      bytes space_key = 1;
 
       google.protobuf.Any invitation = 2;
     }
