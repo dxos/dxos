@@ -3,20 +3,20 @@
 //
 
 import { Activity, Eraser } from 'phosphor-react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useClient, useIdentity } from '@dxos/react-client';
 import { QrCode, useTranslation, Button, getSize, Input, AlertDialog } from '@dxos/react-uikit';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
-import { BASE_PROPERTIES, getIdentifier } from '../../telemetry';
+import { BASE_PROPERTIES, DX_TELEMETRY, getIdentifier } from '../../telemetry';
 
 export const IdentityPage = () => {
   const client = useClient();
   const profile = useIdentity();
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
-  const telemetryDisabled = useMemo(() => localStorage.getItem('__TELEMETRY_DISABLED__') === 'true', []);
+  const telemetryDisabled = DX_TELEMETRY === 'true';
   const { t } = useTranslation('halo');
 
   const confirmString = humanize(profile!.identityKey.toHex());
@@ -60,7 +60,7 @@ export const IdentityPage = () => {
                   value: !telemetryDisabled
                 }
               });
-              localStorage.setItem('__TELEMETRY_DISABLED__', String(!telemetryDisabled));
+              localStorage.setItem('halo-app:telemetry-disabled', String(!telemetryDisabled));
               window.location.reload();
             }}
             className='text-error-700 dark:text-error-400'

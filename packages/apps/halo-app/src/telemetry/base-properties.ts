@@ -8,7 +8,8 @@ import { humanize } from '@dxos/util';
 
 const IPDATA_API_KEY = process.env.IPDATA_API_KEY;
 
-export const DX_GROUP = localStorage.getItem('__TELEMETRY_GROUP__');
+export const DX_TELEMETRY = localStorage.getItem('halo-app:telemetry-disabled');
+export const DX_GROUP = localStorage.getItem('halo-app:telemetry-group');
 export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 export const DX_RELEASE = process.env.DX_RELEASE;
 

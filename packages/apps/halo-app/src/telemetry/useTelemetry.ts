@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { DX_ENVIRONMENT, DX_RELEASE, BASE_PROPERTIES, getIdentifier } from './base-properties';
+import { DX_ENVIRONMENT, DX_RELEASE, BASE_PROPERTIES, getIdentifier, DX_TELEMETRY } from './base-properties';
 import { setupWindowListeners } from './listeners';
 
 const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION;
@@ -19,7 +19,7 @@ const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 export const useTelemetry = () => {
   const location = useLocation();
   const client = useClient();
-  const telemetryDisabled = useMemo(() => localStorage.getItem('__TELEMETRY_DISABLED__') === 'true', []);
+  const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
 
   // TODO(wittjosiah): Store preference for disabling telemetry.
   //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
