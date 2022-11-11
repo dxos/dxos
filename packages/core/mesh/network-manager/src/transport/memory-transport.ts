@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
-import { Event } from '@dxos/async';
+import { Event, EventSubscriptions } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -59,9 +59,7 @@ export class MemoryTransport implements Transport {
     log('creating', this._ownId);
 
     if (this.params.initiator) {
-      setTimeout(async () => {
-        await this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` });
-      }, 100);
+      setTimeout(async () => this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` }));
     }
 
     assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
@@ -72,6 +70,7 @@ export class MemoryTransport implements Transport {
       this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
       if (this._remoteConnection) {
         this._remoteConnection._remoteConnection = this;
+        this._remoteConnection._remoteId = this._ownId;
 
         log('connected', { ownId: this._ownId, remoteId: this._remoteId });
         this.params.stream
@@ -99,9 +98,7 @@ export class MemoryTransport implements Transport {
   async close(): Promise<void> {
     log('closing', this._ownId);
 
-    if (this._ownId) {
-      MemoryTransport._connections.delete(this._ownId);
-    }
+    MemoryTransport._connections.delete(this._ownId);
     if (this._remoteConnection) {
       MemoryTransport._connections.delete(this._remoteId);
 
@@ -122,7 +119,7 @@ export class MemoryTransport implements Transport {
     }
 
     this.closed.emit();
-    log('closed', this._ownId);
+    log('closed');
   }
 }
 
