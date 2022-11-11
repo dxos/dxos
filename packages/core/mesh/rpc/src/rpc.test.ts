@@ -470,69 +470,6 @@ describe('RpcPeer', function () {
       expect((msgs[0] as any).error.message).toEqual('Test error');
     })
 
-    it.skip('async stream handler', async function () {
-      const [alicePort, bobPort] = createLinkedPorts();
-
-      const alice = new RpcPeer({
-        callHandler: async (msg) => createPayload(),
-        streamHandler: async (method, msg) => {
-          await sleep(1)
-          expect(method).toEqual('method');
-          expect(msg.value!).toEqual(Buffer.from('request'));
-          return new Stream<Any>(({ next, close }) => {
-            next(createPayload('res1'));
-            next(createPayload('res2'));
-            close();
-          });
-        },
-        port: alicePort
-      });
-
-      const bob = new RpcPeer({
-        callHandler: async (msg) => createPayload(),
-        port: bobPort
-      });
-
-      await Promise.all([alice.open(), bob.open()]);
-
-      const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
-
-      expect(await Stream.consume(stream)).toEqual([
-        { ready: true },
-        { data: createPayload('res1') },
-        { data: createPayload('res2') },
-        { closed: true }
-      ]);
-    });
-
-    it.skip('async stream handler rejects', async function () {
-      const [alicePort, bobPort] = createLinkedPorts();
-
-      const alice = new RpcPeer({
-        callHandler: async (msg) => createPayload(),
-        streamHandler: async (method, msg): Promise<Stream<Any>> => {
-          await sleep(1)
-          throw new Error('Test error')
-        },
-        port: alicePort
-      });
-
-      const bob = new RpcPeer({
-        callHandler: async (msg) => createPayload(),
-        port: bobPort
-      });
-
-      await Promise.all([alice.open(), bob.open()]);
-
-      const stream = await bob.callStream('method', createPayload('request'));
-      expect(stream).toBeA(Stream);
-
-      const msgs = await Stream.consume(stream);
-      expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
-
-      expect((msgs[0] as any).error.message).toEqual('Test error');
-    });
   });
 
   describe('with disabled handshake', function () {
