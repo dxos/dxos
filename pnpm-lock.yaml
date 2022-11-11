@@ -125,7 +125,7 @@ importers:
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
       '@dxos/mocha': link:tools/executors/mocha
-      '@dxos/plate': link:tools/plate
+      '@dxos/plate': link:packages/devtools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
@@ -236,7 +236,7 @@ importers:
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.53
     devDependencies:
-      '@dxos/plate': link:../tools/plate
+      '@dxos/plate': link:../packages/devtools/plate
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry
       '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
@@ -408,14 +408,11 @@ importers:
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
       prosemirror-model: ^1.7.1
       prosemirror-view: ^1.9.10
       react: ^18.2.0
       react-dom: ^18.2.0
-      vite: 3.0.9
-      vite-plugin-pwa: ^0.12.4
       y-protocols: ^1.0.5
       yjs: ^13.5.41
     dependencies:
@@ -442,12 +439,10 @@ importers:
     devDependencies:
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.8
-      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
 
   packages/apps/templates/bare-template:
     specifiers:
+      '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
@@ -457,6 +452,7 @@ importers:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
     devDependencies:
+      '@dxos/cli': link:../../../devtools/cli
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
@@ -464,6 +460,7 @@ importers:
   packages/apps/templates/hello-template:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dxos/cli': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -497,6 +494,7 @@ importers:
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
@@ -515,6 +513,7 @@ importers:
       url-join: 5.0.0
     devDependencies:
       '@babel/core': 7.20.2
+      '@dxos/cli': link:../../../devtools/cli
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@storybook/addon-actions': 6.5.13_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.13_nmvwumqgum5gmkux27754yvf3a
@@ -533,6 +532,7 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
       webpack: 5.75.0
+      workbox-window: 6.5.4
 
   packages/bots/bender-bot:
     specifiers:
@@ -675,11 +675,13 @@ importers:
 
   packages/common/async:
     specifiers:
+      '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/util': workspace:*
       assert: ^2.0.0
       events: ^3.3.0
     dependencies:
+      '@dxos/context': link:../context
       '@dxos/debug': link:../debug
       '@dxos/util': link:../util
       assert: 2.0.0
@@ -688,6 +690,7 @@ importers:
 
   packages/common/codec-protobuf:
     specifiers:
+      '@dxos/context': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
       assert: ^2.0.0
@@ -696,6 +699,7 @@ importers:
       path-browserify: ^1.0.1
       protobufjs: ^6.9.0
     dependencies:
+      '@dxos/context': link:../context
       assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2
@@ -704,6 +708,12 @@ importers:
       '@types/lodash.merge': 4.6.7
       path-browserify: 1.0.1
       protobufjs: 6.11.3
+
+  packages/common/context:
+    specifiers:
+      '@dxos/log': workspace:*
+    dependencies:
+      '@dxos/log': link:../log
 
   packages/common/crypto:
     specifiers:
@@ -970,6 +980,7 @@ importers:
       phosphor-react: ^1.4.1
       postcss: ^8.4.17
       qrcode.react: ^3.1.0
+      rci: ^0.0.3
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
@@ -996,6 +1007,7 @@ importers:
       jdenticon: 3.2.0
       postcss: 8.4.18
       qrcode.react: 3.1.0_react@18.2.0
+      rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
       tailwindcss: 3.2.3
       tailwindcss-logical: 3.0.0_lycaqaeny3mp632atgvyvqdgwe
       tailwindcss-radix: 2.6.1
@@ -2084,7 +2096,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
-      '@dxos/plate': link:../../../tools/plate
+      '@dxos/plate': link:../plate
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/sentry': link:../../common/sentry
@@ -2178,6 +2190,7 @@ importers:
       typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2231,6 +2244,7 @@ importers:
       typescript: 4.8.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_vite@3.0.9
+      workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
     specifiers:
@@ -2377,6 +2391,47 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
+
+  packages/devtools/plate:
+    specifiers:
+      '@types/lodash.flatten': ^4.4.6
+      '@types/lodash.zip': ^4.2.6
+      '@types/minimatch': ^5.1.2
+      '@types/mkdirp': ^1.0.2
+      '@types/node': ^18.11.9
+      '@types/prettier': ^2.7.1
+      '@types/recursive-readdir': ^2.2.0
+      '@types/yargs': ~16.0.1
+      esbuild: ~0.14.1
+      lodash.flatten: ^4.4.0
+      lodash.zip: ^4.2.0
+      minimatch: ^5.1.0
+      mkdirp: ^1.0.4
+      prettier: ^2.7.1
+      recursive-readdir: ^2.2.2
+      ts-node: 10.9.1
+      typescript: ^4.8.4
+      yargs: ~16.2.0
+    dependencies:
+      esbuild: 0.14.54
+      lodash.flatten: 4.4.0
+      lodash.zip: 4.2.0
+      minimatch: 5.1.0
+      mkdirp: 1.0.4
+      prettier: 2.7.1
+      recursive-readdir: 2.2.3
+      yargs: 16.2.0
+    devDependencies:
+      '@types/lodash.flatten': 4.4.7
+      '@types/lodash.zip': 4.2.7
+      '@types/minimatch': 5.1.2
+      '@types/mkdirp': 1.0.2
+      '@types/node': 18.11.9
+      '@types/prettier': 2.7.1
+      '@types/recursive-readdir': 2.2.1
+      '@types/yargs': 16.0.4
+      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
+      typescript: 4.8.4
 
   packages/e2e/rpc-tunnel-e2e:
     specifiers:
@@ -3258,6 +3313,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
@@ -3292,6 +3348,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
@@ -3356,17 +3413,16 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/react-ui': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
-      '@mui/material': ^5.8.1
+      '@dxos/vite-plugin': workspace:*
       '@testing-library/dom': ^8.17.1
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^14.4.3
@@ -3401,9 +3457,8 @@ importers:
       debug: 4.3.4
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@mui/material': 5.10.13_2zx2umvpluuhvlq44va5bta2da
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/vite-plugin': link:../vite-plugin
       '@testing-library/dom': 8.19.0
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_aaq3sbffpfe3jnxzm2zngsddei
@@ -3757,47 +3812,6 @@ importers:
       '@types/node': 18.11.9
       typescript: 4.8.4
 
-  tools/plate:
-    specifiers:
-      '@types/lodash.flatten': ^4.4.6
-      '@types/lodash.zip': ^4.2.6
-      '@types/minimatch': ^5.1.2
-      '@types/mkdirp': ^1.0.2
-      '@types/node': ^18.11.9
-      '@types/prettier': ^2.7.1
-      '@types/recursive-readdir': ^2.2.0
-      '@types/yargs': ~16.0.1
-      esbuild: ~0.14.1
-      lodash.flatten: ^4.4.0
-      lodash.zip: ^4.2.0
-      minimatch: ^5.1.0
-      mkdirp: ^1.0.4
-      prettier: ^2.7.1
-      recursive-readdir: ^2.2.2
-      ts-node: 10.9.1
-      typescript: ^4.8.4
-      yargs: ~16.2.0
-    dependencies:
-      esbuild: 0.14.54
-      lodash.flatten: 4.4.0
-      lodash.zip: 4.2.0
-      minimatch: 5.1.0
-      mkdirp: 1.0.4
-      prettier: 2.7.1
-      recursive-readdir: 2.2.3
-      yargs: 16.2.0
-    devDependencies:
-      '@types/lodash.flatten': 4.4.7
-      '@types/lodash.zip': 4.2.7
-      '@types/minimatch': 5.1.2
-      '@types/mkdirp': 1.0.2
-      '@types/node': 18.11.9
-      '@types/prettier': 2.7.1
-      '@types/recursive-readdir': 2.2.1
-      '@types/yargs': 16.0.4
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
-      typescript: 4.8.4
-
   tools/protobuf-test:
     specifiers: {}
 
@@ -3805,7 +3819,7 @@ importers:
     specifiers:
       '@dxos/plate': workspace:*
     dependencies:
-      '@dxos/plate': link:../plate
+      '@dxos/plate': link:../../packages/devtools/plate
 
   tools/ridoculous:
     specifiers:
@@ -3887,7 +3901,7 @@ importers:
       vue: ^3.2.40
       vuepress: ^2.0.0-beta.53
     devDependencies:
-      '@dxos/plate': link:../plate
+      '@dxos/plate': link:../../packages/devtools/plate
       '@types/node': 18.11.9
       '@vuepress/client': 2.0.0-beta.53
       change-case: 4.1.2
@@ -6629,6 +6643,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 18.2.0
       react-transition-group: 4.4.5_biqbaboplfbrettd7655fr4n2y
+    dev: false
 
   /@mui/material/5.10.13_thp4wrxo45nyllusrnt46mid4u:
     resolution: {integrity: sha512-TkkT1rNc0/hhL4/+zv4gYcA6egNWBH/1Tz+azoTnQIUdZ32fgwFI2pFX2KVJNTt30xnLznxDWtTv7ilmJQ52xw==}
@@ -6720,6 +6735,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/system/5.10.13_fan5qbzahqtxlm5dzefqlqx5ia:
     resolution: {integrity: sha512-Xzx26Asu5fVlm0ucm+gnJmeX4Y1isrpVDvqxX4yJaOT7Fzmd8Lfq9ih3QMfZajns5LMtUiOuCQlVFRtUG5IY7A==}
@@ -6747,6 +6763,7 @@ packages:
       csstype: 3.1.1
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/system/5.10.13_v64nlmo6pkqfmpmxge6otzlg54:
     resolution: {integrity: sha512-Xzx26Asu5fVlm0ucm+gnJmeX4Y1isrpVDvqxX4yJaOT7Fzmd8Lfq9ih3QMfZajns5LMtUiOuCQlVFRtUG5IY7A==}
@@ -13407,7 +13424,7 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       buffer: 5.7.1
-      immediate: 3.2.3
+      immediate: 3.3.0
       level-concat-iterator: 2.0.1
       level-supports: 1.0.1
       xtend: 4.0.2
@@ -21127,10 +21144,10 @@ packages:
 
   /immediate/3.2.3:
     resolution: {integrity: sha512-RrGCXRm/fRVqMIhqXrGEX9rRADavPiDFSoMb/k64i9XMk8uH4r/Omi5Ctierj6XzNecwDbO4WuFbDD1zmpl3Tg==}
+    dev: false
 
   /immediate/3.3.0:
     resolution: {integrity: sha512-HR7EVodfFUdQCTIeySw+WDRFJlPcLOJbXfwwZ7Oom6tjsvZ3bOkCDJHehQC3nxJrv7+f9XecwazynjU8e4Vw3Q==}
-    dev: false
 
   /immutability-helper/3.1.1:
     resolution: {integrity: sha512-Q0QaXjPjwIju/28TsugCHNEASwoCcJSyJV3uO1sOIQGI0jKgm9f41Lvz0DZj3n46cNCyAZTsEYoY4C2bVRUzyQ==}
@@ -27512,6 +27529,17 @@ packages:
       strip-json-comments: 2.0.1
     dev: true
 
+  /rci/0.0.3_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Rs71aR0YL/8pVNKkGLpTQgPOgn0vPelxzTmP2rChF3Ac30nzROVasilAWbONn5rzwm+1yp23SHyS/IsIU1Wnjw==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      use-code-input: 0.0.2_biqbaboplfbrettd7655fr4n2y
+    dev: false
+
   /react-copy-to-clipboard/5.1.0_react@18.2.0:
     resolution: {integrity: sha512-k61RsNgAayIJNoy9yDsYzDe/yAZAzEbEgcz3DZMhF686LEyukcE1hzurxe85JandPUG+yTfGVFzuEw3xt8WP/A==}
     peerDependencies:
@@ -31435,6 +31463,16 @@ packages:
       '@types/react': 18.0.25
       react: 18.2.0
       tslib: 2.4.1
+    dev: false
+
+  /use-code-input/0.0.2_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-lDIUiRca0K8sF+c/KZ9cz5g6oPqlFiTmaDgwGzg0wlNSnFAvROtweKy0XpihEWJwo2tjETtgAxIh82RVGaBFHQ==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /use-isomorphic-layout-effect/1.1.2_fan5qbzahqtxlm5dzefqlqx5ia:
