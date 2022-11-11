@@ -50,11 +50,19 @@ export class MemoryTransport implements Transport {
   private _remoteConnection?: MemoryTransport;
 
   constructor(
-    private readonly params: { stream: NodeJS.ReadWriteStream; sendSignal: (signal: Signal) => Promise<void> }
+    private readonly params: {
+      stream: NodeJS.ReadWriteStream;
+      sendSignal: (signal: Signal) => Promise<void>;
+      initiator: boolean;
+    }
   ) {
     log('creating', this._ownId);
 
-    void this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` });
+    if (this.params.initiator) {
+      setTimeout(async () => {
+        await this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` });
+      }, 100);
+    }
 
     assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._ownId, this);
@@ -82,7 +90,9 @@ export class MemoryTransport implements Transport {
     const { json } = signal;
     if (json) {
       const { transportId } = JSON.parse(json);
-      this._remote.emit(PublicKey.from(transportId));
+      if (transportId) {
+        this._remote.emit(PublicKey.from(transportId));
+      }
     }
   }
 
