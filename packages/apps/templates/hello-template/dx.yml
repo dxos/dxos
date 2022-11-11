@@ -10,7 +10,6 @@ package:
 
 runtime:
   client:
-    mode: remote
     # remoteSource: http://localhost:3967/vault.html
     storage:
       persistent: true

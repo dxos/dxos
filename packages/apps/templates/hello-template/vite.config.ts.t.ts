@@ -55,7 +55,7 @@ const basicBuildConfig = /* javascript */ `
   },
   build: {
     outDir: 'out/hello'
-  }
+  },
 `;
 
 // TODO(wittjosiah): Nx executor to execute in place.
