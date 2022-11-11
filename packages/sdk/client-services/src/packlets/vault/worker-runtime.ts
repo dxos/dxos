@@ -2,13 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'node:assert';
+
 import { Trigger } from '@dxos/async';
-import { ClientServicesHost, createNetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { WebsocketSignalManager } from '@dxos/messaging';
+import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
+import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
 export type CreateSessionParams = {
@@ -36,9 +39,16 @@ export class WorkerRuntime {
 
   async start() {
     this._config = await this._configProvider();
+    const signalServer = this._config.get('runtime.services.signal.server');
+    // TODO(wittjosiah): Networking shouldn't be required.
+    assert(signalServer);
     this._clientServices = new ClientServicesHost({
       config: this._config,
-      networkManager: createNetworkManager(this._config, { transportFactory: this._transportFactory })
+      networkManager: new NetworkManager({
+        log: true,
+        signalManager: new WebsocketSignalManager([signalServer]),
+        transportFactory: this._transportFactory
+      })
     });
 
     await this._clientServices.open();

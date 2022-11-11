@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { IFrameRuntime } from '@dxos/client';
 import { RpcPort } from '@dxos/rpc';
 import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
-
-import { IFrameRuntime } from './worker/iframe-runtime';
 
 const createRuntime = async (origin: string, wrtcPort: RpcPort) => {
   const iframeRuntime = new IFrameRuntime({
     systemPort: wrtcPort,
     appOrigin: origin
   });
+
   window.addEventListener('beforeunload', () => {
     iframeRuntime.close().catch((err) => console.error(err));
   });
