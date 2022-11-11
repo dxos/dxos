@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keys",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
