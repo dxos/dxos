@@ -59,7 +59,7 @@ export class MemoryTransport implements Transport {
     assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._ownId, this);
 
-    this._remote.wait({ timeout: 1_000 }).then(
+    this._remote.wait().then(
       (remoteId) => {
         this._remoteId = remoteId;
         this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
