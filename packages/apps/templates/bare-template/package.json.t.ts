@@ -17,13 +17,13 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "version": "${packageJson.version}",
   "private": true,
   "description": "Application template with only the essentials.",
-  ${input.monorepo ? '' : `
+  ${input.monorepo ? `
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  `}"scripts": {
+  ` : ''}"scripts": {
     "build": "tsc",
     "bundle": "vite build",
     "deploy": "dx app publish",
