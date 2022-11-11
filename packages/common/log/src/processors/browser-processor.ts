@@ -2,9 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from 'node:path';
-
-import { LogLevel, shortLevelName } from '../config';
+import { LogLevel } from '../config';
 import { LogProcessor, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
@@ -24,36 +22,44 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  const args = [];
+  // TODO(burdon): Config repo and branch.
+  //  Make easy to switch since line links are bright and noisy.
+  const LOG_BROWSER_PREFIX = 'https://vscode.dev/github.com/dxos/dxos/blob/main/';
 
+  // TODO(burdon): Line numbers not working for app link.
+  // const LOG_BROWSER_PREFIX = 'vscode://file/Users/burdon/Code/dxos/dxos/';
+  // const LOG_BROWSER_PREFIX = '';
+
+  // TODO(burdon): CSS breaks formatting (e.g., [Object] rather than expandable property).
+  // TODO(burdon): Consider custom formatters.
+  //  https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
+  // NOTE: Cannot change color of link (from bright white).
+  // const LOG_BROWSER_CSS = ['color:gray; font-size:10px; padding-bottom: 4px', 'color:#B97852; font-size:14px;'];
+  const LOG_BROWSER_CSS: string[] = [];
+
+  let link = '';
   if (entry.meta) {
-    const server = 'https://vscode.dev/github.com';
-    const repo = 'dxos/dxos';
-    const branch = 'main';
     const filename = getRelativeFilename(entry.meta.file);
-    const filepath = path.join(server, repo, 'blob', branch, filename);
-    args.push(`${filepath}#L${entry.meta.line}`);
+    const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
+    link = `${filepath}#L${entry.meta.line}`;
   }
 
-  // TODO(burdon): https://javascript.plainenglish.io/adding-css-to-console-log-dde2e167ee7a
-
-  args.push(`${shortLevelName[entry.level]}\n${entry.message}`);
-
+  const args = [];
+  args.push(entry.message);
   if (entry.context && Object.keys(entry.context).length > 0) {
     args.push(entry.context);
   }
 
-  switch (entry.level) {
-    case LogLevel.ERROR: {
-      console.error(...args);
-      break;
-    }
-    case LogLevel.WARN: {
-      console.warn(...args);
-      break;
-    }
-    default: {
-      console.log(...args);
-    }
+  const levels: any = {
+    [LogLevel.ERROR]: console.error,
+    [LogLevel.WARN]: console.warn,
+    [LogLevel.DEBUG]: console.log
+  };
+
+  const level = levels[entry.level] ?? console.log;
+  if (LOG_BROWSER_CSS?.length) {
+    level.call(level, `%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS);
+  } else {
+    level.call(level, link + '\n', ...args);
   }
 };

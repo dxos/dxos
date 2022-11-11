@@ -124,7 +124,8 @@ export const App = () => {
   });
 
   useEffect(() => {
-    log.config({ filter: ['invitations:debug'] });
+    // TODO(burdon): From env.
+    log.config({ filter: ['debug'] });
   }, []);
 
   return (
