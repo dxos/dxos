@@ -12,24 +12,20 @@ import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
 
 export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-  sendSignal: (msg: SignalMessage) => void;
   bridgeService: BridgeService;
+  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 export class WebRTCTransportProxy implements Transport {
   readonly closed = new Event();
   private _closed = false;
   readonly connected = new Event();
+
   readonly errors = new ErrorStream();
 
   private _serviceStream!: Stream<BridgeEvent>;
@@ -94,13 +90,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
-    await this._params.sendSignal({
-      author: this._params.ownId,
-      recipient: this._params.remoteId,
-      topic: this._params.topic,
-      sessionId: this._params.sessionId,
-      data: { signal: signalEvent.payload }
-    });
+    await this._params.sendSignal(signalEvent.payload);
   }
 
   async signal(signal: Signal): Promise<void> {

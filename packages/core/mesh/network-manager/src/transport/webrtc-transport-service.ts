@@ -44,13 +44,9 @@ export class WebRTCTransportService implements BridgeService {
       const transport = new WebRTCTransport({
         initiator: request.initiator,
         stream: duplex,
-        ownId: PublicKey.from(Buffer.from('')),
-        remoteId: PublicKey.from(Buffer.from('')),
-        sessionId: PublicKey.from(Buffer.from('')),
-        topic: PublicKey.from(Buffer.from('')),
-        sendSignal: (msg) => {
+        sendSignal: async (signal) => {
           next({
-            signal: { payload: msg.data.signal }
+            signal: { payload: signal }
           });
         }
       });

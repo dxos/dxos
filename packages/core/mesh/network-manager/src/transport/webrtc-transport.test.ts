@@ -21,11 +21,7 @@ describe('WebRTCTransport', function () {
     const connection = new WebRTCTransport({
       initiator: true,
       stream: new Duplex(),
-      ownId: PublicKey.random(),
-      remoteId: PublicKey.random(),
-      sessionId: PublicKey.random(),
-      topic: PublicKey.random(),
-      sendSignal: async (msg) => {}
+      sendSignal: async () => {}
     });
 
     let callsCounter = 0;
@@ -48,7 +44,6 @@ describe('WebRTCTransport', function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
-    const sessionId = PublicKey.random();
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
@@ -58,13 +53,9 @@ describe('WebRTCTransport', function () {
         channel: discoveryKey(topic),
         initiator: true
       }).stream,
-      ownId: peer1Id,
-      remoteId: peer2Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
+      sendSignal: async (signal) => {
         await sleep(10);
-        await connection2.signal(msg.data.signal);
+        await connection2.signal(signal);
       }
     });
     afterTest(() => connection1.close());
@@ -78,13 +69,9 @@ describe('WebRTCTransport', function () {
         channel: discoveryKey(topic),
         initiator: false
       }).stream,
-      ownId: peer2Id,
-      remoteId: peer1Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
+      sendSignal: async (signal) => {
         await sleep(10);
-        await connection1.signal(msg.data.signal);
+        await connection1.signal(signal);
       }
     });
     afterTest(() => connection2.close());

@@ -7,24 +7,17 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream, raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
 import { wrtc } from './webrtc';
 
 export type WebRTCTransportParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-  // TODO(mykola): change signature to accept only Signal
-  sendSignal: (msg: SignalMessage) => void;
   webrtcConfig?: any;
+  sendSignal: (signal: Signal) => Promise<void>;
 };
 
 /**
@@ -47,27 +40,17 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      try {
-        await this.params.sendSignal({
-          author: this.params.ownId,
-          recipient: this.params.remoteId,
-          sessionId: this.params.sessionId,
-          topic: this.params.topic,
-          data: { signal: { json: JSON.stringify(data) } }
-        });
-      } catch (err: any) {
-        this.errors.raise(err);
-      }
+      await this.params.sendSignal({ json: JSON.stringify(data) });
     });
 
     this._peer.on('connect', () => {
-      log('connected', { id: this.params.ownId, remoteId: this.params.remoteId });
+      log('connected');
       this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });
 
     this._peer.on('close', async () => {
-      log('closed', { id: this.params.ownId, remoteId: this.params.remoteId });
+      log('closed');
       await this._disconnectStreams();
       this.closed.emit();
     });
@@ -80,14 +63,6 @@ export class WebRTCTransport implements Transport {
 
   get peer() {
     return this._peer;
-  }
-
-  get remoteId() {
-    return this.params.remoteId;
-  }
-
-  get sessionId() {
-    return this.params.sessionId;
   }
 
   async close() {
