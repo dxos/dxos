@@ -99,7 +99,9 @@ export class MemoryTransport implements Transport {
   async close(): Promise<void> {
     log('closing', this._ownId);
 
-    MemoryTransport._connections.delete(this._ownId);
+    if (this._ownId) {
+      MemoryTransport._connections.delete(this._ownId);
+    }
     if (this._remoteConnection) {
       MemoryTransport._connections.delete(this._remoteId);
 
