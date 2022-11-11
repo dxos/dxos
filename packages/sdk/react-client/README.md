@@ -13,7 +13,6 @@ pnpm i @dxos/react-client
 The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
 
 ```javascript
-
 import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -36,7 +35,6 @@ const Root = () => (
 
 createRoot(document.getElementById('root')!)
   .render(<Root/>);
-
 ```
 
 ## Storybooks
