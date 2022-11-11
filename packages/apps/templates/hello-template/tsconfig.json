@@ -15,7 +15,6 @@
     "vite.config.ts"
   ],
   "include": [
-    "playwright",
     "src"
   ],
   "references": [

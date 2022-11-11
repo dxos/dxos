@@ -6,6 +6,7 @@ package:
       type: dxos:type/app
       build:
         command: npm run bundle
+        out: out/hello
 
 runtime:
   client:
