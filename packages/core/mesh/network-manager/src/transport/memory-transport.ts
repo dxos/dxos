@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -42,7 +42,7 @@ export class MemoryTransport implements Transport {
 
   private readonly _ownId = PublicKey.random();
   private _remoteId!: PublicKey;
-  private readonly _remote = new Event<PublicKey>();
+  private readonly _remote = new Trigger<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
@@ -65,24 +65,30 @@ export class MemoryTransport implements Transport {
     assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._ownId, this);
 
-    this._remote.once((remoteId) => {
-      this._remoteId = remoteId;
-      this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
-      if (this._remoteConnection) {
-        this._remoteConnection._remoteConnection = this;
-        this._remoteConnection._remoteId = this._ownId;
+    this._remote.wait({ timeout: 1_000 }).then(
+      (remoteId) => {
+        this._remoteId = remoteId;
+        this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
+        if (this._remoteConnection) {
+          this._remoteConnection._remoteConnection = this;
+          this._remoteConnection._remoteId = this._ownId;
 
-        log('connected', { ownId: this._ownId, remoteId: this._remoteId });
-        this.params.stream
-          .pipe(this._outgoingDelay)
-          .pipe(this._remoteConnection.params.stream)
-          .pipe(this._incomingDelay)
-          .pipe(this.params.stream);
+          log('connected', { ownId: this._ownId, remoteId: this._remoteId });
+          this.params.stream
+            .pipe(this._outgoingDelay)
+            .pipe(this._remoteConnection.params.stream)
+            .pipe(this._incomingDelay)
+            .pipe(this.params.stream);
 
-        this.connected.emit();
-        this._remoteConnection.connected.emit();
+          this.connected.emit();
+          this._remoteConnection.connected.emit();
+        }
+      },
+      async (err) => {
+        log.catch(err);
+        await this.close();
       }
-    });
+    );
   }
 
   async signal(signal: Signal) {
@@ -90,7 +96,7 @@ export class MemoryTransport implements Transport {
     if (json) {
       const { transportId } = JSON.parse(json);
       if (transportId) {
-        this._remote.emit(PublicKey.from(transportId));
+        this._remote.wake(PublicKey.from(transportId));
       }
     }
   }
