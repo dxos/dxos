@@ -102,7 +102,7 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
                   }
                 }
 
-                log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
+                log('writing guest credentials', { host: identity.deviceKey, guest: deviceKey });
                 // TODO(burdon): Check if already admitted.
                 const signer = identity.getIdentityCredentialSigner();
                 await writeMessages(identity.controlPipeline.writer, [
