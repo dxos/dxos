@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
-import { Event, EventSubscriptions } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
