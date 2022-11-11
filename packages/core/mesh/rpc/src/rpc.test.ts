@@ -449,8 +449,7 @@ describe('RpcPeer', function () {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg): Stream<Any> => {
-          new Error('Test error')
-          return null as any;
+          throw new Error('Test error')
         },
         port: alicePort
       });
@@ -514,7 +513,7 @@ describe('RpcPeer', function () {
         callHandler: async (msg) => createPayload(),
         streamHandler: async (method, msg): Promise<Stream<Any>> => {
           await sleep(1)
-          new Error('Test error')
+          throw new Error('Test error')
         },
         port: alicePort
       });
