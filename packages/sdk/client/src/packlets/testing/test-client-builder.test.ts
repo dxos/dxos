@@ -7,14 +7,31 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
-import { syncItems } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
+import { ISpace } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
 import { Space } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
+
+// TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
+const syncItems = async (space1: ISpace, space2: ISpace) => {
+  {
+    // Check item replicated from 1 => 2.
+    const item1 = await space1.database!.createItem({ type: 'type-1' });
+    const item2 = await space2.database!.waitForItem({ type: 'type-1' });
+    expect(item1.id).to.eq(item2.id);
+  }
+
+  {
+    // Check item replicated from 2 => 1.
+    const item1 = await space2.database!.createItem({ type: 'type-2' });
+    const item2 = await space1.database!.waitForItem({ type: 'type-2' });
+    expect(item1.id).to.eq(item2.id);
+  }
+};
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
