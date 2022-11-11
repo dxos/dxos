@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { Transport, TransportFactory } from './transport';
+import { Transport, TransportFactory, TransportOptions } from './transport';
 
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
@@ -49,13 +49,7 @@ export class MemoryTransport implements Transport {
 
   private _remoteConnection?: MemoryTransport;
 
-  constructor(
-    private readonly params: {
-      stream: NodeJS.ReadWriteStream;
-      sendSignal: (signal: Signal) => Promise<void>;
-      initiator: boolean;
-    }
-  ) {
+  constructor(private readonly params: TransportOptions) {
     log('creating', this._ownId);
 
     if (this.params.initiator) {
@@ -86,7 +80,6 @@ export class MemoryTransport implements Transport {
       },
       async (err) => {
         log.catch(err);
-        await this.close();
       }
     );
   }
