@@ -74,7 +74,10 @@ const template: TemplateFunction<Input> = ({ input }) => {
     ]
   } : {
     ...rootTsconfig,
-    compilerOptions,
+    compilerOptions: {
+      ...rootTsconfig,
+      ...compilerOptions
+    },
     include,
     exclude: [
       ...rootTsconfig.exclude,
