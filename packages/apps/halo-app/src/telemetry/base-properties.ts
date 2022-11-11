@@ -2,17 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Client } from '@dxos/client';
 import { captureException } from '@dxos/sentry';
+import { humanize } from '@dxos/util';
 
 const IPDATA_API_KEY = process.env.IPDATA_API_KEY;
 
+export const DX_TELEMETRY = localStorage.getItem('halo-app:telemetry-disabled');
+export const DX_GROUP = localStorage.getItem('halo-app:telemetry-group');
 export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 export const DX_RELEASE = process.env.DX_RELEASE;
 
 export const BASE_PROPERTIES: any = {
   environment: DX_ENVIRONMENT,
   release: DX_RELEASE,
-  group: localStorage.getItem('__TELEMETRY_GROUP__')
+  group: DX_GROUP
 };
 
 setInterval(async () => {
@@ -31,3 +35,14 @@ void fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
     BASE_PROPERTIES.longitude = data.longitude;
   })
   .catch((err) => captureException(err));
+
+// TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
+// await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
+export const getIdentifier = (client: Client) => {
+  const profile = client.halo.profile;
+  if (profile) {
+    humanize(profile.identityKey);
+  }
+
+  return undefined;
+};
