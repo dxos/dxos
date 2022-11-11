@@ -102,5 +102,7 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
+  console.log('DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).');
+
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };
