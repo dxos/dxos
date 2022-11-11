@@ -155,9 +155,19 @@ describe('Client services', function () {
     await syncItems(space1, space2);
   });
 
-  // TODO(burdon): Browser-only.
+  // TODO(mykola): Add shared worker setup.
   it.skip('creates client with remote iframe', async function () {
+    if (typeof window === 'undefined') {
+      // Browser only.
+      console.log('Skipping test');
+      return;
+    }
+
     const testBuilder = new TestClientBuilder();
+
+    const peer = testBuilder.createClientServicesHost();
+    await peer.open();
+    afterTest(() => peer.close());
 
     const client = new Client({
       services: fromIFrame(testBuilder.config)
