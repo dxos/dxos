@@ -61,11 +61,11 @@ describe('services/space-invitations-handler', function () {
       onConnecting: async (invitation1: Invitation) => {
         const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnecting: async (invitation2: Invitation) => {},
+          onConnecting: async () => {},
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
           },
-          onAuthenticating: async (invitation2: Invitation) => {
+          onAuthenticating: async () => {
             await observable2.authenticate(await authenticationCode.wait());
           },
           onSuccess: (invitation: Invitation) => {
@@ -81,7 +81,7 @@ describe('services/space-invitations-handler', function () {
         authenticationCode.wake(invitation.authenticationCode);
       },
       onSuccess: (invitation: Invitation) => {
-        complete1.wake(space1.key);
+        complete1.wake(invitation.spaceKey!);
       },
       onCancelled: () => raise(new Error()),
       onTimeout: (err: Error) => raise(new Error(err.message)),

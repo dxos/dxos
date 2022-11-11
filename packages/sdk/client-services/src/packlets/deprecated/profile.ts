@@ -27,6 +27,7 @@ import { InviteeInvitation, InviteeInvitations } from './invitations';
 
 /**
  * Profile service implementation.
+ * @deprecated
  */
 export class ProfileServiceImpl implements ProfileService {
   private inviteeInvitations: InviteeInvitations = new Map();

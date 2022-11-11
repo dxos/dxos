@@ -3,7 +3,7 @@
 //
 
 export * from './encoder';
-export * from './halo-invitations';
+export * from './halo-invitations-handler';
 export * from './invitations';
 export * from './invitations-proxy';
 export * from './space-invitations-handler';

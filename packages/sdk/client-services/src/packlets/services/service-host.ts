@@ -55,25 +55,26 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SpacesService: new SpacesServiceImpl(),
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         this._serviceContext.identityManager,
         () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
         () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
       ),
 
-      SpaceService: new SpaceServiceImpl(this._serviceContext),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+      SpacesService: new SpacesServiceImpl(),
 
+      // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
+      SpaceService: new SpaceServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
         config,
         context: this._serviceContext
-      }),
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager)
+      })
     });
   }
 

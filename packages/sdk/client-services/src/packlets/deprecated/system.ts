@@ -6,6 +6,9 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { SystemService } from '@dxos/protocols/proto/dxos/client';
 
+/**
+ * @deprecated
+ */
 export class SystemServiceImpl implements SystemService {
   constructor(private readonly _config: Config) {}
 

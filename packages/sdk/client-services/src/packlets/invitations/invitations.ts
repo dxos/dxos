@@ -15,6 +15,11 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
+export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
+
+// TODO(burdon): Don't close until RPC has complete.
+export const ON_CLOSE_DELAY = 500;
+
 export type CreateInvitationsOptions = {
   type?: Invitation.Type;
   timeout?: number;

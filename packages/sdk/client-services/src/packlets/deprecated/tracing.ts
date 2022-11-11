@@ -6,7 +6,7 @@ import { Config } from '@dxos/config';
 import { TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 
 /**
- *
+ * @deprecated
  */
 export class TracingServiceImpl implements TracingService {
   constructor(private readonly _config: Config) {}

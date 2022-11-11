@@ -19,7 +19,7 @@ import { Identity, IdentityManager } from '../identity';
 /**
  * Creates and processes Halo invitations between devices.
  */
-export class HaloInvitations {
+export class _haloInvitations {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _networkManager: NetworkManager,

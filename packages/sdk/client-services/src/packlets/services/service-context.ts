@@ -22,7 +22,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
-import { HaloInvitations, SpaceInvitationsHandler } from '../invitations';
+import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 
 /**
  * Shared backend for all client services.
@@ -35,7 +35,7 @@ export class ServiceContext {
   public readonly feedStore: FeedStore<FeedMessage>;
   public readonly keyring: Keyring;
   public readonly identityManager: IdentityManager;
-  public readonly haloInvitations: HaloInvitations;
+  public readonly haloInvitations: HaloInvitationsHandler;
 
   // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
@@ -69,9 +69,8 @@ export class ServiceContext {
     );
 
     // TODO(burdon): _initialize called in multiple places.
-    this.haloInvitations = new HaloInvitations(this.identityManager, this.networkManager, async () => {
-      await this._initialize();
-    });
+    // TODO(burdon): Call _initialize on success.
+    this.haloInvitations = new HaloInvitationsHandler(this.identityManager, this.networkManager);
   }
 
   async open() {
@@ -100,6 +99,7 @@ export class ServiceContext {
     return identity;
   }
 
+  // Called when identity is created.
   private async _initialize() {
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
