@@ -53,7 +53,7 @@ export class MemoryTransport implements Transport {
     log('creating', this._ownId);
 
     if (this.params.initiator) {
-      setTimeout(async () => this.params.sendSignal({ json: `{ "transportId": "${this._ownId.toHex()}" }` }));
+      setTimeout(async () => this.params.sendSignal({ json: JSON.stringify({ transportId: this._ownId.toHex() }) }));
     }
 
     assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
