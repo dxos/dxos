@@ -4,10 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-
-import { SignalMessage } from '../signal';
 
 /**
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
@@ -26,11 +23,6 @@ export type TransportOptions = {
    */
   initiator: boolean;
 
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-
   /**
    * Wire protocol.
    */
@@ -39,7 +31,7 @@ export type TransportOptions = {
   /**
    * Send a signal message to remote peer.
    */
-  sendSignal: (msg: SignalMessage) => Promise<void>; // TODO(burdon): Remove async?
+  sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
 };
 
 export interface TransportFactory {
