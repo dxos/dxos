@@ -33,7 +33,7 @@ type Kube = {
   id: string;
   bots: {
     id: string;
-    partyKey?: string;
+    spaceKey?: string;
   }[];
 };
 

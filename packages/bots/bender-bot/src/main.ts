@@ -38,14 +38,14 @@ const main = async () => {
   }
   log('Created profile');
 
-  // if (!client.echo.getParty(PublicKey.from(botConfig.spec.partyKey))) {
+  // if (!client.echo.getSpace(PublicKey.from(botConfig.spec.spaceKey))) {
   //   await client.echo.acceptInvitation(
   //     InvitationEncoder.fromProto(botConfig.spec.invitation)
   //   );
   // }
 
   const profile = client.halo.profile ?? failUndefined();
-  // const party = client.echo.getParty(PublicKey.from(botConfig.spec.partyKey));
+  // const space = client.echo.getSpace(PublicKey.from(botConfig.spec.spaceKey));
 
   log('Before send report');
   await rpc.rpc.sendReport({

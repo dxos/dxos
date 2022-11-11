@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import columnify from 'columnify';
 
-import { Item, ObjectModel, Party, SchemaField } from '@dxos/client';
+import { Item, ObjectModel, Space, SchemaField } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
 // TODO(burdon): Protobuf definitions.
@@ -14,9 +14,9 @@ import { truncate, truncateKey } from '@dxos/debug';
  * Validate item matches schema.
  * @param schema
  * @param item
- * @param [party] Optionally test reference exists.
+ * @param [space] Optionally test reference exists.
  */
-export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, party?: Party) => {
+export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>, space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   return fields.every(({ key, type, required, ref }) => {
     const value = item.model.get(key);
@@ -29,8 +29,8 @@ export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>,
         return false;
       }
 
-      if (party) {
-        const item = party.database.getItem(value);
+      if (space) {
+        const item = space.database.getItem(value);
         if (!item) {
           return false;
         }
@@ -49,9 +49,9 @@ export const validateItem = (schema: Item<ObjectModel>, item: Item<ObjectModel>,
  * Log the items for the given schema.
  * @param schema
  * @param items
- * @param [party]
+ * @param [space]
  */
-export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
+export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 
@@ -69,9 +69,9 @@ export const renderItems = (schema: Item<ObjectModel>, items: Item<ObjectModel>[
           }
 
           case 'ref': {
-            if (party) {
+            if (space) {
               const { field } = ref!;
-              const item = party.database.getItem(value);
+              const item = space.database.getItem(value);
               row[key] = chalk.red(logString(item?.model.get(field)));
             } else {
               row[key] = chalk.red(logKey(value));

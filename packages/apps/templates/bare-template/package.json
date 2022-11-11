@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc",
     "bundle": "vite build",
+    "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"
   },
@@ -19,6 +20,7 @@
     "@dxos/config": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/cli": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "typescript": "^4.8.4",
     "vite": "3.0.9"

@@ -5,7 +5,7 @@
 import { Plus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import { ObservableInvitation } from '@dxos/client';
+import { InvitationObservable } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
@@ -16,7 +16,7 @@ export const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
   const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);
-  const invitations = useHaloInvitations(client);
+  const invitations = useHaloInvitations();
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const onCreateInvitation = useCallback(() => {
@@ -42,7 +42,7 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <InvitationList invitations={invitations as unknown as ObservableInvitation[] | undefined} />
+      <InvitationList invitations={invitations as unknown as InvitationObservable[] | undefined} />
     </main>
   );
 };

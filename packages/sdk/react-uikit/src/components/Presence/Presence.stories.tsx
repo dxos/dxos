@@ -5,16 +5,14 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultConfig, invitationObservable, InvitationEncoder, Party } from '@dxos/client';
-import { ClientProvider, useClient, useProfile, useSecretProvider } from '@dxos/react-client';
+import { defaultConfig, invitationObservable, InvitationEncoder, Space } from '@dxos/client';
+import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 import { templateForComponent } from '../../testing';
 import { SingleInputStep } from '../SingleInputStep';
 import { Presence, PresenceProps } from './Presence';
-
-const textEncoder = new TextEncoder();
 
 export default {
   title: 'react-uikit/Presence',
@@ -69,10 +67,9 @@ const SharingTemplate = () => {
 // TODO(wittjosiah): Factor out.
 const JoinPanel = () => {
   const client = useClient();
-  const profile = useProfile();
-  const [_secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
+  const profile = useIdentity();
   const [invitationCode, setInvitationCode] = useState('');
-  const [pinCode, setPinCode] = useState('');
+  const [_pinCode, setPinCode] = useState('');
   const [showPin, setShowPin] = useState(false);
 
   const handleInvite = async () => {
@@ -84,9 +81,7 @@ const JoinPanel = () => {
     // await acceptedInvitation.authenticate(secret);
   };
 
-  const handlePin = () => {
-    secretResolver(textEncoder.encode(pinCode));
-  };
+  const handlePin = () => {};
 
   if (profile) {
     return <>{humanize(profile.identityKey)}</>;
@@ -106,15 +101,15 @@ Sharing.args = {};
 
 const WithinSpaceTemplate = () => {
   const client = useClient();
-  const [space, setSpace] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
 
   useEffect(() => {
     console.log('[client change]', space);
     if (client && !space) {
       console.log('[creating space]', space);
       void client.echo
-        .createParty()
-        .then((space: Party) => {
+        .createSpace()
+        .then((space: Space) => {
           console.log('[setting space]', space);
           setSpace(space);
         })

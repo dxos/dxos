@@ -69,7 +69,7 @@ export class ProfileServiceImpl implements ProfileService {
   createInvitation(): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setTimeout(async () => {
-        const secret = Buffer.from(generatePasscode());
+        const authenticationCode = generatePasscode();
         // TODO(burdon): Not used.
         // const secretProvider = async () => {
         //   next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
@@ -82,7 +82,7 @@ export class ProfileServiceImpl implements ProfileService {
             close();
           }
         });
-        invitation.secret = secret;
+        invitation.authenticationCode = authenticationCode;
 
         next({
           state: InvitationState.WAITING_FOR_CONNECTION,
@@ -110,16 +110,16 @@ export class ProfileServiceImpl implements ProfileService {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(invitation);
+      const haloSpacePromise = this.context.haloInvitations.acceptInvitation(invitation);
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      haloPartyPromise
+      haloSpacePromise
         .then((identity) => {
           next({
             id,
             state: InvitationState.SUCCESS,
-            partyKey: identity.identityKey
+            spaceKey: identity.identityKey
           });
         })
         .catch((err) => {

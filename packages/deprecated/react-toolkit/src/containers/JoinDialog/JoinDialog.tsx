@@ -6,16 +6,16 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 
-import { Party, InvitationEncoder } from '@dxos/client';
+import { Space, InvitationEncoder } from '@dxos/client';
 import type { SecretProvider } from '@dxos/credentials';
-import { useSecretProvider } from '@dxos/react-client';
+// import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
 import { handleKey } from '../../helpers';
 
 const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
 
-enum PartyJoinState {
+enum SpaceJoinState {
   INIT,
   AUTHENTICATE,
   ERROR
@@ -30,16 +30,17 @@ export interface JoinDialogProps {
   open: boolean;
   title: string;
   invitationCode?: string;
-  onJoin: (joinOptions: JoinOptions) => Promise<Party | void>;
+  onJoin: (joinOptions: JoinOptions) => Promise<Space | void>;
   onClose?: () => void;
   closeOnSuccess?: boolean;
   modal?: boolean;
 }
 
 /**
- * Manages joining HALO and parties.
+ * Manages joining HALO and spaces.
  * Not exported for the end user.
- * See JoinPartyDialog and JoinHaloDialog.
+ * See JoinSpaceDialog and JoinHaloDialog.
+ * @deprecated
  */
 export const JoinDialog = ({
   open,
@@ -50,19 +51,19 @@ export const JoinDialog = ({
   closeOnSuccess = true,
   modal
 }: JoinDialogProps) => {
-  const [state, setState] = useState(initialCode ? PartyJoinState.AUTHENTICATE : PartyJoinState.INIT);
+  const [state, setState] = useState(initialCode ? SpaceJoinState.AUTHENTICATE : SpaceJoinState.INIT);
   const [error, setError] = useState<string | undefined>(undefined);
   const [processing, setProcessing] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState(initialCode || '');
-  const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
+  // const [secretProvider, secretResolver, resetSecret] = useSecretProvider<Buffer>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
     setError(undefined);
     setProcessing(false);
     setInvitationCode('');
-    resetSecret();
-    setState(PartyJoinState.INIT);
+    // resetSecret();
+    setState(SpaceJoinState.INIT);
   };
 
   const handleCancel = () => {
@@ -82,42 +83,42 @@ export const JoinDialog = ({
       return;
     }
 
-    let invitation: InvitationEncoder;
+    // let invitation: InvitationEncoder;
     try {
       // Parse URL.
-      const invitationCode = invitationCodeFromUrl(text);
-      invitation = InvitationEncoder.decode(invitationCode);
+      // const invitationCode = invitationCodeFromUrl(text);
+      // invitation = InvitationEncoder.decode(invitationCode);
     } catch (err: any) {
       setError('Invalid invitation code.');
-      setState(PartyJoinState.ERROR);
+      setState(SpaceJoinState.ERROR);
       return;
     }
 
     try {
-      setState(PartyJoinState.AUTHENTICATE);
-      await onJoin({ invitation, secretProvider });
+      setState(SpaceJoinState.AUTHENTICATE);
+      // await onJoin({ invitation, secretProvider });
     } catch (err: any) {
       // TODO(burdon): The client package should only throw errors with user-facing messages.
       const parseError = (err: any) => {
         const messages: { [index: string]: string } = {
           ERR_EXTENSION_RESPONSE_FAILED: 'Authentication failed. Please try again.',
-          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the party.'
+          ERR_GREET_ALREADY_CONNECTED_TO_SWARM: 'Already a member of the space.'
         };
 
         return messages[err.responseCode];
       };
 
       setError(parseError(err) || err.responseMessage || err.message);
-      setState(PartyJoinState.ERROR);
+      setState(SpaceJoinState.ERROR);
       return;
     }
 
     handleDone();
   };
 
-  const handleAuthenticate = (pin: string) => {
+  const handleAuthenticate = (authenticationCode: string) => {
     setProcessing(true);
-    secretResolver(Buffer.from(pin));
+    // secretResolver(Buffer.from(authenticationCode));
   };
 
   useEffect(() => {
@@ -142,8 +143,8 @@ export const JoinDialog = ({
     };
   }, []);
 
-  const getDialogProps = (state: PartyJoinState) => {
-    const joinPartyContent = (
+  const getDialogProps = (state: SpaceJoinState) => {
+    const joinSpaceContent = (
       <TextField
         id='join-dialog-invitation-code'
         ref={inputRef}
@@ -157,7 +158,7 @@ export const JoinDialog = ({
       />
     );
 
-    const joinPartyActions = (
+    const joinSpaceActions = (
       <>
         <Button onClick={handleCancel}>Cancel</Button>
         <Button onClick={() => handleProcessInvitation(invitationCode)}>Accept</Button>
@@ -191,16 +192,16 @@ export const JoinDialog = ({
     );
 
     switch (state) {
-      case PartyJoinState.INIT: {
+      case SpaceJoinState.INIT: {
         return {
           title,
           processing,
-          content: joinPartyContent,
-          actions: joinPartyActions
+          content: joinSpaceContent,
+          actions: joinSpaceActions
         };
       }
 
-      case PartyJoinState.AUTHENTICATE: {
+      case SpaceJoinState.AUTHENTICATE: {
         return {
           title: 'Authenticate Invitation',
           processing,
@@ -209,7 +210,7 @@ export const JoinDialog = ({
         };
       }
 
-      case PartyJoinState.ERROR: {
+      case SpaceJoinState.ERROR: {
         return {
           title: 'Invitation Failed',
           error,

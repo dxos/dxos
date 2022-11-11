@@ -16,6 +16,10 @@ export default {
     validationValence: {
       control: 'select',
       options: ['success', 'info', 'warning', 'error']
+    },
+    size: {
+      control: 'select',
+      options: ['md', 'lg', 'pin']
     }
   }
 };
@@ -33,7 +37,8 @@ Default.args = {
   labelVisuallyHidden: false,
   descriptionVisuallyHidden: false,
   validationMessage: '',
-  validationValence: undefined
+  validationValence: undefined,
+  length: 6
 };
 
 export const Disabled = () => (
@@ -86,6 +91,18 @@ export const InputWithValidationAndDescription = () => (
       description: 'This description is extra.',
       validationValence: 'success',
       validationMessage: 'This validation message is really part of the description.'
+    }}
+  />
+);
+
+export const PinInput = () => (
+  <Template
+    {...{
+      label: 'This input is a PIN-style input',
+      size: 'pin',
+      length: 6,
+      description: 'Type in secret you received',
+      placeholder: '••••••'
     }}
   />
 );

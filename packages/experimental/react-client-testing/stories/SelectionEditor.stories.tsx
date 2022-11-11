@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { ClientProvider } from '@dxos/react-client';
 
-import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestParty } from '../src';
+import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestSpace } from '../src';
 
 export default {
   title: 'react-client-testing/SelectionEditor'
@@ -16,13 +16,13 @@ export default {
 
 const App = () => {
   const [result, setResult] = useState<number>(0);
-  const party = useTestParty();
-  if (!party) {
+  const space = useTestSpace();
+  if (!space) {
     return null;
   }
 
   const handleChange = (text: string) => {
-    const selection = execSelection(party, text);
+    const selection = execSelection(space, text);
     if (selection) {
       const result = selection.exec();
       setResult(result.entities.length);

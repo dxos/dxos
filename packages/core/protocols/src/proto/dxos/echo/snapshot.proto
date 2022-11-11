@@ -11,16 +11,16 @@ import "dxos/keys.proto";
 package dxos.echo.snapshot;
 
 //
-// Snapshots define full party state at a given point in time.
-// They must have enough information to be able to recover the party state without reading the feed messages.
+// Snapshots define full space state at a given point in time.
+// They must have enough information to be able to recover the space state without reading the feed messages.
 //
-// Each snapshot is identified by a party key and a timeframe.
+// Each snapshot is identified by a space key and a timeframe.
 // The timeframe defines the set of feed messages that have already been processed.
 // When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
 //
 
-message PartySnapshot {
-  bytes party_key = 1;
+message SpaceSnapshot {
+  bytes space_key = 1;
   optional timeframe.TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.

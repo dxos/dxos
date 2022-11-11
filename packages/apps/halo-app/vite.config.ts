@@ -25,6 +25,7 @@ export default defineConfig({
     port: 3967
   },
   define: {
+    'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),

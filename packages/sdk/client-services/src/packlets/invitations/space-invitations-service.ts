@@ -4,42 +4,47 @@
 
 import assert from 'assert';
 
-import { CancellableObservable, TimeoutError } from '@dxos/async';
+import { TimeoutError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { SpaceManager } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { AuthenticateRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { AuthenticationRequest, Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
 import { SpaceInvitationsHandler } from './space-invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
  */
 export class SpaceInvitationsServiceImpl implements InvitationsService {
-  private readonly _createInvitations = new Map<string, CancellableObservable<any>>();
-  private readonly _acceptInvitations = new Map<string, CancellableObservable<any>>();
+  private readonly _createInvitations = new Map<string, CancellableInvitationObservable>();
+  private readonly _acceptInvitations = new Map<string, AuthenticatingInvitationObservable>();
 
   // prettier-ignore
   constructor (
-    // TODO(burdon): Replace with getters.
     private readonly _identityManager: IdentityManager,
-    private readonly _spaceManager: SpaceManager,
-    private readonly _spaceInvitations: SpaceInvitationsHandler
+    private readonly _getSpaceManager: Provider<SpaceManager>,
+    private readonly _getSpaceInvitations: Provider<SpaceInvitationsHandler>
   ) {}
 
   createInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
+      const spaceManager = this._getSpaceManager();
+      const spaceInvitations = this._getSpaceInvitations();
+
       assert(invitation.spaceKey);
       log('stream opened', {
         host: this._identityManager.identity?.deviceKey,
         spaceKey: invitation.spaceKey
       });
-      const space = this._spaceManager.spaces.get(invitation.spaceKey!);
+      const space = spaceManager.spaces.get(invitation.spaceKey!);
       assert(space);
 
       let invitationId: string;
-      const observable = this._spaceInvitations.createInvitation(space);
+      const { type } = invitation;
+      const observable = spaceInvitations.createInvitation(space, { type });
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);
@@ -51,6 +56,11 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
         onConnected: (invitation) => {
           assert(invitation.invitationId);
           invitation.state = Invitation.State.CONNECTED;
+          next(invitation);
+        },
+        onAuthenticating: (invitation) => {
+          assert(invitation.invitationId);
+          invitation.state = Invitation.State.AUTHENTICATING;
           next(invitation);
         },
         onSuccess: (invitation) => {
@@ -94,6 +104,8 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
 
   acceptInvitation(invitation: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
+      const spaceInvitations = this._getSpaceInvitations();
+
       assert(invitation.spaceKey);
       log('stream opened', {
         guest: this._identityManager.identity?.deviceKey,
@@ -101,7 +113,7 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
       });
 
       let invitationId: string;
-      const observable = this._spaceInvitations.acceptInvitation(invitation);
+      const observable = spaceInvitations.acceptInvitation(invitation);
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);
@@ -113,6 +125,11 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
         onConnected: (invitation) => {
           assert(invitation.invitationId);
           invitation.state = Invitation.State.CONNECTED;
+          next(invitation);
+        },
+        onAuthenticating: (invitation) => {
+          assert(invitation.invitationId);
+          invitation.state = Invitation.State.AUTHENTICATING;
           next(invitation);
         },
         onSuccess: (invitation) => {
@@ -154,15 +171,26 @@ export class SpaceInvitationsServiceImpl implements InvitationsService {
     });
   }
 
+  async authenticate({ invitationId, authenticationCode }: AuthenticationRequest): Promise<void> {
+    log('authenticating...');
+    assert(invitationId);
+    const observable = this._acceptInvitations.get(invitationId);
+    if (!observable) {
+      log.warn('invalid invitation', { invitationId });
+    } else {
+      await observable.authenticate(authenticationCode);
+    }
+  }
+
   async cancelInvitation(invitation: Invitation): Promise<void> {
     log('cancelling...');
     assert(invitation.invitationId);
     const observable =
       this._createInvitations.get(invitation.invitationId) ?? this._acceptInvitations.get(invitation.invitationId);
-    await observable?.cancel();
-  }
-
-  async authenticate(request: AuthenticateRequest): Promise<Invitation> {
-    throw new Error();
+    if (!observable) {
+      log.warn('invalid invitation', { invitationId: invitation.invitationId });
+    } else {
+      await observable?.cancel();
+    }
   }
 }

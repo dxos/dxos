@@ -5,7 +5,7 @@
 import { CID, IPFSHTTPClient } from 'ipfs-http-client';
 import { useMemo } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
 export type IPFSFile = {
@@ -16,13 +16,13 @@ export type IPFSFile = {
 
 /**
  * Returns a list of mapped IPFS files.
- * @param party
+ * @param space
  * @param type
  */
-export const useIpfsFiles = (party: Party | undefined, type: string) => {
+export const useIpfsFiles = (space: Space | undefined, type: string) => {
   // TODO(burdon): Schema definitions for types?
   // TODO(burdon): Use reducer to do mapping?
-  const items = useSelection(party?.select().filter({ type }));
+  const items = useSelection(space?.select().filter({ type }));
 
   const files: IPFSFile[] =
     useMemo(

@@ -3,8 +3,8 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { ProfileService, SystemService, PartyService } from '@dxos/protocols/proto/dxos/client';
-import { SpacesService, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
+import { SpacesService, InvitationsService, DevicesService } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
@@ -14,7 +14,7 @@ import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 //
 
 export type ClientServices = {
-  PartyService: PartyService;
+  SpaceService: SpaceService;
   DataService: DataService;
   ProfileService: ProfileService;
   SystemService: SystemService;
@@ -23,6 +23,7 @@ export type ClientServices = {
 
   SpacesService: SpacesService;
   SpaceInvitationsService: InvitationsService;
+  DevicesService: DevicesService;
 };
 
 /**
@@ -40,7 +41,7 @@ export interface ClientServicesProvider {
  * Services supported by host.
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
-  PartyService: schema.getService('dxos.client.PartyService'),
+  SpaceService: schema.getService('dxos.client.SpaceService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   SystemService: schema.getService('dxos.client.SystemService'),
@@ -48,5 +49,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   TracingService: schema.getService('dxos.devtools.host.TracingService'),
 
   SpacesService: schema.getService('dxos.client.services.SpacesService'),
-  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
+  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService'),
+  DevicesService: schema.getService('dxos.client.services.DevicesService')
 });

@@ -12,8 +12,6 @@
     "node:util": "util"
   },
   "scripts": {
-    "book": "toolchain book",
-    "build:book": "toolchain build:book",
     "check": "true"
   },
   "dependencies": {
@@ -37,9 +35,8 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@mui/material": "^5.8.1",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

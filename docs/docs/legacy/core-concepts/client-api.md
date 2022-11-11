@@ -46,5 +46,5 @@ const client = new Client({
 | `initialize`       | Initializes internal resources in an idempotent way. Required before using the Client instance. |
 | `destroy`          | Cleanup, release resources.                                                                     |
 | `reset`            | Resets and destroys client storage.                                                             |
-| `createParty`      | Create a new Party.                                                                             |
-| `createInvitation` | Creates an invitation to a given party.                                                         |
+| `createspace`      | Create a new space.                                                                             |
+| `createInvitation` | Creates an invitation to a given space.                                                         |

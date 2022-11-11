@@ -28,7 +28,7 @@ export class DeviceStateMachine {
   async process(credential: Credential) {
     log('credential processed:', credential);
 
-    // Save device key chain credential when processed by the party state machine.
+    // Save device key chain credential when processed by the space state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
       this.deviceCredentialChain = { credential };
       this.deviceChainReady.wake();

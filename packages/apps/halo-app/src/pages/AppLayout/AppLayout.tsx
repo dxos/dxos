@@ -7,19 +7,19 @@ import React from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
-import { useParty, useProfile } from '@dxos/react-client';
+import { useSpace, useIdentity } from '@dxos/react-client';
 import { NavMenu, NavMenuSeparatorProps, Presence, useTranslation } from '@dxos/react-uikit';
 
 const iconAttributes = { className: 'h-5 w-5' };
 
 export const AppLayout = () => {
   const { t } = useTranslation('halo');
-  const profile = useProfile();
+  const profile = useIdentity();
   const navigate = useNavigate();
   const location = useLocation();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useParty(spaceKey);
+  const space = useSpace(spaceKey);
 
   const pathSegments = location.pathname.split('/').length;
   const isRootPath = pathSegments < 3;
