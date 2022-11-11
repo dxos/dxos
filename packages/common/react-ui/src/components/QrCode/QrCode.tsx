@@ -13,42 +13,41 @@ import { getSize } from '../../styles';
 import { Button, ButtonProps } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
-export interface QrCodeProps
+interface SharedQrCodeProps
   extends Omit<ButtonProps, 'onClick' | 'ref' | 'variant'>,
     Pick<TooltipProps, 'side' | 'sideOffset' | 'collisionPadding'> {
-  compact?: boolean;
   value: string;
-  displayQrLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
-  copyLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   buttonCompact?: boolean;
+}
+
+export interface FullQrCodeProps extends SharedQrCodeProps {
+  label: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
   size?: Size;
 }
 
-const FullQrCode = ({
+export type QrCodeProps = FullQrCodeProps;
+
+export interface CompactQrCodeProps extends SharedQrCodeProps {
+  displayQrLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+  copyLabel: string | Omit<ReactHTMLElement<HTMLElement>, 'ref'>;
+}
+
+export const FullQrCode = ({
   value,
-  displayQrLabel,
-  copyLabel,
+  label,
   size,
   side,
   sideOffset,
   collisionPadding,
   buttonCompact = true,
   ...buttonProps
-}: QrCodeProps) => {
+}: FullQrCodeProps) => {
   const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
   return (
-    <Tooltip
-      content={
-        <>
-          {displayQrLabel}
-          {copyLabel}
-        </>
-      }
-      {...{ side, sideOffset, collisionPadding }}
-    >
+    <Tooltip content={label} {...{ side, sideOffset, collisionPadding }}>
       <Button
         compact={buttonCompact}
         {...buttonProps}
@@ -57,26 +56,25 @@ const FullQrCode = ({
       >
         <QRCodeSVG value={value} includeMargin role='none' className='w-full h-auto' />
         <div id={labelId} className='sr-only'>
-          {displayQrLabel}
+          {label}
         </div>
       </Button>
     </Tooltip>
   );
 };
 
-const CompactQrCode = ({
+export const CompactQrCode = ({
   value,
   displayQrLabel,
   copyLabel,
-  size,
   side,
   sideOffset,
   collisionPadding,
   compact,
   buttonCompact,
   ...buttonProps
-}: QrCodeProps) => {
-  const labelId = useId('qrCodeLabel');
+}: CompactQrCodeProps) => {
+  const labelId = useId('qr-label');
   const copyValue = useCallback(() => {
     void navigator.clipboard.writeText(value);
   }, [value]);
@@ -152,6 +150,4 @@ const CompactQrCode = ({
   );
 };
 
-export const QrCode = (props: QrCodeProps) => {
-  return props.compact ? <CompactQrCode {...props} /> : <FullQrCode {...props} />;
-};
+export const QrCode = FullQrCode;
