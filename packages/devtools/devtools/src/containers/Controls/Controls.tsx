@@ -9,12 +9,12 @@ import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem } from '@mui
 
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
-import { useClient, useParties, useProfile } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-toolkit';
+import { useClient, useSpaces, useIdentity } from '@dxos/react-client';
+import { JoinSpaceDialog } from '@dxos/react-toolkit';
 import { TextModel } from '@dxos/text-model';
 
 import { ConfigSource } from './ConfigSource';
-import { PartyCard } from './PartyCard';
+import { SpaceCard } from './SpaceCard';
 
 export type ControlsProps = {
   onConfigChange: (remoteSource?: string) => void;
@@ -27,45 +27,45 @@ export type ControlsProps = {
  */
 export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [showJoinParty, setShowJoinParty] = useState(false);
+  const [showJoinSpace, setShowJoinSpace] = useState(false);
   const client = useClient();
-  const profile = useProfile();
-  const parties = useParties();
+  const profile = useIdentity();
+  const spaces = useSpaces();
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
   };
 
-  const handleCreateParty = () => {
-    void client.echo.createParty();
+  const handleCreateSpace = () => {
+    void client.echo.createSpace();
   };
 
   const handleTestData = async () => {
     client.echo.modelFactory.registerModel(TextModel);
     client.echo.modelFactory.registerModel(MessengerModel);
 
-    // Create party.
-    const party = await client.echo.createParty();
-    const root = await party.database.createItem({
+    // Create space.
+    const space = await client.echo.createSpace();
+    const root = await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/root'
     });
     await root.model.set('title', 'root');
 
     // Objects.
-    await party.database.createItem({
+    await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/object',
       parent: root.id
     });
-    const child = await party.database.createItem({
+    const child = await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/object',
       parent: root.id
     });
 
     // Text.
-    const text = await party.database.createItem({
+    const text = await space.database.createItem({
       model: TextModel,
       type: 'example:type/text',
       parent: child.id
@@ -73,7 +73,7 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
     await text.model.insert('Hello world', 0);
 
     // Messenger.
-    const messenger = await party.database.createItem({
+    const messenger = await space.database.createItem({
       model: MessengerModel,
       type: 'example:type/messenger',
       parent: child.id
@@ -110,14 +110,14 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
             disabled={!profile}
             onClick={() => {
               setMenuAnchorEl(null);
-              setShowJoinParty(true);
+              setShowJoinSpace(true);
             }}
           >
-            Join Party
+            Join Space
           </MenuItem>
         </Menu>
 
-        <JoinPartyDialog open={showJoinParty} onClose={() => setShowJoinParty(false)} closeOnSuccess />
+        <JoinSpaceDialog open={showJoinSpace} onClose={() => setShowJoinSpace(false)} closeOnSuccess />
       </>
 
       <ConfigSource onConfigChange={onConfigChange} />
@@ -132,8 +132,8 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
             <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile} variant='outlined'>
               Profile
             </Button>
-            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>
-              Party
+            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateSpace}>
+              Space
             </Button>
             <Box sx={{ flex: 1 }} />
             <IconButton onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
@@ -153,8 +153,8 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
         }}
       >
         <Box>
-          {parties.map((party) => (
-            <PartyCard key={party.key.toHex()} party={party} />
+          {spaces.map((space) => (
+            <SpaceCard key={space.key.toHex()} space={space} />
           ))}
         </Box>
       </Box>

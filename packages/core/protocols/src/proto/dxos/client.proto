@@ -54,8 +54,8 @@ message RedeemedInvitation {
   /// Only if state == ERROR.
   optional string error = 3;
 
-  /// Only on party invitations that are finished.
-  optional dxos.keys.PublicKey party_key = 4;
+  /// Only on space invitations that are finished.
+  optional dxos.keys.PublicKey space_key = 4;
 }
 
 message AuthenticateInvitationRequest {
@@ -69,7 +69,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  // TODO(burdon): Remove identity from Profile (party of identity).
+  // TODO(burdon): Remove identity from Profile (space of identity).
   dxos.keys.PublicKey identity_key = 1;
   optional string displayName = 2;
 }
@@ -156,56 +156,56 @@ service HaloService {
 //
 
 // TODO(burdon): Rename Space.
-message Party {
+message Space {
   dxos.keys.PublicKey public_key = 1;
   bool is_open = 2;
   bool is_active = 3;
 
-  repeated PartyMember members = 4;
+  repeated SpaceMember members = 4;
 }
 
-message SubscribePartyRequest {
-  dxos.keys.PublicKey party_key = 1;
+message SubscribeSpaceRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message GetPartyDetailsRequest {
-  dxos.keys.PublicKey party_key = 1;
+message GetSpaceDetailsRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message PartyDetails {
+message SpaceDetails {
   /// The timeframe of mutations processed by the client.
   dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
-// TODO(burdon): Reconcile with dxos.halo.credentials.PartyMember.
+// TODO(burdon): Reconcile with dxos.halo.credentials.SpaceMember.
 // TODO(burdon): Reconcile with Profile.
-message PartyMember {
+message SpaceMember {
   dxos.keys.PublicKey identity_key = 1;
   optional Profile profile = 2;
 }
 
-message SubscribePartyResponse {
-  optional Party party = 1;
+message SubscribeSpaceResponse {
+  optional Space space = 1;
 }
 
-message SubscribePartiesResponse {
-  repeated Party parties = 1;
+message SubscribeSpacesResponse {
+  repeated Space spaces = 1;
 }
 
 message CreateInvitationRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
   optional dxos.keys.PublicKey invitee_key = 2;
 }
 
-message PartyActivationOptions {
+message SpaceActivationOptions {
   bool global = 1;
   bool device = 2;
 }
 
-message SetPartyStateRequest {
-  dxos.keys.PublicKey party_key = 1;
+message SetSpaceStateRequest {
+  dxos.keys.PublicKey space_key = 1;
 
   optional bool open = 2;
   optional bool active_global = 3;
@@ -213,36 +213,36 @@ message SetPartyStateRequest {
 }
 
 message SubscribeMembersRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 message SubscribeMembersResponse {
-  repeated PartyMember members = 1;
+  repeated SpaceMember members = 1;
 }
 
 message CreateSnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 //
 // Service definition
 //
 
-service PartyService {
-  rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
-  rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
+service SpaceService {
+  rpc SubscribeToSpace (SubscribeSpaceRequest) returns (stream SubscribeSpaceResponse);
+  rpc SubscribeSpaces (google.protobuf.Empty) returns (stream SubscribeSpacesResponse);
 
-  rpc GetPartyDetails(GetPartyDetailsRequest) returns (PartyDetails);
+  rpc GetSpaceDetails(GetSpaceDetailsRequest) returns (SpaceDetails);
 
-  rpc CreateParty(google.protobuf.Empty) returns (Party);
-  rpc CloneParty(dxos.echo.snapshot.PartySnapshot) returns (Party);
+  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc CloneSpace(dxos.echo.snapshot.SpaceSnapshot) returns (Space);
 
-  /// Open and close or activate and deactivate a party.
-  rpc SetPartyState(SetPartyStateRequest) returns (Party);
+  /// Open and close or activate and deactivate a space.
+  rpc SetSpaceState(SetSpaceStateRequest) returns (Space);
 
-  // TODO(rzadp): Remove and join with Subscribing to Party.
+  // TODO(rzadp): Remove and join with Subscribing to Space.
   // Deprecated.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
-  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.PartySnapshot);
+  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.SpaceSnapshot);
 }

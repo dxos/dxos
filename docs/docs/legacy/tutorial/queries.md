@@ -10,18 +10,18 @@ We should add now some more code to be able to see the created tasks. For this w
 
 ```jsx:title=src/components/TaskList.js
 import { ObjectModel } from '@dxos/object-model';
-import { useParty, useSelection } from '@dxos/react-client';
+import { usespace, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
 
-const TaskList = ({ party_key }) => {
-  const party = useParty(party_key);
+const TaskList = ({ space_key }) => {
+  const space = usespace(space_key);
 
   const items = useSelection(
-    party.database.select(
+    space.database.select(
       selection => selection.filter({ type: TASK_TYPE }).filter((item) => !item.model.getProperty('deleted')).items
     ),
-    [party_key]
+    [space_key]
   );
 
   // ...

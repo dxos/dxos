@@ -37,17 +37,17 @@ export default class Join extends BaseCommand {
       CliUx.ux.action.start('Waiting for peer to connect');
       const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
       const invitation = await invitationObservable(observable);
-      const party = client.echo.getParty(invitation.spaceKey!)!;
+      const space = client.echo.getSpace(invitation.spaceKey!)!;
       CliUx.ux.action.stop();
 
-      const { value: members } = party.queryMembers();
+      const { value: members } = space.queryMembers();
       if (!json) {
         printMembers(members);
       }
 
       return {
-        key: party.key.toHex(),
-        name: party.getProperty('name'),
+        key: space.key.toHex(),
+        name: space.getProperty('name'),
         members: mapMembers(members)
       };
     });

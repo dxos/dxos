@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, css } from '@mui/material';
 
-import { ItemID, PARTY_ITEM_TYPE } from '@dxos/client';
+import { ItemID, SPACE_ITEM_TYPE } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 // TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
 import {
@@ -16,8 +16,8 @@ import {
   execSelection,
   itemAdapter,
   typeMeta,
-  usePartyBuilder,
-  useTestParty
+  useSpaceBuilder,
+  useTestSpace
 } from '@dxos/react-client-testing';
 import { BoxContainer, FullScreen } from '@dxos/react-components';
 
@@ -34,25 +34,25 @@ const graphStyles = css`
 `;
 
 const App = () => {
-  const party = useTestParty();
-  const model = useGraphModel(party, [
-    (item) => Boolean(item.type?.startsWith('example:')) || item.type === PARTY_ITEM_TYPE
+  const space = useTestSpace();
+  const model = useGraphModel(space, [
+    (item) => Boolean(item.type?.startsWith('example:')) || item.type === SPACE_ITEM_TYPE
   ]);
 
   return <EchoGraph model={model} itemAdapter={itemAdapter} styles={graphStyles} />;
 };
 
 const AppWithEditor = () => {
-  const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
-  const builder = usePartyBuilder(party);
+  const space = useTestSpace();
+  const model = useGraphModel(space, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const builder = useSpaceBuilder(space);
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
-  if (!party) {
+  if (!space) {
     return null;
   }
 
   const handleSelection = (text: string) => {
-    const selection = execSelection(party, text);
+    const selection = execSelection(space, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
     result?.entities.forEach((item) => selected.add(item.id));

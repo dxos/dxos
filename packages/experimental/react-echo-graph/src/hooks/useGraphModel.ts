@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { Item, Party } from '@dxos/client';
+import { Item, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
 import { EchoGraphModel } from '../components';
@@ -13,9 +13,9 @@ import { EchoGraphModel } from '../components';
 /**
  * Create model.
  */
-export const useGraphModel = (party?: Party, filters: ((item: Item<any>) => boolean)[] = []): EchoGraphModel => {
+export const useGraphModel = (space?: Space, filters: ((item: Item<any>) => boolean)[] = []): EchoGraphModel => {
   const model = useMemo(() => new EchoGraphModel(), []);
-  const items = useSelection(party?.select()) ?? [];
+  const items = useSelection(space?.select()) ?? [];
 
   useEffect(() => {
     // TODO(burdon): API should filter out root item.

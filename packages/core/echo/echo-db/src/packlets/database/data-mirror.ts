@@ -28,12 +28,12 @@ export class DataMirror {
   constructor(
     private readonly _itemManager: ItemManager,
     private readonly _dataService: DataService,
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   open() {
     const entities = this._dataService.subscribeEntitySet({
-      partyKey: this._partyKey
+      spaceKey: this._spaceKey
     });
     entities.subscribe(
       async (diff) => {
@@ -77,7 +77,7 @@ export class DataMirror {
 
   private _subscribeToUpdates(entity: Entity<Model<any>>) {
     const stream = this._dataService.subscribeEntityStream({
-      partyKey: this._partyKey,
+      spaceKey: this._spaceKey,
       itemId: entity.id
     });
     stream.subscribe(

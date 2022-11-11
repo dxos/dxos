@@ -7,12 +7,13 @@ import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import { syncItems } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
-import { Party } from '../proxies';
+import { Space } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
 
 // TODO(burdon): Use as set-up for test suite.
@@ -118,8 +119,8 @@ describe('Client services', function () {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const party1 = await client1.echo.createParty();
-    const observable1 = await party1.createInvitation();
+    const space1 = await client1.echo.createSpace();
+    const observable1 = await space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
     const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
 
     observable1.subscribe({
@@ -130,39 +131,28 @@ describe('Client services', function () {
     });
 
     observable2.subscribe({
-      onSuccess: (invitation) => {
+      onSuccess: (invitation: Invitation) => {
         success2.wake(invitation);
       },
-      onError: (err) => raise(err)
+      onError: (err: Error) => raise(err)
     });
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
-    const trigger = new Trigger<Party>();
+    // TODO(burdon): Space should now be available?
+    const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const party2 = client2.echo.getParty(invitation2.spaceKey!);
-      assert(party2);
-      expect(party2).to.exist;
-      trigger.wake(party2);
+      const space2 = client2.echo.getSpace(invitation2.spaceKey!);
+      assert(space2);
+      expect(space2).to.exist;
+      trigger.wake(space2);
     });
 
-    const party2 = await trigger.wait();
+    const space2 = await trigger.wait();
 
-    // TODO(burdon): Factor out synchronization test.
-    // TODO(burdon): Reconcile with `@dxos/client-services` `syncItems` (reconcile PartyProxy, Space).
-    {
-      const item1 = await party1.database.createItem({ type: 'type-1' });
-      const item2 = await party2.database.waitForItem({ type: 'type-1' });
-      expect(item1.id).to.eq(item2.id);
-    }
-
-    {
-      const item1 = await party2.database.createItem({ type: 'type-2' });
-      const item2 = await party1.database.waitForItem({ type: 'type-2' });
-      expect(item1.id).to.eq(item2.id);
-    }
+    await syncItems(space1, space2);
   });
 
   // TODO(burdon): Browser-only.

@@ -5,11 +5,11 @@ label: Queries
 # Querying data
 
 ```tsx
-import { useParty, useSelection } from '@dxos/react-client';
+import { usespace, useSelection } from '@dxos/react-client';
 
 export const List = ({ key }) => {
-  const party = useParty(key);
-  const items = useSelection(party.select({ type: 'task' }));
+  const space = usespace(key);
+  const items = useSelection(space.select({ type: 'task' }));
 
   return (
     <ul>

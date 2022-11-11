@@ -5,11 +5,11 @@
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
-import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, CredentialSigner } from './credential-factory';
 
-// TODO(burdon): Normalize party_key, space_key (args, proto).
+// TODO(burdon): Normalize space_key, space_key (args, proto).
 
 /**
  * Utility class for generating credential messages, where the issuer is the current identity or device.
@@ -31,8 +31,8 @@ export class CredentialGenerator {
         issuer: spaceKey,
         subject: spaceKey,
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey: spaceKey
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey
         }
       }),
 
@@ -41,9 +41,9 @@ export class CredentialGenerator {
         issuer: spaceKey,
         subject: this._identityKey,
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey: spaceKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         }
       }),
 
@@ -56,7 +56,7 @@ export class CredentialGenerator {
    * Admit identity and control and data feeds.
    */
   async createMemberInvitation(
-    partyKey: PublicKey,
+    spaceKey: PublicKey,
     identityKey: PublicKey,
     deviceKey: PublicKey,
     controlKey: PublicKey,
@@ -68,14 +68,14 @@ export class CredentialGenerator {
         issuer: this._identityKey,
         subject: identityKey,
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.MEMBER
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.MEMBER
         }
       }),
 
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(partyKey, dataKey, AdmittedFeed.Designation.DATA)
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA)
     ];
   }
 
@@ -99,7 +99,7 @@ export class CredentialGenerator {
    * Add feed to space.
    */
   async createFeedAdmission(
-    partyKey: PublicKey,
+    spaceKey: PublicKey,
     feedKey: PublicKey,
     designation: AdmittedFeed.Designation
   ): Promise<Credential> {
@@ -109,7 +109,7 @@ export class CredentialGenerator {
       subject: feedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey,
+        spaceKey,
         identityKey: this._identityKey,
         deviceKey: this._deviceKey,
         designation
@@ -131,9 +131,9 @@ export const createAdmissionCredentials = async (
     await signer.createCredential({
       subject: identityKey,
       assertion: {
-        '@type': 'dxos.halo.credentials.PartyMember',
-        partyKey: spaceKey,
-        role: PartyMember.Role.ADMIN // TODO(burdon): Configure.
+        '@type': 'dxos.halo.credentials.SpaceMember',
+        spaceKey,
+        role: SpaceMember.Role.ADMIN // TODO(burdon): Configure.
       }
     }),
 
@@ -141,7 +141,7 @@ export const createAdmissionCredentials = async (
       subject: controlFeedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: spaceKey,
+        spaceKey,
         deviceKey,
         identityKey,
         designation: AdmittedFeed.Designation.CONTROL
@@ -152,7 +152,7 @@ export const createAdmissionCredentials = async (
       subject: dataFeedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: spaceKey,
+        spaceKey,
         deviceKey,
         identityKey,
         designation: AdmittedFeed.Designation.DATA

@@ -29,7 +29,7 @@ const Template = (args: Omit<ComposerProps, 'item'>) => {
     // TODO(burdon): Observer.
     await client.halo.createProfile();
     // TODO(burdon): Observer.
-    const space = await client.echo.createParty();
+    const space = await client.echo.createSpace();
     const item = await space.database.createItem({
       model: TextModel,
       type: DOCUMENT_TYPE

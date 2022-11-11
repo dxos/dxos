@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Client, Party } from '@dxos/client';
+import { Client, Space } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import {
   BotReport,
@@ -19,7 +19,7 @@ const log = debug('dxos:bot:client-bot');
 
 export class Bot implements BotService {
   protected client: Client | undefined;
-  protected party: Party | undefined;
+  protected space: Space | undefined;
   protected id: string | undefined;
 
   async initialize(request: InitializeRequest) {
@@ -51,11 +51,11 @@ export class Bot implements BotService {
     log('Client bot initialize');
     await this.client.initialize();
 
-    const parties = this.client.echo.queryParties().value;
-    if (parties.length === 0) {
-      throw new Error('Bot is not in any party');
+    const spaces = this.client.echo.querySpaces().value;
+    if (spaces.length === 0) {
+      throw new Error('Bot is not in any space');
     }
-    this.party = parties[0];
+    this.space = spaces[0];
 
     log('Client bot onInit');
     await this.onStart(request);
@@ -74,8 +74,8 @@ export class Bot implements BotService {
   startReporting(): Stream<BotReport> {
     return new Stream(({ next, close }) => {
       const report = async () => {
-        const partyDetails = await this.party?.getDetails();
-        next({ partyDetails });
+        const spaceDetails = await this.space?.getDetails();
+        next({ spaceDetails });
       };
       void report();
       const intervalHandle = setInterval(report, 1000);

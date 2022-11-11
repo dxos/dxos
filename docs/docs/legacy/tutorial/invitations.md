@@ -4,7 +4,7 @@ sidebar_title: 7. Sharing and replication
 description: Managing peers and replication
 ---
 
-In order to share data we add to the party, we have to invite other peers to it. There are two steps required in this process: creating an invitation and redeeming an invitation.
+In order to share data we add to the space, we have to invite other peers to it. There are two steps required in this process: creating an invitation and redeeming an invitation.
 
 ## Create an Invitation
 
@@ -13,15 +13,15 @@ We have to create an invitation code that we will share with the peer we want to
 We will then create a new component `src/components/TaskList.js` that will handle the invitations process (and the actual app logic in the next section):
 
 ```jsx:title=src/components/TaskList.js
-import { useParty } from '@dxos/react-client';
+import { usespace } from '@dxos/react-client';
 
-const TaskList = ({ party_key }) => {
-  const party = useParty(party_key);
+const TaskList = ({ space_key }) => {
+  const space = usespace(space_key);
 
   // ...
 
   const handleCopyInvite = async () => {
-    const invitation = await party.createInvitation();
+    const invitation = await space.createInvitation();
     const invitationText = JSON.stringify(invitation.toQueryParameters());
     await navigator.clipboard.writeText(invitationText);
   };
@@ -43,7 +43,7 @@ export default TaskList;
 
 > You can access [this](https://github.com/dxos/tutorial-tasks-app/blob/master/src/components/TaskList.js) link to check the full `TaskList` code.
 
-To create a new invitation we just need to call `party.createInvitation` method and it will return the specific information you need to share with your peer.
+To create a new invitation we just need to call `space.createInvitation` method and it will return the specific information you need to share with your peer.
 
 Go to your `src/components/Main.js` component and render the `TaskList` component in a main section:
 
@@ -57,43 +57,43 @@ const Main = () => {
     <div className={classes.root}>
       {/* ... */}
 
-      <main className={classes.main}>{party_key && <TaskList party_key={party_key} />}</main>
+      <main className={classes.main}>{space_key && <TaskList space_key={space_key} />}</main>
     </div>
   );
 };
 ```
 
-On your browser, when selecting your party from the list, you will see a share button at the bottom of the page. Clicking on it will copy the invitation code to clipboard:
+On your browser, when selecting your space from the list, you will see a share button at the bottom of the page. Clicking on it will copy the invitation code to clipboard:
 
 ![Invite Button](images/invite-00.png)
 
 ## Redeem Invitation
 
-We now need to give our users the possibility to redeem an invitation so they are able to join the party. Lucky for us, the `@dxos/react-toolkit` package already exports a `JoinPartyDialog` component that we can make usage of.
+We now need to give our users the possibility to redeem an invitation so they are able to join the space. Lucky for us, the `@dxos/react-toolkit` package already exports a `JoinspaceDialog` component that we can make usage of.
 
-Let's got now to our `src/components/PartyList.js` component and place the following:
+Let's got now to our `src/components/spaceList.js` component and place the following:
 
-```jsx:title=src/components/PartyList.js
+```jsx:title=src/components/spaceList.js
 // ...
-import { JoinPartyDialog } from '@dxos/react-toolkit';
+import { JoinspaceDialog } from '@dxos/react-toolkit';
 
-const PartyList = ({ onSelectParty }) => {
+const spaceList = ({ onSelectspace }) => {
   const [redeemDialog, setRedeemDialog] = useState(false);
 
-  const handleRedeemParty = () => setRedeemDialog(true);
+  const handleRedeemspace = () => setRedeemDialog(true);
 
   return (
     <div>
-      {/* ... PartySettings */}
+      {/* ... spaceSettings */}
 
-      <JoinPartyDialog open={redeemDialog} onClose={() => setRedeemDialog(false)} />
+      <JoinspaceDialog open={redeemDialog} onClose={() => setRedeemDialog(false)} />
 
-      {/* ... Parties */}
+      {/* ... Spaces */}
 
       <div>
-        {/* ... Create Party Button */}
+        {/* ... Create space Button */}
 
-        <Fab size='small' color='secondary' aria-label='redeem' title='Redeem invitation' onClick={handleRedeemParty}>
+        <Fab size='small' color='secondary' aria-label='redeem' title='Redeem invitation' onClick={handleRedeemspace}>
           <RedeemIcon />
         </Fab>
       </div>
@@ -101,12 +101,12 @@ const PartyList = ({ onSelectParty }) => {
   );
 };
 
-export default PartyList;
+export default spaceList;
 ```
 
-We are rendering now the `JoinPartyDialog` and also a button to show it.
+We are rendering now the `JoinspaceDialog` and also a button to show it.
 
-If you go to your app in the browser, you will see that button next to the create party button. Go ahead and try it yourself.
+If you go to your app in the browser, you will see that button next to the create space button. Go ahead and try it yourself.
 
 ![Redeem Dialog Enter Code](images/invite-04.png)
 
@@ -115,7 +115,7 @@ If you go to your app in the browser, you will see that button next to the creat
 Open your app in two different browser sessions. It could be an incognito window with a separate session or a different browser.
 We will simulate the actions of two users:
 
-- In one window, with a party created, click the **invitation** button to generate a new invite code and copy it to the clipboard.
+- In one window, with a space created, click the **invitation** button to generate a new invite code and copy it to the clipboard.
 - In the other browser choose _Redeem invitation_. **Paste the invitation code** and submit.
-- After some seconds, you should notice **the newly created party appearing in the lists column of the second browser**.
+- After some seconds, you should notice **the newly created space appearing in the lists column of the second browser**.
 - That list is now shared between those two users.

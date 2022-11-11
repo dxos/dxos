@@ -73,13 +73,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 790px; margin-left: 321px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                PartyCore
+                                SpaceCore
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="360" y="794" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    PartyCore
+                    SpaceCore
                 </text>
             </switch>
         </g>
@@ -109,7 +109,7 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 790px; margin-left: 201px;">
                         <div data-drawio-colors="color: #333333; " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(51, 51, 51); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                Party
+                                space
                                 <br/>
                                 StateMachine
                             </div>
@@ -117,7 +117,7 @@
                     </div>
                 </foreignObject>
                 <text x="240" y="794" fill="#333333" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    Party...
+                    space...
                 </text>
             </switch>
         </g>
@@ -219,13 +219,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 190px; margin-left: 321px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                Party
+                                space
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="360" y="194" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    Party
+                    space
                 </text>
             </switch>
         </g>
@@ -236,7 +236,7 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 270px; margin-left: 321px;">
                         <div data-drawio-colors="color: #333333; " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(51, 51, 51); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                Party
+                                space
                                 <br/>
                                 ServiceHost
                             </div>
@@ -244,7 +244,7 @@
                     </div>
                 </foreignObject>
                 <text x="360" y="274" fill="#333333" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    Party...
+                    space...
                 </text>
             </switch>
         </g>
@@ -255,13 +255,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 630px; margin-left: 1px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                PartyFactory
+                                SpaceFactory
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="40" y="634" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    PartyFactory
+                    SpaceFactory
                 </text>
             </switch>
         </g>
@@ -314,13 +314,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 390px; margin-left: 1241px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                Party
+                                space
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="1280" y="394" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    Party
+                    space
                 </text>
             </switch>
         </g>
@@ -722,13 +722,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 410px; margin-left: 211px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                DataParty
+                                Dataspace
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="250" y="414" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    DataParty
+                    Dataspace
                 </text>
             </switch>
         </g>
@@ -741,7 +741,7 @@
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
                                 HALO
                                 <br/>
-                                Party
+                                space
                             </div>
                         </div>
                     </div>

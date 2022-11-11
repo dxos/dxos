@@ -46,7 +46,7 @@ HALO is a set of components and protocols for decentralized identity and access 
 
 #### 2.1.1 The HALO Application
 
-The HALO application provides a wallet where users can manage multiple identities and provides UI that enables passwordless sign-in to 3rd party applications via the HALO SDK. It is delivered as a mobile-first PWA, and later possibly also in a browser extension, if necessary.
+The HALO application provides a wallet where users can manage multiple identities and provides UI that enables passwordless sign-in to 3rd space applications via the HALO SDK. It is delivered as a mobile-first PWA, and later possibly also in a browser extension, if necessary.
 
 The HALO application may be running on these URLs:
 

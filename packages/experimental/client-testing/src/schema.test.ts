@@ -6,13 +6,13 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Item, ObjectModel, Party, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
+import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
 import { log, SchemaBuilder, TestType } from './builders';
 
 let client: Client;
-let party: Party;
+let space: Space;
 let builder: SchemaBuilder;
 
 describe('Schemas', function () {
@@ -20,12 +20,12 @@ describe('Schemas', function () {
     client = new Client();
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
-    party = await client.echo.createParty();
-    builder = new SchemaBuilder(party.database);
+    space = await client.echo.createSpace();
+    builder = new SchemaBuilder(space.database);
   });
 
   afterEach(async function () {
-    await party.destroy();
+    await space.destroy();
     await client.destroy();
   });
 
@@ -65,7 +65,7 @@ describe('Schemas', function () {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const items = await party.database
+    const items = await space.database
       .select()
       .filter((item) => Boolean(item.type) && [orgSchema.name, personSchema.name].includes(item.type as string))
       .exec().entities;
@@ -84,11 +84,11 @@ describe('Schemas', function () {
       [builder.defaultSchemas[TestType.Person].schema]: 16
     });
 
-    const { entities: schemas } = party.database.select({ type: TYPE_SCHEMA }).exec();
+    const { entities: schemas } = space.database.select({ type: TYPE_SCHEMA }).exec();
 
-    const { entities: orgs } = party.database.select({ type: builder.defaultSchemas[TestType.Org].schema }).exec();
+    const { entities: orgs } = space.database.select({ type: builder.defaultSchemas[TestType.Org].schema }).exec();
 
-    const { entities: people } = party.database.select({ type: builder.defaultSchemas[TestType.Person].schema }).exec();
+    const { entities: people } = space.database.select({ type: builder.defaultSchemas[TestType.Person].schema }).exec();
 
     [...orgs, ...people].forEach((item) => {
       const schemaItem = schemas.find((schema) => schema.model.get('schema') === item.type);
@@ -99,8 +99,8 @@ describe('Schemas', function () {
     // Log tables.
     schemas.forEach((schema) => {
       const type = schema.model.get('schema');
-      const { entities: items } = party.database.select({ type }).exec();
-      log(renderSchemaItemsTable(schema, items, party));
+      const { entities: items } = space.database.select({ type }).exec();
+      log(renderSchemaItemsTable(schema, items, space));
     });
   });
 });
@@ -109,9 +109,9 @@ describe('Schemas', function () {
  * Log the items for the given schema.
  * @param schema
  * @param items
- * @param [party]
+ * @param [space]
  */
-const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], party?: Party) => {
+const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectModel>[], space?: Space) => {
   const fields = Object.values(schema.model.get('fields')) as SchemaField[];
   const columns = fields.map(({ key }) => key);
 
@@ -129,9 +129,9 @@ const renderSchemaItemsTable = (schema: Item<ObjectModel>, items: Item<ObjectMod
           }
 
           case 'ref': {
-            if (party) {
+            if (space) {
               const { field } = ref!;
-              const item = party.database.getItem(value);
+              const item = space.database.getItem(value);
               row[key] = chalk.red(logString(item?.model.get(field)));
             } else {
               row[key] = chalk.red(logKey(value));

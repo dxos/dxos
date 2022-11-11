@@ -6,13 +6,13 @@ import React, { useEffect, useState } from 'react';
 
 import { Button } from '@mui/material';
 
-import { useClient, useProfile, useClientServices } from '@dxos/react-client';
+import { useClient, useIdentity, useClientServices } from '@dxos/react-client';
 import { HaloSharingDialog, JoinHaloDialog, RegistrationDialog, RegistrationDialogProps } from '@dxos/react-toolkit';
 
 const App = () => {
   const client = useClient();
-  const profile = useProfile();
-  const [parties, setParties] = useState<any[]>([]);
+  const profile = useIdentity();
+  const [spaces, setSpaces] = useState<any[]>([]);
   const [error, setError] = useState<Error | undefined>(undefined);
   const [inProgress, setInProgress] = useState(false);
   const [joinHaloDialog, setJoinHaloDialog] = useState(false);
@@ -30,12 +30,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const partyStream = services.PartyService.subscribeParties();
-    partyStream.subscribe(
-      (response) => setParties(response.parties ?? []),
+    const spaceStream = services.SpaceService.subscribeSpaces();
+    spaceStream.subscribe(
+      (response) => setSpaces(response.spaces ?? []),
       (error) => setError(error)
     );
-    return () => partyStream.close();
+    return () => spaceStream.close();
   }, []);
 
   const handleCreateProfile: RegistrationDialogProps['onComplete'] = async (seedphrase, displayName) => {
@@ -63,10 +63,10 @@ const App = () => {
     }
   };
 
-  const handleCreateParty = async () => {
+  const handleCreateSpace = async () => {
     setInProgress(true);
     try {
-      await services.PartyService.createParty();
+      await services.SpaceService.createSpace();
     } catch (e: any) {
       console.error(e);
       setError(e);
@@ -114,10 +114,10 @@ const App = () => {
       </Button>
       <HaloSharingDialog open={haloSharingDialog} onClose={() => setHaloSharingDialog(false)} />
 
-      <Button disabled={inProgress} onClick={handleCreateParty} variant='outlined'>
-        Create party
+      <Button disabled={inProgress} onClick={handleCreateSpace} variant='outlined'>
+        Create space
       </Button>
-      <p>You have {parties.length} parties.</p>
+      <p>You have {spaces.length} spaces.</p>
 
       <details>
         <summary>Local Client config</summary>

@@ -21,7 +21,7 @@ describe('Grid demo', function () {
   this.timeout(0); // Run until manually quit.
 
   // TODO(burdon): Not working.
-  // Invitation to join existing party.
+  // Invitation to join existing space.
   const invitation = process.env.INVITATION;
 
   const spacing = 8;
@@ -60,11 +60,11 @@ describe('Grid demo', function () {
    * Create and process invitation.
    */
   const invite = async (inviter: Launcher, invited: Launcher) => {
-    await inviter.page.click('button[data-id=test-button-share-party]');
+    await inviter.page.click('button[data-id=test-button-share-space]');
     const invitation: string = await inviter.page.evaluate(() => navigator.clipboard.readText());
 
-    await invited.page.fill('input[data-id=test-input-join-party]', invitation);
-    await invited.page.click('button[data-id=test-button-join-party]');
+    await invited.page.fill('input[data-id=test-input-join-space]', invitation);
+    await invited.page.click('button[data-id=test-button-join-space]');
   };
 
   /**
@@ -104,18 +104,18 @@ describe('Grid demo', function () {
 
       if (!previous) {
         if (invitation) {
-          // Join existing party.
-          console.log('Joining existing party...');
-          await launcher.page.fill('input[data-id=test-input-join-party]', invitation);
-          await launcher.page.click('button[data-id=test-button-join-party]');
+          // Join existing space.
+          console.log('Joining existing space...');
+          await launcher.page.fill('input[data-id=test-input-join-space]', invitation);
+          await launcher.page.click('button[data-id=test-button-join-space]');
         } else {
-          // First launcher creates the party.
-          console.log('Creating party...');
-          await launcher.page.click('button[data-id=test-button-create-party]');
+          // First launcher creates the space.
+          console.log('Creating space...');
+          await launcher.page.click('button[data-id=test-button-create-space]');
         }
       } else {
         // Start invitation flow.
-        console.log('Joining party...');
+        console.log('Joining space...');
         await invite(previous, launcher);
 
         // Select view.
