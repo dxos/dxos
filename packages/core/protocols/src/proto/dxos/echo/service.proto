@@ -12,7 +12,7 @@ import "dxos/keys.proto";
 package dxos.echo.service;
 
 message SubscribeEntitySetRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 message SubscribeEntitySetResponse {
@@ -22,7 +22,7 @@ message SubscribeEntitySetResponse {
 }
 
 message SubscribeEntityStreamRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
   string item_id = 2;
 }
 
@@ -47,7 +47,7 @@ message SubscribeEntityStreamResponse {
 }
 
 message WriteRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
   feed.EchoEnvelope mutation = 2;
 }
 

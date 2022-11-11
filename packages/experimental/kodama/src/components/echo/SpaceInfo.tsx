@@ -4,14 +4,14 @@
 
 import React, { FC } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 import { Table } from '../util';
 
-export const PartyInfo: FC<{
-  party: Party;
-}> = ({ party }) => {
+export const SpaceInfo: FC<{
+  space: Space;
+}> = ({ space }) => {
   return (
     <Table
       columns={[
@@ -27,11 +27,11 @@ export const PartyInfo: FC<{
       rows={[
         {
           property: 'Name',
-          value: party.getProperty('title')
+          value: space.getProperty('title')
         },
         {
           property: 'Public key',
-          value: truncateKey(party.key, 4)
+          value: truncateKey(space.key, 4)
         }
       ]}
     />

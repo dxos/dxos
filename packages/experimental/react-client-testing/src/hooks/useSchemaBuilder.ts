@@ -4,11 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { SchemaBuilder } from '@dxos/client-testing';
 
 /**
- * @param party
+ * @param space
  */
-export const useSchemaBuilder = (party?: Party) =>
-  useMemo(() => (party ? new SchemaBuilder(party.database) : undefined), [party?.key.toHex()]);
+export const useSchemaBuilder = (space?: Space) =>
+  useMemo(() => (space ? new SchemaBuilder(space.database) : undefined), [space?.key.toHex()]);

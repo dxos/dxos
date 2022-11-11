@@ -83,8 +83,8 @@ const SpacesView = () => {
   };
 
   const handleCreateSpace = async () => {
-    // 1. Create party.
-    const space = await client.echo.createParty();
+    // 1. Create space.
+    const space = await client.echo.createSpace();
 
     // 2. Create item.
     await space.database.createItem({

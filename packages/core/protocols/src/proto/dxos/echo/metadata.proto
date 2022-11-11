@@ -26,13 +26,13 @@ message EchoMetadata {
   // TODO(dmaretskyi): Store the device key associated with the identity.
   optional dxos.halo.credentials.IdentityRecord identity = 10;
 
-  /// List of the data parties.
-  repeated PartyMetadata parties = 11;
+  /// List of the data spaces.
+  repeated SpaceMetadata spaces = 11;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.
-message PartyMetadata {
-  /// Party key.
+message SpaceMetadata {
+  /// Space key.
   dxos.keys.PublicKey key = 1;
 
   optional dxos.keys.PublicKey genesis_feed_key = 6;
@@ -40,12 +40,12 @@ message PartyMetadata {
   /// Key of the wriatable control feed.
   optional dxos.keys.PublicKey control_feed_key = 4;
 
-  /// List of all feed associated with the party.
+  /// List of all feed associated with the space.
   repeated dxos.keys.PublicKey feed_keys = 2;
 
   /// Key of the wriatable data feed.
   optional dxos.keys.PublicKey data_feed_key = 3;
 
-  // Latest timeframe reached while processing party messages.
+  // Latest timeframe reached while processing space messages.
   optional timeframe.TimeframeVector latest_timeframe = 5;
 }

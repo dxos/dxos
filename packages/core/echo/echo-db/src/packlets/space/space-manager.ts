@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
@@ -89,7 +89,7 @@ export class SpaceManager {
   async open() {
     await this._metadataStore.load();
 
-    for (const spaceMetadata of this._metadataStore.parties) {
+    for (const spaceMetadata of this._metadataStore.spaces) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
       this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
@@ -110,7 +110,7 @@ export class SpaceManager {
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
-    const metadata: PartyMetadata = {
+    const metadata: SpaceMetadata = {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
@@ -150,7 +150,7 @@ export class SpaceManager {
 
   // TODO(burdon): Rename join space.
   async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
-    const metadata: PartyMetadata = {
+    const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlFeedKey: await this._keyring.createKey(),
@@ -172,7 +172,7 @@ export class SpaceManager {
     this.updated.emit();
   }
 
-  private async _constructSpace(metadata: PartyMetadata) {
+  private async _constructSpace(metadata: SpaceMetadata) {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });

@@ -11,7 +11,7 @@ import { Dialog } from '@dxos/react-components';
 
 import { ImportMenu } from './ImportMenu';
 
-export interface CreatePartyDialogProps {
+export interface CreateSpaceDialogProps {
   open: boolean;
   title?: string;
   modal?: boolean;
@@ -21,16 +21,16 @@ export interface CreatePartyDialogProps {
 }
 
 /**
- * Dialog to create, join, or import party.
+ * Dialog to create, join, or import space.
  */
-export const CreatePartyDialog = ({
+export const CreateSpaceDialog = ({
   open,
-  title = 'New Party',
+  title = 'New Space',
   modal = true,
   onCreate,
   onJoin,
   onImport
-}: CreatePartyDialogProps) => {
+}: CreateSpaceDialogProps) => {
   const [invitationCodeOrIpfsCid, setInvitationCodeOrIpfsCid] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -61,7 +61,7 @@ export const CreatePartyDialog = ({
         autoComplete='off'
         spellCheck={false}
         inputProps={{
-          'data-id': 'test-input-join-party'
+          'data-id': 'test-input-join-space'
         }}
       />
       <div style={{ height: 8, marginTop: 16 }}>{inProgress && <LinearProgress />}</div>
@@ -81,7 +81,7 @@ export const CreatePartyDialog = ({
 
       {onJoin && (
         <Button
-          data-id='test-button-join-party'
+          data-id='test-button-join-space'
           color='secondary'
           variant='contained'
           disabled={!invitationCodeOrIpfsCid || inProgress}
@@ -97,13 +97,13 @@ export const CreatePartyDialog = ({
             }
           }}
         >
-          Join Party
+          Join Space
         </Button>
       )}
 
       {onCreate && (
         <Button
-          data-id='test-button-create-party'
+          data-id='test-button-create-space'
           color='primary'
           variant='contained'
           disabled={inProgress}
@@ -112,7 +112,7 @@ export const CreatePartyDialog = ({
             onCreate!();
           }}
         >
-          Create Party
+          Create Space
         </Button>
       )}
     </>

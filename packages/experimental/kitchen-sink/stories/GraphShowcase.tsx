@@ -6,7 +6,7 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider } from '@dxos/react-client';
-import { itemAdapter, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
+import { itemAdapter, ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
 import { graphStyles } from '../src';
@@ -18,8 +18,8 @@ interface AppProps {
 }
 
 const App = ({ grid }: AppProps) => {
-  const party = useTestParty();
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const space = useTestSpace();
+  const model = useGraphModel(space, [(item) => Boolean(item.type?.startsWith('example:'))]);
 
   return (
     <EchoGraph

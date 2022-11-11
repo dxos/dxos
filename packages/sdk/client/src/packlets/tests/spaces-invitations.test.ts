@@ -20,8 +20,8 @@ describe('Spaces/invitations', function () {
     await client.halo.createProfile({ displayName: 'test-user' });
 
     {
-      const party = await client.echo.createParty();
-      const item = await party.database.createItem({ model: ObjectModel });
+      const space = await client.echo.createSpace();
+      const item = await space.database.createItem({ model: ObjectModel });
       await item.model.set('title', 'testing');
       expect(item.model.get('title')).to.eq('testing');
     }

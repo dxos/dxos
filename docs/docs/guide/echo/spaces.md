@@ -5,31 +5,31 @@ label: Spaces
 # Spaces 
 
 ```tsx
-import { Party } from '@dxos/client';
+import { space } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export const App = () => {
   const client = useClient();
-  const [party_key, setPartyKey] = useMemo<Party>();
-  const [party, setParty] = useMemo<Party>();
+  const [space_key, setspaceKey] = useMemo<space>();
+  const [space, setspace] = useMemo<space>();
 
   useEffect(() => {
     void (async () => {
-      const party = await client.echo.createParty({ title: 'New Party' });
-      setParty(party);
+      const space = await client.echo.createspace({ title: 'New space' });
+      setspace(space);
     })();
   }, []);
   
-  if (!party) {
+  if (!space) {
     return null;
   }
 
   return (
-    <div>Party: {party.key.toHex()}</div>
+    <div>space: {space.key.toHex()}</div>
   );
 };
 ```
 
 ```tsx
-const invitation = await party.createInvitation();
+const invitation = await space.createInvitation();
 ```

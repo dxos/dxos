@@ -5,13 +5,13 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Client, Party } from '@dxos/client';
+import { Client, Space } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
 import { AuthChoices, Button, Heading, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface RegistrationPageProps {
-  onRegister?: (client: Client) => Promise<Party>;
+  onRegister?: (client: Client) => Promise<Space>;
 }
 
 /**

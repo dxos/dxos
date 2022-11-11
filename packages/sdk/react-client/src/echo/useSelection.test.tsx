@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import expect from 'expect';
 import React from 'react';
 
-import { Party, Client } from '@dxos/client';
+import { Space, Client } from '@dxos/client';
 
 import { useSelection } from './useSelection';
 
@@ -20,19 +20,19 @@ const createTestComponents = async () => {
   await client.initialize();
   await client.halo.createProfile();
 
-  const party = await client.echo.createParty();
+  const space = await client.echo.createSpace();
   const items = await Promise.all(
-    Array.from({ length: count }).map(async () => await party.database.createItem({ type: TYPE_EXAMPLE }))
+    Array.from({ length: count }).map(async () => await space.database.createItem({ type: TYPE_EXAMPLE }))
   );
   expect(items.length).toBe(count);
 
-  return { client, party };
+  return { client, space };
 };
 
-const UseSelectionTestComponent = ({ party }: { party: Party }) => {
-  const items = useSelection(party?.select().filter({ type: TYPE_EXAMPLE }), []);
+const UseSelectionTestComponent = ({ space }: { space: Space }) => {
+  const items = useSelection(space?.select().filter({ type: TYPE_EXAMPLE }), []);
 
-  const addItem = async () => await party.database.createItem({ type: TYPE_EXAMPLE });
+  const addItem = async () => await space.database.createItem({ type: TYPE_EXAMPLE });
 
   return (
     <ul data-testid='add' onClick={addItem}>
@@ -47,8 +47,8 @@ const UseSelectionTestComponent = ({ party }: { party: Party }) => {
 
 describe('useSelection', function () {
   it('gets updated items selection', async function () {
-    const { party } = await createTestComponents();
-    render(<UseSelectionTestComponent party={party} />);
+    const { space } = await createTestComponents();
+    render(<UseSelectionTestComponent space={space} />);
 
     expect((await screen.findAllByTestId('item')).length).toEqual(count);
     await userEvent.click(screen.getByTestId('add'));
