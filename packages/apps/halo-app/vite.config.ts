@@ -77,7 +77,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        headless: resolve(__dirname, 'headless.html')
+        headless: resolve(__dirname, 'vault.html')
       }
     }
   },
