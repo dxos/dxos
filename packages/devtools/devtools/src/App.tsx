@@ -27,7 +27,7 @@ export const App = () => {
   const [client, setClient] = useState<Client>();
 
   const onConfigChange = async (remoteSource?: string) => {
-    if (client?.config.values.runtime?.client?.remoteSource === remoteSource) {
+    if (client && client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
 
