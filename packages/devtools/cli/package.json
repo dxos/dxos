@@ -96,5 +96,8 @@
         "description": "Configuration information."
       }
     }
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
