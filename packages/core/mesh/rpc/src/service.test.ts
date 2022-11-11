@@ -291,6 +291,83 @@ describe('Protobuf service', function () {
     });
   });
 
+  describe('service providers', () => {
+    it('sync function', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const TestService = schema.getService('example.testing.rpc.TestService');
+
+      const services = createServiceBundle({
+        TestService,
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestService: () => ({
+            testCall: async (req) => {
+              expect(req.data).toEqual('requestData');
+              return { data: 'responseData' };
+            },
+            voidCall: async () => {}
+          }),
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const response = await client.rpc.TestService.testCall({
+        data: 'requestData'
+      });
+      expect(response.data).toEqual('responseData');
+    });
+
+    it('async function', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const TestService = schema.getService('example.testing.rpc.TestService');
+
+      const services = createServiceBundle({
+        TestService,
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestService: async () => {
+            await sleep(1);
+            return{
+            testCall: async (req) => {
+              expect(req.data).toEqual('requestData');
+              return { data: 'responseData' };
+            },
+            voidCall: async () => {}
+          }},
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const response = await client.rpc.TestService.testCall({
+        data: 'requestData'
+      });
+      expect(response.data).toEqual('responseData');
+    });
+  })
+})
+
   describe('google.protobuf.Any encoding', function () {
     it('recursively encodes google.protobuf.Any by default', async function () {
       const [alicePort, bobPort] = createLinkedPorts();

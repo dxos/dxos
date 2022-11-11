@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
+import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
@@ -38,6 +38,7 @@ export class ProtoRpcPeer<Service> {
   }
 }
 
+
 export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
   /**
    * Services that are expected to be implemented by the counter-space.
@@ -54,7 +55,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Handlers for the exposed services
    */
-  handlers?: Server;
+  handlers?: { [ServiceName in keyof Server]: ServiceProvider<Server[ServiceName]> };
 
   /**
    * Encoding options passed to the underlying proto codec.
@@ -82,8 +83,8 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
       // Get full service name with the package name without '.' at the beginning.
       const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-      const serviceHandlers = handlers[serviceName];
-      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceHandlers, encodingOptions);
+      const serviceProvider = handlers[serviceName];
+      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
     }
   }
 

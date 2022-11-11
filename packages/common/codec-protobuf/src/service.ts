@@ -17,6 +17,11 @@ export interface ServiceBackend {
   callStream(method: string, request: Any): Stream<Any>;
 }
 
+export type ServiceProvider<Service> = 
+  | Service
+  | (() => Service)
+  | (() => Promise<Service>);
+
 /**
  * Client/server service wrapper.
  */
@@ -35,7 +40,7 @@ export class ServiceDescriptor<S> {
     return new Service(backend, this._service, this._schema, encodingOptions) as Service & S;
   }
 
-  createServer(handlers: S, encodingOptions?: EncodingOptions): ServiceHandler<S> {
+  createServer(handlers: ServiceProvider<S>, encodingOptions?: EncodingOptions): ServiceHandler<S> {
     return new ServiceHandler(this._service, this._schema, handlers, encodingOptions);
   }
 }
@@ -97,7 +102,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   constructor(
     private readonly _service: pb.Service,
     private readonly _schema: Schema<any>,
-    private readonly _handlers: S,
+    private readonly _serviceProvider: ServiceProvider<S>,
     private readonly _encodingOptions?: EncodingOptions
   ) {}
 
@@ -111,11 +116,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const mappedMethodName = mapRpcMethodName(methodName);
 
-    const handler = this._handlers[mappedMethodName as keyof S];
-    assert(handler, `Handler is missing: ${mappedMethodName}`);
-
+    const handler = await this._getHandler(mappedMethodName);
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
-    const response = await (handler as any).bind(this._handlers)(requestDecoded);
+    const response = await handler(requestDecoded);
     const responseEncoded = responseCodec.encode(response, this._encodingOptions);
 
     return {
@@ -134,11 +137,10 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const mappedMethodName = mapRpcMethodName(methodName);
 
-    const handler = this._handlers[mappedMethodName as keyof S];
-    assert(handler, `Handler is missing: ${mappedMethodName}`);
+    const handlerPromise = this._getHandler(mappedMethodName);
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
-    const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
+    const responseStream = Stream.unwrapPromise(handlerPromise.then(handler => handler(requestDecoded) as Stream<unknown>))
     return Stream.map(
       responseStream,
       (data): Any => ({
@@ -146,6 +148,13 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
         type_url: method.resolvedResponseType!.fullName
       })
     );
+  }
+
+  private async _getHandler(method: string): Promise<(request: unknown) => unknown> {
+    const service: S = typeof this._serviceProvider === 'function' ? await (this._serviceProvider as Function)() : this._serviceProvider;
+    const handler = service[method as keyof S];
+    assert(handler, `Handler is missing: ${method}`);
+    return (handler as any).bind(service);
   }
 
   private _getMethodInfo(methodName: string) {

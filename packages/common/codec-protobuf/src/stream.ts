@@ -51,9 +51,8 @@ export type StreamItem<T> = { ready: true } | { data: T } | { closed: true; erro
 
 /**
  * Represents a typed stream of data.
- *
+ * In concept it's a Promise that can resolve multiple times.
  * Can only have one subscriber.
- *
  * `close` must be called to clean-up the resources.
  */
 export class Stream<T> {
@@ -92,6 +91,33 @@ export class Stream<T> {
       source.subscribe((data) => next(map(data)), close);
 
       return () => source.close();
+    });
+  }
+
+  /**
+   * Converts Promise<Stream<T>> to Stream<T>.
+   */
+  static unwrapPromise<T>(streamPromise: Promise<Stream<T>>): Stream<T> {
+    if (streamPromise instanceof Stream) {
+      return streamPromise;
+    }
+
+    return new Stream(({ ready, next, close}) => {
+      streamPromise.then(
+        stream => {
+          stream.onReady(ready);
+          stream.subscribe(next, close);
+        },
+        err => {
+          close(err);
+        }
+      );
+      return () => {
+        streamPromise.then(
+          stream => stream.close(),
+          err => { /* already handled */ }
+        );
+      }
     });
   }
 
