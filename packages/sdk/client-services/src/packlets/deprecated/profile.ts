@@ -110,16 +110,16 @@ export class ProfileServiceImpl implements ProfileService {
       // };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(invitation);
+      const haloSpacePromise = this.context.haloInvitations.acceptInvitation(invitation);
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      haloPartyPromise
+      haloSpacePromise
         .then((identity) => {
           next({
             id,
             state: InvitationState.SUCCESS,
-            partyKey: identity.identityKey
+            spaceKey: identity.identityKey
           });
         })
         .catch((err) => {

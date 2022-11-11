@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { InvitationObservable, PartyProxy } from '@dxos/client';
+import { InvitationObservable, SpaceProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 
 import { useInvitationStatus } from '../invitations';
@@ -15,7 +15,7 @@ export const useSpaceInvitations = (spaceKey?: PublicKey): InvitationObservable[
   const [invitations, setInvitations] = useState<InvitationObservable[]>(space?.invitations ?? []);
 
   useEffect(() => {
-    if (!(space instanceof PartyProxy)) {
+    if (!(space instanceof SpaceProxy)) {
       return;
     }
 

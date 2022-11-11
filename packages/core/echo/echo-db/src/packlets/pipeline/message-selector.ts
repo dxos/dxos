@@ -14,8 +14,8 @@ const log = debug('dxos:echo-db:message-selector');
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.
- * The first message we wish to process is the PartyGenesis, which will admit a Feed.
- * As we encounter and process FeedAdmit messages those are added to the Party's trust,
+ * The first message we wish to process is the SpaceGenesis, which will admit a Feed.
+ * As we encounter and process FeedAdmit messages those are added to the Space's trust,
  * and we begin processing messages from them as well.
  */
 export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlockSelector<FeedMessage> => {

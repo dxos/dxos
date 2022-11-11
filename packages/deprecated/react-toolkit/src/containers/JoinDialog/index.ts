@@ -3,5 +3,5 @@
 //
 
 export * from './JoinDialog';
-export * from './JoinPartyDialog';
+export * from './JoinSpaceDialog';
 export * from './JoinHaloDialog';

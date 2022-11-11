@@ -63,7 +63,7 @@ describe('services/service-host', function () {
           }
 
           case InvitationState.SUCCESS: {
-            expect(msg.partyKey).not.to.be.undefined;
+            expect(msg.spaceKey).not.to.be.undefined;
             setAck();
             break;
           }

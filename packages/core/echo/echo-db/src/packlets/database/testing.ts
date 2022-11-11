@@ -41,10 +41,10 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const dataServiceSubscriptions = new DataServiceSubscriptions();
   const dataService = new DataServiceImpl(dataServiceSubscriptions);
 
-  const partyKey = PublicKey.random();
-  dataServiceSubscriptions.registerSpace(partyKey, dataServiceHost);
+  const spaceKey = PublicKey.random();
+  dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
-  const database = new Database(modelFactory, new RemoteDatabaseBackend(dataService, partyKey), PublicKey.random());
+  const database = new Database(modelFactory, new RemoteDatabaseBackend(dataService, spaceKey), PublicKey.random());
 
   await database.initialize();
   return database;

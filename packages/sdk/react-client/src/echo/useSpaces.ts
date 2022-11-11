@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { PublicKeyLike } from '@dxos/keys';
 
 import { useClient } from '../client';
@@ -13,7 +13,7 @@ import { useClient } from '../client';
  * Get a specific Space.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useSpace = (spaceKey?: PublicKeyLike): Party | undefined => {
+export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
   const spaces = useSpaces();
   return spaces.find((space) => spaceKey && space.key.equals(spaceKey));
 };
@@ -24,10 +24,10 @@ export const useSpace = (spaceKey?: PublicKeyLike): Party | undefined => {
  */
 export const useSpaces = () => {
   const client = useClient();
-  const [spaces, setSpaces] = useState<Party[]>([]);
+  const [spaces, setSpaces] = useState<Space[]>([]);
 
   useEffect(() => {
-    const result = client.echo.queryParties();
+    const result = client.echo.querySpaces();
     setSpaces(result.value);
 
     const unsubscribe = result.subscribe(() => {

@@ -27,8 +27,8 @@ import { Link } from './link';
 const log = debug('dxos:echo-db:data-service-host');
 
 /**
- * Provides methods for DataService for a single party.
- * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
+ * Provides methods for DataService for a single space.
+ * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on space id.
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceHost {
@@ -39,7 +39,7 @@ export class DataServiceHost {
   ) {}
 
   /**
-   * Returns a stream with a list of active entities in the party.
+   * Returns a stream with a list of active entities in the space.
    */
   subscribeEntitySet(): Stream<SubscribeEntitySetResponse> {
     return new Stream(({ next }) => {

@@ -23,7 +23,7 @@ export interface ImportMenuProps {
 }
 
 /**
- * Dialog to create, join, or import party.
+ * Dialog to create, join, or import space.
  */
 export const ImportMenu = ({ onImport }: ImportMenuProps) => {
   const [inProgress, setInProgress] = useState(false);

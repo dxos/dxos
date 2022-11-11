@@ -10,26 +10,26 @@ import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
 
 import { SharingDialog, SharingDialogProps } from './SharingDialog';
 
-export interface PartySharingDialogProps
+export interface SpaceSharingDialogProps
   extends Omit<
     SharingDialogProps,
     'title' | 'members' | 'onCreateInvitation' | 'onCancelInvitation' | 'onCreateBotInvitation'
   > {
-  partyKey: PublicKey;
+  spaceKey: PublicKey;
 }
 
 /**
- * Manages the workflow for inviting a user to a party.
+ * Manages the workflow for inviting a user to a space.
  * @deprecated
  */
-export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogProps) => {
-  const party = useSpace(partyKey);
-  const members = useMembers(partyKey);
-  const _invitations = useSpaceInvitations(partyKey);
+export const SpaceSharingDialog = ({ spaceKey, ...props }: SpaceSharingDialogProps) => {
+  const space = useSpace(spaceKey);
+  const members = useMembers(spaceKey);
+  const _invitations = useSpaceInvitations(spaceKey);
   // const botClient = useBotFactoryClient(false);
 
   const handleCreateInvitation = async () => {
-    await party!.createInvitation();
+    await space!.createInvitation();
     throw new Error('Not implemented.');
   };
 
@@ -40,18 +40,18 @@ export const PartySharingDialog = ({ partyKey, ...props }: PartySharingDialogPro
 
   // const handleBotInvitation = botClient
   //   ? async (resource: ResourceSet) => {
-  //       await botClient!.spawn({ name: resource.name.toString() }, party!);
+  //       await botClient!.spawn({ name: resource.name.toString() }, space!);
   //     }
   //   : undefined;
 
-  if (!party) {
+  if (!space) {
     return null;
   }
 
   return (
     <SharingDialog
       {...props}
-      title='Party Sharing'
+      title='Space Sharing'
       members={members}
       invitations={[]}
       onCreateInvitation={handleCreateInvitation}

@@ -6,12 +6,12 @@ import cx from 'classnames';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { Avatar, Group, defaultGroup, defaultHover, defaultFocus } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
-  spaces?: Array<Party>;
+  spaces?: Array<Space>;
 }
 
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {

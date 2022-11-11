@@ -4,19 +4,19 @@
 
 import React, { FC, useEffect, useState } from 'react';
 
-import { PARTY_ITEM_TYPE, Party } from '@dxos/client';
+import { SPACE_ITEM_TYPE, Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
 import { List } from '../util';
 
 // TODO(burdon): Move into react-client.
-const useTypes = (party?: Party, deps: any[] = []) => {
+const useTypes = (space?: Space, deps: any[] = []) => {
   const [types, setTypes] = useState<Set<string>>(new Set());
-  const items = useSelection(party?.select(), deps) ?? [];
+  const items = useSelection(space?.select(), deps) ?? [];
 
   useEffect(() => {
     const types = new Set<string>();
-    items.forEach((item) => item.type && item.type !== PARTY_ITEM_TYPE && types.add(item.type));
+    items.forEach((item) => item.type && item.type !== SPACE_ITEM_TYPE && types.add(item.type));
     setTypes(types);
   }, [items]);
 
@@ -24,10 +24,10 @@ const useTypes = (party?: Party, deps: any[] = []) => {
 };
 
 export const ItemTypeList: FC<{
-  party: Party;
+  space: Space;
   onChange: (type: string) => void;
-}> = ({ party, onChange }) => {
-  const types = useTypes(party);
+}> = ({ space, onChange }) => {
+  const types = useTypes(space);
 
   return (
     <List

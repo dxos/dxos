@@ -90,9 +90,9 @@ export const manifest: FrameManifest = {
 };
 ```
 
-Two key concepts of ECHO are parties and items. In short, a party is a shared database containing queryable graph of items. The `createRootItem` function should create an item which corresponds to a single instance of the frame. It will be called with the party which the item should be created in and the initial properties of that item.
+Two key concepts of ECHO are spaces and items. In short, a space is a shared database containing queryable graph of items. The `createRootItem` function should create an item which corresponds to a single instance of the frame. It will be called with the space which the item should be created in and the initial properties of that item.
 
-TODO link to ECHO docs on parties/items.
+TODO link to ECHO docs on spaces/items.
 
 We need to pass a few options to `createItem`, let's walk through what those are:
 
@@ -112,8 +112,8 @@ export const manifest: FrameManifest = {
   register: async (client) => {
     client.registerModel(ObjectModel);
   },
-  createRootItem: async (party, props) => {
-    const item = await party.database.createItem({
+  createRootItem: async (space, props) => {
+    const item = await space.database.createItem({
       type: TYPE_TASKS_LIST,
       model: ObjectModel,
       props
@@ -163,13 +163,13 @@ return (
 
 ### Create Tasks
 
-Next we want to make our text field useful and add some tasks. The most important piece here is the `useFrameContext` hook. The frame context makes available an ECHO party and item to the frame, the item provided is the specific item relevant to our frame.
+Next we want to make our text field useful and add some tasks. The most important piece here is the `useFrameContext` hook. The frame context makes available an ECHO space and item to the frame, the item provided is the specific item relevant to our frame.
 
-We'll need both the party and item in order for the frame to operate properly so if either are missing we won't render anything for now.
+We'll need both the space and item in order for the frame to operate properly so if either are missing we won't render anything for now.
 
 There's also one other piece of state we need and that will be used to manage the new task input. With that in place we just need to go about creating tasks.
 
-The last piece is an event handler which will create a new item in the party. The aside from using a different type, the only difference between this and the root item is that this item references the root item as it's parent.
+The last piece is an event handler which will create a new item in the space. The aside from using a different type, the only difference between this and the root item is that this item references the root item as it's parent.
 
 ```tsx
 import { ObjectModel } from '@dxos/object-model';
@@ -179,10 +179,10 @@ const TYPE_TASKS_TASK = 'example:type.tasks.task';
 
 // ...
 
-const { party, item } = useFrameContext();
+const { space, item } = useFrameContext();
 const [newTask, setNewTask] = useState('');
 
-if (!party || !item) {
+if (!space || !item) {
   return null;
 }
 
@@ -191,7 +191,7 @@ const handleCreateTask = async () => {
     return;
   }
 
-  await party.database.createItem({
+  await space.database.createItem({
     type: TYPE_TASKS_TASK,
     model: ObjectModel,
     parent: item.id,
@@ -234,7 +234,7 @@ return (
 
 ### Render Tasks
 
-With that in place we'll be able to create new tasks, but it still appears as if nothing is happening. We need to query the database to retrieve the tasks we create and render them. To query the database, we'll use the selection API from the party and the `useSelection` hook which returns a reactive result of the query.
+With that in place we'll be able to create new tasks, but it still appears as if nothing is happening. We need to query the database to retrieve the tasks we create and render them. To query the database, we'll use the selection API from the space and the `useSelection` hook which returns a reactive result of the query.
 
 TODO link to ECHO api reference for `useSelection`
 
@@ -247,10 +247,10 @@ import { useSelection } from '@dxos/react-client';
 
 // ...
 
-const tasks = useSelection(party?.database.select(selection => selection
+const tasks = useSelection(space?.database.select(selection => selection
   .filter({ type: TYPE_TASKS_TASK })
   .items
-), [party, item]) ?? [];
+), [space, item]) ?? [];
 ```
 
 When creating a new task we set the `title` property on that item with the value of that task. Here we will read that property from the item in order to display the task.
