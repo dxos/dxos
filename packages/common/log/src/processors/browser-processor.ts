@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import path from 'node:path';
+
 import { LogLevel, shortLevelName } from '../config';
 import { LogProcessor, shouldLog } from '../context';
 
@@ -25,10 +27,17 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   const args = [];
 
   if (entry.meta) {
-    args.push(`${getRelativeFilename(entry.meta.file)}:${entry.meta.line}`);
+    const server = 'https://vscode.dev/github.com';
+    const repo = 'dxos/dxos';
+    const branch = 'main';
+    const filename = getRelativeFilename(entry.meta.file);
+    const filepath = path.join(server, repo, 'blob', branch, filename);
+    args.push(`${filepath}#L${entry.meta.line}`);
   }
 
-  args.push(`${shortLevelName[entry.level]} ${entry.message}`);
+  // TODO(burdon): https://javascript.plainenglish.io/adding-css-to-console-log-dde2e167ee7a
+
+  args.push(`${shortLevelName[entry.level]}\n${entry.message}`);
 
   if (entry.context && Object.keys(entry.context).length > 0) {
     args.push(entry.context);
