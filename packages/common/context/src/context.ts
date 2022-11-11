@@ -3,6 +3,7 @@
 //
 
 import { log } from '@dxos/log';
+import { safeInstanceof } from '@dxos/util';
 
 export type ContextErrorHandler = (error: Error) => void;
 
@@ -12,17 +13,8 @@ export type CreateContextParams = {
   onError?: ContextErrorHandler;
 };
 
+@safeInstanceof('Context')
 export class Context {
-  // Marker for the isContext method.
-  private readonly _isContext = true;
-
-  /**
-   * Checks if the object is a context. Not susceptible to prototype duplication that could happen during bundling.
-   */
-  static isContext(value: unknown): value is Context {
-    return (value as Context)?._isContext === true;
-  }
-
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;

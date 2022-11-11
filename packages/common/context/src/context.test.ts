@@ -35,12 +35,12 @@ describe('Context', function () {
     expect(error.message).toEqual('test');
   });
 
-  it('isContext', function () {
+  it('instanceof', function () {
     const ctx = new Context();
-    expect(Context.isContext(ctx)).toBeTruthy();
+    expect(ctx instanceof Context).toBeTruthy();
 
-    expect(Context.isContext({})).toBeFalsy();
+    expect({} instanceof Context).toBeFalsy();
 
-    expect(Context.isContext(undefined)).toBeFalsy();
+    expect((undefined as any) instanceof Context).toBeFalsy();
   });
 });
