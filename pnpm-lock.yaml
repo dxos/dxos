@@ -3313,6 +3313,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
@@ -3347,6 +3348,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util

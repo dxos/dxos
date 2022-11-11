@@ -4,7 +4,7 @@ title: Values
 # Values 
 
 ### [`DEFAULT_CLIENT_ORIGIN`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L37)
-Type: `"https://halo.dxos.org/headless.html"`
+Type: `"https://halo.dxos.org/vault.html"`
 ### [`DXOS_VERSION`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/version.ts#L5)
 Type: `"2.33.8"`
 ### [`PARTY_ITEM_TYPE`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/stubs.ts#L9)
