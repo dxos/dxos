@@ -28,12 +28,16 @@ export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
 export {
   invitationObservable,
-  ClientServicesHost,
-  ClientServicesProvider,
   InvitationEvents,
   InvitationEncoder,
   InvitationObservable,
-  AuthenticatingInvitationObservable
+  AuthenticatingInvitationObservable,
+  // TODO(wittjosiah): Remove.
+  ClientServicesHost,
+  ClientServicesProvider,
+  IFrameRuntime,
+  WorkerRuntime,
+  WorkerSession
 } from '@dxos/client-services';
 
 export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';

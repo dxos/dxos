@@ -9,7 +9,7 @@ export const IFRAME_ID = '__DXOS_CLIENT__';
 export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
 
 // TODO(burdon): Move to ConfigProto.
-export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
+export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/vault.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
 

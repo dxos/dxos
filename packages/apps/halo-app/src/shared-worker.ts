@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { WorkerRuntime } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';
-
-import { WorkerRuntime } from './worker/worker-runtime';
 
 log.config({ filter: 'info' });
 
@@ -24,10 +23,5 @@ void workerRuntime.start().then(
 
 onconnect = async (event) => {
   log.info('onconnect', { event });
-  const muxer = new PortMuxer(event.ports[0]);
-
-  await workerRuntime.createSession({
-    appPort: muxer.createWorkerPort({ channel: 'dxos:app' }),
-    systemPort: muxer.createWorkerPort({ channel: 'dxos:wrtc' })
-  });
+  await workerRuntime.createSession({ portMuxer: new PortMuxer(event.ports[0]) });
 };
