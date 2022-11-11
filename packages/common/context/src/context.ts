@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { safeInstanceof } from '@dxos/util';
 import { log } from '@dxos/log';
+import { safeInstanceof } from '@dxos/util';
 
 export type ContextErrorHandler = (error: Error) => void;
 

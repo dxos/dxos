@@ -15,4 +15,4 @@ export * from './random';
 export * from './range';
 export * from './types';
 export * from './uint8array';
-export * from './safe-instanceof'
+export * from './safe-instanceof';
