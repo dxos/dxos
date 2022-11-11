@@ -712,8 +712,10 @@ importers:
   packages/common/context:
     specifiers:
       '@dxos/log': workspace:*
+      '@dxos/util': workspace:*
     dependencies:
       '@dxos/log': link:../log
+      '@dxos/util': link:../util
 
   packages/common/crypto:
     specifiers:

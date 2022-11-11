@@ -16,7 +16,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
