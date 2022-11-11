@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
-import { Party, Client } from '@dxos/client';
+import { Space, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
@@ -25,15 +25,15 @@ export class Orchestrator {
     })
   );
 
-  private _party: Party | undefined;
+  private _space: Space | undefined;
   private _config?: Config;
   private _broker?: TestBroker;
 
   constructor(private readonly _botContainer: BotContainer) {}
 
-  get party(): Party {
-    assert(this._party);
-    return this._party;
+  get space(): Space {
+    assert(this._space);
+    return this._space;
   }
 
   get botFactoryClient(): BotFactoryClient {
@@ -57,7 +57,7 @@ export class Orchestrator {
     this._client = new Client({ config: this._config });
     await this._client.initialize();
     await this._client.halo.createProfile();
-    this._party = await this._client.echo.createParty();
+    this._space = await this._client.echo.createSpace();
 
     const topic = PublicKey.random();
 
@@ -84,7 +84,7 @@ export class Orchestrator {
   }
 
   async spawnBot(botPackageSpecifier: BotPackageSpecifier) {
-    assert(this._party);
-    return await this._botFactoryClient.spawn(botPackageSpecifier, this._party);
+    assert(this._space);
+    return await this._botFactoryClient.spawn(botPackageSpecifier, this._space);
   }
 }

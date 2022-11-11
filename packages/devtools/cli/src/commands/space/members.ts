@@ -28,18 +28,18 @@ export default class Members extends BaseCommand {
     let { key } = args;
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: parties = [] } = await client.echo.queryParties();
+      const { value: spaces = [] } = await client.echo.querySpaces();
       if (!key) {
-        key = await selectSpace(parties);
+        key = await selectSpace(spaces);
       }
 
-      const party = parties.find((party) => party.key.toHex().startsWith(key));
-      if (!party) {
+      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      if (!space) {
         this.log('Invalid key');
         return;
       }
 
-      const { value: members = [] } = party.queryMembers();
+      const { value: members = [] } = space.queryMembers();
       if (!flags.json) {
         printMembers(members, flags);
       }

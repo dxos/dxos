@@ -22,7 +22,7 @@ const Story = () => {
 
   return (
     <div>
-      <Button onClick={() => client.echo.createParty()}>Add Space</Button>
+      <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
 
       <SpaceList spaces={spaces} />
     </div>

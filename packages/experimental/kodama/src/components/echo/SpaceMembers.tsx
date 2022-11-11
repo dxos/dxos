@@ -10,11 +10,11 @@ import { useMembers, useSpace } from '@dxos/react-client';
 
 import { Table } from '../util';
 
-export const PartyMembers: FC<{
-  partyKey: PublicKey;
-}> = ({ partyKey }) => {
-  const _party = useSpace(partyKey);
-  const members = useMembers(partyKey);
+export const SpaceMembers: FC<{
+  spaceKey: PublicKey;
+}> = ({ spaceKey }) => {
+  const _space = useSpace(spaceKey);
+  const members = useMembers(spaceKey);
 
   return (
     <Table

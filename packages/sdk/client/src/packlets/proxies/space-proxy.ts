@@ -15,15 +15,13 @@ import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { Party as PartyType, PartyDetails, PartyMember } from '@dxos/protocols/proto/dxos/client';
-import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.
+export const SPACE_ITEM_TYPE = 'dxos:item/space'; // TODO(burdon): Remove.
 
-// TODO(burdon): Rename Space.
-// TODO(burdon): Match params to @dxos/echo-db Space.
 // TODO(burdon): Separate public API form implementation (move comments here).
-export interface Party extends ISpace {
+export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
@@ -59,7 +57,7 @@ export interface Party extends ISpace {
   /**
    * @deprecated
    */
-  getDetails(): Promise<PartyDetails>;
+  getDetails(): Promise<SpaceDetails>;
   /**
    * @deprecated
    */
@@ -73,15 +71,14 @@ export interface Party extends ISpace {
    */
   getProperty(key: string, defaultValue?: any): any;
 
-  queryMembers(): ResultSet<PartyMember>;
+  queryMembers(): ResultSet<SpaceMember>;
 
-  // TODO(burdon): Remove this option (for testing only).
   createInvitation(options?: CreateInvitationsOptions): Promise<InvitationObservable>;
 
-  createSnapshot(): Promise<PartySnapshot>;
+  createSnapshot(): Promise<SpaceSnapshot>;
 }
 
-export class PartyProxy implements Party {
+export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
   private readonly _invitations: InvitationObservable[] = [];
@@ -92,20 +89,20 @@ export class PartyProxy implements Party {
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
-  private _item?: Item<ObjectModel>;
+  private _item?: Item<ObjectModel>; // TODO(burdon): Rename.
 
   // prettier-ignore
   constructor(
     private _clientServices: ClientServicesProvider,
     private _modelFactory: ModelFactory,
-    private _party: PartyType,
+    private _space: SpaceType,
     memberKey: PublicKey // TODO(burdon): Change to identityKey (see optimistic mutations)?
   ) {
     // TODO(burdon): Don't shadow properties.
-    this._key = this._party.publicKey;
-    this._isOpen = this._party.isOpen;
-    this._isActive = this._party.isActive;
-    if (!this._party.isOpen) { // TODO(burdon): Assert?
+    this._key = this._space.publicKey;
+    this._isOpen = this._space.isOpen;
+    this._isActive = this._space.isActive;
+    if (!this._space.isOpen) { // TODO(burdon): Assert?
       return;
     }
 
@@ -117,8 +114,8 @@ export class PartyProxy implements Party {
     );
     // } else if (false) {
     //   // TODO(wittjosiah): Reconcile service provider host with interface.
-    //   const party = (this._serviceProvider as any).echo.getParty(this._key) ?? failUndefined();
-    //   this._database = party.database;
+    //   const space = (this._serviceProvider as any).echo.getSpace(this._key) ?? failUndefined();
+    //   this._database = space.database;
     // } else {
     //   throw new Error('Unrecognized service provider.');
     // }
@@ -137,10 +134,9 @@ export class PartyProxy implements Party {
     return this._isActive;
   }
 
-  // TODO(burdon): Invert party/database? (e.g., const db = client.connect()).
   get database(): Database {
     if (!this._database) {
-      throw new Error('Party not open.');
+      throw new Error('Space not open.');
     }
 
     return this._database;
@@ -148,16 +144,16 @@ export class PartyProxy implements Party {
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
+   * @deprecated Use database accessor.
    */
-  // TODO(burdon): Remove (use database).
   get select(): Database['select'] {
     return this.database.select.bind(this.database);
   }
 
   /**
    * Returns a selection context, which can be used to traverse the object graph.
+   * @deprecated Use database accessor.
    */
-  // TODO(burdon): Remove (use database).
   get reduce(): Database['reduce'] {
     return this.database.reduce.bind(this.database);
   }
@@ -166,12 +162,10 @@ export class PartyProxy implements Party {
    * Called by EchoProxy open.
    */
   async initialize() {
-    // if (this._database && this._serviceProvider instanceof ClientServicesProxy) {
     await this._database!.initialize();
-    // }
 
     // Root item for properties.
-    this._item = await this._database?.createItem({ type: PARTY_ITEM_TYPE });
+    this._item = await this._database?.createItem({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
   }
@@ -193,15 +187,15 @@ export class PartyProxy implements Party {
     await this._setOpen(false);
   }
 
-  async getDetails(): Promise<PartyDetails> {
-    return this._clientServices.services.PartyService.getPartyDetails({
-      partyKey: this._key
+  async getDetails(): Promise<SpaceDetails> {
+    return this._clientServices.services.SpaceService.getSpaceDetails({
+      spaceKey: this._key
     });
   }
 
   async _setOpen(open: boolean) {
-    await this._clientServices.services.PartyService.setPartyState({
-      partyKey: this.key,
+    await this._clientServices.services.SpaceService.setSpaceState({
+      spaceKey: this.key,
       open
     });
   }
@@ -209,8 +203,8 @@ export class PartyProxy implements Party {
   async setActive(active: boolean) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
-    // await this._serviceProvider.services.PartyService.setPartyState({
-    //   party_key: this.key,
+    // await this._serviceProvider.services.SpaceService.setSpaceState({
+    //   space_key: this.key,
     //   active_global,
     //   active_device
     // });
@@ -225,40 +219,40 @@ export class PartyProxy implements Party {
   }
 
   /**
-   * @deprecated Use party.properties.
+   * @deprecated Use space.properties.
    */
   async setTitle(title: string) {
-    // await this.setProperty(PARTY_TITLE_PROPERTY, title);
+    // await this.setProperty(SPACE_TITLE_PROPERTY, title);
   }
 
   /**
-   * @deprecated Use party.properties.
+   * @deprecated Use space.properties.
    */
   getTitle() {
     return todo();
-    // return this.getProperty(PARTY_TITLE_PROPERTY);
+    // return this.getProperty(SPACE_TITLE_PROPERTY);
   }
 
   /**
-   * @deprecated Use party.properties.
+   * @deprecated Use space.properties.
    */
   async setProperty(key: string, value?: any) {
     await this.properties.set(key, value);
   }
 
   /**
-   * @deprecated Use party.properties.
+   * @deprecated Use space.properties.
    */
   getProperty(key: string, defaultValue?: any) {
     return this.properties.get(key, defaultValue);
   }
 
   /**
-   * Return set of party members.
+   * Return set of space members.
    */
   // TODO(burdon): Don't expose result object and provide type.
-  queryMembers(): ResultSet<PartyMember> {
-    return new ResultSet(this.stateUpdate, () => this._party.members ?? []);
+  queryMembers(): ResultSet<SpaceMember> {
+    return new ResultSet(this.stateUpdate, () => this._space.members ?? []);
   }
 
   /**
@@ -289,21 +283,21 @@ export class PartyProxy implements Party {
   /**
    * Implementation method.
    */
-  createSnapshot(): Promise<PartySnapshot> {
+  createSnapshot(): Promise<SpaceSnapshot> {
     return todo();
-    // return this._serviceProvider.services.PartyService.createSnapshot({ party_key: this.key });
+    // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
   }
 
   /**
-   * Called by EchoProxy to update this party instance.
+   * Called by EchoProxy to update this space instance.
    * @internal
    */
-  _processPartyUpdate(party: PartyType) {
-    console.log('Party._processPartyUpdate', party);
-    this._party = party;
-    this._key = party.publicKey;
-    this._isOpen = party.isOpen;
-    this._isActive = party.isActive;
+  _processSpaceUpdate(space: SpaceType) {
+    console.log('Space._processSpaceUpdate', space);
+    this._space = space;
+    this._key = space.publicKey;
+    this._isOpen = space.isOpen;
+    this._isActive = space.isActive;
     this.stateUpdate.emit();
   }
 }

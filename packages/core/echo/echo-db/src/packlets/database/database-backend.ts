@@ -97,7 +97,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
   // prettier-ignore
   constructor(
     private readonly _service: DataService,
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get isReadOnly(): boolean {
@@ -107,7 +107,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
   async open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
-    const dataMirror = new DataMirror(this._itemManager, this._service, this._partyKey);
+    const dataMirror = new DataMirror(this._itemManager, this._service, this._spaceKey);
 
     this._subscriptions.add(
       modelFactory.registered.on(async (model) => {
@@ -132,7 +132,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
         log('write', mutation);
         const { feedKey, seq } = await this._service.write({
           mutation,
-          partyKey: this._partyKey
+          spaceKey: this._spaceKey
         });
         assert(feedKey);
         assert(seq !== undefined);

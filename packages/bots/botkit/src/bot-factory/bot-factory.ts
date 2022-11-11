@@ -96,7 +96,7 @@ export class BotFactory implements BotFactoryService {
               config: this._config,
               packageSpecifier: bot.packageSpecifier,
               // TODO(egorgripasov): Restore properly from snapshot storage.
-              partyKey: bot.partyKey && PublicKey.from(bot.partyKey.toString())
+              spaceKey: bot.spaceKey && PublicKey.from(bot.spaceKey.toString())
             });
             handle.startTimestamp = new Date();
             handle.localPath = localPath;
@@ -132,7 +132,7 @@ export class BotFactory implements BotFactoryService {
       const handle = new BotHandle(id, join(BOT_OUT_DIR, id), this._botContainer, {
         config: this._config,
         packageSpecifier,
-        partyKey: request.partyKey
+        spaceKey: request.spaceKey
       });
       log(`[${id}] Bot directory is set to ${handle.workingDirectory}`);
       await handle.initializeDirectories();

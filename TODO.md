@@ -19,7 +19,7 @@ Staging area for internal work-in-progress (written-up into GH issues).
 - [ ] Testing framework (factor out sync tests).
 - [x] Move InvitationWrapper to client.
 - [ ] Remove re-exports from `@dxos/client`.
-- [ ] Remove `partyKey` vars, etc.
+- [ ] Remove `spaceKey` vars, etc.
 - [ ] Halo key management (factor out usage by `@dxos/registry-client`.
 - [ ] Move DXOS errors from `@dxos/debug`. Reconcile debug/mesh-protocol (nanoerror).
 
@@ -34,7 +34,7 @@ Staging area for internal work-in-progress (written-up into GH issues).
 
 ## Protocols
 
-- [ ] Clean-up defs; remove "party".
+- [ ] Clean-up defs; remove "space".
 - [ ] ProtoRpcPeerOptions (rename requested/exposed options).
 
 ## Tools

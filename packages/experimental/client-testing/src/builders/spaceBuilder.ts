@@ -4,7 +4,7 @@
 
 import faker from 'faker';
 
-import { Item, ObjectModel, Party } from '@dxos/client';
+import { Item, ObjectModel, Space } from '@dxos/client';
 
 import { NumberRange, capitalize, getNumber } from '../util';
 
@@ -43,7 +43,7 @@ const schemas = {
  */
 export class ProjectBuilder {
   constructor(
-    private readonly _builder: PartyBuilder,
+    private readonly _builder: SpaceBuilder,
     private readonly _org: Item<ObjectModel>,
     private readonly _project: Item<ObjectModel>
   ) {}
@@ -68,7 +68,7 @@ export class ProjectBuilder {
  * Org
  */
 export class OrgBuilder {
-  constructor(private readonly _builder: PartyBuilder, private readonly _org: Item<ObjectModel>) {}
+  constructor(private readonly _builder: SpaceBuilder, private readonly _org: Item<ObjectModel>) {}
 
   get org() {
     return this._org;
@@ -94,15 +94,15 @@ export class OrgBuilder {
 }
 
 /**
- * Party builder.
+ * Space builder.
  */
 // TODO(burdon): Rename generator.
 // TODO(burdon): Configure generator to treat all references as links (e.g., for table).
-export class PartyBuilder {
-  constructor(private readonly _party: Party) {}
+export class SpaceBuilder {
+  constructor(private readonly _space: Space) {}
 
-  get party() {
-    return this._party;
+  get space() {
+    return this._space;
   }
 
   async createOrgs(n: NumberRange = 1, callback?: (buidler: OrgBuilder) => Promise<void>) {
@@ -116,7 +116,7 @@ export class PartyBuilder {
   }
 
   async createOrg() {
-    return this._party.database.createItem({
+    return this._space.database.createItem({
       model: ObjectModel,
       type: TestType.Org,
       props: {
@@ -127,7 +127,7 @@ export class PartyBuilder {
   }
 
   async createPerson(org: Item<ObjectModel>) {
-    return this._party.database.createItem({
+    return this._space.database.createItem({
       model: ObjectModel,
       type: TestType.Person,
       parent: org.id,
@@ -139,7 +139,7 @@ export class PartyBuilder {
   }
 
   async createProject(org: Item<ObjectModel>) {
-    return this._party.database.createItem({
+    return this._space.database.createItem({
       model: ObjectModel,
       type: TestType.Project,
       parent: org.id,
@@ -151,7 +151,7 @@ export class PartyBuilder {
   }
 
   async createTask(project: Item<ObjectModel>) {
-    return this._party.database.createItem({
+    return this._space.database.createItem({
       model: ObjectModel,
       type: TestType.Task,
       parent: project.id,
@@ -163,7 +163,7 @@ export class PartyBuilder {
   }
 
   // TODO(burdon): ???
-  async createParty() {}
+  async createSpace() {}
 
   async createRandomItem(parent?: Item<ObjectModel>) {
     if (parent) {
@@ -203,7 +203,7 @@ export class PartyBuilder {
       await orgBuilder.createPeople([2, 4]);
     } else {
       // Random parent.
-      const result = this.party
+      const result = this.space
         .select()
         .filter((item) => item.type === TestType.Org || item.type === TestType.Project)
         .exec();
@@ -216,7 +216,7 @@ export class PartyBuilder {
   }
 
   async createLink(source: Item<ObjectModel>, target: Item<ObjectModel>) {
-    await this._party.database.createLink({
+    await this._space.database.createLink({
       source,
       target
     });
@@ -238,11 +238,11 @@ export const defaultTestOptions: Options = {
 };
 
 /**
- * Create populated test party.
+ * Create populated test space.
  * @param builder
  * @param options
  */
-export const buildTestParty = async (builder: PartyBuilder, options: Options = defaultTestOptions) => {
+export const buildTestSpace = async (builder: SpaceBuilder, options: Options = defaultTestOptions) => {
   await builder.createOrgs(options.numOrgs, async (orgBuilder: OrgBuilder) => {
     await orgBuilder.createPeople(options.numPeople);
     await orgBuilder.createProjects(options.numProjects, async (projectBuilder: ProjectBuilder) => {

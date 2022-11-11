@@ -11,7 +11,7 @@ import { Button } from '@dxos/react-uikit';
 import { SpaceList } from './SpaceList';
 
 export default {
-  title: 'react-appkit/PartyList'
+  title: 'react-appkit/SpaceList'
 };
 
 const Story = () => {
@@ -20,7 +20,7 @@ const Story = () => {
 
   return (
     <div>
-      <Button onClick={() => client.echo.createParty()}>Add Space</Button>
+      <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
 
       <SpaceList spaces={spaces} />
     </div>

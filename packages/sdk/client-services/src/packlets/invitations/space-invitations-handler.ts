@@ -166,7 +166,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
 
   /**
    * Waits for the host peer (inviter) to accept our join request.
-   * The local guest peer (invitee) then sends the local party invitation to the host,
+   * The local guest peer (invitee) then sends the local space invitation to the host,
    * which then writes the guest's credentials to the space.
    */
   acceptInvitation(invitation: Invitation): AuthenticatingInvitationProvider {

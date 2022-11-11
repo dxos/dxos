@@ -3,7 +3,7 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { ProfileService, SystemService, PartyService } from '@dxos/protocols/proto/dxos/client';
+import { ProfileService, SystemService, SpaceService } from '@dxos/protocols/proto/dxos/client';
 import { SpacesService, InvitationsService, DevicesService } from '@dxos/protocols/proto/dxos/client/services';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -14,7 +14,7 @@ import { createServiceBundle, ServiceBundle } from '@dxos/rpc';
 //
 
 export type ClientServices = {
-  PartyService: PartyService;
+  SpaceService: SpaceService;
   DataService: DataService;
   ProfileService: ProfileService;
   SystemService: SystemService;
@@ -41,7 +41,7 @@ export interface ClientServicesProvider {
  * Services supported by host.
  */
 export const clientServiceBundle = createServiceBundle<ClientServices>({
-  PartyService: schema.getService('dxos.client.PartyService'),
+  SpaceService: schema.getService('dxos.client.SpaceService'),
   DataService: schema.getService('dxos.echo.service.DataService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   SystemService: schema.getService('dxos.client.SystemService'),

@@ -46,7 +46,7 @@ export class Identity {
 
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
-    // Save device key chain credential when processed by the party state machine.
+    // Save device key chain credential when processed by the space state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);
       this.stateUpdate.emit();

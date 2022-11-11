@@ -16,11 +16,11 @@ const createTestComponents = async () => {
   await client.initialize();
   await client.halo.createProfile();
 
-  const party = await client.echo.createParty();
+  const space = await client.echo.createSpace();
   const items = await Promise.all(
     Array.from({ length: 3 }).map(
       async () =>
-        await party.database.createItem({
+        await space.database.createItem({
           model: ObjectModel,
           type: 'example:type/list-item',
           props: {
@@ -30,7 +30,7 @@ const createTestComponents = async () => {
     )
   );
 
-  return { client, party, items };
+  return { client, space, items };
 };
 
 const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList: OrderedList }) => {
@@ -62,8 +62,8 @@ const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList:
 
 describe.skip('OrderedList', function () {
   it('reorders', async function () {
-    const { party, items } = await createTestComponents();
-    const list = await party.database.createItem({
+    const { space, items } = await createTestComponents();
+    const list = await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/list'
     });

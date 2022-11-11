@@ -15,7 +15,7 @@ export type HaloSharingDialogProps = Omit<
 >;
 
 /**
- * Manages the workflow for inviting a new device to a HALO party.
+ * Manages the workflow for inviting a new device to a HALO space.
  */
 export const HaloSharingDialog = (props: HaloSharingDialogProps) => {
   const client = useClient();

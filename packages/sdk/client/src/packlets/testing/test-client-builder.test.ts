@@ -13,7 +13,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
-import { Party } from '../proxies';
+import { Space } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
 
 // TODO(burdon): Use as set-up for test suite.
@@ -119,8 +119,8 @@ describe('Client services', function () {
     const success1 = new Trigger<Invitation>();
     const success2 = new Trigger<Invitation>();
 
-    const party1 = await client1.echo.createParty();
-    const observable1 = await party1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+    const space1 = await client1.echo.createSpace();
+    const observable1 = await space1.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
     const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
 
     observable1.subscribe({
@@ -141,18 +141,18 @@ describe('Client services', function () {
     expect(invitation1.spaceKey).to.deep.eq(invitation2.spaceKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
 
-    // TODO(burdon): Party should now be available?
-    const trigger = new Trigger<Party>();
+    // TODO(burdon): Space should now be available?
+    const trigger = new Trigger<Space>();
     await waitForExpect(() => {
-      const party2 = client2.echo.getParty(invitation2.spaceKey!);
-      assert(party2);
-      expect(party2).to.exist;
-      trigger.wake(party2);
+      const space2 = client2.echo.getSpace(invitation2.spaceKey!);
+      assert(space2);
+      expect(space2).to.exist;
+      trigger.wake(space2);
     });
 
-    const party2 = await trigger.wait();
+    const space2 = await trigger.wait();
 
-    await syncItems(party1, party2);
+    await syncItems(space1, space2);
   });
 
   // TODO(burdon): Browser-only.

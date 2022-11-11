@@ -116,7 +116,7 @@ Spaces are graph databases that contain atomic data elements called ***Nodes***.
 Spaces are implemented using secure and privacy-preserving [ECHO](./echo-spec.md) peer-to-peer databases.
 The graph is traversable using the \[LINK] ECHO Graph API.
 
-> *   TODO: Spaces were previously called Parties. Change use of Party for ad hoc sessions?
+> *   TODO: Spaces were previously called Spaces. Change use of space for ad hoc sessions?
 > *   TODO: Rename Nodes to Atoms?
 > *   TODO: Spaces are globally addressable digital assets.
 > *   TODO: Define Branespace.

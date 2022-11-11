@@ -26,36 +26,36 @@ import {
   TextField
 } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { CopyText, HashIcon } from '@dxos/react-components';
-import { PartySharingDialog } from '@dxos/react-toolkit';
+import { SpaceSharingDialog } from '@dxos/react-toolkit';
 
 import { ModelType, modelTypes } from './models';
 
 /**
- * Party controls.
- * @param party
+ * Space controls.
+ * @param space
  * @constructor
  */
-export const PartyCard = ({ party }: { party: Party }) => {
+export const SpaceCard = ({ space }: { space: Space }) => {
   const client = useClient();
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [partySharing, setPartySharing] = useState(false);
+  const [spaceSharing, setSpaceSharing] = useState(false);
   const [itemModel, setItemModel] = useState<ModelType | undefined>();
   const [propertyKey, setPropertyKey] = useState('');
   const [propertyValue, setPropertyValue] = useState('');
 
-  const handlePartyOpenToggle = (party: Party) => {
-    if (party.isOpen) {
-      void party.open();
+  const handleSpaceOpenToggle = (space: Space) => {
+    if (space.isOpen) {
+      void space.open();
     } else {
-      void party.close();
+      void space.close();
     }
   };
 
-  const handlePartyActiveToggle = (party: Party) => {
-    void party.setActive(!party.isActive);
+  const handleSpaceActiveToggle = (space: Space) => {
+    void space.setActive(!space.isActive);
   };
 
   const handlePropertyKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -66,12 +66,12 @@ export const PartyCard = ({ party }: { party: Party }) => {
     setPropertyValue(event.target.value);
   };
 
-  const handleSetPartyProperty = (party: Party) => {
+  const handleSetSpaceProperty = (space: Space) => {
     const intValue: number = parseInt(propertyValue);
     if (!isNaN(intValue)) {
-      void party.setProperty(propertyKey, intValue);
+      void space.setProperty(propertyKey, intValue);
     } else {
-      void party.setProperty(propertyKey, propertyValue);
+      void space.setProperty(propertyKey, propertyValue);
     }
   };
 
@@ -79,11 +79,11 @@ export const PartyCard = ({ party }: { party: Party }) => {
     setItemModel(event.target.value as ModelType);
   };
 
-  const handleCreateItem = (party: Party) => {
+  const handleCreateItem = (space: Space) => {
     const { model, createItem } = (itemModel && modelTypes[itemModel]) || {};
     client.echo.modelFactory.registerModel(model); // TODO(burdon): Test if already registered.
     if (createItem) {
-      createItem(party);
+      createItem(space);
     }
   };
 
@@ -93,14 +93,14 @@ export const PartyCard = ({ party }: { party: Party }) => {
         <MenuItem
           onClick={() => {
             setMenuAnchorEl(null);
-            setPartySharing(true);
+            setSpaceSharing(true);
           }}
         >
-          Share Party
+          Share Space
         </MenuItem>
       </Menu>
 
-      <PartySharingDialog open={partySharing} onClose={() => setPartySharing(false)} partyKey={party.key} />
+      <SpaceSharingDialog open={spaceSharing} onClose={() => setSpaceSharing(false)} spaceKey={space.key} />
 
       <Card
         sx={{
@@ -118,10 +118,10 @@ export const PartyCard = ({ party }: { party: Party }) => {
           }}
           avatar={
             <IconButton>
-              <HashIcon value={party.key.toString()} />
+              <HashIcon value={space.key.toString()} />
             </IconButton>
           }
-          title={<CopyText value={party.key.toString()} monospace variant='h6' length={8} />}
+          title={<CopyText value={space.key.toString()} monospace variant='h6' length={8} />}
           action={
             <IconButton onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
               <MenuIcon />
@@ -157,7 +157,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
               onChange={handlePropertyValueChange}
             />
             <Box>
-              <IconButton size='small' onClick={() => handleSetPartyProperty(party)}>
+              <IconButton size='small' onClick={() => handleSetSpaceProperty(space)}>
                 <AddIcon />
               </IconButton>
             </Box>
@@ -181,7 +181,7 @@ export const PartyCard = ({ party }: { party: Party }) => {
               </Select>
             </FormControl>
             <Box>
-              <IconButton size='small' title='Create item' onClick={() => handleCreateItem(party)}>
+              <IconButton size='small' title='Create item' onClick={() => handleCreateItem(space)}>
                 <RegisterIcon />
               </IconButton>
             </Box>
@@ -189,8 +189,8 @@ export const PartyCard = ({ party }: { party: Party }) => {
         </CardContent>
 
         <CardActions>
-          <Button onClick={() => handlePartyOpenToggle(party)}>{party.isOpen ? 'Close' : 'Open'}</Button>
-          <Button onClick={() => handlePartyActiveToggle(party)}>{party.isActive ? 'Deactivate' : 'Activate'}</Button>
+          <Button onClick={() => handleSpaceOpenToggle(space)}>{space.isOpen ? 'Close' : 'Open'}</Button>
+          <Button onClick={() => handleSpaceActiveToggle(space)}>{space.isActive ? 'Deactivate' : 'Activate'}</Button>
         </CardActions>
       </Card>
     </>

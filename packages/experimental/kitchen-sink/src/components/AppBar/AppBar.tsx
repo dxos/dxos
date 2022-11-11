@@ -74,7 +74,7 @@ export const AppBar = ({ view, onInvite, onExport, onSearch, onSelection, onChan
             {onExport && <ExportMenu onExport={onExport} />}
 
             {onInvite && (
-              <IconButton data-id='test-button-share-party' size='small' onClick={onInvite}>
+              <IconButton data-id='test-button-share-space' size='small' onClick={onInvite}>
                 <ShareIcon />
               </IconButton>
             )}

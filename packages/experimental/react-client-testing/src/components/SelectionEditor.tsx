@@ -36,7 +36,7 @@ const completions = [
 ];
 
 /**
- * Simple editor that evaluates text as method calls against a party object.
+ * Simple editor that evaluates text as method calls against a space object.
  * @constructor
  */
 export const SelectionEditor = ({ onChange, initialValue, delay = 500, rows = 6 }: SelectionEditorProps) => {

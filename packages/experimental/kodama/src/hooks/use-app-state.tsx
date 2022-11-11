@@ -9,17 +9,17 @@ import { PublicKey } from '@dxos/keys';
 export type AppState = {
   debug?: boolean;
   error?: string;
-  partyKey?: PublicKey;
+  spaceKey?: PublicKey;
 };
 
 export interface ActionHandler {
   setError(error: Error | string): void;
-  setPartyKey(partyKey: PublicKey): void;
+  setSpaceKey(spaceKey: PublicKey): void;
 }
 
 enum ActionType {
   SET_ERROR,
-  SET_PARTY_KEY
+  SET_SPACE_KEY
 }
 
 type Action = {
@@ -35,10 +35,10 @@ const appStateReducer = (state: AppState, action: Action) => {
         error: action.value
       };
     }
-    case ActionType.SET_PARTY_KEY: {
+    case ActionType.SET_SPACE_KEY: {
       return {
         ...state,
-        partyKey: action.value
+        spaceKey: action.value
       };
     }
   }
@@ -58,8 +58,8 @@ export const AppStateProvider: FC<{
       setError: (error: Error | string) => {
         dispatch({ type: ActionType.SET_ERROR, value: error });
       },
-      setPartyKey: (partyKey: PublicKey) => {
-        dispatch({ type: ActionType.SET_PARTY_KEY, value: partyKey });
+      setSpaceKey: (spaceKey: PublicKey) => {
+        dispatch({ type: ActionType.SET_SPACE_KEY, value: spaceKey });
       }
     }),
     [dispatch]

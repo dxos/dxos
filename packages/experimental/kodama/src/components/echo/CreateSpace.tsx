@@ -10,8 +10,8 @@ import { useClient } from '@dxos/react-client';
 import { TextInput } from '../../components';
 import { Panel } from '../util';
 
-export const CreateParty: FC<{
-  onCreate: (partyKey: PublicKey) => void;
+export const CreateSpace: FC<{
+  onCreate: (spaceKey: PublicKey) => void;
 }> = ({ onCreate }) => {
   const client = useClient();
   const [name, setName] = useState<string>();
@@ -20,10 +20,10 @@ export const CreateParty: FC<{
   const handleSubmit = async (text: string) => {
     const name = text.trim();
     if (name.length) {
-      const party = await client.echo.createParty();
-      // void party.setProperty('title', name);
+      const space = await client.echo.createSpace();
+      // void space.setProperty('title', name);
       setName('');
-      onCreate?.(party.key);
+      onCreate?.(space.key);
     }
   };
 
@@ -34,7 +34,7 @@ export const CreateParty: FC<{
         onChange={setName}
         onSubmit={handleSubmit}
         onFocus={setFocused}
-        placeholder='Enter party name.'
+        placeholder='Enter space name.'
       />
     </Panel>
   );

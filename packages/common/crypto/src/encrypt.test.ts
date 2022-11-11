@@ -28,7 +28,7 @@ d0555d455097daafc777103697f96e3697847d30ea802057d4795f6fbe6aacfd25e7324b7420f3d3
 ,"trusted":true,"type":"DEVICE_PSEUDONYM"},{"added":"2020-02-04T22:22:37-07:00","created":"2020-02-04T22:22:37-07:00","
 hint":false,"key":"0d7a22f56bc1e398a5611f592d6a41fcc0f93cf233437d5f3a7f760de2b2bc75","own":true,"publicKey":"0d7a22f56b
 c1e398a5611f592d6a41fcc0f93cf233437d5f3a7f760de2b2bc75","secretKey":"279e5ee1ec0b45d3505ab8a3fc79f1b2d9f71667ac311e36e4
-d237bca84e68920d7a22f56bc1e398a5611f592d6a41fcc0f93cf233437d5f3a7f760de2b2bc75","trusted":true,"type":"PARTY"},{"added"
+d237bca84e68920d7a22f56bc1e398a5611f592d6a41fcc0f93cf233437d5f3a7f760de2b2bc75","trusted":true,"type":"SPACE"},{"added"
 :"2020-02-04T22:22:37-07:00","created":"2020-02-04T22:22:37-07:00","hint":false,"key":"c8e865ae089f4cb5add830b67fa676dd
 c0e813f5333272633b305b359115a6b6","own":true,"publicKey":"c8e865ae089f4cb5add830b67fa676ddc0e813f5333272633b305b359115a
 6b6","secretKey":"1a211268f48fe9fc4d6a294b320bc1f92a592631d0bbdb5c94a8a8626a150a2dc8e865ae089f4cb5add830b67fa676ddc0e81

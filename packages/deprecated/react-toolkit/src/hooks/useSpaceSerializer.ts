@@ -4,11 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { PartySerializer } from '@dxos/client';
+import { SpaceSerializer } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
-export const usePartySerializer = () => {
+export const useSpaceSerializer = () => {
   const client = useClient();
-  const serializer = useMemo(() => new PartySerializer(client), []);
+  const serializer = useMemo(() => new SpaceSerializer(client), []);
   return serializer;
 };

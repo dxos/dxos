@@ -21,7 +21,7 @@ export const SpacesPage = () => {
   const { t } = useTranslation('halo');
 
   const handleCreateSpace = async () => {
-    const space = await client.echo.createParty();
+    const space = await client.echo.createSpace();
     await space.database.createItem({
       model: TextModel,
       type: DOCUMENT_TYPE
