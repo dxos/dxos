@@ -18,5 +18,8 @@
     "rollup": "~2.77.3",
     "rollup-plugin-polyfill-node": "^0.10.2",
     "vite": "3.0.9"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
