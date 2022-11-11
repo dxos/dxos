@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/dxos/dxos/compare/v0.1.4...v0.1.5) (2022-11-11)
+
+
+### Bug Fixes
+
+* Publish config ([#1859](https://github.com/dxos/dxos/issues/1859)) ([949c5e8](https://github.com/dxos/dxos/commit/949c5e80a2d406cb27440f915a4c94d72265699f))
+* **react-client:** Remove old dependency ([#1860](https://github.com/dxos/dxos/issues/1860)) ([bc06ea9](https://github.com/dxos/dxos/commit/bc06ea9a5beffeab35304284c364397fe3b2ee12))
+
 ## [0.1.4](https://github.com/dxos/dxos/compare/v0.1.3...v0.1.4) (2022-11-11)
 
 
