@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { sleep, Trigger } from '@dxos/async';
-import { generatePasscode } from '@dxos/credentials';
+import { createDeviceAuthorization, generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -48,7 +48,6 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
     const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._identityManager.identity ?? failUndefined();
-    const signingContext = identity.getIdentityCredentialSigner();
 
     const invitation: Invitation = {
       type,
@@ -73,7 +72,7 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
           HaloHostService: {
             requestAdmission: async () => {
               log('responding with admission offer', {
-                host: signingContext.deviceKey
+                host: identity.deviceKey
               });
 
               // TODO(burdon): Is this the right place to set this state?
@@ -104,21 +103,14 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
 
                 log('writing guest credentials', { host: identity.deviceKey, guest: deviceKey });
                 // TODO(burdon): Check if already admitted.
-                const signer = identity.getIdentityCredentialSigner();
-                await writeMessages(identity.controlPipeline.writer, [
-                  {
-                    // TODO(burdon): Use credential generator.
-                    '@type': 'dxos.echo.feed.CredentialsMessage',
-                    credential: await signer.createCredential({
-                      subject: deviceKey,
-                      assertion: {
-                        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                        identityKey: identity.identityKey,
-                        deviceKey
-                      }
-                    })
-                  }
-                ]);
+                await writeMessages(
+                  identity.controlPipeline.writer,
+                  await createDeviceAuthorization(
+                    identity.getIdentityCredentialSigner(),
+                    identity.identityKey,
+                    identity.deviceKey
+                  )
+                );
 
                 // Updating credentials complete.
                 complete.wake(deviceKey);
@@ -135,10 +127,10 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
 
       try {
         await peer.open();
-        log('connected', { host: signingContext.deviceKey });
+        log('connected', { host: identity.deviceKey });
         observable.callback.onConnected?.(invitation);
         const deviceKey = await complete.wait({ timeout });
-        log('admitted guest', { host: signingContext.deviceKey, guest: deviceKey });
+        log('admitted guest', { host: identity.deviceKey, guest: deviceKey });
         observable.callback.onSuccess(invitation);
       } catch (err) {
         if (!observable.cancelled) {
@@ -189,7 +181,7 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
     });
 
     let connectionCount = 0;
-    const complete = new Trigger();
+    const complete = new Trigger<PublicKey>();
     const plugin = createRpcPlugin(async (port) => {
       const peer = createProtoRpcPeer({
         requested: {
@@ -205,11 +197,11 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
           throw new Error(`multiple connections detected: ${connectionCount}`);
         }
 
-        log('connected', { guest: this._signingContext.deviceKey });
+        log('connected');
         observable.callback.onConnected?.(invitation);
 
         // 1. Send request.
-        log('sending admission request', { guest: this._signingContext.deviceKey });
+        log('sending admission request');
         const { identityKey, haloSpaceKey, genesisFeedKey } = await peer.rpc.HaloHostService.requestAdmission();
 
         // 2. Get authentication code.
@@ -231,16 +223,16 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
         });
 
         // 4. Send admission credentials to host (with local identity keys).
-        log('presenting admission credentials', { guest: this._signingContext.deviceKey, identityKey });
+        log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
         await peer.rpc.HaloHostService.presentAdmissionCredentials({
           deviceKey: identity.deviceKey,
-          controlFeedKey: PublicKey.random(),
+          controlFeedKey: PublicKey.random(), // TODO(burdon): ???
           dataFeedKey: PublicKey.random()
         });
 
         // 5. Success.
-        log('admitted by host', { guest: this._signingContext.deviceKey, identityKey });
-        complete.wake();
+        log('admitted by host', { guest: identity.deviceKey, identityKey });
+        complete.wake(identityKey);
       } catch (err) {
         if (!observable.cancelled) {
           log.warn('failed', err);
@@ -263,7 +255,7 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
       });
 
       observable.callback.onConnecting?.(invitation);
-      await complete.wait();
+      invitation.identityKey = await complete.wait();
       observable.callback.onSuccess(invitation);
       await swarmConnection.close();
     });
