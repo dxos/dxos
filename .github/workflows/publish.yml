@@ -48,7 +48,9 @@ jobs:
         run: pnpm nx run-many --target=build
 
       - name: Publish to NPM
-        run: pnpm --filter-prod="./packages/**" publish --no-git-checks
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
