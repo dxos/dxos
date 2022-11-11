@@ -1,6 +1,6 @@
 {
   "name": "@dxos/vite-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Plugin to enable Vite to build DXOS apps.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
