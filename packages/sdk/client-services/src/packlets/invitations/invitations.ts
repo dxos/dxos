@@ -11,19 +11,22 @@ import {
   Observable,
   CancellableObservableProvider
 } from '@dxos/async';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { Stream } from '@dxos/codec-protobuf';
+import { AuthenticationRequest, CancelInvitationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const AUTHENTICATION_CODE_LENGTH = 6;
 
 export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
 
-// TODO(burdon): Don't close until RPC has complete.
-export const ON_CLOSE_DELAY = 500;
+// TODO(burdon): Don't close until RPC has complete (bug).
+export const ON_CLOSE_DELAY = 1_000;
 
-export type CreateInvitationsOptions = {
-  type?: Invitation.Type;
-  timeout?: number;
-};
+export interface InvitationsService {
+  createInvitation(invitation: Invitation): Stream<Invitation>;
+  authenticate(request: AuthenticationRequest): Promise<void>;
+  acceptInvitation(invitation: Invitation): Stream<Invitation>;
+  cancelInvitation(request: CancelInvitationRequest): Promise<void>;
+}
 
 /**
  * Common invitation events (callbacks) for creating and accepting invitations.
@@ -93,50 +96,10 @@ export class AuthenticatingInvitationProvider
 }
 
 /**
- * Common interface for Halo and Space invitation proxies and handlers.
- * Handles the life-cycle of Space invitations between peers.
- *
- * Host
- * - Creates an invitation containing a swarm topic.
- * - Joins the swarm with the topic and waits for guest's admission request.
- * - Responds with admission offer then waits for guest's credentials.
- * - Writes credentials to control feed then exits.
- *
- * Guest
- * - Joins the swarm with the topic.
- * - NOTE: The topic is transmitted out-of-band (e.g., via a QR code).
- * - Sends an admission request.
- * - If Space handler then creates a local cloned space (with genesis block).
- * - Sends admission credentials (containing local device and feed keys).
- *
- * TODO(burdon): Show proxy/service relationship and reference design doc/diagram.
- *
- *  ```
- *  [Guest]                                                  [Host]
- *   |-------------------------------------RequestAdmission-->|
- *   |<--AdmissionOffer---------------------------------------|
- *   |
- *   |--------------------------PresentAdmissionCredentials-->|
- *  ```
- */
-export interface InvitationsHandler<T> {
-  // TODO(burdon): Pass in options.
-  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable;
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
-}
-
-/**
- * Common interface for Halo and Space proxies.
- */
-export interface InvitationsProxy<T> extends InvitationsHandler<T> {
-  createInvitationObject(context: T): Invitation;
-}
-
-/**
  * Util to wrap observable with promise.
  * @deprecated
  */
-// TODO(burdon): Replace with InvitationObservableProvider.
+// TODO(burdon): Replace with ObservableInvitationProvider.
 export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({

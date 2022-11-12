@@ -29,13 +29,12 @@ describe('services/halo', function () {
     expect(identity).not.to.be.undefined;
   });
 
-  it.only('creates and accepts invitation', async function () {
+  it('creates and accepts invitation', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    // TODO(burdon): Put context in options.
     const observable1 = await host.haloInvitations.createInvitation();
 
     const complete1 = new Trigger<PublicKey>();

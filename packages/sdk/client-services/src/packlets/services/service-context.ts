@@ -70,7 +70,7 @@ export class ServiceContext {
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
-    this.haloInvitations = new HaloInvitationsHandler(this.identityManager, this.networkManager);
+    this.haloInvitations = new HaloInvitationsHandler(this.networkManager, this.identityManager);
   }
 
   async open() {
@@ -123,7 +123,7 @@ export class ServiceContext {
 
     await spaceManager.open();
     this.spaceManager = spaceManager;
-    this.spaceInvitations = new SpaceInvitationsHandler(this.spaceManager, this.networkManager, signingContext);
+    this.spaceInvitations = new SpaceInvitationsHandler(this.networkManager, this.spaceManager, signingContext);
     this.initialized.wake();
   }
 }

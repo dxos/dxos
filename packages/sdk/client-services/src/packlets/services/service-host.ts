@@ -14,7 +14,7 @@ import { TextModel } from '@dxos/text-model';
 import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
-import { SpaceInvitationsServiceImpl } from '../invitations';
+import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -55,15 +55,22 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+      HaloInvitationsService: new HaloInvitationsServiceImpl(
         this._serviceContext.identityManager,
-        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized')),
-        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized'))
+        this._serviceContext.haloInvitations
       ),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
-      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+      ),
+
       SpacesService: new SpacesServiceImpl(),
+
+      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),

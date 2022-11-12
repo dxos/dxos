@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
@@ -17,11 +17,11 @@ import { ServiceRegistry } from './service-registry';
 // TODO(burdon): Create TestService (that doesn't require peers).
 
 type TestServices = {
-  SpaceInvitationsService: InvitationsService;
+  SpaceInvitationsService: SpaceInvitationsService;
 };
 
 const serviceBundle = createServiceBundle<TestServices>({
-  SpaceInvitationsService: schema.getService('dxos.client.services.InvitationsService')
+  SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService')
 });
 
 describe('service registry', function () {
@@ -37,8 +37,8 @@ describe('service registry', function () {
     const serviceRegistry = new ServiceRegistry(serviceBundle, {
       SpaceInvitationsService: new SpaceInvitationsServiceImpl(
         serviceContext.identityManager,
-        () => serviceContext.spaceManager!,
-        () => serviceContext.spaceInvitations!
+        () => serviceContext.spaceInvitations!,
+        () => serviceContext.spaceManager!
       )
     });
 

@@ -18,24 +18,25 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
   AuthenticatingInvitationProvider,
-  CreateInvitationsOptions,
-  InvitationsHandler,
   InvitationObservable,
   InvitationObservableProvider,
   AUTHENTICATION_CODE_LENGTH,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
+import { AbstractInvitationsHandler, CreateInvitationsOptions } from './invitations-handler';
 
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
-export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
+export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   constructor(
+    networkManager: NetworkManager,
     private readonly _spaceManager: SpaceManager,
-    private readonly _networkManager: NetworkManager,
     private readonly _signingContext: SigningContext
-  ) {}
+  ) {
+    super(networkManager);
+  }
 
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
@@ -44,6 +45,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
+    assert(space);
 
     const invitation: Invitation = {
       type,
@@ -207,7 +209,7 @@ export class SpaceInvitationsHandler implements InvitationsHandler<Space> {
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          log('waiting for authentication code...');
+          log('guest waiting for authentication code...');
           observable.callback.onAuthenticating?.(invitation);
           const authenticationCode = await authenticated.wait({ timeout: INVITATION_TIMEOUT });
           log('sending authentication request');

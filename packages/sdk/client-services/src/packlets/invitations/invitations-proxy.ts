@@ -7,22 +7,26 @@ import assert from 'assert';
 import { observableError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import {
   AuthenticatingInvitationObservable,
   AuthenticatingInvitationProvider,
-  CreateInvitationsOptions,
-  InvitationsProxy,
   InvitationObservable,
-  InvitationObservableProvider
+  InvitationObservableProvider,
+  InvitationsService
 } from './invitations';
+import { InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitations service observable to client/service stream.
- * Used by both HALO and Spaces client/service interfaces.
+ * Common base class for HALO and Spaces implementations.
  */
-export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
+export interface InvitationsProxy<T = void> extends InvitationsHandler<T> {
+  createInvitationObject(context: T): Invitation;
+}
+
+export abstract class AbstractInvitationsProxy<T = void> implements InvitationsProxy<T> {
   // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService
@@ -30,9 +34,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
 
   abstract createInvitationObject(context: T): Invitation;
 
-  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable {
-    assert(context);
-
+  createInvitation(context: T): InvitationObservable {
     let invitationId: string;
     const observable = new InvitationObservableProvider(async () => {
       if (invitationId) {
@@ -40,7 +42,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
       }
     });
 
-    const invitation = { ...this.createInvitationObject(context), ...options };
+    const invitation = this.createInvitationObject(context);
     const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
 
     stream.subscribe(

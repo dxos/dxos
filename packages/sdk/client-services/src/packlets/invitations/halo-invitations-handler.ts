@@ -19,31 +19,30 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 import { IdentityManager } from '../identity';
 import {
   AuthenticatingInvitationProvider,
-  CreateInvitationsOptions,
-  InvitationsHandler,
   InvitationObservable,
   InvitationObservableProvider,
   AUTHENTICATION_CODE_LENGTH,
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
-
-// TODO(burdon): Factor out commonality with SpaceInvitationsHandler.
+import { AbstractInvitationsHandler, CreateInvitationsOptions } from './invitations-handler';
 
 /**
  * Handles the life-cycle of Halo invitations between peers.
  */
-export class HaloInvitationsHandler implements InvitationsHandler<void> {
+export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
-    private readonly _identityManager: IdentityManager,
-    private readonly _networkManager: NetworkManager
-  ) {}
+    networkManager: NetworkManager,
+    private readonly _identityManager: IdentityManager
+  ) {
+    super(networkManager);
+  }
 
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(_: void, options?: CreateInvitationsOptions): InvitationObservable {
+  createInvitation(context: void, options: CreateInvitationsOptions = {}): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
@@ -207,7 +206,7 @@ export class HaloInvitationsHandler implements InvitationsHandler<void> {
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          log('waiting for authentication code...');
+          log('guest waiting for authentication code...');
           observable.callback.onAuthenticating?.(invitation);
           const authenticationCode = await authenticated.wait({ timeout: INVITATION_TIMEOUT });
           log('sending authentication request');

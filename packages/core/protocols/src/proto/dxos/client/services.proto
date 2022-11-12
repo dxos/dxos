@@ -188,8 +188,16 @@ message CancelInvitationRequest {
   string invitation_id = 1;
 }
 
-// TODO(burdon): Separate implementations for HALO/Data Spaces.
-service InvitationsService {
+// Common TS interface.
+
+service HaloInvitationsService {
+  rpc CreateInvitation(Invitation) returns (stream Invitation);
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+  rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
+}
+
+service SpaceInvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc AcceptInvitation(Invitation) returns (stream Invitation);
