@@ -24,7 +24,7 @@ import {
   INVITATION_TIMEOUT,
   ON_CLOSE_DELAY
 } from './invitations';
-import { AbstractInvitationsHandler, CreateInvitationsOptions } from './invitations-handler';
+import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
 
 /**
  * Handles the life-cycle of Space invitations between peers.
@@ -41,7 +41,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space, options?: CreateInvitationsOptions): InvitationObservable {
+  createInvitation(space: Space, options?: InvitationsOptions): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
@@ -167,7 +167,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
    * The local guest peer (invitee) then sends the local space invitation to the host,
    * which then writes the guest's credentials to the space.
    */
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationProvider {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationProvider {
+    const { timeout = INVITATION_TIMEOUT } = options ?? {};
     let swarmConnection: SwarmConnection | undefined;
 
     const authenticated = new Trigger<string>();
@@ -211,7 +212,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
           log('guest waiting for authentication code...');
           observable.callback.onAuthenticating?.(invitation);
-          const authenticationCode = await authenticated.wait({ timeout: INVITATION_TIMEOUT });
+          const authenticationCode = await authenticated.wait({ timeout });
           log('sending authentication request');
           await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
         }

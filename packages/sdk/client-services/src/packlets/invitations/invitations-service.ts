@@ -12,7 +12,7 @@ import { Provider } from '@dxos/util';
 
 import { IdentityManager } from '../identity';
 import { AuthenticatingInvitationObservable, CancellableInvitationObservable, InvitationsService } from './invitations';
-import { InvitationsHandler } from './invitations-handler';
+import { InvitationsHandler, InvitationsOptions } from './invitations-handler';
 
 /**
  * Adapts invitation service observable to client/service stream.
@@ -99,13 +99,13 @@ export abstract class AbstractInvitationsService<T = void> implements Invitation
     });
   }
 
-  acceptInvitation(invitation: Invitation): Stream<Invitation> {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
       log('stream opened', this.getLoggingContext());
       const invitationsHandler = this._getInvitationsHandler();
 
       let invitationId: string;
-      const observable = invitationsHandler.acceptInvitation(invitation);
+      const observable = invitationsHandler.acceptInvitation(invitation, options);
       observable.subscribe({
         onConnecting: (invitation) => {
           assert(invitation.invitationId);

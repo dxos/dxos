@@ -7,7 +7,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { AuthenticatingInvitationObservable, InvitationObservable } from './invitations';
 
-export type CreateInvitationsOptions = {
+export type InvitationsOptions = {
   type?: Invitation.Type;
   timeout?: number;
 };
@@ -40,8 +40,8 @@ export type CreateInvitationsOptions = {
  *  ```
  */
 export interface InvitationsHandler<T = void> {
-  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable;
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  createInvitation(context: T, options?: InvitationsOptions): InvitationObservable;
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
 }
 
 /**
@@ -54,6 +54,6 @@ export abstract class AbstractInvitationsHandler<T = void> implements Invitation
     protected readonly _networkManager: NetworkManager
   ) {}
 
-  abstract createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable;
-  abstract acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable;
+  abstract createInvitation(context: T, options?: InvitationsOptions): InvitationObservable;
+  abstract acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
 }

@@ -73,7 +73,10 @@ describe('services/halo-invitation-service', function () {
     }
 
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
-    expect(invitation1.identityKey).to.deep.eq(invitation2.identityKey);
+    expect(invitation1.identityKey).not.to.exist;
+    expect(invitation2.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
+    expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
   });
 });

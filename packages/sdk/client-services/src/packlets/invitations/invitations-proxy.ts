@@ -16,14 +16,14 @@ import {
   InvitationObservableProvider,
   InvitationsService
 } from './invitations';
-import { InvitationsHandler } from './invitations-handler';
+import { InvitationsOptions, InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitations service observable to client/service stream.
  * Common base class for HALO and Spaces implementations.
  */
 export interface InvitationsProxy<T = void> extends InvitationsHandler<T> {
-  createInvitationObject(context: T): Invitation;
+  getInvitationOptions(context: T): Invitation;
 }
 
 export abstract class AbstractInvitationsProxy<T = void> implements InvitationsProxy<T> {
@@ -32,9 +32,9 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
     private readonly _invitationsService: InvitationsService
   ) {}
 
-  abstract createInvitationObject(context: T): Invitation;
+  abstract getInvitationOptions(context: T): Invitation;
 
-  createInvitation(context: T): InvitationObservable {
+  createInvitation(context: T, options?: InvitationsOptions): InvitationObservable {
     let invitationId: string;
     const observable = new InvitationObservableProvider(async () => {
       if (invitationId) {
@@ -42,7 +42,7 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
       }
     });
 
-    const invitation = this.createInvitationObject(context);
+    const invitation: Invitation = { ...this.getInvitationOptions(context), ...options };
     const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
 
     stream.subscribe(
@@ -92,7 +92,7 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
     return observable;
   }
 
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     assert(invitation && invitation.swarmKey);
 
     const observable = new AuthenticatingInvitationProvider({
@@ -109,7 +109,7 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
       }
     });
 
-    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation(invitation);
+    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation({ ...invitation, ...options });
 
     stream.subscribe(
       (invitation: Invitation) => {

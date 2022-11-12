@@ -175,8 +175,11 @@ message Invitation {
   /// Authentication code created by host.
   optional string authentication_code = 7;
 
+  /// Timeout (ms).
+  optional int32 timeout = 8;
+
   /// Space key (if data invitation).
-  optional dxos.keys.PublicKey space_key = 8;
+  optional dxos.keys.PublicKey space_key = 9;
 }
 
 message AuthenticationRequest {
