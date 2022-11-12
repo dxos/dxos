@@ -124,7 +124,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   on(callback: (data: T) => void): UnsubscribeCallback;
   on(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
   on(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
-    const [ctx, callback] = Context.isContext(_ctx) ? [_ctx, _callback] : [new Context(), _ctx];
+    const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
 
     const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
 
@@ -166,7 +166,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   once(callback: (data: T) => void): UnsubscribeCallback;
   once(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
   once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
-    const [ctx, callback] = Context.isContext(_ctx) ? [_ctx, _callback] : [new Context(), _ctx];
+    const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
 
     if (this._listeners.has(callback)) {
       return () => {
