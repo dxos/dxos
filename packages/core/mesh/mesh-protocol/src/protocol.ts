@@ -142,6 +142,7 @@ export class Protocol {
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
     this.error.on((err) => {
+      // NOTE: ERROR Writable stream closed prematurely Error: Writable stream closed prematurely
       log.catch(err);
     });
 
@@ -284,7 +285,6 @@ export class Protocol {
     this._isOpen = true;
   }
 
-  // TODO(burdon): Error: Writable stream closed prematurely
   @synchronized
   async close() {
     if (!this._isOpen) {
@@ -297,6 +297,7 @@ export class Protocol {
     await this._extensionInit.close().catch((err: any) => {
       this._handleError(err);
     });
+
     for (const [name, extension] of this._extensionMap) {
       log('close extension', { name, key: PublicKey.from(this._stream.publicKey) });
       await extension.close().catch((err: any) => {

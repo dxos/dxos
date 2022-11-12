@@ -186,7 +186,7 @@ describe('NetworkManager', function () {
       getTransportFactory: async () => MemoryTransportFactory
     });
 
-    it.skip('large amount of peers and connections', async function () {
+    it('many peers and connections', async function () {
       const numTopics = 5;
       const peersPerTopic = 5;
 
@@ -231,11 +231,9 @@ describe('NetworkManager', function () {
       );
     });
 
-    // TODO(burdon): Remove flaky tests.
-    // TODO(burdon): Factor out to separate test suite.
     // This test performs random actions in the real system and compares it's state with a simplified model.
     // TODO(dmaretskyi): Run this on with actual webrtc and signal servers.
-    it.skip('property-based tests', async function () {
+    it('property-based tests', async function () {
       const testBuilder = new TestBuilder();
 
       /**
