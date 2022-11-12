@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
@@ -21,10 +22,11 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/halo-invitation-service', function () {
-  it('creates identity and invites peer', async function () {
+  it.only('creates identity and invites peer', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     await host.identityManager.createIdentity();
+    expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
 
     // prettier-ignore
     const service1: HaloInvitationsService = new HaloInvitationsServiceImpl(
@@ -54,6 +56,8 @@ describe('services/halo-invitation-service', function () {
               await observable2.authenticate(await authenticationCode.wait());
             },
             onSuccess: (invitation: Invitation) => {
+              // TODO(burdon): No device.
+              // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
               success2.wake(invitation);
             },
             onError: (err: Error) => raise(new Error(err.message))
@@ -72,11 +76,22 @@ describe('services/halo-invitation-service', function () {
       });
     }
 
+    // Check same identity.
     const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
     expect(invitation1.identityKey).not.to.exist;
     expect(invitation2.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
     expect(invitation2.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
     expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
+
+    // Check devices.
+    // TODO(burdon): Incorrect number of devices.
+    console.log(host.identityManager.identity!.identityKey);
+    await waitForExpect(() => {
+      expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
+      expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
+    });
+    // console.log(host.identityManager.identity!.authorizedDeviceKeys.size);
+    // console.log(guest.identityManager.identity!.authorizedDeviceKeys.size);
   });
 });

@@ -88,6 +88,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               authenticationCode = code;
             },
 
+            // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
             presentAdmissionCredentials: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
               try {
                 // Check authenticated.
@@ -224,11 +225,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
         // 4. Send admission credentials to host (with local identity keys).
         log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
-        await peer.rpc.HaloHostService.presentAdmissionCredentials({
-          deviceKey: identity.deviceKey,
-          controlFeedKey: PublicKey.random(), // TODO(burdon): ???
-          dataFeedKey: PublicKey.random()
-        });
+        await peer.rpc.HaloHostService.presentAdmissionCredentials(identity.getAdmissionCredentials());
 
         // 5. Success.
         log('admitted by host', { guest: identity.deviceKey, identityKey });

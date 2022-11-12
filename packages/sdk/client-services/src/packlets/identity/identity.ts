@@ -15,6 +15,7 @@ import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
 export type IdentityParams = {
@@ -46,7 +47,7 @@ export class Identity {
 
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
-    // Save device key chain credential when processed by the space state machine.
+    // Save device keychain credential when processed by the space state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);
       this.stateUpdate.emit();
@@ -89,6 +90,14 @@ export class Identity {
 
   get haloDatabase(): Database {
     return this._space.database ?? failUndefined();
+  }
+
+  getAdmissionCredentials(): HaloAdmissionCredentials {
+    return {
+      deviceKey: this.deviceKey,
+      controlFeedKey: this._space.controlFeedKey,
+      dataFeedKey: this._space.dataFeedKey
+    };
   }
 
   /**
