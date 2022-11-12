@@ -289,6 +289,8 @@ describe('NetworkManager', function () {
         );
       };
 
+      // TODO(burdon): Factor out to TestBuilder.
+
       class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
         constructor(readonly peerId: PublicKey) {}
 

@@ -75,9 +75,10 @@ export const transportProtocolProvider = (
   rendezvousKey: Buffer,
   peerId: Buffer,
   protocolPlugin: any
-): ProtocolProvider =>
-  protocolFactory({
+): ProtocolProvider => {
+  return protocolFactory({
     getTopics: () => [rendezvousKey],
     session: { peerId: PublicKey.stringify(peerId) },
     plugins: [protocolPlugin]
   });
+};

@@ -18,13 +18,14 @@ import { MemoryTransport } from './memory-transport';
 //  Cannot log after tests are done. Did you forget to wait for something async in your test?
 //  Attempted to log "Ignoring unsupported ICE candidate.".
 
+// TODO(burdon): Move to TestBuilder.
 const createPair = () => {
   const topic = PublicKey.random();
-  const peerId1 = PublicKey.random();
-  const peerId2 = PublicKey.random();
+  const peer1Id = PublicKey.random();
+  const peer2Id = PublicKey.random();
 
-  const plugin1 = new TestProtocolPlugin(peerId1.asBuffer());
-  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peerId1, plugin1);
+  const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
+  const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
   const connection1 = new MemoryTransport({
     stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
     sendSignal: async (signal) => {
@@ -36,8 +37,8 @@ const createPair = () => {
   afterTest(() => connection1.close());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
-  const plugin2 = new TestProtocolPlugin(peerId2.asBuffer());
-  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peerId2, plugin2);
+  const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
+  const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
   const connection2 = new MemoryTransport({
     stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
     sendSignal: async (signal) => {
@@ -54,8 +55,8 @@ const createPair = () => {
     connection2,
     plugin1,
     plugin2,
-    peer1Id: peerId1,
-    peer2Id: peerId2,
+    peer1Id,
+    peer2Id,
     topic
   };
 };
