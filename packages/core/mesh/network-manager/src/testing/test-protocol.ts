@@ -15,13 +15,28 @@ import { protocolFactory } from '../protocol-factory';
 
 const EXTENSION_NAME = 'test';
 
+// TODO(burdon): PublicKey.
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
 export const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
   if (!peerId) {
     return undefined;
   }
+
   return PublicKey.bufferize(peerId);
+};
+
+/**
+ * @return {ProtocolProvider}
+ */
+// TODO(dboreham): Try to encapsulate swarm_key, nodeId.
+export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
+  log('creating protocol-factory', { swarmKey: PublicKey.from(swarmKey), peerId });
+  return protocolFactory({
+    getTopics: () => [swarmKey],
+    session: { peerId: peerId.toString() }, // TODO(burdon): Key.
+    plugins: [protocolPlugin]
+  });
 };
 
 /**
@@ -84,6 +99,10 @@ export class TestProtocolPlugin extends EventEmitter {
   // Methods below are per-peer-connection.
   // TODO(dboreham): Why are these here and not on Protocol?
 
+  private async _init(protocol: Protocol) {
+    this.initCalled = true;
+  }
+
   /**
    * Send/Receive messages with peer when initiating a request/response interaction.
    * @param peerId Must be the value passed to the constructor on the responding node.
@@ -92,38 +111,35 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   async send(peerId: Buffer, payload: string): Promise<string> {
     assert(Buffer.isBuffer(peerId));
-    const peerIdStr = PublicKey.stringify(peerId);
+    const peerIdStr = PublicKey.stringify(peerId); // TODO(burdon): Key.
     const peer = this._peers.get(peerIdStr);
     // TODO(dboreham): Throw fatal error if peer not found.
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
 
-    log('sent', { peerIdStr, payload });
+    log('sent', { peerId: PublicKey.from(peerId), payload });
     return await extension.send(encoded, { oneway: true });
-  }
-
-  private async _init(protocol: Protocol) {
-    this.initCalled = true;
   }
 
   async _receive(protocol: Protocol, data: any) {
     const peerId = getPeerId(protocol);
     assert(peerId !== undefined);
-    const peerIdStr = PublicKey.stringify(peerId);
     let payload = data.data.toString();
     if (this._uppercase) {
       payload = payload.toUpperCase();
     }
 
-    log('received', { peerIdStr, payload });
+    log('received', { peerId: PublicKey.from(peerId), payload });
     this.emit('receive', protocol, payload);
   }
 
   async _onPeerConnect(protocol: Protocol) {
+    log('on connect');
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
     }
+
     const peerIdStr = PublicKey.stringify(peerId);
     if (this._peers.has(peerIdStr)) {
       return;
@@ -143,16 +159,3 @@ export class TestProtocolPlugin extends EventEmitter {
     this.emit('disconnect', peerId);
   }
 }
-
-/**
- * @return {ProtocolProvider}
- */
-// TODO(dboreham): Try to encapsulate swarm_key, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
-  log('creating protocol factory', { swarmKey: PublicKey.from(swarmKey), peerId });
-  return protocolFactory({
-    getTopics: () => [swarmKey],
-    session: { peerId: peerId.toHex() },
-    plugins: [protocolPlugin]
-  });
-};

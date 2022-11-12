@@ -42,6 +42,7 @@ export const protocolFactory = ({
         if (publicKey) {
           protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
+
         assert(publicKey, 'PublicKey not found in discovery.');
         return publicKey;
       },
@@ -51,7 +52,6 @@ export const protocolFactory = ({
     });
 
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
-
     return protocol;
   };
 };

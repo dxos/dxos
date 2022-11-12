@@ -162,6 +162,7 @@ export class NetworkManager {
    */
   async closeSwarmConnection(topic: PublicKey) {
     if (!this._swarms.has(topic)) {
+      log.warn('swarm not open', { topic });
       return;
     }
 

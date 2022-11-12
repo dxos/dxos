@@ -55,6 +55,7 @@ export class SwarmMapper {
         );
       })
     );
+
     this._subscriptions.add(
       _swarm.connectionRemoved.on((connection) => {
         this._connectionSubscriptions.get(connection.remoteId)?.();
@@ -62,22 +63,28 @@ export class SwarmMapper {
         this._update();
       })
     );
+
     if (_presence) {
       const cb = () => {
         this._update();
       };
       this._subscriptions.add(_presence.graphUpdated.on(cb));
     }
+
+    // TODO(burdon): Do not call from constructor.
     this._update();
   }
 
   private _update() {
+    log('updating swarm');
+
     this._peers.clear();
     this._peers.set(this._swarm.ownPeerId, {
       id: this._swarm.ownPeerId,
-      state: 'ME',
+      state: 'ME', // TODO(burdon): Enum.
       connections: []
     });
+
     for (const connection of this._swarm.connections) {
       this._peers.set(connection.remoteId, {
         id: connection.remoteId,
@@ -85,18 +92,21 @@ export class SwarmMapper {
         connections: [this._swarm.ownPeerId]
       });
     }
+
     if (this._presence) {
       this._presence.graph.forEachNode((node: any) => {
         const id = PublicKey.fromHex(node.id);
         if (this._peers.has(id)) {
           return;
         }
+
         this._peers.set(id, {
           id,
           state: 'INDIRECTLY_CONNECTED',
           connections: []
         });
       });
+
       this._presence.graph.forEachLink((link: any) => {
         const from = PublicKey.from(link.fromId);
         const to = PublicKey.from(link.toId);
@@ -106,10 +116,12 @@ export class SwarmMapper {
         }
       });
     }
+
     log('graph changed', {
       directConnections: this._swarm.connections.length,
       totalPeersInSwarm: this._peers.size
     });
+
     this.mapUpdated.emit(Array.from(this._peers.values()));
   }
 
