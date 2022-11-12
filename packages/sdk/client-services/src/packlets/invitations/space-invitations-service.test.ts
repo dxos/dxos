@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../services';
@@ -26,18 +26,18 @@ describe('services/space-invitation-service', function () {
 
     assert(host.spaceManager);
     assert(host.spaceInvitations);
-    const service1: InvitationsService = new SpaceInvitationsServiceImpl(
+    const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
-      () => host.spaceManager!,
-      () => host.spaceInvitations!
+      () => host.spaceInvitations!,
+      () => host.spaceManager!
     );
 
     assert(guest.spaceManager);
     assert(guest.spaceInvitations);
-    const service2: InvitationsService = new SpaceInvitationsServiceImpl(
+    const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
-      () => guest.spaceManager!,
-      () => guest.spaceInvitations!
+      () => guest.spaceInvitations!,
+      () => guest.spaceManager!
     );
 
     const space1 = await host.spaceManager.createSpace();
@@ -87,18 +87,18 @@ describe('services/space-invitation-service', function () {
 
     assert(host.spaceManager);
     assert(host.spaceInvitations);
-    const service1: InvitationsService = new SpaceInvitationsServiceImpl(
+    const service1: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       host.identityManager,
-      () => host.spaceManager!,
-      () => host.spaceInvitations!
+      () => host.spaceInvitations!,
+      () => host.spaceManager!
     );
 
     assert(guest.spaceManager);
     assert(guest.spaceInvitations);
-    const service2: InvitationsService = new SpaceInvitationsServiceImpl(
+    const service2: SpaceInvitationsService = new SpaceInvitationsServiceImpl(
       guest.identityManager,
-      () => guest.spaceManager!,
-      () => guest.spaceInvitations!
+      () => guest.spaceInvitations!,
+      () => guest.spaceManager!
     );
 
     const space1 = await host.spaceManager.createSpace();

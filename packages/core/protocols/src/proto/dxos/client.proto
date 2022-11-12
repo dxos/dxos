@@ -102,10 +102,6 @@ service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
   rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
-
-  rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
-  rpc AcceptInvitation(dxos.client.services.Invitation) returns (stream RedeemedInvitation);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
 message AddKeyRecordRequest {
@@ -113,9 +109,7 @@ message AddKeyRecordRequest {
 }
 
 message SignRequest {
-  /**
-   * - The public key of the key that is supposed to be used for signing.
-   */
+  /// The public key of the key that is supposed to be used for signing.
   dxos.keys.PublicKey public_key = 1;
 
   bytes payload = 2;
