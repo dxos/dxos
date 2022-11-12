@@ -20,33 +20,38 @@ const MEMORY_TRANSPORT_DELAY = 1;
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
-  new Transform({
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
+  return new Transform({
     objectMode: true,
     transform: (chunk, _, cb) => {
       setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
     }
   });
+};
+
+export const MemoryTransportFactory: TransportFactory = {
+  create: (params) => new MemoryTransport(params)
+};
 
 /**
  * Fake transport.
  */
 // TODO(burdon): Remove static variables.
 export class MemoryTransport implements Transport {
-  // TODO(burdon): Remove global properties.
+  // TODO(burdon): Remove static properties.
   private static readonly _connections = new ComplexMap<PublicKey, MemoryTransport>(PublicKey.hash);
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  private readonly _ownId = PublicKey.random();
-  private _remoteId!: PublicKey;
+  private readonly _ownId = PublicKey.random(); // TODO(burdon): Rename "own" to "local" throughout.
   private readonly _remote = new Trigger<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
 
+  private _remoteId!: PublicKey;
   private _remoteConnection?: MemoryTransport;
 
   constructor(private readonly params: TransportOptions) {
@@ -121,7 +126,3 @@ export class MemoryTransport implements Transport {
     log('closed');
   }
 }
-
-export const MemoryTransportFactory: TransportFactory = {
-  create: (params) => new MemoryTransport(params)
-};

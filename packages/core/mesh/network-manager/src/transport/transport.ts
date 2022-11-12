@@ -35,5 +35,6 @@ export type TransportOptions = {
 };
 
 export interface TransportFactory {
+  // TODO(burdon): Rename createTransport.
   create(options: TransportOptions): Transport;
 }

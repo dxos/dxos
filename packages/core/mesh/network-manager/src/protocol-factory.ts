@@ -32,6 +32,7 @@ export const protocolFactory = ({
   getTopics
 }: ProtocolFactoryOptions): ProtocolProvider => {
   assert(getTopics);
+
   // eslint-disable-next-line no-unused-vars
   return ({ channel, initiator }) => {
     log('creating protocol');

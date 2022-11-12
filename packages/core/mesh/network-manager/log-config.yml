@@ -3,5 +3,6 @@ formatter:
 
 filter:
   - network-manager:debug
-  - test-protocol:debug
-  - mesh-protocol:debug
+#  - test-protocol:debug
+#  - mesh-protocol:debug
+  - protocol:debug

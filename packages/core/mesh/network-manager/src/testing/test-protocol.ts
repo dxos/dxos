@@ -29,7 +29,7 @@ export const getPeerId = (protocol: Protocol) => {
 /**
  * @return {ProtocolProvider}
  */
-// TODO(dboreham): Try to encapsulate swarm_key, nodeId.
+// TODO(dboreham): Try to encapsulate swarmKey, nodeId.
 export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
   log('creating protocol-factory', { swarmKey: PublicKey.from(swarmKey), peerId });
   return protocolFactory({
@@ -96,7 +96,7 @@ export class TestProtocolPlugin extends EventEmitter {
       .setCloseHandler(this._onPeerDisconnect.bind(this));
   }
 
-  // Methods below are per-peer-connection.
+  // Methods below are per-peer connection.
   // TODO(dboreham): Why are these here and not on Protocol?
 
   private async _init(protocol: Protocol) {
@@ -117,7 +117,7 @@ export class TestProtocolPlugin extends EventEmitter {
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
 
-    log('sent', { peerId: PublicKey.from(peerId), payload });
+    log('sending', { peerId: PublicKey.from(peerId), payload });
     return await extension.send(encoded, { oneway: true });
   }
 

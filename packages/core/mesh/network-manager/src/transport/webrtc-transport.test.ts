@@ -28,13 +28,12 @@ describe('WebRTCTransport', function () {
     const closedCb = () => {
       callsCounter++;
     };
-    connection.closed.once(closedCb);
 
+    connection.closed.once(closedCb);
     await sleep(10); // Let simple-peer process events.
     await connection.close();
 
     await sleep(10); // Process events.
-
     expect(callsCounter).toEqual(1);
   })
     .timeout(1_000)
@@ -83,7 +82,6 @@ describe('WebRTCTransport', function () {
       return undefined;
     };
     plugin1.on('receive', mockReceive);
-
     plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
