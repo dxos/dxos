@@ -8,7 +8,7 @@ import {
   ClientServicesProxy,
   InvitationObservable,
   SpaceInvitationsProxy,
-  CreateInvitationsOptions
+  InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
@@ -73,7 +73,7 @@ export interface Space extends ISpace {
 
   queryMembers(): ResultSet<SpaceMember>;
 
-  createInvitation(options?: CreateInvitationsOptions): Promise<InvitationObservable>;
+  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable>;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -258,7 +258,7 @@ export class SpaceProxy implements Space {
   /**
    * Creates an interactive invitation.
    */
-  async createInvitation(options?: CreateInvitationsOptions) {
+  async createInvitation(options?: InvitationsOptions) {
     return new Promise<InvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
 

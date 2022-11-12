@@ -1,0 +1,6 @@
+formatter:
+  column: 80
+
+filter:
+#  - network-manager:debug
+  - test-protocol:debug
