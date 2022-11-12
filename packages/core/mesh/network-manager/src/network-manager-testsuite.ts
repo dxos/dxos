@@ -161,7 +161,7 @@ export const sharedTests = ({
     .timeout(10_000)
     .retries(10);
 
-  it.skip('join two swarms', async () => {
+  it('join two swarms', async () => {
     const testBuilder = new TestBuilder({ signalUrl: !inMemory ? signalUrl : undefined });
 
     const peerId = PublicKey.random();

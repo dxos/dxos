@@ -249,13 +249,7 @@ describe('NetworkManager', function () {
        * The real system being tested.
        */
       interface Real {
-        peers: ComplexMap<
-          PublicKey,
-          {
-            networkManager: NetworkManager;
-            presence?: PresencePlugin;
-          }
-        >;
+        peers: ComplexMap<PublicKey, { networkManager: NetworkManager; presence?: PresencePlugin }>;
       }
 
       const assertState = async (model: Model, real: Real) => {
@@ -268,7 +262,8 @@ describe('NetworkManager', function () {
                 }
 
                 const actuallyConnectedPeers = peer.presence!.peers;
-                if (!actuallyConnectedPeers.some((x) => PublicKey.equals(expectedJoinedPeer, x))) {
+                if (!actuallyConnectedPeers.some((peer) => PublicKey.equals(expectedJoinedPeer, peer))) {
+                  // TODO(burdon): More concise error.
                   throw new Error(
                     `Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString(
                       'hex'
@@ -286,8 +281,6 @@ describe('NetworkManager', function () {
           })
         );
       };
-
-      // TODO(burdon): Factor out to TestBuilder.
 
       class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
         constructor(readonly peerId: PublicKey) {}
