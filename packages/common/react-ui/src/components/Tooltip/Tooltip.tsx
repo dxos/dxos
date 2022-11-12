@@ -12,11 +12,19 @@ import { defaultTooltip } from '../../styles';
 export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitive.Content>, 'children'> {
   content: ReactNode;
   children: ReactNode;
+  compact?: boolean;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
 }
 
-export const Tooltip = ({ content, children, tooltipLabelsTrigger, mountAsSibling, ...contentProps }: TooltipProps) => {
+export const Tooltip = ({
+  content,
+  children,
+  compact,
+  tooltipLabelsTrigger,
+  mountAsSibling,
+  ...contentProps
+}: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const labelId = useId('tooltipLabel');
 
@@ -29,7 +37,8 @@ export const Tooltip = ({ content, children, tooltipLabelsTrigger, mountAsSiblin
         'radix-side-right:animate-slide-left-fade',
         'radix-side-bottom:animate-slide-up-fade',
         'radix-side-left:animate-slide-right-fade',
-        'inline-flex items-center rounded-md px-4 py-2.5',
+        'inline-flex items-center rounded-md',
+        !compact && 'px-4 py-2.5',
         'shadow-lg bg-white dark:bg-neutral-800',
         !isOpen && 'sr-only',
         defaultTooltip,

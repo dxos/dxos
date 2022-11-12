@@ -80,7 +80,7 @@ export const CompactQrCode = ({
   }, [value]);
   return (
     <>
-      <div className='flex md:hidden'>
+      <div className='flex grow md:hidden'>
         <span className='sr-only' id={labelId}>
           {displayQrLabel}
         </span>
@@ -91,13 +91,13 @@ export const CompactQrCode = ({
               <QRCodeSVG value={value} includeMargin role='none' className={getSize(32)} />
             </div>
           }
-          {...{ side, sideOffset, collisionPadding }}
+          {...{ side: side ?? 'left', sideOffset, collisionPadding }}
         >
           <Button
             rounding='rounded-is-md'
             compact={buttonCompact}
             {...buttonProps}
-            className={cx('border-ie-0', buttonProps.className)}
+            className={cx('border-ie-0 grow', buttonProps.className)}
             aria-labelledby={labelId}
           >
             <QrCodeIcon className={getSize(5)} />
@@ -105,7 +105,7 @@ export const CompactQrCode = ({
         </Tooltip>
         <Tooltip content={copyLabel} tooltipLabelsTrigger {...{ side, sideOffset, collisionPadding }}>
           <Button
-            rounding='rounded-ie-md'
+            rounding='rounded-ie-md grow'
             compact={buttonCompact}
             {...buttonProps}
             className={buttonProps.className}
@@ -123,7 +123,7 @@ export const CompactQrCode = ({
               <QRCodeSVG value={value} includeMargin role='none' className={getSize(32)} />
             </div>
           }
-          {...{ side, sideOffset, collisionPadding }}
+          {...{ side: side ?? 'left', sideOffset, collisionPadding }}
         >
           <Button
             rounding='rounded-is-md'

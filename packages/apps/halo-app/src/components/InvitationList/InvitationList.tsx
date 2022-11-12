@@ -19,7 +19,7 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
   const empty = !invitations || invitations.length < 1;
   return (
     <Group
-      className='mbs-4'
+      className='mlb-4'
       label={{
         level: 2,
         children: !empty ? t('invitations label') : t('empty invitations message'),
@@ -27,13 +27,10 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
       }}
       elevation={0}
     >
-      {!empty && (
-        <div role='none' className='grid grid-cols-[repeat(auto-fill,_minmax(12rem,1fr))] gap-4'>
-          {invitations.map((wrapper, index) => (
-            <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} />
-          ))}
-        </div>
-      )}
+      {!empty &&
+        invitations.map((wrapper, index) => (
+          <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} />
+        ))}
     </Group>
   );
 };
