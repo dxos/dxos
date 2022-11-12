@@ -31,8 +31,6 @@ import {
 
 describe('NetworkManager', function () {
   describe('WebRTC transport', function () {
-    // TODO(burdon): Skipped.
-    return;
     let topic: PublicKey;
     let peer1Id: PublicKey;
     let peer2Id: PublicKey;
@@ -173,6 +171,7 @@ describe('NetworkManager', function () {
       return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService);
     };
 
+    // TODO(burdon): Skipped.
     sharedTests({
       inMemory: false,
       signalUrl: TEST_SIGNAL_URL,

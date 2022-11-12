@@ -108,7 +108,8 @@ export class Swarm {
   }
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { topic: this._topic, swarmEvent });
+    log('swarm event', { topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
+
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
       log('new peer', { topic: this._topic, peerId });
@@ -124,6 +125,7 @@ export class Swarm {
 
   async onOffer(message: OfferMessage): Promise<Answer> {
     log('offer', { topic: this._topic, message });
+
     // Id of the peer offering us the connection.
     assert(message.author);
     const remoteId = message.author;
