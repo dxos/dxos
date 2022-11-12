@@ -42,7 +42,6 @@ import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
 
-// TODO(burdon): Remove?
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();
 }
@@ -53,6 +52,9 @@ export type DevtoolsServiceParams = {
   context: ServiceContext;
 };
 
+/**
+ * @deprecated
+ */
 export class DevtoolsServiceImpl implements DevtoolsHost {
   constructor(private readonly params: DevtoolsServiceParams) {}
 

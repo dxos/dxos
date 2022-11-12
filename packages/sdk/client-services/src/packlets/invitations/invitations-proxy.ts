@@ -7,32 +7,34 @@ import assert from 'assert';
 import { observableError } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { Invitation, InvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import {
   AuthenticatingInvitationObservable,
   AuthenticatingInvitationProvider,
-  CreateInvitationsOptions,
-  InvitationsProxy,
   InvitationObservable,
-  InvitationObservableProvider
+  InvitationObservableProvider,
+  InvitationsService
 } from './invitations';
+import { InvitationsOptions, InvitationsHandler } from './invitations-handler';
 
 /**
  * Adapts invitations service observable to client/service stream.
- * Used by both HALO and Spaces client/service interfaces.
+ * Common base class for HALO and Spaces implementations.
  */
-export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T> {
+export interface InvitationsProxy<T = void> extends InvitationsHandler<T> {
+  getInvitationOptions(context: T): Invitation;
+}
+
+export abstract class AbstractInvitationsProxy<T = void> implements InvitationsProxy<T> {
   // prettier-ignore
   constructor(
     private readonly _invitationsService: InvitationsService
   ) {}
 
-  abstract createInvitationObject(context: T): Invitation;
+  abstract getInvitationOptions(context: T): Invitation;
 
-  createInvitation(context: T, options?: CreateInvitationsOptions): InvitationObservable {
-    assert(context);
-
+  createInvitation(context: T, options?: InvitationsOptions): InvitationObservable {
     let invitationId: string;
     const observable = new InvitationObservableProvider(async () => {
       if (invitationId) {
@@ -40,7 +42,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
       }
     });
 
-    const invitation = { ...this.createInvitationObject(context), ...options };
+    const invitation: Invitation = { ...this.getInvitationOptions(context), ...options };
     const stream: Stream<Invitation> = this._invitationsService.createInvitation(invitation);
 
     stream.subscribe(
@@ -90,7 +92,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
     return observable;
   }
 
-  acceptInvitation(invitation: Invitation): AuthenticatingInvitationObservable {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable {
     assert(invitation && invitation.swarmKey);
 
     const observable = new AuthenticatingInvitationProvider({
@@ -107,7 +109,7 @@ export abstract class AbstractInvitationsProxy<T> implements InvitationsProxy<T>
       }
     });
 
-    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation(invitation);
+    const stream: Stream<Invitation> = this._invitationsService.acceptInvitation({ ...invitation, ...options });
 
     stream.subscribe(
       (invitation: Invitation) => {
