@@ -1,4 +1,4 @@
-# DXOS Oh-my-zsh Plugin
+# DXOS [oh-my-zsh](https://ohmyz.sh) Plugin
 
 ## Installation
 
