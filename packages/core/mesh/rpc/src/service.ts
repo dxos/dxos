@@ -14,6 +14,8 @@ import { RpcPeer, RpcPeerOptions } from './rpc';
 // TODO(burdon): Rename ServiceMap.
 export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
 
+export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
+
 /**
  * Groups multiple services together to be served by a single RPC peer.
  */
@@ -54,7 +56,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Handlers for the exposed services
    */
-  handlers?: { [ServiceName in keyof Server]: ServiceProvider<Server[ServiceName]> };
+  handlers?: ServiceHandlers<Server>;
 
   /**
    * Encoding options passed to the underlying proto codec.
