@@ -14,13 +14,13 @@ import {
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
+import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { TypedMessage } from '@dxos/protocols';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
-import { writeMessages } from '@dxos/feed-store';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { TypedMessage } from '@dxos/protocols';
-import { log } from '@dxos/log';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -125,7 +125,13 @@ export class Identity {
   }
 
   async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: HaloAdmissionCredentials) {
-    log('Admitting device:', { identityKey: this.identityKey, hostDevice: this.deviceKey, deviceKey, controlFeedKey, dataFeedKey });
+    log('Admitting device:', {
+      identityKey: this.identityKey,
+      hostDevice: this.deviceKey,
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey
+    });
     const signer = this.getIdentityCredentialSigner();
     await writeMessages(
       this.controlPipeline.writer,
@@ -135,7 +141,7 @@ export class Identity {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             identityKey: this.identityKey,
-            deviceKey,
+            deviceKey
           }
         }),
         await signer.createCredential({
@@ -159,6 +165,6 @@ export class Identity {
           }
         })
       ].map((credential): TypedMessage => ({ '@type': 'dxos.echo.feed.CredentialsMessage', credential }))
-    )
+    );
   }
 }

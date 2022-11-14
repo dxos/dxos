@@ -5,9 +5,8 @@
 import assert from 'assert';
 
 import { sleep, Trigger } from '@dxos/async';
-import { createDeviceAuthorization, generatePasscode } from '@dxos/credentials';
+import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
@@ -104,7 +103,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
                 log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
                 // TODO(burdon): Check if already admitted.
-                await identity.admitDevice(credentials)
+                await identity.admitDevice(credentials);
 
                 // Updating credentials complete.
                 complete.wake(credentials.deviceKey);
