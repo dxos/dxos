@@ -30,6 +30,7 @@ import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-ha
 /**
  * Handles the life-cycle of Halo invitations between peers.
  */
+// TODO(dmaretskyi): Split into Host and Guest parts.
 export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
@@ -108,7 +109,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
                   await createDeviceAuthorization(
                     identity.getIdentityCredentialSigner(),
                     identity.identityKey,
-                    identity.deviceKey
+                    deviceKey
                   )
                 );
 
