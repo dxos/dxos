@@ -146,13 +146,11 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
-   * Warning: Inconsistent state after reset, do not continue to use this client instance.
    */
-  // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
   @synchronized
   async reset() {
     await this._services.services?.SystemService.reset();
-    this._halo.profileChanged.emit();
     this._initialized = false;
+    this._halo.profileChanged.emit();
   }
 }

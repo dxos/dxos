@@ -11,7 +11,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
-import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
+import { SpaceServiceImpl, ProfileServiceImpl, TracingServiceImpl, SystemServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
 import { DevicesServiceImpl } from '../identity/devices-service-impl';
 import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
@@ -75,7 +75,7 @@ export class ClientServicesHost implements ClientServicesProvider {
       // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
       SpaceService: new SpaceServiceImpl(this._serviceContext),
-      SystemService: new SystemServiceImpl(config),
+      SystemService: new SystemServiceImpl(config, this._serviceContext),
       TracingService: new TracingServiceImpl(config),
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
