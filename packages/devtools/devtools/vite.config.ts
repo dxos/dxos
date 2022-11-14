@@ -8,12 +8,19 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { dxosPlugin } from '@dxos/vite-plugin';
+import packageJson from './package.json';
+
+const env = (value?: string) => (value ? `"${value}"` : undefined);
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true
+  },
+  define: {
+    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
+    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -46,10 +53,7 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     }
   },
   plugins: [
