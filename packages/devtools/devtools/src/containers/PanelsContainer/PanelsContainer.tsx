@@ -38,9 +38,10 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   const [selected, setSelected] = useState(sections[0]?.items[0]?.id);
   const services = useClientServices();
   if (!services) {
+    console.log('App No services');
     return null;
   }
-
+  console.log('App services', services);
   // TODO(burdon): Factor out.
   // TODO(wittjosiah): Should this only be done in the app?
   useEffect(() => {
