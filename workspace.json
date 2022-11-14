@@ -93,6 +93,7 @@
     "util": "packages/common/util",
     "vite-plugin": "packages/sdk/vite-plugin",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
-    "wallet-playground": "packages/deprecated/wallet/wallet-playground"
+    "wallet-playground": "packages/deprecated/wallet/wallet-playground",
+    "x": "packages/tools/x"
   }
 }
