@@ -52,6 +52,7 @@ export type LogOptions = {
   formatter?: {
     column: number;
   };
+  prefix?: string;
 };
 
 /**
@@ -61,4 +62,5 @@ export interface LogConfig {
   options: LogOptions;
   filters?: LogFilter[];
   processor: LogProcessor;
+  prefix?: string;
 }

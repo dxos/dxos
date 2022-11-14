@@ -24,7 +24,7 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   // TODO(burdon): Config repo and branch.
   //  Make easy to switch since line links are bright and noisy.
-  const LOG_BROWSER_PREFIX = 'https://vscode.dev/github.com/dxos/dxos/blob/main/';
+  const LOG_BROWSER_PREFIX = config.prefix ?? 'https://vscode.dev/github.com/dxos/dxos/blob/main/';
 
   // TODO(burdon): Line numbers not working for app link.
   // const LOG_BROWSER_PREFIX = 'vscode://file/Users/burdon/Code/dxos/dxos/';

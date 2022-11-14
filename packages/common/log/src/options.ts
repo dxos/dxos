@@ -56,6 +56,7 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
   return {
     options,
     filters: parseFilter(options.filter ?? LogLevel.INFO),
-    processor: options.processor ? processors[options.processor] : defaultProcessor
+    processor: options.processor ? processors[options.processor] : defaultProcessor,
+    prefix: options.prefix
   };
 };
