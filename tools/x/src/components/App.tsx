@@ -24,7 +24,10 @@ export const App: FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
     } = await octokit.rest.actions.listWorkflowRunsForRepo({ owner, repo });
 
     if (!idRef.current) {
-      notifier.notify({ title: 'Workflow updated' });
+      const { name, conclusion } = items[0];
+
+      // https://github.com/mikaelbr/node-notifier#all-notification-options-with-their-defaults
+      notifier.notify({ title: 'Workflow updated', message: `${name}:${conclusion}` });
     }
 
     setItems(items);
