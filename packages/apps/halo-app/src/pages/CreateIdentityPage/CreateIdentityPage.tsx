@@ -19,7 +19,7 @@ export const CreateIdentityPage = () => {
   const onNext = useCallback(() => {
     setPending(true);
     void client.halo.createProfile({ displayName }).then(
-      () => navigate(redirect),
+      () => (redirect.startsWith('http') ? window.location.replace(redirect) : navigate(redirect)),
       (_rejection) => setPending(false)
     );
   }, [displayName]);
