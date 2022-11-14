@@ -59,6 +59,7 @@ export class IdentityManager {
   }
 
   async open() {
+    log('opening...');
     await this._metadataStore.load();
 
     const identityRecord = this._metadataStore.getIdentityRecord();
@@ -66,12 +67,15 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();
       await this._identity.ready();
+      log('identity ready');
       this.stateUpdate.emit();
     }
+    log('opened');
   }
 
   async close() {
     await this._identity?.close();
+    this._identity = undefined;
   }
 
   private async _constructIdentity(identityRecord: IdentityRecord) {

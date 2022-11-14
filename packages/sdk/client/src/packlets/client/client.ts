@@ -147,10 +147,10 @@ export class Client {
   /**
    * Resets and destroys client storage.
    */
-  @synchronized
   async reset() {
     await this._services.services?.SystemService.reset();
-    this._initialized = false;
+    await this.destroy();
+    await this.initialize();
     this._halo.profileChanged.emit();
   }
 }
