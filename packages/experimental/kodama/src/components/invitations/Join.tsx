@@ -7,13 +7,13 @@ import React, { FC, useState } from 'react';
 
 import { InvitationEncoder, Invitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { useClient, useParty } from '@dxos/react-client';
+import { useClient, useSpace } from '@dxos/react-client';
 
-import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
+import { ActionStatus, SpaceInfo, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
-  onJoin?: (partyKey: PublicKey) => void;
+  onJoin?: (spaceKey: PublicKey) => void;
 }> = ({ onJoin }) => {
   const client = useClient();
   const [focused, setFocused] = useState(false);
@@ -21,15 +21,15 @@ export const Join: FC<{
   const [secret, setSecret] = useState<string>();
   const [invitation, _setInvitation] = useState<Invitation>();
   const [status, setStatus] = useState<StatusState>();
-  const [partyKey, setPartyKey] = useState<PublicKey>();
-  const party = useParty(partyKey);
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
+  const space = useSpace(spaceKey);
 
   const handleDecode = async () => {
     const invitation = InvitationEncoder.decode(invitationCode!);
     const observable = await client.echo.acceptInvitation(invitation);
     observable.subscribe({
       onSuccess: (invitation: Invitation) => {
-        setPartyKey(invitation.spaceKey);
+        setSpaceKey(invitation.spaceKey);
       },
       onError: (err: Error) => {
         setStatus({ error: err as Error });
@@ -41,11 +41,11 @@ export const Join: FC<{
     try {
       setStatus({ processing: 'Authenticating...' });
       // await invitation!.authenticate(Buffer.from(secret));
-      // const party = await invitation!.getParty();
+      // const space = await invitation!.getSpace();
       // setInvitation(undefined);
       // setStatus({ success: 'OK' });
-      // setPartyKey(party.key);
-      // onJoin?.(party.key);
+      // setSpaceKey(space.key);
+      // onJoin?.(space.key);
     } catch (err) {
       setStatus({ error: err as Error });
     }
@@ -77,7 +77,7 @@ export const Join: FC<{
         </Box>
       )}
 
-      {party && <PartyInfo party={party} />}
+      {space && <SpaceInfo space={space} />}
 
       <ActionStatus status={status} marginTop={1} />
     </Panel>

@@ -10,19 +10,13 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
+message AuthenticationRequest {
+  string authentication_code = 1;
+}
+
 //
 // HALO device invitations.
 //
-
-// TODO(burdon): ALL invitation messages should be handled over encrypted sessions.
-// TODO(burdon): Or contain some form of signed credential.
-// TODO(burdon): Calls should include some request context (e.g., halo/space key).
-
-message HaloAdmissionCredentials {
-  dxos.keys.PublicKey device_key = 1;
-  dxos.keys.PublicKey control_feed_key = 2;
-  dxos.keys.PublicKey data_feed_key = 3;
-}
 
 message HaloAdmissionOffer {
   dxos.keys.PublicKey identity_key = 1;
@@ -30,19 +24,31 @@ message HaloAdmissionOffer {
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
-service HaloHostService {
-  /// Process admission request from guest.
-  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
+message HaloAdmissionCredentials {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  dxos.keys.PublicKey data_feed_key = 3;
 }
 
-service HaloGuestService {
+service HaloHostService {
   /// Process admission offer from host.
-  rpc PresentAdmissionOffer(HaloAdmissionOffer) returns (google.protobuf.Empty);
+  rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
+
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+
+  /// Process admission request from guest.
+  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
 }
 
 //
 // Space agent invitations.
 //
+
+message SpaceAdmissionOffer {
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey genesis_feed_key = 3;
+}
 
 message SpaceAdmissionCredentials {
   dxos.keys.PublicKey identity_key = 1;
@@ -51,17 +57,13 @@ message SpaceAdmissionCredentials {
   dxos.keys.PublicKey data_feed_key = 4;
 }
 
-message SpaceAdmissionOffer {
-  dxos.keys.PublicKey space_key = 1;
-  dxos.keys.PublicKey genesis_feed_key = 3;
-}
-
 service SpaceHostService {
   /// Process admission request.
   rpc RequestAdmission(google.protobuf.Empty) returns (SpaceAdmissionOffer);
 
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+
   /// Process admission credentials.
   rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
 }
-
-service SpaceGuestService {}

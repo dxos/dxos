@@ -90,7 +90,7 @@ export const AlertDialog = ({
             {title}
           </AlertDialogPrimitive.Title>
           {description && (
-            <AlertDialogPrimitive.Description className={cx('mt-2', defaultDescription)}>
+            <AlertDialogPrimitive.Description className={cx('my-2', defaultDescription)}>
               {description}
             </AlertDialogPrimitive.Description>
           )}

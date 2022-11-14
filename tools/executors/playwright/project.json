@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "tools/executors/playwright/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/gravity/gravity-dashboard/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

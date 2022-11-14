@@ -5,14 +5,14 @@ label: Mutations
 # Mutating data
 
 ```tsx
-import { useParty } from '@dxos/react-client';
+import { usespace } from '@dxos/react-client';
 
 export const List = ({ key }) => {
-  const party = useParty(key);
+  const space = usespace(key);
   const textRef = useRef();
 
   const handleCreate = async () => {
-    party.database.createItem({
+    space.database.createItem({
       type: 'task',
       properties: {
         title: textRef.current.value

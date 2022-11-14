@@ -5,7 +5,7 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-import { useProfile } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 export interface RequireProfileProps {
   redirect: string;
@@ -22,7 +22,7 @@ export const RequireIdentity = ({
   inverse
 }: RequireProfileProps) => {
   const { pathname, search } = useLocation();
-  const profile = useProfile();
+  const profile = useIdentity();
 
   if ((!inverse && !profile) || (inverse && profile)) {
     const redirect = inverse ? '' : `?redirect=${pathname}${search}`;

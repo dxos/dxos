@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import { expect } from 'chai';
 
 import { asyncChain, Trigger } from '@dxos/async';
@@ -19,7 +20,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/spaces', function () {
+describe('services/space-invitations-handler', function () {
   it('genesis', async function () {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
@@ -47,20 +48,25 @@ describe('services/spaces', function () {
   });
 
   it('creates and accepts invitation', async function () {
-    const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
     const complete2 = new Trigger<PublicKey>();
 
-    const space1 = await peer1.spaceManager!.createSpace();
-    const observable1 = peer1.spaceInvitations!.createInvitation(space1);
+    const authenticationCode = new Trigger<string>();
+
+    const space1 = await host.spaceManager!.createSpace();
+    const observable1 = host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
-        const observable2 = peer2.spaceInvitations!.acceptInvitation(invitation1);
+        const observable2 = guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
-          onConnecting: async (invitation2: Invitation) => {},
+          onConnecting: async () => {},
           onConnected: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);
+          },
+          onAuthenticating: async () => {
+            await observable2.authenticate(await authenticationCode.wait());
           },
           onSuccess: (invitation: Invitation) => {
             complete2.wake(invitation.spaceKey!);
@@ -70,21 +76,24 @@ describe('services/spaces', function () {
           onError: (err: Error) => raise(new Error(err.message))
         });
       },
-      onConnected: (invitation: Invitation) => {},
+      onConnected: (invitation: Invitation) => {
+        assert(invitation.authenticationCode);
+        authenticationCode.wake(invitation.authenticationCode);
+      },
       onSuccess: (invitation: Invitation) => {
-        complete1.wake(space1.key);
+        complete1.wake(invitation.spaceKey!);
       },
       onCancelled: () => raise(new Error()),
       onTimeout: (err: Error) => raise(new Error(err.message)),
       onError: (err: Error) => raise(new Error(err.message))
     });
 
-    {
-      const [spaceKey1, spaceKey2] = await Promise.all([complete1.wait(), complete2.wait()]);
-      expect(spaceKey1).to.deep.eq(spaceKey2);
+    const [spaceKey1, spaceKey2] = await Promise.all([complete1.wait(), complete2.wait()]);
+    expect(spaceKey1).to.deep.eq(spaceKey2);
 
-      const space1 = peer1.spaceManager!.spaces.get(spaceKey1)!;
-      const space2 = peer2.spaceManager!.spaces.get(spaceKey2)!;
+    {
+      const space1 = host.spaceManager!.spaces.get(spaceKey1)!;
+      const space2 = guest.spaceManager!.spaces.get(spaceKey2)!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -96,19 +105,19 @@ describe('services/spaces', function () {
   });
 
   it('cancels invitation', async function () {
-    const [peer1, peer2] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();
     const connecting1 = new Trigger<Invitation>(); // peer 1 connected.
     const connecting2 = new Trigger<Invitation>(); // peer 2 connected.
 
-    const space1 = await peer1.spaceManager!.createSpace();
-    const observable1 = await peer1.spaceInvitations!.createInvitation(space1);
+    const space1 = await host.spaceManager!.createSpace();
+    const observable1 = await host.spaceInvitations!.createInvitation(space1);
     observable1.subscribe({
       onConnecting: async (invitation1: Invitation) => {
         connecting1.wake(invitation1);
 
-        const observable2 = await peer2.spaceInvitations!.acceptInvitation(invitation1);
+        const observable2 = await guest.spaceInvitations!.acceptInvitation(invitation1);
         observable2.subscribe({
           onConnecting: async (invitation2: Invitation) => {
             expect(invitation1.swarmKey).to.eq(invitation2.swarmKey);

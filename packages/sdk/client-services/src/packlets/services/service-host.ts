@@ -3,6 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
 import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -10,14 +11,15 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { TextModel } from '@dxos/text-model';
 
-import { PartyServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
+import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
 import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
-import { SpaceInvitationsServiceImpl } from '../invitations';
+import { DevicesServiceImpl } from '../identity/devices-service-impl';
+import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
 import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
-import { createServiceProvider, ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry';
 
 type ClientServicesHostParams = {
   config: Config;
@@ -53,23 +55,33 @@ export class ClientServicesHost implements ClientServicesProvider {
 
     // TODO(burdon): Start to think of DMG (dynamic services).
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SpacesService: new SpacesServiceImpl(),
-      SpaceInvitationsService: createServiceProvider(() => {
-        // TODO(burdon): Replace with providers.
-        return new SpaceInvitationsServiceImpl(
-          this._serviceContext.identityManager,
-          this._serviceContext.spaceManager!,
-          this._serviceContext.spaceInvitations!
-        );
-      }),
+      HaloInvitationsService: new HaloInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.haloInvitations
+      ),
 
-      PartyService: new PartyServiceImpl(this._serviceContext),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+      ),
+
+      SpacesService: new SpacesServiceImpl(),
+
       DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
 
+      // TODO(burdon): Move to new protobuf definitions.
       ProfileService: new ProfileServiceImpl(this._serviceContext),
+      SpaceService: new SpaceServiceImpl(this._serviceContext),
       SystemService: new SystemServiceImpl(config),
       TracingService: new TracingServiceImpl(config),
-      DevtoolsHost: new DevtoolsServiceImpl({ events: new DevtoolsHostEvents(), config, context: this._serviceContext })
+      DevtoolsHost: new DevtoolsServiceImpl({
+        events: new DevtoolsHostEvents(),
+        config,
+        context: this._serviceContext
+      })
     });
   }
 

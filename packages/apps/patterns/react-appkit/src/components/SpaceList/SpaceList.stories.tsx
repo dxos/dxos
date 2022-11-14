@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 import { HashRouter } from 'react-router-dom';
 
-import { ClientProvider, useClient, useParties } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { Button } from '@dxos/react-uikit';
 
@@ -18,11 +18,11 @@ export default {
 
 const Story = () => {
   const client = useClient();
-  const spaces = useParties();
+  const spaces = useSpaces();
 
   return (
     <div>
-      <Button onClick={() => client.echo.createParty()}>Add Space</Button>
+      <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
 
       <SpaceList spaces={spaces} />
     </div>

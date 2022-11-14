@@ -6,12 +6,12 @@ import '@dxosTheme';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import React from 'react';
 
-import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
+import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { Button } from '@dxos/react-uikit';
 
 const Hello = () => {
   const client = useClient();
-  const profile = useProfile();
+  const profile = useIdentity();
 
   if (!profile) {
     return <Button onClick={() => client.halo.createProfile()}>Create Profile</Button>;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "author": "info@dxos.org",

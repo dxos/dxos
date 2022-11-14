@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/deprecated/wallet/wallet-playground/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

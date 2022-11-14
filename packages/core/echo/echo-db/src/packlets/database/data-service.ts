@@ -43,31 +43,31 @@ export class DataServiceSubscriptions {
 }
 
 /**
- * Routes DataService requests to different DataServiceHost instances based on party id.
+ * Routes DataService requests to different DataServiceHost instances based on space id.
  */
 // TODO(burdon): Move to client-services.
 export class DataServiceImpl implements DataService {
   constructor(private readonly _subscriptions: DataServiceSubscriptions) {}
 
   subscribeEntitySet(request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
-    assert(request.partyKey);
+    assert(request.spaceKey);
     const host =
-      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.subscribeEntitySet();
   }
 
   subscribeEntityStream(request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
-    assert(request.partyKey);
+    assert(request.spaceKey);
     const host =
-      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.subscribeEntityStream(request);
   }
 
   write(request: WriteRequest): Promise<MutationReceipt> {
-    assert(request.partyKey);
+    assert(request.spaceKey);
     assert(request.mutation);
     const host =
-      this._subscriptions.getDataService(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+      this._subscriptions.getDataService(request.spaceKey) ?? raise(new SpaceNotFoundError(request.spaceKey));
     return host.write(request.mutation);
   }
 }

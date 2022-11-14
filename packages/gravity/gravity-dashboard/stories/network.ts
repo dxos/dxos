@@ -19,13 +19,13 @@ export type Kube = {
 };
 
 /**
- * Bot instance (peer of party).
+ * Bot instance (peer of space).
  */
 export type Bot = {
   id: Key;
   identity?: Key;
   peerId?: Key;
-  partyKey?: Key;
+  spaceKey?: Key;
   timeframe?: Timeframe;
 };
 

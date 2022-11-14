@@ -12,7 +12,7 @@ import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-compone
 
 export type PendingInvitationProps = {
   invitation: Invitation;
-  pin?: string | undefined;
+  authenticationCode?: string | undefined;
   createUrl: (invitation: Invitation) => string;
   onCancel: () => void;
 };
@@ -21,7 +21,7 @@ export type PendingInvitationProps = {
  * Displays the pending invitation row, invitaion/cancel buttons, etc.
  * @constructor
  */
-export const PendingInvitation = ({ invitation, pin, createUrl, onCancel }: PendingInvitationProps) => {
+export const PendingInvitation = ({ invitation, authenticationCode, createUrl, onCancel }: PendingInvitationProps) => {
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
@@ -40,10 +40,10 @@ export const PendingInvitation = ({ invitation, pin, createUrl, onCancel }: Pend
 
       {/* TODO(burdon): Show expiration time. */}
       <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
-        {!pin ? 'Waiting...' : 'Passcode'}
+        {!authenticationCode ? 'Waiting...' : 'Passcode'}
       </Typography>
 
-      {!pin && (
+      {!authenticationCode && (
         <>
           <IconButton size='small' title='Copy invitation.'>
             <CopyToClipboard text={createUrl(invitation)} />
@@ -71,12 +71,12 @@ export const PendingInvitation = ({ invitation, pin, createUrl, onCancel }: Pend
         </>
       )}
 
-      {pin && (
+      {authenticationCode && (
         <>
           <IconButton size='small' title='Copy passcode.'>
-            <CopyToClipboard text={pin} />
+            <CopyToClipboard text={authenticationCode} />
           </IconButton>
-          <Passcode disabled size='small' value={pin} />
+          <Passcode disabled size='small' value={authenticationCode} />
         </>
       )}
 

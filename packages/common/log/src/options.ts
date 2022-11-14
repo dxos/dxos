@@ -48,7 +48,8 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
 
   if (options.file) {
     options = defaultsDeep({}, loadOptions(options.file), options);
-    console.log(JSON.stringify(options, undefined, 2));
+    // TODO(burdon): Verbose option.
+    // console.log(JSON.stringify(options, undefined, 2));
   }
 
   const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;

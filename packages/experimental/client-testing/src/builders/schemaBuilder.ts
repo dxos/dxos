@@ -8,7 +8,7 @@ import faker from 'faker';
 import { Database, Item, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA } from '@dxos/client';
 import type { Model } from '@dxos/model-factory';
 
-import { TestType } from './partyBuilder';
+import { TestType } from './spaceBuilder';
 
 export const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');

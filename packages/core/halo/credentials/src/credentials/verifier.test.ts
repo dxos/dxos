@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
@@ -16,14 +16,14 @@ describe('verifier', function () {
     it('pass', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer,
         signer: keyring,
@@ -36,14 +36,14 @@ describe('verifier', function () {
     it('fail - invalid signature', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer,
         signer: keyring,
@@ -61,14 +61,14 @@ describe('verifier', function () {
     it('fail - invalid issuer', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer,
         signer: keyring,
@@ -76,7 +76,7 @@ describe('verifier', function () {
       });
 
       // Tamper with the credential.
-      credential.issuer = partyKey;
+      credential.issuer = spaceKey;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail'
@@ -86,14 +86,14 @@ describe('verifier', function () {
     it('fail - invalid nonce', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer,
         signer: keyring,
@@ -112,14 +112,14 @@ describe('verifier', function () {
     it('fail - no nonce provided', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer,
         signer: keyring,
@@ -140,7 +140,7 @@ describe('verifier', function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -158,9 +158,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -176,7 +176,7 @@ describe('verifier', function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -194,9 +194,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -216,7 +216,7 @@ describe('verifier', function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -234,9 +234,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -256,7 +256,7 @@ describe('verifier', function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -273,9 +273,9 @@ describe('verifier', function () {
       };
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -286,9 +286,9 @@ describe('verifier', function () {
 
       credential.proof.chain!.credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -305,7 +305,7 @@ describe('verifier', function () {
       const identity = await keyring.createKey();
       const identity2 = await keyring.createKey();
       const device = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
       const chain: Chain = {
         credential: await createCredential({
@@ -322,9 +322,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -354,7 +354,7 @@ describe('verifier', function () {
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();
       const device2 = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -385,9 +385,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,
@@ -404,7 +404,7 @@ describe('verifier', function () {
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();
       const device2 = await keyring.createKey();
-      const partyKey = PublicKey.random();
+      const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
       const chain: Chain = {
@@ -435,9 +435,9 @@ describe('verifier', function () {
 
       const credential = await createCredential({
         assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey,
+          role: SpaceMember.Role.ADMIN
         },
         issuer: identity,
         signer: keyring,

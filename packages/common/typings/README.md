@@ -1,6 +1,6 @@
 # Typings
 
-This is a staging area for Typescript definitions that are either not available from the third-party packages directly
+This is a staging area for Typescript definitions that are either not available from the third-space packages directly
 or from [Definitely Typed](https://github.com/DefinitelyTyped/DefinitelyTyped).
 
 ## Usage

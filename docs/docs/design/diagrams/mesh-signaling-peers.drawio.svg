@@ -175,7 +175,7 @@
                                 <b>
                                     join
                                 </b>
-                                (party_key, peerKey)
+                                (space_key, peerKey)
                             </div>
                         </div>
                     </div>

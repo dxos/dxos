@@ -11,28 +11,93 @@ import {
   Observable,
   CancellableObservableProvider
 } from '@dxos/async';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import type { Stream } from '@dxos/codec-protobuf';
+import { AuthenticationRequest, CancelInvitationRequest, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
+export const AUTHENTICATION_CODE_LENGTH = 6;
+
+export const INVITATION_TIMEOUT = 3 * 60_000; // 3 mins.
+
+// TODO(burdon): Don't close until RPC has complete (bug).
+export const ON_CLOSE_DELAY = 500;
+
+export interface InvitationsService {
+  createInvitation(invitation: Invitation): Stream<Invitation>;
+  authenticate(request: AuthenticationRequest): Promise<void>;
+  acceptInvitation(invitation: Invitation): Stream<Invitation>;
+  cancelInvitation(request: CancelInvitationRequest): Promise<void>;
+}
+
+/**
+ * Common invitation events (callbacks) for creating and accepting invitations.
+ */
+// TODO(burdon): Remove optionals.
 export interface InvitationEvents extends AsyncEvents, CancellableObservableEvents {
   onConnecting?(invitation: Invitation): void;
   onConnected?(invitation: Invitation): void;
+  onAuthenticating?(invitation: Invitation): void;
   onSuccess(invitation: Invitation): void; // TODO(burdon): Collides with AsyncEvents.
 }
 
-export type InvitationObservable = CancellableObservable<InvitationEvents>;
-
-// TODO(burdon): Create base class.
-export interface InvitationsHandler<T> {
-  createInvitation(context: T): CancellableObservable<InvitationEvents>;
-  acceptInvitation(invitation: Invitation): CancellableObservable<InvitationEvents>;
+/**
+ * Base class for all invitation observables and providers.
+ * Observable that supports inspection of the current value.
+ */
+export interface InvitationObservable extends CancellableObservable<InvitationEvents> {
+  get invitation(): Invitation | undefined;
 }
 
-export interface InvitationsProxy<T> extends InvitationsHandler<T> {
-  createInvitationObject(context: T): Invitation;
+export class InvitationObservableProvider
+  extends CancellableObservableProvider<InvitationEvents>
+  implements InvitationObservable
+{
+  private _invitation?: Invitation;
+
+  get invitation(): Invitation | undefined {
+    return this._invitation;
+  }
+
+  setInvitation(invitation: Invitation) {
+    this._invitation = invitation;
+  }
+}
+
+/**
+ * Cancelable observer.
+ */
+export type CancellableInvitationObservable = InvitationObservable;
+
+/**
+ * Cancelable observer that relays authentication requests.
+ */
+export interface AuthenticatingInvitationObservable extends CancellableInvitationObservable {
+  authenticate(code: string): Promise<void>;
+}
+
+export interface AuthenticatingInvitationProviderActions {
+  onCancel(): Promise<void>;
+  onAuthenticate(code: string): Promise<void>;
+}
+
+export class AuthenticatingInvitationProvider
+  extends InvitationObservableProvider
+  implements AuthenticatingInvitationObservable
+{
+  // prettier-ignore
+  constructor(
+    private readonly _actions: AuthenticatingInvitationProviderActions
+  ) {
+    super(() => this._actions.onCancel());
+  }
+
+  async authenticate(authenticationCode: string): Promise<void> {
+    return this._actions.onAuthenticate(authenticationCode);
+  }
 }
 
 /**
  * Util to wrap observable with promise.
+ * @deprecated
  */
 // TODO(burdon): Replace with ObservableInvitationProvider.
 export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
@@ -50,25 +115,3 @@ export const invitationObservable = async (observable: Observable<InvitationEven
     });
   });
 };
-
-export interface ObservableInvitation extends CancellableObservable<InvitationEvents> {
-  get invitation(): Invitation | undefined;
-}
-
-/**
- * Observable provider that supports inspection of the current value.
- */
-export class ObservableInvitationProvider
-  extends CancellableObservableProvider<InvitationEvents>
-  implements ObservableInvitation
-{
-  private _invitation?: Invitation;
-
-  get invitation(): Invitation | undefined {
-    return this._invitation;
-  }
-
-  setInvitation(invitation: Invitation) {
-    this._invitation = invitation;
-  }
-}

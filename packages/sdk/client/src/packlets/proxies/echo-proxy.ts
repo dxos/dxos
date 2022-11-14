@@ -8,7 +8,8 @@ import { Event, EventSubscriptions, latch } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  ObservableInvitation,
+  InvitationObservable,
+  InvitationsOptions,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
@@ -16,28 +17,28 @@ import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
-import { Party, PartyProxy } from './party-proxy';
+import { Space, SpaceProxy } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
  */
 export interface Echo {
-  createParty(): Promise<Party>;
-  cloneParty(snapshot: PartySnapshot): Promise<Party>;
-  getParty(partyKey: PublicKey): Party | undefined;
-  queryParties(): ResultSet<Party>;
-  acceptInvitation(invitation: Invitation): Promise<ObservableInvitation>;
+  createSpace(): Promise<Space>;
+  cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
+  getSpace(spaceKey: PublicKey): Space | undefined;
+  querySpaces(): ResultSet<Space>;
+  acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
 }
 
 export class EchoProxy implements Echo {
-  private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(PublicKey.hash);
+  private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _partiesChanged = new Event();
+  private readonly _spacesChanged = new Event();
 
   // prettier-ignore
   constructor(
@@ -53,7 +54,7 @@ export class EchoProxy implements Echo {
   // TODO(burdon): Include deviceId.
   toJSON() {
     return {
-      parties: this._parties.size
+      spaces: this._spaces.size
     };
   }
 
@@ -80,130 +81,133 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async _open() {
-    const gotParties = this._partiesChanged.waitForCount(1);
+    const gotSpaces = this._spacesChanged.waitForCount(1);
 
-    const partiesStream = this._serviceProvider.services.PartyService.subscribeParties();
-    partiesStream.subscribe(async (data) => {
-      for (const party of data.parties ?? []) {
-        if (!this._parties.has(party.publicKey)) {
+    const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
+    spacesStream.subscribe(async (data) => {
+      for (const space of data.spaces ?? []) {
+        if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
 
-          const partyProxy = new PartyProxy(
+          const spaceProxy = new SpaceProxy(
             this._serviceProvider,
             this._modelFactory,
-            party,
+            space,
             this._haloProxy.profile!.identityKey
           );
-          await partyProxy.initialize();
-          this._parties.set(partyProxy.key, partyProxy);
+
+          await spaceProxy.initialize();
+          this._spaces.set(spaceProxy.key, spaceProxy);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
-          // partyProxy.database.entityUpdate.on(entity => {
-          //   if (entity.type === PARTY_ITEM_TYPE) {
-          //     this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
+          // spaceProxy.database.entityUpdate.on(entity => {
+          //   if (entity.type === SPACE_ITEM_TYPE) {
+          //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
           // });
 
-          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ party_key: party.public_key });
-          // partyStream.subscribe(async ({ party }) => {
-          //   if (!party) {
+          // const spaceStream = this._serviceProvider.services.SpaceService.subscribeToSpace({ space_key: space.public_key });
+          // spaceStream.subscribe(async ({ space }) => {
+          //   if (!space) {
           //     return;
           //   }
 
-          //   partyProxy._processPartyUpdate(party);
-          //   this._partiesChanged.emit();
+          //   spaceProxy._processSpaceUpdate(space);
+          //   this._spacesChanged.emit();
           // });
 
-          // this._subscriptions.add(() => partyStream.close());
+          // this._subscriptions.add(() => spaceStream.close());
+        } else {
+          this._spaces.get(space.publicKey)!._processSpaceUpdate(space);
         }
       }
 
-      this._partiesChanged.emit();
+      this._spacesChanged.emit();
     });
 
-    this._subscriptions.add(() => partiesStream.close());
+    this._subscriptions.add(() => spacesStream.close());
 
-    await gotParties;
+    await gotSpaces;
   }
 
   /**
    * @internal
    */
   async _close() {
-    for (const party of this._parties.values()) {
-      await party.destroy();
+    for (const space of this._spaces.values()) {
+      await space.destroy();
     }
 
     await this._subscriptions.clear();
   }
 
   //
-  // Parties.
+  // Spaces.
   //
 
   /**
-   * Creates a new party.
+   * Creates a new space.
    */
-  async createParty(): Promise<Party> {
-    const [done, partyReceived] = latch();
+  async createSpace(): Promise<Space> {
+    const [done, spaceReceived] = latch();
 
-    const party = await this._serviceProvider.services.PartyService.createParty();
+    const space = await this._serviceProvider.services.SpaceService.createSpace();
     const handler = () => {
-      if (this._parties.has(party.publicKey)) {
-        partyReceived();
+      if (this._spaces.has(space.publicKey)) {
+        spaceReceived();
       }
     };
 
-    this._partiesChanged.on(handler);
+    this._spacesChanged.on(handler);
     handler();
     await done();
 
-    this._partiesChanged.off(handler);
-    return this._parties.get(party.publicKey)!;
+    this._spacesChanged.off(handler);
+    return this._spaces.get(space.publicKey)!;
   }
 
   /**
-   * Clones the party from a snapshot.
+   * Clones the space from a snapshot.
    */
-  async cloneParty(snapshot: PartySnapshot): Promise<Party> {
-    const [done, partyReceived] = latch();
+  async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
+    const [done, spaceReceived] = latch();
 
-    const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
+    const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
     const handler = () => {
-      if (this._parties.has(party.publicKey)) {
-        partyReceived();
+      if (this._spaces.has(space.publicKey)) {
+        spaceReceived();
       }
     };
 
-    this._partiesChanged.on(handler);
+    this._spacesChanged.on(handler);
     handler();
     await done();
 
-    this._partiesChanged.off(handler);
-    return this._parties.get(party.publicKey)!;
+    this._spacesChanged.off(handler);
+    return this._spaces.get(space.publicKey)!;
   }
 
   /**
-   * Returns an individual party by its key.
+   * Returns an individual space by its key.
    */
-  getParty(partyKey: PublicKey): Party | undefined {
-    return this._parties.get(partyKey);
+  getSpace(spaceKey: PublicKey): Space | undefined {
+    return this._spaces.get(spaceKey);
   }
 
   /**
-   * Query for all parties.
+   * Query for all spaces.
    */
-  queryParties(): ResultSet<Party> {
-    return new ResultSet<Party>(this._partiesChanged, () => Array.from(this._parties.values()));
+  querySpaces(): ResultSet<Space> {
+    return new ResultSet<Space>(this._spacesChanged, () => Array.from(this._spaces.values()));
   }
 
   /**
    * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitation: Invitation): Promise<ObservableInvitation> {
-    return new Promise<ObservableInvitation>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation);
-      // TODO(wittjosiah): Same as party.createInvitation, factor out?
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<InvitationObservable> {
+    return new Promise<InvitationObservable>((resolve, reject) => {
+      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
+      // TODO(wittjosiah): Same as space.createInvitation, factor out?
       const unsubscribe = acceptedInvitation.subscribe({
         onConnecting: () => {
           resolve(acceptedInvitation);

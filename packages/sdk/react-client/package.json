@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -12,13 +12,10 @@
     "node:util": "util"
   },
   "scripts": {
-    "book": "toolchain book",
-    "build:book": "toolchain build:book",
     "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -37,9 +34,8 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@mui/material": "^5.8.1",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

@@ -42,7 +42,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/experimental/registry-client/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
