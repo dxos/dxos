@@ -37,6 +37,7 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
   };
 
   const handleCreateSpace = () => {
+    debugger;
     void client.echo.createSpace();
   };
 
