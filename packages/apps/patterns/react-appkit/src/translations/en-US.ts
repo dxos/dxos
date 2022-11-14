@@ -7,5 +7,7 @@ export const appkit = {
   'need refresh description': 'You’ll likely need these updates to continue using DXOS without interruption.',
   'refresh label': 'Refresh',
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
-  'offline ready label': 'HALO is ready to use offline.'
+  'offline ready label': 'HALO is ready to use offline.',
+  'spaces label': 'Spaces',
+  'back to spaces label': 'Back to spaces'
 };

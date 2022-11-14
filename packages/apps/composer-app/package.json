@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/composer-app",
+  "version": "0.1.5",
+  "private": true,
+  "description": "DXOS composer application.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "dependencies": {
+    "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-composer": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "vite": "3.0.9",
+    "vite-plugin-pwa": "^0.12.4",
+    "workbox-window": "^6.5.4"
+  }
+}

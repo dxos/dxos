@@ -1,0 +1,33 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+, "../patterns/react-appkit/src/components/AppShell/pwa.d.ts"  ],
+  "references": [
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/vite-plugin"
+    }
+  ]
+}
