@@ -3,9 +3,12 @@
 //
 
 import { Octokit } from '@octokit/rest';
+import growl from 'growl';
 
+// TODO(burdon): Start of tool to monitor/log workflows.
+// TODO(burdon): Growl when completes and show log on error.
+//  https://www.npmjs.com/package/growl
 // TODO(burdon): See `@dxos/mission-control`.
-// https://octokit.github.io/rest.js/v19
 
 // https://github.com/settings/tokens
 // https://github.com/settings/tokens/1020021638
@@ -17,8 +20,8 @@ const config = {
   }
 };
 
-// TODO(burdon): Start of tool to monitor/log workflows.
 const main = async () => {
+  // https://octokit.github.io/rest.js/v19
   const octokit = new Octokit({
     auth: config.token.value
   });
@@ -35,6 +38,7 @@ const main = async () => {
   }));
 
   console.log(JSON.stringify(output, undefined, 2));
+  growl('ok');
 };
 
 // TODO(burdon): Yargs.

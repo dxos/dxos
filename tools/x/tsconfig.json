@@ -1,22 +1,8 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "composite": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "target": "ESNext",
-    "types": [
-      "mocha",
-      "node"
-    ]
+    "outDir": "dist"
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
   "include": [
     "src/**/*"
   ],

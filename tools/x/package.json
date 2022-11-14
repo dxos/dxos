@@ -27,6 +27,7 @@
     "chalk": "^4.1.0",
     "color-hash": "^1.0.3",
     "debug": "^4.3.3",
+    "growl": "^1.10.5",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
