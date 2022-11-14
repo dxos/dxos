@@ -5,7 +5,6 @@
 import cx from 'classnames';
 import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
-import urlJoin from 'url-join';
 
 import { Invitation, InvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
@@ -21,17 +20,19 @@ import {
   Tooltip
 } from '@dxos/react-uikit';
 
+import { createInvitationUrl } from '../../util';
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
   wrapper: InvitationObservable;
+  path: string;
 }
 
 const PendingInvitationSkeleton = ({ message }: { message: string }) => {
   return <Loading label={message} />;
 };
 
-export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
+export const PendingInvitation = ({ wrapper, path }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
 
   const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
@@ -63,7 +64,7 @@ export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
                     {...{
                       copyLabel: t('copy space invite code short label', { ns: 'uikit' }),
                       displayQrLabel: t('display space invite qr code label', { ns: 'uikit' }),
-                      value: createInvitationUrl(invitationCode!)
+                      value: createInvitationUrl(path, invitationCode!)
                     }}
                   />
                 )}
@@ -85,11 +86,4 @@ export const PendingInvitation = ({ wrapper }: PendingInvitationProps) => {
       )}
     </div>
   );
-};
-
-// TODO(wittjosiah): Factor out.
-const createInvitationUrl = (invitationCode: string) => {
-  const invitationPath = '/identity/join';
-  const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
 };

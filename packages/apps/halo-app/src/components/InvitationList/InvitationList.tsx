@@ -11,10 +11,11 @@ import { defaultDisabled, Group, useTranslation } from '@dxos/react-uikit';
 import { PendingInvitation } from './PendingInvitation';
 
 export interface InvitationListProps {
+  path: string;
   invitations?: InvitationObservable[];
 }
 
-export const InvitationList = ({ invitations }: InvitationListProps) => {
+export const InvitationList = ({ path, invitations }: InvitationListProps) => {
   const { t } = useTranslation('halo');
   const empty = !invitations || invitations.length < 1;
   return (
@@ -29,7 +30,7 @@ export const InvitationList = ({ invitations }: InvitationListProps) => {
     >
       {!empty &&
         invitations.map((wrapper, index) => (
-          <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} />
+          <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} path={path} />
         ))}
     </Group>
   );

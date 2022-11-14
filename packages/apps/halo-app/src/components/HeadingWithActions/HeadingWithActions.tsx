@@ -23,7 +23,7 @@ export const HeadingWithActions = ({ heading, actions, compact, spacer, ...divPr
     >
       <Heading {...heading} />
       {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[2rem]' /> : spacer}
-      <div role='none' className='flex grow gap-2'>
+      <div role='none' className='flex grow gap-2 items-center'>
         {actions}
       </div>
     </div>
