@@ -17,7 +17,7 @@
 ## 1. Introduction
 
 MESH is a set of protocols and components that enable resilient peer-to-peer networks.
-The MESH infrastructure supports client application networks (e.g., parties), signaling, and server-to-server networks.
+The MESH infrastructure supports client application networks (e.g., spaces), signaling, and server-to-server networks.
 
 ## 2. Terminology
 
@@ -33,7 +33,7 @@ The Interactive Connectivity Establishment ([ICE](https://en.wikipedia.org/wiki/
 ***NAT*** -
 Network Address Translation ([NAT](https://en.wikipedia.org/wiki/Network_address_translation)) provides a public IP address to devices behind a router.
 
-***Party*** -
+***space*** -
 Context for collaboration and data replication.
 
 ***Peer*** -
@@ -173,7 +173,7 @@ This omits STUN/TURN to focus on communications between peers, their signaling s
 ## 6. Issues
 
 > *   How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)? How does bi-directionality work?
-> *   Reference HALO authentication/party admission.
+> *   Reference HALO authentication/space admission.
 > *   Reference ECHO `hypercore`, `@dxos/protocol` replication; [Noise](https://noiseprotocol.org/noise.html)?
 > *   <https://github.com/hypercore-protocol/hypercore-protocol>
 > *   <https://github.com/mafintosh/simple-hypercore-protocol/blob/master/schema.proto>
@@ -184,9 +184,9 @@ This omits STUN/TURN to focus on communications between peers, their signaling s
 > *   Current [signaling protocol design](https://github.com/dxos/dxos/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)? protocol.
 > *   MST swarm/routing.
 > *   Scope of replication for signaling servers (i.e., subnet/realm vs. global DXNS network?) Security considerations. Peers configured with multiple signal servers (one per network)?
-> *   Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of party invitations).
-> *   Generalize discovery key to generic network assets (i.e., not just party)? E.g., discovery of peers based on agent identity (public key).
+> *   Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of space invitations).
+> *   Generalize discovery key to generic network assets (i.e., not just space)? E.g., discovery of peers based on agent identity (public key).
 > *   Guaranteed message delivery (or just ACK)? AXE for reliable streams? QUIC, SPDY?
-> *   Presence management (separate from in-party swarm presence?)
-> *   Security considerations (e.g., encryption, authentication, key exchange, hash party/device keys, TTLs)
+> *   Presence management (separate from in-space swarm presence?)
+> *   Security considerations (e.g., encryption, authentication, key exchange, hash space/device keys, TTLs)
 

@@ -12,7 +12,7 @@ import { handleKey } from '../helpers';
 
 export interface ProfileDialogProps {
   open: boolean;
-  onCreate: ({ username }: { username: string }) => void;
+  onCreate: ({ displayName }: { displayName: string }) => void;
   onCancel?: () => void;
   onJoinHalo?: () => void;
 }
@@ -21,10 +21,10 @@ export interface ProfileDialogProps {
  * @deprecated Replace with RegistrationDialog.
  */
 export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileDialogProps) => {
-  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
 
   const handleUpdate = () => {
-    onCreate({ username });
+    onCreate({ displayName });
   };
 
   const handleCancel = () => {
@@ -41,10 +41,10 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
             autoFocus
             fullWidth
             required
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
             onKeyPress={handleKey('Enter', handleUpdate)}
-            label='Username'
+            label='Display Name'
             variant='outlined'
             spellCheck={false}
           />
@@ -62,7 +62,7 @@ export const ProfileDialog = ({ open, onCreate, onCancel, onJoinHalo }: ProfileD
               Join HALO
             </Button>
           )}
-          <Button color='primary' disabled={!username} onClick={handleUpdate}>
+          <Button color='primary' disabled={!displayName} onClick={handleUpdate}>
             Create
           </Button>
         </>

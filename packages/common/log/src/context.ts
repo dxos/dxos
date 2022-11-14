@@ -8,7 +8,7 @@ import { OwnershipScope } from './ownership';
 /**
  * Optional object passed to the logging API.
  */
-export type LogContext = Record<string, any>;
+export type LogContext = Record<string, any> | Error | any;
 
 /**
  * Generated meta data from source map.

@@ -138,7 +138,7 @@ When merging monorepos it's best practice to add packages one by one, starting f
 
 ```
 "deps": {
-  "@types/node": "^16.11.58",
+  "@types/node": "^18.11.9",
 }
 ```
 

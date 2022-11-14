@@ -6,7 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { asyncTimeout } from '@dxos/async';
-import type { Party } from '@dxos/client';
+import type { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
@@ -100,19 +100,21 @@ export class BotFactoryClient {
    * Spawns a bot and starts it.
    * @deprecated
    */
-  async spawn(spec: BotPackageSpecifier, party: Party) {
+  async spawn(spec: BotPackageSpecifier, space: Space) {
     if (!this._rpcClient) {
-      await this.start(party.key);
+      await this.start(space.key);
       assert(this._rpcClient, 'Not started.');
     }
 
-    const invitation = await party.createInvitation();
-    const { id } = await this._rpcClient.rpc.spawnBot({
-      package: spec,
-      partyKey: party.key,
-      invitation: invitation.descriptor.toProto()
-    });
+    throw new Error('Not implemented.');
 
-    return new BotHandle(id!, this._rpcClient);
+    // const invitation = await space.createInvitation();
+    // const { id } = await this._rpcClient.rpc.spawnBot({
+    //   package: spec,
+    //   spaceKey: space.key,
+    //   invitation
+    // });
+
+    // return new BotHandle(id!, this._rpcClient);
   }
 }

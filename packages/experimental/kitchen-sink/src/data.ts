@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import { useSelection } from '@dxos/react-client';
@@ -32,11 +32,11 @@ export const sortItems = (a: Item<ObjectModel>, b: Item<ObjectModel>) => {
 /**
  * Filter items.
  */
-export const useQuery = (party?: Party, query?: string): Item<ObjectModel>[] => {
+export const useQuery = (space?: Space, query?: string): Item<ObjectModel>[] => {
   const text = query?.toLowerCase();
   const items =
     useSelection(
-      party?.select().filter((item) => {
+      space?.select().filter((item) => {
         if (!item.type?.startsWith('example:')) {
           return false;
         }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -37,20 +37,20 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/testutils": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
-    "json-stable-stringify": "^1.0.1",
     "jsondown": "dxos/jsondown#main",
     "level-js": "^5.0.2",
     "memdown": "^5.1.0"
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@types/json-stable-stringify": "^1.0.32",
+    "@dxos/testutils": "workspace:*",
     "@types/level-js": "~4.0.1",
     "@types/memdown": "^3.0.0",
     "@types/readable-stream": "^2.3.9"

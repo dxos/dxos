@@ -6,37 +6,23 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
-  AccountCircle as ProfileIcon,
   Grain as ItemsIcon,
-  Dns as StorageIcon,
-  List as MessagesIcon,
   FilterTiltShift as SwarmIcon,
-  Group as PartiesIcon,
+  Group as SpacesIcon,
   List as FeedsIcon,
   // AppRegistration as RegistryIcon,
   Router as SignalIcon,
-  Settings as ConfigIcon,
-  SettingsBackupRestore as SnapshotsIcon,
-  Subject as LoggingIcon,
-  VpnKey as KeyIcon
+  Settings as ConfigIcon
 } from '@mui/icons-material';
 
 import {
   ConfigPanel,
-  CredentialMessagesPanel,
   FeedsPanel,
   ItemsPanel,
-  KeyringPanel,
-  LoggingPanel,
   // NetworkPanel,
   SpacesPanel,
-  ProfilePanel,
-  // RegistryPanel,
-  RpcTracePanel,
   Section,
   SignalPanel,
-  SnapshotsPanel,
-  StoragePanel,
   SwarmPanel
 } from './containers';
 
@@ -85,9 +71,9 @@ export const sections: Section[] = [
     title: 'ECHO',
     items: [
       {
-        id: 'echo.parties',
-        title: 'Parties',
-        icon: <PartiesIcon />,
+        id: 'echo.spaces',
+        title: 'Spaces',
+        icon: <SpacesIcon />,
         panel: <SpacesPanel />
       },
       {

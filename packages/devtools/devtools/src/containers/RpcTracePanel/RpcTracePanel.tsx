@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
-import { useClient } from '@dxos/react-client';
+import { useClient, useClientServices } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { Panel } from '../../components';
@@ -13,10 +13,17 @@ import { Panel } from '../../components';
 export const RpcTracePanel = () => {
   const client = useClient();
   const [messages, setMessages] = useState<RpcMessage[]>([]);
+  const services = useClientServices();
+  if (!services) {
+    return null;
+  }
 
   useEffect(() => {
-    const stream = client.services.TracingService.subscribeToRpcTrace();
-    stream.subscribe(msg => setMessages(messages => [...messages, msg]), () => {});
+    const stream = services.TracingService.subscribeToRpcTrace();
+    stream.subscribe(
+      (msg: any) => setMessages((messages) => [...messages, msg]),
+      () => {}
+    );
 
     return () => stream.close();
   }, [client]);

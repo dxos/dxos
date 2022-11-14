@@ -1,6 +1,6 @@
 {
   "name": "@dxos/text-model",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": false,
   "description": "ECHO text model.",
   "homepage": "https://github.com/dxos/dxos/tree/master/packages/protocols",
@@ -25,7 +25,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "assert": "^2.0.0",
     "yjs": "^13.5.41"
   },

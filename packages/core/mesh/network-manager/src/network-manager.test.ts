@@ -11,7 +11,6 @@ import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -21,8 +20,8 @@ import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
-import { TestProtocolPlugin, testProtocolProvider } from './testing';
-import { FullyConnectedTopology, StarTopology, Topology } from './topology';
+import { createPeer, TEST_SIGNAL_URL, TestBuilder, TestProtocolPlugin, testProtocolProvider } from './testing';
+import { FullyConnectedTopology, StarTopology } from './topology';
 import {
   createWebRTCTransportFactory,
   MemoryTransportFactory,
@@ -30,67 +29,6 @@ import {
   WebRTCTransportProxyFactory,
   WebRTCTransportService
 } from './transport';
-
-// Signal server will be started by the setup script.
-const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
-
-// TODO(burdon): Remove global and replace with factories.
-const signalContext = new MemorySignalManagerContext();
-
-// const createMemoryNetworkManager = (signalContext: MemorySignalManagerContext) => {
-//   return new NetworkManager({
-//     signalManager: new MemorySignalManager(signalContext),
-//     transportFactory: MemoryTransportFactory
-//   });
-// };
-
-// const createWebRTCNetworkManager = async (config: any, peerId: PublicKey) => {
-//   const signalManager = new WebsocketSignalManager(signalHosts!);
-//   await signalManager.subscribeMessages(peerId);
-//
-//   return new NetworkManager({
-//     signalManager,
-//     transportFactory: createWebRTCTransportFactory(config)
-//   });
-// };
-
-interface CreatePeerOptions {
-  topic: PublicKey;
-  peerId: PublicKey;
-  topology?: Topology;
-  signalHosts?: string[];
-  transportFactory: TransportFactory;
-}
-
-/**
- * @deprecated
- */
-// TODO(burdon): Builder pattern.
-const createPeer = async ({
-  topic,
-  peerId,
-  topology = new FullyConnectedTopology(),
-  signalHosts,
-  transportFactory
-}: CreatePeerOptions) => {
-  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
-  await signalManager.subscribeMessages(peerId);
-  const networkManager = new NetworkManager({
-    signalManager,
-    transportFactory
-  });
-
-  afterTest(() => networkManager.destroy());
-
-  const plugin = new TestProtocolPlugin(peerId.asBuffer());
-  const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  await networkManager.openSwarmConnection({ topic, peerId, protocol: protocolProvider, topology });
-
-  return {
-    networkManager,
-    plugin
-  };
-};
 
 describe('NetworkManager', function () {
   describe('WebRTC transport', function () {
@@ -106,7 +44,7 @@ describe('NetworkManager', function () {
 
     sharedTests({
       inMemory: false,
-      signalUrl: SIGNAL_URL,
+      signalUrl: TEST_SIGNAL_URL,
       getTransportFactory: async () => createWebRTCTransportFactory()
     });
 
@@ -203,7 +141,6 @@ describe('NetworkManager', function () {
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       const service = createProtoRpcPeer({
-        requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
@@ -219,8 +156,6 @@ describe('NetworkManager', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: rpcPortB,
         noHandshake: true,
         encodingOptions: {
@@ -238,7 +173,7 @@ describe('NetworkManager', function () {
 
     sharedTests({
       inMemory: false,
-      signalUrl: SIGNAL_URL,
+      signalUrl: TEST_SIGNAL_URL,
       getTransportFactory: createTransportFactory
     });
   });
@@ -294,9 +229,12 @@ describe('NetworkManager', function () {
       );
     });
 
+    // TODO(burdon): Remove flaky tests.
     // This test performs random actions in the real system and compares it's state with a simplified model.
     // TODO(dmaretskyi): Run this on with actual webrtc and signal servers.
-    it('property-based tests', async function () {
+    it.skip('property-based tests', async function () {
+      const testBuilder = new TestBuilder();
+
       /**
        * The simplified model of the system.
        */
@@ -348,6 +286,8 @@ describe('NetworkManager', function () {
         );
       };
 
+      // TODO(burdon): Factor out to TestBuilder.
+
       class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
         constructor(readonly peerId: PublicKey) {}
 
@@ -355,10 +295,7 @@ describe('NetworkManager', function () {
         async run(model: Model, real: Real) {
           model.peers.add(this.peerId);
 
-          const networkManager = new NetworkManager({
-            signalManager: new MemorySignalManager(signalContext),
-            transportFactory: MemoryTransportFactory
-          });
+          const networkManager = testBuilder.createNetworkManager();
           afterTest(() => networkManager.destroy());
 
           real.peers.set(this.peerId, {
@@ -504,6 +441,7 @@ describe('NetworkManager', function () {
   }).timeout(30_000);
 });
 
+// TODO(burdon): Factor out test-suite.
 function sharedTests({
   inMemory,
   signalUrl,
@@ -634,7 +572,7 @@ function sharedTests({
     await networkManager2.openSwarmConnection({
       topic,
       peerId: newPeer2Id,
-      protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
+      protocol: testProtocolProvider(topic.asBuffer(), peer2Id, plugin2),
       topology: new FullyConnectedTopology()
     });
 
@@ -649,28 +587,28 @@ function sharedTests({
     .timeout(10_000)
     .retries(10);
 
-  it('join 2 swarms', async function () {
+  it.skip('join two swarms', async function () {
+    const testBuilder = new TestBuilder({ signalUrl: !inMemory ? signalUrl : undefined });
+
     const peerId = PublicKey.random();
     const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
     const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
 
-    const signalManager = inMemory ? new MemorySignalManager(signalContext) : new WebsocketSignalManager([signalUrl!]);
-    const networkManager = new NetworkManager({
-      signalManager,
-      transportFactory: await getTransportFactory()
-    });
+    const signalManager = testBuilder.createSignalManager();
+    const networkManager = new NetworkManager({ signalManager, transportFactory: await getTransportFactory() });
     afterTest(() => networkManager.destroy());
 
     // Joining first swarm.
     {
       const topic = PublicKey.random();
-      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId, plugin1);
       await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
         topology: new FullyConnectedTopology()
       });
+
       // Creating and joining second peer.
       await createPeer({
         topic,
@@ -683,13 +621,14 @@ function sharedTests({
     // Joining second swarm with same peerId.
     {
       const topic = PublicKey.random();
-      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId, plugin2);
       await networkManager.openSwarmConnection({
         topic,
         peerId,
         protocol: protocolProvider,
         topology: new FullyConnectedTopology()
       });
+
       // Creating and joining second peer.
       await createPeer({
         topic,
@@ -699,7 +638,11 @@ function sharedTests({
       });
     }
 
-    await Promise.all([Event.wrap(plugin1, 'connect').waitForCount(1), Event.wrap(plugin2, 'connect').waitForCount(1)]);
+    // prettier-ignore
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
   });
 
   it('two swarms at the same time', async function () {

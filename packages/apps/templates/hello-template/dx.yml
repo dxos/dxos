@@ -6,11 +6,11 @@ package:
       type: dxos:type/app
       build:
         command: npm run bundle
+        out: out/hello
 
 runtime:
   client:
-    mode: remote
-    # remoteSource: http://localhost:3967/headless.html
+    # remoteSource: http://localhost:3967/vault.html
     storage:
       persistent: true
 

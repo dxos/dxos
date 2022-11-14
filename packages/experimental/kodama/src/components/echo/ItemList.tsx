@@ -5,7 +5,7 @@
 import { Box } from 'ink';
 import React, { FC } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
 import { List } from '../util';
@@ -15,21 +15,21 @@ const LABEL_PROPERTY = 'name';
 const TYPE_ITEM = 'dxos:type/item';
 
 export const ItemList: FC<{
-  party: Party;
+  space: Space;
   type?: string;
   onCancel?: () => void;
-}> = ({ party, type = TYPE_ITEM, onCancel }) => {
-  // TODO(burdon): Select should not return party item by default.
+}> = ({ space, type = TYPE_ITEM, onCancel }) => {
+  // TODO(burdon): Select should not return space item by default.
   // TODO(burdon): Clean-up API (e.g., provide default value as empty list).
   // TODO(burdon): Not updated if model properties change.
-  const items = useSelection(party?.select().filter({ type }), [party, type]) ?? [];
+  const items = useSelection(space?.select().filter({ type }), [space, type]) ?? [];
 
   const handleUpdate = (data: { id?: string; text: string }) => {
     if (data.id) {
-      const item = party.database.getItem(data.id)!;
+      const item = space.database.getItem(data.id)!;
       item.model.set(LABEL_PROPERTY, data.text);
     } else {
-      void party.database.createItem({
+      void space.database.createItem({
         type,
         props: {
           [LABEL_PROPERTY]: data.text
@@ -38,14 +38,14 @@ export const ItemList: FC<{
     }
   };
 
-  if (!party) {
+  if (!space) {
     return null;
   }
 
   return (
     <Box flexDirection='column' flexGrow={1}>
       <List
-        id={`item-list-${party.key.toHex()}`}
+        id={`item-list-${space.key.toHex()}`}
         showCount
         onCancel={onCancel}
         onUpdate={handleUpdate}

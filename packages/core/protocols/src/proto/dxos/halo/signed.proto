@@ -18,7 +18,7 @@ message Message {
 }
 
 /**
- * A generic container message used whenever messages are signed (e.g. PartyCredential)
+ * A generic container message used whenever messages are signed (e.g. SpaceCredential)
  */
 message SignedMessage {
   //

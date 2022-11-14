@@ -6,7 +6,7 @@ import faker from 'faker';
 import React from 'react';
 
 import { ClientProvider, useSelection } from '@dxos/react-client';
-import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoList } from '../src';
@@ -18,10 +18,10 @@ export default {
 faker.seed(100);
 
 const App = () => {
-  const party = useTestParty();
+  const space = useTestSpace();
 
-  // TODO(burdon): Filter out party item.
-  const items = useSelection(party?.select()) ?? [];
+  // TODO(burdon): Filter out space item.
+  const items = useSelection(space?.select()) ?? [];
 
   return (
     <FullScreen>

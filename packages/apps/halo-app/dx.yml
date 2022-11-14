@@ -16,8 +16,7 @@ package:
 
 runtime:
   client:
-    mode: remote
-    remoteSource: /headless.html
+    remoteSource: /vault.html
     storage:
       persistent: true
 

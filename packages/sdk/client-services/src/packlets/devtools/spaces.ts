@@ -4,33 +4,34 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { Space } from '@dxos/echo-db';
-import { SubscribeToPartiesRequest, SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SubscribeToSpacesRequest, SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { ServiceContext } from '../services';
 
-export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: SubscribeToPartiesRequest) =>
-  new Stream<SubscribeToPartiesResponse>(({ next }) => {
+export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) =>
+  new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 
     const update = async () => {
-      const parties: Space[] = [...context.spaceManager!.spaces.values()];
-      const filteredParties = parties.filter(
-        (party) => !partyKeys?.length || partyKeys.some((partyKey) => partyKey.equals(party.key))
+      const spaces: Space[] = [...context.spaceManager!.spaces.values()];
+      const filteredSpaces = spaces.filter(
+        (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key))
       );
 
       next({
-        parties: filteredParties.map((party) => {
-          const partyMetadata = context.metadataStore.parties.find((partyMetadata: PartyMetadata) =>
-            partyMetadata.key.equals(party.key)
+        spaces: filteredSpaces.map((space) => {
+          const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
+            spaceMetadata.key.equals(space.key)
           );
+
           return {
-            key: party.key,
-            isOpen: party.isOpen,
-            timeframe: partyMetadata!.latestTimeframe!,
-            genesisFeed: party.genesisFeedKey,
-            controlFeed: party.controlFeedKey,
-            dataFeed: party.dataFeedKey
+            key: space.key,
+            isOpen: space.isOpen,
+            timeframe: spaceMetadata!.latestTimeframe!,
+            genesisFeed: space.genesisFeedKey,
+            controlFeed: space.controlFeedKey,
+            dataFeed: space.dataFeedKey
           };
         })
       });
@@ -38,9 +39,9 @@ export const subscribeToSpaces = (context: ServiceContext, { partyKeys = [] }: S
 
     setImmediate(async () => {
       await context.initialized.wait();
-      unsubscribe = context.spaceManager!.update.on(() => update());
+      unsubscribe = context.spaceManager!.updated.on(() => update());
 
-      // Send initial parties.
+      // Send initial spaces.
       await update();
     });
 

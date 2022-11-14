@@ -8,8 +8,8 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/client.proto";
+import "dxos/client/services.proto";
 import "dxos/config.proto";
-import "dxos/halo/invitations.proto";
 import "dxos/keys.proto";
 
 package dxos.bot;
@@ -47,7 +47,7 @@ message Bot {
 
   optional BotPackageSpecifier package_specifier = 3;
   optional google.protobuf.Timestamp last_start = 4;
-  optional dxos.keys.PublicKey party_key = 5;
+  optional dxos.keys.PublicKey space_key = 5;
 
   message Runtime {
     optional int32 exit_code = 1;
@@ -66,11 +66,11 @@ message GetBotsResponse {
 message SpawnBotRequest {
   optional BotPackageSpecifier package = 1;
 
-  /// Invitation for the bot to join the target party.
-  optional dxos.halo.invitations.InvitationDescriptor invitation = 2;
+  /// Invitation for the bot to join the target space.
+  optional dxos.client.services.Invitation invitation = 2;
 
-  /// Key of the party bot is invited to.
-  optional dxos.keys.PublicKey party_key = 3;
+  /// Key of the space bot is invited to.
+  optional dxos.keys.PublicKey space_key = 3;
 }
 
 message SendCommandRequest {
@@ -92,8 +92,8 @@ message GetLogsRequest {
 }
 
 message BotReport {
-  /// Details of the party the bot was spawned for.
-  optional dxos.client.PartyDetails party_details = 1;
+  /// Details of the space the bot was spawned for.
+  optional dxos.client.SpaceDetails space_details = 1;
 }
 
 /// Service that is used by clients to communicate with bot factory.
@@ -120,8 +120,8 @@ message InitializeRequest {
   /// Bot runtime configuration.
   optional dxos.config.Config config = 1;
 
-  /// Invitation for the bot to join the target party.
-  optional dxos.halo.invitations.InvitationDescriptor invitation = 2;
+  /// Invitation for the bot to join the target space.
+  optional dxos.client.services.Invitation invitation = 2;
 
   /// ID of the bot.
   optional string id = 3;
@@ -134,7 +134,7 @@ message StartRequest {
 
 /// Service that is used by bots communicating with bot factory.
 service BotService {
-  /// Initialize Client, create profile, and join a party.
+  /// Initialize Client, create profile, and join a space.
   rpc Initialize(InitializeRequest) returns (google.protobuf.Empty);
 
   /// Start an initialized bot.

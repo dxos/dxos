@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CliUx } from '@oclif/core';
-import chalk from 'chalk';
-
-import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
-import { printMembers, selectSpace } from '../../util';
+import { selectSpace } from '../../util';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
@@ -22,23 +18,22 @@ export default class Invite extends BaseCommand {
   ];
 
   async run(): Promise<any> {
-    const { args, flags } = await this.parse(Invite);
+    const { args } = await this.parse(Invite);
     let { key } = args;
-    const { timeout } = flags;
 
     return await this.execWithClient(async (client: Client) => {
-      const { value: parties = [] } = await client.echo.queryParties();
+      const { value: spaces = [] } = await client.echo.querySpaces();
       if (!key) {
-        key = await selectSpace(parties);
+        key = await selectSpace(spaces);
       }
 
-      const party = parties.find((party) => party.key.toHex().startsWith(key));
-      if (!party) {
+      const space = spaces.find((space) => space.key.toHex().startsWith(key));
+      if (!space) {
         this.log(`Invalid key: ${truncateKey(key)}`);
-        return;
       }
 
-      const invitation = await party.createInvitation();
+      /*
+      const invitation = await space.createInvitation();
       const descriptor = invitation.encode();
       const secret = invitation.secret.toString();
 
@@ -50,7 +45,7 @@ export default class Invite extends BaseCommand {
         await invitation.wait(timeout * 1_000);
         CliUx.ux.action.stop();
 
-        const { value: members } = party.queryMembers();
+        const { value: members } = space.queryMembers();
         printMembers(members);
 
         // TODO(burdon): Wait to replicate.
@@ -60,6 +55,7 @@ export default class Invite extends BaseCommand {
 
         invitation.cancel();
       }
+      */
     });
   }
 }

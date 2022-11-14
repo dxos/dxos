@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-uikit",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "A React component library for DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,6 +16,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/util": "workspace:*",

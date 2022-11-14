@@ -6,10 +6,10 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
+import "dxos/client/services.proto";
 import "dxos/config.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/invitations.proto";
 import "dxos/halo/keys.proto";
 import "dxos/keys.proto";
 
@@ -26,7 +26,6 @@ service SystemService {
 
 //
 // Invitations shared across HALO and ECHO.
-// TODO(burdon): Consolidate with invitation protobufs.
 //
 
 enum InvitationState {
@@ -38,7 +37,7 @@ enum InvitationState {
 
 /// Invitation process created by sender.
 message InvitationRequest {
-  optional dxos.halo.invitations.InvitationDescriptor descriptor = 1;
+  optional dxos.client.services.Invitation descriptor = 1;
 
   InvitationState state = 2;
 
@@ -55,8 +54,8 @@ message RedeemedInvitation {
   /// Only if state == ERROR.
   optional string error = 3;
 
-  /// Only on party invitations that are finished.
-  optional dxos.keys.PublicKey party_key = 4;
+  /// Only on space invitations that are finished.
+  optional dxos.keys.PublicKey space_key = 4;
 }
 
 message AuthenticateInvitationRequest {
@@ -70,8 +69,9 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  dxos.keys.PublicKey public_key = 1;
-  optional string username = 2;
+  // TODO(burdon): Remove identity from Profile (space of identity).
+  dxos.keys.PublicKey identity_key = 1;
+  optional string displayName = 2;
 }
 
 message SubscribeProfileResponse {
@@ -79,14 +79,16 @@ message SubscribeProfileResponse {
 }
 
 message CreateProfileRequest {
-  optional string username = 1;
-  optional bytes public_key = 2;
-  optional bytes secret_key = 3;
+  optional bytes public_key = 1;
+  optional bytes secret_key = 2;
+  // TODO(burdon): Profile.
+  optional string displayName = 3;
 }
 
 message RecoverProfileRequest {
   string seed_phrase = 1;
 }
+
 message Contact {
   dxos.keys.PublicKey public_key = 1;
   optional string display_name = 2;
@@ -100,10 +102,6 @@ service ProfileService {
   rpc CreateProfile(CreateProfileRequest) returns (Profile);
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
   rpc SubscribeProfile (google.protobuf.Empty) returns (stream SubscribeProfileResponse);
-
-  rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
-  rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
 message AddKeyRecordRequest {
@@ -111,9 +109,7 @@ message AddKeyRecordRequest {
 }
 
 message SignRequest {
-  /**
-   * - The public key of the key that is supposed to be used for signing.
-   */
+  /// The public key of the key that is supposed to be used for signing.
   dxos.keys.PublicKey public_key = 1;
 
   bytes payload = 2;
@@ -154,54 +150,56 @@ service HaloService {
 //
 
 // TODO(burdon): Rename Space.
-message Party {
-  message Member {
-    dxos.keys.PublicKey public_key = 1;
-    optional string display_name = 2;
-  }
-
+message Space {
   dxos.keys.PublicKey public_key = 1;
   bool is_open = 2;
   bool is_active = 3;
 
-  repeated Member members = 4;
+  repeated SpaceMember members = 4;
 }
 
-message SubscribePartyRequest {
-  dxos.keys.PublicKey party_key = 1;
+message SubscribeSpaceRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message GetPartyDetailsRequest {
-  dxos.keys.PublicKey party_key = 1;
+message GetSpaceDetailsRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message PartyDetails {
+message SpaceDetails {
   /// The timeframe of mutations processed by the client.
   dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
-message SubscribePartyResponse {
-  optional Party party = 1;
+// TODO(burdon): Reconcile with dxos.halo.credentials.SpaceMember.
+// TODO(burdon): Reconcile with Profile.
+message SpaceMember {
+  dxos.keys.PublicKey identity_key = 1;
+  optional Profile profile = 2;
 }
 
-message SubscribePartiesResponse {
-  repeated Party parties = 1;
+message SubscribeSpaceResponse {
+  optional Space space = 1;
+}
+
+message SubscribeSpacesResponse {
+  repeated Space spaces = 1;
 }
 
 message CreateInvitationRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
   optional dxos.keys.PublicKey invitee_key = 2;
 }
 
-message PartyActivationOptions {
+message SpaceActivationOptions {
   bool global = 1;
   bool device = 2;
 }
 
-message SetPartyStateRequest {
-  dxos.keys.PublicKey party_key = 1;
+message SetSpaceStateRequest {
+  dxos.keys.PublicKey space_key = 1;
 
   optional bool open = 2;
   optional bool active_global = 3;
@@ -209,46 +207,36 @@ message SetPartyStateRequest {
 }
 
 message SubscribeMembersRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 message SubscribeMembersResponse {
-  message PartyMember {
-    dxos.keys.PublicKey public_key = 1; // TODO(burdon): Rename xxx_key.
-    optional string display_name = 2;
-  }
-
-  repeated PartyMember members = 1;
+  repeated SpaceMember members = 1;
 }
 
 message CreateSnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+  dxos.keys.PublicKey space_key = 1;
 }
 
 //
 // Service definition
 //
 
-// TODO(burdon): Rename SpaceService.
-service PartyService {
-  rpc SubscribeToParty (SubscribePartyRequest) returns (stream SubscribePartyResponse);
-  rpc SubscribeParties (google.protobuf.Empty) returns (stream SubscribePartiesResponse);
+service SpaceService {
+  rpc SubscribeToSpace (SubscribeSpaceRequest) returns (stream SubscribeSpaceResponse);
+  rpc SubscribeSpaces (google.protobuf.Empty) returns (stream SubscribeSpacesResponse);
 
-  rpc GetPartyDetails(GetPartyDetailsRequest) returns (PartyDetails);
+  rpc GetSpaceDetails(GetSpaceDetailsRequest) returns (SpaceDetails);
 
-  rpc CreateParty(google.protobuf.Empty) returns (Party);
-  rpc CloneParty(dxos.echo.snapshot.PartySnapshot) returns (Party);
+  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc CloneSpace(dxos.echo.snapshot.SpaceSnapshot) returns (Space);
 
-  /// Open and close or activate and deactivate a party.
-  rpc SetPartyState(SetPartyStateRequest) returns (Party);
+  /// Open and close or activate and deactivate a space.
+  rpc SetSpaceState(SetSpaceStateRequest) returns (Space);
 
-  // TODO(burdon): Rename.
-  rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
-  rpc AcceptInvitation(dxos.halo.invitations.InvitationDescriptor) returns (stream RedeemedInvitation);
-  rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
-
-  // TODO(rzadp): Remove and join with Subscribing to Party.
+  // TODO(rzadp): Remove and join with Subscribing to Space.
+  // Deprecated.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
-  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.PartySnapshot);
+  rpc CreateSnapshot(CreateSnapshotRequest) returns (echo.snapshot.SpaceSnapshot);
 }

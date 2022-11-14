@@ -24,7 +24,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

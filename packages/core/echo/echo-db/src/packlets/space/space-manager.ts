@@ -8,14 +8,15 @@ import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { Database, DataService } from '../database';
+import { Database, DataServiceSubscriptions } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
@@ -41,7 +42,7 @@ export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
   keyring: Keyring;
-  dataService: DataService;
+  dataServiceSubscriptions: DataServiceSubscriptions;
   modelFactory: ModelFactory;
   signingContext: SigningContext;
 };
@@ -50,14 +51,14 @@ export type SpaceManagerParams = {
  * Manages a collection of ECHO (Data) Spaces.
  */
 export class SpaceManager {
-  public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
-  public readonly update = new Event();
+  public readonly updated = new Event();
 
+  private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _metadataStore: MetadataStore;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
   private readonly _keyring: Keyring;
-  private readonly _dataService: DataService;
+  private readonly _dataServiceSubscriptions: DataServiceSubscriptions;
   private readonly _modelFactory: ModelFactory;
   private readonly _signingContext: SigningContext; // TODO(burdon): Contains keyring.
 
@@ -66,7 +67,7 @@ export class SpaceManager {
     feedStore,
     networkManager,
     keyring,
-    dataService,
+    dataServiceSubscriptions,
     modelFactory,
     signingContext
   }: SpaceManagerParams) {
@@ -75,24 +76,29 @@ export class SpaceManager {
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._keyring = keyring;
-    this._dataService = dataService;
+    this._dataServiceSubscriptions = dataServiceSubscriptions;
     this._modelFactory = modelFactory;
     this._signingContext = signingContext;
+  }
+
+  // TODO(burdon): Remove.
+  get spaces() {
+    return this._spaces;
   }
 
   async open() {
     await this._metadataStore.load();
 
-    for (const spaceMetadata of this._metadataStore.parties) {
+    for (const spaceMetadata of this._metadataStore.spaces) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open();
-      this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
-      this.spaces.set(spaceMetadata.key, space);
+      this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
+      this._spaces.set(spaceMetadata.key, space);
     }
   }
 
   async close() {
-    await Promise.all([...this.spaces.values()].map((space) => space.close()));
+    await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
   /**
@@ -104,13 +110,14 @@ export class SpaceManager {
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
-    const metadata: PartyMetadata = {
+    const metadata: SpaceMetadata = {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey
     };
 
+    log('creating space...', { spaceKey });
     const space = await this._constructSpace(metadata);
     await space.open();
 
@@ -143,14 +150,15 @@ export class SpaceManager {
 
   // TODO(burdon): Rename join space.
   async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
-    const metadata: PartyMetadata = {
+    const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlFeedKey: await this._keyring.createKey(),
       dataFeedKey: await this._keyring.createKey()
     };
-    const space = await this._constructSpace(metadata);
 
+    log('accepting space...', { spaceKey: opts.spaceKey });
+    const space = await this._constructSpace(metadata);
     await space.open();
 
     await this._metadataStore.addSpace(metadata);
@@ -159,12 +167,14 @@ export class SpaceManager {
   }
 
   private _insertSpace(space: Space) {
-    this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
-    this.spaces.set(space.key, space);
-    this.update.emit();
+    this._dataServiceSubscriptions.registerSpace(space.key, space.database!.createDataServiceHost());
+    this._spaces.set(space.key, space);
+    this.updated.emit();
   }
 
-  private async _constructSpace(metadata: PartyMetadata) {
+  private async _constructSpace(metadata: SpaceMetadata) {
+    log('constructing space...', { spaceKey: metadata.genesisFeedKey });
+
     const controlFeed = await this._feedStore.openFeed(metadata.controlFeedKey ?? failUndefined(), { writable: true });
     const dataFeed = await this._feedStore.openFeed(metadata.dataFeedKey ?? failUndefined(), { writable: true });
 

@@ -91,7 +91,7 @@ describe('space/control-pipeline', function () {
           subject: controlFeed2.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            partyKey: spaceKey,
+            spaceKey,
             identityKey,
             deviceKey,
             designation: AdmittedFeed.Designation.CONTROL
@@ -114,7 +114,7 @@ describe('space/control-pipeline', function () {
           subject: dataFeed1.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
-            partyKey: spaceKey,
+            spaceKey,
             identityKey,
             deviceKey,
             designation: AdmittedFeed.Designation.DATA
@@ -140,7 +140,7 @@ describe('space/control-pipeline', function () {
             subject: dataFeed2.key,
             assertion: {
               '@type': 'dxos.halo.credentials.AdmittedFeed',
-              partyKey: spaceKey,
+              spaceKey,
               identityKey,
               deviceKey,
               designation: AdmittedFeed.Designation.DATA

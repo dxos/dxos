@@ -8,7 +8,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
-import { DataService } from './data-service';
+import { DataServiceImpl, DataServiceSubscriptions } from './data-service';
 import { DataServiceHost } from './data-service-host';
 import { Database } from './database';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
@@ -38,15 +38,13 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   modelFactory: ModelFactory,
   dataServiceHost: DataServiceHost
 ) => {
-  const partyKey = PublicKey.random();
-  const dataServiceRouter = new DataService();
-  dataServiceRouter.trackParty(partyKey, dataServiceHost);
+  const dataServiceSubscriptions = new DataServiceSubscriptions();
+  const dataService = new DataServiceImpl(dataServiceSubscriptions);
 
-  const database = new Database(
-    modelFactory,
-    new RemoteDatabaseBackend(dataServiceRouter, partyKey),
-    PublicKey.random()
-  );
+  const spaceKey = PublicKey.random();
+  dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
+
+  const database = new Database(modelFactory, new RemoteDatabaseBackend(dataService, spaceKey), PublicKey.random());
 
   await database.initialize();
   return database;

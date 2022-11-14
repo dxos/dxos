@@ -6,12 +6,12 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
-import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
+import { ProfileInitializer, useTestSpace } from '@dxos/react-client-testing';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 
-import { usePartySerializer } from '../src';
+import { useSpaceSerializer } from '../src';
 
 export default {
   title: 'KitchenSink/Serialization'
@@ -19,14 +19,14 @@ export default {
 
 const ImportStory = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [party, setParty] = useState<Party | null>();
-  const partySerializer = usePartySerializer();
+  const [space, setSpace] = useState<Space | null>();
+  const spaceSerializer = useSpaceSerializer();
 
-  const handleImportParty = async (files: File[]) => {
+  const handleImportSpace = async (files: File[]) => {
     if (files.length) {
       const data = await new Uint8Array(await files[0].arrayBuffer());
-      const importedParty = await partySerializer.deserializeParty(data);
-      setParty(importedParty);
+      const importedSpace = await spaceSerializer.deserializeSpace(data);
+      setSpace(importedSpace);
     }
   };
 
@@ -35,19 +35,19 @@ const ImportStory = () => {
       <FileUploadDialog
         open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
-        onUpload={handleImportParty}
+        onUpload={handleImportSpace}
       />
       <Toolbar>
         <Button variant='contained' color='primary' onClick={() => setUploadDialogOpen(true)}>
           Import
         </Button>
       </Toolbar>
-      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
+      {space && <Box sx={{ padding: 2 }}>Space: {space.key.toHex()}</Box>}
     </FullScreen>
   );
 };
 
-export const ImportParty = () => (
+export const ImportSpace = () => (
   <ClientProvider>
     <ProfileInitializer>
       <ImportStory />
@@ -56,28 +56,28 @@ export const ImportParty = () => (
 );
 
 const ExportStory = () => {
-  const party = useTestParty();
-  const partySerializer = usePartySerializer();
+  const space = useTestSpace();
+  const spaceSerializer = useSpaceSerializer();
   const download = useFileDownload();
 
-  const handleExportParty = async () => {
-    const blob = await partySerializer.serializeParty(party!);
-    download(blob, `${party!.key.toHex()}.party`);
+  const handleExportSpace = async () => {
+    const blob = await spaceSerializer.serializeSpace(space!);
+    download(blob, `${space!.key.toHex()}.space`);
   };
 
   return (
     <FullScreen>
       <Toolbar>
-        <Button variant='contained' color='primary' disabled={!party} onClick={handleExportParty}>
+        <Button variant='contained' color='primary' disabled={!space} onClick={handleExportSpace}>
           Export
         </Button>
       </Toolbar>
-      {party && <Box sx={{ padding: 2 }}>Party: {party.key.toHex()}</Box>}
+      {space && <Box sx={{ padding: 2 }}>Space: {space.key.toHex()}</Box>}
     </FullScreen>
   );
 };
 
-export const ExportParty = () => (
+export const ExportSpace = () => (
   <ClientProvider>
     <ProfileInitializer>
       <ExportStory />

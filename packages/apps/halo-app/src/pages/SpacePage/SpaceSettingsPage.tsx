@@ -3,11 +3,11 @@
 //
 
 import { CaretLeft, Planet, UserPlus } from 'phosphor-react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useSafeSpaceKey } from '@dxos/react-appkit';
-import { useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
+import { useMembers, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
@@ -19,24 +19,22 @@ export const SpaceSettingsPage = () => {
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useParty(spaceKey);
-  const invitations = usePartyInvitations(spaceKey);
-  const members = useMembers(space);
+  const space = useSpace(spaceKey);
+  const invitations = space?.invitations;
+  const members = useMembers(spaceKey);
+  const [creatingInvitation, setCreatingInvitation] = useState(false);
 
   const onCreateInvitation = useCallback(() => {
     if (space) {
-      void space.createInvitation();
+      setCreatingInvitation(true);
+      void space.createInvitation().finally(() => setCreatingInvitation(false));
     }
   }, [space]);
-
-  if (!space) {
-    return null;
-  }
 
   return (
     <>
       <div role='none' className='fixed block-start-6 inset-inline-24 flex gap-2 justify-center items-center z-[1]'>
-        <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
+        <Heading className='truncate pbe-1'>{space ? humanize(space.key) : '…'}</Heading>
       </div>
       <div role='none' className='fixed block-start-7 inline-start-7 mlb-px'>
         <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
@@ -54,7 +52,12 @@ export const SpaceSettingsPage = () => {
           }}
           actions={
             <>
-              <Button variant='primary' onClick={onCreateInvitation} className='flex gap-1 items-center'>
+              <Button
+                variant='primary'
+                onClick={onCreateInvitation}
+                className='flex gap-1 items-center'
+                disabled={!space || creatingInvitation}
+              >
                 <span>{t('create invitation label')}</span>
                 <UserPlus className={getSize(5)} />
               </Button>
@@ -62,7 +65,7 @@ export const SpaceSettingsPage = () => {
           }
         />
         <ProfileList profiles={members} />
-        <InvitationList {...{ invitations }} />
+        <InvitationList invitations={invitations} />
       </main>
     </>
   );

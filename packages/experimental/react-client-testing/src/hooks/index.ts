@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './usePartyBootstrap';
+export * from './useSpaceBootstrap';
 export * from './useSchemaBuilder';
-export * from './useTestParty';
+export * from './useTestSpace';

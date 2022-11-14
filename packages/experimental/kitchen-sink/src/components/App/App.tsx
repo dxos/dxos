@@ -4,9 +4,9 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { ItemID } from '@dxos/protocols';
-import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
+import { ExportAction, execSelection, itemAdapter, useSpaceBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-echo-graph';
 
@@ -17,25 +17,25 @@ import { ThemeProvider } from '../Theme';
 import { ViewContainer, ViewType } from '../View';
 
 interface AppProps {
-  party: Party;
+  space: Space;
   onInvite?: () => void;
   onExport?: (action: ExportAction) => void;
 }
 
 /**
  * Main application.
- * @param party
+ * @param space
  * @param onInvite
  * @param onExport
  * @constructor
  */
-export const App = ({ party, onInvite, onExport }: AppProps) => {
+export const App = ({ space, onInvite, onExport }: AppProps) => {
   const [view, setView] = useState<string>(ViewType.List);
   const [search, setSearch] = useState<string>('');
   const [selected, setSelected] = useState<Set<ItemID>>(new Set());
-  const model = useGraphModel(party, [(item) => Boolean(item.type?.startsWith('example:'))]);
-  const items = useQuery(party, search);
-  const builder = usePartyBuilder(party);
+  const model = useGraphModel(space, [(item) => Boolean(item.type?.startsWith('example:'))]);
+  const items = useQuery(space, search);
+  const builder = useSpaceBuilder(space);
 
   // Update selection.
   useEffect(() => {
@@ -49,7 +49,7 @@ export const App = ({ party, onInvite, onExport }: AppProps) => {
     // TODO(burdon): Items.length hack (if just items, then recursion).
   }, [search, items.length]);
 
-  if (!party) {
+  if (!space) {
     return null;
   }
 
@@ -59,7 +59,7 @@ export const App = ({ party, onInvite, onExport }: AppProps) => {
       return;
     }
 
-    void party.database.createItem({
+    void space.database.createItem({
       type,
       parent: parentId,
       props: {
@@ -73,7 +73,7 @@ export const App = ({ party, onInvite, onExport }: AppProps) => {
   };
 
   const handleSelection = (text: string) => {
-    const selection = execSelection(party, text);
+    const selection = execSelection(space, text);
     const result = selection?.exec();
     const selected = new Set<ItemID>();
     result?.entities.forEach((item) => selected.add(item.id));

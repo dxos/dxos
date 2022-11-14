@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "author": "info@dxos.org",
@@ -16,7 +16,8 @@
     "prepare": "husky install",
     "install-playwright": "playwright install",
     "changed-packages": "scripts/changed",
-    "lint-changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
+    "lint": "nx run-many --target=lint --fix",
     "build": "nx run-many --target=build",
     "test": "nx run-many --target=test"
   },
@@ -69,7 +70,7 @@
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/sharedworker": "0.0.80",
     "@types/uuid": "~8.3.3",

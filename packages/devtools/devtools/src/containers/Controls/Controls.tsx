@@ -5,70 +5,67 @@
 import React, { useState } from 'react';
 
 import { AddCircleOutline as AddIcon, MoreVert as MenuIcon } from '@mui/icons-material';
-import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem, TextField } from '@mui/material';
+import { Box, Button, Card, CardActions, IconButton, Menu, MenuItem } from '@mui/material';
 
-import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
-import { useClient, useParties, useProfile } from '@dxos/react-client';
-import { JoinPartyDialog } from '@dxos/react-toolkit';
+import { useClient, useSpaces, useIdentity } from '@dxos/react-client';
+import { JoinSpaceDialog } from '@dxos/react-toolkit';
 import { TextModel } from '@dxos/text-model';
 
-import { PartyCard } from './PartyCard';
+import { ConfigSource } from './ConfigSource';
+import { SpaceCard } from './SpaceCard';
 
-export interface ControlsProps {
-  onRemoteSource: (remoteSource: string) => void;
-}
+export type ControlsProps = {
+  onConfigChange: (remoteSource?: string) => void;
+};
 
 /**
  * Devtools playground control.
  * @param port
  * @constructor
  */
-export const Controls = ({ onRemoteSource }: ControlsProps) => {
+export const Controls = ({ onConfigChange }: ControlsProps) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [showJoinParty, setShowJoinParty] = useState(false);
+  const [showJoinSpace, setShowJoinSpace] = useState(false);
   const client = useClient();
-  const profile = useProfile();
-  const parties = useParties();
-  const [remoteSource, setRemoteSource] = useState(
-    client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
-  );
+  const profile = useIdentity();
+  const spaces = useSpaces();
 
   const handleCreateProfile = () => {
     void client.halo.createProfile();
   };
 
-  const handleCreateParty = () => {
-    void client.echo.createParty();
+  const handleCreateSpace = () => {
+    void client.echo.createSpace();
   };
 
   const handleTestData = async () => {
-    client.echo.registerModel(TextModel);
-    client.echo.registerModel(MessengerModel);
+    client.echo.modelFactory.registerModel(TextModel);
+    client.echo.modelFactory.registerModel(MessengerModel);
 
-    // Create party.
-    const party = await client.echo.createParty();
-    const root = await party.database.createItem({
+    // Create space.
+    const space = await client.echo.createSpace();
+    const root = await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/root'
     });
     await root.model.set('title', 'root');
 
     // Objects.
-    await party.database.createItem({
+    await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/object',
       parent: root.id
     });
-    const child = await party.database.createItem({
+    const child = await space.database.createItem({
       model: ObjectModel,
       type: 'example:type/object',
       parent: root.id
     });
 
     // Text.
-    const text = await party.database.createItem({
+    const text = await space.database.createItem({
       model: TextModel,
       type: 'example:type/text',
       parent: child.id
@@ -76,7 +73,7 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
     await text.model.insert('Hello world', 0);
 
     // Messenger.
-    const messenger = await party.database.createItem({
+    const messenger = await space.database.createItem({
       model: MessengerModel,
       type: 'example:type/messenger',
       parent: child.id
@@ -113,41 +110,17 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
             disabled={!profile}
             onClick={() => {
               setMenuAnchorEl(null);
-              setShowJoinParty(true);
+              setShowJoinSpace(true);
             }}
           >
-            Join Party
+            Join Space
           </MenuItem>
         </Menu>
 
-        <JoinPartyDialog open={showJoinParty} onClose={() => setShowJoinParty(false)} closeOnSuccess />
+        <JoinSpaceDialog open={showJoinSpace} onClose={() => setShowJoinSpace(false)} closeOnSuccess />
       </>
 
-      <Box
-        sx={{
-          paddingRight: 1
-        }}
-      >
-        <Card sx={{ margin: 1 }}>
-          <Box
-            sx={{
-              padding: 1,
-              display: 'flex'
-            }}
-          >
-            <TextField
-              label='Remote Source'
-              variant='standard'
-              fullWidth
-              value={remoteSource}
-              onChange={(event) => setRemoteSource(event.target.value)}
-            />
-            <Button variant='contained' onClick={() => onRemoteSource(remoteSource)} sx={{ marginLeft: 1 }}>
-              Set
-            </Button>
-          </Box>
-        </Card>
-      </Box>
+      <ConfigSource onConfigChange={onConfigChange} />
 
       <Box
         sx={{
@@ -159,8 +132,8 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
             <Button disabled={!!profile} startIcon={<AddIcon />} onClick={handleCreateProfile} variant='outlined'>
               Profile
             </Button>
-            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateParty}>
-              Party
+            <Button disabled={!profile} startIcon={<AddIcon />} onClick={handleCreateSpace}>
+              Space
             </Button>
             <Box sx={{ flex: 1 }} />
             <IconButton onClick={(event) => setMenuAnchorEl(event.currentTarget)}>
@@ -180,8 +153,8 @@ export const Controls = ({ onRemoteSource }: ControlsProps) => {
         }}
       >
         <Box>
-          {parties.map((party) => (
-            <PartyCard key={party.key.toHex()} party={party} />
+          {spaces.map((space) => (
+            <SpaceCard key={space.key.toHex()} space={space} />
           ))}
         </Box>
       </Box>

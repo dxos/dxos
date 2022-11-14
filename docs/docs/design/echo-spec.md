@@ -30,7 +30,7 @@ ECHO (The **E**ventually **C**onsistent **H**ierrarhical **O**bject store) is a 
 
 ***Atom*** -
 
-***Party*** -
+***space*** -
 Context for collaboration and data replication.
 
 ***Epoch*** -
@@ -66,7 +66,7 @@ The diagram below illustrates the data processing pipeline.
 *   Messages are written with the peer's current timeframe. This creates a partial order.
 *   Message ordering is determined by available feeds and the timeframes associated with messages.
 *   Clients may process messages in different order (potential discrepancies are rectified downstream by the models).
-*   DAG; require party key and first feed key.
+*   DAG; require space key and first feed key.
 
 TODO(burdon): Diagram.
 
@@ -95,10 +95,10 @@ TODO(burdon): Diagram.
 
 ### 4.8. Epochs
 
-Epochs are blocks of contiguous messages spanning all peers within a party.
+Epochs are blocks of contiguous messages spanning all peers within a space.
 They enable compression for quicker startup, and provide "sync" points for consensus and consistency.
 
-Timeframes provide a common reference point for mutations across the feeds within a party.
+Timeframes provide a common reference point for mutations across the feeds within a space.
 However, when peers are partitioned, they start to diverge from each other.
 
 > *   TODO(burdon): Write up branch anaolgy.
@@ -110,7 +110,7 @@ However, when peers are partitioned, they start to diverge from each other.
 *   Split out HALO and other control messages (like epoch genesis) into own set of feeds.
 *   Each peer has a writable control feed in addition to its data (ECHO) feed.
 *   Control feeds can be read and processed independently from data feeds.
-*   They are piped into `PartyStateMachine`.
+*   They are piped into `spaceStateMachine`.
 
 #### 4.8.2. Epoch Genesis
 
@@ -127,9 +127,9 @@ However, when peers are partitioned, they start to diverge from each other.
 *   They allow compression by removing history.
     *   The ObjectModel will just save the current state instead of the list of mutations.
 *   Peers participate in snapshot exchange protocol, similar to BitTorrent.
-    *   Based on party policy a particular peer may be authorized to declare snapshots (e.g., a bot); otherwise a peer election may be implemented.
+    *   Based on space policy a particular peer may be authorized to declare snapshots (e.g., a bot); otherwise a peer election may be implemented.
 *   Snapshots can be split into a tree of blobs as an optimization for more efficient storage/replication.
-    *   This enables items to restore their models on demand (or for parties to only partially hydrate specific items).
+    *   This enables items to restore their models on demand (or for spaces to only partially hydrate specific items).
 *   Snapshots reference the hash of a previous snapshot, which may contain additional historical data.
     *   Certain models may decide to discard information when creating a snapshot.
         *   Examples: the MessengerModel may discard old messages; the ObjectModel may discard deleted objects.
@@ -145,16 +145,16 @@ However, when peers are partitioned, they start to diverge from each other.
 
 *   [ ] Each model implements to/from snaphost (defined by protobuf).
     *   [ ] Models may decide to discard information.
-*   [ ] Party creates tree of item snapshots.
-*   [ ] Party records snapshot file, referenced by CID, which contains the following metadata:.
+*   [ ] space creates tree of item snapshots.
+*   [ ] space records snapshot file, referenced by CID, which contains the following metadata:.
     *   Timeframe
     *   Datetime
     *   Previous snapshot CID
     *   Model versions
 *   [ ] The epoch generator peer writes an epoch genesis message to its feed.
 *   [ ] When peers process the epoch genesis message they create the corresponding snapshot and store it locally.
-*   [ ] When peers join a party they may request the snapshot for a particular epoch.
-*   [ ] Each peer stores the latest epoch genesis message for each party; this is used to bootstrap (and will be replaced later by the control feed).
+*   [ ] When peers join a space they may request the snapshot for a particular epoch.
+*   [ ] Each peer stores the latest epoch genesis message for each space; this is used to bootstrap (and will be replaced later by the control feed).
 *   [ ] Ability to simulate multi-peer paries with epoch generation.
 
 ISSUES
@@ -178,9 +178,9 @@ Each item or link has state-machine and a model.
 *   TODO: Notes from White paper Google doc
 
 *   TODO: Packlets to enforce layer isolation?
-    *   Factor out ECHO/HALO dispatch (e.g., make PartyManager, Database pluggable)
+    *   Factor out ECHO/HALO dispatch (e.g., make spaceManager, Database pluggable)
 
-*   Party Manager
+*   space Manager
     *   DAG of feeds
     *   DAG of user claims
 
@@ -199,10 +199,10 @@ Each item or link has state-machine and a model.
 
 *   HALO groups
 
-*   Light-weight parties (isolation, esp. relating to epochs/undo)
-    *   Consider party with 1 chess game and 100 coordinated items
+*   Light-weight spaces (isolation, esp. relating to epochs/undo)
+    *   Consider space with 1 chess game and 100 coordinated items
 
-*   Cross-party linking
+*   Cross-space linking
 
 *   Typed Object models (schema as first-class entities)
 
