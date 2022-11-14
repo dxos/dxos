@@ -19,16 +19,10 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/vite-plugin"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
       "path": "../../../common/react-ui"
-    },
-    {
-      "path": "../../../common/react-uikit"
     },
     {
       "path": "../../../core/echo/object-model"
@@ -41,6 +35,12 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/react-uikit"
+    },
+    {
+      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

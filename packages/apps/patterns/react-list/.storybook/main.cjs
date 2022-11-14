@@ -34,8 +34,6 @@ module.exports = {
           '@dxos/react-uikit',
           '@dxos/object-model',
           'storybook-dark-mode',
-          'i18next',
-          'lodash/merge'
         ],
         esbuildOptions: {
           plugins: [
