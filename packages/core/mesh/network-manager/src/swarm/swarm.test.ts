@@ -4,7 +4,7 @@
 
 // @dxos/mocha platform=nodejs
 
-import { expect, mockFn } from 'earljs';
+import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, asyncTimeout } from '@dxos/async';
@@ -15,7 +15,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { FullyConnectedTopology } from '../topology';
-import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
+import { createWebRTCTransportFactory } from '../transport';
 import { Swarm } from './swarm';
 
 describe.only('Swarm', function () {
