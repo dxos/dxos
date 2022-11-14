@@ -3922,16 +3922,25 @@ importers:
       '@types/minimatch': ^5.1.2
       '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
+      '@types/react': ^18.0.21
       '@types/yargs': ~16.0.1
       chalk: ^4.1.0
       color-hash: ^1.0.3
       columnify: ^1.6.0
+      console-table-printer: ^2.11.0
       debug: ^4.3.3
+      enquirer: ^2.3.6
+      ink: ^3.2.0
+      ink-spinner: ~4.0.3
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
+      log-update: ^4.0.0
       mocha: ^8.4.0
       node-notifier: ^10.0.1
+      react: ^18.2.0
       typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
@@ -3940,11 +3949,19 @@ importers:
       chalk: 4.1.2
       color-hash: 1.1.1
       columnify: 1.6.0
+      console-table-printer: 2.11.1
       debug: 4.3.4
+      enquirer: 2.3.6
+      ink: 3.2.0_fan5qbzahqtxlm5dzefqlqx5ia
+      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
+      ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
       lodash.pick: 4.4.0
+      log-update: 4.0.0
       node-notifier: 10.0.1
+      react: 18.2.0
       yargs: 16.2.0
     devDependencies:
       '@babel/core': 7.20.2
@@ -3955,6 +3972,7 @@ importers:
       '@types/minimatch': 5.1.2
       '@types/mocha': 8.2.3
       '@types/node': 18.11.9
+      '@types/react': 18.0.25
       '@types/yargs': 16.0.4
       mocha: 8.4.0
       typescript: 4.8.4
@@ -13831,7 +13849,6 @@ packages:
   /ansi-colors/4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
     engines: {node: '>=6'}
-    dev: true
 
   /ansi-escapes/3.2.0:
     resolution: {integrity: sha512-cBhpre4ma+U0T1oM5fXg7Dy1Jw7zzwv7lt/GoCpr+hDQJoYnKVPLL4dCvSEFMmQurOQvSrwT7SL/DAlhBI97RQ==}
@@ -17605,7 +17622,6 @@ packages:
     engines: {node: '>=8.6'}
     dependencies:
       ansi-colors: 4.1.3
-    dev: true
 
   /entities/2.2.0:
     resolution: {integrity: sha512-p92if5Nz619I0w+akJrLZH0MX0Pb5DX39XOwQTtXSdQQOaYH03S1uIQp4mhOZtAXrxq4ViO67YTiLBo2638o9A==}
@@ -23768,6 +23784,16 @@ packages:
       chalk: 5.1.2
       is-unicode-supported: 1.3.0
 
+  /log-update/4.0.0:
+    resolution: {integrity: sha512-9fkkDevMefjg0mmzWFBW8YkFP91OrizzkW3diF7CpG+S2EYdy4+TVfGwz1zeF8x7hCx1ovSPTOE9Ngib74qqUg==}
+    engines: {node: '>=10'}
+    dependencies:
+      ansi-escapes: 4.3.2
+      cli-cursor: 3.1.0
+      slice-ansi: 4.0.0
+      wrap-ansi: 6.2.0
+    dev: false
+
   /long/4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
 
@@ -29280,6 +29306,15 @@ packages:
   /slice-ansi/3.0.0:
     resolution: {integrity: sha512-pSyv7bSTC7ig9Dcgbw9AuRNUb5k5V6oDudjZoMBSr13qpLBG7tB+zgCkARjq7xIUgdz5P1Qe8u+rSGdouOOIyQ==}
     engines: {node: '>=8'}
+    dependencies:
+      ansi-styles: 4.3.0
+      astral-regex: 2.0.0
+      is-fullwidth-code-point: 3.0.0
+    dev: false
+
+  /slice-ansi/4.0.0:
+    resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
+    engines: {node: '>=10'}
     dependencies:
       ansi-styles: 4.3.0
       astral-regex: 2.0.0
