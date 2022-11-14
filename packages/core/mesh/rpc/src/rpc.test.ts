@@ -443,13 +443,13 @@ describe('RpcPeer', function () {
       expect(await Stream.consume(stream)).toEqual([{ ready: true }, { closed: true }]);
     });
 
-    it('stream handlers throws', async () => {
+    it('stream handlers throws', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg): Stream<Any> => {
-          throw new Error('Test error')
+          throw new Error('Test error');
         },
         port: alicePort
       });
@@ -468,8 +468,7 @@ describe('RpcPeer', function () {
       expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
 
       expect((msgs[0] as any).error.message).toEqual('Test error');
-    })
-
+    });
   });
 
   describe('with disabled handshake', function () {

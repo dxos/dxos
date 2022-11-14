@@ -38,7 +38,6 @@ export class ProtoRpcPeer<Service> {
   }
 }
 
-
 export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'> {
   /**
    * Services that are expected to be implemented by the counter-space.

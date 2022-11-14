@@ -7,7 +7,7 @@ import { expect } from 'earljs';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/example/testing/rpc';
+import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
 
 import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
@@ -291,14 +291,14 @@ describe('Protobuf service', function () {
     });
   });
 
-  describe('service providers', () => {
+  describe('service providers', function () {
     it('sync function', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const TestService = schema.getService('example.testing.rpc.TestService');
 
       const services = createServiceBundle({
-        TestService,
+        TestService
       });
 
       const server = createProtoRpcPeer({
@@ -310,7 +310,7 @@ describe('Protobuf service', function () {
               return { data: 'responseData' };
             },
             voidCall: async () => {}
-          }),
+          })
         },
         port: alicePort
       });
@@ -334,21 +334,22 @@ describe('Protobuf service', function () {
       const TestService = schema.getService('example.testing.rpc.TestService');
 
       const services = createServiceBundle({
-        TestService,
+        TestService
       });
 
       const server = createProtoRpcPeer({
         exposed: services,
         handlers: {
-          TestService: async () => {
+          TestService: async (): Promise<TestService> => {
             await sleep(1);
-            return{
-            testCall: async (req) => {
-              expect(req.data).toEqual('requestData');
-              return { data: 'responseData' };
-            },
-            voidCall: async () => {}
-          }},
+            return {
+              testCall: async (req) => {
+                expect(req.data).toEqual('requestData');
+                return { data: 'responseData' };
+              },
+              voidCall: async () => {}
+            };
+          }
         },
         port: alicePort
       });
@@ -365,8 +366,84 @@ describe('Protobuf service', function () {
       });
       expect(response.data).toEqual('responseData');
     });
-  })
-})
+
+    it('stream', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const services = createServiceBundle({
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestStreamService: async (): Promise<TestStreamService> => {
+            await sleep(1);
+            return {
+              testCall: (req) =>
+                new Stream(({ next, close }) => {
+                  expect(req.data).toEqual('requestData');
+
+                  next({ data: 'foo' });
+                  next({ data: 'bar' });
+                  next({ data: 'baz' });
+                  close();
+                })
+            };
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const stream = await client.rpc.TestStreamService.testCall({
+        data: 'requestData'
+      });
+      expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
+        { data: { data: 'foo' } },
+        { data: { data: 'bar' } },
+        { data: { data: 'baz' } },
+        { closed: true }
+      ]);
+    });
+
+    it('stream that throws', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const services = createServiceBundle({
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestStreamService: async (): Promise<TestStreamService> => {
+            throw new Error('test error');
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const stream = await client.rpc.TestStreamService.testCall({
+        data: 'requestData'
+      });
+      expect(await Stream.consume(stream)).toEqual([expect.objectWith({ closed: true })]);
+    });
+  });
 
   describe('google.protobuf.Any encoding', function () {
     it('recursively encodes google.protobuf.Any by default', async function () {
