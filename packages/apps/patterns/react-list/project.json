@@ -1,0 +1,49 @@
+{
+  "sourceRoot": "packages/apps/patterns/react-list/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/patterns/react-list/src/index.ts",
+        "outputPath": "packages/apps/patterns/react-list/dist",
+        "tsConfig": "packages/apps/patterns/react-list/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/apps/patterns/react-list/src/**/*.{js,jsx,ts,tsx}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "storybook": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "config": {
+          "configFolder": "packages/apps/patterns/react-list/.storybook"
+        },
+        "uiFramework": "@storybook/react"
+      }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  }
+}

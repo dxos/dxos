@@ -70,6 +70,7 @@
     "react-composer": "packages/apps/patterns/react-composer",
     "react-echo-graph": "packages/experimental/react-echo-graph",
     "react-ipfs": "packages/experimental/react-ipfs",
+    "react-list": "packages/apps/patterns/react-list",
     "react-registry-client": "packages/experimental/react-registry-client",
     "react-toolkit": "packages/deprecated/react-toolkit",
     "react-ui": "packages/common/react-ui",
