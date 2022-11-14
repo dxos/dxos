@@ -10,7 +10,7 @@ import React, { useCallback, ReactHTMLElement } from 'react';
 import { useId } from '../../hooks';
 import { Size } from '../../props';
 import { getSize } from '../../styles';
-import { Button, ButtonProps } from '../Button';
+import { Button, ButtonGroup, ButtonProps } from '../Button';
 import { Tooltip, TooltipProps } from '../Tooltip';
 
 interface SharedQrCodeProps
@@ -80,7 +80,7 @@ export const CompactQrCode = ({
   }, [value]);
   return (
     <>
-      <div className='flex grow md:hidden'>
+      <ButtonGroup className='inline-flex grow md:hidden'>
         <span className='sr-only' id={labelId}>
           {displayQrLabel}
         </span>
@@ -114,8 +114,8 @@ export const CompactQrCode = ({
             <CopySimple className={getSize(5)} />
           </Button>
         </Tooltip>
-      </div>
-      <div className='hidden md:flex'>
+      </ButtonGroup>
+      <ButtonGroup className='hidden md:inline-flex'>
         <Tooltip
           compact
           content={
@@ -145,7 +145,7 @@ export const CompactQrCode = ({
           <CopySimple className={getSize(5)} />
           {copyLabel}
         </Button>
-      </div>
+      </ButtonGroup>
     </>
   );
 };

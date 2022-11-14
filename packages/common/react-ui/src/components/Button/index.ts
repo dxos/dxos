@@ -5,3 +5,4 @@
 export * from './Button';
 export * from './buttonStyles';
 export * from './ButtonProps';
+export * from './ButtonGroup';
