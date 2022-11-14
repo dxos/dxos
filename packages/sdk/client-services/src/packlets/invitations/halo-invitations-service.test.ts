@@ -22,7 +22,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/halo-invitation-service', function () {
-  it.only('creates identity and invites peer', async function () {
+  it('creates identity and invites peer', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     await host.identityManager.createIdentity();
@@ -86,7 +86,6 @@ describe('services/halo-invitation-service', function () {
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
-    console.log(host.identityManager.identity!.identityKey);
     await waitForExpect(() => {
       expect(host.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);
       expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(2);

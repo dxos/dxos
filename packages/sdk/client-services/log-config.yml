@@ -1,7 +1,7 @@
 formatter:
   column: 100
 
-depth: 0
+# depth: 0
 
 filter:
   - warn

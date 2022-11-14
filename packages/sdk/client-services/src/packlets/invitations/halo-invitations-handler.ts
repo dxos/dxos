@@ -90,7 +90,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
             },
 
             // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
-            presentAdmissionCredentials: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
+            presentAdmissionCredentials: async (credentials) => {
               try {
                 // Check authenticated.
                 if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
@@ -102,19 +102,12 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
                   }
                 }
 
-                log('writing guest credentials', { host: identity.deviceKey, guest: deviceKey });
+                log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
                 // TODO(burdon): Check if already admitted.
-                await writeMessages(
-                  identity.controlPipeline.writer,
-                  await createDeviceAuthorization(
-                    identity.getIdentityCredentialSigner(),
-                    identity.identityKey,
-                    deviceKey
-                  )
-                );
+                await identity.admitDevice(credentials)
 
                 // Updating credentials complete.
-                complete.wake(deviceKey);
+                complete.wake(credentials.deviceKey);
               } catch (err) {
                 // TODO(burdon): Generic RPC callback to report error to client.
                 observable.callback.onError(err);

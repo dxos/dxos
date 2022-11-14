@@ -17,6 +17,10 @@ import { Database, Space } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
+import { writeMessages } from '@dxos/feed-store';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { TypedMessage } from '@dxos/protocols';
+import { log } from '@dxos/log';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -118,5 +122,43 @@ export class Identity {
    */
   getDeviceCredentialSigner(): CredentialSigner {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
+  }
+
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: HaloAdmissionCredentials) {
+    log('Admitting device:', { identityKey: this.identityKey, hostDevice: this.deviceKey, deviceKey, controlFeedKey, dataFeedKey });
+    const signer = this.getIdentityCredentialSigner();
+    await writeMessages(
+      this.controlPipeline.writer,
+      [
+        await signer.createCredential({
+          subject: deviceKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            identityKey: this.identityKey,
+            deviceKey,
+          }
+        }),
+        await signer.createCredential({
+          subject: controlFeedKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.haloSpaceKey,
+            deviceKey,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.CONTROL
+          }
+        }),
+        await signer.createCredential({
+          subject: dataFeedKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.haloSpaceKey,
+            deviceKey,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.DATA
+          }
+        })
+      ].map((credential): TypedMessage => ({ '@type': 'dxos.echo.feed.CredentialsMessage', credential }))
+    )
   }
 }
