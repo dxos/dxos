@@ -264,8 +264,8 @@ export class Protocol {
     if (this._isOpen) {
       return;
     }
-    await this._openExtensions();
 
+    await this._openExtensions();
     eos(this._stream as any, async () => {
       await this.close();
     });
@@ -306,7 +306,7 @@ export class Protocol {
 
   private async _initExtensions(userSession?: Record<string, any>) {
     try {
-      // Exchanging sessions, because other extensions (like Bot Plugin) might depend on the session being already there.
+      // Exchanging sessions since other extensions (like Bot Plugin) might depend on the session being already there.
       await this._extensionInit.sendSession(userSession);
 
       for (const [name, extension] of this._extensionMap) {

@@ -10,7 +10,7 @@ import { AbstractInvitationsProxy } from './invitations-proxy';
  * Adapts invitation service observable to client/service stream.
  */
 export class SpaceInvitationsProxy extends AbstractInvitationsProxy<PublicKey> {
-  createInvitationObject(spaceKey: PublicKey) {
-    return { spaceKey };
+  getInvitationOptions(context: PublicKey) {
+    return { spaceKey: context };
   }
 }
