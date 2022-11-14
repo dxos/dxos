@@ -65,7 +65,7 @@ export const SpaceSettingsPage = () => {
           }
         />
         <ProfileList profiles={members} />
-        <InvitationList invitations={invitations} />
+        <InvitationList invitations={invitations} path='/spaces/join' />
       </main>
     </>
   );

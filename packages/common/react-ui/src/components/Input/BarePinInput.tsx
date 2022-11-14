@@ -50,7 +50,7 @@ export const BarePinInput = forwardRef<HTMLInputElement, BarePinInputProps>(
           ...bareInputStyleProps,
           inputRef,
           className: cx(
-            'font-mono selection:bg-transparent',
+            'font-mono selection:bg-transparent mli-auto',
             inputProps.disabled && 'cursor-not-allowed',
             inputProps.className
           ),
