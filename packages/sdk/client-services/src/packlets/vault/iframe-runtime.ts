@@ -24,6 +24,7 @@ export class IFrameRuntime {
   private readonly _transportService = new WebRTCTransportService();
 
   constructor({ portMuxer }: IframeRuntimeParams) {
+    // TODO(dmaretskyi): Extract port names to config.ts.
     this._systemPort = portMuxer.createWorkerPort({ channel: 'dxos:system' });
     this._workerAppPort = portMuxer.createWorkerPort({ channel: 'dxos:app' });
     this._windowAppPort = portMuxer.createIFramePort({
