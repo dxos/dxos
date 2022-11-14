@@ -44,7 +44,7 @@ const start = async () => {
   clear();
   const { waitUntilExit } = render(
     <OctokitContext.Provider value={octokit}>
-      <App />
+      <App owner='dxos' repo='dxos' />
     </OctokitContext.Provider>
   );
 

@@ -6,31 +6,29 @@ import { Box } from 'ink';
 import WrappedTextInput from 'ink-text-input';
 import { NotificationCenter } from 'node-notifier';
 import process from 'process';
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 
 import { useOctokit } from '../hooks';
 import { WorkflowTable } from './WorkflowTable';
 
 const notifier = new NotificationCenter({});
 
-export const App = () => {
+export const App: FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
   const octokit = useOctokit();
-  const [first, setFirst] = useState<number>(0);
+  const idRef = useRef<number>(0);
   const [items, setItems] = useState<any[]>([]);
 
   const update = async () => {
     const {
       data: { workflow_runs: items = [] }
-    } = await octokit.rest.actions.listWorkflowRunsForRepo({
-      owner: 'dxos',
-      repo: 'dxos'
-    });
+    } = await octokit.rest.actions.listWorkflowRunsForRepo({ owner, repo });
 
-    setItems(items);
-    setFirst(items[0]?.id);
-    if (!first) {
+    if (!idRef.current) {
       notifier.notify({ title: 'Workflow updated' });
     }
+
+    setItems(items);
+    idRef.current = items[0]?.id;
   };
 
   useEffect(() => {
