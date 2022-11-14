@@ -10,6 +10,7 @@ import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFa
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -121,6 +122,16 @@ export class Client {
 
     await this._halo._open();
     await this._echo._open();
+
+    if (
+      this._config.get('runtime.client.services.identity.mode') ===
+        Runtime.Client.Services.Identity.Mode.AUTO_INITIALIZE &&
+      !this._halo.profile
+    ) {
+      await this._services.services.ProfileService.createProfile({
+        displayName: this._config.get('runtime.client.services.identity.displayName')
+      });
+    }
 
     // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
