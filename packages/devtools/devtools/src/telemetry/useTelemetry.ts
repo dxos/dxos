@@ -22,7 +22,7 @@ export const useTelemetry = () => {
   const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
 
   // TODO(wittjosiah): Store preference for disabling telemetry.
-  //   At minimum should be stored locally (i.e., localstorage), possibly in halo preference.
+  //   At minimum should be stored locally (i.e., localstorage), possibly in devtools preference.
   //   Needs to be hooked up to settings page for user visibility.
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export const useTelemetry = () => {
 
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.page.load',
+      name: 'devtools-app.page.load',
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,

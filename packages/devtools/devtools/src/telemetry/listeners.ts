@@ -19,7 +19,7 @@ export const setupWindowListeners = (client: Client) => {
 
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.click',
+      name: 'devtools-app.window.click',
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -37,7 +37,7 @@ export const setupWindowListeners = (client: Client) => {
     const now = new Date();
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.focus',
+      name: 'devtools-app.window.focus',
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -52,7 +52,7 @@ export const setupWindowListeners = (client: Client) => {
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.blur',
+      name: 'devtools-app.window.blur',
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -66,7 +66,7 @@ export const setupWindowListeners = (client: Client) => {
   const unloadCallback = () => {
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.page.unload',
+      name: 'devtools-app.page.unload',
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
