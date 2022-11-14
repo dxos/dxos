@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/bot-factory-client": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

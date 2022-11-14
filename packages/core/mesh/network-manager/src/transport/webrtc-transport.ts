@@ -61,10 +61,6 @@ export class WebRTCTransport implements Transport {
     });
   }
 
-  get peer() {
-    return this._peer;
-  }
-
   async close() {
     log('closing...');
     await this._disconnectStreams();

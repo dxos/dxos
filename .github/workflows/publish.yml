@@ -45,7 +45,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm nx run-many --target=build
+        run: pnpm nx run-many --target=build --skip-nx-cache
         env:
           DX_ENVIRONMENT: production
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
