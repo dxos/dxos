@@ -61,7 +61,7 @@ const main = async () => {
         id: chalk.blue(id),
         name: chalk.gray(name),
         status: status === 'completed' ? '' : chalk.blue('…'),
-        conclusion: conclusion === 'success' ? chalk.green('✔') : chalk.red('✗'),
+        conclusion, // : conclusion === 'success' ? chalk.green('✔') : chalk.red('✗'),
         updated_at: relativeTime(Date.parse(updated_at).valueOf()),
         pull_requests: chalk.gray(formatPullRequest(pull_requests))
       })
