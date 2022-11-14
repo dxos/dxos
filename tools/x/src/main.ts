@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+/* eslint-disable camelcase */
+
 import { Octokit } from '@octokit/rest';
-import growl from 'growl';
+import chalk from 'chalk';
+import columnify from 'columnify';
+import { NotificationCenter } from 'node-notifier';
+
+import { relativeTime } from './util';
 
 // TODO(burdon): Start of tool to monitor/log workflows.
-// TODO(burdon): Growl when completes and show log on error.
-//  https://www.npmjs.com/package/growl
 // TODO(burdon): See `@dxos/mission-control`.
 
 // https://github.com/settings/tokens
@@ -20,25 +24,85 @@ const config = {
   }
 };
 
+const notifier = new NotificationCenter({});
+
+const formatPullRequest = (pull_requests?: any) => {
+  return pull_requests?.[0]?.head.ref;
+};
+
 const main = async () => {
   // https://octokit.github.io/rest.js/v19
   const octokit = new Octokit({
     auth: config.token.value
   });
 
-  const { data } = await octokit.rest.pulls.list({
+  const {
+    data: { workflow_runs }
+  } = await octokit.rest.actions.listWorkflowRunsForRepo({
     owner: 'dxos',
     repo: 'dxos'
   });
 
-  // TODO(burdon): Projection tool.
-  const output = data.map(({ title, user }) => ({
-    title,
-    user: user?.login
-  }));
+  const rows = columnify(
+    workflow_runs.map(
+      ({
+        id,
+        name,
+        display_title,
+        run_number,
+        status,
+        conclusion,
+        pull_requests,
+        created_at,
+        updated_at,
+        run_started_at,
+        logs_url
+      }) => ({
+        id: chalk.blue(id),
+        name: chalk.gray(name),
+        status: status === 'completed' ? '' : chalk.blue('…'),
+        conclusion: conclusion === 'success' ? chalk.green('✔') : chalk.red('✗'),
+        updated_at: relativeTime(Date.parse(updated_at).valueOf()),
+        pull_requests: chalk.gray(formatPullRequest(pull_requests))
+      })
+    ),
+    {
+      columns: ['id', 'status', 'name', 'updated_at', 'conclusion', 'pull_requests'],
+      truncate: true,
+      config: {
+        name: {
+          maxWidth: 20
+        },
+        status: {
+          align: 'right',
+          showHeaders: false,
+          minWidth: 2
+        },
+        conclusion: {
+          showHeaders: false,
+          minWidth: 4
+        },
+        branch: {
+          maxWidth: 32
+        },
+        pull_requests: {
+          maxWidth: 32
+        },
+        updated_at: {
+          align: 'right',
+          minWidth: 14,
+          headingTransform: () => 'Updated'
+        }
+      }
+    }
+  );
 
-  console.log(JSON.stringify(output, undefined, 2));
-  growl('ok');
+  console.log(rows);
+
+  // NOTE: Check notifications are not silenced.
+  // await notifier.notify({ title: 'test', message: 'hello', timeout: 3 }, () => {
+  //   console.log(JSON.stringify(output, undefined, 2));
+  // });
 };
 
 // TODO(burdon): Yargs.

@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+echo "DXOS"
+
 #
 # Oh My Zsh plugin.
 #
@@ -11,8 +13,8 @@ eval "$(monorepo-cd --init m)"
 # Git
 #
 
-gs='git-branch-select -l'
-gb='git branch -vv'
+alias gs='git-branch-select -l'
+alias gb='git branch -vv'
 
 #
 # NX
