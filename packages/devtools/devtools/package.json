@@ -35,6 +35,7 @@
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/telemetry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@emotion/react": "^11.9.0",
