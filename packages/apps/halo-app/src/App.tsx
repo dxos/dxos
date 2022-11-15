@@ -10,7 +10,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
-import { ErrorsProvider, Fallback, FatalError, GenericFallback, ServiceWorkerToast } from '@dxos/react-appkit';
+import { ErrorProvider, Fallback, FatalError, GenericFallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
@@ -112,7 +112,7 @@ export const App = () => {
 
   return (
     <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
-      <ErrorsProvider>
+      <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
@@ -126,7 +126,7 @@ export const App = () => {
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>
-      </ErrorsProvider>
+      </ErrorProvider>
     </UiKitProvider>
   );
 };

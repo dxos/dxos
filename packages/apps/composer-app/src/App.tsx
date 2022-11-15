@@ -11,13 +11,13 @@ import { Client, fromIFrame, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   AppLayout,
-  ErrorsProvider,
+  ErrorProvider,
   Fallback,
   FatalError,
   GenericFallback,
   RequireIdentity,
   ServiceWorkerToast,
-  SpacesView
+  SpacesPage
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
 import { DOCUMENT_TYPE } from '@dxos/react-composer';
@@ -62,7 +62,7 @@ const Routes = () => {
           children: [
             {
               path: '/',
-              element: <SpacesView />
+              element: <SpacesPage />
             },
             {
               path: '/spaces/:space',
@@ -89,7 +89,7 @@ export const App = () => {
 
   return (
     <UiKitProvider fallback={<Fallback message='Loading...' />}>
-      <ErrorsProvider>
+      <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
@@ -103,7 +103,7 @@ export const App = () => {
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>
-      </ErrorsProvider>
+      </ErrorProvider>
     </UiKitProvider>
   );
 };

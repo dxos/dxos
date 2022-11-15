@@ -3,10 +3,10 @@
 //
 
 export * from './AppLayout';
-export * from './ErrorsProvider';
+export * from './ErrorProvider';
 export * from './Fallback';
 export * from './FatalError';
 export * from './RequireIdentity';
 export * from './ServiceWorkerToast';
 export * from './SpaceList';
-export * from './SpacesView';
+export * from './SpacesPage';

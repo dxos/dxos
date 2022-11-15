@@ -8,7 +8,7 @@ import { useSpaces } from '@dxos/react-client';
 
 import { SpaceList } from '../SpaceList';
 
-export const SpacesView = () => {
+export const SpacesPage = () => {
   const spaces = useSpaces();
 
   return <SpaceList spaces={spaces} />;
