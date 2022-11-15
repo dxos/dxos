@@ -11,7 +11,7 @@ import { ClientServicesProvider } from './service-definitions';
 import { ClientServicesProxy } from './service-proxy';
 
 // TODO(mykola): Remove copy-paste from client/config.ts
-export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
+export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/vault.html';
 export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
 
 export type ClientIFrameServiceProxyParams = {
