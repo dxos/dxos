@@ -18,7 +18,9 @@ import { List, ListProps } from './List';
 export default {
   title: 'react-list/List',
   component: List,
-  argTypes: {}
+  argTypes: {
+    onAction: {}
+  }
 };
 
 const Template = (args: Omit<ListProps, 'item'>) => {
@@ -37,15 +39,15 @@ const Template = (args: Omit<ListProps, 'item'>) => {
     setItem(item);
   }, []);
 
-  return <main>{item ? <List {...args} item={item} /> : <Loading label='Loading…' />}</main>;
+  return <main>{item ? <List {...args} /> : <Loading label='Loading…' />}</main>;
 };
 
-export const Default = templateForComponent(Template)({});
+export const Default = templateForComponent(Template)({ id: '', items: {}, order: [] });
 Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={defaultConfig}>
+    <ClientProvider config={defaultConfig} fallback={<Loading label='Loading…' />}>
       <Story />
     </ClientProvider>
   )

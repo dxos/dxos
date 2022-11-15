@@ -28,6 +28,7 @@ module.exports = {
           '@dxos/client',
           '@dxos/config',
           '@dxos/debug',
+          '@dxos/react-appkit',
           '@dxos/react-async',
           '@dxos/react-client',
           '@dxos/react-ui',

@@ -1,6 +1,7 @@
 import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
-import { UiKitProvider } from '@dxos/react-uikit';
+import { UiKitProvider, Loading } from '@dxos/react-uikit';
+import {translations} from '@dxos/react-appkit';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -22,11 +23,13 @@ const ThemeWrapper = ({ children }) => {
 };
 
 export const decorators = [
-  (Story) => (
-    createElement(UiKitProvider, {
+  (Story) => {
+    return createElement(UiKitProvider, {
+      resourceExtensions: translations,
+      fallback: createElement(Loading, {label: 'Loading…'}),
       children: createElement(ThemeWrapper, {
         children: createElement(Story)
       })
     })
-  )
+  }
 ];

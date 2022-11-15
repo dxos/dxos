@@ -446,6 +446,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
@@ -461,6 +462,7 @@ importers:
       '@dxos/config': link:../../../sdk/config
       '@dxos/debug': link:../../../common/debug
       '@dxos/object-model': link:../../../core/echo/object-model
+      '@dxos/react-appkit': link:../react-appkit
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
