@@ -34,13 +34,6 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   const outDir = join(options.basePath, options.outputPath);
   const packageRoot = context.workspace.projects[context.projectName!].root;
 
-  console.log({
-    src,
-    substitutionsPath,
-    baseDir,
-    outDir
-  })
-
   try {
     rmSync(outDir, { recursive: true, force: true });
   } catch (err: any) {
