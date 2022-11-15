@@ -1,6 +1,11 @@
-import { existsSync, mkdirSync, rmdirSync, writeFileSync } from "fs";
-import { dirname, join, relative } from "path";
-import { parseFullyQualifiedName } from "../namespaces";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { existsSync, mkdirSync, rmdirSync, writeFileSync } from 'fs';
+import { dirname, join, relative } from 'path';
+
+import { parseFullyQualifiedName } from '../namespaces';
 
 export type GeneratePackageExportsParams = {
   /**
@@ -15,47 +20,39 @@ export type GeneratePackageExportsParams = {
    */
   exportFrom: string;
   namespaces: string[];
-}
+};
 
 const HEADER = '/**\n * @generated\n */\n';
 
-
 export const generatePackageExports = ({ packageRoot, exportFrom, namespaces }: GeneratePackageExportsParams) => {
-   console.log({
-      packageRoot,
-      exportFrom,
-      namespaces,
-   })
+  console.log({
+    packageRoot,
+    exportFrom,
+    namespaces
+  });
 
-   // TODO(dmaretskyi): Move to config.
-   const prefix = 'proto'
+  // TODO(dmaretskyi): Move to config.
+  const prefix = 'proto';
 
-   // Clean.
-   if(existsSync(join(packageRoot, prefix))) {
-      rmdirSync(join(packageRoot, prefix), { recursive: true });
-   }
+  // Clean.
+  if (existsSync(join(packageRoot, prefix))) {
+    rmdirSync(join(packageRoot, prefix), { recursive: true });
+  }
 
   for (const namespace of namespaces) {
     // Example: packages/core/protocols/proto/dxos/echo/feed
-    const filenameWithoutExtension = join(
-      packageRoot,
-      prefix,
-      parseFullyQualifiedName(namespace).join('/') 
-    )
+    const filenameWithoutExtension = join(packageRoot, prefix, parseFullyQualifiedName(namespace).join('/'));
 
     // Example: packages/core/protocols/dist/src/proto/gen/dxos/echo/feed
-    const exportedModule = join(
-      exportFrom,
-      parseFullyQualifiedName(namespace).join('/') 
-    )
+    const exportedModule = join(exportFrom, parseFullyQualifiedName(namespace).join('/'));
 
     // Example: ../../../dist/src/proto/gen/dxos/echo/feed
-    const moduleRelativeToFile = relative(dirname(filenameWithoutExtension), exportedModule)
+    const moduleRelativeToFile = relative(dirname(filenameWithoutExtension), exportedModule);
 
     writeFile(`${filenameWithoutExtension}.js`, `${HEADER}\nmodule.exports = require('${moduleRelativeToFile}');\n`);
     writeFile(`${filenameWithoutExtension}.d.ts`, `${HEADER}\nexport * from '${moduleRelativeToFile}';\n`);
   }
-}
+};
 
 const writeFile = (path: string, content: string) => {
   if (!existsSync(dirname(path))) {
@@ -63,4 +60,4 @@ const writeFile = (path: string, content: string) => {
   }
 
   writeFileSync(path, content);
-}
+};

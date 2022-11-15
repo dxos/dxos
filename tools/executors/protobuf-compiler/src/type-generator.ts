@@ -40,7 +40,7 @@ export const parseAndGenerateSchema = async (
     baseDir: baseDirPath,
     outDir: outDirPath,
     packageRoot,
-    exportPath,
+    exportPath
   });
 };
 
@@ -53,7 +53,7 @@ export interface GenerateSchemaOptions {
   baseDir: string | undefined;
   outDir: string;
   packageRoot: string;
-  exportPath?: string
+  exportPath?: string;
 }
 
 /**
@@ -98,7 +98,7 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
     generatePackageExports({
       packageRoot: options.packageRoot,
       exportFrom: options.exportPath,
-      namespaces: Array.from(namespaces.keys()),
-    })
+      namespaces: Array.from(namespaces.keys())
+    });
   }
 };

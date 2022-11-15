@@ -24,7 +24,7 @@
     },
     "exportPath": {
       "type": "string",
-      "description": "Generates exports for compiled proto definitions. Set this to the directory where tsc outputs compiled definitions.",
+      "description": "Directory for compiled proto definitions.",
       "examples": [
         "dist/src/proto/gen"
       ]

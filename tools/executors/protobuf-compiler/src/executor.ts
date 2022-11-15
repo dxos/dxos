@@ -19,7 +19,7 @@ export interface GenerateExecutorOptions {
   srcPath: string;
   outputPath: string;
   substitutionsPath: string;
-  exportPath?: string
+  exportPath?: string;
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -54,7 +54,14 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   preconfigureProtobufjs();
 
   logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDir, outdirPath);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outdirPath, packageRoot, options.exportPath);
+  await parseAndGenerateSchema(
+    substitutionsModule,
+    protoFilePaths,
+    baseDir,
+    outdirPath,
+    packageRoot,
+    options.exportPath
+  );
 
   return { success: true };
 };
