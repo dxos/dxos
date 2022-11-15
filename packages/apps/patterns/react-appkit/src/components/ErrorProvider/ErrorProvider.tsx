@@ -3,32 +3,28 @@
 //
 
 import cx from 'classnames';
-import debug from 'debug';
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
 import { Tooltip, valenceColorText, defaultFocus, useTranslation } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
-export interface ErrorsContextState {
+export interface ErrorContextState {
   errors: Error[];
   addError: (error: Error) => void;
   resetErrors: () => void;
 }
 
-export const ErrorsContext = createContext<ErrorsContextState>({
+export const ErrorContext = createContext<ErrorContextState>({
   errors: [],
   addError: () => {},
   resetErrors: () => {}
 });
 
-const error = debug('dxos:react-toolkit:error');
-
 // TODO(burdon): Override if dev-only?
-const logError = (f: string, ...args: any[]) => (error.enabled ? error(f, ...args) : console.error(f, ...args));
+const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
-// TODO(wittjosiah): Factor out.
-export const ErrorsProvider = ({ children }: PropsWithChildren<{}>) => {
+export const ErrorProvider = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState<Error[]>([]);
   const addError = useCallback((error: Error) => setErrors([error, ...errors]), []);
@@ -63,7 +59,7 @@ export const ErrorsProvider = ({ children }: PropsWithChildren<{}>) => {
   }, []);
 
   return (
-    <ErrorsContext.Provider value={{ errors, addError, resetErrors }}>
+    <ErrorContext.Provider value={{ errors, addError, resetErrors }}>
       {children}
       <div role='none' className={cx('fixed bottom-4 right-4', valenceColorText('warning'))}>
         {/* TODO(wittjosiah): Render this warning conditionally based on a prop (e.g., isInternalUser?). */}
@@ -73,8 +69,8 @@ export const ErrorsProvider = ({ children }: PropsWithChildren<{}>) => {
           </Tooltip>
         )}
       </div>
-    </ErrorsContext.Provider>
+    </ErrorContext.Provider>
   );
 };
 
-export const useErrors = () => useContext(ErrorsContext);
+export const useErrors = () => useContext(ErrorContext);
