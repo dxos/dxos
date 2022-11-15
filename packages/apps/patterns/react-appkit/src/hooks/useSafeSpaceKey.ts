@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 /**
  * Validate string keys from url params as space keys.
@@ -19,6 +20,7 @@ export const useSafeSpaceKey = (hex?: string, onFailure?: () => void): PublicKey
       try {
         setSpaceKey(PublicKey.fromHex(hex));
       } catch {
+        log.warn('invalid space key', { hex });
         onFailure?.();
       }
     } else {
