@@ -3,7 +3,6 @@
 //
 
 import { useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
@@ -17,7 +16,6 @@ const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION;
 const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 
 export const useTelemetry = () => {
-  const location = useLocation();
   const client = useClient();
   const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
 
@@ -59,5 +57,5 @@ export const useTelemetry = () => {
       identityId: getIdentifier(client),
       properties: BASE_PROPERTIES
     });
-  }, [location]);
+  }, []);
 };
