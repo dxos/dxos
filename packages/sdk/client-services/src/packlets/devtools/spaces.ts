@@ -38,9 +38,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
     };
 
     setImmediate(async () => {
-      console.log('waiting for init');
       await context.initialized.wait();
-      console.log('initialized');
       unsubscribe = context.spaceManager!.updated.on(() => update());
 
       // Send initial spaces.
