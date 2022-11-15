@@ -42,6 +42,9 @@
   .elevated-buttons {
     --button-elevation: theme(boxShadow.sm);
   }
+  .grouped-buttons {
+    --button-elevation: theme(boxShadow.none);
+  }
 }
 
 :root {
