@@ -9,15 +9,18 @@ import { join } from 'node:path';
 import { resolve } from 'path';
 
 import { build } from './build';
-import { TypingsGenerator } from './typings-generator';
+import { preconfigureProtobufjs } from './configure';
+import { logger } from './logger';
+import { ModuleSpecifier } from './module-specifier';
+import { registerResolver } from './parser';
+import { parseAndGenerateSchema } from './type-generator';
 
 export interface GenerateExecutorOptions {
   basePath: string;
   srcPath: string;
   outputPath: string;
-  typingsOutputPath: string;
   substitutionsPath: string;
-  verbose: boolean;
+  packageExports: boolean;
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -31,6 +34,17 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
   const baseDir = resolve(context.cwd, options.basePath);
   const outDir = join(options.basePath, options.outputPath);
+  const packageRoot = context.workspace.projects[context.projectName!].root;
+
+  // console.log({
+  //   options,
+  //   cwd: context.cwd,
+  //   src,
+  //   substitutionsPath,
+  //   baseDir,
+  //   outDir,
+  //   packageRoot
+  // })
 
   try {
     rmSync(outDir, { recursive: true, force: true });
@@ -41,33 +55,20 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined;
   const proto = glob(src, { cwd: context.cwd });
 
-  await build({
-    proto,
-    substitutions,
-    baseDir,
-    outDir,
-    verbose: context.isVerbose
-  });
 
-  console.info({
-    cwd: context.cwd,
-    baseDir,
-    outDir,
-    options
-  });
+  // TODO(burdon): Use context.cwd.
+  const substitutionsModule = substitutions
+    ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
+    : undefined;
+  const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
+  const outDirPath = resolve(process.cwd(), outDir);
 
-  // Typings.
-  if (options.typingsOutputPath) {
-    const typeGenerator = new TypingsGenerator({
-      files: proto,
-      baseDir: options.basePath,
-      outDir: join(context.cwd, options.typingsOutputPath),
-      // TODO(burdon): Fix definition and computation of relative paths.
-      distDir: '../dist/src/proto/gen'
-    });
+  // Initialize.
+  registerResolver(baseDir);
+  preconfigureProtobufjs();
 
-    typeGenerator.generate(context.isVerbose);
-  }
+  logger.logCompilationOptions(protoFilePaths, baseDir, outDirPath, context.isVerbose);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outDirPath, packageRoot, context.isVerbose, options.packageExports);
 
   return { success: true };
 };

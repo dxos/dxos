@@ -37,8 +37,8 @@ export class Logger {
     }
   }
 
-  logTypings(outDir: string, verbose = false) {
-    console.info('Generating typings...');
+  logExports(outDir: string, verbose = false) {
+    console.info('Generating exports...');
     if (verbose) {
       console.log(chalk`Output: {bold ${outDir}}`);
     }

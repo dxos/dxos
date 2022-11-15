@@ -33,7 +33,8 @@
         "basePath": "packages/core/protocols/src/proto",
         "genPath": "packages/core/protocols/src/proto/gen",
         "outputPath": "packages/core/protocols/dist",
-        "typingsPath": "packages/core/protocols/typings"
+        "typingsPath": "packages/core/protocols/typings",
+        "packageExports": true
       },
       "outputs": [
         "{options.basePath}/gen",

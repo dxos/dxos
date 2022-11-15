@@ -8,9 +8,10 @@ import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
+import { ExportsGenerator } from './generator/package-exports';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
-import { splitSchemaIntoNamespaces } from './namespaces';
+import { normalizeFullyQualifiedName, splitSchemaIntoNamespaces } from './namespaces';
 import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
 export const parseAndGenerateSchema = async (
@@ -18,7 +19,9 @@ export const parseAndGenerateSchema = async (
   protoFiles: string[],
   baseDirPath: string | undefined,
   outDirPath: string,
-  verbose = false
+  packageRoot?: string,
+  verbose = false,
+  packageExports = false
 ) => {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   const root = await pb.load(protoFiles);
@@ -37,7 +40,9 @@ export const parseAndGenerateSchema = async (
     schema: root,
     substitutions: substitutions ? { map: substitutions, module: substitutionsModule! } : undefined,
     baseDir: baseDirPath,
-    outDir: outDirPath
+    outDir: outDirPath,
+    packageRoot,
+    packageExports,
   });
 };
 
@@ -49,12 +54,16 @@ export interface GenerateSchemaOptions {
   };
   baseDir: string | undefined;
   outDir: string;
+  packageRoot?: string;
+  packageExports?: boolean;
 }
 
 /**
  * Generate typescript definitions for a given schema and write them to `options.outDir`.
  */
 export const generateSchema = (options: GenerateSchemaOptions) => {
+  console.log(options)
+
   const namespaces = splitSchemaIntoNamespaces(options.schema);
 
   const printer = ts.createPrinter();
@@ -76,6 +85,7 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
     }
 
     const source = printer.printFile(generatedSourceFile);
+    console.log('WRITE', outFile);
     writeFileSync(outFile, source);
   }
 
@@ -88,4 +98,17 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
   const source = printer.printFile(generatedSourceFile);
 
   writeFileSync(join(options.outDir, 'index.ts'), source);
+
+  if (options.packageExports) {
+    new ExportsGenerator({
+      files: Array.from(namespaces.keys()).map(namespace => ({
+        namespace: normalizeFullyQualifiedName(namespace),
+        generatedModule: join(options.outDir, getFileNameForNamespace(namespace)),
+      })),
+      baseDir: options.baseDir ?? '',
+      outDir: options.outDir,
+      distDir: options.outDir,
+      packageRoot: options.packageRoot ?? ''
+    }).generate();
+  }
 };

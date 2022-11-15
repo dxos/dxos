@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { logger } from './logger';
+import { logger } from '../logger';
 
 const HEADER = '// Generated file: do not edit.';
 
@@ -13,23 +13,30 @@ const HEADER = '// Generated file: do not edit.';
 // TODO(burdon): Warn if does not match.
 
 export type TypingGeneratorOptions = {
-  files: string[];
+  files: {
+    namespace: string;
+    generatedModule: string;
+  }[];
   baseDir: string;
   outDir: string;
   distDir: string;
+  packageRoot: string;
 };
 
 /**
  * Generates Typescript typings from protocol buffer definitions.
  */
-export class TypingsGenerator {
+export class ExportsGenerator {
   // prettier-ignore
   constructor (
     private readonly _options: TypingGeneratorOptions
-  ) {}
+  ) {
+    console.log(_options);
+  }
 
   generate(verbose = false) {
-    logger.logTypings(this._options.outDir, verbose);
+    return;
+    logger.logExports(this._options.outDir, verbose);
     fs.rmSync(this._options.outDir, { recursive: true, force: true });
     fs.mkdirSync(this._options.outDir, { recursive: true });
 
@@ -37,14 +44,9 @@ export class TypingsGenerator {
     fs.writeFileSync(path.join(this._options.outDir, 'README.md'), '# Generated Protobuf Defs');
 
     // https://www.npmjs.com/package/glob
-    for (const file of this._options.files) {
-      if (file.indexOf(this._options.baseDir) === -1) {
-        console.warn(`File doesn't match baseDir: ${file}`);
-        break;
-      }
-
+    for (const { namespace, generatedModule } of this._options.files) {
       // Output directory.
-      const relativePath = file.substr(this._options.baseDir.length + 1);
+      const relativePath = namespace.replaceAll('.', '/');
       const relativeDir = path.join(this._options.outDir, path.dirname(relativePath));
 
       console.log({
