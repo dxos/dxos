@@ -33,11 +33,11 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
   const spaces = useSpaces();
 
   const handleCreateProfile = () => {
+    debugger;
     void client.halo.createProfile();
   };
 
   const handleCreateSpace = () => {
-    debugger;
     void client.echo.createSpace();
   };
 

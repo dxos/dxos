@@ -43,8 +43,9 @@ export const App = () => {
         await client.destroy();
         await servicesProvider.close();
       }
-      setServicesProvider(remoteSource ? fromIFrame(config) : fromDefaults(config));
-      const newClient = new Client({ config, services: servicesProvider });
+      const newServicesProvider = remoteSource ? fromIFrame(config) : fromDefaults(config);
+      setServicesProvider(newServicesProvider);
+      const newClient = new Client({ config, services: newServicesProvider });
       await newClient.initialize();
       setClient(newClient);
     }
