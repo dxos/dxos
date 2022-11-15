@@ -6,7 +6,7 @@ export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean
 
 export type AsyncCallback<T> = (param: T) => Promise<void>;
 
-export type Provider<T> = () => T;
+export type Provider<T, U = void> = (param?: U) => T;
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -25,9 +25,9 @@ export type MaybeFunction<T> = T | (() => T);
 /**
  * Get value from a provider.
  */
-export const getAsyncValue = async <T>(value: MaybeFunction<MaybePromise<T>>) => {
+export const getAsyncValue = async <T, U = void>(value: MaybeFunction<MaybePromise<T>>, param?: U): Promise<T> => {
   if (typeof value === 'function') {
-    return (value as Function)();
+    return (value as Function)(param);
   } else {
     return value;
   }

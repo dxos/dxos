@@ -5,60 +5,67 @@
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { synchronized } from '@dxos/async';
-import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto, fromConfig } from '@dxos/config';
+import { synchronized, Trigger } from '@dxos/async';
+import {
+  InvalidConfigurationError,
+  ClientServicesProvider,
+  createDefaultModelFactory,
+  ClientServicesHost,
+  ClientServicesProxy
+} from '@dxos/client-services';
+import { Config, ConfigLike } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
+import { getAsyncValue, Provider } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
-import { defaultConfig, EXPECTED_CONFIG_VERSION } from './config';
-import { fromDefaults } from './utils';
+import { DEFAULT_CONFIG_CHANNEL, EXPECTED_CONFIG_VERSION, IFRAME_ID } from './config';
+import { createNetworkManager } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
 export type ClientOptions = {
-  config?: Config | ConfigProto;
-  services?: ClientServicesProvider;
+  config?: ConfigLike | Provider<Promise<ConfigLike>>;
+  services?: ClientServicesProvider | Provider<ClientServicesProvider, Config>;
   modelFactory?: ModelFactory;
 };
 
 /**
  * The Client class encapsulates DXOS's core client-side API.
  */
+// TODO(wittjosiah): Wire up lazy initialization.
 export class Client {
   public readonly version = DXOS_VERSION;
 
-  private readonly _config: Config;
+  private readonly _configReady = new Trigger<Config | undefined>();
+  private readonly _servicesProvider: ClientOptions['services'];
   private readonly _modelFactory: ModelFactory;
-  private readonly _services: ClientServicesProvider;
-  private readonly _halo: HaloProxy;
-  private readonly _echo: EchoProxy;
+  private _config?: Config;
+  private _services?: ClientServicesProvider;
+  private _halo?: HaloProxy;
+  private _echo?: EchoProxy;
 
   private _initialized = false;
 
   // prettier-ignore
   constructor({
-    config,
-    modelFactory,
-    services
+    config: configProvider,
+    services: servicesProvider,
+    modelFactory
   }: ClientOptions = {}) {
-    this._config = fromConfig(config ?? defaultConfig);
-    this._services = services ?? fromDefaults(this._config);
+    void (configProvider
+      ? getAsyncValue(configProvider).then(config => {
+        this._configReady.wake(new Config(config));
+      })
+      : this._configReady.wake(undefined));
+    this._servicesProvider = servicesProvider;
     // NOTE: Defaults to the same as the backend services.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
-
-    this._halo = new HaloProxy(this._services);
-    this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
-
-    if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigurationError(
-        `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
-      );
-    }
   }
 
   [inspect.custom]() {
@@ -74,6 +81,7 @@ export class Client {
   }
 
   get config(): Config {
+    assert(this._config, 'Client not initialized.');
     return this._config;
   }
 
@@ -90,7 +98,7 @@ export class Client {
    * HALO credentials.
    */
   get halo(): HaloProxy {
-    assert(this._initialized, 'Client not initialized.');
+    assert(this._halo, 'Client not initialized.');
     return this._halo;
   }
 
@@ -98,7 +106,7 @@ export class Client {
    * ECHO database.
    */
   get echo(): EchoProxy {
-    assert(this._initialized, 'Client not initialized.');
+    assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
 
@@ -112,6 +120,41 @@ export class Client {
     if (this._initialized) {
       return;
     }
+    log('initializing...');
+
+    this._config = await this._configReady.wait();
+    const remoteSource = this._config?.get('runtime.client.remoteSource');
+    if (this._servicesProvider) {
+      log('using services provider...');
+      this._services = await getAsyncValue(this._servicesProvider, this.config);
+    } else if (remoteSource) {
+      log('using remote source...', { remoteSource });
+      const source = new URL(remoteSource, window.location.origin);
+      const iframe = createIFrame(source.toString(), IFRAME_ID);
+      const iframePort = createIFramePort({
+        origin: source.origin,
+        iframe,
+        channel: DEFAULT_CONFIG_CHANNEL
+      });
+      this._services = new ClientServicesProxy(iframePort);
+    } else {
+      log('using services host...');
+      this._services = new ClientServicesHost({
+        config: this._config!,
+        modelFactory: this._modelFactory,
+        // TODO(wittjosiah): Remove helper function.
+        networkManager: createNetworkManager(this._config!)
+      });
+    }
+
+    this._halo = new HaloProxy(this._services);
+    this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
+
+    if (Object.keys(this.config.values).length > 0 && this.config.values.version !== EXPECTED_CONFIG_VERSION) {
+      throw new InvalidConfigurationError(
+        `Invalid config version: ${this.config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
+      );
+    }
 
     await this._services.open();
 
@@ -124,17 +167,18 @@ export class Client {
     await this._echo._open();
 
     if (
-      this._config.get('runtime.client.services.identity.mode') ===
+      this.config.get('runtime.client.services.identity.mode') ===
         Runtime.Client.Services.Identity.Mode.AUTO_INITIALIZE &&
       !this._halo.profile
     ) {
       await this._services.services.ProfileService.createProfile({
-        displayName: this._config.get('runtime.client.services.identity.displayName')
+        displayName: this.config.get('runtime.client.services.identity.displayName')
       });
     }
 
     // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
+    log('initialized');
   }
 
   /**
@@ -147,10 +191,10 @@ export class Client {
       return;
     }
 
-    await this._halo._close();
-    await this._echo._close();
+    await this._halo?._close();
+    await this._echo?._close();
 
-    await this._services.close();
+    await this._services?.close();
 
     this._initialized = false;
   }
@@ -162,8 +206,8 @@ export class Client {
   // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
   @synchronized
   async reset() {
-    await this._services.services?.SystemService.reset();
-    this._halo.profileChanged.emit();
+    await this._services?.services?.SystemService.reset();
+    this._halo?.profileChanged.emit();
     this._initialized = false;
   }
 }

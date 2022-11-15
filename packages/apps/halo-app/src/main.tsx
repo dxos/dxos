@@ -9,12 +9,6 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { FatalError } from './components';
 
-// import debug from 'debug'
-// import { log } from '@dxos/log'
-
-// debug.enable('dxos:*')
-// log.config({ filter: 'debug' })
-
 const root = createRoot(document.getElementById('root')!);
 
 if (typeof SharedWorker !== 'undefined') {

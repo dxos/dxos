@@ -10,7 +10,7 @@ import { HashRouter, Route, Routes, useNavigate, useParams, useSearchParams } fr
 import urlJoin from 'url-join';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame, InvitationEncoder, Item } from '@dxos/client';
+import { Client, InvitationEncoder, Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
 import { ClientProvider, useClient, useSpaces, useSpace, useIdentity, useSelection } from '@dxos/react-client';
@@ -31,14 +31,7 @@ import { humanize } from '@dxos/util';
 
 import translationResources from './translations';
 
-const configProvider = async () => new Config(await Dynamics(), Defaults());
-
-const clientProvider = async () => {
-  const config = await configProvider();
-  const client = new Client({ config, services: fromIFrame(config) });
-  await client.initialize();
-  return client;
-};
+const config = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
   const {
@@ -49,7 +42,7 @@ export const App = () => {
 
   return (
     <UiKitProvider resourceExtensions={translationResources}>
-      <ClientProvider client={clientProvider}>
+      <ClientProvider client={new Client({ config })}>
         <HashRouter>
           <Routes>
             <Route path='/' element={<SpacesView />} />

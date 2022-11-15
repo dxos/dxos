@@ -3,7 +3,7 @@
 //
 
 import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto, fromConfig } from '@dxos/config';
+import { Config, ConfigProto, ConfigLike } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
@@ -27,11 +27,11 @@ export class TestClientBuilder {
 
   // prettier-ignore
   constructor (
-    config: Config | ConfigProto = defaultConfig,
+    config: ConfigLike = defaultConfig,
     private readonly _modelFactory = createDefaultModelFactory(),
     private readonly _signalManagerContext = new MemorySignalManagerContext()
   ) {
-    this._config = fromConfig(config);
+    this._config = new Config(config);
   }
 
   get config(): Config {

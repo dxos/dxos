@@ -14,7 +14,7 @@ import { ConfigKey, DeepIndex, ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
 
-export const fromConfig = (config: Config | ConfigProto) => (config instanceof Config ? config : new Config(config));
+export type ConfigLike = Config | ConfigProto;
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
@@ -107,7 +107,11 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor(...objects: [ConfigProto, ...ConfigProto[]]) {
+  constructor(...objects: [ConfigLike, ...ConfigLike[]]) {
+    if (objects[0] instanceof Config) {
+      return objects[0];
+    }
+
     this._config = sanitizeConfig(defaultsDeep(...objects, { version: 1 }));
   }
 

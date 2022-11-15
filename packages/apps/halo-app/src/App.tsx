@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromDefaults, fromIFrame } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { ServiceWorkerToast } from '@dxos/react-appkit';
@@ -34,15 +34,14 @@ import {
 import { useTelemetry } from './telemetry';
 import translationResources from './translations';
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-
-const clientProvider = async () => {
-  const config = await configProvider();
-  const services = process.env.DX_VAULT === 'false' ? fromDefaults(config) : fromIFrame(config);
-  const client = new Client({ config, services });
-  await client.initialize();
-  return client;
-};
+const config = async () =>
+  new Config(
+    // TODO(wittjosiah): It would be useful it `null` was a valid config value which unset previously set values.
+    process.env.DX_VAULT === 'false' ? { runtime: { client: { remoteSource: '' } } } : {},
+    await Dynamics(),
+    await Envs(),
+    Defaults()
+  );
 
 const Routes = () => {
   useTelemetry();
@@ -130,7 +129,7 @@ export const App = () => {
       <ErrorsProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider client={clientProvider} fallback={<ClientFallback />}>
+          <ClientProvider client={new Client({ config })} fallback={<ClientFallback />}>
             <HashRouter>
               <Routes />
               {needRefresh ? (

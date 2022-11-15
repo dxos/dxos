@@ -12,7 +12,7 @@ import { ISpace } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
-import { Client, fromIFrame } from '../client';
+import { Client } from '../client';
 import { Space } from '../proxies';
 import { TestClientBuilder } from './test-client-builder';
 
@@ -176,9 +176,7 @@ describe('Client services', function () {
   it.skip('creates client with remote iframe', async function () {
     const testBuilder = new TestClientBuilder();
 
-    const client = new Client({
-      services: fromIFrame(testBuilder.config)
-    });
+    const client = new Client({ config: testBuilder.config });
 
     await client.initialize();
     afterTest(() => client.destroy());

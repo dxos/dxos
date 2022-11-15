@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client, fromDefaults, fromIFrame } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
@@ -40,7 +40,7 @@ export const App = () => {
         setClient(undefined);
         await client.destroy();
       }
-      const newClient = new Client({ config, services: remoteSource ? fromIFrame(config) : fromDefaults(config) });
+      const newClient = new Client({ config });
       await newClient.initialize();
       setClient(newClient);
     }

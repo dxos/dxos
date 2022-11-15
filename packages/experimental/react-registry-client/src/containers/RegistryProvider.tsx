@@ -5,8 +5,9 @@
 import debug from 'debug';
 import React, { useState, useEffect, ReactNode } from 'react';
 
-import { ConfigProvider } from '@dxos/config';
+import { ConfigLike } from '@dxos/config';
 import { RegistryClient } from '@dxos/registry-client';
+import { Provider } from '@dxos/util';
 
 import { RegistryContext } from '../hooks';
 import { createRegistryContext } from './config';
@@ -14,7 +15,7 @@ import { createRegistryContext } from './config';
 const log = debug('dxos:react-registry-client:error');
 
 interface RegistryProviderProps {
-  config?: ConfigProvider;
+  config?: ConfigLike | Provider<Promise<ConfigLike>>;
   registry?: RegistryClient;
   children?: ReactNode;
 }
