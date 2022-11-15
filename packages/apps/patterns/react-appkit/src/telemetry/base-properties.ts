@@ -13,7 +13,7 @@ export const DX_GROUP = localStorage.getItem('halo-app:telemetry-group');
 export const DX_ENVIRONMENT = process.env.DX_ENVIRONMENT;
 export const DX_RELEASE = process.env.DX_RELEASE;
 
-export const BASE_PROPERTIES: any = {
+export const BASE_TELEMETRY_PROPERTIES: any = {
   environment: DX_ENVIRONMENT,
   release: DX_RELEASE,
   group: DX_GROUP
@@ -21,24 +21,24 @@ export const BASE_PROPERTIES: any = {
 
 setInterval(async () => {
   const storageEstimate = await navigator.storage.estimate();
-  BASE_PROPERTIES.storageUsage = storageEstimate.usage;
-  BASE_PROPERTIES.storageQuota = storageEstimate.quota;
+  BASE_TELEMETRY_PROPERTIES.storageUsage = storageEstimate.usage;
+  BASE_TELEMETRY_PROPERTIES.storageQuota = storageEstimate.quota;
 }, 10e3);
 
 void fetch(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`)
   .then((res) => res.json())
   .then((data) => {
-    BASE_PROPERTIES.city = data.city;
-    BASE_PROPERTIES.region = data.region;
-    BASE_PROPERTIES.country = data.country;
-    BASE_PROPERTIES.latitude = data.latitude;
-    BASE_PROPERTIES.longitude = data.longitude;
+    BASE_TELEMETRY_PROPERTIES.city = data.city;
+    BASE_TELEMETRY_PROPERTIES.region = data.region;
+    BASE_TELEMETRY_PROPERTIES.country = data.country;
+    BASE_TELEMETRY_PROPERTIES.latitude = data.latitude;
+    BASE_TELEMETRY_PROPERTIES.longitude = data.longitude;
   })
   .catch((err) => captureException(err));
 
 // TODO(wittjosiah): Store uuid in halo for the purposes of usage metrics.
 // await client.halo.getGlobalPreference('dxosTelemetryIdentifier');
-export const getIdentifier = (client: Client) => {
+export const getTelemetryIdentifier = (client: Client) => {
   const profile = client.halo.profile;
   if (profile) {
     humanize(profile.identityKey);

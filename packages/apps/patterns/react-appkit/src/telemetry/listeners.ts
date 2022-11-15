@@ -10,7 +10,7 @@ import { BASE_PROPERTIES, DX_GROUP, getIdentifier } from './base-properties';
 let lastFocusEvent = new Date();
 let totalTime = 0;
 
-export const setupWindowListeners = (client: Client) => {
+export const setupTelemetryListeners = (namespace: string, client: Client) => {
   const clickCallback = (event: any) => {
     if (DX_GROUP === 'dxos' && event.target && !event.target.id) {
       // TODO(wittjosiah): Use @dxos/log so these can be filtered.
@@ -19,7 +19,7 @@ export const setupWindowListeners = (client: Client) => {
 
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.click',
+      name: `${namespace}.window.click`,
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -37,7 +37,7 @@ export const setupWindowListeners = (client: Client) => {
     const now = new Date();
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.focus',
+      name: `${namespace}.window.focus`,
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -52,7 +52,7 @@ export const setupWindowListeners = (client: Client) => {
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.window.blur',
+      name: `${namespace}.window.blur`,
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -66,7 +66,7 @@ export const setupWindowListeners = (client: Client) => {
   const unloadCallback = () => {
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.page.unload',
+      name: `${namespace}.page.unload`,
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,

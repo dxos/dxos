@@ -16,7 +16,11 @@ import { setupWindowListeners } from './listeners';
 const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION;
 const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 
-export const useTelemetry = () => {
+export type UseTelemetryOptions = {
+  namespace: string;
+};
+
+export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
   const location = useLocation();
   const client = useClient();
   const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
@@ -43,7 +47,7 @@ export const useTelemetry = () => {
 
     Telemetry.event({
       identityId: getIdentifier(client),
-      name: 'halo-app.page.load',
+      name: `${namespace}.page.load`,
       properties: {
         ...BASE_PROPERTIES,
         href: window.location.href,
@@ -51,7 +55,7 @@ export const useTelemetry = () => {
       }
     });
 
-    return setupWindowListeners(client);
+    return setupWindowListeners(namespace, client);
   }, []);
 
   useAsyncEffect(async () => {

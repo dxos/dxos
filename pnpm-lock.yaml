@@ -406,6 +406,7 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/sentry': workspace:*
+      '@dxos/telemetry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/react': ^18.0.21
@@ -428,6 +429,7 @@ importers:
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       '@dxos/sentry': link:../../../common/sentry
+      '@dxos/telemetry': link:../../../common/telemetry
       '@dxos/util': link:../../../common/util
       classnames: 2.3.2
       url-join: 5.0.0
