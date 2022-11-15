@@ -27,6 +27,7 @@ const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> =>
     throw new Error(`only *.t.ts or *.t.js template files are supported. attempted file: ${p}`);
   }
   // const outpath = p.replace(/\.t\.ts$/, ".t.js");
+  // TODO(wittjosiah): Make this conditional on whether the template is typescript.
   tsnode.register({
     transpileOnly: true,
     swc: true,

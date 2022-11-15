@@ -3,5 +3,4 @@ formatter:
 
 filter:
   - warn
-  - space-invitations:debug
-  - service
+  - invitations:debug

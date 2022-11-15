@@ -61,6 +61,7 @@ export const createIdentity = async (peer: ServiceContext) => {
   return peer;
 };
 
+// TODO(wittjosiah): Factor out to client-testing?
 // TODO(burdon): Create builder and make configurable.
 export const syncItems = async (space1: ISpace, space2: ISpace) => {
   {

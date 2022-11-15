@@ -116,7 +116,7 @@ Peer-to-peer network supported by KUBE nodes.
 
 ***Credential chain*** -
 Set of credential messages establishing a linear chain of trust between credentials.
-TOOD: Example.
+TODO: Example.
 
 ***Keyring*** -
 Storage for keys (on disk or in-memory).

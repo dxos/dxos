@@ -17,12 +17,16 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "version": "${packageJson.version}",
   "private": true,
   "description": "Application template with only the essentials.",
+  ${input.monorepo ? `
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "repository": "github:dxos/dxos",
-  "scripts": {
+  ` : ''}"scripts": {
     "build": "tsc",
     "bundle": "vite build",
+    "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"
   },
@@ -31,8 +35,9 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@dxos/config": "${input.monorepo ? 'workspace:*' : packageJson.version}"
   },
   "devDependencies": {
+    "@dxos/cli": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
-    "typescript": "^4.7.2",
+    "typescript": "^4.8.4",
     "vite": "3.0.9"
   }${input.monorepo ? '' : `,
   "pnpm": {
