@@ -19,7 +19,9 @@ if (typeof SharedWorker !== 'undefined') {
     })
   });
   
-  iframeRuntime.start();
+  window.addEventListener('beforeunload', () => {
+    iframeRuntime.close().catch((err) => console.error(err));
+  });
 } else {
   throw new Error('Requires a browser with support for shared workers.');
 }

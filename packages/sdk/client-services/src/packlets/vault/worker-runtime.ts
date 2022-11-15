@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { MaybePromise } from '@dxos/util';
 
@@ -41,13 +39,11 @@ export class WorkerRuntime {
   async start() {
     this._config = await this._configProvider();
     const signalServer = this._config.get('runtime.services.signal.server');
-    // TODO(wittjosiah): Networking shouldn't be required.
-    assert(signalServer);
     this._clientServices = new ClientServicesHost({
       config: this._config,
       networkManager: new NetworkManager({
         log: true,
-        signalManager: new WebsocketSignalManager([signalServer]),
+        signalManager: signalServer ? new WebsocketSignalManager([signalServer]) : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory
       })
     });

@@ -44,15 +44,9 @@ export class IFrameRuntime {
       port: this._systemPort,
       timeout: 200
     });
-  }
 
-  start() {
     this._workerAppPort.subscribe((msg) => this._windowAppPort.send(msg));
     this._windowAppPort.subscribe((msg) => this._workerAppPort.send(msg));
-
-    window.addEventListener('beforeunload', () => {
-      this.close().catch((err) => console.error(err));
-    });
   }
 
   async open(origin: string) {
