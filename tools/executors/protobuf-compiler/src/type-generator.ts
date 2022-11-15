@@ -8,16 +8,20 @@ import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
+import { generatePackageExports } from './generator/package-exports';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
 import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
+// TODO(dmaretskyi): Move all parsing into `generateSchema` and remove this function.
 export const parseAndGenerateSchema = async (
   substitutionsModule: ModuleSpecifier | undefined,
   protoFiles: string[],
   baseDirPath: string | undefined,
-  outDirPath: string
+  outDirPath: string,
+  packageRoot: string,
+  exportPath?: string
 ) => {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   const root = await pb.load(protoFiles);
@@ -34,7 +38,9 @@ export const parseAndGenerateSchema = async (
     schema: root,
     substitutions: substitutions ? { map: substitutions, module: substitutionsModule! } : undefined,
     baseDir: baseDirPath,
-    outDir: outDirPath
+    outDir: outDirPath,
+    packageRoot,
+    exportPath,
   });
 };
 
@@ -46,6 +52,8 @@ export interface GenerateSchemaOptions {
   };
   baseDir: string | undefined;
   outDir: string;
+  packageRoot: string;
+  exportPath?: string
 }
 
 /**
@@ -85,4 +93,12 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
   const source = printer.printFile(generatedSourceFile);
 
   writeFileSync(join(options.outDir, 'index.ts'), source);
+
+  if (options.exportPath) {
+    generatePackageExports({
+      packageRoot: options.packageRoot,
+      exportFrom: options.exportPath,
+      namespaces: Array.from(namespaces.keys()),
+    })
+  }
 };

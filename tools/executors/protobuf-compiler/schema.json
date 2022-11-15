@@ -21,6 +21,13 @@
       "type": "string",
       "description": "",
       "default": "substitutions.ts"
+    },
+    "exportPath": {
+      "type": "string",
+      "description": "Generates exports for compiled proto definitions. Set this to the directory where tsc outputs compiled definitions.",
+      "examples": [
+        "dist/src/proto/gen"
+      ]
     }
   },
   "required": ["basePath"]

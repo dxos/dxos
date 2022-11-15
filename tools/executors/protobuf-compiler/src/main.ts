@@ -46,7 +46,7 @@ const main = async () => {
   preconfigureProtobufjs();
 
   logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, '');
 };
 
 void main();
