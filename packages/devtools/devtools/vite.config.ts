@@ -8,7 +8,6 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { dxosPlugin } from '@dxos/vite-plugin';
-import packageJson from './package.json';
 
 const env = (value?: string) => (value ? `"${value}"` : undefined);
 
