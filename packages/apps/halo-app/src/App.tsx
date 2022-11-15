@@ -10,7 +10,14 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
-import { ErrorProvider, Fallback, FatalError, GenericFallback, ServiceWorkerToast } from '@dxos/react-appkit';
+import {
+  ErrorProvider,
+  Fallback,
+  FatalError,
+  GenericFallback,
+  ServiceWorkerToast,
+  useTelemetry
+} from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
@@ -30,7 +37,6 @@ import {
   SpacePage,
   SpacesPage
 } from './pages';
-import { useTelemetry } from './telemetry';
 import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
@@ -44,7 +50,7 @@ const clientProvider = async () => {
 };
 
 const Routes = () => {
-  useTelemetry();
+  useTelemetry({ namespace: 'halo-app' });
 
   return useRoutes([
     {

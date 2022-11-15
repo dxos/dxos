@@ -17,7 +17,8 @@ import {
   GenericFallback,
   RequireIdentity,
   ServiceWorkerToast,
-  SpacesPage
+  SpacesPage,
+  useTelemetry
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
@@ -35,8 +36,7 @@ const clientProvider = async () => {
 };
 
 const Routes = () => {
-  // TODO(wittjosiah): useTelemetry.
-
+  useTelemetry({ namespace: 'tasks-app' });
   const config = useConfig();
   // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
   // TODO(wittjosiah): Config defaults should be available from the config.
