@@ -3,3 +3,4 @@
 //
 
 declare module 'node-notifier';
+declare module 'unzip-stream';

@@ -12,12 +12,13 @@ import React from 'react';
 import { relativeTime } from '../util';
 
 const formatPullRequest = (pull_requests?: any) => {
-  return pull_requests?.[0]?.head.ref;
+  return pull_requests?.[0]?.head.ref ?? '';
 };
 
 export const WorkflowTable = ({ items }: { items: any[] }) => {
   const rows = columnify(
-    items.map(({ id, name, display_title, run_number, conclusion, pull_requests, updated_at, logs_url }) => ({
+    // TODO(burdon): Calc. elapsed time.
+    items.map(({ id, name, display_title, conclusion, pull_requests, updated_at }) => ({
       id: chalk.dim.blue(id),
       name: chalk.gray(name),
       conclusion: !conclusion ? chalk.gray('…') : conclusion === 'success' ? chalk.bold.green('✔') : chalk.red('✗'),
@@ -31,7 +32,7 @@ export const WorkflowTable = ({ items }: { items: any[] }) => {
       headingTransform: (str) => str.toLowerCase(),
       config: {
         name: {
-          maxWidth: 20
+          maxWidth: 24
         },
         updated: {
           align: 'right',
@@ -42,10 +43,10 @@ export const WorkflowTable = ({ items }: { items: any[] }) => {
           minWidth: 4
         },
         branch: {
-          maxWidth: 32
+          maxWidth: 40
         },
         title: {
-          maxWidth: 32
+          maxWidth: 40
         }
       }
     }
