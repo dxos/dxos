@@ -2165,9 +2165,11 @@ importers:
       '@dxos/react-toolkit': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -2216,9 +2218,11 @@ importers:
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
+      '@dxos/sentry': link:../../common/sentry
       '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/util': link:../../common/util
       '@emotion/react': 11.10.5_cuziicjcvwawlf5iuhzacuhqcy
       '@emotion/styled': 11.10.5_hmjty4frusbltjhl3xd7udcm2y
       '@mui/icons-material': 5.10.9_4tcfjhohj57yvze6zkot3vymie
