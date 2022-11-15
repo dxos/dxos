@@ -5,7 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { Space, Client } from '@dxos/client';
+import { Space, Client, fromHost } from '@dxos/client';
 
 /**
  * Test builder.
@@ -19,7 +19,7 @@ export class TestBuilder {
   }
 
   async initialize() {
-    const client = new Client();
+    const client = new Client({ services: fromHost({}) });
     await client.initialize();
     expect(client.initialized).toBeTruthy();
 

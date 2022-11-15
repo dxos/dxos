@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import expect from 'expect';
 import React from 'react';
 
-import { Space, Client } from '@dxos/client';
+import { Space, Client, fromHost } from '@dxos/client';
 
 import { useSelection } from './useSelection';
 
@@ -15,8 +15,7 @@ const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
 const createTestComponents = async () => {
-  const config = {};
-  const client = new Client(config);
+  const client = new Client({ services: fromHost({}) });
   await client.initialize();
   await client.halo.createProfile();
 
