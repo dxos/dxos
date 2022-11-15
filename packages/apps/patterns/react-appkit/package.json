@@ -19,6 +19,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
+    "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
     "classnames": "^2.3.2",
     "url-join": "^5.0.0"

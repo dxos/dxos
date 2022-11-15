@@ -3,7 +3,6 @@
 //
 
 import cx from 'classnames';
-import debug from 'debug';
 import { Warning } from 'phosphor-react';
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useState } from 'react';
 
@@ -22,10 +21,8 @@ export const ErrorsContext = createContext<ErrorsContextState>({
   resetErrors: () => {}
 });
 
-const error = debug('dxos:react-toolkit:error');
-
 // TODO(burdon): Override if dev-only?
-const logError = (f: string, ...args: any[]) => (error.enabled ? error(f, ...args) : console.error(f, ...args));
+const logError = (f: string, ...args: any[]) => console.error(f, ...args);
 
 // TODO(wittjosiah): Factor out.
 export const ErrorsProvider = ({ children }: PropsWithChildren<{}>) => {

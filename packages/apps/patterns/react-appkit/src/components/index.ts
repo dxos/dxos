@@ -3,7 +3,9 @@
 //
 
 export * from './AppLayout';
-export * from './AppShell';
+export * from './ErrorsProvider';
+export * from './Fallback';
+export * from './FatalError';
 export * from './RequireIdentity';
 export * from './ServiceWorkerToast';
 export * from './SpaceList';

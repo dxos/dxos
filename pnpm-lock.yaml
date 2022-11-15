@@ -268,13 +268,16 @@ importers:
   packages/apps/composer-app:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
+      '@dxos/sentry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@sentry/react': ^7.17.2
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
@@ -285,17 +288,20 @@ importers:
       vite-plugin-pwa: ^0.12.4
       workbox-window: ^6.5.4
     dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-composer': link:../patterns/react-composer
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
+      '@dxos/sentry': link:../../common/sentry
       '@dxos/text-model': link:../../core/echo/text-model
+      '@sentry/react': 7.18.0_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
     devDependencies:
-      '@dxos/client': link:../../sdk/client
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.8
@@ -392,6 +398,7 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
+      '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/react': ^18.0.21
@@ -412,6 +419,7 @@ importers:
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/sentry': link:../../../common/sentry
       '@dxos/util': link:../../../common/util
       classnames: 2.3.2
       url-join: 5.0.0

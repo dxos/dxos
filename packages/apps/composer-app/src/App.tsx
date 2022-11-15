@@ -2,33 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosTheme';
+import { ErrorBoundary } from '@sentry/react';
 import React from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import type { Item, Space } from '@dxos/client';
-import { AppShell, ServiceWorkerToast } from '@dxos/react-appkit';
-import { useSelection } from '@dxos/react-client';
-import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
-import { Loading, useTranslation } from '@dxos/react-uikit';
+import { Client, fromIFrame, Space } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
+import {
+  AppLayout,
+  ErrorsProvider,
+  Fallback,
+  FatalError,
+  GenericFallback,
+  RequireIdentity,
+  ServiceWorkerToast,
+  SpacesView
+} from '@dxos/react-appkit';
+import { ClientProvider, useConfig } from '@dxos/react-client';
+import { DOCUMENT_TYPE } from '@dxos/react-composer';
+import { UiKitProvider } from '@dxos/react-uikit';
+import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
-const SpacePage = () => {
-  const { t } = useTranslation();
-  const { space } = useOutletContext<{ space: Space }>();
+import { SpacePage } from './pages';
 
-  const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
+const configProvider = async () => new Config(await Dynamics(), Defaults());
 
-  return item ? <Composer item={item} className='z-0' /> : <Loading label={t('generic loading label')} size='md' />;
+const clientProvider = async () => {
+  const config = await configProvider();
+  const client = new Client({ config, services: fromIFrame(config) });
+  await client.initialize();
+  return client;
 };
 
-export const App = () => {
-  const {
-    offlineReady: [offlineReady, _setOfflineReady],
-    needRefresh: [needRefresh, _setNeedRefresh],
-    updateServiceWorker
-  } = useRegisterSW({ onRegisterError: (err) => console.error(err) });
+const Routes = () => {
+  // TODO(wittjosiah): useTelemetry.
+
+  const config = useConfig();
+  // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
+  // TODO(wittjosiah): Config defaults should be available from the config.
+  const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
   const handleSpaceCreate = async (space: Space) => {
     await space.database.createItem({
@@ -37,19 +51,59 @@ export const App = () => {
     });
   };
 
-  return (
-    <>
-      <AppShell
-        globalContent={
-          needRefresh ? (
-            <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
-          ) : offlineReady ? (
-            <ServiceWorkerToast variant='offlineReady' />
-          ) : null
+  return useRoutes([
+    {
+      path: '/',
+      element: <RequireIdentity redirect={remoteSource.origin} />,
+      children: [
+        {
+          path: '/',
+          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          children: [
+            {
+              path: '/',
+              element: <SpacesView />
+            },
+            {
+              path: '/spaces/:space',
+              element: <SpacePage />
+            }
+          ]
         }
-        spaceElement={<SpacePage />}
-        onSpaceCreate={handleSpaceCreate}
-      />
-    </>
+      ]
+    }
+  ]);
+};
+
+export const App = () => {
+  const {
+    offlineReady: [offlineReady, _setOfflineReady],
+    needRefresh: [needRefresh, _setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError: (err) => {
+      captureException(err);
+      console.error(err);
+    }
+  });
+
+  return (
+    <UiKitProvider fallback={<Fallback message='Loading...' />}>
+      <ErrorsProvider>
+        {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
+        <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
+          <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
+            <HashRouter>
+              <Routes />
+              {needRefresh ? (
+                <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
+              ) : offlineReady ? (
+                <ServiceWorkerToast variant='offlineReady' />
+              ) : null}
+            </HashRouter>
+          </ClientProvider>
+        </ErrorBoundary>
+      </ErrorsProvider>
+    </UiKitProvider>
   );
 };

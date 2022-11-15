@@ -9,18 +9,21 @@
   "license": "MIT",
   "author": "DXOS.org",
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-composer": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@dxos/text-model": "workspace:*",
+    "@sentry/react": "^7.17.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
-    "@dxos/client": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

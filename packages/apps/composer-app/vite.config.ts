@@ -19,6 +19,8 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
+      '@dxos/client',
+      '@dxos/config',
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-composer',
