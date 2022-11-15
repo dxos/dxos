@@ -20,6 +20,8 @@ package dxos.client;
 //
 
 service SystemService {
+  /// Called at the start of the session. Service should block until it is fully initialized.
+  rpc InitSession (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
