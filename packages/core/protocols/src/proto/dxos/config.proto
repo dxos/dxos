@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "dxos/client.proto";
 import "google/protobuf/any.proto";
 
 package dxos.config;
@@ -82,20 +83,6 @@ message Runtime {
       optional string path = 4;                 // TODO(burdon): Rename data_path.
     }
 
-    message Services {
-      message Identity {
-        enum Mode {
-          DEFAULT = 0; // TODO(wittjosiah): Name?
-          AUTO_INITIALIZE = 1;
-        }
-
-        optional Mode mode = 1;
-        optional string displayName = 2;
-      }
-
-      optional Identity identity = 1;
-    }
-
     optional string debug = 1 [(env) = "DEBUG"];
     optional Storage storage = 2;
     optional bool enable_snapshots = 3;
@@ -109,7 +96,7 @@ message Runtime {
     // TODO(burdon): Remove?
     optional string remote_source = 6;
 
-    optional Services services = 7;
+    optional dxos.client.Profile seed_identity = 7;
   }
 
   message App {
