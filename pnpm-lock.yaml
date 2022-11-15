@@ -487,6 +487,47 @@ importers:
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.8
 
+  packages/apps/tasks-app:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@sentry/react': ^7.17.2
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
+      vite: 3.0.9
+      vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-uikit': link:../../sdk/react-uikit
+      '@dxos/sentry': link:../../common/sentry
+      '@sentry/react': 7.18.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
+      '@types/react': 18.0.25
+      '@types/react-dom': 18.0.8
+      '@vitejs/plugin-react': 2.2.0_vite@3.0.9
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
+      workbox-window: 6.5.4
+
   packages/apps/templates/bare-template:
     specifiers:
       '@dxos/cli': workspace:*
