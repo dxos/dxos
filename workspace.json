@@ -85,6 +85,7 @@
     "sentry": "packages/common/sentry",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
+    "tasks-app": "packages/apps/tasks-app",
     "telemetry": "packages/common/telemetry",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
