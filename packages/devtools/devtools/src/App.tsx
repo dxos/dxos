@@ -18,8 +18,12 @@ import { sections } from './sections';
 import { useTelemetry } from './telemetry';
 import { theme } from './theme';
 
-export const App = () => {
+const Telemetry = () => {
   useTelemetry();
+  return null;
+};
+
+export const App = () => {
   const [client, setClient] = useState<Client>();
 
   const onConfigChange = async (remoteSource?: string) => {
@@ -62,6 +66,7 @@ export const App = () => {
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
           <ClientContext.Provider value={{ client }}>
+            <Telemetry />
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
             </Box>
