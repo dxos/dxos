@@ -26,6 +26,7 @@ export default defineConfig({
       '@dxos/react-composer',
       '@dxos/react-ui',
       '@dxos/react-uikit',
+      '@dxos/sentry',
       '@dxos/text-model'
     ],
     esbuildOptions: {
