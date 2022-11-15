@@ -8,13 +8,14 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
+import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
-  clientServices: ClientServicesHost;
+  getServices: () => Promise<ClientServicesHost>;
   systemPort: RpcPort;
   appPort: RpcPort;
+  readySignal: Trigger<Error | undefined>;
   options?: {
     heartbeatInterval: number;
   };
@@ -27,6 +28,7 @@ export class WorkerSession {
   private readonly _clientRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
+  private readonly _getServices: () => Promise<ClientServicesHost>
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
 
@@ -36,7 +38,7 @@ export class WorkerSession {
   public bridgeService?: BridgeService;
 
   constructor({
-    clientServices,
+    getServices,
     systemPort,
     appPort,
     options = {
@@ -44,10 +46,22 @@ export class WorkerSession {
     }
   }: WorkerSessionParams) {
     this._options = options;
+    this._getServices = getServices;
 
     this._clientRpc = createProtoRpcPeer({
-      exposed: clientServices.descriptors,
-      handlers: clientServices.services,
+      exposed: clientServiceBundle,
+      handlers: {
+        HaloInvitationsService: async () => (await this._getServices()).services.HaloInvitationsService,
+        DevicesService: async () => (await this._getServices()).services.DevicesService,
+        SpaceInvitationsService: async () => (await this._getServices()).services.SpaceInvitationsService,
+        SpacesService: async () => (await this._getServices()).services.SpacesService,
+        SpaceService: async () => (await this._getServices()).services.SpaceService,
+        DataService: async () => (await this._getServices()).services.DataService,
+        ProfileService: async () => (await this._getServices()).services.ProfileService,
+        SystemService: async () => (await this._getServices()).services.SystemService,
+        DevtoolsHost: async () => (await this._getServices()).services.DevtoolsHost,
+        TracingService: async () => (await this._getServices()).services.TracingService,
+      },
       port: appPort
     });
 
@@ -82,7 +96,7 @@ export class WorkerSession {
   async open() {
     await Promise.all([this._clientRpc.open(), this._systemRpc.open()]);
 
-    await this._startTrigger.wait(); // TODO(dmaretskyi): Timeout.
+    await this._startTrigger.wait({ timeout: 3_000 });
 
     this._heartbeatTimer = setInterval(async () => {
       try {

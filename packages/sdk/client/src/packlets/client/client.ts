@@ -119,7 +119,7 @@ export class Client {
       await createDevtoolsRpcServer(this, this._services);
     }
 
-    await this._services.services.SystemService.init();
+    await this._services.services.SystemService.initSession();
 
     await this._halo._open();
     await this._echo._open();
