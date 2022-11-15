@@ -2190,6 +2190,7 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
       typescript: ^4.8.4
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
@@ -2234,6 +2235,7 @@ importers:
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
     devDependencies:
       '@babel/core': 7.20.2
       '@dxos/echo-db': link:../../core/echo/echo-db
