@@ -15,9 +15,11 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
+import { useTelemetry } from './telemetry';
 import { theme } from './theme';
 
 export const App = () => {
+  useTelemetry();
   const [client, setClient] = useState<Client>();
 
   const onConfigChange = async (remoteSource?: string) => {
