@@ -5,3 +5,4 @@
 export * from './echo-proxy';
 export * from './halo-proxy';
 export * from './space-proxy';
+export * from './iframe-service-proxy';

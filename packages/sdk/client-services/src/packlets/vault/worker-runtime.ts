@@ -8,14 +8,16 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
-import { PortMuxer } from '@dxos/rpc-tunnel';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
+import { RpcPort } from '@dxos/rpc';
 
+// NOTE: Keep those as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {
-  portMuxer: PortMuxer;
+  appPort: RpcPort;
+  systemPort: RpcPort;
 };
 
 /**
@@ -62,10 +64,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ portMuxer }: CreateSessionParams) {
-    const appPort = portMuxer.createWorkerPort({ channel: 'dxos:app' });
-    const systemPort = portMuxer.createWorkerPort({ channel: 'dxos:system' });
-
+  async createSession({ appPort, systemPort }: CreateSessionParams) {
     await this._ready.wait();
 
     const session = new WorkerSession({

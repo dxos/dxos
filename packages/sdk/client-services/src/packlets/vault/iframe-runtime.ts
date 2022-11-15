@@ -5,12 +5,14 @@
 import { WebRTCTransportService } from '@dxos/network-manager';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { PortMuxer } from '@dxos/rpc-tunnel';
 
 import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 
+// NOTE: Keep those as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type IframeRuntimeParams = {
-  portMuxer: PortMuxer;
+  systemPort: RpcPort;
+  workerAppPort: RpcPort;
+  windowAppPort: RpcPort;
 };
 
 /**
@@ -23,14 +25,10 @@ export class IFrameRuntime {
   private readonly _systemRpc: ProtoRpcPeer<WorkerServiceBundle>;
   private readonly _transportService = new WebRTCTransportService();
 
-  constructor({ portMuxer }: IframeRuntimeParams) {
-    // TODO(dmaretskyi): Extract port names to config.ts.
-    this._systemPort = portMuxer.createWorkerPort({ channel: 'dxos:system' });
-    this._workerAppPort = portMuxer.createWorkerPort({ channel: 'dxos:app' });
-    this._windowAppPort = portMuxer.createIFramePort({
-      channel: 'dxos:app',
-      onOrigin: (origin) => this.open(origin)
-    });
+  constructor({ systemPort, workerAppPort, windowAppPort }: IframeRuntimeParams) {
+    this._systemPort = systemPort;
+    this._windowAppPort = windowAppPort;
+    this._workerAppPort = workerAppPort;
 
     this._systemRpc = createProtoRpcPeer({
       requested: workerServiceBundle,
