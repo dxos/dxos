@@ -32,15 +32,14 @@ type RoutesProps = {
 
 const Routes = ({ spaceElement, onSpaceCreate }: RoutesProps) => {
   const config = useConfig();
-  // TODO(wittjosiah): Separate config for HALO UI or assume path so it doesn't need to parsed out.
-  // TODO(wittjosiah): Config defaults should be available from teh config.
-  const remoteSource =
-    config.get('runtime.client.remoteSource')?.split('/').slice(0, -1).join('/') ?? 'https://halo.dxos.org';
+  // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
+  // TODO(wittjosiah): Config defaults should be available from the config.
+  const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
   return useRoutes([
     {
       path: '/',
-      element: <RequireIdentity redirect={remoteSource} />,
+      element: <RequireIdentity redirect={remoteSource.origin} />,
       children: [
         {
           path: '/',
