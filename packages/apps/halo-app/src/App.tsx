@@ -52,22 +52,16 @@ const Routes = () => {
       element: <LockPage />
     },
     {
-      path: '/',
-      element: <RequireIdentity inverse redirect='/spaces' />,
-      children: [
-        {
-          path: '/identity/create',
-          element: <CreateIdentityPage />
-        },
-        {
-          path: '/identity/recover',
-          element: <RecoverIdentityPage />
-        },
-        {
-          path: '/identity/join',
-          element: <JoinIdentityPage />
-        }
-      ]
+      path: '/identity/create',
+      element: <CreateIdentityPage />
+    },
+    {
+      path: '/identity/recover',
+      element: <RecoverIdentityPage />
+    },
+    {
+      path: '/identity/join',
+      element: <JoinIdentityPage />
     },
     {
       path: '/',
