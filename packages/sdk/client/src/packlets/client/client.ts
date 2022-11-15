@@ -15,7 +15,7 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { defaultConfig, EXPECTED_CONFIG_VERSION } from './config';
-import { fromDefaults } from './utils';
+import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -46,7 +46,7 @@ export class Client {
     services
   }: ClientOptions = {}) {
     this._config = fromConfig(config ?? defaultConfig);
-    this._services = services ?? fromDefaults(this._config);
+    this._services = services ?? fromIFrame(this._config);
     // NOTE: Defaults to the same as the backend services.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 

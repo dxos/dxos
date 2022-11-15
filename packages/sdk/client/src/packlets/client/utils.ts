@@ -21,10 +21,11 @@ import { DEFAULT_CONFIG_CHANNEL } from './config';
  */
 export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider =>
   new ClientIFrameServiceProxy({ config, channel });
+
 /**
- * Creates stand-alone services.
+ * Creates stand-alone services without rpc.
  */
-export const fromDefaults = (config: Config | ConfigProto): ClientServicesProvider => {
+export const fromHost = (config: Config | ConfigProto): ClientServicesProvider => {
   const conf = fromConfig(config);
   return new ClientServicesHost({
     config: conf,
