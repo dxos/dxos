@@ -6,8 +6,9 @@ import '@dxosTheme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { FatalError } from '@dxos/react-appkit';
+
 import { App } from './App';
-import { FatalError } from './components';
 
 // import debug from 'debug'
 // import { log } from '@dxos/log'

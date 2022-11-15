@@ -14,12 +14,16 @@ import { invitationCodeFromUrl } from '../../util';
 export const JoinIdentityPage = () => {
   const { t } = useTranslation();
   const client = useClient();
-  const profile = useIdentity();
+  const identity = useIdentity();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirect = searchParams.get('redirect') ?? '/spaces';
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
+  const redirectUrl = searchParams.get('redirect') ?? '/spaces';
+  const redirect = useCallback(
+    () => (redirectUrl.startsWith('http') ? window.location.replace(redirectUrl) : navigate(redirectUrl)),
+    [redirectUrl]
+  );
 
   const { status, cancel, error, connect } = useInvitationStatus();
 
@@ -28,13 +32,14 @@ export const JoinIdentityPage = () => {
       InvitationEncoder.decode(invitationCodeFromUrl(invitationCode))
     );
     connect(invitation);
+    // TODO(wittjosiah): Call redirect on invitaton success.
   }, [invitationCode]);
 
   useEffect(() => {
-    if (profile) {
-      navigate(redirect);
+    if (identity) {
+      redirect();
     }
-  }, [profile, redirect]);
+  }, []);
 
   useEffect(() => {
     if (invitationParam) {

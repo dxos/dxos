@@ -3,7 +3,7 @@
 //
 
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Client, Space } from '@dxos/client';
 import { useIdentity } from '@dxos/react-client';
@@ -22,6 +22,8 @@ export const LockPage = () => {
   const profile = useIdentity();
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') ?? '';
 
   const handleUnlock = useCallback(() => {
     navigate('/spaces');
@@ -51,9 +53,9 @@ export const LockPage = () => {
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices
             {...{
-              onJoin: () => navigate('/identity/join'),
-              onCreate: () => navigate('/identity/create'),
-              onRecover: () => navigate('/identity/recover')
+              onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
+              onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
+              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
             }}
           />
         </>

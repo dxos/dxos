@@ -10,7 +10,7 @@ import type { ClientServices } from '@dxos/client-services';
 import { ConfigProvider } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-async';
-import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
+import { getAsyncValue, Provider } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
 
 import { printBanner } from '../banner';
 
@@ -26,7 +26,7 @@ export const ClientContext: Context<ClientContextProps | undefined> = createCont
   undefined
 );
 
-export type ClientProvider = MaybeFunction<MaybePromise<Client>>;
+export type ClientProvider = Client | Provider<Promise<Client>>;
 
 /**
  * Hook returning instance of DXOS client.
