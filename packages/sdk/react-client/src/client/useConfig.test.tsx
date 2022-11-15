@@ -21,7 +21,7 @@ describe('Config hook', function () {
   });
 
   it('should return default client config when no config is passed in a context', function () {
-    const client = new Client({ services: fromHost({}) });
+    const client = new Client({ services: fromHost() });
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(Object.entries(result.current).length).toBeGreaterThan(0);

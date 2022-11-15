@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
 import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto, fromConfig } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -41,11 +41,11 @@ export class Client {
 
   // prettier-ignore
   constructor({
-    config,
+    config = defaultConfig,
     modelFactory,
     services
   }: ClientOptions = {}) {
-    this._config = fromConfig(config ?? defaultConfig);
+    this._config = new Config(config);
     this._services = services ?? fromIFrame(this._config);
     // NOTE: Defaults to the same as the backend services.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();

@@ -6,7 +6,7 @@ import React, { ReactNode, useState, Context, createContext, useContext } from '
 
 import { Client } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
-import { Config, ConfigProto, ConfigProvider } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -40,14 +40,14 @@ export interface ClientProviderProps {
   /**
    * Config object or async provider.
    */
-  config?: ConfigProvider;
+  config?: Config | ConfigProto | Provider<Promise<Config>>;
 
   /**
    * Callback to enable the caller to create a custom ClientServicesProvider.
    *
    * Most apps won't need this.
    */
-  services?: (config: Config | ConfigProto) => ClientServicesProvider;
+  services?: (config?: Config | ConfigProto) => ClientServicesProvider;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
@@ -101,7 +101,7 @@ export const ClientProvider = ({
       // Asynchronously construct client (config may be undefined).
       const config = await getAsyncValue(configProvider);
       log('resolved config', { config });
-      const services = config && createServices?.(config);
+      const services = createServices?.(config);
       log('created services', { services });
       const client = new Client({ config, services });
       log('created client', { client });
