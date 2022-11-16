@@ -2,6 +2,20 @@
   "sourceRoot": "tools/ridoculous/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/ridoculous/src/index.ts",
+        "outputPath": "tools/ridoculous/dist",
+        "tsConfig": "tools/ridoculous/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {

@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "x": "./bin/x.js"
   },
@@ -16,9 +16,6 @@
     "check": "true",
     "info": "tsc --showConfig | jq",
     "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx"
-  },
-  "mocha": {
-    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
