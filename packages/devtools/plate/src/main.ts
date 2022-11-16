@@ -57,6 +57,13 @@ const main = async () => {
       type: 'boolean',
       alias: ['-v']
     })
+    .option('quiet', {
+      description: 'Print nothing to standard out',
+      requiresArg: false,
+      type: 'boolean',
+      alias: ['-v'],
+      default: false
+    })
     .option('overwrite', {
       description: 'allow overwriting existing files or not',
       requiresArg: false,
@@ -75,6 +82,7 @@ const main = async () => {
         exclude,
         sequential = false,
         verbose = false,
+        quiet = false,
         overwrite
       }: {
         _: string[];
@@ -87,10 +95,11 @@ const main = async () => {
         sequential: boolean;
         verbose: boolean;
         overwrite: boolean;
+        quiet: boolean;
       }) => {
         const tstart = Date.now();
         const debug = logger(verbose);
-        const info = logger(true); // !quiet later
+        const info = logger(!quiet);
         const [template] = _;
         if (!template) {
           throw new Error('no template specified');
@@ -112,10 +121,10 @@ const main = async () => {
           verbose,
           overwrite
         });
+        let written = 0;
         if (!dry) {
           debug(`output folder: ${output}`);
           info(`template generated ${files.length} files ...`);
-          let written = 0;
           await Promise.all(
             files.map(async (f) => {
               try {
@@ -130,7 +139,7 @@ const main = async () => {
           );
         }
         const now = Date.now();
-        console.log(`wrote ${files.length} files [${fmtDuration(now - tstart)}]`);
+        info(`wrote ${written} files [${fmtDuration(now - tstart)}]`);
       }
     })
     .help().argv;

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 import flatten from 'lodash.flatten';
+import minimatch from 'minimatch';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
-import minimatch from 'minimatch';
 
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
