@@ -61,7 +61,7 @@ export const FeedsPanel = () => {
           <KeySelect
             id='feed-select'
             label='Feed'
-            keys={spaceFeeds}
+            keys={[...new Set(spaceFeeds)]}
             selected={selectedFeed}
             onChange={handleFeedChange}
           />

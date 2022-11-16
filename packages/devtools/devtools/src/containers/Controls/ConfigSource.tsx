@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { Box, Button, Card, FormControlLabel, Switch, TextField } from '@mui/material';
 
 import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
@@ -22,13 +21,11 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
 
   const [remote, setRemote] = useState(Boolean(client.config.get('runtime.client.remoteSource')));
 
-  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRemote(event.target.checked);
+  const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRemote = event.target.checked;
+    onConfigChange(event.target.checked ? remoteSource : undefined);
+    setRemote(newRemote);
   };
-
-  useAsyncEffect(async () => {
-    await onConfigChange(remote ? remoteSource : undefined);
-  }, [remote, remoteSource]);
 
   return (
     <Card sx={{ margin: 1 }}>
@@ -46,7 +43,12 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
           value={remoteSource}
           onChange={(event) => setRemoteSource(event.target.value)}
         />
-        <Button disabled={!remote} variant='contained' onClick={() => onConfigChange()} sx={{ marginLeft: 1 }}>
+        <Button
+          disabled={!remote}
+          variant='contained'
+          onClick={() => onConfigChange(remoteSource)}
+          sx={{ marginLeft: 1 }}
+        >
           Set
         </Button>
       </Box>
