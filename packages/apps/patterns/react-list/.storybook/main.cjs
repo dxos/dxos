@@ -35,19 +35,7 @@ module.exports = {
           '@dxos/react-uikit',
           '@dxos/object-model',
           'storybook-dark-mode',
-        ],
-        esbuildOptions: {
-          plugins: [
-            {
-              name: 'yjs',
-              setup: ({ onResolve }) => {
-                onResolve({ filter: /yjs/ }, () => {
-                  return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
-                });
-              }
-            }
-          ]
-        }
+        ]
       },
       build: {
         commonjsOptions: {

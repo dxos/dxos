@@ -461,21 +461,21 @@ importers:
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
       '@dxos/object-model': link:../../../core/echo/object-model
       '@dxos/react-appkit': link:../react-appkit
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
-      '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       classnames: 2.3.2
-      phosphor-react: 1.4.1_react@18.2.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.8
+      phosphor-react: 1.4.1_react@18.2.0
 
   packages/apps/templates/bare-template:
     specifiers:
