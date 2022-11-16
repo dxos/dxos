@@ -39,13 +39,11 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
   );
 
   const createListItemId = useCallback(async () => {
-    console.log('[creating list item]');
     const listItem = await space?.database.createItem({
       model: ObjectModel,
       type: LIST_ITEM_TYPE,
       parent: list.id
     });
-    console.log('[created]', listItem);
     return listItem.id;
   }, [space]);
 
@@ -55,7 +53,7 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
         id: list.id,
         title: list.model.get('title') ?? '',
         description: list.model.get('description') ?? '',
-        order: Object.values(list.model.get('order')) ?? [],
+        order: Object.values(list.model.get('order') ?? {}),
         items: (listItems ?? []).reduce((acc: ListItems, item) => {
           acc[item.id] = {
             title: item.model.get('title'),
