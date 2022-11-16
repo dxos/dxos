@@ -2,7 +2,6 @@ version: 1
 
 runtime:
   client:
-    mode: local
     storage:
       persistent: true
 
