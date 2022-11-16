@@ -32,14 +32,13 @@ const config = {
 /**
  * Clear terminal.
  */
+// TODO(burdon): Move to util.
 export const clear = () => {
   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
 };
 
 // TODO(burdon): Yargs.
-// void main();
-
-const start = async () => {
+const main = async () => {
   // https://octokit.github.io/rest.js/v19
   // TODO(burdon): Interactive OAuth: https://github.com/octokit/auth-app.js/#authenticate-as-user
   const octokit = new Octokit({
@@ -47,23 +46,13 @@ const start = async () => {
   });
 
   clear();
+  const { waitUntilExit } = render(
+    <OctokitContext.Provider value={octokit}>
+      <App owner='dxos' repo='dxos' />
+    </OctokitContext.Provider>
+  );
 
-  // circleci.getBuilds({ username: 'dxos', project: 'dxos' }).then((builds: any[]) => {
-  //   console.log('>>>>>>>>', builds);
-  //   for (let i = 0; i < builds.length; i++) {
-  //     console.log(builds[i].build_num); // logs the build number for each project
-  //   }
-  // });
-
-  if (false) {
-    const { waitUntilExit } = render(
-      <OctokitContext.Provider value={octokit}>
-        <App owner='dxos' repo='dxos' />
-      </OctokitContext.Provider>
-    );
-
-    await waitUntilExit();
-  }
+  await waitUntilExit();
 };
 
-void start();
+void main();

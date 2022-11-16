@@ -2,24 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import fs from 'fs';
-import { get } from 'https';
 import { Box } from 'ink';
 import WrappedTextInput from 'ink-text-input';
 import { NotificationCenter } from 'node-notifier';
 import process from 'process';
-import React, { FC, useEffect, useRef, useState } from 'react';
-import unzip from 'unzip-stream';
+import React, { FC, useEffect, useState } from 'react';
 
 import { useOctokit } from '../hooks';
 import { WorkflowTable } from './WorkflowTable';
 
+// TODO(burdon): Call on state change.
 const notifier = new NotificationCenter({});
 
 export const App: FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
   const octokit = useOctokit();
-  const idRef = useRef<number>(0);
   const [items, setItems] = useState<any[]>([]);
 
   const update = async () => {
@@ -28,71 +24,12 @@ export const App: FC<{ owner: string; repo: string }> = ({ owner, repo }) => {
       data: { workflow_runs: items = [] }
     } = await octokit.rest.actions.listWorkflowRunsForRepo({ owner, repo });
 
-    // TODO(burdon): CircleCI API.
-    // https://circleci.com/docs/api/v1/index.html#circleci-v1-api-overview
-    // https://www.npmjs.com/package/circleci
-
-    // status, conclusion
-    // if (!idRef.current) {
-    if (items[0] && false) {
-      // console.log(items[0]);
-      // const { name, run_number: jobId, conclusion } = items[0];
-      // console.log('>>>>>>>>>>', jobId);
-
-      // https://docs.github.com/en/rest/actions/workflow-runs#download-workflow-run-logs
-      const { url } = await octokit.rest.actions.downloadWorkflowRunLogs({
-        accept: 'application/vnd.github+json',
-        owner,
-        repo,
-        run_id: 3465435690
-      });
-
-      // TODO(burdon): Factor out processing logic.
-      // TODO(burdon): Change to async fetch.
-      get(url, (response) => {
-        assert(response.statusCode === 200);
-
-        // NOTE: zlib directly doesn't work. Z_DATA_ERROR
-        // https://nodejs.org/api/zlib.html
-        // https://www.npmjs.com/package/tar-stream
-
-        // TODO(burdon): CI jobs?
-        // TODO(burdon): Rename jobs with machine readable title (e.g., `a-b-c.txt`).
-        // https://www.npmjs.com/package/unzip-stream#quick-examples
-        // response.pipe(unzip.Extract({ path: '/tmp/dxos/workflow.zip' }));
-        response
-          .pipe(unzip.Parse())
-          .on('entry', (entry: any) => {
-            const { path, isDirectory } = entry;
-            // TODO(burdon): Scan for errors?
-            !isDirectory && console.log('=', path);
-            const selected = false;
-            if (selected) {
-              entry.pipe(fs.createWriteStream('/tmp/output.txt')).on('finish', () => {
-                console.log('done');
-              });
-            } else {
-              entry.autodrain();
-            }
-          })
-          .on('finish', () => {
-            process.exit();
-          });
-      });
-
-      // https://github.com/mikaelbr/node-notifier#all-notification-options-with-their-defaults
-      // notifier.notify({ title: 'Workflow updated', message: `${name}:${conclusion}` });
-    }
-
     setItems(items);
-    // idRef.current = items[0]?.id;
   };
 
   useEffect(() => {
-    const i = 0;
-    // const i = setInterval(update, 3000); // TODO(burdon): Back-off.
     void update();
-
+    const i = setInterval(update, 3000); // TODO(burdon): Back-off.
     return () => clearInterval(i);
   }, []);
 
