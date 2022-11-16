@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
+import React, { ComponentProps, useCallback, useState } from 'react';
 
 import { defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
@@ -18,6 +18,8 @@ export interface ListItemProps {
   description?: string;
   annotations?: Record<string, string | boolean>;
 }
+
+export type ListItems = Record<ListItemId, Omit<ListItemProps, 'id'>>;
 
 interface SharedListActionProps {
   listId: ListId;
@@ -35,21 +37,31 @@ export interface ListChangedAction extends SharedListActionProps {
   next: Partial<ListPrimitiveProps>;
 }
 
-export type ListAction = ListItemChangedAction | ListChangedAction;
+export interface ListItemCreatedAction extends ListChangedAction {
+  created: Partial<ListItemProps>;
+}
+
+export interface ListItemDeletedAction extends ListChangedAction {
+  deleted: Partial<ListItemProps>;
+}
+
+export type ListAction = ListItemChangedAction | ListChangedAction | ListItemCreatedAction | ListItemDeletedAction;
 
 export const isListItemChangedAction = (o: any): o is ListItemChangedAction => 'listItemId' in o;
+export const isListItemCreatedAction = (o: any): o is ListItemCreatedAction => 'created' in o;
+export const isListItemDeletedAction = (o: any): o is ListItemDeletedAction => 'deleted' in o;
 
 export interface ListPrimitiveProps {
   id: ListId;
   title?: string;
   description?: string;
-  items: Record<ListItemId, Omit<ListItemProps, 'id'>>;
+  items: ListItems;
   order: ListItemId[];
 }
 
 export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<ComponentProps<'div'>, 'id'> {
   onAction?: (action: ListAction) => void;
-  createListItemId?: () => ListItemId;
+  createListItemId?: () => Promise<ListItemId>;
 }
 
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
@@ -59,6 +71,8 @@ export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<Com
   isFirst?: boolean;
   isLast?: boolean;
 }
+
+const defaultCreateListItemId = async () => randomString(8);
 
 const ListItemPrimitive = ({
   id,
@@ -78,43 +92,32 @@ const ListItemPrimitive = ({
   const { t } = useTranslation('appkit');
 
   const [title, setTitle] = useState(propsTitle ?? '');
-  const [description, setDescription] = useState(propsDescription ?? '');
+
+  const [description, _setDescription] = useState(propsDescription ?? '');
   const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
   const isDone = annotations?.state === 'done';
-  const mounted = useRef(false);
-
-  useEffect(() => {
-    if (mounted.current) {
-      // (thure) Only update after mount.
-      updateItem({
-        id,
-        title,
-        description,
-        annotations
-      });
-    } else {
-      mounted.current = true;
-    }
-  }, [id, title, description, annotations]);
 
   const onChangeTitle = useCallback((nextValue: string) => {
     setTitle(nextValue);
+    updateItem({ id, title: nextValue });
   }, []);
 
-  const onChangeDescription = useCallback((nextValue: string) => {
-    setDescription(nextValue);
+  const _onChangeDescription = useCallback((nextValue: string) => {
+    _setDescription(nextValue);
+    updateItem({ id, description: nextValue });
   }, []);
 
-  // TODO(thure): Restore these, or implement drag & drop, when how best to change order in Echo is clarified.
-  // const onClickMoveUp = useCallback(() => {
-  //   updateOrder(id, -1);
-  // }, [updateOrder, id]);
-  // const onClickMoveDown = useCallback(() => {
-  //   updateOrder(id, 1);
-  // }, [updateOrder, id]);
+  const _onClickMoveUp = useCallback(() => {
+    updateOrder(id, -1);
+  }, [updateOrder, id]);
+  const _onClickMoveDown = useCallback(() => {
+    updateOrder(id, 1);
+  }, [updateOrder, id]);
 
   const onChangeCheckbox = useCallback(() => {
-    setAnnotations({ ...annotations, state: isDone ? 'init' : 'done' });
+    const nextAnnotations = { ...annotations, state: isDone ? 'init' : 'done' };
+    setAnnotations(nextAnnotations);
+    updateItem({ id, annotations: nextAnnotations });
   }, [annotations, isDone]);
 
   const onClickDelete = useCallback(() => {
@@ -159,13 +162,14 @@ const ListItemPrimitive = ({
           initialValue={title}
           onChange={onChangeTitle}
         />
-        <Input
-          label={t('list item description label')}
-          placeholder={t('list item description placeholder')}
-          labelVisuallyHidden
-          initialValue={description}
-          onChange={onChangeDescription}
-        />
+        {/* TODO(thure): Re-enable this when descriptions become relevant */}
+        {/* <Input */}
+        {/*  label={t('list item description label')} */}
+        {/*  placeholder={t('list item description placeholder')} */}
+        {/*  labelVisuallyHidden */}
+        {/*  initialValue={description} */}
+        {/*  onChange={onChangeDescription} */}
+        {/* /> */}
       </div>
       {/* TODO(thure): Restore these, or implement drag & drop, when how best to change order in Echo is clarified. */}
       {/* <ButtonGroup className='flex flex-col items-stretch'> */}
@@ -193,7 +197,7 @@ export const ListPrimitive = ({
   items: propsItems,
   order: propsOrder,
   onAction,
-  createListItemId = randomString,
+  createListItemId = defaultCreateListItemId,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
@@ -203,6 +207,8 @@ export const ListPrimitive = ({
 
   const [order, setOrder] = useState(propsOrder ?? []);
   const [items, setItems] = useState(propsItems ?? {});
+
+  const [creating, setCreating] = useState(false);
 
   const titleId = `${listId}__title`;
   const descriptionId = `${listId}__description`;
@@ -215,7 +221,7 @@ export const ListPrimitive = ({
     [onAction, listId]
   );
 
-  const onChangeDescription = useCallback(
+  const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
       onAction?.({ listId, next: { description: nextValue } });
@@ -224,9 +230,9 @@ export const ListPrimitive = ({
   );
 
   const updateItem = useCallback(
-    ({ id, ...item }: ListItemProps) => {
-      setItems(Object.assign(items, { [id]: item }));
-      onAction?.({ listId, listItemId: id, next: item });
+    ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
+      setItems(Object.assign(items, { [id]: { ...items[id], ...next } }));
+      onAction?.({ listId, listItemId: id, next });
     },
     [items, onAction]
   );
@@ -265,14 +271,19 @@ export const ListPrimitive = ({
   );
 
   const createItem = useCallback(() => {
-    const id = createListItemId();
-    const next = {
-      items: { ...items, [id]: {} },
-      order: [...order, id]
-    };
-    setItems(next.items);
-    setOrder(next.order);
-    onAction?.({ listId, next });
+    setCreating(true);
+    return createListItemId()
+      .then((id) => {
+        const next = {
+          items: { ...items, [id]: {} },
+          order: [...order, id]
+        };
+        const created = { id };
+        setItems(next.items);
+        setOrder(next.order);
+        onAction?.({ listId, next, created });
+      })
+      .finally(() => setCreating(false));
   }, [order, items, createListItemId, onAction]);
 
   return (
@@ -299,14 +310,15 @@ export const ListPrimitive = ({
         onChange={onChangeTitle}
         className='mli-4'
       />
-      <Input
-        label={t('list description label')}
-        placeholder={t('list description placeholder')}
-        labelVisuallyHidden
-        initialValue={description}
-        onChange={onChangeDescription}
-        className='mli-4'
-      />
+      {/* TODO(thure): Re-enable this when relevant */}
+      {/* <Input */}
+      {/*  label={t('list description label')} */}
+      {/*  placeholder={t('list description placeholder')} */}
+      {/*  labelVisuallyHidden */}
+      {/*  initialValue={description} */}
+      {/*  onChange={onChangeDescription} */}
+      {/*  className='mli-4' */}
+      {/* /> */}
       <ol className='contents'>
         {order.map((listItemId, index) => {
           return (
@@ -321,7 +333,7 @@ export const ListPrimitive = ({
         })}
       </ol>
       <div role='none' className='mli-4 mlb-4'>
-        <Button className='is-full' onClick={createItem}>
+        <Button className='is-full' onClick={createItem} disabled={creating}>
           <Plus />
           <span className='sr-only'>{t('add list item label')}</span>
         </Button>

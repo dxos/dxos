@@ -26,7 +26,7 @@ export default {
   argTypes: {}
 };
 
-const Template = (args: Omit<ListProps, 'item'> & { spaceKey?: PublicKey; id?: number }) => {
+const Template = (args: Omit<ListProps, 'itemId' | 'spaceKey'> & { spaceKey?: PublicKey; id?: number }) => {
   const space = useSpace(args.spaceKey);
   const [item] = useSelection(space?.database.select({ type: LIST_TYPE })) ?? [];
 
@@ -39,7 +39,11 @@ const Template = (args: Omit<ListProps, 'item'> & { spaceKey?: PublicKey; id?: n
     }
   }, [space]);
 
-  return <div className='flex-grow mx-2'>{item ? <List {...args} item={item} /> : <Loading label='Loading…' />}</div>;
+  return (
+    <main className='max-is-lg mli-auto pli-7 mbs-7'>
+      {item && space ? <List {...args} itemId={item.id} spaceKey={space?.key} /> : <Loading label='Loading…' />}
+    </main>
+  );
 };
 
 export const Default = templateForComponent(Template)({});
