@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { Item, PublicKey, Space } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
@@ -38,31 +38,6 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
     [list]
   );
 
-  const { id, order, title, description } = useMemo(
-    () => ({
-      id: list.id ?? '',
-      title: list.model.get('title'),
-      description: list.model.get('description'),
-      order: list.model.get('order') ?? []
-    }),
-    [list]
-  );
-
-  const items = useMemo(
-    () =>
-      listItems.reduce((acc: ListItems, item) => {
-        acc[item.id] = {
-          title: item.model.get('title'),
-          description: item.model.get('description'),
-          annotations: item.model.get('annotations')
-        };
-        return acc;
-      }, {}),
-    [listItems]
-  );
-
-  console.log('[list loaded]', { id, order, title, description, items });
-
   const createListItemId = useCallback(async () => {
     console.log('[creating list item]');
     const listItem = await space?.database.createItem({
@@ -74,7 +49,26 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
     return listItem.id;
   }, [space]);
 
-  return <ListPrimitive {...{ id, title, description, items, order, onAction, createListItemId }} />;
+  return (
+    <ListPrimitive
+      {...{
+        id: list.id,
+        title: list.model.get('title') ?? '',
+        description: list.model.get('description') ?? '',
+        order: Object.values(list.model.get('order')) ?? [],
+        items: (listItems ?? []).reduce((acc: ListItems, item) => {
+          acc[item.id] = {
+            title: item.model.get('title'),
+            description: item.model.get('description'),
+            annotations: item.model.get('annotations')
+          };
+          return acc;
+        }, {}),
+        onAction,
+        createListItemId
+      }}
+    />
+  );
 };
 
 export const List = ({ spaceKey, itemId }: ListProps) => {

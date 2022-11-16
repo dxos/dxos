@@ -217,8 +217,8 @@ export const ListPrimitive = ({
     if (mounted.current) {
       propsTitle !== title && setTitle(propsTitle ?? '');
       propsDescription !== description && setDescription(propsDescription ?? '');
-      propsItems !== items && setItems(items);
-      propsOrder !== order && setOrder(order);
+      propsItems !== items && setItems(propsItems ?? {});
+      propsOrder !== order && setOrder(propsOrder ?? []);
       setSession(randomString());
     } else {
       mounted.current = true;
