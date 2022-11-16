@@ -30,14 +30,13 @@ type Unsubscribe = () => void;
 export class SwarmMapper {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(PublicKey.hash);
-
   private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(PublicKey.hash);
+
+  readonly mapUpdated = new Event<PeerInfo[]>();
 
   get peers(): PeerInfo[] {
     return Array.from(this._peers.values());
   }
-
-  readonly mapUpdated = new Event<PeerInfo[]>();
 
   // prettier-ignore
   constructor(
@@ -65,10 +64,9 @@ export class SwarmMapper {
     );
 
     if (_presence) {
-      const cb = () => {
+      this._subscriptions.add(_presence.graphUpdated.on(() => {
         this._update();
-      };
-      this._subscriptions.add(_presence.graphUpdated.on(cb));
+      }));
     }
 
     // TODO(burdon): Do not call from constructor.
@@ -81,7 +79,7 @@ export class SwarmMapper {
     this._peers.clear();
     this._peers.set(this._swarm.ownPeerId, {
       id: this._swarm.ownPeerId,
-      state: 'ME', // TODO(burdon): Enum.
+      state: 'ME', // TODO(burdon): Enum (rename "local").
       connections: []
     });
 
@@ -125,6 +123,7 @@ export class SwarmMapper {
     this.mapUpdated.emit(Array.from(this._peers.values()));
   }
 
+  // TODO(burdon): Async open/close.
   destroy() {
     Array.from(this._connectionSubscriptions.values()).forEach((cb) => cb());
     this._subscriptions.clear();

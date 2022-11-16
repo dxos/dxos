@@ -55,7 +55,7 @@ export class MemoryTransport implements Transport {
   private _remoteConnection?: MemoryTransport;
 
   constructor(private readonly params: TransportOptions) {
-    log('creating', this._ownId);
+    log('creating', { id: this._ownId });
 
     if (this.params.initiator) {
       setTimeout(async () => this.params.sendSignal({ json: JSON.stringify({ transportId: this._ownId.toHex() }) }));
@@ -100,7 +100,7 @@ export class MemoryTransport implements Transport {
   }
 
   async close(): Promise<void> {
-    log('closing', this._ownId);
+    log('closing', { id: this._ownId });
 
     MemoryTransport._connections.delete(this._ownId);
     if (this._remoteConnection) {

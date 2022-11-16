@@ -111,9 +111,12 @@ export class TestProtocolPlugin extends EventEmitter {
    */
   async send(peerId: Buffer, payload: string): Promise<string> {
     assert(Buffer.isBuffer(peerId));
-    const peerIdStr = PublicKey.stringify(peerId); // TODO(burdon): Key.
+    const peerIdStr = PublicKey.stringify(peerId); // TODO(burdon): PublicKey.
     const peer = this._peers.get(peerIdStr);
-    // TODO(dboreham): Throw fatal error if peer not found.
+    if (!peer) {
+      throw new Error(`peer not found: ${PublicKey.from(peerId).truncate()}`);
+    }
+
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
 
@@ -134,7 +137,7 @@ export class TestProtocolPlugin extends EventEmitter {
   }
 
   async _onPeerConnect(protocol: Protocol) {
-    log('on connect');
+    log('connecting', { id: PublicKey.from(protocol.id) });
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;
@@ -150,6 +153,7 @@ export class TestProtocolPlugin extends EventEmitter {
   }
 
   async _onPeerDisconnect(protocol: Protocol) {
+    log('disconnecting', { id: PublicKey.from(protocol.id) });
     const peerId = getPeerId(protocol);
     if (peerId === undefined) {
       return;

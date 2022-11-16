@@ -10,13 +10,14 @@ import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkManager } from './network-manager';
-import { createProtocolFactory } from './protocol-factory';
-import { FullyConnectedTopology } from './topology';
-import { MemoryTransportFactory } from './transport';
+import { NetworkManager } from '../network-manager';
+import { createProtocolFactory } from '../protocol-factory';
+import { FullyConnectedTopology } from '../topology';
+import { MemoryTransportFactory } from '../transport';
 
 const signalContext = new MemorySignalManagerContext();
 
+// TODO(burdon): Move to TestBuilder.
 const createPeer = async (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
@@ -24,12 +25,12 @@ const createPeer = async (topic: PublicKey) => {
     signalManager: new MemorySignalManager(signalContext),
     transportFactory: MemoryTransportFactory
   });
-  afterTest(() => networkManager.destroy());
+  afterTest(() => networkManager.close());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   afterTest(() => presencePlugin.stop());
 
-  await networkManager.openSwarmConnection({
+  await networkManager.joinSwarm({
     peerId,
     protocol: createProtocolFactory(topic, peerId, [presencePlugin]),
     topic,
@@ -67,7 +68,7 @@ describe('Presence', function () {
       );
     });
 
-    await peer2.networkManager.closeSwarmConnection(topic);
+    await peer2.networkManager.leaveSwarm(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(

@@ -9,6 +9,9 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { Message, SignalMethods } from './signal-methods';
 
+/**
+ *
+ */
 export interface SignalManager extends SignalMethods {
   statusChanged: Event<SignalStatus[]>;
   commandTrace: Event<CommandTrace>;
@@ -16,5 +19,7 @@ export interface SignalManager extends SignalMethods {
   onMessage: Event<Message>;
 
   getStatus(): SignalStatus[];
+
+  // TODO(burdon): Open/close.
   destroy(): Promise<void>;
 }

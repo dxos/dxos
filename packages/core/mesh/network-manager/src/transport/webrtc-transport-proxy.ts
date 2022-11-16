@@ -39,6 +39,7 @@ export class WebRTCTransportProxy implements Transport {
       proxyId: this._proxyId,
       initiator: this._params.initiator
     });
+
     this._serviceStream.waitUntilReady().then(
       () => {
         this._serviceStream.subscribe(async (event: BridgeEvent) => {
@@ -100,16 +101,20 @@ export class WebRTCTransportProxy implements Transport {
     });
   }
 
+  // TODO(burdon): Move open from constructor.
   async close(): Promise<void> {
     if (this._closed) {
       return;
     }
+
     this._serviceStream.close();
+
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
     } catch (err: any) {
       log.catch(err);
     }
+
     this.closed.emit();
     this._closed = true;
   }
@@ -117,6 +122,7 @@ export class WebRTCTransportProxy implements Transport {
   /**
    * Called when underlying proxy service becomes unavailable.
    */
+  // TODO(burdon): Option on close method.
   forceClose() {
     this._serviceStream.close();
     this.closed.emit();

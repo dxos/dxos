@@ -4,22 +4,26 @@
 
 import { RpcPort } from './rpc';
 
+/**
+ * Create bidirectionally linked ports.
+ */
 export const createLinkedPorts = (): [RpcPort, RpcPort] => {
-  let aliceReceive: RpcPort['send'] | undefined;
-  let bobReceive: RpcPort['send'] | undefined;
+  let port1Receive: RpcPort['send'] | undefined;
+  let port2Receive: RpcPort['send'] | undefined;
 
-  const alice: RpcPort = {
-    send: (msg) => bobReceive?.(msg),
+  const port1: RpcPort = {
+    send: (msg) => port2Receive?.(msg),
     subscribe: (cb) => {
-      aliceReceive = cb;
-    }
-  };
-  const bob: RpcPort = {
-    send: (msg) => aliceReceive?.(msg),
-    subscribe: (cb) => {
-      bobReceive = cb;
+      port1Receive = cb;
     }
   };
 
-  return [alice, bob];
+  const port2: RpcPort = {
+    send: (msg) => port1Receive?.(msg),
+    subscribe: (cb) => {
+      port2Receive = cb;
+    }
+  };
+
+  return [port1, port2];
 };

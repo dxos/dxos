@@ -42,7 +42,7 @@
         "resultsPath": "test-results/packages/core/mesh/network-manager",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
-          "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
+          "packages/core/mesh/network-manager/src/tests/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/network-manager/src/**/*"

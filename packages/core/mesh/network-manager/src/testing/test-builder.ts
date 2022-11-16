@@ -4,11 +4,19 @@
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { schema } from '@dxos/protocols';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology, Topology } from '../topology';
-import { MemoryTransportFactory, TransportFactory } from '../transport';
+import {
+  MemoryTransportFactory,
+  TransportFactory,
+  WebRTCTransportProxyFactory,
+  WebRTCTransportService
+} from '../transport';
 import { TestProtocolPlugin, testProtocolProvider } from './test-protocol';
 
 // Signal server will be started by the setup script.
@@ -18,27 +26,116 @@ export type TestBuilderOptions = {
   signalUrl?: string;
 };
 
-// TODO(burdon): Builder pattern (see feed-store).
+/**
+ * Builder used to construct networks and peers.
+ */
 export class TestBuilder {
   private _signalContext = new MemorySignalManagerContext();
 
-  constructor(private _options: TestBuilderOptions = {}) {}
+  constructor(public readonly options: TestBuilderOptions = {}) {}
 
   createSignalManager() {
-    if (this._options.signalUrl) {
-      return new WebsocketSignalManager([this._options.signalUrl]);
+    if (this.options.signalUrl) {
+      return new WebsocketSignalManager([this.options.signalUrl]);
     }
 
     return new MemorySignalManager(this._signalContext);
   }
 
-  createNetworkManager() {
-    return new NetworkManager({
-      signalManager: new MemorySignalManager(this._signalContext),
-      transportFactory: MemoryTransportFactory
-    });
+  createPeer() {
+    return new TestPeer(this);
   }
 }
+
+/**
+ * Testing network peer.
+ */
+export class TestPeer {
+  readonly peerId = PublicKey.random();
+
+  // TODO(burdon): Configure plugins.
+  readonly plugin = new TestProtocolPlugin(this.peerId.asBuffer()); // TODO(burdon): PublicKey.
+
+  private readonly _swarms = new ComplexSet<PublicKey>(PublicKey.hash);
+
+  private readonly _networkManager: NetworkManager;
+  private readonly _client?: ProtoRpcPeer<any>;
+  private readonly _server?: ProtoRpcPeer<any>;
+
+  constructor(testBuilder: TestBuilder) {
+    const signalManager = testBuilder.createSignalManager();
+
+    let transportFactory: TransportFactory;
+    if (!testBuilder.options.signalUrl) {
+      transportFactory = MemoryTransportFactory;
+    } else {
+      const [clientPort, serverPort] = createLinkedPorts();
+
+      this._client = createProtoRpcPeer({
+        port: clientPort,
+        requested: {
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        },
+        noHandshake: true,
+        encodingOptions: {
+          preserveAny: true
+        }
+      });
+
+      this._server = createProtoRpcPeer({
+        port: serverPort,
+        exposed: {
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        },
+        handlers: { BridgeService: new WebRTCTransportService() },
+        noHandshake: true,
+        encodingOptions: {
+          preserveAny: true
+        }
+      });
+
+      transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._client.rpc.BridgeService);
+    }
+
+    this._networkManager = new NetworkManager({
+      signalManager,
+      transportFactory
+    });
+  }
+
+  async open() {
+    await this._client?.open();
+    await this._server?.open();
+  }
+
+  async close() {
+    await Promise.all(Array.from(this._swarms.values()).map((topic) => this.leaveSwarm(topic)));
+    await this._client?.close();
+    await this._server?.close();
+    await this._networkManager.close();
+  }
+
+  async joinSwarm(topic: PublicKey, topology = new FullyConnectedTopology()) {
+    await this._networkManager.joinSwarm({
+      topic,
+      peerId: this.peerId,
+      protocol: testProtocolProvider(topic.asBuffer(), this.peerId, this.plugin),
+      topology
+    });
+    this._swarms.add(topic);
+  }
+
+  async leaveSwarm(topic: PublicKey) {
+    await this._networkManager.leaveSwarm(topic);
+    this._swarms.delete(topic);
+  }
+}
+
+//
+// TODO(burdon): Remove.
+//
+
+const signalContext = new MemorySignalManagerContext();
 
 export interface CreatePeerOptions {
   topic: PublicKey;
@@ -47,9 +144,6 @@ export interface CreatePeerOptions {
   signalHosts?: string[];
   transportFactory: TransportFactory;
 }
-
-// TODO(burdon): Remove.
-const signalContext = new MemorySignalManagerContext();
 
 /**
  * @deprecated
@@ -68,12 +162,12 @@ export const createPeer = async ({
     transportFactory
   });
 
-  afterTest(() => networkManager.destroy());
+  afterTest(() => networkManager.close());
 
   // TODO(burdon): Use keys everywhere.
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId, plugin);
-  await networkManager.openSwarmConnection({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.joinSwarm({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,

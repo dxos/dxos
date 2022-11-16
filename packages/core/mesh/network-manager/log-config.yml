@@ -1,8 +1,10 @@
 formatter:
-  column: 80
+  column: 100
+
+depth: 1
 
 filter:
   - network-manager:debug
-#  - test-protocol:debug
+  - test-protocol:debug
 #  - mesh-protocol:debug
-  - protocol:debug
+#  - protocol:debug
