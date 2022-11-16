@@ -24,7 +24,7 @@ Type: `DataServiceSubscriptions`
 ### [`feedStore`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L35)
 Type: `FeedStore<FeedMessage>`
 ### [`haloInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L38)
-Type: [`HaloInvitations`](/api/@dxos/client-services/classes/HaloInvitations)
+Type: [`HaloInvitationsHandler`](/api/@dxos/client-services/classes/HaloInvitationsHandler)
 ### [`identityManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L37)
 Type: [`IdentityManager`](/api/@dxos/client-services/classes/IdentityManager)
 ### [`initialized`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L32)
@@ -45,19 +45,19 @@ Type: `SpaceManager`
 Type: `Storage`
 
 ## Methods
-### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L86)
+### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L85)
 
 
 Returns: `Promise<void>`
 
 Arguments: none
-### [`createIdentity`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L96)
+### [`createIdentity`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L95)
 
 
 Returns: `Promise<`[`Identity`](/api/@dxos/client-services/classes/Identity)`>`
 
 Arguments: none
-### [`open`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L77)
+### [`open`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-context.ts#L76)
 
 
 Returns: `Promise<void>`

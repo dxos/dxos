@@ -55,6 +55,13 @@ Swarm rendezvous (random).
 
 Options:
   - proto3_optional = true
+### [`timeout`]()
+Type: `number`
+
+Timeout (ms).
+
+Options:
+  - proto3_optional = true
 ### [`type`]()
 Type: [`Type`](/api/@dxos/client/enums#Type)
 

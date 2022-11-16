@@ -1,5 +1,5 @@
 # Class `DevtoolsHostEvents`
-Declared in [`packages/sdk/client-services/src/packlets/devtools/devtools.ts:46`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L46)
+Declared in [`packages/sdk/client-services/src/packlets/devtools/devtools.ts:45`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L45)
 
 
 
@@ -13,7 +13,7 @@ Returns: [`DevtoolsHostEvents`](/api/@dxos/client-services/classes/DevtoolsHostE
 Arguments: none
 
 ## Properties
-### [`ready`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L47)
+### [`ready`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L46)
 Type: `Event<void>`
 
 ## Methods

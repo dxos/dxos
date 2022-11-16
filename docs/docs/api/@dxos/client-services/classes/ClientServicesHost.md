@@ -15,19 +15,19 @@ Arguments:
 `__namedParameters`: `ClientServicesHostParams`
 
 ## Properties
-### [`descriptors`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L80)
+### [`descriptors`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L88)
 Type: `ServiceBundle<`[`ClientServices`](/api/@dxos/client-services/types/ClientServices)`>`
-### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L84)
+### [`services`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L92)
 Type: [`ClientServices`](/api/@dxos/client-services/types/ClientServices)
 
 ## Methods
-### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L95)
+### [`close`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L103)
 
 
 Returns: `Promise<void>`
 
 Arguments: none
-### [`open`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L88)
+### [`open`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L96)
 
 
 Returns: `Promise<void>`

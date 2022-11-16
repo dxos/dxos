@@ -5,20 +5,20 @@ Declared in [`packages/sdk/client-services/src/packlets/invitations/space-invita
 Adapts invitation service observable to client/service stream.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L27)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L31)
 
 
 Returns: [`SpaceInvitationsProxy`](/api/@dxos/client-services/classes/SpaceInvitationsProxy)
 
 Arguments: 
 
-`_invitationsService`: `InvitationsService`
+`_invitationsService`: [`InvitationsService`](/api/@dxos/client-services/interfaces/InvitationsService)
 
 ## Properties
 
 
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L93)
+### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L95)
 
 
 Returns: [`AuthenticatingInvitationObservable`](/api/@dxos/client-services/interfaces/AuthenticatingInvitationObservable)
@@ -26,7 +26,9 @@ Returns: [`AuthenticatingInvitationObservable`](/api/@dxos/client-services/inter
 Arguments: 
 
 `invitation`: `Invitation`
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L33)
+
+`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
+### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L37)
 
 
 Returns: [`InvitationObservable`](/api/@dxos/client-services/interfaces/InvitationObservable)
@@ -35,12 +37,12 @@ Arguments:
 
 `context`: `PublicKey`
 
-`options`: [`CreateInvitationsOptions`](/api/@dxos/client-services/types/CreateInvitationsOptions)
-### [`createInvitationObject`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-proxy.ts#L13)
+`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
+### [`getInvitationOptions`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-proxy.ts#L13)
 
 
 Returns: `object`
 
 Arguments: 
 
-`spaceKey`: `PublicKey`
+`context`: `PublicKey`

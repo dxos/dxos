@@ -42,7 +42,7 @@ Arguments:
 `__namedParameters`: `object`
 
 `request`: `GetNetworkPeersRequest`
-### [`invitationObservable`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L135)
+### [`invitationObservable`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L103)
 
 
 Util to wrap observable with promise.

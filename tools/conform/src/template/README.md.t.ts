@@ -1,10 +1,14 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import path from 'path';
 import { TemplateFunction, text, fileExists } from '@dxos/plate';
 import { Input } from './index';
 
-const template: TemplateFunction<Input> = async ({ input, outputDirectory }) => {
-  const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
-  const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
+const template: TemplateFunction<Input> = async ({ input }) => {
+  // const docsReadmeExists = await fileExists(path.resolve(outputDirectory, 'docs/README.md'));
+  // const defaultDepDiagramUrl = docsReadmeExists ? './docs/README.md' : '';
   const {
     name,
     description,
@@ -13,18 +17,23 @@ const template: TemplateFunction<Input> = async ({ input, outputDirectory }) => 
     quickStartUrl,
     guideUrl,
     apiReferenceUrl = `https://docs.dxos.org/api/${input?.name}`,
-    dependencyDiagramUrl = defaultDepDiagramUrl,
+    dependencyDiagramUrl,
     codeCoverageUrl,
     twitter = `dxos_org`,
-    issuesUrl = 'https://github.com/dxos/dxos/issues',
-    conductUrl,
-    contributionGuideUrl,
-    prGuideUrl,
+    issuesUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues',
+    conductUrl = 'https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md',
+    contributionGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md',
+    prGuideUrl = 'https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs',
     features,
     diagram,
     badges,
     storybooks,
-    background
+    background,
+    blogUrl,
+    roadmapUrl,
+    eventsUrl,
+    discordUrl,
+    stackOverflowTag = 'dxos'
   } = input;
 
   const section = (header: string, content: string, emitFlag?: any) => {
@@ -56,11 +65,11 @@ const template: TemplateFunction<Input> = async ({ input, outputDirectory }) => 
   ## DXOS Resources
   - [Website](https://dxos.org)
   - [Developer Documentation](https://docs.dxos.org)
-  - [Blog](https://blog.dxos.org)
-  - [Roadmap](https://docs.dxos.org/roadmap)
-  - [Events calendar](https://blog.dxos.org/events)
-  - Hang out with the community on [Discord](https://dxos.org/discord)
-  - Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with \`#dxos\`
+  ${blogUrl && `- [Blog](${blogUrl})`}
+  ${roadmapUrl && `- [Roadmap](${roadmapUrl})`}
+  ${eventsUrl && `- [Events calendar](${eventsUrl})`}
+  ${discordUrl && `- Hang out with the community on [Discord](${discordUrl})`}
+  ${stackOverflowTag && `- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/${stackOverflowTag}) with \`#${stackOverflowTag}\``}
   ${twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`}
 
   ## Contributions

@@ -10,7 +10,7 @@ import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 // import { tocPlugin } from "@vuepress/plugin-toc";
 import { hopeTheme } from 'vuepress-theme-hope';
 
-import { apiSidebar, DOCS_PATH, link, PINNED_PACKAGES, showcasePlugin, sidebarSection, telemetryPlugin } from './src';
+import { showcasePlugin, apiSidebar, telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
@@ -34,9 +34,15 @@ const config: UserConfig = defineUserConfig({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
     logo: '/images/dxos.svg',
     logoDark: '/images/dxos-white.svg',
+    repo: 'dxos/dxos',
     sidebar: {
       '/guide/': 'structure',
       '/api/': await apiSidebar()
+    },
+    navbarLayout: {
+      left: ['Brand','Links'],
+      center: [],
+      right: ['Search','Outlook','Repo']
     },
     navbar: [
       {
@@ -44,7 +50,7 @@ const config: UserConfig = defineUserConfig({
         link: '/guide/'
       },
       {
-        text: "API",
+        text: 'API',
         link: '/api/'
       }
     ]
@@ -85,7 +91,7 @@ const config: UserConfig = defineUserConfig({
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
     telemetryPlugin(),
-    await showcasePlugin(),
+    await showcasePlugin()
     // (tocPlugin as Function)({})
   ],
   bundler: viteBundler({

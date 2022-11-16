@@ -1,5 +1,5 @@
 # Interface `InvitationsHandler`
-> Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts`]()
+> Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts`]()
 
 Common interface for Halo and Space invitation proxies and handlers.
 Handles the life-cycle of Space invitations between peers.

@@ -1,11 +1,11 @@
 # Class `ProfileServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/deprecated/profile.ts:31`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L31)
+Declared in [`packages/sdk/client-services/src/packlets/deprecated/profile.ts:22`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L22)
 
 
 Profile service implementation.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L34)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L25)
 
 
 Returns: [`ProfileServiceImpl`](/api/@dxos/client-services/classes/ProfileServiceImpl)
@@ -18,29 +18,7 @@ Arguments:
 
 
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L95)
-
-
-Returns: `Stream<RedeemedInvitation>`
-
-Arguments: 
-
-`invitation`: `Invitation`
-### [`authenticateInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L131)
-
-
-Returns: `Promise<void>`
-
-Arguments: 
-
-`request`: `AuthenticateInvitationRequest`
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L69)
-
-
-Returns: `Stream<InvitationRequest>`
-
-Arguments: none
-### [`createProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L52)
+### [`createProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L43)
 
 
 Returns: `Promise<Profile>`
@@ -48,7 +26,7 @@ Returns: `Promise<Profile>`
 Arguments: 
 
 `request`: `CreateProfileRequest`
-### [`recoverProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L57)
+### [`recoverProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L48)
 
 
 Returns: `Promise<Profile>`
@@ -56,7 +34,7 @@ Returns: `Promise<Profile>`
 Arguments: 
 
 `request`: `RecoverProfileRequest`
-### [`subscribeProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L36)
+### [`subscribeProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L27)
 
 
 Returns: `Stream<SubscribeProfileResponse>`

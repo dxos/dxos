@@ -1,11 +1,11 @@
 # Class `AuthenticatingInvitationProvider`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts:74`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L74)
+Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts:82`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L82)
 
 
 Cancelable observer that relays authentication requests.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L79)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L87)
 
 
 Returns: [`AuthenticatingInvitationProvider`](/api/@dxos/client-services/classes/AuthenticatingInvitationProvider)
@@ -23,11 +23,11 @@ Type: `Events`
 Proxy used to dispatch callbacks to each subscription.
 ### [`cancelled`]()
 Type: `boolean`
-### [`invitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L48)
+### [`invitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L56)
 Type: `undefined | Invitation`
 
 ## Methods
-### [`authenticate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L85)
+### [`authenticate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L93)
 
 
 Returns: `Promise<void>`
@@ -41,7 +41,7 @@ Arguments:
 Returns: `Promise<void>`
 
 Arguments: none
-### [`setInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L52)
+### [`setInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L60)
 
 
 Returns: `void`

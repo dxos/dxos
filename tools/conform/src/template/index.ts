@@ -22,4 +22,9 @@ export type Input = {
   issuesUrl: string;
   prGuideUrl: string;
   contributionGuideUrl: string;
+  blogUrl: string;
+  eventsUrl: string;
+  roadmapUrl: string;
+  discordUrl: string;
+  stackOverflowTag: string;
 };

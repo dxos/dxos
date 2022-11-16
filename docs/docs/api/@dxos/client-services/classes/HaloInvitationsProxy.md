@@ -1,15 +1,14 @@
-# Class `AbstractInvitationsProxy`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts:29`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L29)
+# Class `HaloInvitationsProxy`
+Declared in [`packages/sdk/client-services/src/packlets/invitations/halo-invitations-proxy.ts:10`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-proxy.ts#L10)
 
 
-Adapts invitations service observable to client/service stream.
-Common base class for HALO and Spaces implementations.
+Adapts invitation service observable to client/service stream.
 
 ## Constructors
 ### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L31)
 
 
-Returns: [`AbstractInvitationsProxy`](/api/@dxos/client-services/classes/AbstractInvitationsProxy)`<T>`
+Returns: [`HaloInvitationsProxy`](/api/@dxos/client-services/classes/HaloInvitationsProxy)
 
 Arguments: 
 
@@ -36,14 +35,12 @@ Returns: [`InvitationObservable`](/api/@dxos/client-services/interfaces/Invitati
 
 Arguments: 
 
-`context`: `T`
+`context`: `void`
 
 `options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
-### [`getInvitationOptions`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L35)
+### [`getInvitationOptions`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-proxy.ts#L11)
 
 
-Returns: `Invitation`
+Returns: `object`
 
-Arguments: 
-
-`context`: `T`
+Arguments: none

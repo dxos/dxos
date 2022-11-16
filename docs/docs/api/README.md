@@ -1,10 +1,8 @@
 # DXOS API Documentation
 
-> Version hash <Badge type="tip" text="cafebabe" vertical="middle" />
+This reference documentation was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
 
-This is reference documentation that was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
-
-To get started with DXOS components and learn how to use them, check out the [guide](/guide).
+To get started with DXOS components and learn how to use them, check out the [guide](/guide/).
 
 ## Packages:
 

@@ -1,22 +1,20 @@
-# Class `SpaceInvitationsServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts:18`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L18)
+# Class `AbstractInvitationsService`
+Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations-service.ts:20`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L20)
 
 
 Adapts invitation service observable to client/service stream.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L20)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L25)
 
 
-Returns: [`SpaceInvitationsServiceImpl`](/api/@dxos/client-services/classes/SpaceInvitationsServiceImpl)
+Returns: [`AbstractInvitationsService`](/api/@dxos/client-services/classes/AbstractInvitationsService)`<T>`
 
 Arguments: 
 
-`identityManager`: [`IdentityManager`](/api/@dxos/client-services/classes/IdentityManager)
+`_identityManager`: [`IdentityManager`](/api/@dxos/client-services/classes/IdentityManager)
 
-`invitationsHandler`: `Provider<`[`InvitationsHandler`](/api/@dxos/client-services/interfaces/InvitationsHandler)`<Space>>`
-
-`_getSpaceManager`: `Provider<SpaceManager>`
+`_getInvitationsHandler`: `Provider<`[`InvitationsHandler`](/api/@dxos/client-services/interfaces/InvitationsHandler)`<T>>`
 
 ## Properties
 
@@ -56,10 +54,10 @@ Returns: `Stream<Invitation>`
 Arguments: 
 
 `invitation`: `Invitation`
-### [`getContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L28)
+### [`getContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L37)
 
 
-Returns: `Space`
+Returns: `T`
 
 Arguments: 
 

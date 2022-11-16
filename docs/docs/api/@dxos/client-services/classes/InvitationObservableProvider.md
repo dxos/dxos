@@ -1,5 +1,5 @@
 # Class `InvitationObservableProvider`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts:42`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L42)
+Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts:50`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L50)
 
 
 Base class for all invitation observables and providers.
@@ -24,7 +24,7 @@ Type: `Events`
 Proxy used to dispatch callbacks to each subscription.
 ### [`cancelled`]()
 Type: `boolean`
-### [`invitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L48)
+### [`invitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L56)
 Type: `undefined | Invitation`
 
 ## Methods
@@ -34,7 +34,7 @@ Type: `undefined | Invitation`
 Returns: `Promise<void>`
 
 Arguments: none
-### [`setInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L52)
+### [`setInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L60)
 
 
 Returns: `void`

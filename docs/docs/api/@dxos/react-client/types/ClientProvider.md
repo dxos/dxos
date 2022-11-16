@@ -5,5 +5,5 @@ Declared in [`packages/sdk/react-client/src/client/ClientContext.tsx:29`](https:
 
 
 ```ts
-type ClientProvider = MaybeFunction<MaybePromise<Client>>
+type ClientProvider = Client | Provider<Promise<Client>>
 ```

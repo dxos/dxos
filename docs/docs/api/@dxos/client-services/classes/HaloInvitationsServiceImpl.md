@@ -1,22 +1,20 @@
-# Class `SpaceInvitationsServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts:18`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L18)
+# Class `HaloInvitationsServiceImpl`
+Declared in [`packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts:14`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L14)
 
 
 Adapts invitation service observable to client/service stream.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L20)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L16)
 
 
-Returns: [`SpaceInvitationsServiceImpl`](/api/@dxos/client-services/classes/SpaceInvitationsServiceImpl)
+Returns: [`HaloInvitationsServiceImpl`](/api/@dxos/client-services/classes/HaloInvitationsServiceImpl)
 
 Arguments: 
 
 `identityManager`: [`IdentityManager`](/api/@dxos/client-services/classes/IdentityManager)
 
-`invitationsHandler`: `Provider<`[`InvitationsHandler`](/api/@dxos/client-services/interfaces/InvitationsHandler)`<Space>>`
-
-`_getSpaceManager`: `Provider<SpaceManager>`
+`invitationsHandler`: [`InvitationsHandler`](/api/@dxos/client-services/interfaces/InvitationsHandler)`<void>`
 
 ## Properties
 
@@ -56,10 +54,10 @@ Returns: `Stream<Invitation>`
 Arguments: 
 
 `invitation`: `Invitation`
-### [`getContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/space-invitations-service.ts#L28)
+### [`getContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L23)
 
 
-Returns: `Space`
+Returns: `void`
 
 Arguments: 
 

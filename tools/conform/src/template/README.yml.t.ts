@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 // import { TemplateFunction, File, text } from '@dxos/plate';
 
 // const template: TemplateFunction = ({ outputDirectory, defaultOutputFile }) => {

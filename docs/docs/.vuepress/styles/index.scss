@@ -39,9 +39,8 @@ div[class^="language-"] {
   max-width: 40rem;
 }
 
-.navbar .navbar-center {
-  flex-grow: 1;
-  margin-left: 2rem;
+.navbar nav.nav-links {
+  margin-left: 2rem !important;
 }
 
 /// DEFAULT THEME CUSTOMIZATION FOLLOWS

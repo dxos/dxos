@@ -70,7 +70,7 @@ Returns: `Promise<`[`InvitationObservable`](/api/@dxos/client/interfaces/Invitat
 
 Arguments: 
 
-`options`: `CreateInvitationsOptions`
+`options`: `InvitationsOptions`
 ### [`createSnapshot`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/space-proxy.ts#L286)
 
 

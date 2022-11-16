@@ -12,7 +12,7 @@ Arguments:
 `client`: [`Client`](/api/@dxos/client/classes/Client)
 
 `clientServices`: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesProvider)
-### [`createNetworkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L53)
+### [`createNetworkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L43)
 
 
 Creates a WebRTC network manager connected to the specified signal server.
@@ -24,7 +24,7 @@ Arguments:
 `config`: `Config`
 
 `options`: `Partial<NetworkManagerOptions>`
-### [`fromDefaults`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L41)
+### [`fromDefaults`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L31)
 
 
 Creates stand-alone services.
@@ -34,7 +34,7 @@ Returns: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesP
 Arguments: 
 
 `config`: `Config | Config`
-### [`fromIFrame`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L27)
+### [`fromIFrame`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L26)
 
 
 Create services provider proxy connected via iFrame to host.
