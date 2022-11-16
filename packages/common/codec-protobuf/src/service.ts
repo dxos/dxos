@@ -5,6 +5,8 @@
 import assert from 'node:assert';
 import pb from 'protobufjs';
 
+import { getAsyncValue } from '@dxos/util';
+
 import { Any, EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
@@ -67,16 +69,7 @@ export class Service {
       const responseCodec = schema.tryGetCodecForType(method.resolvedResponseType.fullName);
       const methodName = mapRpcMethodName(method.name);
 
-      if (!method.responseStream) {
-        (this as any)[methodName] = async (request: unknown) => {
-          const encoded = requestCodec.encode(request, encodingOptions);
-          const response = await backend.call(method.name, {
-            value: encoded,
-            type_url: method.resolvedRequestType!.fullName
-          });
-          return responseCodec.decode(response.value, encodingOptions);
-        };
-      } else {
+      if (method.responseStream) {
         (this as any)[methodName] = (request: unknown) => {
           const encoded = requestCodec.encode(request, encodingOptions);
           const stream = backend.callStream(method.name, {
@@ -84,6 +77,15 @@ export class Service {
             type_url: method.resolvedRequestType!.fullName
           });
           return Stream.map(stream, (data) => responseCodec.decode(data.value!, encodingOptions));
+        };
+      } else {
+        (this as any)[methodName] = async (request: unknown) => {
+          const encoded = requestCodec.encode(request, encodingOptions);
+          const response = await backend.call(method.name, {
+            value: encoded,
+            type_url: method.resolvedRequestType!.fullName
+          });
+          return responseCodec.decode(response.value, encodingOptions);
         };
       }
 
@@ -100,7 +102,7 @@ export class Service {
  */
 export class ServiceHandler<S = {}> implements ServiceBackend {
   constructor(
-    private readonly _service: pb.Service,
+    private readonly _serviceDefinition: pb.Service,
     private readonly _schema: Schema<any>,
     private readonly _serviceProvider: ServiceProvider<S>,
     private readonly _encodingOptions?: EncodingOptions
@@ -136,7 +138,6 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     assert(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
 
     const mappedMethodName = mapRpcMethodName(methodName);
-
     const handlerPromise = this._getHandler(mappedMethodName);
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
@@ -151,14 +152,14 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   }
 
   private async _getHandler(method: string): Promise<(request: unknown) => unknown> {
-    const service: S = typeof this._serviceProvider === 'function' ? await (this._serviceProvider as Function)() : this._serviceProvider;
+    const service: S = getAsyncValue(this._serviceProvider);
     const handler = service[method as keyof S];
     assert(handler, `Handler is missing: ${method}`);
     return (handler as any).bind(service);
   }
 
   private _getMethodInfo(methodName: string) {
-    const method = this._service.methods[methodName];
+    const method = this._serviceDefinition.methods[methodName];
     assert(!!method, `Method not found: ${methodName}`);
 
     method.resolve();

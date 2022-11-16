@@ -36,7 +36,7 @@ describe('WorkerRuntime', () => {
 
   it('initialization errors get propagated to the client', async () => {
     const workerRuntime = new WorkerRuntime(async () => {
-        await sleep(2);
+        await sleep(1);
         throw new Error('Test error');
     });
 
@@ -57,7 +57,7 @@ describe('WorkerRuntime', () => {
     })
     
     const promise = Promise.all([
-      workerRuntime.start().catch(() => {}),
+      workerRuntime.start().catch(() => {}), // This error should be propagated to client.initialize() call.
       clientProxy.open('*'),
     ]) 
 

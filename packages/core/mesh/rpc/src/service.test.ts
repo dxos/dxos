@@ -13,6 +13,8 @@ import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testing';
 
+// TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
+
 describe('Protobuf service', function () {
   it('Works with protobuf service', async function () {
     const [alicePort, bobPort] = createLinkedPorts();

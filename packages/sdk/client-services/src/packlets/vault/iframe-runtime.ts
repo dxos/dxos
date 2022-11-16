@@ -8,7 +8,7 @@ import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { iframeServiceBundle, WorkerServiceBundle, workerServiceBundle } from './services';
 
-// NOTE: Keep those as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
+// NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type IframeRuntimeParams = {
   systemPort: RpcPort;
   workerAppPort: RpcPort;

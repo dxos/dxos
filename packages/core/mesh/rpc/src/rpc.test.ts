@@ -18,6 +18,8 @@ const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => 
   value: Buffer.from(value)
 });
 
+// TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
+
 describe('RpcPeer', function () {
   describe('handshake', function () {
     it('can open', async function () {
@@ -466,7 +468,6 @@ describe('RpcPeer', function () {
 
       const msgs = await Stream.consume(stream);
       expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
-
       expect((msgs[0] as any).error.message).toEqual('Test error');
     });
   });

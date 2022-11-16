@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/context": "workspace:*",
+    "@dxos/async": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
     "lodash.merge": "^4.6.2"
