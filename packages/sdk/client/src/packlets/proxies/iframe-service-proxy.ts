@@ -2,21 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
+import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
-import { ClientServicesProvider } from './service-definitions';
-import { ClientServicesProxy } from './service-proxy';
-
-// TODO(mykola): Remove copy-paste from client/config.ts
-export const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
-export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
+import { DEFAULT_CLIENT_ORIGIN } from '../client';
 
 export type ClientIFrameServiceProxyParams = {
   config: Config | ConfigProto;
-  channel?: string;
+  channel: string;
   timeout?: number;
 };
 
@@ -26,7 +22,7 @@ export class ClientIFrameServiceProxy implements ClientServicesProvider {
   private _clientServicesProxy?: ClientServicesProxy;
   private readonly params;
 
-  constructor({ config, channel = DEFAULT_CONFIG_CHANNEL, timeout = 1000 }: ClientIFrameServiceProxyParams) {
+  constructor({ config, channel, timeout = 1000 }: ClientIFrameServiceProxyParams) {
     this.params = { config, channel, timeout };
     this._clientServicesProxy = new ClientServicesProxy(this._getIFramePort());
   }

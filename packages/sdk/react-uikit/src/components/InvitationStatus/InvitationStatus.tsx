@@ -7,11 +7,11 @@ import React, { ComponentProps, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Invitation } from '@dxos/client';
-import { defaultShimmer, getSize } from '@dxos/react-ui';
+import { strongShimmer, getSize } from '@dxos/react-ui';
 
 const pip = cx('rounded-full flex-none', getSize(3));
 const stripe = cx('rounded-full grow', getSize(2));
-const inactiveColor = 'bg-neutral-400 dark:bg-neutral-600';
+const inactiveColor = 'bg-neutral-100 dark:bg-neutral-600';
 const activeColor = 'bg-primary-500 dark:bg-primary-400';
 const successColor = 'bg-success-500 dark:bg-success-400';
 const errorColor = 'bg-error-500 dark:bg-error-400';
@@ -67,7 +67,7 @@ export const InvitationStatus = ({
         role='none'
         className={cx(
           stripe,
-          cursor === 1 && defaultShimmer,
+          cursor === 1 && strongShimmer,
           cursor === 1 ? activeColor : cursor > 1 ? resolvedColor : inactiveColor
         )}
       />
@@ -82,7 +82,7 @@ export const InvitationStatus = ({
         role='none'
         className={cx(
           stripe,
-          cursor === 3 && defaultShimmer,
+          cursor === 3 && strongShimmer,
           cursor === 3 ? activeColor : cursor > 3 ? resolvedColor : inactiveColor
         )}
       />

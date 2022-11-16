@@ -30,21 +30,6 @@ const main = async () => {
       requiresArg: true,
       type: 'string'
     })
-    .option('filter', {
-      description: 'Filter the template files by regular expression string',
-      requiresArg: false,
-      type: 'string'
-    })
-    .option('exclude', {
-      description: 'A regex to exclude entries from the template',
-      requiresArg: false,
-      type: 'string'
-    })
-    .option('glob', {
-      description: 'Filter the template files by glob expression string',
-      requiresArg: false,
-      type: 'string'
-    })
     .command({
       command: '*',
       describe: 'execute a @dxos/plate template',
@@ -52,18 +37,12 @@ const main = async () => {
         _,
         dry,
         input,
-        output = process.cwd(),
-        filter,
-        glob,
-        exclude
+        output = process.cwd()
       }: {
         _: string[];
         dry: boolean;
         input: string;
         output: string;
-        filter: string;
-        glob: string;
-        exclude: string;
       }) => {
         const tstart = Date.now();
         const [template] = _;
@@ -71,18 +50,11 @@ const main = async () => {
           throw new Error('no template specified');
         }
         console.log('working directory', process.cwd());
-        console.log(
-          `executing template '${template}'...`,
-          filter ? `filter: '${filter}'` : '',
-          exclude ? ` exclude: '${exclude}'` : ''
-        );
+        console.log(`executing template '${template}'...`);
         const files = await executeDirectoryTemplate({
           outputDirectory: output,
           templateDirectory: template,
-          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {},
-          filterGlob: glob,
-          filterRegEx: filter ? new RegExp(filter) : undefined,
-          filterExclude: exclude ? new RegExp(exclude) : undefined
+          input: input ? JSON.parse((await fs.readFile(input)).toString()) : {}
         });
         if (!dry) {
           console.log(`output folder: ${output}`);
@@ -97,10 +69,9 @@ const main = async () => {
               }
             })
           );
-          console.log(`wrote ${files.length} files.`);
         }
         const now = Date.now();
-        console.log(`done [${fmtDuration(now - tstart)}]`);
+        console.log(`wrote ${files.length} files [${fmtDuration(now - tstart)}]`);
       }
     })
     .help().argv;
