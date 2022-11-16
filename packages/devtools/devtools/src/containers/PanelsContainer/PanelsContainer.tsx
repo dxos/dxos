@@ -40,7 +40,6 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   if (!services) {
     return null;
   }
-
   // TODO(burdon): Factor out.
   // TODO(wittjosiah): Should this only be done in the app?
   useEffect(() => {

@@ -49,8 +49,9 @@ export const App = () => {
         await client.destroy();
         await servicesProvider.close();
       }
-      setServicesProvider(remoteSource ? fromIFrame(config) : fromDefaults(config));
-      const newClient = new Client({ config, services: servicesProvider });
+      const newServicesProvider = remoteSource ? fromIFrame(config) : fromDefaults(config);
+      setServicesProvider(newServicesProvider);
+      const newClient = new Client({ config, services: newServicesProvider });
       await newClient.initialize();
       setClient(newClient);
     }
@@ -69,7 +70,7 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
-          <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
+          <ClientContext.Provider value={{ client, services: servicesProvider?.services, services: servicesProvider?.services }}>
             <Telemetry />
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
