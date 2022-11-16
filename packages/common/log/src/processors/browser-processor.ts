@@ -22,13 +22,8 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
-  // TODO(burdon): Config repo and branch.
-  //  Make easy to switch since line links are bright and noisy.
-  const LOG_BROWSER_PREFIX = 'https://vscode.dev/github.com/dxos/dxos/blob/main/';
-
-  // TODO(burdon): Line numbers not working for app link.
-  // const LOG_BROWSER_PREFIX = 'vscode://file/Users/burdon/Code/dxos/dxos/';
-  // const LOG_BROWSER_PREFIX = '';
+  // Example local editor prefix: 'vscode://file/Users/burdon/Code/dxos/dxos/'.
+  const LOG_BROWSER_PREFIX = config.prefix ?? 'https://vscode.dev/github.com/dxos/dxos/blob/main/';
 
   // TODO(burdon): CSS breaks formatting (e.g., [Object] rather than expandable property).
   // TODO(burdon): Consider custom formatters.
@@ -41,6 +36,8 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   if (entry.meta) {
     const filename = getRelativeFilename(entry.meta.file);
     const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
+    // TODO(burdon): Line numbers not working for app link, even with colons.
+    //   https://stackoverflow.com/a/54459820/2804332
     link = `${filepath}#L${entry.meta.line}`;
   }
 

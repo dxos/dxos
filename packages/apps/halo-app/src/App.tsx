@@ -3,7 +3,7 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -32,6 +32,8 @@ import {
 } from './pages';
 import { useTelemetry } from './telemetry';
 import translationResources from './translations';
+
+log.config({ filter: process.env.LOG_FILTER, prefix: process.env.LOG_BROWSER_PREFIX });
 
 const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
 
@@ -99,11 +101,6 @@ export const App = () => {
       console.error(err);
     }
   });
-
-  useEffect(() => {
-    // TODO(burdon): From env.
-    log.config({ filter: ['debug'] });
-  }, []);
 
   return (
     <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
