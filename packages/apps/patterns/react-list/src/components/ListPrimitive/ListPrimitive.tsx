@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import { CaretUp, CaretDown } from 'phosphor-react';
+import { CaretUp, CaretDown, Minus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { ButtonGroup, defaultGroup, defaultHover } from '@dxos/react-ui';
@@ -52,6 +52,7 @@ export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<Co
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
   updateItem: (item: ListItemProps) => void;
   updateOrder: (id: ListItemId, delta: number) => void;
+  deleteItem: (id: ListItemId) => void;
   isFirst?: boolean;
   isLast?: boolean;
 }
@@ -62,9 +63,10 @@ const ListItemPrimitive = ({
   description: propsDescription,
   annotations: propsAnnotations,
   updateItem,
+  updateOrder,
+  deleteItem,
   isFirst,
-  isLast,
-  updateOrder
+  isLast
 }: ListItemPrimitiveComponentProps) => {
   const checkId = `${id}__checkbox`;
   const labelId = `${id}__title`;
@@ -106,6 +108,10 @@ const ListItemPrimitive = ({
     setAnnotations({ ...annotations, state: isDone ? 'init' : 'done' });
   }, [annotations, isDone]);
 
+  const onClickDelete = useCallback(() => {
+    deleteItem(id);
+  }, [deleteItem, id]);
+
   return (
     <li
       key={id}
@@ -127,7 +133,7 @@ const ListItemPrimitive = ({
             defaultHover({})
           ),
           onChange: onChangeCheckbox,
-          checked: !!isDone
+          checked: isDone
         }}
       />
       <label htmlFor={checkId} id={labelId} className='sr-only'>
@@ -162,6 +168,10 @@ const ListItemPrimitive = ({
           <span className='sr-only'>{t('move list item down label')}</span>
         </Button>
       </ButtonGroup>
+      <Button compact onClick={onClickDelete}>
+        <Minus />
+        <span className='sr-only'>{t('delete list item label')}</span>
+      </Button>
     </li>
   );
 };
@@ -202,10 +212,13 @@ export const ListPrimitive = ({
     [onAction, listId]
   );
 
-  const updateItem = useCallback(({ id, ...item }: ListItemProps) => {
-    setItems(Object.assign(items, { id: item }));
-    onAction?.({ listId, listItemId: id, next: item });
-  }, []);
+  const updateItem = useCallback(
+    ({ id, ...item }: ListItemProps) => {
+      setItems(Object.assign(items, { [id]: item }));
+      onAction?.({ listId, listItemId: id, next: item });
+    },
+    [items, onAction]
+  );
 
   const updateOrder = useCallback(
     (id: ListItemId, delta: number) => {
@@ -218,7 +231,27 @@ export const ListPrimitive = ({
       setOrder(nextOrder);
       onAction?.({ listId, next: { order: nextOrder } });
     },
-    [order]
+    [order, onAction]
+  );
+
+  const deleteItem = useCallback(
+    (id: ListItemId) => {
+      const next: Partial<ListPrimitiveProps> = {};
+      const fromIndex = order.indexOf(id);
+      if (fromIndex >= 0) {
+        const nextOrder = Array.from(order);
+        nextOrder.splice(fromIndex, 1);
+        setOrder(nextOrder);
+        next.order = nextOrder;
+      }
+      if (items[id]) {
+        const { [id]: _removedItem, ...nextItems } = items;
+        setItems(nextItems);
+        next.items = nextItems;
+      }
+      onAction?.({ listId, next });
+    },
+    [order, items, onAction]
   );
 
   return (
@@ -260,7 +293,7 @@ export const ListPrimitive = ({
               key={listItemId}
               isFirst={index === 0}
               isLast={index === order.length - 1}
-              {...{ id: listItemId, updateItem, updateOrder }}
+              {...{ id: listItemId, updateItem, updateOrder, deleteItem }}
               {...items[listItemId]}
             />
           );
