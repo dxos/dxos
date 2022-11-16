@@ -221,6 +221,7 @@ export const ListPrimitive = ({
       nextOrder.splice(fromIndex, 1);
       nextOrder.splice(toIndex, 0, id);
       setOrder(nextOrder);
+      onAction?.({ listId, next: { order: nextOrder } });
     },
     [order]
   );
