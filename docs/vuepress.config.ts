@@ -5,8 +5,8 @@
 import { viteBundler } from '@vuepress/bundler-vite';
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
-import { join, resolve } from 'node:path';
-import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
+import { resolve } from 'node:path';
+import { defineUserConfig, UserConfig } from 'vuepress';
 // import { tocPlugin } from "@vuepress/plugin-toc";
 import { hopeTheme } from 'vuepress-theme-hope';
 
@@ -40,9 +40,9 @@ const config: UserConfig = defineUserConfig({
       '/api/': await apiSidebar()
     },
     navbarLayout: {
-      left: ['Brand','Links'],
+      left: ['Brand', 'Links'],
       center: [],
-      right: ['Search','Outlook','Repo']
+      right: ['Search', 'Outlook', 'Repo']
     },
     navbar: [
       {

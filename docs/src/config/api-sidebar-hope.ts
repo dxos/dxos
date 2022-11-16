@@ -7,7 +7,7 @@ import matter from 'gray-matter';
 import { promises as fs } from 'node:fs';
 import path from 'path';
 // import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from 'vuepress';
-import { sidebar, arraySidebar, HopeThemeSidebarArrayConfig, HopeThemeSidebarItem } from 'vuepress-theme-hope';
+import { HopeThemeSidebarItem } from 'vuepress-theme-hope';
 
 import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
 
