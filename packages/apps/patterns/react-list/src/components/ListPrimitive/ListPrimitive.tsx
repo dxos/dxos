@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { CaretUp, CaretDown, Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useEffect, useState } from 'react';
+import React, { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonGroup, defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
@@ -36,6 +36,8 @@ export interface ListChangedAction extends SharedListActionProps {
 }
 
 export type ListAction = ListItemChangedAction | ListChangedAction;
+
+export const isListItemChangedAction = (o: any): o is ListItemChangedAction => 'listItemId' in o;
 
 export interface ListPrimitiveProps {
   id: ListId;
@@ -79,14 +81,20 @@ const ListItemPrimitive = ({
   const [description, setDescription] = useState(propsDescription ?? '');
   const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
   const isDone = annotations?.state === 'done';
+  const mounted = useRef(false);
 
   useEffect(() => {
-    updateItem({
-      id,
-      title,
-      description,
-      annotations
-    });
+    if (mounted.current) {
+      // (thure) Only update after mount.
+      updateItem({
+        id,
+        title,
+        description,
+        annotations
+      });
+    } else {
+      mounted.current = true;
+    }
   }, [id, title, description, annotations]);
 
   const onChangeTitle = useCallback((nextValue: string) => {
