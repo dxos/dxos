@@ -3,7 +3,7 @@ Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14
 
 
 A globally addressable data item.
-Items are hermetic data structures contained within a Party. They may be hierarchical.
+Items are hermetic data structures contained within a Space. They may be hierarchical.
 The Item data structure is governed by a Model class, which implements data consistency.
 
 ## Constructors
