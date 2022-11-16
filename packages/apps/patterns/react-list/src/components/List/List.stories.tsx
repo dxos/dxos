@@ -61,8 +61,6 @@ Default.decorators = [
       await Promise.all(clients.map((client) => client.halo.createProfile()));
       log('identity created');
 
-      console.log(clients);
-
       const space = await clients[0].echo.createSpace();
       log('space created');
 
