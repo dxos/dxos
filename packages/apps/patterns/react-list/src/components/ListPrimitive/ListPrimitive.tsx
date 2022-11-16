@@ -3,10 +3,10 @@
 //
 
 import cx from 'classnames';
-import { CaretUp, CaretDown, Minus, Plus } from 'phosphor-react';
+import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 
-import { ButtonGroup, defaultGroup, defaultHover } from '@dxos/react-ui';
+import { defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
 
 type ListId = string;
@@ -66,8 +66,8 @@ const ListItemPrimitive = ({
   description: propsDescription,
   annotations: propsAnnotations,
   updateItem,
-  updateOrder,
   deleteItem,
+  updateOrder,
   isFirst,
   isLast
 }: ListItemPrimitiveComponentProps) => {
@@ -105,13 +105,13 @@ const ListItemPrimitive = ({
     setDescription(nextValue);
   }, []);
 
-  const onClickMoveUp = useCallback(() => {
-    updateOrder(id, -1);
-  }, [updateOrder, id]);
-
-  const onClickMoveDown = useCallback(() => {
-    updateOrder(id, 1);
-  }, [updateOrder, id]);
+  // TODO(thure): Restore these, or implement drag & drop, when how best to change order in Echo is clarified.
+  // const onClickMoveUp = useCallback(() => {
+  //   updateOrder(id, -1);
+  // }, [updateOrder, id]);
+  // const onClickMoveDown = useCallback(() => {
+  //   updateOrder(id, 1);
+  // }, [updateOrder, id]);
 
   const onChangeCheckbox = useCallback(() => {
     setAnnotations({ ...annotations, state: isDone ? 'init' : 'done' });
@@ -167,16 +167,17 @@ const ListItemPrimitive = ({
           onChange={onChangeDescription}
         />
       </div>
-      <ButtonGroup className='flex flex-col items-stretch'>
-        <Button compact rounding='rounded-bs-md border-be-0' disabled={isFirst} onClick={onClickMoveUp}>
-          <CaretUp />
-          <span className='sr-only'>{t('move list item up label')}</span>
-        </Button>
-        <Button compact rounding='rounded-be-md' disabled={isLast} onClick={onClickMoveDown}>
-          <CaretDown />
-          <span className='sr-only'>{t('move list item down label')}</span>
-        </Button>
-      </ButtonGroup>
+      {/* TODO(thure): Restore these, or implement drag & drop, when how best to change order in Echo is clarified. */}
+      {/* <ButtonGroup className='flex flex-col items-stretch'> */}
+      {/*  <Button compact rounding='rounded-bs-md border-be-0' disabled={isFirst} onClick={onClickMoveUp}> */}
+      {/*    <CaretUp /> */}
+      {/*    <span className='sr-only'>{t('move list item up label')}</span> */}
+      {/*  </Button> */}
+      {/*  <Button compact rounding='rounded-be-md' disabled={isLast} onClick={onClickMoveDown}> */}
+      {/*    <CaretDown /> */}
+      {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
+      {/*  </Button> */}
+      {/* </ButtonGroup> */}
       <Button compact onClick={onClickDelete}>
         <Minus />
         <span className='sr-only'>{t('delete list item label')}</span>
