@@ -102,22 +102,25 @@ export class Stream<T> {
       return streamPromise;
     }
 
-    return new Stream(({ ready, next, close}) => {
+    return new Stream(({ ready, next, close }) => {
       streamPromise.then(
-        stream => {
+        (stream) => {
           stream.onReady(ready);
           stream.subscribe(next, close);
         },
-        err => {
+        (err) => {
           close(err);
         }
       );
       return () => {
         streamPromise.then(
-          stream => stream.close(),
-          err => { /* already handled */ }
+          (stream) => stream.close(),
+          // eslint-disable-next-line n/handle-callback-err
+          (err) => {
+            /* already handled */
+          }
         );
-      }
+      };
     });
   }
 

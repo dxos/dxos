@@ -8,7 +8,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { clientServiceBundle, ClientServices, ClientServicesHost } from '../services';
+import { clientServiceBundle, ClientServicesHost } from '../services';
 import { IframeServiceBundle, iframeServiceBundle, workerServiceBundle } from './services';
 
 export type WorkerSessionParams = {
@@ -28,7 +28,7 @@ export class WorkerSession {
   private readonly _clientRpc: ProtoRpcPeer<{}>;
   private readonly _systemRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
-  private readonly _getServices: () => Promise<ClientServicesHost>
+  private readonly _getServices: () => Promise<ClientServicesHost>;
   private readonly _options: NonNullable<WorkerSessionParams['options']>;
   private _heartbeatTimer?: NodeJS.Timeout;
 
@@ -60,7 +60,7 @@ export class WorkerSession {
         ProfileService: async () => (await this._getServices()).services.ProfileService,
         SystemService: async () => (await this._getServices()).services.SystemService,
         DevtoolsHost: async () => (await this._getServices()).services.DevtoolsHost,
-        TracingService: async () => (await this._getServices()).services.TracingService,
+        TracingService: async () => (await this._getServices()).services.TracingService
       },
       port: appPort
     });

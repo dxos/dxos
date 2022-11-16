@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogLevel, shortLevelName } from '../config';
+import { LogLevel } from '../config';
 import { LogProcessor, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {

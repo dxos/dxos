@@ -7,6 +7,7 @@ import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
+
 import { DEFAULT_CLIENT_ORIGIN } from '../client';
 
 export type ClientIFrameServiceProxyParams = {

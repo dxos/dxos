@@ -19,10 +19,7 @@ export interface ServiceBackend {
   callStream(method: string, request: Any): Stream<Any>;
 }
 
-export type ServiceProvider<Service> = 
-  | Service
-  | (() => Service)
-  | (() => Promise<Service>);
+export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
 
 /**
  * Client/server service wrapper.
@@ -141,7 +138,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const handlerPromise = this._getHandler(mappedMethodName);
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
-    const responseStream = Stream.unwrapPromise(handlerPromise.then(handler => handler(requestDecoded) as Stream<unknown>))
+    const responseStream = Stream.unwrapPromise(
+      handlerPromise.then((handler) => handler(requestDecoded) as Stream<unknown>)
+    );
     return Stream.map(
       responseStream,
       (data): Any => ({

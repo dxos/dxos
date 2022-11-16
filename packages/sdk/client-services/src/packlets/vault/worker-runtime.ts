@@ -6,11 +6,11 @@ import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
+import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
-import { RpcPort } from '@dxos/rpc';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {
@@ -44,7 +44,9 @@ export class WorkerRuntime {
         config: this._config,
         networkManager: new NetworkManager({
           log: true,
-          signalManager: signalServer ? new WebsocketSignalManager([signalServer]) : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+          signalManager: signalServer
+            ? new WebsocketSignalManager([signalServer])
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
           transportFactory: this._transportFactory
         })
       });
@@ -68,10 +70,10 @@ export class WorkerRuntime {
     const session = new WorkerSession({
       getServices: async () => {
         const error = await this._ready.wait();
-        if(error !== undefined) {
+        if (error !== undefined) {
           throw error;
         }
-        return this._clientServices
+        return this._clientServices;
       },
       appPort,
       systemPort,
