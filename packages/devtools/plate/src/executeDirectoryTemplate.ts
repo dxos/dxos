@@ -4,13 +4,14 @@
 import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
+import minimatch from 'minimatch';
 
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
 import { logger } from './logger';
 import { runPromises } from './runPromises';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /^index(\.d)?\.[tj]s/];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /^index(\.d)?\.[tj]s/];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string;
@@ -41,7 +42,10 @@ export const executeDirectoryTemplate = async <TInput>(
   const debug = logger(verbose);
   debug(options);
   const allFiles = (await readDir(templateDirectory)).filter(
-    (file) => !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(path.relative(templateDirectory, file)))
+    (file) =>
+      !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(file)) &&
+      (filterGlob ? minimatch(file, filterGlob) : filterRegEx ? filterRegEx.test(file) : true) &&
+      (filterExclude ? !filterExclude.test(file) : true)
   );
   debug('all files:\n', allFiles.join('\n'));
   const templateFiles = allFiles.filter(isTemplateFile);
