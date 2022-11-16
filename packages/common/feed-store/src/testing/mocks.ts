@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
 import type { FeedWriter, WriteReceipt } from '../feed-writer';
@@ -20,14 +21,17 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
   ) {}
 
   async write(data: T): Promise<WriteReceipt> {
-    this.messages.push(data);
+  this.messages.push(data);
 
     const receipt: WriteReceipt = {
       feedKey: this.feedKey,
       seq: this.messages.length - 1
     };
 
-    this.written.emit([data, receipt]);
+    scheduleTask(new Context(), () => {
+      this.written.emit([data, receipt]);
+    })
+
     return receipt;
   }
 }
