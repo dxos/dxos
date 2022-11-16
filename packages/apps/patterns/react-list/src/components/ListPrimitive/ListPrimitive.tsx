@@ -234,7 +234,6 @@ export const ListPrimitive = ({
     (id: ListItemId, delta: number) => {
       const fromIndex = order.indexOf(id);
       const toIndex = fromIndex + delta;
-      console.log('[update order]', id, delta, order, fromIndex, toIndex);
       const nextOrder = Array.from(order);
       nextOrder.splice(fromIndex, 1);
       nextOrder.splice(toIndex, 0, id);
