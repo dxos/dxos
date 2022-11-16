@@ -5,7 +5,7 @@
 import { Client } from '@dxos/client';
 import * as Telemetry from '@dxos/telemetry';
 
-import { BASE_PROPERTIES, DX_GROUP, getIdentifier } from './base-properties';
+import { BASE_TELEMETRY_PROPERTIES, DX_GROUP, getTelemetryIdentifier } from './base-properties';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;
@@ -18,10 +18,10 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
     }
 
     Telemetry.event({
-      identityId: getIdentifier(client),
+      identityId: getTelemetryIdentifier(client),
       name: `${namespace}.window.click`,
       properties: {
-        ...BASE_PROPERTIES,
+        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         id: (event.target as HTMLElement)?.id,
         path: (event.path as HTMLElement[])
@@ -36,10 +36,10 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   const focusCallback = () => {
     const now = new Date();
     Telemetry.event({
-      identityId: getIdentifier(client),
+      identityId: getTelemetryIdentifier(client),
       name: `${namespace}.window.focus`,
       properties: {
-        ...BASE_PROPERTIES,
+        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         timeAway: now.getTime() - lastFocusEvent.getTime()
       }
@@ -51,10 +51,10 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     Telemetry.event({
-      identityId: getIdentifier(client),
+      identityId: getTelemetryIdentifier(client),
       name: `${namespace}.window.blur`,
       properties: {
-        ...BASE_PROPERTIES,
+        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         timeSpent
       }
@@ -65,10 +65,10 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
 
   const unloadCallback = () => {
     Telemetry.event({
-      identityId: getIdentifier(client),
+      identityId: getTelemetryIdentifier(client),
       name: `${namespace}.page.unload`,
       properties: {
-        ...BASE_PROPERTIES,
+        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         timeSpent: totalTime
       }

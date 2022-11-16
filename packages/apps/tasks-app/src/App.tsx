@@ -37,6 +37,7 @@ const clientProvider = async () => {
 };
 
 const Routes = () => {
+  // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace: 'tasks-app' });
   const config = useConfig();
   // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
