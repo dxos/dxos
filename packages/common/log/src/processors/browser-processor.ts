@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogLevel, shortLevelName } from '../config';
+import { LogLevel } from '../config';
 import { LogProcessor, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
@@ -28,7 +28,7 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     args.push(`${getRelativeFilename(entry.meta.file)}:${entry.meta.line}`);
   }
 
-  args.push(`${shortLevelName[entry.level]} ${entry.message}`);
+  args.push(`${entry.message}`);
 
   if (entry.context && Object.keys(entry.context).length > 0) {
     args.push(entry.context);
