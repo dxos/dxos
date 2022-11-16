@@ -22,11 +22,6 @@ Milliseconds
 
 Options:
   - proto3_optional = true
-### [`mode`]()
-Type: [`Mode`](/api/@dxos/config/enums#Mode)
-
-Options:
-  - proto3_optional = true
 ### [`remoteSource`]()
 Type: `string`
 

@@ -8,6 +8,7 @@ prev: ./
 
 You can use ECHO and HALO with any application framework. DXOS offers a curated set of application project templates which put together some opinions to optimize for high performance local-first applications. Read below about the [list of opinions](#template-opinions) in each template.
 
+[[toc]]
 ### Install the CLI
 
 Only `pnpm` is supported for now.

@@ -1,89 +1,85 @@
 # Class `EchoProxy`
-Declared in [`packages/sdk/client/src/packlets/proxies/echo-proxy.ts:25`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L25)
+Declared in [`packages/sdk/client/src/packlets/proxies/echo-proxy.ts:36`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L36)
 
 
-Client proxy to local/remote ECHO service.
+TODO(burdon): Public API (move comments here).
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L31)
+### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L43)
 
 
 Returns: [`EchoProxy`](/api/@dxos/client/classes/EchoProxy)
 
 Arguments: 
 
-`_serviceProvider`: `ClientServiceProvider`
+`_serviceProvider`: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesProvider)
 
 `_modelFactory`: `ModelFactory`
 
 `_haloProxy`: [`HaloProxy`](/api/@dxos/client/classes/HaloProxy)
 
 ## Properties
-### [`info`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L55)
-Type: `object`
-### [`modelFactory`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L41)
+### [`modelFactory`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L63)
 Type: `ModelFactory`
-### [`networkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L45)
+### [`networkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L70)
 Type: `any`
 
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L192)
-
-
-Joins an existing Party by invitation.
-
-To be used with  `party.createInvitation`  on the inviter side.
-
-Returns: [`PartyInvitation`](/api/@dxos/client/classes/PartyInvitation)
-
-Arguments: 
-
-`invitationDescriptor`: [`InvitationWrapper`](/api/@dxos/client/classes/InvitationWrapper)
-### [`cloneParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L155)
-
-
-Clones the party from a snapshot.
-
-Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
-
-Arguments: 
-
-`snapshot`: `PartySnapshot`
-### [`createParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L134)
-
-
-Creates a new party.
-
-Returns: `Promise<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
-
-Arguments: none
-### [`getParty`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L176)
-
-
-Returns an individual party by its key.
-
-Returns: `undefined | `[`Party`](/api/@dxos/client/interfaces/Party)
-
-Arguments: 
-
-`partyKey`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
-### [`queryParties`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L183)
-
-
-Returns: [`ResultSet`](/api/@dxos/client/classes/ResultSet)`<`[`Party`](/api/@dxos/client/interfaces/Party)`>`
-
-Arguments: none
-### [`registerModel`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L61)
-
-
-Returns: [`EchoProxy`](/api/@dxos/client/classes/EchoProxy)
-
-Arguments: 
-
-`constructor`: `ModelConstructor<any>`
-### [`toString`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L37)
+### [`[custom]`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L49)
 
 
 Returns: `string`
+
+Arguments: none
+### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L206)
+
+
+Initiates an interactive accept invitation flow.
+
+Returns: `Promise<`[`InvitationObservable`](/api/@dxos/client/interfaces/InvitationObservable)`>`
+
+Arguments: 
+
+`invitation`: [`Invitation`](/api/@dxos/client/interfaces/Invitation)
+### [`cloneSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L171)
+
+
+Clones the space from a snapshot.
+
+Returns: `Promise<`[`Space`](/api/@dxos/client/interfaces/Space)`>`
+
+Arguments: 
+
+`snapshot`: `SpaceSnapshot`
+### [`createSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L150)
+
+
+Creates a new space.
+
+Returns: `Promise<`[`Space`](/api/@dxos/client/interfaces/Space)`>`
+
+Arguments: none
+### [`getSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L192)
+
+
+Returns an individual space by its key.
+
+Returns: `undefined | `[`Space`](/api/@dxos/client/interfaces/Space)
+
+Arguments: 
+
+`spaceKey`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [`querySpaces`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L199)
+
+
+Query for all spaces.
+
+Returns: [`ResultSet`](/api/@dxos/client/classes/ResultSet)`<`[`Space`](/api/@dxos/client/interfaces/Space)`>`
+
+Arguments: none
+### [`toJSON`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L54)
+
+
+Returns: `object`
 
 Arguments: none

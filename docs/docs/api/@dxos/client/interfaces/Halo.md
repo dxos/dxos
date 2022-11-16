@@ -1,7 +1,5 @@
 # Interface `Halo`
-> Declared in [`packages/sdk/client/src/packlets/api/halo.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/halo-proxy.ts`]()
 
-HALO API.
+TODO(burdon): Public API (move comments here).
 ## Properties
-### [`info`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L21)
-Type: `object`
