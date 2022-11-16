@@ -1,7 +1,5 @@
 #!/bin/zsh
 
-echo "DXOS"
-
 #
 # Oh My Zsh plugin.
 #
@@ -19,29 +17,29 @@ alias gb='git branch -vv'
 #
 # NX
 # pnpm nx run-many --target=build
-# pnpm nx build <target> --watch
+# pnpm -w nx build <target> --watch
 #
 
-alias px="pnpm -w nx"
+alias nx="pnpm -w nx"
 
 # Run target in local directory (e.g., `p build`).
 function p () {
-  px $1 "${PWD##*/}" "$@"
+  nx $1 "${PWD##*/}" "$@"
 }
 
 # Break NX cache (e.g., `pc test`).
 function pc () {
-  px $1 "${PWD##*/}" "$@" "${RANDOM}"
+  nx $1 "${PWD##*/}" "$@" "${RANDOM}"
 }
 
 # Run everything (e.g., `pa build`).
 function pa () {
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    pnpm nx run-many --target=$1
+    nx run-many --target=$1
   else;
     pushd $ROOT
-    pnpm nx run-many --target=$1
+    nx run-many --target=$1
     popd
   fi;
 }

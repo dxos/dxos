@@ -16,11 +16,14 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
+    "@dxos/sentry": "workspace:*",
     "@dxos/util": "workspace:*",
-    "classnames": "^2.3.2"
+    "classnames": "^2.3.2",
+    "url-join": "^5.0.0"
   },
   "devDependencies": {
     "@dxos/react-client-testing": "workspace:*",

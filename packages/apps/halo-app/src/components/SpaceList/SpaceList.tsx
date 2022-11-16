@@ -3,23 +3,12 @@
 //
 
 import cx from 'classnames';
-import { SignIn, Gear } from 'phosphor-react';
 import React, { FunctionComponent } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import {
-  Avatar,
-  Group,
-  defaultGroup,
-  defaultHover,
-  defaultFocus,
-  useTranslation,
-  getSize,
-  Tooltip,
-  buttonStyles
-} from '@dxos/react-uikit';
+import { Avatar, Group, defaultGroup, defaultHover, defaultFocus } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
@@ -32,7 +21,6 @@ export interface SpaceListProps {
 
 // TODO(wittjosiah): Unify with @dxos/react-appkit SpaceList.
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
-  const { t } = useTranslation('halo');
   return (
     <div role='none' className='m-0 flex flex-col gap-4'>
       {spaces.map((space) => {
@@ -56,7 +44,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
             }}
             className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
           >
-            <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
+            {/* <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('manage space label', { ns: 'uikit' })} side='top' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
                   <Gear className={getSize(5)} />
@@ -67,7 +55,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                   <SignIn className={getSize(5)} />
                 </Link>
               </Tooltip>
-            </div>
+            </div> */}
           </Group>
         );
       })}

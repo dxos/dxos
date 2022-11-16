@@ -4,8 +4,6 @@
 
 import { ConfigProto } from '@dxos/config';
 
-export const IFRAME_ID = '__DXOS_CLIENT__';
-
 export const DEFAULT_CONFIG_CHANNEL = 'dxos:app';
 
 // TODO(burdon): Move to ConfigProto.

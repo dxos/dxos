@@ -39,6 +39,8 @@ export const uikit = {
   'manage space label': 'Manage space',
   'copy halo invite code label': 'Scan to authenticate a device, click to copy URL',
   'copy space invite code label': 'Scan to join, click to copy URL',
+  'copy space invite code short label': 'Copy invitation',
+  'display space invite qr code label': 'Show QR',
   'add contact label': 'Add a contact',
   'open apps directory label': 'Open apps directory',
   'pending label': 'Pending',

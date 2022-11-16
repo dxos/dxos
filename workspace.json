@@ -17,6 +17,7 @@
     "config": "packages/sdk/config",
     "credentials": "packages/core/halo/credentials",
     "crypto": "packages/common/crypto",
+    "composer-app": "packages/apps/composer-app",
     "context": "packages/common/context",
     "crypto-names": "packages/common/crypto-names",
     "debug": "packages/common/debug",

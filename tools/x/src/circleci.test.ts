@@ -70,12 +70,11 @@ describe('CI tests', function () {
   });
 
   // NOTE: Community question: https://discuss.circleci.com/t/downloading-build-logs-with-v2-api/44780
-  it.only('gets log', async function () {
+  it('gets log', async function () {
     // https://circleci.com/docs/api/v1/index.html#single-job
     const endpoint = 'https://circleci.com/api/v1.1/project';
     const jobNumber = 3378; // NOTE: The terms `job` and `build` are used interchangeably.
     const url = `${endpoint}/${projectSlug}/${jobNumber}`;
-    console.log(url);
     const response = await fetch(url, { headers });
     expect(response.status).to.eq(200);
     const results = await response.json();
@@ -83,7 +82,7 @@ describe('CI tests', function () {
     console.log('job', { subject, start_time, stop_time, outcome, fail_reason });
     console.log();
 
-    // TODO(burdon): Find first action to fail.
+    // Find first action to fail.
     expect(outcome).to.eq('failed');
     for (const step of steps) {
       const { actions } = step;
@@ -95,10 +94,8 @@ describe('CI tests', function () {
           // Logs.
           const response = await fetch(output_url);
           const data = await response.json();
-          const { message, time, type } = data[0];
+          const { time, type } = data[0];
           console.log('log', { time, type });
-          console.log();
-          console.log(message);
         }
       }
     }
