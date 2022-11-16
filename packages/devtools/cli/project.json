@@ -30,7 +30,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/devtools/cli/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
@@ -44,6 +45,9 @@
         },
         {
           "env": "NODE_ENV"
+        },
+        {
+          "env": "IPDATA_API_KEY"
         },
         {
           "env": "SENTRY_DESTINATION"

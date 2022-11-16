@@ -20,10 +20,10 @@ export class EchoBot extends Bot {
 
   override async onCommand(request: SendCommandRequest) {
     log('onCommand', request);
-    assert(this.party, 'Bot is not initialized');
+    assert(this.space, 'Bot is not initialized');
     assert(request.command, 'Command must be provided');
 
-    await this.party.database.createItem({
+    await this.space.database.createItem({
       model: ObjectModel,
       type: this._echoType,
       props: {

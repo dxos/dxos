@@ -7,14 +7,20 @@ import chalk from 'chalk';
 import { ModuleSpecifier } from './module-specifier';
 import { SubstitutionsMap } from './parser';
 
+type LoggerOptions = {
+  verbose?: boolean;
+};
+
 export class Logger {
+  constructor(private readonly _options: LoggerOptions = {}) {}
+
+  // prettier-ignore
   logCompilationOptions(
     protoFilePaths: string[],
     baseDirPath: string | undefined,
-    outDirPath: string,
-    verbose = false
+    outDirPath: string
   ) {
-    if (verbose) {
+    if (this._options?.verbose) {
       console.log(chalk`Output: {bold ${outDirPath}}`);
       console.log(chalk`Sources:`);
       for (const file of protoFilePaths) {
@@ -24,9 +30,13 @@ export class Logger {
     }
   }
 
-  logParsedSubstitutions(substitutionsModule: ModuleSpecifier, substitutions: SubstitutionsMap, verbose = false) {
+  // prettier-ignore
+  logParsedSubstitutions(
+    substitutionsModule: ModuleSpecifier,
+    substitutions: SubstitutionsMap
+  ) {
     console.log('Processing substitutions...');
-    if (verbose) {
+    if (this._options?.verbose) {
       console.log(chalk`Definitions: {bold ${substitutionsModule.resolve()}}`);
       if (Object.keys(substitutions).length > 0) {
         for (const [protoType, tsType] of Object.entries(substitutions)) {
@@ -36,13 +46,4 @@ export class Logger {
       }
     }
   }
-
-  logExports(outDir: string, verbose = false) {
-    console.info('Generating exports...');
-    if (verbose) {
-      console.log(chalk`Output: {bold ${outDir}}`);
-    }
-  }
 }
-
-export const logger = new Logger();

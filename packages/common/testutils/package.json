@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testutils",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,7 +16,7 @@
     "check": "true"
   },
   "devDependencies": {
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "typescript": "^4.8.4"
   },
   "publishConfig": {

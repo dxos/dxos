@@ -1,6 +1,6 @@
 {
   "name": "@dxos/beast",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -41,7 +41,7 @@
     "@types/lodash.pick": "^4.4.7",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",
     "mocha": "^8.4.0",
     "typescript": "^4.8.4"

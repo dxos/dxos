@@ -42,7 +42,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
@@ -58,7 +59,7 @@
         "resultsPath": "test-results/packages/sdk/client",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "testPatterns": [
-          "packages/sdk/client/src/**/*.test.{ts,js}"
+          "packages/sdk/client/src/**/[!_]*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/sdk/client/src/**/*"

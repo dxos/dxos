@@ -3,7 +3,7 @@
 #
 
 #
-# Party Genesis: Creating a new Party.
+# space Genesis: Creating a new space.
 #
 
 feed:
@@ -11,14 +11,14 @@ feed:
   messages:
     - id: 1
       data:
-        # Self-signed Credential by the Party.
-        @type: dxos.halo.party.PartyGenesis
-        party_key: Alice-Halo # ISSUE: Different from IdentityKey?
+        # Self-signed Credential by the space.
+        @type: dxos.halo.space.spaceGenesis
+        space_key: Alice-Halo # ISSUE: Different from IdentityKey?
         identity_key: Alice
     - id: 2
       data:
         # Authorizes device to sign on behalf of Identity
-        # NOTE: This Credential SHOULD be Presented on joining a Party.
+        # NOTE: This Credential SHOULD be Presented on joining a space.
         @type: halo.credential.Credential
         issuer: Alice # Self-signed.
         subject:
@@ -35,7 +35,7 @@ feed:
           id: Alice/Device-1/Feed-1
           assertion:
             @type halo.credentials.AdmittedFeed
-            party_key: Alice-Halo
+            space_key: Alice-Halo
             device_key: Alice/Device-1
 
 #
@@ -64,7 +64,7 @@ feed:
           id: Alice/Device-2/Feed-2 # New Feed.
           assertion:
             @type halo.credentials.AdmittedFeed
-            party_key: Alice-Halo
+            space_key: Alice-Halo
             device_key: Alice/Device-2
 
 #
@@ -76,9 +76,9 @@ feed:
   messages:
     - id: 1
       data:
-        # Self-signed Credential by the Party.
-        @type halo.party.Genesis # NOTE: Same as HALO.
-        party_key: Party-1
+        # Self-signed Credential by the space.
+        @type halo.space.Genesis # NOTE: Same as HALO.
+        space_key: space-1
         identity_key: Alice
     - id: 2
       data:
@@ -88,8 +88,8 @@ feed:
         subject:
           id: Alice
           assertion:
-            @type halo.credentials.PartyMember
-            party_key: Party-1
+            @type halo.credentials.spaceMember
+            space_key: space-1
             role: ADMIN
 
 #
@@ -110,7 +110,7 @@ feed:
           id: Alice/Device-2/Feed-3 # NOTE: This Feed.
           assertion:
             @type: halo.credentials.AdmittedFeed
-            party_key: Party-1
+            space_key: space-1
             identity_key: Alice
             device_key: Alice/Device-1
         proofs:
@@ -156,7 +156,7 @@ feed:
         subject:
           id: Bob
           assertion:
-            @type halo.credentials.PartyMember
-            party_key: Party-1
+            @type halo.credentials.spaceMember
+            space_key: space-1
             role: WRITER
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keyring",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Halo Keyring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.58"
+    "@types/node": "^18.11.9"
   },
   "publishConfig": {
     "access": "public"

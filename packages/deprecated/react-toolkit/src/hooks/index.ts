@@ -3,4 +3,4 @@
 //
 
 export * from './useErrors';
-export * from './usePartySerializer';
+export * from './useSpaceSerializer';

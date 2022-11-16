@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-network-generator",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Protocol network generator.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-network-generator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@dxos/network-generator": "workspace:*",
+    "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "pump": "^3.0.0"
   },

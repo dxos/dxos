@@ -60,8 +60,6 @@ export class SignalRPCClient {
       requested: {
         Signal: schema.getService('dxos.mesh.signal.Signal')
       },
-      exposed: {},
-      handlers: {},
       noHandshake: true,
       port: {
         send: (msg) => {

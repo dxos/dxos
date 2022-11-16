@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { useParties, useParty, useSelection } from '@dxos/react-client';
+import { useSpaces, useSpace, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
@@ -33,21 +33,21 @@ const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
 };
 
 export const ItemsPanel = () => {
-  const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<PublicKey>();
   const [selectedItem, setSelectedItem] = useState<Item<any>>();
 
-  const parties = useParties();
-  const party = useParty(selectedPartyKey);
-  const items = useSelection(party?.select().filter((item) => !item.parent)) ?? [];
+  const spaces = useSpaces();
+  const space = useSpace(selectedSpaceKey);
+  const items = useSelection(space?.select().filter((item) => !item.parent)) ?? [];
 
   return (
     <Panel
       controls={
         <KeySelect
-          label='Party'
-          keys={parties.map(({ key }) => key)}
-          selected={selectedPartyKey}
-          onChange={(key) => setSelectedPartyKey(key)}
+          label='Space'
+          keys={spaces.map(({ key }) => key)}
+          selected={selectedSpaceKey}
+          onChange={(key) => setSelectedSpaceKey(key)}
         />
       }
     >

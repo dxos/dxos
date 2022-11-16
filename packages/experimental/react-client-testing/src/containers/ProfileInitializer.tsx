@@ -5,7 +5,7 @@
 import React, { ReactNode } from 'react';
 
 import { useAsyncEffect } from '@dxos/react-async';
-import { useClient, useProfile } from '@dxos/react-client';
+import { useClient, useIdentity } from '@dxos/react-client';
 
 /**
  * Automatically creates a random DXOS profile.
@@ -13,7 +13,7 @@ import { useClient, useProfile } from '@dxos/react-client';
 // TODO(burdon): Replace with useTestProfile?
 export const ProfileInitializer = ({ children }: { children: ReactNode }) => {
   const client = useClient();
-  const profile = useProfile();
+  const profile = useIdentity();
 
   useAsyncEffect(async () => {
     if (!profile) {

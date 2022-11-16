@@ -52,6 +52,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
         sendToParentWindow(origin, message);
       }
     },
+
     subscribe: (callback) => {
       const handler = (event: MessageEvent<unknown>) => {
         if (!iframe && event.source !== window.parent) {
@@ -101,17 +102,9 @@ export const createIFrame = (source: string, id: string) => {
     return iframe;
   };
 
-  return (document.getElementById(id) as HTMLIFrameElement) ?? create();
-};
+  console.log(
+    'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
+  );
 
-/**
- * Removes a hidden iframe created by createIFrame() function.
- * If an element with the id does not exists it will do nothing.
- * @param id DOM id of the iframe.
- */
-export const removeIFrame = (id: string) => {
-  const iframe = document.getElementById(id) as HTMLIFrameElement;
-  if (iframe) {
-    document.body.removeChild(iframe);
-  }
+  return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

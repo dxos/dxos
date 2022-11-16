@@ -3,15 +3,15 @@
 //
 
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Client, Party } from '@dxos/client';
-import { useProfile } from '@dxos/react-client';
+import { Client, Space } from '@dxos/client';
+import { useIdentity } from '@dxos/react-client';
 import { AuthChoices, Button, Heading, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface RegistrationPageProps {
-  onRegister?: (client: Client) => Promise<Party>;
+  onRegister?: (client: Client) => Promise<Space>;
 }
 
 /**
@@ -19,9 +19,11 @@ export interface RegistrationPageProps {
  */
 export const LockPage = () => {
   const { t } = useTranslation('halo');
-  const profile = useProfile();
+  const profile = useIdentity();
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') ?? '';
 
   const handleUnlock = useCallback(() => {
     navigate('/spaces');
@@ -42,7 +44,7 @@ export const LockPage = () => {
         <>
           <p className='text-center'>
             {t('using halo as message', {
-              displayName: profile.username ?? humanize(profile.publicKey)
+              displayName: profile.displayName ?? humanize(profile.identityKey)
             })}
           </p>
         </>
@@ -51,9 +53,9 @@ export const LockPage = () => {
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices
             {...{
-              onJoin: () => navigate('/identity/join'),
-              onCreate: () => navigate('/identity/create'),
-              onRecover: () => navigate('/identity/recover')
+              onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
+              onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
+              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
             }}
           />
         </>

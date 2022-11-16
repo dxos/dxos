@@ -9,7 +9,6 @@ import { resolve } from 'path';
 import readPkg from 'read-pkg';
 
 import { preconfigureProtobufjs } from './configure';
-import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { registerResolver } from './parser';
 import { parseAndGenerateSchema } from './type-generator';
@@ -21,24 +20,18 @@ const main = async () => {
     description: 'Protobuf compiler'
   });
 
-  // TODO(burdon): Match executor arguments.
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
   parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', {
     help: 'Base path to resolve fully qualified packages'
   });
-  parser.add_argument('--basePath', {});
   parser.add_argument('-o', '--outDir', {
     help: 'Output directory path',
     required: true
   });
-  parser.add_argument('-t', '--typeDir', {
-    required: false,
-    default: false
-  });
 
-  const { proto, substitutions, baseDir, outDir, verbose } = parser.parse_args();
+  const { proto, substitutions, baseDir, outDir } = parser.parse_args();
 
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
   const substitutionsModule = substitutions
@@ -51,8 +44,7 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(protoFilePaths, baseDirPath, outDirPath, verbose);
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, verbose);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, process.cwd());
 };
 
 void main();

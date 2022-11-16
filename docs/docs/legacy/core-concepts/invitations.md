@@ -7,10 +7,10 @@ title: Invitations
 To create an invitation, we first need to call to `useSecretGenerator` hook provided by `@dxos/react-client`:
 
 ```jsx
-import { useParty, useSecretGenerator } from '@dxos/react-client';
+import { usespace, useSecretGenerator } from '@dxos/react-client';
 
-const Component = ({ party_key }) => {
-  const party = useParty(party_key);
+const Component = ({ space_key }) => {
+  const space = usespace(space_key);
 
   const [secretProvider, pin, resetPin] = useSecretGenerator();
 
@@ -30,13 +30,13 @@ The Invitation flow requires the inviter and invitee to be online at the same ti
 
 ## Redeem an Invitation
 
-As a user invited to a party, you need to validate both the `inviteCode` and the `pin` code. For this, you should use the `useSecretProvider` hook from `@dxos/react-client`:
+As a user invited to a space, you need to validate both the `inviteCode` and the `pin` code. For this, you should use the `useSecretProvider` hook from `@dxos/react-client`:
 
 ```jsx
-import { useParty, useSecretProvider } from '@dxos/react-client';
+import { usespace, useSecretProvider } from '@dxos/react-client';
 
-const Component = ({ party_key }) => {
-  const party = useParty(party_key);
+const Component = ({ space_key }) => {
+  const space = usespace(space_key);
 
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 

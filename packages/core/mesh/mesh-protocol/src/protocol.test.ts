@@ -3,18 +3,16 @@
 //
 
 import crypto from 'crypto';
-import debug from 'debug';
 import expect from 'expect';
 import pump from 'pump';
 
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
 import { Extension } from './extension';
 import { Protocol } from './protocol';
 import { pipeProtocols } from './testing';
-
-const log = debug('dxos:protocol:test');
 
 describe('Protocol', function () {
   it('protocol sessions', async function () {
@@ -42,8 +40,8 @@ describe('Protocol', function () {
       userSession: { peerId: 'user2' }
     }).init();
 
-    protocol1.error.on((err) => console.log('protocol1', err));
-    protocol2.error.on((err) => console.log('protocol2', err));
+    protocol1.error.on((err) => log.error('protocol1', err));
+    protocol2.error.on((err) => log.error('protocol2', err));
 
     pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
   }).timeout(1 * 1000);
@@ -79,8 +77,8 @@ describe('Protocol', function () {
       userSession: { peerId: 'user2' }
     }).init();
 
-    protocol1.error.on((err) => console.log('protocol1', err));
-    protocol2.error.on((err) => console.log('protocol2', err));
+    protocol1.error.on((err) => log.error('protocol1', err));
+    protocol2.error.on((err) => log.error('protocol2', err));
 
     await pipeProtocols(protocol1, protocol2);
 
@@ -129,8 +127,8 @@ describe('Protocol', function () {
       )
       .init();
 
-    protocol1.error.on((err) => console.log('protocol1', err));
-    protocol2.error.on((err) => console.log('protocol2', err));
+    protocol1.error.on((err) => log.error('protocol1', err));
+    protocol2.error.on((err) => log.error('protocol2', err));
 
     protocol1.setHandshakeHandler(async (protocol) => {
       const bufferMessages = protocol.getExtension(bufferExtension)!;
@@ -190,8 +188,8 @@ describe('Protocol', function () {
       )
       .init();
 
-    protocol1.error.on((err) => console.log('protocol1', err));
-    protocol2.error.on((err) => console.log('protocol2', err));
+    protocol1.error.on((err) => log.error('protocol1', err));
+    protocol2.error.on((err) => log.error('protocol2', err));
 
     protocol1.setHandshakeHandler(async (protocol) => {
       const messages = protocol.getExtension(extension)!;
@@ -325,8 +323,8 @@ describe('Protocol', function () {
       )
       .init();
 
-    protocol1.error.on((err) => console.log('protocol1', err));
-    protocol2.error.on((err) => console.log('protocol2', err));
+    protocol1.error.on((err) => log.error('protocol1', err));
+    protocol2.error.on((err) => log.error('protocol2', err));
 
     expect(protocol1.id).toBeDefined();
     expect(protocol2.id).toBeDefined();

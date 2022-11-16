@@ -2,19 +2,19 @@
 title: Mutations
 ---
 
-To create shared items on our Party, we just need to call `party.database.createItem` function sending some required information:
+To create shared items on our space, we just need to call `space.database.createItem` function sending some required information:
 
 ```jsx
-import { useParty } from '@dxos/react-client';
+import { usespace } from '@dxos/react-client';
 import { ObjectModel } from '@dxos/object-model';
 
 const EXAMPLE_TYPE = 'example.com/type/item';
 
-const Component = ({ party_key }) => {
-  const party = useParty(party_key);
+const Component = ({ space_key }) => {
+  const space = usespace(space_key);
 
   const handleCreateItem = async () => {
-    await party.database.createItem({
+    await space.database.createItem({
       type: EXAMPLE_TYPE,
       model: ObjectModel,
       props: { title: 'My Example' },

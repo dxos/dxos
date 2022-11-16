@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/protocols/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
@@ -31,14 +32,11 @@
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
-        "genPath": "packages/core/protocols/src/proto/gen",
-        "outputPath": "packages/core/protocols/dist",
-        "typingsPath": "packages/core/protocols/typings",
-        "packageExports": true
+        "exportPath": "packages/core/protocols/dist/src/proto/gen"
       },
       "outputs": [
         "{options.basePath}/gen",
-        "{options.typingsOutputPath}"
+        "packages/core/protocols/proto"
       ]
     },
     "test": {

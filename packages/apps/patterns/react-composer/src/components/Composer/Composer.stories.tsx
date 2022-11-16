@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 
-import { Item } from '@dxos/client';
+import { defaultConfig, Item } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { Loading } from '@dxos/react-uikit';
@@ -26,9 +26,10 @@ const Template = (args: Omit<ComposerProps, 'item'>) => {
   const [item, setItem] = useState<Item<TextModel>>();
 
   useAsyncEffect(async () => {
-    client.echo.registerModel(TextModel);
+    // TODO(burdon): Observer.
     await client.halo.createProfile();
-    const space = await client.echo.createParty();
+    // TODO(burdon): Observer.
+    const space = await client.echo.createSpace();
     const item = await space.database.createItem({
       model: TextModel,
       type: DOCUMENT_TYPE
@@ -44,7 +45,7 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={{ runtime: { client: { mode: 1 } } }}>
+    <ClientProvider config={defaultConfig}>
       <Story />
     </ClientProvider>
   )

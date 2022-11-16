@@ -33,11 +33,10 @@ export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, o
     // TODO(burdon): Catch errors.
     // https://github.com/vfile/vfile#filehistory
     const text = await read(filename);
-    const original = text.toString();
-    const output = await parser.process(text);
+    const processed = await parser.process(text);
 
     // Only write if different.
-    const count = diffLines(original, output.toString() + '\n').length;
+    const count = diffLines(text.toString(), processed.toString() + '\n').length;
     if (count > 1) {
       const parts = path.parse(filename);
       const f = path.format({

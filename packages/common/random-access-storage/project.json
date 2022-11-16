@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/random-access-storage/**/*.ts"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/sdk/vite-plugin/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

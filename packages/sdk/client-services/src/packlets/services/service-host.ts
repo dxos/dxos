@@ -2,100 +2,108 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
-
 import { Config } from '@dxos/config';
+import { raise } from '@dxos/debug';
+import { DataServiceImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { TextModel } from '@dxos/text-model';
 
+import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
+import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
+import { DevicesServiceImpl } from '../identity/devices-service-impl';
+import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
-import { createServices } from './service-factory';
-import { ClientServiceProvider, ClientServices } from './services';
-import { HaloSigner } from './signer';
-// import { DevtoolsHostEvents } from '../devtools';
+import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
+import { ServiceRegistry } from './service-registry';
 
-// TODO(burdon): Remove (no memory defaults).
-const memorySignalManagerContext = new MemorySignalManagerContext();
-
-// TODO(burdon): Factor out.
-export const createNetworkManager = (config: Config): NetworkManager => {
-  const signalServer = config.get('runtime.services.signal.server');
-  // TODO(burdon): Remove.
-  if (!signalServer) {
-    log.warn('DEPRECATED: falling back to MemorySignalManager');
-    return new NetworkManager({
-      log: true,
-      signalManager: new MemorySignalManager(memorySignalManagerContext),
-      transportFactory: MemoryTransportFactory
-    });
-  }
-  assert(signalServer);
-
-  return new NetworkManager({
-    log: true,
-    signalManager: new WebsocketSignalManager([signalServer]),
-    transportFactory: createWebRTCTransportFactory({
-      iceServers: config.get('runtime.services.ice')
-    })
-  });
-};
-
-type ClientServiceHostParams = {
+type ClientServicesHostParams = {
   config: Config;
-  signer?: HaloSigner;
   modelFactory?: ModelFactory;
   networkManager: NetworkManager;
+};
+
+// TODO(burdon): Factor out to spaces.
+// TODO(burdon): Defaults (with TextModel).
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
 };
 
 /**
  * Remote service implementation.
  */
-export class ClientServiceHost implements ClientServiceProvider {
-  private readonly _config: Config;
-  private readonly _signer?: HaloSigner;
-  private readonly _context: ServiceContext;
-  private readonly _services: ClientServices;
+// TODO(burdon): Reconcile Host/Backend, etc.
+export class ClientServicesHost implements ClientServicesProvider {
+  private readonly _serviceContext: ServiceContext;
+  private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
 
   constructor({
     config,
-    modelFactory = new ModelFactory().registerModel(ObjectModel),
-    signer,
+    modelFactory = createDefaultModelFactory(),
+    // TODO(burdon): Create ApolloLink abstraction (see Client).
     networkManager
-  }: ClientServiceHostParams) {
-    this._config = config;
-    this._signer = signer;
-
+  }: ClientServicesHostParams) {
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
-    this._context = new ServiceContext(storage, networkManager, modelFactory);
+    const { storage } = createStorageObjects(config.get('runtime.client.storage', {})!);
 
-    this._services = createServices({
-      config: this._config,
-      context: this._context,
-      signer: this._signer,
-      networkManager
+    // TODO(burdon): Break into components.
+    this._serviceContext = new ServiceContext(storage, networkManager, modelFactory);
+
+    // TODO(burdon): Start to think of DMG (dynamic services).
+    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
+      HaloInvitationsService: new HaloInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.haloInvitations
+      ),
+
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+      ),
+
+      SpacesService: new SpacesServiceImpl(),
+
+      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
+      // TODO(burdon): Move to new protobuf definitions.
+      ProfileService: new ProfileServiceImpl(this._serviceContext),
+      SpaceService: new SpaceServiceImpl(this._serviceContext),
+      SystemService: new SystemServiceImpl(config),
+      TracingService: new TracingServiceImpl(config),
+      DevtoolsHost: new DevtoolsServiceImpl({
+        events: new DevtoolsHostEvents(),
+        config,
+        context: this._serviceContext
+      })
     });
   }
 
-  get services() {
-    return this._services;
+  get descriptors() {
+    return this._serviceRegistry.descriptors;
   }
 
-  // TODO(dmaretskyi): progress.
-  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
-    log('opening...');
-    await this._context.open();
-    // this._devtoolsEvents.ready.emit();
-    log('opened');
+  get services() {
+    return this._serviceRegistry.services;
+  }
+
+  async open() {
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('opening...', { deviceKey });
+    await this._serviceContext.open();
+    log('opened', { deviceKey });
   }
 
   async close() {
-    log('closing...');
-    await this._context.close();
-    log('closed');
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('closing...', { deviceKey });
+    await this._serviceContext.close();
+    log('closed', { deviceKey });
   }
 }

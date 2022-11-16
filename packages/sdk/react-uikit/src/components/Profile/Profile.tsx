@@ -7,30 +7,30 @@ import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import urlJoin from 'url-join';
 
-import type { Profile as NaturalProfile } from '@dxos/client';
+import { Invitation, InvitationEncoder, Profile as ProfileType } from '@dxos/client';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, getSize, Input, Loading, QrCode } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
 export interface ProfileProps {
-  profile: NaturalProfile;
-  createInvitationUrl?: (invitationCode: string) => string;
+  profile: ProfileType;
+  createInvitationUrl?: (invitation: Invitation) => string;
 }
 
 // TODO(wittjosiah): Remove.
-const defaultCreateUrl = (invitationCode: string) => {
+const defaultCreateUrl = (invitation: Invitation) => {
   const invitationPath = '/profile/invite-device'; // App-specific.
   const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
+  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${InvitationEncoder.encode(invitation)}`);
 };
 
-export const UsernameInput = ({ profile }: { profile: NaturalProfile }) => {
+export const DisplayNameInput = ({ profile }: { profile: ProfileType }) => {
   const { t } = useTranslation();
   return (
     <Input
-      label={t('username label')}
-      initialValue={profile.username}
-      placeholder={humanize(profile.publicKey.toHex())}
+      label={t('displayName label')}
+      initialValue={profile.displayName}
+      placeholder={humanize(profile.identityKey.toHex())}
       className='my-0'
     />
   );
@@ -39,7 +39,7 @@ export const UsernameInput = ({ profile }: { profile: NaturalProfile }) => {
 export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: ProfileProps) => {
   const { t } = useTranslation();
   const client = useClient();
-  const invitations = useHaloInvitations(client);
+  const invitations = useHaloInvitations();
 
   useEffect(() => {
     if (invitations.length < 1) {
@@ -48,7 +48,12 @@ export const HaloInviteSingleton = ({ createInvitationUrl = defaultCreateUrl }: 
   }, [client, invitations]);
 
   // TODO(wittjosiah): This should re-generate once it is used.
-  const invitationUrl = useMemo(() => invitations[0] && createInvitationUrl(invitations[0].encode()), [invitations]);
+  const invitationUrl = useMemo(() => {
+    const invitation = invitations[0]?.invitation;
+    if (invitation) {
+      return createInvitationUrl(invitation);
+    }
+  }, [invitations]);
 
   return invitationUrl ? (
     <QrCode
@@ -68,7 +73,7 @@ export const Profile = (props: ProfileProps) => {
   const { t } = useTranslation();
   return (
     <div role='none' className='flex flex-col gap-4 items-center'>
-      <UsernameInput {...props} />
+      <DisplayNameInput {...props} />
       <HaloInviteSingleton {...props} />
       <Button variant='outline' className='w-full flex gap-2'>
         <Eraser className={getSize(5)} />

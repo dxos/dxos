@@ -2,94 +2,56 @@
 // Copyright 2022 DXOS.org
 //
 
-import fs from 'fs';
-import path from 'path';
+import { existsSync, mkdirSync, rmdirSync, writeFileSync } from 'fs';
+import { dirname, join, relative } from 'path';
 
-import { logger } from '../logger';
+import { parseFullyQualifiedName } from '../namespaces';
 
-const HEADER = '// Generated file: do not edit.';
-
-// NOTE: Proto package names must match the generated folder tree.
-// TODO(burdon): Warn if does not match.
-
-export type TypingGeneratorOptions = {
-  files: {
-    namespace: string;
-    generatedModule: string;
-  }[];
-  baseDir: string;
-  outDir: string;
-  distDir: string;
+export type GeneratePackageExportsParams = {
+  /**
+   * Root directory of the project.
+   * Example: packages/core/protocols
+   */
   packageRoot: string;
+
+  /**
+   * Directory with compiled generated definitions.
+   * Example: packages/core/protocols/dist/src/proto/gen
+   */
+  exportFrom: string;
+  namespaces: string[];
 };
 
-/**
- * Generates Typescript typings from protocol buffer definitions.
- */
-export class ExportsGenerator {
-  // prettier-ignore
-  constructor (
-    private readonly _options: TypingGeneratorOptions
-  ) {
-    console.log(_options);
+const HEADER = '/**\n * @generated\n */\n';
+
+export const generatePackageExports = ({ packageRoot, exportFrom, namespaces }: GeneratePackageExportsParams) => {
+  // TODO(dmaretskyi): Move to config.
+  const prefix = 'proto';
+
+  // Clean.
+  if (existsSync(join(packageRoot, prefix))) {
+    rmdirSync(join(packageRoot, prefix), { recursive: true });
   }
 
-  generate(verbose = false) {
-    return;
-    logger.logExports(this._options.outDir, verbose);
-    fs.rmSync(this._options.outDir, { recursive: true, force: true });
-    fs.mkdirSync(this._options.outDir, { recursive: true });
+  for (const namespace of namespaces) {
+    // Example: packages/core/protocols/proto/dxos/echo/feed
+    const filenameWithoutExtension = join(packageRoot, prefix, parseFullyQualifiedName(namespace).join('/'));
 
-    // Create README.
-    fs.writeFileSync(path.join(this._options.outDir, 'README.md'), '# Generated Protobuf Defs');
+    // Example: packages/core/protocols/dist/src/proto/gen/dxos/echo/feed
+    const exportedModule = join(exportFrom, parseFullyQualifiedName(namespace).join('/'));
 
-    // https://www.npmjs.com/package/glob
-    for (const { namespace, generatedModule } of this._options.files) {
-      // Output directory.
-      const relativePath = namespace.replaceAll('.', '/');
-      const relativeDir = path.join(this._options.outDir, path.dirname(relativePath));
+    // Example: ../../../dist/src/proto/gen/dxos/echo/feed
+    const moduleRelativeToFile = relative(dirname(filenameWithoutExtension), exportedModule);
 
-      console.log({
-        genDir: this._options.distDir,
-        outDir: this._options.outDir,
-        relativePath
-      });
-
-      process.exit();
-
-      // Output file.
-      const filename = path.basename(relativePath, '.proto');
-      const jsOutFile = path.join(relativeDir, `${filename}.js`);
-      const tsOutFile = path.join(relativeDir, `${filename}.d.ts`);
-      const outFile = path.join(relativeDir, `${filename}.d.ts.map`);
-
-      if (!fs.existsSync(relativeDir)) {
-        fs.mkdirSync(relativeDir, { recursive: true });
-      }
-
-      // Relative path.
-      const exportFile = path.join(path.dirname(relativePath), filename);
-      const relativeFileDir = path.join(this._options.distDir, exportFile);
-
-      // JS compiled output (required for tests).
-      // Relative path to the `dist/src/proto/gen` folder.
-      fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relativeFileDir}');\n`);
-
-      // TS definitions.
-      fs.writeFileSync(tsOutFile, `${HEADER}\nexport * from '${relativeFileDir}';\n`);
-
-      // Source map definitions (enables IDE navigation in VSCode).
-      // https://github.com/source-map/source-map-spec
-      const defs = {
-        version: 3,
-        file: `${filename}.d.ts`,
-        sourceRoot: '',
-        sources: [path.join(path.relative(exportFile, '.'), this._options.baseDir, relativePath)],
-        names: [],
-        mappings: 'AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC'
-      };
-
-      fs.writeFileSync(outFile, JSON.stringify(defs, undefined, 2) + '\n');
-    }
+    writeFile(`${filenameWithoutExtension}.js`, `${HEADER}\nmodule.exports = require('${moduleRelativeToFile}');\n`);
+    writeFile(`${filenameWithoutExtension}.d.ts`, `${HEADER}\nexport * from '${moduleRelativeToFile}';\n`);
   }
-}
+};
+
+const writeFile = (path: string, content: string) => {
+  if (!existsSync(dirname(path))) {
+    mkdirSync(dirname(path), { recursive: true });
+  }
+
+  writeFileSync(path, content);
+};

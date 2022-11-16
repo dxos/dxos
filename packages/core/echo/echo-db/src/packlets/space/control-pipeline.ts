@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
+import { SpaceStateMachine, SpaceState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ export type ControlPipelineParams = {
  */
 export class ControlPipeline {
   private readonly _pipeline: Pipeline;
-  private readonly _partyStateMachine: PartyStateMachine;
+  private readonly _spaceStateMachine: SpaceStateMachine;
 
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
@@ -35,8 +35,8 @@ export class ControlPipeline {
     this._pipeline = new Pipeline(initialTimeframe);
     void this._pipeline.addFeed(genesisFeed); // TODO(burdon): Require async open/close?
 
-    this._partyStateMachine = new PartyStateMachine(spaceKey);
-    this._partyStateMachine.onFeedAdmitted.set(async (info) => {
+    this._spaceStateMachine = new SpaceStateMachine(spaceKey);
+    this._spaceStateMachine.onFeedAdmitted.set(async (info) => {
       log('feed admitted', { info });
 
       // TODO(burdon): Check not stopping.
@@ -52,12 +52,12 @@ export class ControlPipeline {
       await this.onFeedAdmitted.callIfSet(info);
     });
 
-    this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
-    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
+    this.onMemberAdmitted = this._spaceStateMachine.onMemberAdmitted;
+    this.onCredentialProcessed = this._spaceStateMachine.onCredentialProcessed;
   }
 
-  get partyState(): PartyState {
-    return this._partyStateMachine;
+  get spaceState(): SpaceState {
+    return this._spaceStateMachine;
   }
 
   get pipeline(): PipelineAccessor {
@@ -75,7 +75,7 @@ export class ControlPipeline {
         try {
           log('processing', { msg });
           if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
-            const result = await this._partyStateMachine.process(
+            const result = await this._spaceStateMachine.process(
               msg.data.payload.credential,
               PublicKey.from(msg.feedKey)
             );

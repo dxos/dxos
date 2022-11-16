@@ -7,24 +7,21 @@ import React, { useState } from 'react';
 import { Clear as CancelIcon, QrCode2 as QRCodeIcon } from '@mui/icons-material';
 import { Box, IconButton, Popover, Typography } from '@mui/material';
 
+import { Invitation, InvitationEncoder } from '@dxos/client';
 import { CopyToClipboard, HashIcon, Passcode, QRCode } from '@dxos/react-components';
 
-export interface PendingInvitationProps {
-  invitationCode: string;
-  pin: string | undefined;
-  createUrl: (invitationCode: string) => string;
+export type PendingInvitationProps = {
+  invitation: Invitation;
+  authenticationCode?: string | undefined;
+  createUrl: (invitation: Invitation) => string;
   onCancel: () => void;
-}
+};
 
 /**
  * Displays the pending invitation row, invitaion/cancel buttons, etc.
- * @param invitationCode
- * @param pin
- * @param createUrl
- * @param onCancel
  * @constructor
  */
-export const PendingInvitation = ({ invitationCode, pin, createUrl, onCancel }: PendingInvitationProps) => {
+export const PendingInvitation = ({ invitation, authenticationCode, createUrl, onCancel }: PendingInvitationProps) => {
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
 
   return (
@@ -38,18 +35,18 @@ export const PendingInvitation = ({ invitationCode, pin, createUrl, onCancel }: 
       }}
     >
       <IconButton size='small' disabled>
-        <HashIcon value={invitationCode} />
+        <HashIcon value={InvitationEncoder.encode(invitation)} />
       </IconButton>
 
       {/* TODO(burdon): Show expiration time. */}
       <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
-        {!pin ? 'Waiting...' : 'Passcode'}
+        {!authenticationCode ? 'Waiting...' : 'Passcode'}
       </Typography>
 
-      {!pin && (
+      {!authenticationCode && (
         <>
           <IconButton size='small' title='Copy invitation.'>
-            <CopyToClipboard text={createUrl(invitationCode)} />
+            <CopyToClipboard text={createUrl(invitation)} />
           </IconButton>
           <IconButton size='small' onClick={(event) => setPopoverAnchor(event.currentTarget)}>
             <QRCodeIcon />
@@ -68,18 +65,18 @@ export const PendingInvitation = ({ invitationCode, pin, createUrl, onCancel }: 
             }}
           >
             <Box sx={{ padding: 1 }}>
-              <QRCode value={createUrl(invitationCode)} />
+              <QRCode value={createUrl(invitation)} />
             </Box>
           </Popover>
         </>
       )}
 
-      {pin && (
+      {authenticationCode && (
         <>
           <IconButton size='small' title='Copy passcode.'>
-            <CopyToClipboard text={pin} />
+            <CopyToClipboard text={authenticationCode} />
           </IconButton>
-          <Passcode disabled size='small' value={pin} />
+          <Passcode disabled size='small' value={authenticationCode} />
         </>
       )}
 

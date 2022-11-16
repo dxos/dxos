@@ -6,7 +6,8 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client } from '@dxos/client';
+import { Client, fromDefaults, fromIFrame } from '@dxos/client';
+import { ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
@@ -19,40 +20,39 @@ import { theme } from './theme';
 
 export const App = () => {
   const [client, setClient] = useState<Client>();
+  const [servicesProvider, setServicesProvider] = useState<ClientServicesProvider>();
 
-  const onConfigChange = async ({ remoteSource, mode }: { remoteSource?: string; mode: number }) => {
-    if (
-      client?.config.values.runtime?.client?.mode === mode &&
-      client?.config.values.runtime?.client?.remoteSource === remoteSource
-    ) {
+  const onConfigChange = async (remoteSource?: string) => {
+    if (client && client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
 
     const remoteSourceConfig = {
       runtime: {
         client: {
-          remoteSource,
-          mode
+          remoteSource
         }
       }
     };
+
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
 
     {
-      if (client) {
+      if (client && servicesProvider) {
         setClient(undefined);
         await client.destroy();
+        await servicesProvider.close();
       }
-      const newClient = new Client(config);
+      const newServicesProvider = remoteSource ? fromIFrame(config) : fromDefaults(config);
+      setServicesProvider(newServicesProvider);
+      const newClient = new Client({ config, services: newServicesProvider });
       await newClient.initialize();
       setClient(newClient);
     }
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange({
-      mode: 1
-    });
+    await onConfigChange();
   }, []);
 
   if (!client) {
@@ -64,7 +64,7 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
-          <ClientContext.Provider value={{ client }}>
+          <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
             </Box>

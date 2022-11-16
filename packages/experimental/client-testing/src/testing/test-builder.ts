@@ -5,7 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { Party, Client } from '@dxos/client';
+import { Space, Client } from '@dxos/client';
 
 /**
  * Test builder.
@@ -23,45 +23,45 @@ export class TestBuilder {
     await client.initialize();
     expect(client.initialized).toBeTruthy();
 
-    await client.halo.createProfile({ username: 'test-user' });
-    // const { username } = client.halo.profile!;
-    // expect(username).toEqual('test-user');
+    await client.halo.createProfile({ displayName: 'test-user' });
+    // const { displayName } = client.halo.profile!;
+    // expect(displayName).toEqual('test-user');
 
     this._client = client;
   }
 
-  async createParty() {
+  async createSpace() {
     assert(this._client);
 
-    const party = await this._client.echo.createParty();
-    expect(party.isOpen).toBeTruthy();
+    const space = await this._client.echo.createSpace();
+    expect(space.isOpen).toBeTruthy();
 
-    return party;
+    return space;
   }
 
-  async destroyParty(party: Party) {
+  async destroySpace(space: Space) {
     assert(this._client);
 
-    await party.destroy();
-    // TODO(burdon): Party and Database doesn't match.
-    //  party.destroy not called until ClientServiceProxy.
-    // console.log(party.database.state);
-    // expect(party.is_active).toBeFalsy();
+    await space.destroy();
+    // TODO(burdon): Space and Database doesn't match.
+    //  space.destroy not called until ClientServicesProxy.
+    // console.log(space.database.state);
+    // expect(space.is_active).toBeFalsy();
 
     await this._client.destroy();
     expect(this._client.initialized).toBeFalsy();
   }
 }
 
-type Callback = (client: Client, Party: Party) => Promise<void>;
+type Callback = (client: Client, Space: Space) => Promise<void>;
 
 export const testCallback = async (callback: Callback) => {
   const builder = new TestBuilder();
   await builder.initialize();
-  const party = await builder.createParty();
+  const space = await builder.createSpace();
   try {
-    await callback(builder.client, party);
+    await callback(builder.client, space);
   } finally {
-    await builder.destroyParty(party);
+    await builder.destroySpace(space);
   }
 };

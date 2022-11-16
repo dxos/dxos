@@ -5,30 +5,30 @@
   "properties": {
     "basePath": {
       "type": "string",
-      "description": "Common base for `srcPath`, `substitutionsPath` and `outputPath`"
+      "description": ""
     },
     "srcPath": {
       "type": "string",
-      "description": "Glob to locate source .proto files (relative to `basePath`)",
+      "description": "",
       "default": "**/*.proto"
-    },
-    "substitutionsPath": {
-      "type": "string",
-      "description": "Path to substitutions file (relative to `basePath`)",
-      "default": "substitutions.ts"
     },
     "outputPath": {
       "type": "string",
-      "description": "Directory for generated modules (relative to `basePath`)",
+      "description": "",
       "default": "gen"
     },
-    "packageExports": {
-      "type": "boolean",
-      "description": "Export generated types from the package.",
-      "default": false
+    "substitutionsPath": {
+      "type": "string",
+      "description": "",
+      "default": "substitutions.ts"
+    },
+    "exportPath": {
+      "type": "string",
+      "description": "Directory for compiled proto definitions.",
+      "examples": [
+        "dist/src/proto/gen"
+      ]
     }
   },
-  "required": [
-    "basePath"
-  ]
+  "required": ["basePath"]
 }

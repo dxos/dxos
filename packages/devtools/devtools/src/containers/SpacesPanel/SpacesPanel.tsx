@@ -10,10 +10,14 @@ import { SpaceTable } from '../../components';
 
 export const SpacesPanel = () => {
   const devtoolsHost = useDevtools();
-  const { parties } = useStream(() => devtoolsHost.subscribeToParties({}), {});
-  if (parties === undefined) {
+  if (!devtoolsHost) {
     return null;
   }
 
-  return <SpaceTable parties={parties} />;
+  const { spaces } = useStream(() => devtoolsHost.subscribeToSpaces({}), {});
+  if (spaces === undefined) {
+    return null;
+  }
+
+  return <SpaceTable spaces={spaces} />;
 };

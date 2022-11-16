@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 import crypto from 'crypto';
 
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
@@ -22,12 +23,13 @@ it('basic generator', async function () {
       }).init().stream
   }));
 
-  generator.on('error', (err) => console.log(err));
+  generator.on('error', (err) => log.error(err));
 
   const network = await generator.grid({
     topic: crypto.randomBytes(32),
     parameters: [10, 10]
   });
+
   expect(network.peers.length).to.equal(100);
   expect(network.connections.length).to.equal(180);
   await network.destroy();

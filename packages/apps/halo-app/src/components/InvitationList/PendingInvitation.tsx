@@ -4,62 +4,86 @@
 
 import cx from 'classnames';
 import { ProhibitInset } from 'phosphor-react';
-import React, { useCallback } from 'react';
-import urlJoin from 'url-join';
+import React from 'react';
 
-import { InvitationRequest } from '@dxos/client';
-import { Avatar, QrCode, useTranslation, Tag, defaultGroup, Button, getSize } from '@dxos/react-uikit';
+import { Invitation, InvitationObservable } from '@dxos/client';
+import { useInvitationStatus } from '@dxos/react-client';
+import {
+  Avatar,
+  useTranslation,
+  defaultGroup,
+  Button,
+  Loading,
+  getSize,
+  InvitationStatus,
+  CompactQrCode,
+  Tooltip
+} from '@dxos/react-uikit';
 
+import { createInvitationUrl } from '../../util';
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  value: InvitationRequest; // TODO(burdon): Rename invitation.
+  wrapper: InvitationObservable;
+  path: string;
 }
 
-export const PendingInvitation = ({ value }: PendingInvitationProps) => {
-  const { t } = useTranslation('uikit');
-
-  const onCancel = useCallback(() => value.cancel(), [value]);
-
-  return (
-    <div role='group' className={cx(defaultGroup({ elevation: 1 }))}>
-      <HeadingWithActions
-        compact
-        heading={{
-          level: 2,
-          className: 'text-lg font-body flex gap-2 items-center',
-          children: (
-            <Avatar
-              size={10}
-              fallbackValue={value.descriptor.hash}
-              label={<Tag valence='warning'>{t('pending label')}</Tag>}
-            />
-          )
-        }}
-        actions={
-          <>
-            <Button className='grow flex gap-1 items-center' onClick={onCancel}>
-              <ProhibitInset className={getSize(5)} />
-              <span>{t('cancel label')}</span>
-            </Button>
-          </>
-        }
-      />
-      <QrCode
-        size={40}
-        value={createInvitationUrl(value.encode())}
-        label={<p className='w-20'>{t('copy halo invite code label')}</p>}
-        side='top'
-        sideOffset={12}
-        className='w-full h-auto mt-2'
-      />
-    </div>
-  );
+const PendingInvitationSkeleton = ({ message }: { message: string }) => {
+  return <Loading label={message} />;
 };
 
-// TODO(wittjosiah): Factor out.
-const createInvitationUrl = (invitationCode: string) => {
-  const invitationPath = '/identity/join';
-  const { origin, pathname } = window.location;
-  return urlJoin(origin, pathname, `/#${invitationPath}`, `?invitation=${invitationCode}`);
+export const PendingInvitation = ({ wrapper, path }: PendingInvitationProps) => {
+  const { t } = useTranslation('uikit');
+
+  const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
+
+  return (
+    <div role='group' className={cx(defaultGroup({ elevation: 1 }), 'mbe-2')}>
+      {wrapper.invitation ? (
+        <>
+          <HeadingWithActions
+            compact
+            spacer={null}
+            heading={{
+              level: 2,
+              className: 'text-lg font-body flex gap-2 items-center grow-[99] pie-2',
+              children: (
+                <Avatar
+                  size={10}
+                  fallbackValue={wrapper.invitation.invitationId!}
+                  label={<InvitationStatus {...{ status, haltedAt }} className='grow' />}
+                />
+              )
+            }}
+            actions={
+              <>
+                {status === Invitation.State.AUTHENTICATING ? (
+                  <p className='text-xl text-center text-success-500 dark:text-success-300'>{authenticationCode}</p>
+                ) : (
+                  <CompactQrCode
+                    {...{
+                      copyLabel: t('copy space invite code short label', { ns: 'uikit' }),
+                      displayQrLabel: t('display space invite qr code label', { ns: 'uikit' }),
+                      value: createInvitationUrl(path, invitationCode!)
+                    }}
+                  />
+                )}
+                <Tooltip content={t('cancel label')} tooltipLabelsTrigger>
+                  <Button className='flex md:hidden gap-1 items-center' onClick={cancel}>
+                    <ProhibitInset className={getSize(5)} />
+                  </Button>
+                </Tooltip>
+                <Button className='hidden md:flex gap-1 items-center' onClick={cancel}>
+                  <ProhibitInset className={getSize(5)} />
+                  <span>{t('cancel label')}</span>
+                </Button>
+              </>
+            }
+          />
+        </>
+      ) : (
+        <PendingInvitationSkeleton message={t('generic loading label')} />
+      )}
+    </div>
+  );
 };

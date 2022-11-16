@@ -17,6 +17,8 @@
     "config": "packages/sdk/config",
     "credentials": "packages/core/halo/credentials",
     "crypto": "packages/common/crypto",
+    "composer-app": "packages/apps/composer-app",
+    "context": "packages/common/context",
     "crypto-names": "packages/common/crypto-names",
     "debug": "packages/common/debug",
     "devtools": "packages/devtools/devtools",
@@ -50,7 +52,7 @@
     "network-manager": "packages/core/mesh/network-manager",
     "object-model": "packages/core/echo/object-model",
     "orchestrator": "packages/gravity/orchestrator",
-    "plate": "tools/plate",
+    "plate": "packages/devtools/plate",
     "playwright": "tools/executors/playwright",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
@@ -91,7 +93,7 @@
     "typings": "packages/common/typings",
     "util": "packages/common/util",
     "vite-plugin": "packages/sdk/vite-plugin",
-    "wallet-extension": "packages/experimental/wallet-extension",
-    "wallet-playground": "packages/experimental/wallet-playground"
+    "wallet-extension": "packages/deprecated/wallet/wallet-extension",
+    "wallet-playground": "packages/deprecated/wallet/wallet-playground"
   }
 }

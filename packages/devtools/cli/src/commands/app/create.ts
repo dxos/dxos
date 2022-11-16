@@ -27,7 +27,8 @@ export default class Create extends BaseCommand {
     ...BaseCommand.flags,
     tag: Flags.string({
       description: 'Git tag or branch of the DXOS repo to checkout.',
-      default: 'production'
+      // TODO(wittjosiah): Use release branch.
+      default: 'main'
     }),
     template: Flags.string({
       char: 't',
@@ -52,7 +53,7 @@ export default class Create extends BaseCommand {
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
-          git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template} &&
+          git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template}-template &&
           git checkout ${tag}
       `);
 

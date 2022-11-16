@@ -7,7 +7,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Item, Party, ObjectModel, OrderedList } from '@dxos/client';
+import { Item, Space, ObjectModel, OrderedList } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
@@ -96,17 +96,17 @@ export const NonEchoList = () => {
 
 const ListStory = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
   const [list, setList] = useState<Item<ObjectModel>>();
   const [orderedList, setOrderedList] = useState<OrderedList>();
   const [initialOrder, setInitialOrder] = useState<string[]>([]);
   const [currentOrder, setCurrentOrder] = useState<string[]>([]);
-  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), [list]) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM }), [list]) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
-    const newParty = await client.echo.createParty();
-    const listItem = await newParty.database.createItem({
+    const newSpace = await client.echo.createSpace();
+    const listItem = await newSpace.database.createItem({
       model: ObjectModel,
       type: TYPE_LIST
     });
@@ -114,7 +114,7 @@ const ListStory = () => {
     const res = await Promise.all(
       Array.from({ length: faker.datatype.number({ min: 10, max: 30 }) }).map(
         async () =>
-          await newParty?.database.createItem({
+          await newSpace?.database.createItem({
             model: ObjectModel,
             type: TYPE_LIST_ITEM,
             props: {
@@ -131,7 +131,7 @@ const ListStory = () => {
     setCurrentOrder(newOrderedList.values);
 
     setList(listItem);
-    setParty(newParty);
+    setSpace(newSpace);
 
     return () => {
       orderedList?.destroy();
@@ -216,21 +216,21 @@ export const List = () => (
 
 const MultipleListStory = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
   const [lists, setLists] = useState<Item<ObjectModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
   const [currentOrders, setCurrentOrders] = useState<{ id: string; values: string[] }[]>([]);
-  const items = useSelection(party?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_LIST_ITEM }), []) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
-    const newParty = await client.echo.createParty();
+    const newSpace = await client.echo.createSpace();
 
     const listItems = await Promise.all(
       Array.from({ length: 3 }).map(
         async () =>
-          await newParty.database.createItem({
+          await newSpace.database.createItem({
             model: ObjectModel,
             type: TYPE_LIST
           })
@@ -245,7 +245,7 @@ const MultipleListStory = () => {
             length: faker.datatype.number({ min: 4, max: 20 })
           }).map(
             async () =>
-              await newParty?.database.createItem({
+              await newSpace?.database.createItem({
                 model: ObjectModel,
                 type: TYPE_LIST_ITEM,
                 props: {
@@ -260,7 +260,7 @@ const MultipleListStory = () => {
       })
     );
 
-    setParty(newParty);
+    setSpace(newSpace);
     setLists(listItems);
     setOrderedLists(newOrderedLists);
     setCurrentOrders(
@@ -357,7 +357,7 @@ const MultipleListStory = () => {
     );
   };
 
-  if (!party || !lists.length) {
+  if (!space || !lists.length) {
     return null;
   }
 
@@ -499,7 +499,7 @@ const columns = [
 
 const TableStory = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
   const [table, setTable] = useState<Item<ObjectModel>>();
   const [initialRowOrder, setInitialRowOrder] = useState<string[]>([]);
   const [rowOrderedList, setRowOrderedList] = useState<OrderedList>();
@@ -509,11 +509,11 @@ const TableStory = () => {
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string>();
 
-  const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
 
   useAsyncEffect(async () => {
-    const newParty = await client.echo.createParty();
-    const tableItem = await newParty.database.createItem({
+    const newSpace = await client.echo.createSpace();
+    const tableItem = await newSpace.database.createItem({
       model: ObjectModel,
       type: TYPE_TABLE_TABLE
     });
@@ -521,7 +521,7 @@ const TableStory = () => {
     const createdItems = await Promise.all(
       Array.from({ length: 40 }).map(
         async () =>
-          await newParty?.database.createItem({
+          await newSpace?.database.createItem({
             type: TYPE_TEST_PERSON,
             props: {
               title: faker.name.firstName(),
@@ -537,7 +537,7 @@ const TableStory = () => {
     const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
     await newColumnOrderedList.init(columns.map((column) => column.accessor));
 
-    setParty(newParty);
+    setSpace(newSpace);
     setTable(tableItem);
     setRowOrderedList(newRowOrderedList);
     setRowOrder(newRowOrderedList.values);
@@ -640,7 +640,7 @@ export const Table = () => (
 
 const MultipleContainersStory = () => {
   const client = useClient();
-  const [party, setParty] = useState<Party>();
+  const [space, setSpace] = useState<Space>();
   const [containers, setContainers] = useState<Item<ObjectModel>[]>([]);
   const [orderedLists, setOrderedLists] = useState<OrderedList[]>();
   const [initialOrders, setInitialOrders] = useState<{ id: string; values: string[] }[]>([]);
@@ -648,18 +648,18 @@ const MultipleContainersStory = () => {
   const [initialColumnOrder, setInitialColumnOrder] = useState<string[]>([]);
   const [columnOrderedList, setColumnOrderedList] = useState<OrderedList>();
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const items = useSelection(party?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
+  const items = useSelection(space?.select().filter({ type: TYPE_TEST_PERSON }), []) ?? [];
   const [activeId, setActiveId] = useState<string>();
 
   useAsyncEffect(async () => {
-    const newParty = await client.echo.createParty();
+    const newSpace = await client.echo.createSpace();
 
-    const listItem = await newParty.database.createItem({
+    const listItem = await newSpace.database.createItem({
       model: ObjectModel,
       type: TYPE_LIST
     });
 
-    const tableItem = await newParty.database.createItem({
+    const tableItem = await newSpace.database.createItem({
       model: ObjectModel,
       type: TYPE_TABLE_TABLE
     });
@@ -674,7 +674,7 @@ const MultipleContainersStory = () => {
             length: faker.datatype.number({ min: 4, max: 20 })
           }).map(
             async () =>
-              await newParty?.database.createItem({
+              await newSpace?.database.createItem({
                 model: ObjectModel,
                 type: TYPE_TEST_PERSON,
                 props: {
@@ -695,7 +695,7 @@ const MultipleContainersStory = () => {
     const newColumnOrderedList = new OrderedList(tableItem.model, 'columnOrder');
     await newColumnOrderedList.init(columns.map((column) => column.accessor));
 
-    setParty(newParty);
+    setSpace(newSpace);
     setContainers(containerItems);
     setOrderedLists(newOrderedLists);
     setCurrentOrders(

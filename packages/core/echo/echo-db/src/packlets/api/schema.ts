@@ -63,14 +63,14 @@ export class Schema {
       }
 
       if (field.ref) {
-        // TODO(kaplanski): Should this class have access to all items in the party to validate?
+        // TODO(kaplanski): Should this class have access to all items in the space to validate?
         // Or maybe possible values should be provided?
       }
       return true;
     });
   }
 
-  // TODO(kaplanski): Should the field be added to each item using the schema in the party? (Empty value?)
+  // TODO(kaplanski): Should the field be added to each item using the schema in the space? (Empty value?)
   // TODO(kaplanski): Should the type be infered from the first value added?
   async addField(newField: SchemaField) {
     const newFields = [...this.fields, newField];

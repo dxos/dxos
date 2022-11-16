@@ -47,7 +47,7 @@ export class ItemDemuxer {
     });
 
     // TODO(burdon): Factor out.
-    // TODO(burdon): Should this implement some "back-pressure" (hints) to the PartyProcessor?
+    // TODO(burdon): Should this implement some "back-pressure" (hints) to the SpaceProcessor?
     return async (message: IEchoStream) => {
       const {
         data: { itemId, genesis, itemMutation, mutation, snapshot },
