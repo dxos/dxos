@@ -293,7 +293,6 @@ export class SpaceProxy implements Space {
    * @internal
    */
   _processSpaceUpdate(space: SpaceType) {
-    console.log('Space._processSpaceUpdate', space);
     this._space = space;
     this._key = space.publicKey;
     this._isOpen = space.isOpen;
