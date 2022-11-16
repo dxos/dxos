@@ -25,6 +25,7 @@ module.exports = {
       optimizeDeps: {
         force: true,
         include: [
+          '@dxos/async',
           '@dxos/client',
           '@dxos/config',
           '@dxos/debug',

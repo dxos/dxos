@@ -46,60 +46,63 @@ export const Default = templateForComponent(Template)({});
 Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
-  // TODO(wittjosiah): N clients.
   (Story) => {
-    const [client1, client2] = useMemo(() => {
+    const n = 2;
+    const clients = useMemo(() => {
       const testBuilder = new TestClientBuilder();
-      return [
-        new Client({ services: testBuilder.createClientServicesHost() }),
-        new Client({ services: testBuilder.createClientServicesHost() })
-      ];
+      return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
     }, []);
     const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
     useAsyncEffect(async () => {
-      await client1.initialize();
-      await client2.initialize();
+      await Promise.all(clients.map((client) => client.initialize()));
       log('initialized');
 
-      await client1.halo.createProfile();
-      await client2.halo.createProfile();
+      await Promise.all(clients.map((client) => client.halo.createProfile()));
       log('identity created');
 
-      const success1 = new Trigger<Invitation>();
-      const success2 = new Trigger<Invitation>();
+      console.log(clients);
 
-      const space = await client1.echo.createSpace();
+      const space = await clients[0].echo.createSpace();
       log('space created');
-      const observable1 = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
-      log('invitation created');
-      const observable2 = await client2.echo.acceptInvitation(observable1.invitation!);
-      log('invitation accepted');
 
-      observable1.subscribe({
-        onSuccess: (invitation) => {
-          success1.wake(invitation);
-          log('invitation success1');
-        },
-        onError: (err) => raise(err)
-      });
+      await Promise.all(
+        clients.slice(1).map(async (client) => {
+          const success1 = new Trigger<Invitation>();
+          const success2 = new Trigger<Invitation>();
 
-      observable2.subscribe({
-        onSuccess: (invitation: Invitation) => {
-          success2.wake(invitation);
-          log('invitation success2');
-        },
-        onError: (err: Error) => raise(err)
-      });
+          const observable1 = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
+          log('invitation created');
 
-      await Promise.all([success1.wait(), success2.wait()]);
+          const observable2 = await client.echo.acceptInvitation(observable1.invitation!);
+          log('invitation accepted');
+
+          observable1.subscribe({
+            onSuccess: (invitation) => {
+              success1.wake(invitation);
+              log('invitation success1');
+            },
+            onError: (err) => raise(err)
+          });
+
+          observable2.subscribe({
+            onSuccess: (invitation: Invitation) => {
+              success2.wake(invitation);
+              log('invitation success2');
+            },
+            onError: (err: Error) => raise(err)
+          });
+
+          await Promise.all([success1.wait(), success2.wait()]);
+        })
+      );
+
       setSpaceKey(space.key);
 
       return () => {
-        void client1.destroy();
-        void client2.destroy();
+        void Promise.all(clients.map((client) => client.destroy()));
       };
-    }, [client1, client2]);
+    }, clients);
 
     if (!spaceKey) {
       return <Loading label='Loading…' />;
@@ -107,12 +110,11 @@ Default.decorators = [
 
     return (
       <div className='flex'>
-        <ClientProvider client={client1} fallback={<Loading label='Loading…' />}>
-          <Story args={{ spaceKey, id: 0 }} />
-        </ClientProvider>
-        <ClientProvider client={client2} fallback={<Loading label='Loading…' />}>
-          <Story args={{ spaceKey, id: 1 }} />
-        </ClientProvider>
+        {clients.map((client, index) => (
+          <ClientProvider key={index} client={client} fallback={<Loading label='Loading…' />}>
+            <Story args={{ spaceKey, id: index }} />
+          </ClientProvider>
+        ))}
       </div>
     );
   }
