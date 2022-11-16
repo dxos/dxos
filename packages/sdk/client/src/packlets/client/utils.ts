@@ -5,7 +5,7 @@
 import {
   ClientServicesHost,
   ClientServicesProvider,
-  ClientServicesProxy,
+  ClientIFrameServiceProxy,
   createDefaultModelFactory
 } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
@@ -17,24 +17,14 @@ import {
   NetworkManager,
   NetworkManagerOptions
 } from '@dxos/network-manager';
-import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
-import { DEFAULT_CLIENT_ORIGIN, DEFAULT_CONFIG_CHANNEL, IFRAME_ID } from './config';
+import { DEFAULT_CONFIG_CHANNEL } from './config';
 
 /**
  * Create services provider proxy connected via iFrame to host.
  */
-export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider => {
-  const source = new URL(
-    fromConfig(config).get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
-    window.location.origin
-  );
-
-  const iframe = createIFrame(source.toString(), IFRAME_ID);
-  const iframePort = createIFramePort({ origin: source.origin, iframe, channel });
-  return new ClientServicesProxy(iframePort);
-};
-
+export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider =>
+  new ClientIFrameServiceProxy({ config, channel });
 /**
  * Creates stand-alone services.
  */

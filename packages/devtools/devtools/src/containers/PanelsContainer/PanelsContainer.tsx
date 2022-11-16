@@ -40,7 +40,6 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
   if (!services) {
     return null;
   }
-
   // TODO(burdon): Factor out.
   // TODO(wittjosiah): Should this only be done in the app?
   useEffect(() => {
@@ -48,12 +47,13 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
     client.echo.modelFactory.registerModel(MessengerModel);
   }, [client]);
 
-  useEffect(() => {
-    void services.TracingService.setTracingOptions({ enable: true });
-    return () => {
-      void services.TracingService.setTracingOptions({ enable: false });
-    };
-  }, [client]);
+  // TODO(mykola): unavailable for now.
+  // useEffect(() => {
+  //   void services.TracingService.setTracingOptions({ enable: true });
+  //   return () => {
+  //     void services.TracingService.setTracingOptions({ enable: false });
+  //   };
+  // }, [client]);
 
   const handleListItemClick = (event: any, index: string) => {
     setSelected(index);
