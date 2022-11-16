@@ -1,27 +1,12 @@
-# @dxos/client
+# @dxos/react-uikit
 
-Core DXOS Client API.
+A React component library for DXOS
 
 ## Installation
 
 ```bash
-pnpm i @dxos/client
+pnpm i @dxos/react-uikit
 ```
-
-## Usage
-
-Create a client object like this:
-
-```ts
-import { Client } from "@dxos/client";
-const client = new Client();
-```
-
-## Documentation
-
-- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
-- [📖 Developer Guide](https://docs.dxos.org/guide/echo/)
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 
 ## DXOS Resources
 

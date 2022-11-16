@@ -1,27 +1,12 @@
-# @dxos/client
+# @dxos/object-model
 
-Core DXOS Client API.
+ECHO object model.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/client
+pnpm i @dxos/object-model
 ```
-
-## Usage
-
-Create a client object like this:
-
-```ts
-import { Client } from "@dxos/client";
-const client = new Client();
-```
-
-## Documentation
-
-- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
-- [📖 Developer Guide](https://docs.dxos.org/guide/echo/)
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 
 ## DXOS Resources
 

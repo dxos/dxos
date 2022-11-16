@@ -1,20 +1,24 @@
-# @dxos/client
+# @dxos/client-services
 
 [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/standard/semistandard)
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-Description...
+DXOS client services implementation
 
-## Install
+## Installation
 
-## Usage
+```bash
+pnpm i @dxos/client-services
+```
 
-...
+## DXOS Resources
 
-## Contributing
+- [Website](https://dxos.org)
+- [Developer Documentation](https://docs.dxos.org)
+- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
+- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
 
-PRs accepted.
+## Contributions
 
-## License
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
 
-MIT © DXOS
+License: [MIT](./LICENSE) Copyright 2022 © DXOS

@@ -1,27 +1,12 @@
-# @dxos/client
+# @dxos/vite-plugin
 
-Core DXOS Client API.
+Plugin to enable Vite to build DXOS apps.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/client
+pnpm i @dxos/vite-plugin
 ```
-
-## Usage
-
-Create a client object like this:
-
-```ts
-import { Client } from "@dxos/client";
-const client = new Client();
-```
-
-## Documentation
-
-- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
-- [📖 Developer Guide](https://docs.dxos.org/guide/echo/)
-- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 
 ## DXOS Resources
 
