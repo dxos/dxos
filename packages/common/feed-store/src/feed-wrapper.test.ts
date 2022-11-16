@@ -63,6 +63,24 @@ describe('FeedWrapper', function () {
     expect(feed.properties.length).to.eq(numBlocks);
   });
 
+  it('append emits event', async function () {
+    const numBlocks = 10;
+    const builder = new TestBuilder();
+    const feedFactory = builder.createFeedFactory();
+    const key = await builder.keyring!.createKey();
+    const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
+
+    let emittedAppend = 0;
+    feed.on('append', () => {
+      emittedAppend++;
+    });
+
+    for (const _ of Array.from(Array(numBlocks)).keys()) {
+      await feed.append(faker.lorem.sentence());
+    }
+    expect(emittedAppend).to.eq(numBlocks);
+  });
+
   it('appends blocks with encoding', async function () {
     const numBlocks = 10;
     const builder = new TestItemBuilder();

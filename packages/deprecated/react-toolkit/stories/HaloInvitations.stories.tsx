@@ -6,9 +6,8 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ConfigProvider } from '@dxos/config';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { ClientProvider, useParties, useProfile } from '@dxos/react-client';
+import { defaultConfig } from '@dxos/client';
+import { ClientProvider, useSpaces, useIdentity } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
@@ -19,24 +18,24 @@ export default {
   title: 'react-toolkit/HaloInvitations'
 };
 
-const RemoteParties = () => {
-  const parties = useParties();
+const RemoteSpaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      <p>You have {parties.length} parties.</p>
+      <p>You have {spaces.length} spaces.</p>
     </Box>
   );
 };
 
-const Parties = () => {
-  const parties = useParties();
+const Spaces = () => {
+  const spaces = useSpaces();
 
   return (
     <Box>
-      {parties.map((party) => (
-        <Box key={party.key.toHex()}>
-          <CopyText value={party.key.toHex()} />
+      {spaces.map((space) => (
+        <Box key={space.key.toHex()}>
+          <CopyText value={space.key.toHex()} />
         </Box>
       ))}
     </Box>
@@ -52,7 +51,7 @@ interface UserProps {
 const User = ({ sharing, joining, remote }: UserProps) => {
   const [shareOpen, setShareOpen] = useState(!!sharing && !joining);
   const [joinOpen, setJoinOpen] = useState(!!joining && !sharing);
-  const profile = useProfile();
+  const profile = useIdentity();
 
   return (
     <Box>
@@ -73,10 +72,10 @@ const User = ({ sharing, joining, remote }: UserProps) => {
 
       <JoinHaloDialog open={joinOpen} onClose={() => setJoinOpen(false)} modal={false} closeOnSuccess={true} />
 
-      <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteParties /> : <Parties />}</Box>
+      <Box sx={{ marginTop: 2, padding: 1 }}>{remote ? <RemoteSpaces /> : <Spaces />}</Box>
 
       <Box sx={{ padding: 1 }}>
-        <p>{profile?.username ?? 'Profile not created.'}</p>
+        <p>{profile?.displayName ?? 'Profile not created.'}</p>
       </Box>
     </Box>
   );
@@ -109,16 +108,8 @@ export const Primary = () => (
   </FullScreen>
 );
 
+// TODO(burdon): Different config for remote.
 export const Remote = () => {
-  const remoteConfig: ConfigProvider = {
-    version: 1,
-    runtime: {
-      client: {
-        mode: Runtime.Client.Mode.REMOTE
-      }
-    }
-  };
-
   return (
     <FullScreen>
       <p>
@@ -132,7 +123,7 @@ export const Remote = () => {
             justifyContent: 'space-around'
           }}
         >
-          <ClientProvider config={remoteConfig}>
+          <ClientProvider config={defaultConfig}>
             <Column>
               <User remote sharing joining />
             </Column>

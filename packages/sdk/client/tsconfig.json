@@ -13,11 +13,10 @@
     ]
   },
   "include": [
-    "src/*.ts",
-    "src/experimental",
-    "src/packlets/api",
-    "src/packlets/proxies",
-    "src/packlets/services"
+    "src",
+  ],
+  "exclude": [
+    "**/deprecated",
   ],
   "references": [
     {

@@ -31,10 +31,10 @@ export const getPeerId = (protocol: Protocol) => {
  */
 export class TestProtocolPlugin extends EventEmitter {
   /** @type {Map<string, {Protocol}>} */
-  _peers;
+  private readonly _peers = new Map(); // TODO(burdon): Complex map.
 
   /** @type {Buffer} */
-  _peerId;
+  _peerId; // TODO(burdon): PublicKey.
 
   /** @type {Boolean} */
   _uppercase;
@@ -55,21 +55,14 @@ export class TestProtocolPlugin extends EventEmitter {
     // TODO(dboreham): Mis-named because this is OUR node ID, not the id of any peer.
     this._peerId = peerId;
     this._uppercase = uppercase;
-    this._peers = new Map();
   }
 
-  /**
-   * This node's id.
-   * @return {Buffer}
-   */
+  // TODO(burdon): Expose key directly.
   get peerId() {
     return this._peerId;
   }
 
-  /**
-   * Array of the currently connected peers' node ids (not including our id).
-   * @return {{Protocol}[]}
-   */
+  // TODO(burdon): Map of keys.
   get peers() {
     return Array.from(this._peers.values());
   }
@@ -80,6 +73,7 @@ export class TestProtocolPlugin extends EventEmitter {
    * @return {Extension}
    */
   createExtension() {
+    log('creating extension', { peerId: PublicKey.from(this.peerId) }); // TODO(burdon): Just key.
     return new Extension(EXTENSION_NAME, { binary: true })
       .setInitHandler(this._init.bind(this))
       .setMessageHandler(this._receive.bind(this))
@@ -103,7 +97,8 @@ export class TestProtocolPlugin extends EventEmitter {
     // TODO(dboreham): Throw fatal error if peer not found.
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
-    log('Sent', { peerIdStr, payload });
+
+    log('sent', { peerIdStr, payload });
     return await extension.send(encoded, { oneway: true });
   }
 
@@ -119,7 +114,8 @@ export class TestProtocolPlugin extends EventEmitter {
     if (this._uppercase) {
       payload = payload.toUpperCase();
     }
-    log('Received', { peerIdStr, payload });
+
+    log('received', { peerIdStr, payload });
     this.emit('receive', protocol, payload);
   }
 
@@ -152,9 +148,11 @@ export class TestProtocolPlugin extends EventEmitter {
  * @return {ProtocolProvider}
  */
 // TODO(dboreham): Try to encapsulate swarm_key, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: any) =>
-  protocolFactory({
+export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
+  log('creating protocol factory', { swarmKey: PublicKey.from(swarmKey), peerId });
+  return protocolFactory({
     getTopics: () => [swarmKey],
-    session: { peerId: PublicKey.stringify(nodeId) },
+    session: { peerId: peerId.toHex() },
     plugins: [protocolPlugin]
   });
+};

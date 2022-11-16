@@ -14,7 +14,7 @@ import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
@@ -25,7 +25,7 @@ const ATTEMPT_DELAY = 3_000;
 interface BotHandleOptions {
   config?: Config;
   packageSpecifier?: BotPackageSpecifier;
-  partyKey?: PublicKey;
+  spaceKey?: PublicKey;
 }
 
 /**
@@ -51,13 +51,13 @@ export class BotHandle {
     private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
-    const { config = new Config({ version: 1 }), packageSpecifier, partyKey } = options;
+    const { config = new Config({ version: 1 }), packageSpecifier, spaceKey } = options;
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
       desiredState: Bot.Status.RUNNING,
       packageSpecifier,
-      partyKey,
+      spaceKey,
       attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);
@@ -141,7 +141,7 @@ export class BotHandle {
     );
   }
 
-  async spawn(invitation?: InvitationDescriptor): Promise<Bot> {
+  async spawn(invitation?: Invitation): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._initialize(invitation);
@@ -328,7 +328,7 @@ export class BotHandle {
     await this._rpc.open();
   }
 
-  private async _initialize(invitation?: InvitationDescriptor): Promise<void> {
+  private async _initialize(invitation?: Invitation): Promise<void> {
     this._log('Initializing bot');
     await this.rpc.initialize({
       config: this.config.values,

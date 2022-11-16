@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Vite plugin which configures a low-level design system for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,9 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "plugin.js",
+    "plugin.d.ts"
   ],
   "dependencies": {
     "@fontsource/fira-code": "^4.5.12",
@@ -31,12 +33,12 @@
     "jdenticon": "^3.2.0",
     "postcss": "^8.4.17",
     "qrcode.react": "^3.1.0",
+    "rci": "^0.0.3",
     "tailwindcss": "^3.1.8",
     "tailwindcss-logical": "^3.0.0",
     "tailwindcss-radix": "^2.6.0"
   },
   "devDependencies": {
-    "@dxos/vite-plugin": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",

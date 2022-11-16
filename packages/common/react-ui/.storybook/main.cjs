@@ -1,7 +1,6 @@
 const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
-const { dxosPlugin } = require('@dxos/vite-plugin');
 const { themePlugin } = require('../dist/src/plugin.js');
 
 module.exports = {
@@ -38,7 +37,7 @@ module.exports = {
         ]
       }
     },
-    plugins: [dxosPlugin(), themePlugin({
+    plugins: [themePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
     })],
   })

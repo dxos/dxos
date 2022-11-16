@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/crypto/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

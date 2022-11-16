@@ -1,5 +1,5 @@
-# Type alias `ItemID`
-> Declared in [`packages/core/protocols/dist/src/types.d.ts:30`]()
+# Type `ItemID`
+Declared in [`packages/core/protocols/dist/src/types.d.ts:31`]()
 
 
 

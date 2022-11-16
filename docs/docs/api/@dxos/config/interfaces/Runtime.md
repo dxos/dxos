@@ -4,24 +4,38 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### `app: App`
+### [`app`]()
+Type: [`App`](/api/@dxos/config/interfaces/App)
+
 Options:
   - proto3_optional = true
-### `cli: CLI`
+### [`cli`]()
+Type: [`CLI`](/api/@dxos/config/interfaces/CLI)
+
 Options:
   - proto3_optional = true
-### `client: Client`
+### [`client`]()
+Type: [`Client`](/api/@dxos/config/interfaces/Client)
+
 Options:
   - proto3_optional = true
-### `kube: Kube`
+### [`kube`]()
+Type: [`Kube`](/api/@dxos/config/interfaces/Kube)
+
 Options:
   - proto3_optional = true
-### `props: Props`
+### [`props`]()
+Type: [`Props`](/api/@dxos/config/interfaces/Props)
+
 Options:
   - proto3_optional = true
-### `services: Services`
+### [`services`]()
+Type: [`Services`](/api/@dxos/config/interfaces/Services)
+
 Options:
   - proto3_optional = true
-### `system: System`
+### [`system`]()
+Type: [`System`](/api/@dxos/config/interfaces/System)
+
 Options:
   - proto3_optional = true

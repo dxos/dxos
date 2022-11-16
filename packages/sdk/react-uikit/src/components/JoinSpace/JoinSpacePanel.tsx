@@ -2,65 +2,139 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useAsync } from '@react-hook/async';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationWrapper, Party } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
+import { InvitationEncoder, InvitationObservable, PublicKey, Invitation } from '@dxos/client';
+import { useClient, useInvitationStatus } from '@dxos/react-client';
 
+import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
 
 export interface JoinSpacePanelProps {
+  // TODO(burdon): Use InvitationEncoder to parse/decode?
   parseInvitation?: (invitationCode: string) => string;
   initialInvitationCode?: string;
-  onJoin?: (space: Party) => void;
+  onJoin?: (spaceKey: PublicKey) => void;
 }
 
-export const JoinSpacePanel = ({
+interface JoinStep1Props extends JoinSpacePanelProps {
+  connect: (wrapper: InvitationObservable) => void;
+  status: Invitation.State;
+  cancel: () => void;
+  error?: number;
+}
+
+interface JoinStep2Props extends JoinSpacePanelProps {
+  status: Invitation.State;
+  cancel: () => void;
+  authenticate: (secret: string) => Promise<void>;
+  error?: number;
+}
+
+const JoinStep1 = ({
+  connect,
+  status,
+  cancel,
+  error,
   parseInvitation = (code) => code,
-  initialInvitationCode,
-  onJoin
-}: JoinSpacePanelProps) => {
+  initialInvitationCode
+}: JoinStep1Props) => {
   const { t } = useTranslation();
   const client = useClient();
+
   const [invitationCode, setInvitationCode] = useState(initialInvitationCode ?? '');
-  const redeemInvitation = useCallback(() => {
-    const parsedInvitationCode = parseInvitation(invitationCode);
-    const invitation = InvitationWrapper.decode(parsedInvitationCode);
-    const redeemeingInvitation = client.echo.acceptInvitation(invitation);
-    return redeemeingInvitation.getParty();
+
+  const onConnectNext = useCallback(async () => {
+    const invitation = await client.echo.acceptInvitation(InvitationEncoder.decode(parseInvitation(invitationCode)));
+    connect(invitation);
   }, [invitationCode]);
-  const [{ status, cancel, error, value }, call] = useAsync<Party>(redeemInvitation);
+
   useEffect(() => {
     if (initialInvitationCode) {
-      void call();
+      void onConnectNext();
     }
   }, []);
-  useEffect(() => {
-    if (status === 'success' && value) {
-      onJoin?.(value);
-    }
-  }, [status, value]);
+
   return (
     <SingleInputStep
       {...{
-        pending: status === 'loading',
-        inputLabel: t('invitation code label'),
-        inputPlaceholder: t('invitation code placeholder'),
+        pending: status === Invitation.State.CONNECTING,
+        inputLabel: t('invitation code label', { ns: 'uikit' }),
+        inputPlaceholder: t('invitation code placeholder', { ns: 'uikit' }),
         inputProps: {
-          initialValue: invitationCode
+          initialValue: invitationCode,
+          autoFocus: true,
+          className: 'text-center',
+          ...(error && {
+            validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
+            validationValence: 'error' as const
+          })
         },
         onChange: setInvitationCode,
-        onNext: call,
-        onCancelPending: cancel,
-        ...(error && {
-          inputProps: {
-            validationMessage: error.message,
-            validationValence: 'error'
-          }
-        })
+        onNext: onConnectNext,
+        onCancelPending: cancel
       }}
     />
+  );
+};
+
+const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
+  const { t } = useTranslation();
+  const [invitationSecret, setInvitationSecret] = useState('');
+  const [pending, setPending] = useState(false);
+
+  const onAuthenticateNext = useCallback(() => {
+    setPending(true);
+    authenticate(invitationSecret).finally(() => setPending(false));
+  }, [invitationSecret]);
+
+  return (
+    <SingleInputStep
+      {...{
+        pending,
+        inputLabel: t('invitation secret label', { ns: 'uikit' }),
+        inputProps: {
+          size: 'pin',
+          length: 6,
+          initialValue: '',
+          autoFocus: true,
+          className: 'text-center',
+          ...(error && {
+            validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
+            validationValence: 'error' as const
+          })
+        },
+        onChange: setInvitationSecret,
+        onNext: onAuthenticateNext,
+        onCancelPending: cancel
+      }}
+    />
+  );
+};
+
+export const JoinSpacePanel = (props: JoinSpacePanelProps) => {
+  const { status, cancel, error, connect, authenticate, result, haltedAt } = useInvitationStatus();
+
+  useEffect(() => {
+    if (status === Invitation.State.SUCCESS && result.spaceKey) {
+      props.onJoin?.(result.spaceKey);
+    }
+  }, [status, result]);
+
+  const cursor =
+    status === Invitation.State.ERROR || status === Invitation.State.TIMEOUT || status === Invitation.State.CANCELLED
+      ? haltedAt!
+      : status;
+
+  return (
+    <>
+      <InvitationStatus {...{ status, haltedAt }} className='mbs-3' />
+      {cursor < Invitation.State.CONNECTED ? (
+        <JoinStep1 {...props} {...{ connect, status, cancel, error }} />
+      ) : (
+        <JoinStep2 {...props} {...{ connect, authenticate, status, cancel, error }} />
+      )}
+    </>
   );
 };

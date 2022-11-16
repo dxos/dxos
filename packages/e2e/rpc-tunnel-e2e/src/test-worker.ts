@@ -22,7 +22,6 @@ const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
   const port = muxer.createPort({ channel });
 
   const server = createProtoRpcPeer({
-    requested: {},
     exposed: {
       TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
     },

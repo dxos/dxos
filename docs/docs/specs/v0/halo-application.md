@@ -23,7 +23,7 @@ End `users` use the application to manage secure "passwordless" sign-ins to the 
 - self-identify when logging into an application (choose an identity)
 - create/destroy "identities"
 - recover an identity from a paper key
-- join a device to their HALO (incl from a CLI device)
+- join a device to their existing halo on another device (incl from a CLI)
 - revoke a device access to their identity and spaces (for all applications on that device)
 - revoke an application access to their identity and spaces (for all devices)
 ### Contacts:

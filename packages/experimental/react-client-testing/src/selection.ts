@@ -2,21 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Party, Selection } from '@dxos/client';
+import { Space, Selection } from '@dxos/client';
 import { TestType } from '@dxos/client-testing';
 
 /**
- * Eval method against a party object.
+ * Eval method against a space object.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#never_use_eval!
- * @param party
+ * @param space
  * @param text
  */
 // TODO(burdon): Create utility class.
-export const execSelection = (party: Party, text: string): Selection<any> | undefined => {
+export const execSelection = (space: Space, text: string): Selection<any> | undefined => {
   try {
     // eslint-disable-next-line no-new-func
-    const exec = new Function(`"use strict"; return function(party) { return party.${text} }`)();
-    const result = exec(party);
+    const exec = new Function(`"use strict"; return function(space) { return space.${text} }`)();
+    const result = exec(space);
     if (result instanceof Selection) {
       return result;
     }

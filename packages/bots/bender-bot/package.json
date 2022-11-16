@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bender-bot",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": true,
   "description": "The bender bot.",
   "homepage": "https://dxos.org",
@@ -25,6 +25,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",

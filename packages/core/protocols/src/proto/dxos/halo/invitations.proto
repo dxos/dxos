@@ -10,42 +10,13 @@ import "dxos/keys.proto";
 
 package dxos.halo.invitations;
 
-message InvitationDescriptor {
-  enum Type {
-    /// Both peers online at the same time.
-    INTERACTIVE = 0;
-    /// Invited peer's public key is known and invitation can be accepted by any valid peer.
-    OFFLINE = 1;
-  }
-
-  Type type = 1;
-
-  /// Topic for network handshake.
-  bytes swarm_key = 2;
-
-  /// TODO(burdon): Remove?
-  bytes invitation = 3;
-
-  /// Only present if type === OFFLINE.
-  optional bytes identity_key = 4;
-
-  /// Must be stripped out when passing to another peer.
-  optional bytes secret = 5;
+message AuthenticationRequest {
+  string authentication_code = 1;
 }
 
 //
 // HALO device invitations.
 //
-
-// TODO(burdon): ALL invitation messages should be handled over encrypted sessions.
-// TODO(burdon): Or contain some form of signed credential.
-// TODO(burdon): Calls should include some request context (e.g., halo/space key).
-
-message HaloAdmissionCredentials {
-  dxos.keys.PublicKey device_key = 1;
-  dxos.keys.PublicKey control_feed_key = 2;
-  dxos.keys.PublicKey data_feed_key = 3;
-}
 
 message HaloAdmissionOffer {
   dxos.keys.PublicKey identity_key = 1;
@@ -53,19 +24,31 @@ message HaloAdmissionOffer {
   dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
-service HaloHostService {
-  /// Process admission request from guest.
-  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
+message HaloAdmissionCredentials {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  dxos.keys.PublicKey data_feed_key = 3;
 }
 
-service HaloGuestService {
+service HaloHostService {
   /// Process admission offer from host.
-  rpc PresentAdmissionOffer(HaloAdmissionOffer) returns (google.protobuf.Empty);
+  rpc RequestAdmission(google.protobuf.Empty) returns (HaloAdmissionOffer);
+
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+
+  /// Process admission request from guest.
+  rpc PresentAdmissionCredentials(HaloAdmissionCredentials) returns (google.protobuf.Empty);
 }
 
 //
 // Space agent invitations.
 //
+
+message SpaceAdmissionOffer {
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey genesis_feed_key = 3;
+}
 
 message SpaceAdmissionCredentials {
   dxos.keys.PublicKey identity_key = 1;
@@ -74,17 +57,13 @@ message SpaceAdmissionCredentials {
   dxos.keys.PublicKey data_feed_key = 4;
 }
 
-message SpaceAdmissionOffer {
-  dxos.keys.PublicKey space_key = 1;
-  dxos.keys.PublicKey genesis_feed_key = 3;
-}
-
 service SpaceHostService {
-  /// Process admission request from guest.
-  rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
-}
+  /// Process admission request.
+  rpc RequestAdmission(google.protobuf.Empty) returns (SpaceAdmissionOffer);
 
-service SpaceGuestService {
-  /// Process admission offer from host.
-  rpc PresentAdmissionOffer(SpaceAdmissionOffer) returns (google.protobuf.Empty);
+  /// Authenticate request.
+  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
+
+  /// Process admission credentials.
+  rpc PresentAdmissionCredentials(SpaceAdmissionCredentials) returns (google.protobuf.Empty);
 }

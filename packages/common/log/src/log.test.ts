@@ -8,11 +8,17 @@ import { LogLevel } from './config';
 import { log } from './log';
 
 describe('log', function () {
-  it('line numbers', function () {
-    log.warn('LOG LINE 12'); // TODO(burdon): Test by configuring custom processor.
-
+  it('throws an error', function () {
     try {
-      throw new Error('ERROR ON LINE 15');
+      throw new Error('Test failed');
+    } catch (err: any) {
+      log.warn('failed', err);
+    }
+  });
+
+  it('catches an error', function () {
+    try {
+      throw new Error('ERROR ON LINE 21');
     } catch (err: any) {
       log.catch(err);
     }

@@ -25,6 +25,7 @@ export default defineConfig({
     port: 3967
   },
   define: {
+    'process.env.DX_VAULT': env(process.env.DX_VAULT),
     'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
     'process.env.DX_RELEASE': env(DX_RELEASE),
     'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
@@ -42,7 +43,6 @@ export default defineConfig({
       '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-async',
-      '@dxos/react-composer',
       '@dxos/react-client',
       '@dxos/react-uikit',
       '@dxos/rpc',
@@ -50,22 +50,8 @@ export default defineConfig({
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
       '@dxos/telemetry',
-      '@dxos/text-model',
       '@dxos/util'
-    ],
-    esbuildOptions: {
-      // TODO(wittjosiah): Remove.
-      plugins: [
-        {
-          name: 'yjs',
-          setup: ({ onResolve }) => {
-            onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
-            })
-          }
-        }
-      ]
-    }
+    ]
   },
   build: {
     // TODO(wittjosiah): Remove.
@@ -76,7 +62,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        headless: resolve(__dirname, 'headless.html')
+        headless: resolve(__dirname, 'vault.html')
       }
     }
   },

@@ -21,28 +21,22 @@
       "options": {
         "lintFilePatterns": [
           "packages/core/protocols/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"
       ]
     },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "gen-proto-defs"
-      },
-      "outputs": [
-        "packages/core/protocols/proto"
-      ]
-    },
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
-        "basePath": "packages/core/protocols/src/proto"
+        "basePath": "packages/core/protocols/src/proto",
+        "exportPath": "packages/core/protocols/dist/src/proto/gen"
       },
       "outputs": [
-        "{options.basePath}/gen"
+        "{options.basePath}/gen",
+        "packages/core/protocols/proto"
       ]
     },
     "test": {

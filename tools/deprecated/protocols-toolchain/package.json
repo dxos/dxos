@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols-toolchain",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,7 +20,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",
     "ts-node": "10.9.1"
   }

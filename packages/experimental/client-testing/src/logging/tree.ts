@@ -8,7 +8,7 @@ import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 /**
- * Wrapper (e.g., for Party).
+ * Wrapper (e.g., for Space).
  */
 export class TreeRoot {
   constructor(public id: string, public readonly children: TreeNode[]) {}

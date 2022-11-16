@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/apps/patterns/react-appkit/src/**/*.{js,jsx,ts,tsx}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

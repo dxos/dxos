@@ -4,7 +4,6 @@
 
 import PolkadotKeyring from '@polkadot/keyring';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
-import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import assert from 'node:assert';
 
@@ -46,6 +45,9 @@ export class ClientSigner implements Partial<Signer> {
   }
 
   public async signRaw({ data }: SignerPayloadRaw): Promise<SignerResult> {
+    throw new Error();
+
+    /*
     let payload = hexToU8a(data);
 
     // @polkadot/api/packages/types/src/extrinsic/util.ts
@@ -62,5 +64,6 @@ export class ClientSigner implements Partial<Signer> {
       id: ++this.id,
       signature: u8aToHex(result.signed)
     };
+    */
   }
 }

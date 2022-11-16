@@ -7,18 +7,19 @@ import { expect } from 'earljs';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/example/testing/rpc';
+import { TestStreamService, TestRpcResponse, TestService } from '@dxos/protocols/proto/example/testing/rpc';
 
 import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts } from './testutil';
+import { createLinkedPorts } from './testing';
+
+// TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 
 describe('Protobuf service', function () {
   it('Works with protobuf service', async function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -38,8 +39,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -56,7 +55,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -80,8 +78,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -104,7 +100,6 @@ describe('Protobuf service', function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
-      requested: {},
       exposed: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
@@ -124,8 +119,6 @@ describe('Protobuf service', function () {
       requested: {
         TestService: schema.getService('example.testing.rpc.TestService')
       },
-      exposed: {},
-      handlers: {},
       port: bobPort
     });
 
@@ -142,7 +135,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
@@ -170,8 +162,6 @@ describe('Protobuf service', function () {
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -222,7 +212,6 @@ describe('Protobuf service', function () {
       });
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: services,
         handlers: {
           TestService: {
@@ -241,8 +230,6 @@ describe('Protobuf service', function () {
 
       const client = createProtoRpcPeer({
         requested: services,
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -306,12 +293,165 @@ describe('Protobuf service', function () {
     });
   });
 
+  describe('service providers', function () {
+    it('sync function', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const TestService = schema.getService('example.testing.rpc.TestService');
+
+      const services = createServiceBundle({
+        TestService
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestService: () => ({
+            testCall: async (req) => {
+              expect(req.data).toEqual('requestData');
+              return { data: 'responseData' };
+            },
+            voidCall: async () => {}
+          })
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const response = await client.rpc.TestService.testCall({
+        data: 'requestData'
+      });
+      expect(response.data).toEqual('responseData');
+    });
+
+    it('async function', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const TestService = schema.getService('example.testing.rpc.TestService');
+
+      const services = createServiceBundle({
+        TestService
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestService: async (): Promise<TestService> => {
+            await sleep(1);
+            return {
+              testCall: async (req) => {
+                expect(req.data).toEqual('requestData');
+                return { data: 'responseData' };
+              },
+              voidCall: async () => {}
+            };
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const response = await client.rpc.TestService.testCall({
+        data: 'requestData'
+      });
+      expect(response.data).toEqual('responseData');
+    });
+
+    it('stream', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const services = createServiceBundle({
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestStreamService: async (): Promise<TestStreamService> => {
+            await sleep(1);
+            return {
+              testCall: (req) =>
+                new Stream(({ next, close }) => {
+                  expect(req.data).toEqual('requestData');
+
+                  next({ data: 'foo' });
+                  next({ data: 'bar' });
+                  next({ data: 'baz' });
+                  close();
+                })
+            };
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const stream = await client.rpc.TestStreamService.testCall({
+        data: 'requestData'
+      });
+      expect(await Stream.consume(stream)).toEqual([
+        { ready: true },
+        { data: { data: 'foo' } },
+        { data: { data: 'bar' } },
+        { data: { data: 'baz' } },
+        { closed: true }
+      ]);
+    });
+
+    it('stream that throws', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const services = createServiceBundle({
+        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+      });
+
+      const server = createProtoRpcPeer({
+        exposed: services,
+        handlers: {
+          TestStreamService: async (): Promise<TestStreamService> => {
+            throw new Error('test error');
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: services,
+        port: bobPort
+      });
+
+      await Promise.all([server.open(), client.open()]);
+
+      const stream = await client.rpc.TestStreamService.testCall({
+        data: 'requestData'
+      });
+      expect(await Stream.consume(stream)).toEqual([expect.objectWith({ closed: true })]);
+    });
+  });
+
   describe('google.protobuf.Any encoding', function () {
     it('recursively encodes google.protobuf.Any by default', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
@@ -336,8 +476,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort
       });
 
@@ -358,7 +496,6 @@ describe('Protobuf service', function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
-        requested: {},
         exposed: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
@@ -387,8 +524,6 @@ describe('Protobuf service', function () {
         requested: {
           TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
-        exposed: {},
-        handlers: {},
         port: bobPort,
         encodingOptions: {
           preserveAny: true

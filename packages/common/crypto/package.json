@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/crypto-js": "~4.0.2",
-    "@types/node": "^16.11.58"
+    "@types/node": "^18.11.9"
   },
   "publishConfig": {
     "access": "public"

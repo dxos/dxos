@@ -27,7 +27,7 @@
 *   [5. Implementation Details](#5-implementation-details)
     *   [5.1. Credential message](#51-credential-message)
     *   [5.2. Keychain](#52-keychain)
-    *   [5.3. Space (party) state machines](#53-space-party-state-machines)
+    *   [5.3. Space (space) state machines](#53-space-space-state-machines)
     *   [5.4. HALO Creation](#54-halo-creation)
     *   [5.5. ECHO Space creation](#55-echo-space-creation)
 *   [6. Security Concerns](#6-security-concerns)
@@ -116,15 +116,15 @@ Peer-to-peer network supported by KUBE nodes.
 
 ***Credential chain*** -
 Set of credential messages establishing a linear chain of trust between credentials.
-TOOD: Example.
+TODO: Example.
 
 ***Keyring*** -
 Storage for keys (on disk or in-memory).
 
-***Party*** -
+***space*** -
 Set of Agents that can access a digital resource (such as an ECHO Space).
 
-> **NOTE:** Party was the old term for a Space.
+> **NOTE:** space was the old term for a Space.
 
 ***Presentation***
 Message containing a Credential that is signed by the Subject.
@@ -296,7 +296,7 @@ message Credential {
 3.  One or more IdentityRecovery credentials are signed by the Identity key, they setup the keys (with 24-word seed-phrases)
     that can be used to recover the identity in case no devices are available.
 4.  A space keypair is generated for the ECHO Space. It acts as a communication medium between Agent's devices and a credentials store. All of the mentioned credentials are recorded in that space.
-    a. Normal space-creation credential sequence is written to the space: SpaceGenesis, PartyMember, AdmittedFeed.
+    a. Normal space-creation credential sequence is written to the space: SpaceGenesis, spaceMember, AdmittedFeed.
     b. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
     c. HaloSpace credential is created and signed by the identity key. It links the space key with the identity.
 5.  Device keypair is generated. AuthorizedDevice credential is created.
@@ -348,7 +348,7 @@ The diagram below illustrates the chain of trust formed when a HALO is construct
 
 #### 4.2.6. Circles
 
-*   The HALO database contains a set of records representing third-party agents.
+*   The HALO database contains a set of records representing third-space agents.
 *   These records contain Agent keys (e.g., DIDs) and other metadata (e.g., cached Profiles).
 *   The HALO may also contain claims relating to other Agents.
 
@@ -445,20 +445,20 @@ Each entry consists of:
 
 Example:
 
-Parties admit identity keys as members. When a Device signs a credential, it produces a signature using it's own Device key and attaches a KeyChain containing a KeyAdmit message, admitting the Device key to the HALO.
+Spaces admit identity keys as members. When a Device signs a credential, it produces a signature using it's own Device key and attaches a KeyChain containing a KeyAdmit message, admitting the Device key to the HALO.
 
 > Q: What's the difference between including KeyChain as a parent of a different KeyChain vs having the credential message of that KeyChain entry be signed with the first KeyChain.
 
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
-### 5.3. Space (party) state machines
+### 5.3. Space (space) state machines
 
 *   Each space comes with a set of control feeds that can store credential message.
 *   Some types of credentials are processed by the space internally:
-    *   PartyMember - updates the list of party members (IDENTITY keys) and sets permissions.
-    *   AdmittedFeed - party will maintain a set of associated feeds.
+    *   spaceMember - updates the list of space members (IDENTITY keys) and sets permissions.
+    *   AdmittedFeed - space will maintain a set of associated feeds.
 *   All credentials that are processed by the space must either be issued by the Space genesis key or by one of the member identities with proper permissions.
-*   Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO party to build the device KeyChain.
+*   Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO space to build the device KeyChain.
 
 ### 5.4. HALO Creation
 
@@ -563,7 +563,7 @@ This spec does not define protocols to invite new Agents/Devices to a space.
 The concrete invitation processes will be implemented on a higher level, possibly within the app.
 They can still use the Space facilities such as credential storage and networking.
 
-Space membership is defined by the PartyMember credential. All protocols must eventually write a PartyMember credential to finialize the process.
+Space membership is defined by the spaceMember credential. All protocols must eventually write a spaceMember credential to finialize the process.
 
 Examples of possible invitation processes:
 
@@ -604,19 +604,19 @@ import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 
 //
 // TODO(burdon): Move these notes to the design doc commentary.
-// Peers maintain Feeds that are admitted to HALO and ECHO Parties.
+// Peers maintain Feeds that are admitted to HALO and ECHO Spaces.
 // Peers act as Verifiers for Credentials that may be Presented from other Peers.
 // Since Feeds implement a signed hash-linked data structure, they constitute a chain-of-authority for chained Credentials.
-// Credentials written to HALO Feeds may be Presented to Peers Verifying ECHO Parties.
+// Credentials written to HALO Feeds may be Presented to Peers Verifying ECHO Spaces.
 //
 
 //
-// **PartyGenesis** -
-//  First message written to initial Feed in a new Party.
+// **spaceGenesis** -
+//  First message written to initial Feed in a new space.
 //
 
-message PartyGenesis {
-  PubKey party_key = 1; // Feeds belong to Parties.
+message spaceGenesis {
+  PubKey space_key = 1; // Feeds belong to Spaces.
 }
 
 //
@@ -625,8 +625,8 @@ message PartyGenesis {
 //  Claims can be written directly to a feed or used within Credentials.
 //
 
-// Agent is authorized to access Party.
-message PartyMember {
+// Agent is authorized to access space.
+message spaceMember {
   // TODO(burdon): Consider permissions (e.g., for Bots).
   enum Role {
     INVALID = 0;
@@ -638,7 +638,7 @@ message PartyMember {
     READER = 3;
   }
 
-  PubKey party_key = 1;
+  PubKey space_key = 1;
   Role role = 2;
 }
 
@@ -649,8 +649,8 @@ message AuthorizedDevice {
   PubKey device_key = 2; // Existing authorized device.
 }
 
-// Feed is admitted to the Party for replication.
-// NOTE: Feeds are Admitted to Parties.
+// Feed is admitted to the space for replication.
+// NOTE: Feeds are Admitted to Spaces.
 message AdmittedFeed {
   enum Designation {
     /// Classic general purpose feeds for both HALO and ECHO messages together. To be deprecated.
@@ -661,7 +661,7 @@ message AdmittedFeed {
     DATA = 2;
   }
 
-  PubKey party_key = 1;
+  PubKey space_key = 1;
 
   /// Owning identity.
   PubKey identity_key = 2; // Could be derived.
@@ -724,7 +724,7 @@ message Claim {
 message Proof {
   string type = 1;              // Type of proof (e.g., "Ed25519Signature2020").
   Timestamp creation_date = 2;
-  PubKey signer = 3;            // Entity that created the proof (e.g., Agent, Device, Party).
+  PubKey signer = 3;            // Entity that created the proof (e.g., Agent, Device, space).
   optional bytes nonce = 4;     // Used in Presentations to protect against replay attacks.
 
   /// Signature (excluded from signed data).
@@ -763,7 +763,7 @@ message Chain {
 
 message Credential {
   optional PubKey id = 1;                 // Credential identifier (e.g., for storage indexing).
-  PubKey issuer = 2;                      // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
+  PubKey issuer = 2;                      // key = { space (genesis) | Identity (genesis) | (authorized) Device }
   Timestamp issuance_date = 3;
   optional Timestamp expiration_date = 4;
   optional bytes expiration_ref = 5;       // Could reference blockchain or epoch number.
@@ -821,7 +821,7 @@ message IdentityRecord {
 #
 
 #
-# Party Genesis: Creating a new Party.
+# space Genesis: Creating a new space.
 #
 
 feed:
@@ -829,14 +829,14 @@ feed:
   messages:
     - id: 1
       data:
-        # Self-signed Credential by the Party.
-        @type: dxos.halo.party.PartyGenesis
-        party_key: Alice-Halo # ISSUE: Different from IdentityKey?
+        # Self-signed Credential by the space.
+        @type: dxos.halo.space.spaceGenesis
+        space_key: Alice-Halo # ISSUE: Different from IdentityKey?
         identity_key: Alice
     - id: 2
       data:
         # Authorizes device to sign on behalf of Identity
-        # NOTE: This Credential SHOULD be Presented on joining a Party.
+        # NOTE: This Credential SHOULD be Presented on joining a space.
         @type: halo.credential.Credential
         issuer: Alice # Self-signed.
         subject:
@@ -853,7 +853,7 @@ feed:
           id: Alice/Device-1/Feed-1
           assertion:
             @type halo.credentials.AdmittedFeed
-            party_key: Alice-Halo
+            space_key: Alice-Halo
             device_key: Alice/Device-1
 
 #
@@ -882,7 +882,7 @@ feed:
           id: Alice/Device-2/Feed-2 # New Feed.
           assertion:
             @type halo.credentials.AdmittedFeed
-            party_key: Alice-Halo
+            space_key: Alice-Halo
             device_key: Alice/Device-2
 
 #
@@ -894,9 +894,9 @@ feed:
   messages:
     - id: 1
       data:
-        # Self-signed Credential by the Party.
-        @type halo.party.Genesis # NOTE: Same as HALO.
-        party_key: Party-1
+        # Self-signed Credential by the space.
+        @type halo.space.Genesis # NOTE: Same as HALO.
+        space_key: space-1
         identity_key: Alice
     - id: 2
       data:
@@ -906,8 +906,8 @@ feed:
         subject:
           id: Alice
           assertion:
-            @type halo.credentials.PartyMember
-            party_key: Party-1
+            @type halo.credentials.spaceMember
+            space_key: space-1
             role: ADMIN
 
 #
@@ -928,7 +928,7 @@ feed:
           id: Alice/Device-2/Feed-3 # NOTE: This Feed.
           assertion:
             @type: halo.credentials.AdmittedFeed
-            party_key: Party-1
+            space_key: space-1
             identity_key: Alice
             device_key: Alice/Device-1
         proofs:
@@ -974,8 +974,8 @@ feed:
         subject:
           id: Bob
           assertion:
-            @type halo.credentials.PartyMember
-            party_key: Party-1
+            @type halo.credentials.spaceMember
+            space_key: space-1
             role: WRITER
 ```
 

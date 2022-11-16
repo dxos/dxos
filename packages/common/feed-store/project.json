@@ -21,7 +21,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/common/feed-store/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

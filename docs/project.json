@@ -18,10 +18,20 @@
       "options": {
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
-        ]
+        ],
+        "format": "unix"
+      }
+    },
+    "plate": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "plate"
       },
       "outputs": [
         "{options.outputFile}"
+      ],
+      "dependsOn": [
+        "^build"
       ]
     },
     "prerelease": {

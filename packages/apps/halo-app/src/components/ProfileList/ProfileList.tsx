@@ -16,7 +16,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
   return profiles.length > 0 ? (
     <ul>
       {profiles.map((profile) => {
-        const profileHex = profile.publicKey.toHex();
+        const profileHex = profile.identityKey.toHex();
         return (
           <li key={profileHex}>
             <Avatar fallbackValue={profileHex} label={humanize(profileHex)} />

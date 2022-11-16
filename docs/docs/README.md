@@ -11,7 +11,7 @@ actions:
     link: /guide/
     type: secondary
 features:
-  - title: 'ECHO Database'
+  - title: ECHO Database
     details: Peer to peer state synchronization for real time collaborative and offline first applications.
   - title: 'HALO Identity'
     details: Decentralized, private, secure, convenient identity API.

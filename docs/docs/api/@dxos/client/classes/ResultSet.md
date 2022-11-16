@@ -1,28 +1,51 @@
 # Class `ResultSet`
-> Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6`]()
+Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6`]()
 
 
 Reactive query results.
 
 ## Constructors
-```ts
-new ResultSet <T> (itemUpdate: ReadOnlyEvent<void>, getter: function) => ResultSet<T>
-```
+### [`constructor`]()
+
+
+Returns: [`ResultSet`](/api/@dxos/client/classes/ResultSet)`<T>`
+
+Arguments: 
+
+`itemUpdate`: `ReadOnlyEvent<void>`
+
+`getter`: `function`
 
 ## Properties
-### `update: ReadOnlyEvent<T[]>`
-Triggered when  `value`  updates.
-### `first:  get T`
-### `value:  get T[]`
+### [`update`]()
+Type: `ReadOnlyEvent<T[]>`
 
-## Functions
-```ts
-subscribe (listener: function) => function
-```
+Triggered when  `value`  updates.
+### [`first`]()
+Type: `T`
+### [`value`]()
+Type: `T[]`
+
+## Methods
+### [`subscribe`]()
+
+
 Subscribe for updates.
-```ts
-waitFor (condition: function) => Promise<T[]>
-```
+
+Returns: `UnsubscribeCallback`
+
+Arguments: 
+
+`listener`: `function`
+### [`waitFor`]()
+
+
 Waits for condition to be true and then returns the value that passed the condition first.
 
 Current value is also checked.
+
+Returns: `Promise<T[]>`
+
+Arguments: 
+
+`condition`: `function`

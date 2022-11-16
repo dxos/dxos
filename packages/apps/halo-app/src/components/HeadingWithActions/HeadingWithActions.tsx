@@ -11,9 +11,10 @@ export interface HeadingWithActionsProps extends ComponentProps<'div'> {
   heading: HeadingProps;
   actions: ReactNode;
   compact?: boolean;
+  spacer?: ReactNode;
 }
 
-export const HeadingWithActions = ({ heading, actions, compact, ...divProps }: HeadingWithActionsProps) => {
+export const HeadingWithActions = ({ heading, actions, compact, spacer, ...divProps }: HeadingWithActionsProps) => {
   return (
     <div
       role='none'
@@ -21,8 +22,8 @@ export const HeadingWithActions = ({ heading, actions, compact, ...divProps }: H
       className={cx('flex flex-wrap items-center', compact ? 'gap-2' : 'gap-x-2 gap-y-4', divProps.className)}
     >
       <Heading {...heading} />
-      <div role='none' className='grow-[99] min-w-[2rem]' />
-      <div role='none' className='grow flex gap-2'>
+      {typeof spacer === 'undefined' ? <div role='none' className='grow-[99] min-w-[2rem]' /> : spacer}
+      <div role='none' className='flex grow gap-2 items-center'>
         {actions}
       </div>
     </div>

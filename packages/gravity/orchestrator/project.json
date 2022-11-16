@@ -25,7 +25,8 @@
       "options": {
         "lintFilePatterns": [
           "packages/gravity/orchestrator/**/*.{ts,js}"
-        ]
+        ],
+        "format": "unix"
       },
       "outputs": [
         "{options.outputFile}"

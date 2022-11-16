@@ -1,0 +1,57 @@
+{
+  "sourceRoot": "packages/common/context/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/common/context/src/index.ts",
+        "outputPath": "packages/common/context/dist",
+        "tsConfig": "packages/common/context/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/context/**/*.{ts,js}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "coveragePath": "coverage/packages/common/context",
+        "outputPath": "tmp/mocha/packages/common/context",
+        "resultsPath": "test-results/packages/common/context",
+        "testPatterns": [
+          "packages/common/context/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/context/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

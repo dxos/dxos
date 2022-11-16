@@ -42,6 +42,7 @@ export const SingleInputStep = ({
     <>
       <Input
         size='lg'
+        autoFocus
         label={t(inputLabel)}
         {...inputProps}
         {...(inputPlaceholder && { placeholder: t(inputPlaceholder) })}
@@ -49,6 +50,9 @@ export const SingleInputStep = ({
         onChange={onChange}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
+        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} className='order-last'>
+          {nextLabel ?? t('next label')}
+        </Button>
         {onBack && (
           <Button onClick={onBack} {...(pending && { disabled: true })}>
             {backLabel ?? t('back label')}
@@ -63,9 +67,6 @@ export const SingleInputStep = ({
             {cancelPendingLabel ?? t('cancel label')}
           </Button>
         )}
-        <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })}>
-          {nextLabel ?? t('next label')}
-        </Button>
       </div>
     </>
   );

@@ -11,17 +11,12 @@
     ]
   },
   "exclude": [
-    "*.t.ts",
+    "plugin.d.ts",
     "vite.config.ts"
   ],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
-  ],
-  "references": [
-    {
-      "path": "../../../tools/vite-plugin"
-    }
   ]
 }

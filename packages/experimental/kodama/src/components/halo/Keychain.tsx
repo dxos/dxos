@@ -21,6 +21,10 @@ export const Keychain = () => {
   }
 
   const devtoolsHost = useDevtools();
+  if (!devtoolsHost) {
+    return null;
+  }
+
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
   if (keys === undefined) {
     return null;

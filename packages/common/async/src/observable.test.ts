@@ -30,16 +30,14 @@ describe('observable', function () {
         clearTimeout(connectTimeout);
       });
 
-      // TODO(burdon): Use asyncTimeoutObservable and/or delegation.
-
       const timeout = setTimeout(() => {
         clearTimeout(connectTimeout);
-        observable.callbacks?.onTimeout(new TimeoutError(timeoutDelay));
+        observable.callback.onTimeout?.(new TimeoutError(timeoutDelay));
       }, timeoutDelay);
 
       const connectTimeout = setTimeout(() => {
         clearTimeout(timeout);
-        observable.callbacks?.onConnected('connection-1');
+        observable.callback.onConnected('connection-1');
       }, connectionDelay);
 
       return observable;
@@ -51,8 +49,7 @@ describe('observable', function () {
 
     const observable = openConnection();
 
-    // TODO(burdon): Auto unsubscribe on err?
-    observable.subscribe({
+    const unsubscribe = observable.subscribe({
       onConnected: () => {
         connected = true;
         setDone();
@@ -81,7 +78,7 @@ describe('observable', function () {
       clearTimeout(cancelTimeout);
     }
 
-    observable.unsubscribe();
+    unsubscribe();
 
     return { connected, cancelled, failed };
   };
@@ -102,7 +99,7 @@ describe('observable', function () {
 
   it('times out', async function () {
     const { connected, cancelled, failed } = await runTest(50, 30, 20);
-    expect(failed).not.to.be.undefined;
+    expect(failed).to.exist;
     expect(connected).to.be.false;
     expect(cancelled).to.be.false;
   });

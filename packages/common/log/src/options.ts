@@ -32,6 +32,8 @@ export const parseFilter = (filter: string | string[] | LogLevel): LogFilter[] =
   });
 };
 
+const IS_BROWSER = typeof window !== 'undefined' || typeof navigator !== 'undefined';
+
 export const getConfig = (_options?: LogOptions): LogConfig => {
   let options: LogOptions = defaultsDeep(
     {},
@@ -45,11 +47,12 @@ export const getConfig = (_options?: LogOptions): LogConfig => {
   );
 
   if (options.file) {
-    options = defaultsDeep(options, loadOptions(options.file));
+    options = defaultsDeep({}, loadOptions(options.file), options);
+    // TODO(burdon): Verbose option.
+    // console.log(JSON.stringify(options, undefined, 2));
   }
 
-  const defaultProcessor =
-    typeof window !== 'undefined' && typeof window.document !== 'undefined' ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
+  const defaultProcessor = IS_BROWSER ? BROWSER_PROCESSOR : CONSOLE_PROCESSOR;
 
   return {
     options,

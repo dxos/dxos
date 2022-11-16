@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,7 +36,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "earljs": "~0.1.10",
     "mocha": "^8.4.0",
     "typescript": "^4.8.4",

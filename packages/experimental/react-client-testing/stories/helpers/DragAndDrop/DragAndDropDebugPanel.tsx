@@ -4,23 +4,23 @@
 
 import React from 'react';
 
-import { Party } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
 type Order = { [key: string]: string };
 
 interface DragAndDropDebugPanelProps {
   order: Order;
-  party?: Party;
+  space?: Space;
   width?: number | string;
 }
 
-export const DragAndDropDebugPanel = ({ order, party }: DragAndDropDebugPanelProps) => {
+export const DragAndDropDebugPanel = ({ order, space }: DragAndDropDebugPanelProps) => {
   const getStringToDisplay = (key: string) => {
-    if (!party) {
+    if (!space) {
       return truncateKey(key, 5);
     }
-    const [item] = party?.select({ id: key }).exec().entities ?? [];
+    const [item] = space?.select({ id: key }).exec().entities ?? [];
     return truncateKey(key, 5) + ' - ' + item?.model.get('title').substring(0, 5);
   };
 
