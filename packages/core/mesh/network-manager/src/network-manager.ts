@@ -23,7 +23,7 @@ export type SwarmConnection = {
   close(): Promise<void>;
 };
 
-// TODO(burdon): Timeout.
+// TODO(burdon): Add timeout.
 export type SwarmOptions = {
   /**
    * Swarm topic.
@@ -51,7 +51,8 @@ export type SwarmOptions = {
   presence?: any;
 
   /**
-   * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.
+   * Custom label assigned to this swarm.
+   * Used in devtools to display human-readable names for swarms.
    */
   label?: string;
 };
@@ -59,7 +60,7 @@ export type SwarmOptions = {
 export type NetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
-  log?: boolean; // TODO(burdon): Remove.
+  log?: boolean; // Log to devtools.
 };
 
 /**
