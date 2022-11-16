@@ -76,7 +76,7 @@ export const App = () => {
               <PanelsContainer sections={sections} />
             </Box>
 
-            <Box sx={{ display: 'flex', flexShrink: 0 }}>
+            <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
               <Controls onConfigChange={onConfigChange} />
             </Box>
           </ClientContext.Provider>

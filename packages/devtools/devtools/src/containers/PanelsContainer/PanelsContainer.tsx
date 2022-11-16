@@ -121,6 +121,7 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
         {sections.map(({ items = [] }) =>
           items.map(({ id, panel }) => (
             <Box
+              id={`${id}-panel`}
               key={id}
               sx={{
                 display: selected === id ? 'flex' : 'none',
