@@ -84,12 +84,14 @@ export const subscribeToFeedBlocks = (
       };
 
       feed.on('append', update);
-      subscriptions.add(feed.off('append', update));
+      subscriptions.add(() => feed.off('append', update));
 
       feed.on('truncate', update);
-      subscriptions.add(feed.off('truncate', update));
+      subscriptions.add(() => feed.off('truncate', update));
       await update();
     });
 
-    return () => {};
+    return () => {
+      subscriptions.clear();
+    };
   });
