@@ -51,9 +51,11 @@ export class ModelFactory {
     validateModelClass(constructor);
     const { meta } = constructor;
     this._models.set(meta.type, { meta, constructor });
+
     scheduleTask(new Context(), () => {
       this.registered.emit(constructor)
     });
+    
     return this;
   }
 
