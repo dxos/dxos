@@ -39,7 +39,7 @@ const Template = (args: Omit<ListProps, 'item'> & { spaceKey?: PublicKey; id?: n
     }
   }, [space]);
 
-  return <main>{item ? <List {...args} item={item} /> : <Loading label='Loading…' />}</main>;
+  return <div className='flex-grow mx-2'>{item ? <List {...args} item={item} /> : <Loading label='Loading…' />}</div>;
 };
 
 export const Default = templateForComponent(Template)({});
