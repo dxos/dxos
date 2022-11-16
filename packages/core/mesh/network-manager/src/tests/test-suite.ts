@@ -5,18 +5,56 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Event, latch, sleep, Trigger } from '@dxos/async';
+import { latch, sleep, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkManager } from '../network-manager';
-import { createPeer, TestBuilder, TestPeer, TestProtocolPlugin, testProtocolProvider } from '../testing';
-import { FullyConnectedTopology } from '../topology';
+import { createPeer, TestBuilder, TestPeer } from '../testing';
 import { TransportFactory } from '../transport';
 
-const inMemory = false; // TODO(burdon): Remove.
+/**
+ * Join and cleanly leave swarm.
+ */
+const joinSwarm = async (topic: PublicKey, peers: TestPeer[]) => {
+  const [connected, connect] = latch({ count: peers.length });
+  peers.forEach((peer) => peer.plugin.once('connect', connect));
+  await Promise.all(peers.map((peer) => peer.joinSwarm(topic)));
+  await connected();
+};
+
+/**
+ * Cleanly leave swarm.
+ */
+const leaveSwarm = async (topic: PublicKey, peers: TestPeer[]) => {
+  const [disconnected, disconnect] = latch({ count: peers.length });
+  peers.forEach((peer) => peer.plugin.once('disconnect', disconnect));
+  await Promise.all(peers.map((peer) => peer.leaveSwarm(topic)));
+  await disconnected();
+};
+
+/**
+ * Exchange messages between peers.
+ */
+// TODO(burdon): Make based on plugin instance.
+const exchangeMessages = async (peer1: TestPeer, peer2: TestPeer) => {
+  const peer1Received = new Trigger<any>();
+  const peer2Received = new Trigger<any>();
+  peer1.plugin.on('receive', (peer, message) => peer1Received.wake(message));
+  peer2.plugin.on('receive', (peer, message) => peer2Received.wake(message));
+
+  {
+    void peer1.plugin.send(peer2.peerId.asBuffer(), JSON.stringify({ message: 'ping' }));
+    const { message } = JSON.parse(await peer2Received.wait()); // TODO(burdon): Encoding?
+    expect(message).to.eq('ping');
+  }
+
+  {
+    void peer2.plugin.send(peer1.peerId.asBuffer(), JSON.stringify({ message: 'pong' }));
+    const { message } = JSON.parse(await peer1Received.wait());
+    expect(message).to.eq('pong');
+  }
+};
 
 export const testSuite = ({
   signalUrl, // TODO(burdon): Pass in builder instead.
@@ -25,54 +63,11 @@ export const testSuite = ({
   signalUrl?: string;
   getTransportFactory: () => Promise<TransportFactory>;
 }) => {
-  /**
-   * Join and cleanly leave swarm.
-   */
-  const joinSwarm = async (topic: PublicKey, peers: TestPeer[]) => {
-    const [connected, connect] = latch({ count: peers.length });
-    peers.forEach((peer) => peer.plugin.once('connect', connect));
-    await Promise.all(peers.map((peer) => peer.joinSwarm(topic)));
-    await connected();
-  };
-
-  /**
-   * Cleanly leave swarm.
-   */
-  const leaveSwarm = async (topic: PublicKey, peers: TestPeer[]) => {
-    const [disconnected, disconnect] = latch({ count: peers.length });
-    peers.forEach((peer) => peer.plugin.once('disconnect', disconnect));
-    await Promise.all(peers.map((peer) => peer.leaveSwarm(topic)));
-    await disconnected();
-  };
-
-  /**
-   * Exchange messages between peers.
-   */
-  const exchangeMessages = async (peer1: TestPeer, peer2: TestPeer) => {
-    const peer1Received = new Trigger<any>();
-    const peer2Received = new Trigger<any>();
-    peer1.plugin.on('receive', (peer, message) => peer1Received.wake(message));
-    peer2.plugin.on('receive', (peer, message) => peer2Received.wake(message));
-
-    {
-      void peer1.plugin.send(peer2.peerId.asBuffer(), JSON.stringify({ message: 'ping' }));
-      const { message } = JSON.parse(await peer2Received.wait()); // TODO(burdon): Encoding?
-      expect(message).to.eq('ping');
-    }
-
-    {
-      void peer2.plugin.send(peer1.peerId.asBuffer(), JSON.stringify({ message: 'pong' }));
-      const { message } = JSON.parse(await peer1Received.wait());
-      expect(message).to.eq('pong');
-    }
-  };
-
   it.only('joins, sends messages, and cleanly exits swarm', async () => {
     const testBuilder = new TestBuilder({ signalUrl });
 
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
-
     await Promise.all([peer1.open(), peer2.open()]);
     afterTest(async () => {
       await Promise.all([peer1.close(), peer2.close()]);
@@ -83,7 +78,7 @@ export const testSuite = ({
     await exchangeMessages(peer1, peer2);
     await leaveSwarm(topic, [peer1, peer2]);
 
-    // TODO(burdon): Doesn't seem to shutdown correctly.
+    // TODO(burdon): Doesn't exit cleanly:
     //  If add sleep here, then last logged message is "connecting" in test plugin.
     //  Messages still being sent?
     await sleep(1000);
@@ -94,7 +89,6 @@ export const testSuite = ({
 
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
-
     await Promise.all([peer1.open(), peer2.open()]);
     afterTest(async () => {
       await Promise.all([peer1.close(), peer2.close()]);
@@ -110,6 +104,7 @@ export const testSuite = ({
 
     // TODO(burdon): Doesn't exit cleanly:
     //  Error: Can only pipe to one destination (memory-transport).
+    //  Is this due to re-using the plugin instance?
     {
       // await joinSwarm(topic, [peer1, peer2]);
       // await exchangeMessages(peer1, peer2);
@@ -118,66 +113,27 @@ export const testSuite = ({
   });
 
   //
-  // TODO(burdon): Remove.
+  // TODO(burdon): Reimplement.
   //
 
-  it.skip('join two swarms', async () => {
-    const testBuilder = new TestBuilder({ signalUrl: !inMemory ? signalUrl : undefined });
+  it.skip('join multiple swarms', async () => {
+    const testBuilder = new TestBuilder({ signalUrl });
 
-    const peerId = PublicKey.random();
-    const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
-    const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
-
-    const networkManager = new NetworkManager({
-      signalManager: testBuilder.createSignalManager(),
-      transportFactory: await getTransportFactory()
+    // TODO(burdon): N peers.
+    const peer1 = testBuilder.createPeer();
+    const peer2 = testBuilder.createPeer();
+    await Promise.all([peer1.open(), peer2.open()]);
+    afterTest(async () => {
+      await Promise.all([peer1.close(), peer2.close()]);
     });
-    afterTest(() => networkManager.close());
 
-    // Joining first swarm.
-    {
-      const topic = PublicKey.random();
-      await networkManager.joinSwarm({
-        topic,
-        peerId,
-        protocol: testProtocolProvider(topic.asBuffer(), peerId, plugin1),
-        topology: new FullyConnectedTopology()
-      });
-
-      // Creating and joining second peer.
-      await createPeer({
-        topic,
-        peerId: PublicKey.random(),
-        signalHosts: !inMemory ? [signalUrl!] : undefined,
-        transportFactory: await getTransportFactory()
-      });
-    }
-
-    // Joining second swarm with same peerId.
-    {
-      const topic = PublicKey.random();
-      await networkManager.joinSwarm({
-        topic,
-        peerId,
-        protocol: testProtocolProvider(topic.asBuffer(), peerId, plugin2),
-        topology: new FullyConnectedTopology()
-      });
-
-      // Creating and joining second peer.
-      await createPeer({
-        topic,
-        peerId: PublicKey.random(),
-        signalHosts: !inMemory ? [signalUrl!] : undefined,
-        transportFactory: await getTransportFactory()
-      });
-    }
-
-    // prettier-ignore
-    await Promise.all([
-      Event.wrap(plugin1, 'connect').waitForCount(1),
-      Event.wrap(plugin2, 'connect').waitForCount(1)
-    ]);
+    // TODO(burdon): Plugin instance for each swarm?
+    const numSwarms = 5;
+    const topics = Array.from(Array(numSwarms)).map(() => PublicKey.random());
+    expect(topics).to.have.length(numSwarms);
   });
+
+  const inMemory = true;
 
   it('two swarms at the same time', async () => {
     const topicA = PublicKey.random();

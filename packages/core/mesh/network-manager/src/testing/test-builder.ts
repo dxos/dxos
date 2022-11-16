@@ -69,6 +69,7 @@ export class TestPeer {
     if (!testBuilder.options.signalUrl) {
       transportFactory = MemoryTransportFactory;
     } else {
+      // TODO(burdon): Explain what we're doing here.
       const [clientPort, serverPort] = createLinkedPorts();
 
       this._client = createProtoRpcPeer({
@@ -115,6 +116,7 @@ export class TestPeer {
     await this._networkManager.close();
   }
 
+  // TODO(burdon): Need to create new plugin instance per swarm?
   async joinSwarm(topic: PublicKey, topology = new FullyConnectedTopology()) {
     await this._networkManager.joinSwarm({
       topic,
@@ -122,6 +124,7 @@ export class TestPeer {
       protocol: testProtocolProvider(topic.asBuffer(), this.peerId, this.plugin),
       topology
     });
+
     this._swarms.add(topic);
   }
 
