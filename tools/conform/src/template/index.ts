@@ -14,7 +14,7 @@ export type Input = {
   storybooks: string[];
   quickStartUrl: string;
   guideUrl: string;
-  apiReferenceUrl: string;
+  apiReferenceUrl: string | boolean;
   dependencyDiagramUrl: string;
   codeCoverageUrl: string;
   twitter: string;

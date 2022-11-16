@@ -1,30 +1,37 @@
-# DXOS Client
-Provides a client interface to ECHO database, HALO identity, and MESH networking features.
+# @dxos/client
+
+Core DXOS Client API.
 
 ## Installation
+
 ```bash
-npm i @dxos/client
+pnpm i @dxos/client
+```
+
+## Usage
+
+Create a client object like this:
+
+```ts
+import { Client } from "@dxos/client";
+const client = new Client();
 ```
 
 ## Documentation
-- [Quick Start]()
-- [Developer Guide]()
-- [API Reference]()
-- [Dependency Diagram]()
-- [Code coverage report]()
 
-## Resources
-- DXOS [Website]()
-- DXOS [Blog]()
-- DXOS [Roadmap]()
-- DXOS [Events calendar]()
-- Hang out with the community on [Discord]()
-- Tag [questions on Stack Overflow]() with `#dxos`
-- Tag us on twitter `@dxos`
+- [⚡️ Quick Start](https://docs.dxos.org/quick-start)
+- [📖 Developer Guide](https://docs.dxos.org/guide/echo)
+- [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
+
+## DXOS Resources
+
+- [Website](https://dxos.org)
+- [Developer Documentation](https://docs.dxos.org)
+- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/dxos) with `#dxos`
+- Tag us on twitter [`@dxos_org`](https://twitter.com/dxos_org)
 
 ## Contributions
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](), the [issue guide](), and the [PR contribution guide](). If you would like to contribute to the design and implementation of DXOS, please [start here]().
 
-## License
+Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md).
 
-MIT © DXOS
+License: [MIT](./LICENSE) Copyright 2022 © DXOS

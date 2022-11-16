@@ -10,3 +10,5 @@ usage: >
   ```
 quickStartUrl: https://docs.dxos.org/quick-start
 guideUrl: https://docs.dxos.org/guide/echo
+apiReferenceUrl: true
+

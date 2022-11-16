@@ -16,7 +16,7 @@ const template: TemplateFunction<Input> = async ({ input }) => {
     install = `pnpm i ${input?.name}`,
     quickStartUrl,
     guideUrl,
-    apiReferenceUrl = `https://docs.dxos.org/api/${input?.name}`,
+    apiReferenceUrl,
     dependencyDiagramUrl,
     codeCoverageUrl,
     twitter = `dxos_org`,
@@ -56,7 +56,12 @@ const template: TemplateFunction<Input> = async ({ input }) => {
     text`
     ${quickStartUrl && `- [⚡️ Quick Start](${quickStartUrl})`}
     ${guideUrl && `- [📖 Developer Guide](${guideUrl})`}
-    ${apiReferenceUrl && `- [📚 API Reference](${apiReferenceUrl})`}
+    ${
+      apiReferenceUrl &&
+      `- [📚 API Reference](${
+        typeof apiReferenceUrl === 'boolean' ? `https://docs.dxos.org/api/${name}` : apiReferenceUrl
+      })`
+    }
     ${dependencyDiagramUrl && `- [🧩 Dependency Diagram](${dependencyDiagramUrl})`}
     ${codeCoverageUrl && `- [👖 Code coverage report](${codeCoverageUrl})`}`,
     quickStartUrl || guideUrl || apiReferenceUrl || dependencyDiagramUrl || codeCoverageUrl
@@ -65,17 +70,22 @@ const template: TemplateFunction<Input> = async ({ input }) => {
   ## DXOS Resources
   - [Website](https://dxos.org)
   - [Developer Documentation](https://docs.dxos.org)
-  ${blogUrl && `- [Blog](${blogUrl})`}
-  ${roadmapUrl && `- [Roadmap](${roadmapUrl})`}
-  ${eventsUrl && `- [Events calendar](${eventsUrl})`}
-  ${discordUrl && `- Hang out with the community on [Discord](${discordUrl})`}
-  ${stackOverflowTag && `- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/${stackOverflowTag}) with \`#${stackOverflowTag}\``}
-  ${twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`}
-
+  ${[
+    blogUrl && `- [Blog](${blogUrl})`,
+    roadmapUrl && `- [Roadmap](${roadmapUrl})`,
+    eventsUrl && `- [Events calendar](${eventsUrl})`,
+    discordUrl && `- Hang out with the community on [Discord](${discordUrl})`,
+    stackOverflowTag &&
+      `- Tag [questions on Stack Overflow](https://stackoverflow.com/questions/tagged/${stackOverflowTag}) with \`#${stackOverflowTag}\``,
+    twitter && `- Tag us on twitter [\`@${twitter}\`](https://twitter.com/${twitter})`
+  ]
+    .filter(Boolean)
+    .join('\n')}
+  
   ## Contributions
   Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](${conductUrl}), the [issue guide](${issuesUrl}), and the [PR contribution guide](${prGuideUrl}). If you would like to contribute to the design and implementation of DXOS, please [start with the contributor's guide](${contributionGuideUrl}).
 
-  License: [MIT](./LICENSE.md) Copyright 2022 © DXOS
+  License: [MIT](./LICENSE) Copyright 2022 © DXOS
   `;
 };
 
