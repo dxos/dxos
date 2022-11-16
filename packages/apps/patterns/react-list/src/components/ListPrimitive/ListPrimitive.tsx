@@ -51,6 +51,7 @@ export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<Co
 
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
   updateItem: (item: ListItemProps) => void;
+  updateOrder: (id: ListItemId, delta: number) => void;
   isFirst?: boolean;
   isLast?: boolean;
 }
@@ -62,7 +63,8 @@ const ListItemPrimitive = ({
   annotations,
   updateItem,
   isFirst,
-  isLast
+  isLast,
+  updateOrder
 }: ListItemPrimitiveComponentProps) => {
   const isDone = annotations?.state === 'done';
   const checkId = `${id}__checkbox`;
@@ -99,6 +101,14 @@ const ListItemPrimitive = ({
     },
     [id, title, description, annotations]
   );
+
+  const onClickMoveUp = useCallback(() => {
+    updateOrder(id, -1);
+  }, [updateOrder, id]);
+
+  const onClickMoveDown = useCallback(() => {
+    updateOrder(id, 1);
+  }, [updateOrder, id]);
 
   return (
     <li
@@ -148,11 +158,11 @@ const ListItemPrimitive = ({
         />
       </div>
       <ButtonGroup className='flex flex-col items-stretch'>
-        <Button compact rounding='rounded-bs-md border-be-0' disabled={isFirst}>
+        <Button compact rounding='rounded-bs-md border-be-0' disabled={isFirst} onClick={onClickMoveUp}>
           <CaretUp />
           <span className='sr-only'>{t('move list item up label')}</span>
         </Button>
-        <Button compact rounding='rounded-be-md' disabled={isLast}>
+        <Button compact rounding='rounded-be-md' disabled={isLast} onClick={onClickMoveDown}>
           <CaretDown />
           <span className='sr-only'>{t('move list item down label')}</span>
         </Button>
@@ -202,6 +212,19 @@ export const ListPrimitive = ({
     onAction?.({ listId, listItemId: id, next: item });
   }, []);
 
+  const updateOrder = useCallback(
+    (id: ListItemId, delta: number) => {
+      const fromIndex = order.indexOf(id);
+      const toIndex = fromIndex + delta;
+      console.log('[update order]', id, delta, order, fromIndex, toIndex);
+      const nextOrder = Array.from(order);
+      nextOrder.splice(fromIndex, 1);
+      nextOrder.splice(toIndex, 0, id);
+      setOrder(nextOrder);
+    },
+    [order]
+  );
+
   return (
     <div
       role='group'
@@ -241,7 +264,7 @@ export const ListPrimitive = ({
               key={listItemId}
               isFirst={index === 0}
               isLast={index === order.length - 1}
-              {...{ id: listItemId, updateItem }}
+              {...{ id: listItemId, updateItem, updateOrder }}
               {...items[listItemId]}
             />
           );
