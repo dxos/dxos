@@ -474,6 +474,11 @@
           "type": "json",
           "path": "tools/typedoc-plugin-plate/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/x/package.json",
+          "jsonpath": "$.version"
         }
       ]
     }
