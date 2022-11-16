@@ -45,6 +45,7 @@ export class Workspace {
   async getPackage(packageName: string): Promise<any> {
     const [, project] = this._projectsByPackage.get(packageName) ?? [];
     assert(project && project.root, `Invalid package: ${packageName}`);
+    // TODO(burdon): Contention with FixCommand.
     return await loadJson(path.join(this.root, project.root, 'package.json'));
   }
 

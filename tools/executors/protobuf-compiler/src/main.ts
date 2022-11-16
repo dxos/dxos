@@ -9,7 +9,6 @@ import { resolve } from 'path';
 import readPkg from 'read-pkg';
 
 import { preconfigureProtobufjs } from './configure';
-import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { registerResolver } from './parser';
 import { parseAndGenerateSchema } from './type-generator';
@@ -45,7 +44,6 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
   await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, process.cwd());
 };
 

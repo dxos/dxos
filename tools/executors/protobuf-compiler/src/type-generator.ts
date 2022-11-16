@@ -7,9 +7,13 @@ import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
-import { generatePackageExports } from './generator/package-exports';
-import { logger } from './logger';
+import {
+  createIndexSourceFile,
+  createNamespaceSourceFile,
+  getFileNameForNamespace,
+  generatePackageExports
+} from './generator';
+import { Logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
 import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
@@ -21,18 +25,23 @@ export const parseAndGenerateSchema = async (
   baseDirPath: string | undefined,
   outDirPath: string,
   packageRoot: string,
-  exportPath?: string
+  exportPath?: string,
+  verbose = false
 ) => {
-  const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
-  const root = await pb.load(protoFiles);
+  const logger = new Logger({ verbose });
+  logger.logCompilationOptions(protoFiles, baseDirPath, outDirPath);
 
+  const root = await pb.load(protoFiles);
+  const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   for (const fqn of Object.keys(substitutions)) {
     if (!root.lookup(fqn)) {
       throw new Error(`No protobuf definition found matching the substitution: ${fqn}`);
     }
   }
 
-  logger.logParsedSubstitutions(substitutions);
+  if (substitutionsModule) {
+    logger.logParsedSubstitutions(substitutionsModule, substitutions);
+  }
 
   await generateSchema({
     schema: root,
@@ -61,12 +70,9 @@ export interface GenerateSchemaOptions {
  */
 export const generateSchema = (options: GenerateSchemaOptions) => {
   const namespaces = splitSchemaIntoNamespaces(options.schema);
-
   const printer = ts.createPrinter();
 
   for (const [namespace, types] of namespaces) {
-    const outFile = join(options.outDir, getFileNameForNamespace(namespace));
-
     const generatedSourceFile = createNamespaceSourceFile(
       types,
       options.substitutions?.map ?? {},
@@ -76,6 +82,7 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
       Array.from(namespaces.keys())
     );
 
+    const outFile = join(options.outDir, getFileNameForNamespace(namespace));
     if (!existsSync(dirname(outFile))) {
       mkdirSync(dirname(outFile), { recursive: true });
     }
@@ -84,14 +91,9 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
     writeFileSync(outFile, source);
   }
 
-  const generatedSourceFile = createIndexSourceFile(
-    options.substitutions?.module,
-    options.schema,
-    options.outDir,
-    Array.from(namespaces.keys())
+  const source = printer.printFile(
+    createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()))
   );
-  const source = printer.printFile(generatedSourceFile);
-
   writeFileSync(join(options.outDir, 'index.ts'), source);
 
   if (options.exportPath) {
