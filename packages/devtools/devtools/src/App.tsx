@@ -70,7 +70,7 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
-          <ClientContext.Provider value={{ client, services: servicesProvider?.services, services: servicesProvider?.services }}>
+          <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
             <Telemetry />
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
