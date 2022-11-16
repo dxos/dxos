@@ -10,5 +10,4 @@ export * from './packlets/identity';
 export * from './packlets/invitations';
 export * from './packlets/services';
 export * from './packlets/storage';
-export * from './packlets/testing';
 export * from './packlets/vault';

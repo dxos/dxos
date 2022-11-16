@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.5](https://github.com/dxos/dxos/compare/v0.1.4...v0.1.5) (2022-11-11)
+
+
+### Bug Fixes
+
+* Publish config ([#1859](https://github.com/dxos/dxos/issues/1859)) ([949c5e8](https://github.com/dxos/dxos/commit/949c5e80a2d406cb27440f915a4c94d72265699f))
+* **react-client:** Remove old dependency ([#1860](https://github.com/dxos/dxos/issues/1860)) ([bc06ea9](https://github.com/dxos/dxos/commit/bc06ea9a5beffeab35304284c364397fe3b2ee12))
+
+## [0.1.4](https://github.com/dxos/dxos/compare/v0.1.3...v0.1.4) (2022-11-11)
+
+
+### Features
+
+* Add ClientIFrameServiceProxy ([#1837](https://github.com/dxos/dxos/issues/1837)) ([7dc67e2](https://github.com/dxos/dxos/commit/7dc67e234111007877e88ed9c2748d9b25933cca))
+* Add safeInstanceof decorator ([#1850](https://github.com/dxos/dxos/issues/1850)) ([fd52e2c](https://github.com/dxos/dxos/commit/fd52e2ca25f2778d5d2e5fd4e1d2a88857e8b665))
+
+
+### Bug Fixes
+
+* Dependency issues when installing cli ([#1852](https://github.com/dxos/dxos/issues/1852)) ([e7e4947](https://github.com/dxos/dxos/commit/e7e494792d4b315354cec0dbf6dabc2d98723946))
+* More template fixes ([#1857](https://github.com/dxos/dxos/issues/1857)) ([884b5b7](https://github.com/dxos/dxos/commit/884b5b7ddafe8245cd056dd7ce111e014eea085a))
+* realign app templates ([#1856](https://github.com/dxos/dxos/issues/1856)) ([c4054f9](https://github.com/dxos/dxos/commit/c4054f907f9490ae77cf00c2aceeb67b199c1bee))
+
 ## [0.1.3](https://github.com/dxos/dxos/compare/v0.1.2...v0.1.3) (2022-11-11)
 
 

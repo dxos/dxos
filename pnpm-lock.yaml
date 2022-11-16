@@ -265,6 +265,51 @@ importers:
       vue-router: 4.1.6_vue@3.2.41
       vuepress: 2.0.0-beta.53_dkfen5jh5waidbcncwb2iemhwm
 
+  packages/apps/composer-app:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/react-appkit': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-composer': workspace:*
+      '@dxos/react-ui': workspace:*
+      '@dxos/react-uikit': workspace:*
+      '@dxos/sentry': workspace:*
+      '@dxos/text-model': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@sentry/react': ^7.17.2
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-router-dom: ^6.3.0
+      vite: 3.0.9
+      vite-plugin-pwa: ^0.12.4
+      workbox-window: ^6.5.4
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/react-appkit': link:../patterns/react-appkit
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-composer': link:../patterns/react-composer
+      '@dxos/react-ui': link:../../common/react-ui
+      '@dxos/react-uikit': link:../../sdk/react-uikit
+      '@dxos/sentry': link:../../common/sentry
+      '@dxos/text-model': link:../../core/echo/text-model
+      '@sentry/react': 7.17.2_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router-dom: 6.4.2_biqbaboplfbrettd7655fr4n2y
+    devDependencies:
+      '@dxos/vite-plugin': link:../../sdk/vite-plugin
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      workbox-window: 6.5.4
+
   packages/apps/halo-app:
     specifiers:
       '@dxos/async': workspace:*
@@ -278,14 +323,12 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-composer': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
-      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@react-hook/async': ^3.1.1
@@ -317,14 +360,12 @@ importers:
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
-      '@dxos/react-composer': link:../patterns/react-composer
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/sentry': link:../../common/sentry
       '@dxos/telemetry': link:../../common/telemetry
-      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       '@react-hook/async': 3.1.1_react@18.2.0
       '@sentry/react': 7.17.2_react@18.2.0
@@ -353,10 +394,12 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
+      '@dxos/sentry': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@types/react': ^18.0.21
@@ -368,16 +411,20 @@ importers:
       react-dom: ^18.2.0
       react-router-dom: ^6.3.0
       storybook-dark-mode: ^1.1.2
+      url-join: ^5.0.0
       vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
+      '@dxos/sentry': link:../../../common/sentry
       '@dxos/util': link:../../../common/util
       classnames: 2.3.2
+      url-join: 5.0.0
     devDependencies:
       '@dxos/react-client-testing': link:../../../experimental/react-client-testing
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
@@ -690,7 +737,9 @@ importers:
 
   packages/common/codec-protobuf:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
       assert: ^2.0.0
@@ -699,7 +748,9 @@ importers:
       path-browserify: ^1.0.1
       protobufjs: ^6.9.0
     dependencies:
+      '@dxos/async': link:../async
       '@dxos/context': link:../context
+      '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2
@@ -712,8 +763,10 @@ importers:
   packages/common/context:
     specifiers:
       '@dxos/log': workspace:*
+      '@dxos/util': workspace:*
     dependencies:
       '@dxos/log': link:../log
+      '@dxos/util': link:../util
 
   packages/common/crypto:
     specifiers:
@@ -885,7 +938,6 @@ importers:
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
       lodash.pickby: ^4.6.0
-      path-browserify: ^1.0.1
       pirates: ~4.0.5
       sorcery: ^0.10.0
       typescript: ^4.8.4
@@ -895,7 +947,6 @@ importers:
       js-yaml: 4.1.0
       lodash.defaultsdeep: 4.6.1
       lodash.pickby: 4.6.0
-      path-browserify: 1.0.1
       util: 0.12.5
     devDependencies:
       '@swc-node/sourcemap-support': 0.2.2
@@ -959,7 +1010,6 @@ importers:
 
   packages/common/react-ui:
     specifiers:
-      '@dxos/vite-plugin': workspace:*
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
       '@fontsource/space-grotesk': ^4.5.10
@@ -1014,7 +1064,6 @@ importers:
       tailwindcss-logical: 3.0.0_xkowlklhtk6sfvtndbucb3hfiy
       tailwindcss-radix: 2.6.0
     devDependencies:
-      '@dxos/vite-plugin': link:../../sdk/vite-plugin
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
@@ -2396,6 +2445,7 @@ importers:
 
   packages/devtools/plate:
     specifiers:
+      '@swc/core': ^1.3.9
       '@types/lodash.flatten': ^4.4.6
       '@types/lodash.zip': ^4.2.6
       '@types/minimatch': ^5.1.2
@@ -2415,6 +2465,7 @@ importers:
       typescript: ^4.8.4
       yargs: ~16.2.0
     dependencies:
+      '@swc/core': 1.3.9
       esbuild: 0.14.54
       lodash.flatten: 4.4.0
       lodash.zip: 4.2.0
@@ -2422,6 +2473,7 @@ importers:
       mkdirp: 1.0.4
       prettier: 2.7.1
       recursive-readdir: 2.2.2
+      ts-node: 10.9.1_avwejrfg7abipkjwvznwy27qia
       yargs: 16.2.0
     devDependencies:
       '@types/lodash.flatten': 4.4.7
@@ -2432,7 +2484,6 @@ importers:
       '@types/prettier': 2.7.1
       '@types/recursive-readdir': 2.2.1
       '@types/yargs': 16.0.4
-      ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
   packages/e2e/rpc-tunnel-e2e:
@@ -3315,7 +3366,6 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
@@ -3350,7 +3400,6 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@dxos/util': link:../../common/util
@@ -3409,7 +3458,6 @@ importers:
   packages/sdk/react-client:
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
@@ -3441,7 +3489,6 @@ importers:
       use-subscription: ^1.8.0
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -3831,6 +3878,7 @@ importers:
       '@dxos/protobuf-compiler': workspace:*
       '@microsoft/tsdoc': ~0.14.1
       '@types/debug': ^4.1.7
+      '@types/diff': ^5.0.2
       '@types/glob': ~7.1.3
       '@types/js-yaml': ^4.0.5
       '@types/node': ^18.11.9
@@ -3882,6 +3930,7 @@ importers:
       '@dxos/esbuild-server': 2.29.0
       '@dxos/protobuf-compiler': link:../executors/protobuf-compiler
       '@types/debug': 4.1.7
+      '@types/diff': 5.0.2
       '@types/glob': 7.1.4
       '@types/js-yaml': 4.0.5
       '@types/node': 18.11.9
@@ -3911,6 +3960,75 @@ importers:
       typescript: 4.8.4
       vue: 3.2.41
       vuepress: 2.0.0-beta.53_dkfen5jh5waidbcncwb2iemhwm
+
+  tools/x:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/log': workspace:*
+      '@octokit/rest': ^19.0.5
+      '@types/color-hash': ^1.0.1
+      '@types/columnify': ^1.5.1
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.pick': ^4.4.7
+      '@types/minimatch': ^5.1.2
+      '@types/mocha': ^8.2.2
+      '@types/node': ^18.11.9
+      '@types/react': ^18.0.21
+      '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
+      color-hash: ^1.0.3
+      columnify: ^1.6.0
+      console-table-printer: ^2.11.0
+      debug: ^4.3.3
+      enquirer: ^2.3.6
+      ink: ^3.2.0
+      ink-spinner: ~4.0.3
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
+      lodash.pick: ^4.4.0
+      log-update: ^4.0.0
+      mocha: ^8.4.0
+      node-notifier: ^10.0.1
+      react: ^18.2.0
+      typescript: ^4.8.4
+      unzip-stream: ^0.3.1
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/log': link:../../packages/common/log
+      '@octokit/rest': 19.0.5
+      chalk: 4.1.2
+      color-hash: 1.1.1
+      columnify: 1.6.0
+      console-table-printer: 2.11.1
+      debug: 4.3.4
+      enquirer: 2.3.6
+      ink: 3.2.0_iapumuv4e6jcjznwuxpf4tt22e
+      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
+      ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.pick: 4.4.0
+      log-update: 4.0.0
+      node-notifier: 10.0.1
+      react: 18.2.0
+      unzip-stream: 0.3.1
+      yargs: 16.2.0
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@types/color-hash': 1.0.2
+      '@types/columnify': 1.5.1
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.pick': 4.4.7
+      '@types/minimatch': 5.1.2
+      '@types/mocha': 8.2.3
+      '@types/node': 18.11.9
+      '@types/react': 18.0.21
+      '@types/yargs': 16.0.4
+      mocha: 8.4.0
+      typescript: 4.8.4
 
 packages:
 
@@ -7564,12 +7682,30 @@ packages:
       '@octokit/types': 6.41.0
     dev: false
 
+  /@octokit/plugin-paginate-rest/5.0.1_@octokit+core@4.1.0:
+    resolution: {integrity: sha512-7A+rEkS70pH36Z6JivSlR7Zqepz3KVucEFVDnSrgHXzG7WLAzYwcHZbKdfTXHwuTHbkT1vKvz7dHl1+HNf6Qyw==}
+    engines: {node: '>= 14'}
+    peerDependencies:
+      '@octokit/core': '>=4'
+    dependencies:
+      '@octokit/core': 4.1.0
+      '@octokit/types': 8.0.0
+    dev: false
+
   /@octokit/plugin-request-log/1.0.4_@octokit+core@3.6.0:
     resolution: {integrity: sha512-mLUsMkgP7K/cnFEw07kWqXGF5LKrOkD+lhCrKvPHXWDywAwuDUeDwWBpc69XK3pNX0uKiVt8g5z96PJ6z9xCFA==}
     peerDependencies:
       '@octokit/core': '>=3'
     dependencies:
       '@octokit/core': 3.6.0
+    dev: false
+
+  /@octokit/plugin-request-log/1.0.4_@octokit+core@4.1.0:
+    resolution: {integrity: sha512-mLUsMkgP7K/cnFEw07kWqXGF5LKrOkD+lhCrKvPHXWDywAwuDUeDwWBpc69XK3pNX0uKiVt8g5z96PJ6z9xCFA==}
+    peerDependencies:
+      '@octokit/core': '>=3'
+    dependencies:
+      '@octokit/core': 4.1.0
     dev: false
 
   /@octokit/plugin-rest-endpoint-methods/5.16.2_@octokit+core@3.6.0:
@@ -7579,6 +7715,17 @@ packages:
     dependencies:
       '@octokit/core': 3.6.0
       '@octokit/types': 6.41.0
+      deprecation: 2.3.1
+    dev: false
+
+  /@octokit/plugin-rest-endpoint-methods/6.7.0_@octokit+core@4.1.0:
+    resolution: {integrity: sha512-orxQ0fAHA7IpYhG2flD2AygztPlGYNAdlzYz8yrD8NDgelPfOYoRPROfEyIe035PlxvbYrgkfUZIhSBKju/Cvw==}
+    engines: {node: '>= 14'}
+    peerDependencies:
+      '@octokit/core': '>=3'
+    dependencies:
+      '@octokit/core': 4.1.0
+      '@octokit/types': 8.0.0
       deprecation: 2.3.1
     dev: false
 
@@ -7633,6 +7780,18 @@ packages:
       '@octokit/plugin-paginate-rest': 2.21.3_@octokit+core@3.6.0
       '@octokit/plugin-request-log': 1.0.4_@octokit+core@3.6.0
       '@octokit/plugin-rest-endpoint-methods': 5.16.2_@octokit+core@3.6.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /@octokit/rest/19.0.5:
+    resolution: {integrity: sha512-+4qdrUFq2lk7Va+Qff3ofREQWGBeoTKNqlJO+FGjFP35ZahP+nBenhZiGdu8USSgmq4Ky3IJ/i4u0xbLqHaeow==}
+    engines: {node: '>= 14'}
+    dependencies:
+      '@octokit/core': 4.1.0
+      '@octokit/plugin-paginate-rest': 5.0.1_@octokit+core@4.1.0
+      '@octokit/plugin-request-log': 1.0.4_@octokit+core@4.1.0
+      '@octokit/plugin-rest-endpoint-methods': 6.7.0_@octokit+core@4.1.0
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -11920,6 +12079,10 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
+  /@types/diff/5.0.2:
+    resolution: {integrity: sha512-uw8eYMIReOwstQ0QKF0sICefSy8cNO/v7gOTiIy9SbwuHyEecJUm7qlgueOO5S1udZ5I/irVydHVwMchgzbKTg==}
+    dev: true
+
   /@types/download/8.0.1:
     resolution: {integrity: sha512-t5DjMD6Y1DxjXtEHl7Kt+nQn9rOmVLYD8p4Swrcc5QpgyqyqR2gXTIK6RwwMnNeFJ+ZIiIW789fQKzCrK7AOFA==}
     dependencies:
@@ -13770,7 +13933,6 @@ packages:
   /ansi-colors/4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
     engines: {node: '>=6'}
-    dev: true
 
   /ansi-escapes/3.2.0:
     resolution: {integrity: sha512-cBhpre4ma+U0T1oM5fXg7Dy1Jw7zzwv7lt/GoCpr+hDQJoYnKVPLL4dCvSEFMmQurOQvSrwT7SL/DAlhBI97RQ==}
@@ -14606,6 +14768,13 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
+  /binary/0.3.0:
+    resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
+    dependencies:
+      buffers: 0.1.1
+      chainsaw: 0.1.0
+    dev: false
+
   /binaryextensions/4.18.0:
     resolution: {integrity: sha512-PQu3Kyv9dM4FnwB7XGj1+HucW+ShvJzJqjuw1JkKVs1mWdwOKVcRjOi+pV9X52A0tNvrPCsPkbFFQb+wE1EAXw==}
     engines: {node: '>=0.8'}
@@ -14944,6 +15113,11 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+
+  /buffers/0.1.1:
+    resolution: {integrity: sha512-9q/rDEGSb/Qsvv2qvzIzdluL5k7AaJOTrw23z9reQthrbF7is4CtlT0DXyO1oei2DCp4uojjzQ7igaSHp1kAEQ==}
+    engines: {node: '>=0.2.0'}
+    dev: false
 
   /bufferutil/4.0.6:
     resolution: {integrity: sha512-jduaYOYtnio4aIAyc6UbvPCVcgq7nYpVnucyxr6eCYg/Woad9Hf/oxxBRDnGGjPfjUm6j5O/uBWhIu4iLebFaw==}
@@ -15284,6 +15458,12 @@ packages:
       pathval: 1.1.1
       type-detect: 4.0.8
     dev: true
+
+  /chainsaw/0.1.0:
+    resolution: {integrity: sha512-75kWfWt6MEKNC8xYXIdRpDehRYY/tNSgwKaJq+dbbDcxORuVrrQ+SEHoWsniVn9XPYfP4gmdWIeDk/4YNp1rNQ==}
+    dependencies:
+      traverse: 0.3.9
+    dev: false
 
   /chalk/1.1.3:
     resolution: {integrity: sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==}
@@ -15801,7 +15981,6 @@ packages:
     dependencies:
       strip-ansi: 6.0.1
       wcwidth: 1.0.1
-    dev: true
 
   /combined-stream/1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
@@ -17525,7 +17704,6 @@ packages:
     engines: {node: '>=8.6'}
     dependencies:
       ansi-colors: 4.1.3
-    dev: true
 
   /entities/2.2.0:
     resolution: {integrity: sha512-p92if5Nz619I0w+akJrLZH0MX0Pb5DX39XOwQTtXSdQQOaYH03S1uIQp4mhOZtAXrxq4ViO67YTiLBo2638o9A==}
@@ -20421,7 +20599,6 @@ packages:
 
   /growly/1.3.0:
     resolution: {integrity: sha512-+xGQY0YyAWCnqy7Cd++hc2JqMYzlm0dG30Jd0beaA64sROr8C4nt8Yc9V5Ro3avlSUDTN0ulqP/VBKi1/lLygw==}
-    dev: true
 
   /handlebars/4.7.7:
     resolution: {integrity: sha512-aAcXm5OAfE/8IXkcZvCepKU3VzW1/39Fb5ZuqMtgI/hT8X2YgoMvBY5dLhq/cpOvw7Lk1nK/UF71aLG/ZnVYRA==}
@@ -23673,6 +23850,16 @@ packages:
       chalk: 5.1.2
       is-unicode-supported: 1.3.0
 
+  /log-update/4.0.0:
+    resolution: {integrity: sha512-9fkkDevMefjg0mmzWFBW8YkFP91OrizzkW3diF7CpG+S2EYdy4+TVfGwz1zeF8x7hCx1ovSPTOE9Ngib74qqUg==}
+    engines: {node: '>=10'}
+    dependencies:
+      ansi-escapes: 4.3.2
+      cli-cursor: 3.1.0
+      slice-ansi: 4.0.0
+      wrap-ansi: 6.2.0
+    dev: false
+
   /long/4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
 
@@ -25395,6 +25582,17 @@ packages:
   /node-machine-id/1.1.12:
     resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
     dev: true
+
+  /node-notifier/10.0.1:
+    resolution: {integrity: sha512-YX7TSyDukOZ0g+gmzjB6abKu+hTGvO8+8+gIFDsRCU2t8fLV/P2unmt+LGFaIa4y64aX98Qksa97rgz4vMNeLQ==}
+    dependencies:
+      growly: 1.3.0
+      is-wsl: 2.2.0
+      semver: 7.3.8
+      shellwords: 0.1.1
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
+      which: 2.0.2
+    dev: false
 
   /node-notifier/9.0.0:
     resolution: {integrity: sha512-SkwNwGnMMlSPrcoeH4CSo9XyWe72acAHEJGDdPdB+CyBVHsIYaTQ4U/1wk3URsyzC75xZLg2vzU2YaALlqDF1Q==}
@@ -29034,7 +29232,6 @@ packages:
 
   /shellwords/0.1.1:
     resolution: {integrity: sha512-vFwSUfQvqybiICwZY5+DAWIPLKsWO31Q91JSKl3UYv+K5c2QRPzn0qzec6QPu1Qc9eHYItiP3NdJqNVqetYAww==}
-    dev: true
 
   /shiki/0.11.1:
     resolution: {integrity: sha512-EugY9VASFuDqOexOgXR18ZV+TbFrQHeCpEYaXamO+SZlsnT/2LxuLBX25GGtIrwaEVFXUAbUQ601SWE2rMwWHA==}
@@ -29164,6 +29361,15 @@ packages:
   /slice-ansi/3.0.0:
     resolution: {integrity: sha512-pSyv7bSTC7ig9Dcgbw9AuRNUb5k5V6oDudjZoMBSr13qpLBG7tB+zgCkARjq7xIUgdz5P1Qe8u+rSGdouOOIyQ==}
     engines: {node: '>=8'}
+    dependencies:
+      ansi-styles: 4.3.0
+      astral-regex: 2.0.0
+      is-fullwidth-code-point: 3.0.0
+    dev: false
+
+  /slice-ansi/4.0.0:
+    resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
+    engines: {node: '>=10'}
     dependencies:
       ansi-styles: 4.3.0
       astral-regex: 2.0.0
@@ -30614,6 +30820,10 @@ packages:
     dependencies:
       punycode: 2.1.1
 
+  /traverse/0.3.9:
+    resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
+    dev: false
+
   /tree-kill/1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
@@ -31301,6 +31511,13 @@ packages:
   /untildify/4.0.0:
     resolution: {integrity: sha512-KK8xQ1mkzZeg9inewmFVDNkg3l5LUhoq9kN6iWYB/CC9YMG8HA+c1Q8HwDe6dEX7kErrEVNVBO3fWsVq5iDgtw==}
     engines: {node: '>=8'}
+    dev: false
+
+  /unzip-stream/0.3.1:
+    resolution: {integrity: sha512-RzaGXLNt+CW+T41h1zl6pGz3EaeVhYlK+rdAap+7DxW5kqsqePO8kRtWPaCiVqdhZc86EctSPVYNix30YOMzmw==}
+    dependencies:
+      binary: 0.3.0
+      mkdirp: 0.5.6
     dev: false
 
   /upath/1.2.0:
