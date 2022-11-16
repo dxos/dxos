@@ -13,6 +13,7 @@ import * as Sentry from './node';
 
 const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
 
+// TODO(burdon): https://example.com?
 const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
 describe('Node error reporting', function () {

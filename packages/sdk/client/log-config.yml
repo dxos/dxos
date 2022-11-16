@@ -5,3 +5,4 @@ filter:
   - warn
   - client:debug
   - client-services:debug
+  - invitations:debug
