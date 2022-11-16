@@ -26,7 +26,7 @@ export const LockPage = () => {
   const redirect = searchParams.get('redirect') ?? '';
 
   const handleUnlock = useCallback(() => {
-    navigate('/spaces');
+    navigate('/devices');
   }, []);
 
   return (

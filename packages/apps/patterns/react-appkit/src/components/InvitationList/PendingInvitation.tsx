@@ -8,33 +8,22 @@ import React from 'react';
 
 import { Invitation, InvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
-import {
-  Avatar,
-  useTranslation,
-  defaultGroup,
-  Button,
-  Loading,
-  getSize,
-  InvitationStatus,
-  CompactQrCode,
-  Tooltip
-} from '@dxos/react-uikit';
+import { Avatar, Button, CompactQrCode, defaultGroup, getSize, Loading, Tooltip } from '@dxos/react-ui';
+import { InvitationStatus, useTranslation } from '@dxos/react-uikit';
 
-import { createInvitationUrl } from '../../util';
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
   wrapper: InvitationObservable;
-  path: string;
+  createInvitationUrl: (invitation: string) => string;
 }
 
 const PendingInvitationSkeleton = ({ message }: { message: string }) => {
   return <Loading label={message} />;
 };
 
-export const PendingInvitation = ({ wrapper, path }: PendingInvitationProps) => {
+export const PendingInvitation = ({ wrapper, createInvitationUrl }: PendingInvitationProps) => {
   const { t } = useTranslation('uikit');
-
   const { cancel, status, haltedAt, authenticationCode, invitationCode } = useInvitationStatus(wrapper);
 
   return (
@@ -64,7 +53,7 @@ export const PendingInvitation = ({ wrapper, path }: PendingInvitationProps) => 
                     {...{
                       copyLabel: t('copy space invite code short label', { ns: 'uikit' }),
                       displayQrLabel: t('display space invite qr code label', { ns: 'uikit' }),
-                      value: createInvitationUrl(path, invitationCode!)
+                      value: createInvitationUrl(invitationCode!)
                     }}
                   />
                 )}
