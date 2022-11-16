@@ -52,7 +52,7 @@ export class ComplexSet<T> implements Set<T> {
   }
 
   get size(): number {
-    return this.size;
+    return this._values.size;
   }
 
   [Symbol.iterator](): IterableIterator<T> {
