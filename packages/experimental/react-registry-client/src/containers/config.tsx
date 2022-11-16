@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Config, ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import {
   AccountsClient,
   createApiPromise,
@@ -16,7 +16,7 @@ import { getAsyncValue, Provider } from '@dxos/util';
 import { RegistryContext } from '../hooks';
 
 export const createRegistryContext = async (
-  configProvider: Config | ConfigProto | Provider<Promise<Config>>,
+  configProvider?: Config | Provider<Promise<Config>>,
   signFn?: SignTxFunction
 ): Promise<RegistryContext> => {
   const configValue = await getAsyncValue(configProvider);

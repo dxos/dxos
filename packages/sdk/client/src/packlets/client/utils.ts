@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ClientServicesHost, ClientServicesProvider, ClientIFrameServiceProxy } from '@dxos/client-services';
-import { Config, ConfigProto } from '@dxos/config';
+import { ClientServicesHost, ClientServicesProvider } from '@dxos/client-services';
+import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -19,19 +19,17 @@ import { DEFAULT_CONFIG_CHANNEL } from './config';
 /**
  * Create services provider proxy connected via iFrame to host.
  */
-export const fromIFrame = (config?: Config | ConfigProto, channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider =>
+export const fromIFrame = (config: Config = new Config(), channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider =>
   new ClientIFrameServiceProxy({ config, channel });
 
 /**
  * Creates stand-alone services without rpc.
  */
-export const fromHost = (config?: Config | ConfigProto): ClientServicesProvider => {
-  config = new Config(config);
-  return new ClientServicesHost({
+export const fromHost = (config: Config = new Config()): ClientServicesProvider =>
+  new ClientServicesHost({
     config,
     networkManager: createNetworkManager(config)
   });
-};
 /**
  * Creates a WebRTC network manager connected to the specified signal server.
  */

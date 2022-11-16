@@ -105,11 +105,7 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor(config: Config | ConfigProto = {}, ...objects: ConfigProto[]) {
-    if (config instanceof Config) {
-      return config;
-    }
-
+  constructor(config: ConfigProto = {}, ...objects: ConfigProto[]) {
     this._config = sanitizeConfig(defaultsDeep(config, ...objects, { version: 1 }));
   }
 

@@ -3,7 +3,7 @@
 //
 
 import { ClientServicesProvider, ClientServicesProxy } from '@dxos/client-services';
-import { Config, ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -11,8 +11,8 @@ import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { DEFAULT_CLIENT_ORIGIN } from '../client';
 
 export type ClientIFrameServiceProxyParams = {
-  config?: Config | ConfigProto;
-  channel?: string;
+  config: Config;
+  channel: string;
   timeout?: number;
 };
 
@@ -58,8 +58,7 @@ export class ClientIFrameServiceProxy implements ClientServicesProvider {
   private _getIFramePort(): RpcPort {
     this._iframeId = `__DXOS_CLIENT_${PublicKey.random().toHex()}__`;
     const source = new URL(
-      // TODO(wittjosiah): Store config instance in class.
-      new Config(this.params.config).get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
+      this.params.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN,
       window.location.origin
     );
     const iframe = createIFrame(source.toString(), this._iframeId);

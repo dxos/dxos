@@ -6,7 +6,7 @@ import React, { ReactNode, useState, Context, createContext, useContext } from '
 
 import { Client } from '@dxos/client';
 import type { ClientServices, ClientServicesProvider } from '@dxos/client-services';
-import { Config, ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -40,14 +40,14 @@ export interface ClientProviderProps {
   /**
    * Config object or async provider.
    */
-  config?: Config | ConfigProto | Provider<Promise<Config>>;
+  config?: Config | Provider<Promise<Config>>;
 
   /**
    * Callback to enable the caller to create a custom ClientServicesProvider.
    *
    * Most apps won't need this.
    */
-  services?: (config?: Config | ConfigProto) => ClientServicesProvider;
+  services?: (config?: Config) => ClientServicesProvider;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.

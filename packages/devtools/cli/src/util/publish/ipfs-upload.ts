@@ -6,7 +6,7 @@ import assert from 'assert';
 import fs from 'fs';
 import { CID, create, globSource } from 'ipfs-http-client';
 
-import { ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/client';
 
 interface UploadOptions {
   timeout: string | number;
@@ -14,10 +14,10 @@ interface UploadOptions {
   pin?: boolean;
 }
 
-export const uploadToIPFS = async (path: string, config?: ConfigProto, options?: UploadOptions): Promise<CID> => {
+export const uploadToIPFS = async (path: string, config?: Config, options?: UploadOptions): Promise<CID> => {
   const { timeout, pin = true, progress } = options || {};
 
-  const ipfsServer = config?.runtime?.services?.ipfs?.server;
+  const ipfsServer = config?.get('runtime.services.ipfs.server');
   assert(ipfsServer, 'Invalid IPFS Server.');
 
   const ipfsClient = create({
