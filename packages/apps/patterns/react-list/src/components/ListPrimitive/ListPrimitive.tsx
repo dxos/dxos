@@ -3,18 +3,18 @@
 //
 
 import cx from 'classnames';
-import { CaretUp, CaretDown, Minus } from 'phosphor-react';
+import { CaretUp, CaretDown, Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { ButtonGroup, defaultGroup, defaultHover } from '@dxos/react-ui';
-import { defaultFocus, Input, useTranslation, getSize, Button } from '@dxos/react-uikit';
+import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
 
 type ListId = string;
 type ListItemId = string;
 
 export interface ListItemProps {
   id: ListItemId;
-  title: string;
+  title?: string;
   description?: string;
   annotations?: Record<string, string | boolean>;
 }
@@ -47,6 +47,7 @@ export interface ListPrimitiveProps {
 
 export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<ComponentProps<'div'>, 'id'> {
   onAction?: (action: ListAction) => void;
+  createListItemId?: () => ListItemId;
 }
 
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
@@ -183,6 +184,7 @@ export const ListPrimitive = ({
   items: propsItems,
   order: propsOrder,
   onAction,
+  createListItemId = randomString,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
@@ -254,6 +256,17 @@ export const ListPrimitive = ({
     [order, items, onAction]
   );
 
+  const createItem = useCallback(() => {
+    const id = createListItemId();
+    const next = {
+      items: { ...items, [id]: {} },
+      order: [...order, id]
+    };
+    setItems(next.items);
+    setOrder(next.order);
+    onAction?.({ listId, next });
+  }, [order, items, createListItemId, onAction]);
+
   return (
     <div
       role='group'
@@ -299,6 +312,12 @@ export const ListPrimitive = ({
           );
         })}
       </ol>
+      <div role='none' className='mli-4 mlb-4'>
+        <Button className='is-full' onClick={createItem}>
+          <Plus />
+          <span className='sr-only'>{t('add list item label')}</span>
+        </Button>
+      </div>
     </div>
   );
 };

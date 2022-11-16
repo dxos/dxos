@@ -14,6 +14,7 @@ export const appkit = {
   'move list item up label': 'Move list item up',
   'move list item down label': 'Move list item down',
   'delete list item label': 'Remove list item',
+  'add list item label': 'Add list item',
   'need refresh label': 'Refresh now to get app updates',
   'need refresh description': 'You’ll likely need these updates to continue using DXOS without interruption.',
   'refresh label': 'Refresh',
