@@ -70,11 +70,12 @@ const langType: { [key: string]: Type } = {
  * Snippets are contains within comment blocks.
  * The resulting code snippet is inserted above or replaces an existing block.
  */
-// eslint-disable-next-line
-export function remarkSnippets () {
+export function remarkSnippets() {
+  // eslint-disable-next-line
+  // @ts-ignore
   const { config } = this.data() ?? {};
 
-  return (tree: any, inputFile) => {
+  return (tree: any, inputFile: any) => {
     // visit(tree, 'code', (node, i, parent) => {
     //   console.log('>>>', node);
     // });
@@ -148,7 +149,7 @@ export function remarkSnippets () {
                         })
                       ]),
                       u('html', { value: '</sub>' })
-                    ].filter(Boolean)
+                    ].filter(Boolean) as any[]
                   )
                 );
               }
