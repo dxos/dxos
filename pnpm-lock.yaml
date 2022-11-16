@@ -692,6 +692,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/context': workspace:*
+      '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/lodash.merge': ^4.6.6
       assert: ^2.0.0
@@ -702,6 +703,7 @@ importers:
     dependencies:
       '@dxos/async': link:../async
       '@dxos/context': link:../context
+      '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2

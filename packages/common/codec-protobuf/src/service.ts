@@ -152,7 +152,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   }
 
   private async _getHandler(method: string): Promise<(request: unknown) => unknown> {
-    const service: S = getAsyncValue(this._serviceProvider);
+    const service: S = await getAsyncValue(this._serviceProvider);
     const handler = service[method as keyof S];
     assert(handler, `Handler is missing: ${method}`);
     return (handler as any).bind(service);
