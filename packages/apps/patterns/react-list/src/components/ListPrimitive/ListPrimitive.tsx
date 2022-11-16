@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useState } from 'react';
+import React, { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 
 import { defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
@@ -209,6 +209,21 @@ export const ListPrimitive = ({
   const [items, setItems] = useState(propsItems ?? {});
 
   const [creating, setCreating] = useState(false);
+  const [session, setSession] = useState(randomString());
+
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    if (mounted.current) {
+      propsTitle !== title && setTitle(propsTitle ?? '');
+      propsDescription !== description && setDescription(propsDescription ?? '');
+      propsItems !== items && setItems(items);
+      propsOrder !== order && setOrder(order);
+      setSession(randomString());
+    } else {
+      mounted.current = true;
+    }
+  }, [propsTitle, propsDescription, propsItems, propsOrder]);
 
   const titleId = `${listId}__title`;
   const descriptionId = `${listId}__description`;
@@ -303,6 +318,7 @@ export const ListPrimitive = ({
         </span>
       )}
       <Input
+        key={`${session}__list-title`}
         label={t('list title label')}
         placeholder={t('list title placeholder')}
         labelVisuallyHidden
@@ -312,6 +328,7 @@ export const ListPrimitive = ({
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
+      {/*  key={`${session}__list-description`} */}
       {/*  label={t('list description label')} */}
       {/*  placeholder={t('list description placeholder')} */}
       {/*  labelVisuallyHidden */}

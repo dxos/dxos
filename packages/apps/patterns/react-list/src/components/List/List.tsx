@@ -38,10 +38,12 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
     [list]
   );
 
-  const { id, order } = useMemo(
+  const { id, order, title, description } = useMemo(
     () => ({
-      id: list?.id ?? '',
-      order: list?.model.get('order') ?? []
+      id: list.id ?? '',
+      title: list.model.get('title'),
+      description: list.model.get('description'),
+      order: list.model.get('order') ?? []
     }),
     [list]
   );
@@ -59,25 +61,27 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
     [listItems]
   );
 
+  console.log('[list loaded]', { id, order, title, description, items });
+
   const createListItemId = useCallback(async () => {
     console.log('[creating list item]');
     const listItem = await space?.database.createItem({
       model: ObjectModel,
-      type: LIST_ITEM_TYPE
+      type: LIST_ITEM_TYPE,
+      parent: list.id
     });
-    await listItem.setParent(list.id);
     console.log('[created]', listItem);
     return listItem.id;
   }, [space]);
 
-  return <ListPrimitive {...{ id, items, order, onAction, createListItemId }} />;
+  return <ListPrimitive {...{ id, title, description, items, order, onAction, createListItemId }} />;
 };
 
 export const List = ({ spaceKey, itemId }: ListProps) => {
   const { t } = useTranslation('uikit');
 
   const space = useSpace(spaceKey);
-  const list = space?.database.getItem(itemId);
+  const list = (useSelection(space?.database.select({ id: itemId })) ?? [])[0];
   const listItems = useSelection(list?.select().children().filter({ type: LIST_ITEM_TYPE }));
 
   // TODO(thure): this should become `Suspense` when the above hooks support it
