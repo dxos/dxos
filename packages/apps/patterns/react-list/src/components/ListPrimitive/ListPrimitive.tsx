@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import { CaretUp, CaretDown } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useState } from 'react';
+import React, { ComponentProps, useCallback, useEffect, useState } from 'react';
 
 import { ButtonGroup, defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button } from '@dxos/react-uikit';
@@ -60,13 +60,12 @@ const ListItemPrimitive = ({
   id,
   title: propsTitle,
   description: propsDescription,
-  annotations,
+  annotations: propsAnnotations,
   updateItem,
   isFirst,
   isLast,
   updateOrder
 }: ListItemPrimitiveComponentProps) => {
-  const isDone = annotations?.state === 'done';
   const checkId = `${id}__checkbox`;
   const labelId = `${id}__title`;
   const descriptionId = `${id}__description`;
@@ -75,32 +74,25 @@ const ListItemPrimitive = ({
 
   const [title, setTitle] = useState(propsTitle ?? '');
   const [description, setDescription] = useState(propsDescription ?? '');
+  const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
+  const isDone = annotations?.state === 'done';
 
-  const onChangeTitle = useCallback(
-    (nextValue: string) => {
-      setTitle(nextValue);
-      updateItem({
-        id,
-        title: nextValue,
-        description,
-        annotations
-      });
-    },
-    [id, title, description, annotations]
-  );
+  useEffect(() => {
+    updateItem({
+      id,
+      title,
+      description,
+      annotations
+    });
+  }, [id, title, description, annotations]);
 
-  const onChangeDescription = useCallback(
-    (nextValue: string) => {
-      setDescription(nextValue);
-      updateItem({
-        id,
-        title,
-        description: nextValue,
-        annotations
-      });
-    },
-    [id, title, description, annotations]
-  );
+  const onChangeTitle = useCallback((nextValue: string) => {
+    setTitle(nextValue);
+  }, []);
+
+  const onChangeDescription = useCallback((nextValue: string) => {
+    setDescription(nextValue);
+  }, []);
 
   const onClickMoveUp = useCallback(() => {
     updateOrder(id, -1);
@@ -109,6 +101,10 @@ const ListItemPrimitive = ({
   const onClickMoveDown = useCallback(() => {
     updateOrder(id, 1);
   }, [updateOrder, id]);
+
+  const onChangeCheckbox = useCallback(() => {
+    setAnnotations({ ...annotations, state: isDone ? 'init' : 'done' });
+  }, [annotations, isDone]);
 
   return (
     <li
@@ -120,9 +116,7 @@ const ListItemPrimitive = ({
       <input
         {...{
           type: 'checkbox',
-          ...(isDone && {
-            checked: true
-          }),
+          id: checkId,
           ...(description && {
             'aria-describedby': descriptionId
           }),
@@ -131,9 +125,10 @@ const ListItemPrimitive = ({
             'text-primary-600 bg-neutral-50 rounded border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
             defaultFocus,
             defaultHover({})
-          )
+          ),
+          onChange: onChangeCheckbox,
+          checked: !!isDone
         }}
-        id={checkId}
       />
       <label htmlFor={checkId} id={labelId} className='sr-only'>
         {title}
