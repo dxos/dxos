@@ -17,6 +17,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/composer-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/halo-app/package.json",
           "jsonpath": "$.version"
         },
@@ -468,6 +473,11 @@
         {
           "type": "json",
           "path": "tools/typedoc-plugin-plate/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/x/package.json",
           "jsonpath": "$.version"
         }
       ]

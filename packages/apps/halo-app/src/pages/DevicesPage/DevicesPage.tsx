@@ -42,7 +42,10 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList items={devices} />
-      <InvitationList invitations={invitations as unknown as InvitationObservable[] | undefined} />
+      <InvitationList
+        invitations={invitations as unknown as InvitationObservable[] | undefined}
+        path='/identity/join'
+      />
     </main>
   );
 };

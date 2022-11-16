@@ -8,11 +8,11 @@ import React, { FC } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { ErrorsProvider } from './ErrorsProvider';
+import { ErrorProvider } from './ErrorProvider';
 
 export default {
-  title: 'react-uikit/ErrorsProvider',
-  component: ErrorsProvider
+  title: 'react-uikit/ErrorProvider',
+  component: ErrorProvider
 };
 
 const UnhandledRejectionThrower = () => {
@@ -30,11 +30,11 @@ const UnhandledRejectionThrower = () => {
 };
 
 const Template = (_args: {}) => (
-  <ErrorsProvider>
+  <ErrorProvider>
     <div className='flex flex-col gap-4'>
       <UnhandledRejectionThrower />
     </div>
-  </ErrorsProvider>
+  </ErrorProvider>
 );
 
 // TODO(wittjosiah): Factor out.

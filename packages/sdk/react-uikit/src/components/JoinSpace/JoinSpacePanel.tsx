@@ -65,6 +65,7 @@ const JoinStep1 = ({
         inputProps: {
           initialValue: invitationCode,
           autoFocus: true,
+          className: 'text-center',
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const
@@ -98,6 +99,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           length: 6,
           initialValue: '',
           autoFocus: true,
+          className: 'text-center',
           ...(error && {
             validationMessage: `Untranslated error code: ${error}`, // todo: provide usable error message
             validationValence: 'error' as const

@@ -1,0 +1,77 @@
+{
+  "sourceRoot": "packages/apps/composer-app/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/composer-app/src/index.ts",
+        "outputPath": "packages/apps/composer-app/dist",
+        "tsConfig": "packages/apps/composer-app/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@nxext/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_RELEASE"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
+      "options": {
+        "configFile": "packages/apps/composer-app/vite.config.ts",
+        "outputPath": "packages/apps/composer-app/out/composer"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/apps/composer-app/**/*.{ts,js}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "configFile": "packages/apps/composer-app/vite.config.ts",
+        "outputPath": "packages/apps/composer-app/out/composer"
+      }
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  }
+}
