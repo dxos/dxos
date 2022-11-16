@@ -103,7 +103,7 @@ export const App = () => {
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
           <ClientProvider
             config={configProvider}
-            services={process.env.DX_VAULT === 'false' ? fromHost : fromIFrame}
+            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
             fallback={<GenericFallback />}
           >
             <HashRouter>
