@@ -5,11 +5,12 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { log } from '@dxos/log'
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
@@ -24,7 +25,6 @@ import {
   StateOf,
   StateMachine
 } from './types';
-import { Context } from '@dxos/context';
 
 type OptimisticMutation = {
   mutation: Uint8Array;
@@ -108,8 +108,8 @@ export class StateManager<M extends Model> {
 
   private _emitModelUpdate() {
     scheduleTask(new Context(), () => {
-      assert(this._model)
-      this._model.update.emit(this._model) 
+      assert(this._model);
+      this._model.update.emit(this._model);
     });
   }
 
@@ -117,7 +117,7 @@ export class StateManager<M extends Model> {
    * Writes the mutation to the output stream.
    */
   private async _write(mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
-    log(`Write`, mutation);
+    log('Write', mutation);
     if (!this._feedWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
@@ -134,7 +134,7 @@ export class StateManager<M extends Model> {
 
     // Process mutation if initialzied, otherwise deferred until state-machine is loaded.
     if (this.initialized) {
-      log(`Optimistic apply`, mutation);
+      log('Optimistic apply', mutation);
       this._stateMachine!.process(mutation, optimisticMutation.meta);
       this._emitModelUpdate();
     }
@@ -143,7 +143,7 @@ export class StateManager<M extends Model> {
     // Confirms that the optimistic mutation has been written to the feed store.
     // NOTE: Possible race condition: What if processMessage gets called before write() resolves?
     const receipt = await this._feedWriter.write(mutationEncoded);
-    log(`Confirm`, mutation);
+    log('Confirm', mutation);
     optimisticMutation.receipt = receipt;
 
     // Promise that resolves when this mutation has been processed.
@@ -154,13 +154,16 @@ export class StateManager<M extends Model> {
     // Sanity checks.
     void processed.then(() => {
       if (!optimisticMutation.receipt) {
-        log.error(`Optimistic mutation was processed without being confirmed`, { itemId: this._itemId, mutationType: mutation.type});
+        log.error('Optimistic mutation was processed without being confirmed', {
+          itemId: this._itemId,
+          mutationType: mutation.type
+        });
       }
       if (this._optimisticMutations.includes(optimisticMutation)) {
-        log.error(
-          `Optimistic mutation was processed without being removed from the optimistic queue`,
-          { itemId: this._itemId, mutationType: mutation.type}
-        );
+        log.error('Optimistic mutation was processed without being removed from the optimistic queue', {
+          itemId: this._itemId,
+          mutationType: mutation.type
+        });
       }
     });
 

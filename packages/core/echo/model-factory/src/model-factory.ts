@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
@@ -13,7 +14,6 @@ import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Model } from './model';
 import { StateManager } from './state-manager';
 import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
-import { Context } from '@dxos/context';
 
 /**
  * Creates Model instances from a registered collection of Model types.
@@ -53,9 +53,9 @@ export class ModelFactory {
     this._models.set(meta.type, { meta, constructor });
 
     scheduleTask(new Context(), () => {
-      this.registered.emit(constructor)
+      this.registered.emit(constructor);
     });
-    
+
     return this;
   }
 

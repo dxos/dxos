@@ -21,7 +21,7 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
   ) {}
 
   async write(data: T): Promise<WriteReceipt> {
-  this.messages.push(data);
+    this.messages.push(data);
 
     const receipt: WriteReceipt = {
       feedKey: this.feedKey,
@@ -30,7 +30,7 @@ export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
 
     scheduleTask(new Context(), () => {
       this.written.emit([data, receipt]);
-    })
+    });
 
     return receipt;
   }
