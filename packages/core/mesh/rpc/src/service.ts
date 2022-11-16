@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
+import { EncodingOptions, ServiceDescriptor, ServiceHandler, ServiceProvider } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
@@ -13,6 +13,8 @@ import { RpcPeer, RpcPeerOptions } from './rpc';
  */
 // TODO(burdon): Rename ServiceMap.
 export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
+
+export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
 
 /**
  * Groups multiple services together to be served by a single RPC peer.
@@ -54,7 +56,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Handlers for the exposed services
    */
-  handlers?: Server;
+  handlers?: ServiceHandlers<Server>;
 
   /**
    * Encoding options passed to the underlying proto codec.
@@ -82,8 +84,8 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
       // Get full service name with the package name without '.' at the beginning.
       const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-      const serviceHandlers = handlers[serviceName];
-      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceHandlers, encodingOptions);
+      const serviceProvider = handlers[serviceName];
+      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
     }
   }
 
