@@ -21,6 +21,13 @@
       "type": "string",
       "description": "",
       "default": "substitutions.ts"
+    },
+    "exportPath": {
+      "type": "string",
+      "description": "Directory for compiled proto definitions.",
+      "examples": [
+        "dist/src/proto/gen"
+      ]
     }
   },
   "required": ["basePath"]

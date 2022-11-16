@@ -10,12 +10,11 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
 import { log } from '@dxos/log';
-import { ServiceWorkerToast } from '@dxos/react-appkit';
+import { ErrorProvider, Fallback, FatalError, GenericFallback, ServiceWorkerToast } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
-import { Heading, Loading, UiKitProvider, useTranslation } from '@dxos/react-uikit';
+import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
-import { ErrorsProvider, FatalError } from './components';
 import {
   AppLayout,
   AppsPage,
@@ -28,7 +27,6 @@ import {
   LockPage,
   RecoverIdentityPage,
   RequireIdentity,
-  SpaceSettingsPage,
   SpacePage,
   SpacesPage
 } from './pages';
@@ -54,22 +52,16 @@ const Routes = () => {
       element: <LockPage />
     },
     {
-      path: '/',
-      element: <RequireIdentity inverse redirect='/spaces' />,
-      children: [
-        {
-          path: '/identity/create',
-          element: <CreateIdentityPage />
-        },
-        {
-          path: '/identity/recover',
-          element: <RecoverIdentityPage />
-        },
-        {
-          path: '/identity/join',
-          element: <JoinIdentityPage />
-        }
-      ]
+      path: '/identity/create',
+      element: <CreateIdentityPage />
+    },
+    {
+      path: '/identity/recover',
+      element: <RecoverIdentityPage />
+    },
+    {
+      path: '/identity/join',
+      element: <JoinIdentityPage />
     },
     {
       path: '/',
@@ -88,27 +80,12 @@ const Routes = () => {
             { path: '/spaces', element: <SpacesPage /> },
             { path: '/contacts', element: <ContactsPage /> },
             { path: '/apps', element: <AppsPage /> },
-            { path: '/spaces/:space', element: <SpacePage /> },
-            { path: '/spaces/:space/settings', element: <SpaceSettingsPage /> }
+            { path: '/spaces/:space', element: <SpacePage /> }
           ]
         }
       ]
     }
   ]);
-};
-
-const Fallback = ({ message }: { message: string }) => (
-  <div className='py-8 flex flex-col gap-4' aria-live='polite'>
-    <Loading label={message} size='lg' />
-    <Heading level={1} className='text-lg font-light text-center'>
-      {message}
-    </Heading>
-  </div>
-);
-
-const ClientFallback = () => {
-  const { t } = useTranslation('uikit');
-  return <Fallback message={t('generic loading label')} />;
 };
 
 export const App = () => {
@@ -129,10 +106,10 @@ export const App = () => {
 
   return (
     <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
-      <ErrorsProvider>
+      <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider client={clientProvider} fallback={<ClientFallback />}>
+          <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
             <HashRouter>
               <Routes />
               {needRefresh ? (
@@ -143,7 +120,7 @@ export const App = () => {
             </HashRouter>
           </ClientProvider>
         </ErrorBoundary>
-      </ErrorsProvider>
+      </ErrorProvider>
     </UiKitProvider>
   );
 };
