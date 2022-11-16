@@ -203,27 +203,24 @@ export const ListPrimitive = ({
   const { t } = useTranslation('appkit');
 
   const [title, setTitle] = useState(propsTitle ?? '');
+  const [titleSession, setTitleSession] = useState(randomString());
   const [description, setDescription] = useState(propsDescription ?? '');
 
   const [order, setOrder] = useState(propsOrder ?? []);
   const [items, setItems] = useState(propsItems ?? {});
 
   const [creating, setCreating] = useState(false);
-  const [session, setSession] = useState(randomString());
 
   const mounted = useRef(false);
 
   useEffect(() => {
-    if (mounted.current) {
-      propsTitle !== title && setTitle(propsTitle ?? '');
-      propsDescription !== description && setDescription(propsDescription ?? '');
-      propsItems !== items && setItems(propsItems ?? {});
-      propsOrder !== order && setOrder(propsOrder ?? []);
-      setSession(randomString());
+    if (mounted.current && propsTitle !== title) {
+      setTitle(propsTitle ?? '');
+      setTitleSession(randomString());
     } else {
       mounted.current = true;
     }
-  }, [propsTitle, propsDescription, propsItems, propsOrder]);
+  }, [propsTitle]);
 
   const titleId = `${listId}__title`;
   const descriptionId = `${listId}__description`;
@@ -318,7 +315,7 @@ export const ListPrimitive = ({
         </span>
       )}
       <Input
-        key={`${session}__list-title`}
+        key={titleSession}
         label={t('list title label')}
         placeholder={t('list title placeholder')}
         labelVisuallyHidden
@@ -328,7 +325,6 @@ export const ListPrimitive = ({
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
-      {/*  key={`${session}__list-description`} */}
       {/*  label={t('list description label')} */}
       {/*  placeholder={t('list description placeholder')} */}
       {/*  labelVisuallyHidden */}
