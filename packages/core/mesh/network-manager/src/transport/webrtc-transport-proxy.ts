@@ -130,6 +130,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 }
 
+// TODO(burdon): Why is this named Proxy?
 export class WebRTCTransportProxyFactory implements TransportFactory {
   private _bridgeService: BridgeService | undefined;
   private _connections = new Set<WebRTCTransportProxy>();

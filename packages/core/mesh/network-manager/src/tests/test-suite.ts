@@ -95,7 +95,7 @@ export const testSuite = ({
     await sleep(100);
   });
 
-  it.only('joins, sends messages, and cleanly exits swarm multiple times', async () => {
+  it('joins, sends messages, and cleanly exits swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -133,8 +133,6 @@ export const testSuite = ({
     const topics = Array.from(Array(numSwarms)).map(() => PublicKey.random());
     expect(topics).to.have.length(numSwarms);
   });
-
-  const inMemory = true;
 
   it('joins multiple swarms concurrently', async () => {
     const topicA = PublicKey.random();

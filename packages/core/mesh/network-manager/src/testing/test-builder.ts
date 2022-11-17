@@ -7,7 +7,7 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { schema } from '@dxos/protocols';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology, Topology } from '../topology';
@@ -23,7 +23,7 @@ import { TestProtocolPlugin, testProtocolProvider } from './test-protocol';
 export const TEST_SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 export type TestBuilderOptions = {
-  signalUrl?: string;
+  signalHosts?: string[];
 };
 
 /**
@@ -35,17 +35,21 @@ export class TestBuilder {
   constructor(public readonly options: TestBuilderOptions = {}) {}
 
   createSignalManager() {
-    if (this.options.signalUrl) {
-      return new WebsocketSignalManager([this.options.signalUrl]);
+    if (this.options.signalHosts) {
+      return new WebsocketSignalManager(this.options.signalHosts);
     }
 
     return new MemorySignalManager(this._signalContext);
   }
 
-  createPeer() {
-    return new TestPeer(this);
+  createPeer(options: TestPeerOptions = {}) {
+    return new TestPeer(this, options);
   }
 }
+
+export type TestPeerOptions = {
+  bridge?: boolean;
+};
 
 /**
  * Testing network peer.
@@ -57,41 +61,46 @@ export class TestPeer {
   readonly plugin = new TestProtocolPlugin(this.peerId.asBuffer()); // TODO(burdon): PublicKey.
 
   private readonly _swarms = new ComplexSet<PublicKey>(PublicKey.hash);
-
   private readonly _networkManager: NetworkManager;
   private readonly _client?: ProtoRpcPeer<any>;
   private readonly _server?: ProtoRpcPeer<any>;
 
-  constructor(testBuilder: TestBuilder) {
+  constructor(testBuilder: TestBuilder, options: TestPeerOptions = {}) {
     let transportFactory: TransportFactory = MemoryTransportFactory;
-    if (testBuilder.options.signalUrl) {
+    if (testBuilder.options.signalHosts) {
+      const webrtcTransportFactory = new WebRTCTransportProxyFactory();
+
       // TODO(burdon): Explain what we're doing here.
-      const [clientPort, serverPort] = createLinkedPorts();
+      if (options.bridge) {
+        const [clientPort, serverPort] = createLinkedPorts();
 
-      this._client = createProtoRpcPeer({
-        port: clientPort,
-        requested: {
-          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
-        },
-        noHandshake: true,
-        encodingOptions: {
-          preserveAny: true
-        }
-      });
+        this._client = createProtoRpcPeer({
+          port: clientPort,
+          requested: {
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+          },
+          noHandshake: true,
+          encodingOptions: {
+            preserveAny: true
+          }
+        });
 
-      this._server = createProtoRpcPeer({
-        port: serverPort,
-        exposed: {
-          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
-        },
-        handlers: { BridgeService: new WebRTCTransportService() },
-        noHandshake: true,
-        encodingOptions: {
-          preserveAny: true
-        }
-      });
+        this._server = createProtoRpcPeer({
+          port: serverPort,
+          exposed: {
+            BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+          },
+          handlers: { BridgeService: new WebRTCTransportService() },
+          noHandshake: true,
+          encodingOptions: {
+            preserveAny: true
+          }
+        });
 
-      transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._client.rpc.BridgeService);
+        webrtcTransportFactory.setBridgeService(this._client.rpc.BridgeService);
+      }
+
+      transportFactory = webrtcTransportFactory;
     }
 
     this._networkManager = new NetworkManager({
@@ -176,20 +185,3 @@ export const createPeer = async ({
     plugin
   };
 };
-
-// const createMemoryNetworkManager = (signalContext: MemorySignalManagerContext) => {
-//   return new NetworkManager({
-//     signalManager: new MemorySignalManager(signalContext),
-//     transportFactory: MemoryTransportFactory
-//   });
-// };
-
-// const createWebRTCNetworkManager = async (config: any, peerId: PublicKey) => {
-//   const signalManager = new WebsocketSignalManager(signalHosts!);
-//   await signalManager.subscribeMessages(peerId);
-//
-//   return new NetworkManager({
-//     signalManager,
-//     transportFactory: createWebRTCTransportFactory(config)
-//   });
-// };

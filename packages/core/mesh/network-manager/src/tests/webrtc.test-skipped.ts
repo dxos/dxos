@@ -13,7 +13,7 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { createPeer, TEST_SIGNAL_URL } from '../testing';
+import { createPeer, TEST_SIGNAL_URL, TestBuilder } from '../testing';
 import { StarTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, WebRTCTransportService } from '../transport';
 import { testSuite } from './test-suite';
@@ -32,8 +32,10 @@ describe('WebRTC transport', async function () {
     peer2Id = PublicKey.random();
   });
 
+  const testBuilder = new TestBuilder({ signalHosts: [TEST_SIGNAL_URL] });
+
   testSuite({
-    signalUrl: TEST_SIGNAL_URL,
+    testBuilder,
     getTransportFactory: async () => createWebRTCTransportFactory()
   });
 
@@ -160,8 +162,10 @@ describe.skip('WebRTC proxy transport', function () {
     return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService);
   };
 
+  const testBuilder = new TestBuilder({ signalHosts: [TEST_SIGNAL_URL] });
+
   testSuite({
-    signalUrl: TEST_SIGNAL_URL,
+    testBuilder,
     getTransportFactory: createTransportFactory
   });
 });
