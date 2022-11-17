@@ -20,6 +20,7 @@ export const Device = (props: DeviceProps) => {
         className: 'text-lg font-body flex gap-2 items-center',
         children: <Avatar size={10} fallbackValue={props.publicKey.toHex()} label={<p>{props.displayName}</p>} />
       }}
+      className='mbe-2'
     >
       <p className='font-mono break-words'>{props.publicKey.toHex()}</p>
     </Group>
