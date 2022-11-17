@@ -15,6 +15,7 @@ import {
   Fallback,
   FatalError,
   GenericFallback,
+  ManageSpacePage,
   RequireIdentity,
   ServiceWorkerToast,
   SpacesPage,
@@ -27,6 +28,7 @@ import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
 import { SpacePage } from './pages';
+import translationResources from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
@@ -67,6 +69,10 @@ const Routes = () => {
             {
               path: '/spaces/:space',
               element: <SpacePage />
+            },
+            {
+              path: '/spaces/:space/settings',
+              element: <ManageSpacePage />
             }
           ]
         }
@@ -88,7 +94,7 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

@@ -6,17 +6,18 @@ import cx from 'classnames';
 import React from 'react';
 
 import { InvitationObservable } from '@dxos/client';
-import { defaultDisabled, Group, useTranslation } from '@dxos/react-uikit';
+import { defaultDisabled, Group } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-uikit';
 
-import { PendingInvitation } from './PendingInvitation';
+import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
 export interface InvitationListProps {
-  path: string;
+  createInvitationUrl: PendingInvitationProps['createInvitationUrl'];
   invitations?: InvitationObservable[];
 }
 
-export const InvitationList = ({ path, invitations }: InvitationListProps) => {
-  const { t } = useTranslation('halo');
+export const InvitationList = ({ createInvitationUrl, invitations }: InvitationListProps) => {
+  const { t } = useTranslation('appkit');
   const empty = !invitations || invitations.length < 1;
   return (
     <Group
@@ -30,7 +31,11 @@ export const InvitationList = ({ path, invitations }: InvitationListProps) => {
     >
       {!empty &&
         invitations.map((wrapper, index) => (
-          <PendingInvitation key={wrapper.invitation?.invitationId ?? index} wrapper={wrapper} path={path} />
+          <PendingInvitation
+            key={wrapper.invitation?.invitationId ?? index}
+            wrapper={wrapper}
+            createInvitationUrl={createInvitationUrl}
+          />
         ))}
     </Group>
   );

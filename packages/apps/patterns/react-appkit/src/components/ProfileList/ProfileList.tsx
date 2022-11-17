@@ -4,7 +4,8 @@
 import React from 'react';
 
 import type { Profile } from '@dxos/client';
-import { Avatar, useTranslation } from '@dxos/react-uikit';
+import { Avatar } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface ProfileListProps {
@@ -12,7 +13,7 @@ export interface ProfileListProps {
 }
 
 export const ProfileList = ({ profiles }: ProfileListProps) => {
-  const { t } = useTranslation('uikit');
+  const { t } = useTranslation('appkit');
   return profiles.length > 0 ? (
     <ul>
       {profiles.map((profile) => {
