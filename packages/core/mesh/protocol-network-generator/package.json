@@ -20,8 +20,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/network-generator": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/network-generator": "workspace:*",
     "assert": "^2.0.0",
     "pump": "^3.0.0"
   },

@@ -14,7 +14,7 @@
   ],
   "references": [
     {
-      "path": "../../gem/gem-core"
+      "path": "../../experimental/gem-core"
     }
   ]
 }

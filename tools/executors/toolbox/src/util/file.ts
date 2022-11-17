@@ -6,17 +6,12 @@ import chalk from 'chalk';
 import { parse } from 'comment-json';
 import { readFile, writeFile } from 'node:fs/promises';
 
-// TODO(burdon): Generalize into template builder.
-export const loadJson = async <T>(filename: string, throwOnError = true): Promise<T | undefined> => {
+export const loadJson = async <T>(filename: string): Promise<T> => {
   try {
     const json = await readFile(filename, 'utf-8');
     return parse(json, undefined, true) as T;
   } catch (err) {
-    if (throwOnError) {
-      throw new Error(`Failed to process: ${filename} [${err}]`);
-    }
-
-    return undefined;
+    throw new Error(`Invalid file: ${filename}`);
   }
 };
 

@@ -72,6 +72,12 @@
       "path": "../../mesh/protocol-plugin-replicator"
     },
     {
+      "path": "../../mesh/protocol-plugin-rpc"
+    },
+    {
+      "path": "../../mesh/rpc"
+    },
+    {
       "path": "../../protocols"
     },
     {
