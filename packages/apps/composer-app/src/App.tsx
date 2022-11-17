@@ -19,7 +19,8 @@ import {
   RequireIdentity,
   ServiceWorkerToast,
   SpacesPage,
-  useTelemetry
+  useTelemetry,
+  translations
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
 import { DOCUMENT_TYPE } from '@dxos/react-composer';
@@ -28,7 +29,7 @@ import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
 import { SpacePage } from './pages';
-import translationResources from './translations';
+import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
@@ -94,7 +95,10 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider
+      resourceExtensions={[translations, composerTranslations]}
+      fallback={<Fallback message='Loading...' />}
+    >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

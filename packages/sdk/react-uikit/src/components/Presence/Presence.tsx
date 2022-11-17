@@ -168,7 +168,7 @@ const SpaceMenu = (props: Omit<PresenceProps, 'space'> & { space: Space }) => {
 };
 
 const SpaceLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation();
   return (
     <Button compact className='flex w-full gap-1 pli-2' onClick={onClickGoToSpace}>
       <span className='text-xs'>{t('go to space label')}</span>
