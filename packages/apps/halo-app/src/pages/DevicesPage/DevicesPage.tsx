@@ -7,10 +7,12 @@ import React, { useCallback, useState } from 'react';
 
 import { InvitationObservable } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
+import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
-import { DeviceList, InvitationList, HeadingWithActions } from '../../components';
+import { DeviceList } from '../../components';
+import { createInvitationUrl } from '../../util';
 
 export const DevicesPage = () => {
   const { t } = useTranslation('halo');
@@ -44,7 +46,7 @@ export const DevicesPage = () => {
       <DeviceList items={devices} />
       <InvitationList
         invitations={invitations as unknown as InvitationObservable[] | undefined}
-        path='/identity/join'
+        createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
       />
     </main>
   );

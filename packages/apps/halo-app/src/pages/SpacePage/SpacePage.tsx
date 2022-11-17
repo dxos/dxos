@@ -11,7 +11,7 @@ import { useMembers, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
-import { ProfileList } from '../../components/ProfileList';
+import { ProfileList } from '@dxos/react-appkit/src/components/ProfileList';
 
 export const SpacePage = () => {
   const { t } = useTranslation('halo');
