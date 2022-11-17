@@ -28,10 +28,16 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/react-async"
+    },
+    {
       "path": "../../../common/react-ui"
     },
     {
       "path": "../../../common/sentry"
+    },
+    {
+      "path": "../../../common/telemetry"
     },
     {
       "path": "../../../common/util"

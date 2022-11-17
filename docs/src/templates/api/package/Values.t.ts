@@ -7,6 +7,7 @@ const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const packages = packagesInProject(input);
   const stringifier = new Stringifier(input);
   return packages
+    .filter((p) => p?.name)
     .map((pkage) => {
       const values = reflectionsOfKind(pkage, ReflectionKind.Variable) as Schema.DeclarationReflection[];
 

@@ -37,9 +37,6 @@
       "outputs": [
         "packages/experimental/gem-spore/coverage"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }
