@@ -86,6 +86,7 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
     expect(topics).to.have.length(numSwarms);
   });
 
+  // TODO(burdon): This just tests multiple swarms (not peers in the same swarm)?
   it.skip('joins multiple swarms concurrently', async () => {
     const receivedA: any[] = [];
     {

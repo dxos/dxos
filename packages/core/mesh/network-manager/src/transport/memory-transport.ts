@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { errors } from '@playwright/test';
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
