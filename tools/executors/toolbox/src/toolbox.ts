@@ -246,7 +246,7 @@ const raise = (err: Error) => {
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
  */
 const run = async () => {
-  // TODO(burdon): Parse options.
+  // TODO(burdon): Parse options using yargs.
   const toolbox = new Toolbox({ verbose: false });
   await toolbox.init();
   await toolbox.updateWorkspace();
