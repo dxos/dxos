@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { templateForComponent } from '../../testing';
-import { ListPrimitive, ListPrimitiveProps } from './ListPrimitive';
+import { ListPrimitive, ListPrimitiveComponentProps } from './ListPrimitive';
 
 export default {
   title: 'react-list/ListPrimitive',
@@ -14,7 +14,7 @@ export default {
   argTypes: {}
 };
 
-const Template = (args: Omit<ListPrimitiveProps, 'item'>) => {
+const Template = (args: Omit<ListPrimitiveComponentProps, 'item'>) => {
   return (
     <main className='max-is-lg mli-auto pli-7 mbs-7'>
       <ListPrimitive {...args} />
@@ -22,7 +22,7 @@ const Template = (args: Omit<ListPrimitiveProps, 'item'>) => {
   );
 };
 
-export const Default = templateForComponent(Template)({ id: '', items: {}, order: [] });
+export const Default = templateForComponent(Template)({ id: '', items: {} });
 Default.args = {
   id: 'x123456',
   items: {
@@ -39,6 +39,5 @@ Default.args = {
     x567890: {
       title: 'Courgette'
     }
-  },
-  order: ['x234567', 'x345678', 'x456789', 'x567890']
+  }
 };
