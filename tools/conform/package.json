@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "A utility for conforming files across packages in a monorepo",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "main": "dist/index.js",
   "bin": {
     "conform": "bin/index.js"
@@ -10,16 +14,15 @@
   "scripts": {
     "dev": "plate ./src/template --input ./package.json,./README.yml --output . --overwrite false"
   },
-  "license": "MIT",
   "dependencies": {
     "@dxos/plate": "workspace:*",
-    "yargs": "~16.2.0",
     "minimatch": "^5.1.0",
-    "recursive-readdir": "^2.2.2"
+    "recursive-readdir": "^2.2.2",
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@types/yargs": "~16.0.1",
     "@types/minimatch": "^5.1.2",
-    "@types/recursive-readdir": "^2.2.0"
+    "@types/recursive-readdir": "^2.2.0",
+    "@types/yargs": "~16.0.1"
   }
 }
