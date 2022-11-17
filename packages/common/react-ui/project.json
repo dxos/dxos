@@ -10,10 +10,10 @@
         ],
         "main": "packages/common/react-ui/src/index.ts",
         "outputPath": "packages/common/react-ui/dist",
-        "tsConfig": "packages/common/react-ui/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/common/react-ui/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -22,10 +22,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

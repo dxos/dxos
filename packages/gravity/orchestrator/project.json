@@ -10,11 +10,11 @@
         ],
         "main": "packages/gravity/orchestrator/src/index.ts",
         "outputPath": "packages/gravity/orchestrator/dist",
-        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
-        "updateBuildableProjectDepsInPackageJson": false,
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
+        "updateBuildableProjectDepsInPackageJson": false
       },
       "outputs": [
         "{options.outputPath}"
@@ -23,10 +23,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/gravity/orchestrator/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

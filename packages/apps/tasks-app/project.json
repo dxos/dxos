@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/apps/tasks-app/src/index.ts",
         "outputPath": "packages/apps/tasks-app/dist",
-        "tsConfig": "packages/apps/tasks-app/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/apps/tasks-app/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -54,10 +54,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/apps/tasks-app/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/apps/composer-app/src/index.ts",
         "outputPath": "packages/apps/composer-app/dist",
-        "tsConfig": "packages/apps/composer-app/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/apps/composer-app/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -54,10 +54,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/apps/composer-app/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"
