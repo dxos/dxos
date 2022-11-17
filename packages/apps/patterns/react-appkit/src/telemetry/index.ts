@@ -3,4 +3,4 @@
 //
 
 export * from './base-properties';
-export * from './useTelemetry';
+export * from './listeners';
