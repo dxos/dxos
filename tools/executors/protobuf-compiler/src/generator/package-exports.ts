@@ -25,12 +25,6 @@ export type GeneratePackageExportsParams = {
 const HEADER = '/**\n * @generated\n */\n';
 
 export const generatePackageExports = ({ packageRoot, exportFrom, namespaces }: GeneratePackageExportsParams) => {
-  console.log({
-    packageRoot,
-    exportFrom,
-    namespaces
-  });
-
   // TODO(dmaretskyi): Move to config.
   const prefix = 'proto';
 

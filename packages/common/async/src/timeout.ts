@@ -8,8 +8,8 @@ import { TimeoutError } from './errors';
 /**
  * Times out after delay.
  */
-export const sleep = (ms: number) =>
-  new Promise<void>((resolve) => {
+export const sleep = (ms: number) => {
+  return new Promise<void>((resolve) => {
     const finish = Date.now() + ms;
 
     // `setTimeout` does not guarantee execution at >= the scheduled time and may execute slightly early.
@@ -24,6 +24,7 @@ export const sleep = (ms: number) =>
 
     sleeper();
   });
+};
 
 /**
  * Wait for promise or throw error.

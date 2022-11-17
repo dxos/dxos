@@ -10,6 +10,8 @@ import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin
 import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
 import { NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin } from '@dxos/esbuild-plugins';
 
+const env = (value?: string) => (value ? `"${value}"` : undefined);
+
 export const dxosPlugin = (): Plugin => ({
   name: 'dxos',
   config: ({ root }) => {
@@ -25,6 +27,10 @@ export const dxosPlugin = (): Plugin => ({
           'node:path': 'path-browserify/',
           'node:util': 'util/'
         }
+      },
+      define: {
+        'process.env.LOG_FILTER': env(process.env.LOG_FILTER),
+        'process.env.LOG_BROWSER_PREFIX': env(process.env.LOG_BROWSER_PREFIX)
       },
       optimizeDeps: {
         esbuildOptions: {
