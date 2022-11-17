@@ -101,9 +101,6 @@
         },
         "uiFramework": "@storybook/react"
       }
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }
