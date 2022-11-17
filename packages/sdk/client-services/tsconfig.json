@@ -60,6 +60,9 @@
       "path": "../../core/echo/object-model"
     },
     {
+      "path": "../../core/echo/text-model"
+    },
+    {
       "path": "../../core/halo/credentials"
     },
     {

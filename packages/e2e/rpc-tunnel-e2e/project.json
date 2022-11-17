@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/e2e/rpc-tunnel-e2e/src/index.ts",
         "outputPath": "packages/e2e/rpc-tunnel-e2e/dist",
-        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -28,10 +28,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/e2e/rpc-tunnel-e2e/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

@@ -16,49 +16,49 @@
     ]
   },
   "include": [
-    "scripts",
     "__src",
-    "__stories"
+    "__stories",
+    "scripts"
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
+      "path": "../../../../tools/deprecated/protocols-toolchain"
     },
     {
-      "path": "../../common/async"
+      "path": "../../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../common/util"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../../core/echo/echo-db"
     },
     {
-      "path": "../../core/mesh/rpc"
+      "path": "../../../core/mesh/rpc"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../../core/protocols"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../../sdk/client"
     },
     {
-      "path": "../../sdk/client-services"
+      "path": "../../../sdk/client-services"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../../react-components"
     },
     {
-      "path": "../../sdk/react-toolkit"
+      "path": "../../react-toolkit"
     }
   ]
 }
