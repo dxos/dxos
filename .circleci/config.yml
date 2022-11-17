@@ -142,6 +142,24 @@ jobs:
             NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
+          name: Deploy Tasks
+          working_directory: ./packages/apps/tasks-app
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
+      - run:
+          name: Deploy Composer
+          working_directory: ./packages/apps/composer-app
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
+      - run:
           name: Deploy Docs
           working_directory: ./docs
           command: |
