@@ -4,12 +4,12 @@
 
 import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
+import { Space, Invitation } from '@dxos/client';
 import { useClient, useIdentity, useSpace } from '@dxos/react-client';
-import { Button, getSize, Heading, JoinSpaceDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
@@ -51,6 +51,7 @@ export const AppLayout = ({
   const invitationParam = searchParams.get('invitation');
   const pathSegments = location.pathname.split('/').length;
   const isManagingSpace = !!spaceHex && pathSegments > 3;
+  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -59,7 +60,7 @@ export const AppLayout = ({
 
   return (
     <main className='max-is-5xl mli-auto pli-7'>
-      <div role='none' className={cx('flex flex-wrap items-center gap-x-2 gap-y-4 my-4')}>
+      <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
         {space ? (
           <>
             <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
@@ -68,9 +69,8 @@ export const AppLayout = ({
                 <Planet className={getSize(4)} />
               </Button>
             </Tooltip>
-            <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
-            <div role='none' className='grow flex gap-2'>
+            <Heading className='flex-auto text-center truncate pbe-1'>{humanize(space.key)}</Heading>
+            <div role='none' className='flex gap-2'>
               {/* TODO(wittjosiah): There probably shouldn't be a popover here, or "manage identity" should link out to HALO. */}
               {/* TODO(wittjosiah): We probably don't want to rely on invitation singleton, dialog version prepping for HALO provide? */}
               <Presence
@@ -87,13 +87,13 @@ export const AppLayout = ({
           </>
         ) : (
           <>
-            <Heading>{t('spaces label')}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
+            <Heading className='flex-auto text-center'>{t('spaces label')}</Heading>
             <div role='none' className='grow flex gap-2'>
-              <JoinSpaceDialog
+              <JoinDialog
                 initialInvitationCode={invitationParam ?? undefined}
                 parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                onJoin={(spaceKey) => navigate(generatePath(spacePath, { space: spaceKey.toHex() }))}
+                onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
+                acceptInvitation={acceptInvitation}
                 dialogProps={{
                   initiallyOpen: Boolean(invitationParam),
                   openTrigger: (
