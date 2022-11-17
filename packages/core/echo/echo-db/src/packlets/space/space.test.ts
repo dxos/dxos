@@ -205,22 +205,19 @@ describe('space/space', function () {
       await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
-    console.log(1);
     const item: Item<ObjectModel> = await space.database.createItem({ type: 'dxos:item/space' });
-    console.log(2);
 
     const selection = space.database.select({ type: 'dxos:item/space' });
 
     const result = selection.exec();
-    console.log('result', result.value[0].model.toObject());
     let updateCount = 0;
     result.update.on(() => {
       updateCount++;
     });
 
     await item.model.set('key', 'value');
-    console.log('result', result.value[0].model.toObject());
 
+    expect(result.value[0].model.toObject()).toEqual({ key: 'value' });
     expect(updateCount).toEqual(1);
   });
 });
