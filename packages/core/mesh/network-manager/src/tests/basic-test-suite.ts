@@ -15,10 +15,11 @@ import { TestBuilder } from '../testing';
 import { FullyConnectedTopology, StarTopology } from '../topology';
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
 
+// TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
+
 /**
- * Common test suite for different transport and plugin configurations.
+ * Basic swarm tests.
  */
-// TODO(burdon): Check TestBuilder can be re-used across tests (otherwise factory).
 export const basicTestSuite = (testBuilder: TestBuilder, skip = false) => {
   if (skip) {
     return;
@@ -76,11 +77,11 @@ export const basicTestSuite = (testBuilder: TestBuilder, skip = false) => {
 
   it.skip('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
+    // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
 
-    // TODO(burdon): Plugin instance required for each swarm?
     const numSwarms = 5;
     const topics = Array.from(Array(numSwarms)).map(() => PublicKey.random());
     expect(topics).to.have.length(numSwarms);

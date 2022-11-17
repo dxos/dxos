@@ -15,9 +15,11 @@ import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
 import { FullyConnectedTopology } from '../topology';
 
+/**
+ * Performs random actions in the real system and compares its state with a simplified model.
+ */
+// TODO(dmaretskyi): Run this with actual webrtc and signal servers.
 export const propertyTestSuite = () => {
-  // TODO(dmaretskyi): Run this with actual webrtc and signal servers.
-  // This test performs random actions in the real system and compares it's state with a simplified model.
   it.skip('property-based tests', async function () {
     /**
      * The simplified model of the system.
@@ -39,19 +41,21 @@ export const propertyTestSuite = () => {
       await waitForExpect(() => {
         for (const peer of real.peers.values()) {
           if (peer.presence) {
-            for (const expectedJoinedPeer of model.joinedPeers) {
-              if (expectedJoinedPeer.equals(peer.presence.peerId)) {
+            for (const expectedPeerId of model.joinedPeers) {
+              if (expectedPeerId.equals(peer.presence.peerId)) {
                 continue;
               }
 
               const actuallyConnectedPeers = peer.presence!.peers;
-              if (!actuallyConnectedPeers.some((peer) => PublicKey.equals(expectedJoinedPeer, peer))) {
+              if (!actuallyConnectedPeers.some((peer) => PublicKey.equals(expectedPeerId, peer))) {
                 // TODO(burdon): More concise error.
-                throw new Error(
-                  `Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString(
-                    'hex'
-                  )}, actually connected peers: ${actuallyConnectedPeers.map((key) => key.toString('hex'))}`
-                );
+                const context = {
+                  peerId: peer.presence.peerId,
+                  expectedPeerId: expectedPeerId.truncate(),
+                  connectedPeerIds: actuallyConnectedPeers.map((key) => key.toString('hex'))
+                };
+
+                throw new Error(`Expected peer to be in the list of joined peers: ${context}`);
               }
             }
           }
