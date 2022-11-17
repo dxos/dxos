@@ -9,10 +9,10 @@ import { inspect } from 'util';
 
 import { inspectObject } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter } from './feed-writer';
-import { log } from '@dxos/log';
 
 /**
  * Async feed wrapper.
