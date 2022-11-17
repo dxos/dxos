@@ -12,7 +12,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { Client, fromIFrame, InvitationEncoder, Item } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
+import { ServiceWorkerToast, SpaceList, useSafeSpaceKey, translations } from '@dxos/react-appkit';
 import { ClientProvider, useClient, useSpaces, useSpace, useIdentity, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
 import {
@@ -48,7 +48,7 @@ export const App = () => {
   } = useRegisterSW({ onRegisterError: (err) => console.error(err) });
 
   return (
-    <UiKitProvider resourceExtensions={translationResources}>
+    <UiKitProvider resourceExtensions={[translations, translationResources]}>
       <ClientProvider client={clientProvider}>
         <HashRouter>
           <Routes>

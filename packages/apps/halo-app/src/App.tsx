@@ -16,7 +16,8 @@ import {
   FatalError,
   GenericFallback,
   ServiceWorkerToast,
-  useTelemetry
+  useTelemetry,
+  translations
 } from '@dxos/react-appkit';
 import { ClientProvider } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
@@ -36,7 +37,7 @@ import {
   SpacePage,
   SpacesPage
 } from './pages';
-import translationResources from './translations';
+import haloTranslations from './translations';
 
 log.config({ filter: process.env.LOG_FILTER, prefix: process.env.LOG_BROWSER_PREFIX });
 
@@ -104,7 +105,7 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider resourceExtensions={[translations, haloTranslations]} fallback={<Fallback message='Loading...' />}>
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

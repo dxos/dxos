@@ -21,5 +21,7 @@ export const appkit = {
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
   'offline ready label': 'HALO is ready to use offline.',
   'spaces label': 'Spaces',
-  'back to spaces label': 'Back to spaces'
+  'back to spaces label': 'Back to spaces',
+  'empty invitations message': 'No pending invitations',
+  'invitations label': 'Invitations'
 };

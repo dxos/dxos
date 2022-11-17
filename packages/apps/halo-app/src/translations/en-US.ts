@@ -17,8 +17,6 @@ export const halo = {
   'apps label': 'Apps',
   'contacts label': 'Contacts',
   'reset device label': 'Reset this device',
-  'empty invitations message': 'No pending invitations',
-  'invitations label': 'Invitations',
   'join label': 'Join',
   'manage label': 'Manage',
   'go to space label': 'Done',
