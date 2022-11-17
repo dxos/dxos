@@ -7,10 +7,10 @@
       "options": {
         "main": "tools/executors/mocha/src/main.ts",
         "outputPath": "tools/executors/mocha/dist",
-        "tsConfig": "tools/executors/mocha/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "tools/executors/mocha/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/executors/mocha/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

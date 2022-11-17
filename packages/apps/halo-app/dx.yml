@@ -8,12 +8,6 @@ package:
       build:
         command: pnpm -w nx bundle halo-app
 
-    # - name: dxos:storybook/halo
-    #   type: dxos:type/app
-    #   display_name: HALO Storybook
-    #   build:
-    #     command: pnpm -w run nx build-storybook halo-app
-
 runtime:
   client:
     remoteSource: /vault.html

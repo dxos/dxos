@@ -10,11 +10,11 @@
         ],
         "main": "packages/deprecated/wallet/wallet-extension/src/index.ts",
         "outputPath": "packages/deprecated/wallet/wallet-extension/dist",
-        "tsConfig": "packages/deprecated/wallet/wallet-extension/tsconfig.json",
-        "updateBuildableProjectDepsInPackageJson": false,
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/deprecated/wallet/wallet-extension/tsconfig.json",
+        "updateBuildableProjectDepsInPackageJson": false
       },
       "outputs": [
         "{options.outputPath}"
@@ -23,10 +23,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/deprecated/wallet/wallet-extension/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

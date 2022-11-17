@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/apps/halo-app/src/index.ts",
         "outputPath": "packages/apps/halo-app/dist",
-        "tsConfig": "packages/apps/halo-app/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/apps/halo-app/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -72,10 +72,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/apps/halo-app/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"
