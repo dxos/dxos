@@ -15,9 +15,50 @@
     "vite.config.ts"
   ],
   "include": [
+    "../../composer-app/src/pwa.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
-, "../../composer-app/src/pwa.d.ts"  ],
-  "references": []
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/react-async"
+    },
+    {
+      "path": "../../../common/react-ui"
+    },
+    {
+      "path": "../../../common/sentry"
+    },
+    {
+      "path": "../../../common/telemetry"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../experimental/react-client-testing"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/react-uikit"
+    },
+    {
+      "path": "../../../sdk/vite-plugin"
+    }
+  ]
 }

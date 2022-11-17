@@ -6,10 +6,10 @@
       "options": {
         "main": "packages/devtools/plate/src/index.ts",
         "outputPath": "packages/devtools/plate/dist",
-        "tsConfig": "packages/devtools/plate/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/devtools/plate/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -27,10 +27,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/devtools/plate/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

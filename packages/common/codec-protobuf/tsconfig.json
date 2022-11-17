@@ -11,5 +11,15 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }
