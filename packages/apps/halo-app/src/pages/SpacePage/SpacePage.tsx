@@ -6,12 +6,10 @@ import { CaretLeft, Planet } from 'phosphor-react';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useSafeSpaceKey } from '@dxos/react-appkit';
+import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
-
-import { ProfileList } from '@dxos/react-appkit/src/components/ProfileList';
 
 export const SpacePage = () => {
   const { t } = useTranslation('halo');
