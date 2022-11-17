@@ -1,14 +1,15 @@
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport'
 import { FeedWrapper } from '@dxos/feed-store'
 import { DeferredTask } from '@dxos/async'
-import { ReplicatorService } from '@dxos/protocols'
+import { ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator'
+import { Context } from '@dxos/context'
 
 export type ReplicationOptions = {
   upload: boolean
 }
 
 export class ReplicatorExtension implements TeleportExtension {
-
+  private readonly _ctx = new Context()
 
   private readonly _announceTask = new DeferredTask(async () => {
 

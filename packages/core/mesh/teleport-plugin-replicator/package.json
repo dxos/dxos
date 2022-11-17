@@ -19,6 +19,8 @@
   "dependencies": {
     "@dxos/feed-store": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",

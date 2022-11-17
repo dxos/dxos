@@ -4,6 +4,9 @@
 
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+import "dxos/keys.proto";
+
 package dxos.mesh.teleport.replicator;
 
 message FeedInfo {
