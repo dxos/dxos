@@ -19,7 +19,7 @@ import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from '
  * Common test suite for different transport and plugin configurations.
  */
 // TODO(burdon): Check TestBuilder can be re-used across tests (otherwise factory).
-export const testSuite = (testBuilder: TestBuilder, skip = false) => {
+export const basicTestSuite = (testBuilder: TestBuilder, skip = false) => {
   if (skip) {
     return;
   }
@@ -35,7 +35,7 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
     await leaveSwarm(topic, [peer1, peer2]);
   });
 
-  // TODO(burdon): Test with more peers.
+  // TODO(burdon): Test with more peers (configure and test messaging).
   it('joins swarm with star topology', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
@@ -87,9 +87,9 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
   });
 
   // TODO(burdon): This just tests multiple swarms (not peers in the same swarm)?
+  //  Generalize for n swarms and factor into other tests; configure message activity.
   it.skip('joins multiple swarms concurrently', async () => {
-    const receivedA: any[] = [];
-    {
+    const createSwarm = async (messages: any[], label: string) => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
       const peer2a = testBuilder.createPeer();
@@ -97,49 +97,31 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
       await peer1a.joinSwarm(topicA);
       await peer2a.joinSwarm(topicA);
 
-      const mockReceiveA = (p: Protocol, s: string) => {
-        receivedA.push(p, s);
-        return undefined;
-      };
-
-      peer1a.plugin.on('receive', mockReceiveA);
+      peer1a.plugin.on('receive', (_, msg: string) => {
+        messages.push(msg);
+      });
       peer2a.plugin.on('connect', async () => {
-        await peer2a.plugin.send(peer1a.peerId.asBuffer(), 'Test A');
+        await peer2a.plugin.send(peer1a.peerId.asBuffer(), label);
       });
-    }
+    };
 
+    const receivedA: any[] = [];
     const receivedB: any[] = [];
-    {
-      const topicB = PublicKey.random();
-      const peer1b = testBuilder.createPeer();
-      const peer2b = testBuilder.createPeer();
 
-      await peer1b.joinSwarm(topicB);
-      await peer2b.joinSwarm(topicB);
-
-      const mockReceiveB = (p: Protocol, s: string) => {
-        receivedB.push(p, s);
-        return undefined;
-      };
-
-      peer1b.plugin.on('receive', mockReceiveB);
-      peer2b.plugin.on('connect', async () => {
-        await peer2b.plugin.send(peer1b.peerId.asBuffer(), 'Test B');
-      });
-    }
+    void createSwarm(receivedA, 'Swarm A');
+    void createSwarm(receivedB, 'Swarm B');
 
     // TODO(burdon): Replace with triggers.
     await waitForExpect(() => {
-      expect(receivedA.length).to.eq(2);
-      expect(receivedA[0]).to.be.instanceof(Protocol);
-      expect(receivedA[1]).to.eq('Test A');
+      expect(receivedA).to.have.length(1);
+      expect(receivedB).to.have.length(1);
 
-      expect(receivedB.length).to.eq(2);
-      expect(receivedB[0]).to.be.instanceof(Protocol);
-      expect(receivedB[1]).to.eq('Test B');
+      expect(receivedA[0]).to.eq('Swarm A');
+      expect(receivedB[0]).to.eq('Swarm B');
     });
   });
 
+  // TODO(burdon): Factor out components of test.
   it.skip('many peers and connections', async () => {
     const numTopics = 5;
     const peersPerTopic = 5;

@@ -3,9 +3,9 @@
 //
 
 import { TestBuilder } from '../testing';
-import { testSuite } from './test-suite';
+import { basicTestSuite } from './basic-test-suite';
 
 describe('Memory transport', function () {
   const testBuilder = new TestBuilder();
-  testSuite(testBuilder);
+  basicTestSuite(testBuilder);
 });
