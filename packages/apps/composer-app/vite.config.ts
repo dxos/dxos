@@ -10,6 +10,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+import packageJson from './package.json';
+
 const env = (value?: string) => value ? `"${value}"` : undefined;
 const DX_RELEASE = process.env.NODE_ENV === 'production'
   ? `@dxos/composer-app@${packageJson.version}`
