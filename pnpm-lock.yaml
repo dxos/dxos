@@ -538,6 +538,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
+      '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/sentry': workspace:*
@@ -557,6 +558,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-list': link:../patterns/react-list
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../sdk/react-uikit
       '@dxos/sentry': link:../../common/sentry

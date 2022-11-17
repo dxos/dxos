@@ -23,6 +23,7 @@ export default defineConfig({
       '@dxos/config',
       '@dxos/react-appkit',
       '@dxos/react-client',
+      '@dxos/react-list',
       '@dxos/react-ui',
       '@dxos/react-uikit',
       '@dxos/sentry'

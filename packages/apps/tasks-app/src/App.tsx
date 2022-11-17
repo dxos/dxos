@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame, Space } from '@dxos/client';
+import { Client, fromIFrame, ObjectModel, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   AppLayout,
@@ -20,6 +20,7 @@ import {
   SpacesPage
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
+import { LIST_TYPE } from '@dxos/react-list';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
@@ -43,7 +44,10 @@ const Routes = () => {
   const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
 
   const handleSpaceCreate = async (space: Space) => {
-    // TODO
+    await space.database.createItem({
+      model: ObjectModel,
+      type: LIST_TYPE
+    });
   };
 
   return useRoutes([
