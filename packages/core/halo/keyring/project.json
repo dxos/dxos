@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/core/halo/keyring/src/index.ts",
         "outputPath": "packages/core/halo/keyring/dist",
-        "tsConfig": "packages/core/halo/keyring/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/core/halo/keyring/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/halo/keyring/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

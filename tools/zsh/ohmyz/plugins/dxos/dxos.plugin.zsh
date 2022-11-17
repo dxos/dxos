@@ -32,14 +32,20 @@ function pc () {
   nx $1 "${PWD##*/}" "$@" "${RANDOM}"
 }
 
+# TODO(burdon): Fix args.
 # Run everything (e.g., `pa build`).
 function pa () {
+  X=$1
+  shift()
+  echo $1 $@
+  return
+
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    nx run-many --target=$1
+    nx run-many --target=$@
   else;
     pushd $ROOT
-    nx run-many --target=$1
+    nx run-many --target=$@
     popd
   fi;
 }

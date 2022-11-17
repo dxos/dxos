@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../../devtools/cli"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {
