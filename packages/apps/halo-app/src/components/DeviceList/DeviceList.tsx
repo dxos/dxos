@@ -7,14 +7,14 @@ import React from 'react';
 import { Device, DeviceProps } from './Device';
 
 export interface DeviceListProps {
-  items: DeviceProps[]
+  devices: DeviceProps[];
 }
 
-export const DeviceList = ({ items }: DeviceListProps) => {
+export const DeviceList = ({ devices }: DeviceListProps) => {
   return (
     <>
-      {items.map((item) => (
-        <Device key={item.publicKey.toHex()} {...item} />
+      {devices.map((device) => (
+        <Device key={device.publicKey.toHex()} {...device} />
       ))}
     </>
   );
