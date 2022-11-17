@@ -14,8 +14,8 @@
   },
   "scripts": {
     "check": "true",
-    "info": "tsc --showConfig | jq",
-    "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx"
+    "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx",
+    "info": "tsc --showConfig | jq"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
@@ -30,11 +30,11 @@
     "ink-spinner": "~4.0.3",
     "ink-table": "~3.0.0",
     "ink-text-input": "~4.0.3",
-    "node-notifier": "^10.0.1",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
     "log-update": "^4.0.0",
+    "node-notifier": "^10.0.1",
     "react": "^18.2.0",
     "unzip-stream": "^0.3.1",
     "yargs": "~16.2.0"

@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/core/echo/model-factory/src/index.ts",
         "outputPath": "packages/core/echo/model-factory/dist",
-        "tsConfig": "packages/core/echo/model-factory/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/core/echo/model-factory/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/model-factory/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

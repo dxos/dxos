@@ -14,12 +14,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
-    {
-      "path": "../../bots/bot-factory-client"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -32,7 +26,13 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-ui"
     },
     {
       "path": "../../common/util"
@@ -53,7 +53,13 @@
       "path": "../client"
     },
     {
+      "path": "../client-services"
+    },
+    {
       "path": "../config"
+    },
+    {
+      "path": "../vite-plugin"
     }
   ]
 }

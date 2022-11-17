@@ -7,10 +7,10 @@
       "options": {
         "main": "tools/executors/protobuf-compiler/src/index.ts",
         "outputPath": "tools/executors/protobuf-compiler/dist",
-        "tsConfig": "tools/executors/protobuf-compiler/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "tools/executors/protobuf-compiler/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/executors/protobuf-compiler/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

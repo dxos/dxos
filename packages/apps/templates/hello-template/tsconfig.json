@@ -19,13 +19,16 @@
   ],
   "references": [
     {
-      "path": "../../../experimental/react-client-testing"
+      "path": "../../../common/react-ui"
     },
     {
-      "path": "../../../deprecated/react-components"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../../deprecated/react-toolkit"
+      "path": "../../../core/echo/text-model"
+    },
+    {
+      "path": "../../../devtools/cli"
     },
     {
       "path": "../../../sdk/client"
@@ -37,7 +40,16 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../sdk/react-uikit"
+    },
+    {
       "path": "../../../sdk/vite-plugin"
+    },
+    {
+      "path": "../../patterns/react-appkit"
+    },
+    {
+      "path": "../../patterns/react-composer"
     }
   ]
 }
