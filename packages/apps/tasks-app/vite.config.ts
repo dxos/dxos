@@ -12,10 +12,8 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 
 import packageJson from './package.json';
 
-const env = (value?: string) => value ? `"${value}"` : undefined;
-const DX_RELEASE = process.env.NODE_ENV === 'production'
-  ? `@dxos/tasks-app@${packageJson.version}`
-  : undefined;
+const env = (value?: string) => (value ? `"${value}"` : undefined);
+const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/tasks-app@${packageJson.version}` : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -57,7 +55,8 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.js')
       ]
     }),
     react(),
