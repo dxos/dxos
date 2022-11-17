@@ -40,8 +40,8 @@ const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps)
     async (action: ListAction) => {
       if (isListItemDeletedAction(action)) {
         const subject = space.database.getItem(action.deleted.id);
-        await subject?.model.set('annotations.deleted', true);
-        return subject?.delete();
+        // TODO(thure): use Echo’s native deletion
+        return subject?.model.set('annotations.deleted', true);
       } else if (isListItemCreatedAction(action)) {
         // do nothing?
       } else if (isListItemChangedAction(action)) {
@@ -78,7 +78,8 @@ const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps)
         title: list.model.get('title') ?? '',
         description: list.model.get('description') ?? '',
         items: (listItems ?? [])
-          .filter((item) => !(item.deleted || item.model.get('annotations.deleted')))
+          // TODO(thure): use Echo’s native deletion
+          .filter((item) => !item.model.get('annotations.deleted'))
           .reduce((acc: ListItems, item) => {
             acc[item.id] = {
               title: item.model.get('title'),
