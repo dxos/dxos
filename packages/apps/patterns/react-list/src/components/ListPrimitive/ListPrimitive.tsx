@@ -4,10 +4,12 @@
 
 import cx from 'classnames';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
+import React, { ComponentProps, useCallback, useState } from 'react';
 
 import { defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
+
+import { usePropStatefully } from '../../hooks';
 
 type ListId = string;
 type ListItemId = string;
@@ -56,7 +58,6 @@ export interface ListPrimitiveProps {
   title?: string;
   description?: string;
   items: ListItems;
-  order: ListItemId[];
 }
 
 export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<ComponentProps<'div'>, 'id'> {
@@ -91,7 +92,7 @@ const ListItemPrimitive = ({
 
   const { t } = useTranslation('appkit');
 
-  const [title, setTitle] = useState(propsTitle ?? '');
+  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '');
 
   const [description, _setDescription] = useState(propsDescription ?? '');
   const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
@@ -132,6 +133,7 @@ const ListItemPrimitive = ({
       {...(description && { 'aria-describedby': descriptionId })}
     >
       <input
+        key={titleSession}
         {...{
           type: 'checkbox',
           id: checkId,
@@ -164,6 +166,7 @@ const ListItemPrimitive = ({
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
+        {/*  key={descriptionSession} */}
         {/*  label={t('list item description label')} */}
         {/*  placeholder={t('list item description placeholder')} */}
         {/*  labelVisuallyHidden */}
@@ -190,41 +193,33 @@ const ListItemPrimitive = ({
   );
 };
 
+const itemsEquivalent = (a: ListItems, b: ListItems) => {
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  for (let i = 0; i < aKeys.length; i++) {
+    const key = aKeys[i];
+    if (key !== bKeys[i] || a[key].title !== b[key].title || a[key].annotations?.state !== b[key].annotations?.state) {
+      return false;
+    }
+  }
+  return true;
+};
+
 export const ListPrimitive = ({
   id: listId,
   title: propsTitle,
   description: propsDescription,
   items: propsItems,
-  order: propsOrder,
   onAction,
   createListItemId = defaultCreateListItemId,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
 
-  const [title, setTitle] = useState(propsTitle ?? '');
-  const [titleSession, setTitleSession] = useState(randomString());
-  const [description, setDescription] = useState(propsDescription ?? '');
-
-  const [order, setOrder] = useState(propsOrder ?? []);
-  const [items, setItems] = useState(propsItems ?? {});
-
   const [creating, setCreating] = useState(false);
 
-  const mounted = useRef(false);
-
-  useEffect(() => {
-    if (mounted.current && propsTitle !== title) {
-      setTitle(propsTitle ?? '');
-      setTitleSession(randomString());
-    } else {
-      mounted.current = true;
-    }
-  }, [propsTitle]);
-
   const titleId = `${listId}__title`;
-  const descriptionId = `${listId}__description`;
-
+  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '');
   const onChangeTitle = useCallback(
     (nextValue: string) => {
       setTitle(nextValue);
@@ -233,6 +228,8 @@ export const ListPrimitive = ({
     [onAction, listId]
   );
 
+  const descriptionId = `${listId}__description`;
+  const [description, setDescription, _descriptionSession] = usePropStatefully(propsDescription ?? '');
   const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
@@ -240,6 +237,9 @@ export const ListPrimitive = ({
     },
     [onAction, listId]
   );
+
+  const [items, setItems, itemsSession] = usePropStatefully(propsItems ?? {}, itemsEquivalent);
+  const order = Object.keys(items);
 
   const updateItem = useCallback(
     ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
@@ -251,27 +251,25 @@ export const ListPrimitive = ({
 
   const updateOrder = useCallback(
     (id: ListItemId, delta: number) => {
+      const order = Object.keys(items);
       const fromIndex = order.indexOf(id);
       const toIndex = fromIndex + delta;
       const nextOrder = Array.from(order);
       nextOrder.splice(fromIndex, 1);
       nextOrder.splice(toIndex, 0, id);
-      setOrder(nextOrder);
-      onAction?.({ listId, next: { order: nextOrder } });
+      const nextItems = nextOrder.reduce((acc: ListItems, listItemId) => {
+        acc[listItemId] = items[listItemId];
+        return acc;
+      }, {});
+      setItems(nextItems);
+      onAction?.({ listId, next: { items: nextItems } });
     },
-    [order, onAction]
+    [items, onAction]
   );
 
   const deleteItem = useCallback(
     (id: ListItemId) => {
       const next: Partial<ListPrimitiveProps> = {};
-      const fromIndex = order.indexOf(id);
-      if (fromIndex >= 0) {
-        const nextOrder = Array.from(order);
-        nextOrder.splice(fromIndex, 1);
-        setOrder(nextOrder);
-        next.order = nextOrder;
-      }
       if (items[id]) {
         const { [id]: _removedItem, ...nextItems } = items;
         setItems(nextItems);
@@ -279,7 +277,7 @@ export const ListPrimitive = ({
       }
       onAction?.({ listId, next });
     },
-    [order, items, onAction]
+    [items, onAction]
   );
 
   const createItem = useCallback(() => {
@@ -287,16 +285,14 @@ export const ListPrimitive = ({
     return createListItemId()
       .then((id) => {
         const next = {
-          items: { ...items, [id]: {} },
-          order: [...order, id]
+          items: { ...items, [id]: {} }
         };
         const created = { id };
         setItems(next.items);
-        setOrder(next.order);
         onAction?.({ listId, next, created });
       })
       .finally(() => setCreating(false));
-  }, [order, items, createListItemId, onAction]);
+  }, [items, createListItemId, onAction]);
 
   return (
     <div
@@ -325,6 +321,7 @@ export const ListPrimitive = ({
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
+      {/*  key={descriptionSession} */}
       {/*  label={t('list description label')} */}
       {/*  placeholder={t('list description placeholder')} */}
       {/*  labelVisuallyHidden */}
@@ -336,7 +333,7 @@ export const ListPrimitive = ({
         {order.map((listItemId, index) => {
           return (
             <ListItemPrimitive
-              key={listItemId}
+              key={`${itemsSession}__${listItemId}`}
               isFirst={index === 0}
               isLast={index === order.length - 1}
               {...{ id: listItemId, updateItem, updateOrder, deleteItem }}

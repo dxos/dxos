@@ -27,15 +27,15 @@ export interface ListProps {
 const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
   const onAction = useCallback(
     async (action: ListAction) => {
-      const subject = isListItemChangedAction(action) ? listItems.find(({ id }) => id === action.listItemId) : list;
+      const subject = isListItemChangedAction(action) ? space.database.getItem(action.listItemId) : list;
       await Promise.all(
         (Object.keys(action.next) as (keyof ListAction['next'])[]).map((prop) => {
-          console.log('[set]', prop, action.next[prop]);
+          console.log('[set]', subject, prop, action.next[prop]);
           return subject?.model.set(prop, action.next[prop]);
         })
       );
     },
-    [list]
+    [list, listItems]
   );
 
   const createListItemId = useCallback(async () => {
@@ -53,7 +53,6 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
         id: list.id,
         title: list.model.get('title') ?? '',
         description: list.model.get('description') ?? '',
-        order: Object.values(list.model.get('order') ?? {}),
         items: (listItems ?? []).reduce((acc: ListItems, item) => {
           acc[item.id] = {
             title: item.model.get('title'),
