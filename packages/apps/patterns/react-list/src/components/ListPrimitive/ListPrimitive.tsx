@@ -39,12 +39,12 @@ export interface ListChangedAction extends SharedListActionProps {
   next: Partial<ListPrimitiveProps>;
 }
 
-export interface ListItemCreatedAction extends ListChangedAction {
-  created: Partial<ListItemProps>;
+export interface ListItemCreatedAction extends SharedListActionProps {
+  created: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>;
 }
 
-export interface ListItemDeletedAction extends ListChangedAction {
-  deleted: Partial<ListItemProps>;
+export interface ListItemDeletedAction extends SharedListActionProps {
+  deleted: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>;
 }
 
 export type ListAction = ListItemChangedAction | ListChangedAction | ListItemCreatedAction | ListItemDeletedAction;
@@ -57,10 +57,10 @@ export interface ListPrimitiveProps {
   id: ListId;
   title?: string;
   description?: string;
-  items: ListItems;
 }
 
 export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<ComponentProps<'div'>, 'id'> {
+  items: ListItems;
   onAction?: (action: ListAction) => void;
   createListItemId?: () => Promise<ListItemId>;
 }
@@ -262,20 +262,18 @@ export const ListPrimitive = ({
         return acc;
       }, {});
       setItems(nextItems);
-      onAction?.({ listId, next: { items: nextItems } });
+      onAction?.({ listId, next: {} });
     },
     [items, onAction]
   );
 
   const deleteItem = useCallback(
     (id: ListItemId) => {
-      const next: Partial<ListPrimitiveProps> = {};
       if (items[id]) {
-        const { [id]: _removedItem, ...nextItems } = items;
+        const { [id]: deletedItem, ...nextItems } = items;
         setItems(nextItems);
-        next.items = nextItems;
+        onAction?.({ listId, next: {}, deleted: { id, ...deletedItem } });
       }
-      onAction?.({ listId, next });
     },
     [items, onAction]
   );
@@ -289,7 +287,7 @@ export const ListPrimitive = ({
         };
         const created = { id };
         setItems(next.items);
-        onAction?.({ listId, next, created });
+        onAction?.({ listId, next: {}, created });
       })
       .finally(() => setCreating(false));
   }, [items, createListItemId, onAction]);

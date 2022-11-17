@@ -11,7 +11,16 @@ import { Loading } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-uikit';
 
 import { LIST_ITEM_TYPE } from '../../model';
-import { ListPrimitive, ListAction, ListItems, isListItemChangedAction } from '../ListPrimitive';
+import {
+  ListPrimitive,
+  ListAction,
+  ListItems,
+  isListItemChangedAction,
+  isListItemDeletedAction,
+  isListItemCreatedAction,
+  ListItemProps,
+  ListPrimitiveProps
+} from '../ListPrimitive';
 
 interface ListLoadedProps {
   space: Space;
@@ -24,16 +33,31 @@ export interface ListProps {
   itemId: Item<ObjectModel>['id'];
 }
 
-const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
+const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps) => {
+  const listItems = useSelection(list?.select().children().filter({ type: LIST_ITEM_TYPE })) ?? propsListItems;
+
   const onAction = useCallback(
     async (action: ListAction) => {
-      const subject = isListItemChangedAction(action) ? space.database.getItem(action.listItemId) : list;
-      await Promise.all(
-        (Object.keys(action.next) as (keyof ListAction['next'])[]).map((prop) => {
-          console.log('[set]', subject, prop, action.next[prop]);
-          return subject?.model.set(prop, action.next[prop]);
-        })
-      );
+      if (isListItemDeletedAction(action)) {
+        const subject = space.database.getItem(action.deleted.id);
+        await subject?.model.set('annotations.deleted', true);
+        return subject?.delete();
+      } else if (isListItemCreatedAction(action)) {
+        // do nothing?
+      } else if (isListItemChangedAction(action)) {
+        const subject = space.database.getItem(action.listItemId);
+        return Promise.all(
+          (Object.keys(action.next) as (keyof ListItemProps)[]).map((prop) => {
+            return subject?.model.set(prop, action.next[prop]);
+          })
+        );
+      } else {
+        return Promise.all(
+          (Object.keys(action.next) as (keyof ListPrimitiveProps)[]).map((prop) => {
+            return list?.model.set(prop, action.next[prop]);
+          })
+        );
+      }
     },
     [list, listItems]
   );
@@ -53,14 +77,16 @@ const ListLoaded = ({ space, list, listItems }: ListLoadedProps) => {
         id: list.id,
         title: list.model.get('title') ?? '',
         description: list.model.get('description') ?? '',
-        items: (listItems ?? []).reduce((acc: ListItems, item) => {
-          acc[item.id] = {
-            title: item.model.get('title'),
-            description: item.model.get('description'),
-            annotations: item.model.get('annotations')
-          };
-          return acc;
-        }, {}),
+        items: (listItems ?? [])
+          .filter((item) => !(item.deleted || item.model.get('annotations.deleted')))
+          .reduce((acc: ListItems, item) => {
+            acc[item.id] = {
+              title: item.model.get('title'),
+              description: item.model.get('description'),
+              annotations: item.model.get('annotations')
+            };
+            return acc;
+          }, {}),
         onAction,
         createListItemId
       }}
