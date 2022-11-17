@@ -5,7 +5,13 @@
 import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions } from '@dxos/async';
-import { ClientServicesProvider, InvitationObservable } from '@dxos/client-services';
+import {
+  AuthenticatingInvitationObservable,
+  ClientServicesProvider,
+  HaloInvitationsProxy,
+  InvitationObservable,
+  InvitationsOptions
+} from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
@@ -41,7 +47,10 @@ export interface Halo {
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
+  private readonly _invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
+  private readonly _invitations: InvitationObservable[] = [];
 
+  public readonly invitationsUpdate = new Event<InvitationObservable>();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
   private _profile?: Profile;
@@ -124,12 +133,45 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  async createInvitation(): Promise<InvitationObservable> {
-    throw new Error('Not implemented.');
+  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable> {
+    return new Promise<InvitationObservable>((resolve, reject) => {
+      const invitation = this._invitationProxy.createInvitation(undefined, options);
+
+      this._invitations.push(invitation);
+      const unsubscribe = invitation.subscribe({
+        onConnecting: () => {
+          this.invitationsUpdate.emit(invitation);
+          resolve(invitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
   }
 
-  async acceptInvitation(invitation: Invitation): Promise<InvitationObservable> {
-    throw new Error('Not implemented.');
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
+    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
+      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
+      const unsubscribe = acceptedInvitation.subscribe({
+        onConnecting: () => {
+          resolve(acceptedInvitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
   }
 
   async queryDevices(): Promise<DeviceInfo[]> {
