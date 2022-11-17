@@ -18,6 +18,7 @@ import {
   defaultHover,
   defaultInlineSeparator,
   getSize,
+  Input,
   Loading,
   Popover,
   PopoverProps,
@@ -25,7 +26,17 @@ import {
 } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
 
-import { DisplayNameInput } from '../Profile';
+export const DisplayNameInput = ({ profile }: { profile: ProfileType }) => {
+  const { t } = useTranslation();
+  return (
+    <Input
+      label={t('displayName label')}
+      initialValue={profile.displayName}
+      placeholder={humanize(profile.identityKey.toHex())}
+      className='my-0'
+    />
+  );
+};
 
 export interface PresenceProps
   extends Omit<AvatarProps, 'label' | 'fallbackValue'>,
@@ -84,6 +95,7 @@ const ProfileMenu = (props: PresenceProps) => {
           <span>{t('manage profile label')}</span>
         </Button>
       )}
+      {/* TODO(wittjosiah): Just display here. */}
       <DisplayNameInput profile={profile} />
     </Popover>
   );

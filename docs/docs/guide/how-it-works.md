@@ -1,6 +1,6 @@
 ---
-position: 2
-label: How it works
+order: 2
+title: How it works
 next: ./develop
 prev: ./quick-start
 ---

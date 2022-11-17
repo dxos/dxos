@@ -2,6 +2,7 @@
   "name": "@dxos/devtools",
   "version": "0.1.5",
   "private": true,
+  "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

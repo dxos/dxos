@@ -8,7 +8,7 @@ import * as os from 'os';
 import prettier from 'prettier';
 
 const force = (a: Function | any) => (typeof a === 'function' ? a() : a);
-const join = (a: any[] | any) => (Array.isArray(a) ? a.join(os.EOL) : a);
+const join = (a: any[] | any) => (Array.isArray(a) ? a.filter(Boolean).join(os.EOL) : a);
 const squelch = (a: any) => (!a ? '' : a);
 const trim = (a: string) => a.trim();
 const terminalNewline = (a: string) => (a[a.length - 1] === os.EOL[os.EOL.length - 1] ? a : a + os.EOL);
@@ -35,7 +35,7 @@ export const textUntrimmed = (literals: TemplateStringsArray, ...args: any[]) =>
       zip(
         literals.map((l) => removeLeadingTabs(l, tabs)),
         cleanArgs
-      )
+      ).filter(Boolean)
     ).join('')
   );
 };

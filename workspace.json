@@ -63,6 +63,7 @@
     "protocols": "packages/core/protocols",
     "protocols-toolchain": "tools/deprecated/protocols-toolchain",
     "random-access-storage": "packages/common/random-access-storage",
+    "conform": "tools/conform",
     "react-appkit": "packages/apps/patterns/react-appkit",
     "react-async": "packages/common/react-async",
     "react-client": "packages/sdk/react-client",
@@ -71,6 +72,7 @@
     "react-composer": "packages/apps/patterns/react-composer",
     "react-echo-graph": "packages/experimental/react-echo-graph",
     "react-ipfs": "packages/experimental/react-ipfs",
+    "react-list": "packages/apps/patterns/react-list",
     "react-registry-client": "packages/experimental/react-registry-client",
     "react-toolkit": "packages/deprecated/react-toolkit",
     "react-ui": "packages/common/react-ui",
@@ -83,6 +85,7 @@
     "sentry": "packages/common/sentry",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
+    "tasks-app": "packages/apps/tasks-app",
     "telemetry": "packages/common/telemetry",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
@@ -94,6 +97,7 @@
     "util": "packages/common/util",
     "vite-plugin": "packages/sdk/vite-plugin",
     "wallet-extension": "packages/deprecated/wallet/wallet-extension",
-    "wallet-playground": "packages/deprecated/wallet/wallet-playground"
+    "wallet-playground": "packages/deprecated/wallet/wallet-playground",
+    "x": "tools/x"
   }
 }
