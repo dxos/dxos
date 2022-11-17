@@ -10,13 +10,12 @@ package:
 
 runtime:
   client:
-    remoteSource: http://localhost:3967/vault.html
     storage:
       persistent: true
 
   services:
     signal:
-      server: ws://kube.dxos.org/.well-known/dx/signal
+      server: wss://kube.dxos.org/.well-known/dx/signal
     ice:
       - urls: turn:kube.dxos.org:3478
         username: dxos

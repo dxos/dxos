@@ -18,6 +18,12 @@
   ],
   "references": [
     {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -27,7 +33,16 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-uikit"
+    },
+    {
       "path": "../../sdk/vite-plugin"
+    },
+    {
+      "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-list"
     }
   ]
 }

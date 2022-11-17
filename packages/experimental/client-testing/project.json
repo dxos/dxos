@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/experimental/client-testing/src/index.ts",
         "outputPath": "packages/experimental/client-testing/dist",
-        "tsConfig": "packages/experimental/client-testing/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/experimental/client-testing/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/client-testing/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"
