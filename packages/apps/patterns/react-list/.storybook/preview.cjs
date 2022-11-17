@@ -25,7 +25,7 @@ const ThemeWrapper = ({ children }) => {
 export const decorators = [
   (Story) => {
     return createElement(UiKitProvider, {
-      resourceExtensions: translations,
+      resourceExtensions: [translations],
       fallback: createElement(Loading, {label: 'Loading…'}),
       children: createElement(ThemeWrapper, {
         children: createElement(Story)
