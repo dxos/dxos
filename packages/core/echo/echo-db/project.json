@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/core/echo/echo-db/src/index.ts",
         "outputPath": "packages/core/echo/echo-db/dist",
-        "tsConfig": "packages/core/echo/echo-db/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/core/echo/echo-db/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -20,10 +20,10 @@
       "executor": "@nrwl/linter:eslint",
       "options": {
         "eslintConfig": "packages/core/echo/echo-db/eslint-config.json",
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/echo/echo-db/src/packlets/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

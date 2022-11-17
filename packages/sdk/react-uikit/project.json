@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/sdk/react-uikit/src/index.ts",
         "outputPath": "packages/sdk/react-uikit/dist",
-        "tsConfig": "packages/sdk/react-uikit/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/sdk/react-uikit/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/react-uikit/src/**/*.{js,jsx,ts,tsx}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

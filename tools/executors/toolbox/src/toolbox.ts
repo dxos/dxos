@@ -2,11 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import defaultsdeep from 'lodash.defaultsdeep';
 import { execSync } from 'child_process';
+import defaultsDeep from 'lodash.defaultsdeep';
+import pick from 'lodash.pick';
 import { join, relative } from 'path';
+import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
+
+export type ToolboxConfig = {
+  config?: {
+    package: {
+      common: string[];
+    };
+  };
+};
 
 type Project = {
   name: string;
@@ -15,26 +25,44 @@ type Project = {
   devDependencies: Record<string, any>[];
 };
 
+type Package = {};
+
 type ToolboxOptions = {
   verbose?: boolean;
   ignoredProjects?: string[];
   fixedProjectKeys?: string[];
+  tsConfigFixedKeys?: string[];
 };
 
 const defaultOptions = {
   ignoredProjects: ['@dxos/dxos', '@dxos/docs', '@dxos/readme'],
-  fixedProjectKeys: ['sourceRoot', 'projectType', 'targets']
+  fixedProjectKeys: ['sourceRoot', 'projectType', 'targets'],
+  tsConfigFixedKeys: ['extends', 'compilerOptions']
 };
 
 class Toolbox {
   private readonly options: ToolboxOptions;
   private readonly rootDir: string;
-  private readonly projects: Project[];
+  private readonly rootPackage: any;
+
+  private config!: ToolboxConfig;
+  private projects!: Project[];
 
   // TODO(burdon): Merge options.
   constructor(options: ToolboxOptions = {}) {
-    this.options = defaultsdeep({}, options, defaultOptions);
+    this.options = defaultsDeep({}, options, defaultOptions);
     this.rootDir = execSync('git rev-parse --show-toplevel').toString().trim();
+    this.rootPackage = loadJson(join(this.rootDir, 'package.json'));
+  }
+
+  /**
+   * Initialize.
+   * - Read config.
+   * - Create package list.
+   */
+  async init() {
+    const configPath = join(this.rootDir, 'toolbox.json');
+    this.config = (await loadJson<ToolboxConfig>(configPath, false)) ?? {};
 
     const buffer = execSync('pnpm ls -r --depth -1 --json').toString();
     this.projects = JSON.parse(buffer)
@@ -48,6 +76,10 @@ class Toolbox {
 
   info() {}
 
+  /**
+   * Update root workspace file.
+   * - Sort
+   */
   async updateWorkspace() {
     const workspace = {
       version: 2,
@@ -59,6 +91,10 @@ class Toolbox {
     await saveJson(join(this.rootDir, 'workspace.json'), workspace, this.options.verbose);
   }
 
+  /**
+   * Update project files.
+   * - Sort keys.
+   */
   async updateProjects() {
     for (const project of this.projects) {
       const filepath = join(project.path, 'project.json');
@@ -71,16 +107,67 @@ class Toolbox {
           }
         });
 
-        console.log(updated);
-        return;
-        // await saveJson(filepath, updated);
+        await saveJson(filepath, updated, this.options.verbose);
       }
     }
   }
 
-  async updatePackages() {}
+  /**
+   * Update package files.
+   * - Sort keys.
+   */
+  async updatePackages() {
+    // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
+    for (const project of this.projects) {
+      const projectPath = join(project.path, 'package.json');
+      const projectPackage = await loadJson(projectPath);
+      const commonKeys = pick(this.rootPackage, this.config.config?.package.common ?? []);
+      const updated = sortPackageJson(defaultsDeep(projectPackage, commonKeys));
+      console.error(JSON.stringify(updated, undefined, 2));
+      console.log(projectPackage);
+      await saveJson(projectPath, updated);
+    }
+  }
 
-  async updateTsConfig() {}
+  /**
+   * Update tsconfig files.
+   * - Sort keys.
+   * - Update references.
+   */
+  async updateTsConfig() {
+    for (const project of this.projects) {
+      const projectPath = join(project.path, 'package.json');
+      const projectPackage = await loadJson(projectPath);
+      const tsConfigPath = join(project.path, 'tsconfig.json');
+      const tsConfigJson = await loadJson<any>(tsConfigPath, false);
+      if (tsConfigJson) {
+        // Get refs.
+        const { dependencies = {}, devDependencies = {} } = projectPackage;
+        tsConfigJson.references = [...Object.entries(dependencies), ...Object.entries(devDependencies)]
+          .map(([key, value]) => {
+            if (value === 'workspace:*') {
+              const project = this.workspace.getProject(key)!;
+              const relative = relative(this.path, join(this.context.root, project.root));
+              return { path: relative };
+            }
+
+            return undefined;
+          })
+          .filter(Boolean);
+
+        const updated = sortJson(tsConfigJson, {
+          depth: 3,
+          map: {
+            '.': this.options.tsConfigFixedKeys!,
+            '.references': (value: any) => value.path
+          }
+        });
+
+        await saveJson(tsConfigPath, updated);
+      }
+      break;
+    }
+  }
 }
 
 /**
@@ -88,10 +175,11 @@ class Toolbox {
  */
 const run = async () => {
   // TODO(burdon): Parse options.
-  const toolbox = new Toolbox();
-  await toolbox.updateWorkspace();
-  await toolbox.updateProjects();
-  await toolbox.updatePackages();
+  const toolbox = new Toolbox({ verbose: true });
+  await toolbox.init();
+  // await toolbox.updateWorkspace();
+  // await toolbox.updateProjects();
+  // await toolbox.updatePackages();
   await toolbox.updateTsConfig();
 };
 
