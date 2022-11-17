@@ -6,6 +6,7 @@ import { inspect } from 'node:util';
 
 import { Event, EventSubscriptions, latch } from '@dxos/async';
 import {
+  AuthenticatingInvitationObservable,
   ClientServicesProvider,
   ClientServicesProxy,
   InvitationObservable,
@@ -204,10 +205,9 @@ export class EchoProxy implements Echo {
   /**
    * Initiates an interactive accept invitation flow.
    */
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<InvitationObservable> {
-    return new Promise<InvitationObservable>((resolve, reject) => {
+  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
+    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
       const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
-      // TODO(wittjosiah): Same as space.createInvitation, factor out?
       const unsubscribe = acceptedInvitation.subscribe({
         onConnecting: () => {
           resolve(acceptedInvitation);
