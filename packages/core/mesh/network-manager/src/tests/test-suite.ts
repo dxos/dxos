@@ -2,9 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'chai';
+import waitForExpect from 'wait-for-expect';
+
+import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { expect } from 'chai';
+import { Protocol } from '@dxos/mesh-protocol';
+import { range } from '@dxos/util';
 
 import { TestBuilder } from '../testing';
 import { FullyConnectedTopology, StarTopology } from '../topology';
@@ -81,72 +86,60 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
     expect(topics).to.have.length(numSwarms);
   });
 
-  //
-  // TODO(burdon): Re-implement tests below.
-  //
-
-  /*
-  it('joins multiple swarms concurrently', async () => {
-    const topicA = PublicKey.random();
-    const topicB = PublicKey.random();
-    const peerA1Id = PublicKey.random();
-    const peerA2Id = PublicKey.random();
-    const peerB1Id = PublicKey.random();
-    const peerB2Id = PublicKey.random();
-
-    const { plugin: pluginA1 } = await createPeer({
-      topic: topicA,
-      peerId: peerA1Id,
-      transportFactory: await getTransportFactory()
-    });
-    const { plugin: pluginA2 } = await createPeer({
-      topic: topicA,
-      peerId: peerA2Id,
-      transportFactory: await getTransportFactory()
-    });
-    const { plugin: pluginB1 } = await createPeer({
-      topic: topicB,
-      peerId: peerB1Id,
-      transportFactory: await getTransportFactory()
-    });
-    const { plugin: pluginB2 } = await createPeer({
-      topic: topicB,
-      peerId: peerB2Id,
-      transportFactory: await getTransportFactory()
-    });
-
+  it.skip('joins multiple swarms concurrently', async () => {
     const receivedA: any[] = [];
-    const mockReceiveA = (p: Protocol, s: string) => {
-      receivedA.push(p, s);
-      return undefined;
-    };
-    pluginA1.on('receive', mockReceiveA);
+    {
+      const topicA = PublicKey.random();
+      const peer1a = testBuilder.createPeer();
+      const peer2a = testBuilder.createPeer();
+
+      await peer1a.joinSwarm(topicA);
+      await peer2a.joinSwarm(topicA);
+
+      const mockReceiveA = (p: Protocol, s: string) => {
+        receivedA.push(p, s);
+        return undefined;
+      };
+
+      peer1a.plugin.on('receive', mockReceiveA);
+      peer2a.plugin.on('connect', async () => {
+        await peer2a.plugin.send(peer1a.peerId.asBuffer(), 'Test A');
+      });
+    }
 
     const receivedB: any[] = [];
-    const mockReceiveB = (p: Protocol, s: string) => {
-      receivedB.push(p, s);
-      return undefined;
-    };
-    pluginB1.on('receive', mockReceiveB);
+    {
+      const topicB = PublicKey.random();
+      const peer1b = testBuilder.createPeer();
+      const peer2b = testBuilder.createPeer();
 
-    pluginA2.on('connect', async () => {
-      await pluginA2.send(peerA1Id.asBuffer(), 'Test A');
-    });
-    pluginB2.on('connect', async () => {
-      await pluginB2.send(peerB1Id.asBuffer(), 'Test B');
-    });
+      await peer1b.joinSwarm(topicB);
+      await peer2b.joinSwarm(topicB);
 
+      const mockReceiveB = (p: Protocol, s: string) => {
+        receivedB.push(p, s);
+        return undefined;
+      };
+
+      peer1b.plugin.on('receive', mockReceiveB);
+      peer2b.plugin.on('connect', async () => {
+        await peer2b.plugin.send(peer1b.peerId.asBuffer(), 'Test B');
+      });
+    }
+
+    // TODO(burdon): Replace with triggers.
     await waitForExpect(() => {
       expect(receivedA.length).to.eq(2);
       expect(receivedA[0]).to.be.instanceof(Protocol);
       expect(receivedA[1]).to.eq('Test A');
+
       expect(receivedB.length).to.eq(2);
       expect(receivedB[0]).to.be.instanceof(Protocol);
       expect(receivedB[1]).to.eq('Test B');
     });
   });
 
-  it.skip('many peers and connections', async function () {
+  it.skip('many peers and connections', async () => {
     const numTopics = 5;
     const peersPerTopic = 5;
 
@@ -155,28 +148,24 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
         const topic = PublicKey.random();
 
         await Promise.all(
-          range(peersPerTopic).map(async (_, index) => {
-            const peerId = PublicKey.random();
-            const { plugin } = await createPeer({
-              topic,
-              peerId,
-              transportFactory: MemoryTransportFactory
-            });
+          range(peersPerTopic).map(async () => {
+            const peer = testBuilder.createPeer();
+            await peer.joinSwarm(topic);
 
             const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
 
-            plugin.on('connect', async (protocol: Protocol) => {
+            peer.plugin.on('connect', async (protocol: Protocol) => {
               const { peerId } = protocol.getSession() ?? {};
               const remoteId = PublicKey.from(peerId);
-              await plugin.send(remoteId.asBuffer(), 'ping');
+              await peer.plugin.send(remoteId.asBuffer(), 'ping');
             });
 
-            plugin.on('receive', async (protocol: Protocol, data: any) => {
+            peer.plugin.on('receive', async (protocol: Protocol, data: any) => {
               const { peerId } = protocol.getSession() ?? {};
               const remoteId = PublicKey.from(peerId);
 
               if (data === 'ping') {
-                await plugin.send(remoteId.asBuffer(), 'pong');
+                await peer.plugin.send(remoteId.asBuffer(), 'pong');
               } else if (data === 'pong') {
                 pongReceived();
               } else {
@@ -190,5 +179,4 @@ export const testSuite = (testBuilder: TestBuilder, skip = false) => {
       })
     );
   });
-  */
 };

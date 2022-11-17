@@ -75,11 +75,11 @@ export const propertyTestSuite = () => {
         // model.peers.add(this.peerId);
         // const networkManager = testBuilder.createNetworkManager();
         // afterTest(() => networkManager.close());
-        //
+
         // real.peers.set(this.peerId, {
         //   networkManager
         // });
-        //
+
         // await assertState(model, real);
       }
 

@@ -68,6 +68,7 @@ export class TestPeer {
     this._networkManager = this.createNetworkManager();
   }
 
+  // TODO(burdon): Move to TestBuilder.
   createNetworkManager() {
     let transportFactory: TransportFactory = MemoryTransportFactory;
 
