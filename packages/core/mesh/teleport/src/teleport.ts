@@ -4,13 +4,14 @@
 
 import assert from 'assert';
 
-import { EventSubscriptions, promiseTimeout, repeatTask } from '@dxos/async';
-import { scheduleTask } from '@dxos/async/src';
+import { asyncTimeout, EventSubscriptions, repeatTask, runInContextAsync } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context'
 import { failUndefined, todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
-import { ControlService } from '@dxos/protocols/dist/src/proto/gen/dxos/mesh/teleport/control';
+import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
@@ -24,6 +25,12 @@ export type TeleportParams = {
 export class Teleport {
   public readonly localPeerId: PublicKey;
   public readonly remotePeerId: PublicKey;
+
+  private readonly _ctx = new Context({
+    onError: err => {
+      this.destroy(err);
+    }
+  })
 
   private readonly _muxer = new Muxer();
   private readonly _control = new ControlExtension({
@@ -72,6 +79,8 @@ export class Teleport {
   }
 
   async destroy(err?: Error) {
+    await this._ctx.dispose();
+    
     for (const extension of this._extensions.values()) {
       try {
         await extension.onClose(err);
@@ -88,22 +97,14 @@ export class Teleport {
     this._setExtension(name, extension);
 
     // Perform the registration in a separate tick as this might block while the remote side is opening the extension.
-    scheduleTask(async () => {
-      try {
-        await this._control.registerExtension(name);
-      } catch (err: any) {
-        await this.destroy(err);
-      }
+    scheduleTask(this._ctx, async () => {
+      await this._control.registerExtension(name);
     });
 
     if (this._remoteExtensions.has(name)) {
       // Open the extension in a separate tick.
-      scheduleTask(async () => {
-        try {
-          await this._openExtension(name);
-        } catch (err: any) {
-          await this.destroy(err);
-        }
+      scheduleTask(this._ctx, async () => {
+        await this._openExtension(name);
       });
     }
   }
@@ -129,8 +130,10 @@ export class Teleport {
         assert(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createStream(`${extensionName}/${channelName}`, opts);
       },
-      close: () => {
-        todo();
+      close: err => {
+        runInContextAsync(this._ctx, async () => {
+          await this.close(err);
+        })
       }
     };
 
@@ -157,17 +160,21 @@ type ControlExtensionOpts = {
 };
 
 class ControlExtension implements TeleportExtension {
-  private _context!: ExtensionContext;
+  private readonly _ctx = new Context({
+    onError: err => {
+      this._extensionContext.close(err);
+    }
+  });
+  private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
-  private readonly _subscriptions = new EventSubscriptions();
 
   public readonly onExtensionRegistered = new Callback<(extensionName: string) => Promise<void>>();
   public readonly onTimeout = new Callback<() => void>();
 
   constructor(private readonly opts: ControlExtensionOpts) {}
 
-  async onOpen(context: ExtensionContext): Promise<void> {
-    this._context = context;
+  async onOpen(extensionContext: ExtensionContext): Promise<void> {
+    this._extensionContext = extensionContext;
 
     // NOTE: Make sure that RPC timeout is greater than the heartbeat timeout.
     // TODO(dmaretskyi): Allow overwriting the timeout on individual RPC calls?
@@ -188,27 +195,25 @@ class ControlExtension implements TeleportExtension {
           }
         }
       },
-      port: context.createPort('rpc', {
+      port: extensionContext.createPort('rpc', {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"'
       })
     });
 
     await this._rpc.open();
 
-    this._subscriptions.add(
-      repeatTask(async () => {
-        try {
-          await promiseTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
-        } catch (err: any) {
-          this.onTimeout.call();
-        }
-      }, this.opts.heartbeatInterval)
-    );
+    repeatTask(this._ctx, async () => {
+      try {
+        await asyncTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
+      } catch (err: any) {
+        this.onTimeout.call();
+      }
+    }, this.opts.heartbeatInterval)
   }
 
   async onClose(err?: Error): Promise<void> {
-    this._subscriptions.clear();
-    this._rpc.close();
+    await this._ctx.dispose();
+    await this._rpc.close();
   }
 
   async registerExtension(name: string) {

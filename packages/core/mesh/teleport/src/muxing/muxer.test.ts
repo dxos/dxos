@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { pipeline, Transform } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
-import { latch, promiseTimeout } from '@dxos/async';
+import { latch, asyncTimeout } from '@dxos/async';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -78,7 +78,7 @@ describe('Muxer', function () {
   it('destroy releases other stream', async function () {
     const { peer1, peer2 } = setupPeers();
 
-    const promise = promiseTimeout(peer1.close.waitForCount(1), 100);
+    const promise = asyncTimeout(peer1.close.waitForCount(1), 100);
 
     peer2.destroy();
 

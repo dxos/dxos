@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { promiseTimeout, Trigger } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
@@ -53,7 +53,7 @@ export class TestExtension implements TeleportExtension {
 
   async test() {
     await this._opened.wait({ timeout: 500 });
-    const res = await promiseTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
+    const res = await asyncTimeout(this._rpc.rpc.TestService.testCall({ data: 'test' }), 500);
     assert(res.data === 'test');
   }
 }
