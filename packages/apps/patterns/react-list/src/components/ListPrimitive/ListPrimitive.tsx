@@ -92,9 +92,20 @@ const ListItemPrimitive = ({
 
   const { t } = useTranslation('appkit');
 
-  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '');
+  const rejectTextUpdatesWhenFocused = useCallback(
+    (a: string, b: string) => {
+      return document.activeElement?.getAttribute('data-itemid') === id ? true : a === b;
+    },
+    [id]
+  );
 
-  const [description, _setDescription] = useState(propsDescription ?? '');
+  const [title, setTitle, titleSession] = usePropStatefully<string>(propsTitle ?? '', rejectTextUpdatesWhenFocused);
+
+  const [description, _setDescription, _descriptionSession] = usePropStatefully<string>(
+    propsDescription ?? '',
+    rejectTextUpdatesWhenFocused
+  );
+
   const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
   const isDone = annotations?.state === 'done';
 
@@ -163,6 +174,7 @@ const ListItemPrimitive = ({
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
+          data-itemid={id}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -172,6 +184,7 @@ const ListItemPrimitive = ({
         {/*  labelVisuallyHidden */}
         {/*  initialValue={description} */}
         {/*  onChange={onChangeDescription} */}
+        {/*  data-itemid={id} */}
         {/* /> */}
       </div>
       {/* TODO(thure): Restore these, or implement drag & drop, when how best to change order in Echo is clarified. */}
@@ -218,8 +231,15 @@ export const ListPrimitive = ({
 
   const [creating, setCreating] = useState(false);
 
+  const rejectTextUpdatesWhenFocused = useCallback(
+    (a: string, b: string) => {
+      return document.activeElement?.getAttribute('data-itemid') === listId ? true : a === b;
+    },
+    [listId]
+  );
+
   const titleId = `${listId}__title`;
-  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '');
+  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '', rejectTextUpdatesWhenFocused);
   const onChangeTitle = useCallback(
     (nextValue: string) => {
       setTitle(nextValue);
@@ -229,7 +249,10 @@ export const ListPrimitive = ({
   );
 
   const descriptionId = `${listId}__description`;
-  const [description, setDescription, _descriptionSession] = usePropStatefully(propsDescription ?? '');
+  const [description, setDescription, _descriptionSession] = usePropStatefully(
+    propsDescription ?? '',
+    rejectTextUpdatesWhenFocused
+  );
   const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
@@ -316,6 +339,7 @@ export const ListPrimitive = ({
         initialValue={title}
         onChange={onChangeTitle}
         className='mli-4'
+        data-itemid={listId}
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
@@ -326,6 +350,7 @@ export const ListPrimitive = ({
       {/*  initialValue={description} */}
       {/*  onChange={onChangeDescription} */}
       {/*  className='mli-4' */}
+      {/*  data-itemid={listId} */}
       {/* /> */}
       <ol className='contents'>
         {order.map((listItemId, index) => {

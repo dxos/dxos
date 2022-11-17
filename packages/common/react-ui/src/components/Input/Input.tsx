@@ -31,7 +31,7 @@ export const Input = ({
   validationValence,
   ...inputProps
 }: InputProps) => {
-  const inputId = inputProps.id || useId('input');
+  const inputId = inputProps.id ?? useId('input');
   const descriptionId = useId('input-description');
   const validationId = useId('input-validation');
 
