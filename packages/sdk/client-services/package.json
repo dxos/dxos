@@ -1,5 +1,6 @@
 {
   "name": "@dxos/client-services",
+  "description": "DXOS client services implementation",
   "version": "0.1.5",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,7 +38,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",

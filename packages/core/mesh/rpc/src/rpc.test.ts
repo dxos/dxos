@@ -18,6 +18,8 @@ const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => 
   value: Buffer.from(value)
 });
 
+// TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
+
 describe('RpcPeer', function () {
   describe('handshake', function () {
     it('can open', async function () {
@@ -441,6 +443,32 @@ describe('RpcPeer', function () {
       await stream.waitUntilReady();
 
       expect(await Stream.consume(stream)).toEqual([{ ready: true }, { closed: true }]);
+    });
+
+    it('stream handlers throws', async function () {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const alice = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        streamHandler: (method, msg): Stream<Any> => {
+          throw new Error('Test error');
+        },
+        port: alicePort
+      });
+
+      const bob = new RpcPeer({
+        callHandler: async (msg) => createPayload(),
+        port: bobPort
+      });
+
+      await Promise.all([alice.open(), bob.open()]);
+
+      const stream = await bob.callStream('method', createPayload('request'));
+      expect(stream).toBeA(Stream);
+
+      const msgs = await Stream.consume(stream);
+      expect(msgs).toEqual([{ closed: true, error: expect.a(Error) }]);
+      expect((msgs[0] as any).error.message).toEqual('Test error');
     });
   });
 

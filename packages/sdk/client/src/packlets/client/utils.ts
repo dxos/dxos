@@ -2,12 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  ClientServicesHost,
-  ClientServicesProvider,
-  ClientIFrameServiceProxy,
-  createDefaultModelFactory
-} from '@dxos/client-services';
+import { ClientServicesHost, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config, ConfigProto, fromConfig } from '@dxos/config';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
@@ -18,6 +13,7 @@ import {
   NetworkManagerOptions
 } from '@dxos/network-manager';
 
+import { ClientIFrameServiceProxy } from '../proxies';
 import { DEFAULT_CONFIG_CHANNEL } from './config';
 
 /**
