@@ -23,7 +23,7 @@ export const RequireIdentity = ({ redirect: to }: RequireIdentityProps) => {
   useEffect(() => {
     if (!identity) {
       // TODO(wittjosiah): Remove hash.
-      const redirect = `#?redirect=${window.location.href}`;
+      const redirect = `#?redirect=${encodeURIComponent(window.location.href)}`;
       window.location.replace(`${to}${redirect}`);
     }
   }, []);
