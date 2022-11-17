@@ -1,5 +1,10 @@
 {
   "name": "@dxos/esbuild",
+  "version": "0.1.5",
   "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
   "executors": "./executor.json"
 }

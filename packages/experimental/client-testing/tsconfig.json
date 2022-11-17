@@ -1,0 +1,48 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/random-access-storage"
+    },
+    {
+      "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/model-factory"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    }
+  ]
+}

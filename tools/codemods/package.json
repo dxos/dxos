@@ -1,13 +1,17 @@
 {
   "name": "@dxos/codemods",
-  "version": "2.33.8",
+  "version": "0.1.5",
+  "private": true,
   "description": "Code analyzer.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "beast": "./bin/beast.js"
   },
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "scripts": {},
   "dependencies": {
     "jscodeshift": "^0.13.1"
@@ -16,6 +20,6 @@
     "@babel/core": "^7.18.13",
     "@babel/preset-env": "^7.19.3",
     "@types/jscodeshift": "^0.11.5",
-    "typescript": "^4.7.2"
+    "typescript": "^4.8.4"
   }
 }

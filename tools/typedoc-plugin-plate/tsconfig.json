@@ -1,14 +1,19 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["./src/**/*.ts"],
-  "exclude": ["dist", "node_modules"],
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "./src/**/*.ts"
+  ],
   "references": [
     {
-      "path": "../plate"
+      "path": "../../packages/devtools/plate"
     }
   ]
 }

@@ -14,10 +14,10 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
@@ -25,27 +25,20 @@ import { WebRTCTransportService } from './webrtc-transport-service';
 describe('WebRTCTransportProxy', function () {
   const setupProxy = async ({
     initiator = true,
-    ownId = PublicKey.random(),
-    remoteId = PublicKey.random(),
-    sessionId = PublicKey.random(),
-    topic = PublicKey.random(),
     stream = new Duplex({ write: () => {}, read: () => {} }),
-    sendSignal = () => {}
+    sendSignal = async () => {}
   }: {
     initiator?: boolean;
-    ownId?: PublicKey;
-    remoteId?: PublicKey;
-    sessionId?: PublicKey;
-    topic?: PublicKey;
     stream?: NodeJS.ReadWriteStream;
-    sendSignal?: (msg: SignalMessage) => void;
+    sendSignal?: (msg: Signal) => Promise<void>;
   } = {}) => {
     const [port1, port2] = createLinkedPorts();
 
+    // Starting BridgeService
     const webRTCTransportService: BridgeService = new WebRTCTransportService();
 
     // Starting BridgeService
-    const webRTCService = createProtoRpcPeer({
+    const rpcService = createProtoRpcPeer({
       requested: {},
       exposed: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
@@ -57,16 +50,14 @@ describe('WebRTCTransportProxy', function () {
         preserveAny: true
       }
     });
-    await webRTCService.open();
-    afterTest(() => webRTCService.close());
+    await rpcService.open();
+    afterTest(() => rpcService.close());
 
     // Starting RPC client
     const rpcClient = createProtoRpcPeer({
       requested: {
         BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
       },
-      exposed: {},
-      handlers: {},
       port: port2,
       noHandshake: true,
       encodingOptions: {
@@ -79,16 +70,12 @@ describe('WebRTCTransportProxy', function () {
     const webRTCTransportProxy = new WebRTCTransportProxy({
       initiator,
       stream,
-      ownId,
-      remoteId,
-      sessionId,
-      topic,
       sendSignal,
       bridgeService: rpcClient.rpc.BridgeService
     });
     afterTest(async () => await webRTCTransportProxy.close());
 
-    return { webRTCService, webRTCTransportProxy };
+    return { webRTCService: rpcService, webRTCTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
@@ -119,42 +106,33 @@ describe('WebRTCTransportProxy', function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
-    const sessionId = PublicKey.random();
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-    const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
+    const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
     const { webRTCTransportProxy: connection1 } = await setupProxy({
       initiator: true,
       stream: protocolProvider1({
         channel: discoveryKey(topic),
         initiator: true
       }).stream,
-      ownId: peer1Id,
-      remoteId: peer2Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
+      sendSignal: async (signal) => {
         await sleep(10);
-        await connection2.signal(msg.data.signal);
+        await connection2.signal(signal);
       }
     });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-    const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
+    const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
     const { webRTCTransportProxy: connection2 } = await setupProxy({
       initiator: false,
       stream: protocolProvider2({
         channel: discoveryKey(topic),
         initiator: false
       }).stream,
-      ownId: peer2Id,
-      remoteId: peer1Id,
-      sessionId,
-      topic,
-      sendSignal: async (msg) => {
+      sendSignal: async (signal) => {
         await sleep(10);
-        await connection1.signal(msg.data.signal);
+        await connection1.signal(signal);
       }
     });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -169,7 +147,6 @@ describe('WebRTCTransportProxy', function () {
     plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
-
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
@@ -188,7 +165,6 @@ describe('WebRTCTransportProxy', function () {
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
       service = createProtoRpcPeer({
-        requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
@@ -205,8 +181,6 @@ describe('WebRTCTransportProxy', function () {
         requested: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
         },
-        exposed: {},
-        handlers: {},
         port: port2,
         noHandshake: true,
         encodingOptions: {
@@ -217,51 +191,42 @@ describe('WebRTCTransportProxy', function () {
     });
 
     after(async function () {
-      service?.close();
-      rpcClient?.close();
+      await service?.close();
+      await rpcClient?.close();
     });
 
     it('establish connection and send data through with protocol', async function () {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();
-      const sessionId = PublicKey.random();
 
       const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
-      const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
+      const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id, plugin1);
       const proxy1 = new WebRTCTransportProxy({
         initiator: true,
         stream: protocolProvider1({
           channel: discoveryKey(topic),
           initiator: true
         }).stream,
-        ownId: peer1Id,
-        remoteId: peer2Id,
-        sessionId,
-        topic,
-        sendSignal: async (msg) => {
+        sendSignal: async (signal) => {
           await sleep(10);
-          await proxy2.signal(msg.data.signal);
+          await proxy2.signal(signal);
         },
         bridgeService: rpcClient.rpc.BridgeService
       });
       afterTest(() => proxy1.errors.assertNoUnhandledErrors());
 
       const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
-      const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
+      const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id, plugin2);
       const proxy2 = new WebRTCTransportProxy({
         initiator: false,
         stream: protocolProvider2({
           channel: discoveryKey(topic),
           initiator: false
         }).stream,
-        ownId: peer2Id,
-        remoteId: peer1Id,
-        sessionId,
-        topic,
-        sendSignal: async (msg) => {
+        sendSignal: async (signal) => {
           await sleep(10);
-          await proxy1.signal(msg.data.signal);
+          await proxy1.signal(signal);
         },
         bridgeService: rpcClient.rpc.BridgeService
       });

@@ -52,6 +52,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
         sendToParentWindow(origin, message);
       }
     },
+
     subscribe: (callback) => {
       const handler = (event: MessageEvent<unknown>) => {
         if (!iframe && event.source !== window.parent) {
@@ -100,6 +101,10 @@ export const createIFrame = (source: string, id: string) => {
     document.body.appendChild(iframe);
     return iframe;
   };
+
+  console.log(
+    'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
+  );
 
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

@@ -24,6 +24,18 @@ aliases:
       paths:
         - ~/.local/share/pnpm/store/v3
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &ram_cache_configure
+    run: pnpm config set store-dir /mnt/ramdisk/pnpm-store
+  - &ram_cache_restore
+    restore_cache:
+      keys:
+        - pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-ram-v1-{{ arch }}-
+  - &ram_cache_save
+    save_cache:
+      paths:
+        - /mnt/ramdisk/pnpm-store
+      key: pnpm-store-ram-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
   #
@@ -36,26 +48,32 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+    
+    # Run the job on ramdisk for optimal performance.
+    # https://support.circleci.com/hc/en-us/articles/360056323651-How-to-optimize-the-restore-cache-step-for-Node-projects
+    working_directory: /mnt/ramdisk/work
+
     steps:
+      - *ram_cache_configure
       - checkout
-      - *cache_restore
-      - run: pnpm install
+      - *ram_cache_restore
+      - run: pnpm install --prefer-offline
       - run: pnpm install-playwright
-      - *cache_save
+      - *ram_cache_save
       - nx/set-shas
       - run: pnpm check-dependencies
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
+            - run: pnpm nx run-many --target=lint
             - run: pnpm nx run-many --target=build
             - run: pnpm nx run-many --target=test --skip-nx-cache --coverage --xmlReport
-            - run: pnpm nx run-many --target=lint
       - run:
-          name: "Upload to codecov.com"
+          name: Upload to codecov.com
           command: ./.circleci/scripts/upload-codecov.sh
       - store_test_results:
           path: test-results
@@ -87,8 +105,17 @@ jobs:
       - run: pnpm install
       - *cache_save
       - nx/set-shas
+      # TODO(wittjosiah): Exclude apps because they can't be bundled in parallel currently.
       - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          name: Bundle
+          command: |
+            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
+            pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --exclude="$APPS"
+      - run:
+          name: Bundle (Apps)
+          command: |
+            APPS=$(pnpm nx print-affected --type=app --select=projects | tail -n1)
+            pnpm nx run-many --base=$NX_BASE --head=$NX_HEAD --target=bundle --projects="$APPS" --parallel=1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
@@ -104,19 +131,43 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
-      - run: pnpm nx build dx-cli
+      - run: pnpm nx build cli
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
-          command: ../../../.circleci/scripts/publish.sh
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
           environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
+      - run:
+          name: Deploy Tasks
+          working_directory: ./packages/apps/tasks-app
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=4096
+      - run:
+          name: Deploy Composer
+          working_directory: ./packages/apps/composer-app
+          command: |
+            ../../../.circleci/scripts/publish.sh production
+            ../../../.circleci/scripts/publish.sh
+          environment:
+            NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
           name: Deploy Docs
           working_directory: ./docs
-          command: ../.circleci/scripts/publish.sh
+          command: |
+            ../.circleci/scripts/publish.sh production
+            ../.circleci/scripts/publish.sh
           no_output_timeout: 30m
           environment:
+            NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:

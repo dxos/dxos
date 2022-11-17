@@ -12,24 +12,20 @@ import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
 
-export interface WebRTCTransportProxyParams {
+export type WebRTCTransportProxyParams = {
   initiator: boolean;
   stream: NodeJS.ReadWriteStream;
-  ownId: PublicKey;
-  remoteId: PublicKey;
-  sessionId: PublicKey;
-  topic: PublicKey;
-  sendSignal: (msg: SignalMessage) => void;
   bridgeService: BridgeService;
-}
+  sendSignal: (signal: Signal) => Promise<void>;
+};
 
 export class WebRTCTransportProxy implements Transport {
   readonly closed = new Event();
   private _closed = false;
   readonly connected = new Event();
+
   readonly errors = new ErrorStream();
 
   private _serviceStream!: Stream<BridgeEvent>;
@@ -43,16 +39,16 @@ export class WebRTCTransportProxy implements Transport {
       proxyId: this._proxyId,
       initiator: this._params.initiator
     });
-
     this._serviceStream.waitUntilReady().then(
       () => {
-        this._serviceStream.subscribe(async (msg: BridgeEvent) => {
-          if (msg.connection) {
-            await this._handleConnection(msg.connection);
-          } else if (msg.data) {
-            this._handleData(msg.data);
-          } else if (msg.signal) {
-            await this._handleSignal(msg.signal);
+        this._serviceStream.subscribe(async (event: BridgeEvent) => {
+          log('WebRTCTransportProxy: event', event);
+          if (event.connection) {
+            await this._handleConnection(event.connection);
+          } else if (event.data) {
+            this._handleData(event.data);
+          } else if (event.signal) {
+            await this._handleSignal(event.signal);
           }
         });
 
@@ -94,13 +90,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
-    await this._params.sendSignal({
-      author: this._params.ownId,
-      recipient: this._params.remoteId,
-      topic: this._params.topic,
-      sessionId: this._params.sessionId,
-      data: { signal: signalEvent.payload }
-    });
+    await this._params.sendSignal(signalEvent.payload);
   }
 
   async signal(signal: Signal): Promise<void> {
@@ -144,7 +134,6 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
    */
   setBridgeService(bridgeService: BridgeService | undefined): this {
     this._bridgeService = bridgeService;
-
     for (const connection of this._connections) {
       connection.forceClose();
     }
@@ -159,6 +148,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
       ...options,
       bridgeService: this._bridgeService
     });
+
     this._connections.add(transport);
     transport.closed.on(() => this._connections.delete(transport));
 

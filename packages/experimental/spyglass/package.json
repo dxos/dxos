@@ -1,21 +1,27 @@
 {
   "name": "@dxos/spyglass",
-  "version": "2.33.8",
+  "version": "0.1.5",
   "private": true,
   "description": "Code analyzer.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "spyglass": "./bin/spyglass.js"
   },
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "info": "tsc --showConfig | jq",
     "test:clear": "ts-node ./src/testing/post.ts --clear",
     "test:log": "ts-node ./src/testing/post.ts",
     "test:mark": "ts-node ./src/testing/post.ts --mark"
+  },
+  "mocha": {
+    "loader": "ts-node/esm",
+    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@dxos/keys": "workspace:*",
@@ -28,17 +34,12 @@
     "url-join": "^5.0.0"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.9",
     "@types/isomorphic-fetch": "^0.0.36",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "faker": "^5.5.3",
     "mocha": "^8.4.0",
     "ts-node": "10.9.1",
-    "typescript": "^4.7.2"
-  },
-  "mocha": {
-    "loader": "ts-node/esm",
-    "spec": "src/**/*.test.ts"
+    "typescript": "^4.8.4"
   }
 }

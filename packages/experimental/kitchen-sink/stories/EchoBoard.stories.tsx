@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ItemID } from '@dxos/protocols';
 import { ClientProvider, useSelection } from '@dxos/react-client';
-import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
+import { ProfileInitializer, itemAdapter, useTestSpace } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
 import { EchoBoard } from '../src';
@@ -19,11 +19,11 @@ export default {
 faker.seed(100);
 
 const App = () => {
-  const party = useTestParty();
-  const items = useSelection(party?.select()) ?? [];
+  const space = useTestSpace();
+  const items = useSelection(space?.select()) ?? [];
 
   const handleCreateItem = (type: string, title: string, parentId?: ItemID) => {
-    void party?.database.createItem({
+    void space?.database.createItem({
       type,
       parent: parentId,
       props: {

@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/x",
+  "version": "0.1.5",
+  "private": true,
+  "description": "Tools.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "x": "./bin/x.js"
+  },
+  "scripts": {
+    "check": "true",
+    "info": "tsc --showConfig | jq",
+    "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx"
+  },
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@octokit/rest": "^19.0.5",
+    "chalk": "^4.1.0",
+    "color-hash": "^1.0.3",
+    "columnify": "^1.6.0",
+    "console-table-printer": "^2.11.0",
+    "debug": "^4.3.3",
+    "enquirer": "^2.3.6",
+    "ink": "^3.2.0",
+    "ink-spinner": "~4.0.3",
+    "ink-table": "~3.0.0",
+    "ink-text-input": "~4.0.3",
+    "node-notifier": "^10.0.1",
+    "js-yaml": "^4.1.0",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.pick": "^4.4.0",
+    "log-update": "^4.0.0",
+    "react": "^18.2.0",
+    "unzip-stream": "^0.3.1",
+    "yargs": "~16.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@types/color-hash": "^1.0.1",
+    "@types/columnify": "^1.5.1",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.pick": "^4.4.7",
+    "@types/minimatch": "^5.1.2",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^18.11.9",
+    "@types/react": "^18.0.21",
+    "@types/yargs": "~16.0.1",
+    "mocha": "^8.4.0",
+    "typescript": "^4.8.4"
+  }
+}

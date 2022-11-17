@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/vite-plugin",
+  "version": "0.1.5",
+  "description": "Plugin to enable Vite to build DXOS apps.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/config": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "rollup": "~2.77.3",
+    "rollup-plugin-polyfill-node": "^0.10.2",
+    "vite": "3.0.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

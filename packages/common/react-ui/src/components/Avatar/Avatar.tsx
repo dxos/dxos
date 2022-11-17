@@ -61,7 +61,7 @@ export const Avatar = forwardRef(
           )}
           <AvatarPrimitive.Fallback
             className={cx(
-              'flex h-full w-full items-center justify-center bg-white dark:bg-neutral-800 overflow-hidden',
+              'shrink-0 flex h-full w-full items-center justify-center bg-white dark:bg-neutral-800 overflow-hidden',
               shapeStyles[variant]
             )}
             delayMs={0}

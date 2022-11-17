@@ -24,7 +24,7 @@ export interface FeedInfo {
 }
 
 /**
- * Tracks the feed tree for a party.
+ * Tracks the feed tree for a space.
  * Provides a list of admitted feeds.
  */
 export class FeedStateMachine {
@@ -34,7 +34,7 @@ export class FeedStateMachine {
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
@@ -50,7 +50,7 @@ export class FeedStateMachine {
   async process(credential: Credential, fromFeed: PublicKey) {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
-    assert(assertion.partyKey.equals(this._partyKey));
+    assert(assertion.spaceKey.equals(this._spaceKey));
     assert(!this._feeds.has(credential.subject.id));
 
     const info: FeedInfo = {

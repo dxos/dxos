@@ -131,5 +131,13 @@ const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boole
     return [];
   }
 
-  return ['--reporter', xmlReport ? 'clover' : 'lcov', '--report-dir', outputPath, 'mocha'];
+  return [
+    '--reporter',
+    xmlReport ? 'clover' : 'lcov',
+    '--temp-dir',
+    `${outputPath}/.nyc_output`,
+    '--report-dir',
+    outputPath,
+    'mocha'
+  ];
 };

@@ -1,20 +1,34 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "jsx": "preserve",
-    "module": "esnext",
     "lib": [
-      "ESNext",
-      "DOM"
+      "DOM",
+      "ESNext"
     ],
+    "module": "esnext",
+    "outDir": "dist",
     "types": [
-      "node",
-      "@vuepress/client/types"
+      "@vuepress/client/types",
+      "node"
     ]
   },
   "include": [
     "src",
     "vuepress.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../packages/common/telemetry"
+    },
+    {
+      "path": "../packages/devtools/plate"
+    },
+    {
+      "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../tools/typedoc-plugin-plate"
+    }
   ]
 }

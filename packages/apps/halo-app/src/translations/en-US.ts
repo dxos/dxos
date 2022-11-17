@@ -10,10 +10,24 @@ export const halo = {
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
+  'back to spaces label': 'Back to spaces',
   'devices label': 'Devices',
   'add device label': 'Invite another device',
   'identity label': 'You',
   'apps label': 'Apps',
   'contacts label': 'Contacts',
-  'reset device label': 'Reset this device'
+  'reset device label': 'Reset this device',
+  'empty invitations message': 'No pending invitations',
+  'invitations label': 'Invitations',
+  'join label': 'Join',
+  'manage label': 'Manage',
+  'go to space label': 'Done',
+  'create invitation label': 'Invite',
+  'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:',
+  'enable telemetry description':
+    'This will enable basic telemetry data from HALO to be sent to DXOS. Changing this setting will reload the application.',
+  'enable telemetry label': 'Enable app telemetry',
+  'disable telemetry description':
+    'This will stop all telemetry data from HALO from being sent to DXOS. Changing this setting will reload the application.',
+  'disable telemetry label': 'Disable app telemetry'
 };

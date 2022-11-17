@@ -1,6 +1,81 @@
+
 // TODO(wittjosiah): Can the plugin add this?
 .showcase-preview {
   border: 1px solid var(--c-border);
   border-radius: 6px;
   padding: 1em;
 }
+
+.home.project .feature:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+div[class^="language-"] {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+#message-container .message {
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+}
+
+.custom-container .custom-container-title {
+  font-weight: 500;
+}
+
+.home.project .feature h2 {
+  font-weight: 500;
+}
+
+.home.project .hero {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.home.project .hero .description {
+  max-width: 40rem;
+}
+
+.navbar nav.nav-links {
+  margin-left: 2rem !important;
+}
+
+/// DEFAULT THEME CUSTOMIZATION FOLLOWS
+/// 
+// :root {
+//   --c-dxos: hsl(305, 80%, 35%);
+//   --c-dxos-light: hsl(305, 80%, 45%);
+  
+//   --c-brand: var(--c-dxos);
+//   --c-brand-light: var(--c-dxos-light);
+// }
+
+// :root.dark {
+//   --c-dxos: hsl(305, 50%, 60%);
+//   --c-dxos-light: hsl(305, 50%, 75%);
+  
+//   --c-brand: var(--c-dxos);
+//   --c-brand-light: var(--c-dxos-light);
+// }
+
+// :root {
+//   --c-text: #2c3e50;
+//   --c-text-accent: var(--c-brand);
+//   --c-text-light: #3a5169;
+//   --c-text-lighter: #4e6e8e;
+//   --c-text-lightest: #6a8bad;
+//   --c-text-quote: #999999;
+
+//   // code blocks vars
+//   --code-bg-color: #282c34;
+//   --code-hl-bg-color: rgba(0, 0, 0, 0.66);
+//   --code-ln-color: #9e9e9e;
+//   --code-ln-wrapper-width: 3.5rem;
+// }
+
+// code {
+//   color: var(--c-brand);
+// }

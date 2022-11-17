@@ -1,0 +1,71 @@
+{
+  "name": "@dxos/react-components",
+  "version": "0.1.5",
+  "private": true,
+  "description": "Low-level material components.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "book": "toolchain book",
+    "build:book": "toolchain build:book",
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@emotion/css": "^11.7.1",
+    "debug": "^4.3.3",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.isplainobject": "^4.0.6",
+    "qrcode.react": "^3.1.0",
+    "react-copy-to-clipboard": "^5.1.0",
+    "string-hash": "~1.1.3",
+    "url-join": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@dxos/client": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/lab": "^5.0.0-alpha.83",
+    "@mui/material": "^5.8.1",
+    "@mui/system": "^5.8.1",
+    "@types/debug": "^4.1.7",
+    "@types/faker": "^5.5.9",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/lodash.isplainobject": "^4.0.6",
+    "@types/react": "^18.0.21",
+    "@types/react-copy-to-clipboard": "~5.0.1",
+    "@types/string-hash": "^1.1.1",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "clsx": "^1.1.1",
+    "faker": "^5.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@mui/icons-material": ">=5.0.0",
+    "@mui/lab": ">=5.0.0-alpha",
+    "@mui/material": ">=5.0.0",
+    "react": "*",
+    "react-dom": "*"
+  }
+}

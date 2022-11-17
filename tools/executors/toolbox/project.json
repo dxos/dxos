@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/executors/toolbox/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/toolbox/src/main.ts",
+        "outputPath": "tools/executors/toolbox/dist",
+        "tsConfig": "tools/executors/toolbox/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "tools/executors/toolbox/**/*.{ts,js}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "coveragePath": "coverage/tools/executors/toolbox",
+        "outputPath": "tmp/mocha/tools/executors/toolbox",
+        "resultsPath": "test-results/tools/executors/toolbox",
+        "testPatterns": [
+          "tools/executors/toolbox/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "tools/executors/toolbox/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "log-hook",
+    "mocha"
+  ]
+}

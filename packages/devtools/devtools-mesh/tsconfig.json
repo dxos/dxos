@@ -12,19 +12,34 @@
   ],
   "references": [
     {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
       "path": "../../common/debug"
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/mesh/protocol-plugin-presence"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../gem/gem-core"
+    },
+    {
+      "path": "../../gem/gem-spore"
     },
     {
       "path": "../../sdk/react-components"

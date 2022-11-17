@@ -9,11 +9,13 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
-    "stories",
-    "playwright"
+    "playwright",
+    "src"
   ],
   "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
     {
       "path": "../../bots/bot-factory-client"
     },
@@ -27,16 +29,22 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/react-async"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/mesh/messaging"
     },
     {
-      "path": "../../core/mesh/network-manager"
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
     },
     {
       "path": "../../core/protocols"

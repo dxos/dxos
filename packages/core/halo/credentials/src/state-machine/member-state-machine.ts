@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/keys';
-import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
@@ -13,11 +13,11 @@ import { getCredentialAssertion } from '../credentials';
 export interface MemberInfo {
   key: PublicKey;
   credential: Credential;
-  assertion: PartyMember;
+  assertion: SpaceMember;
 }
 
 /**
- * Tracks the list of members (with roles) for the party.
+ * Tracks the list of members (with roles) for the space.
  * Provides a list of admitted feeds.
  */
 export class MemberStateMachine {
@@ -30,27 +30,27 @@ export class MemberStateMachine {
 
   // prettier-ignore
   constructor(
-    private readonly _partyKey: PublicKey
+    private readonly _spaceKey: PublicKey
   ) {}
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members;
   }
 
-  getRole(member: PublicKey): PartyMember.Role | undefined {
+  getRole(member: PublicKey): SpaceMember.Role | undefined {
     return this._members.get(member)?.assertion.role;
   }
 
   /**
-   * Processes the PartyMember credential.
+   * Processes the SpaceMember credential.
    * Assumes the credential is already pre-verified
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
   async process(credential: Credential) {
     const assertion = getCredentialAssertion(credential);
-    assert(assertion['@type'] === 'dxos.halo.credentials.PartyMember');
-    assert(assertion.partyKey.equals(this._partyKey));
+    assert(assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
+    assert(assertion.spaceKey.equals(this._spaceKey));
     assert(!this._members.has(credential.subject.id));
 
     const info: MemberInfo = {

@@ -4,25 +4,32 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "tools/log-hook/src/index.ts",
         "outputPath": "tools/log-hook/dist",
         "tsConfig": "tools/log-hook/tsconfig.json",
-        "main": "tools/log-hook/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "tools/log-hook/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

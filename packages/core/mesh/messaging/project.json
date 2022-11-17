@@ -4,45 +4,54 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/mesh/messaging/src/index.ts",
         "outputPath": "packages/core/mesh/messaging/dist",
         "tsConfig": "packages/core/mesh/messaging/tsconfig.json",
-        "main": "packages/core/mesh/messaging/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/messaging/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/messaging",
+        "outputPath": "tmp/mocha/packages/core/mesh/messaging",
+        "resultsPath": "test-results/packages/core/mesh/messaging",
         "testPatterns": [
           "packages/core/mesh/messaging/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/messaging/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/messaging",
-        "resultsPath": "test-results/packages/core/mesh/messaging",
-        "coveragePath": "coverage/packages/core/mesh/messaging"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

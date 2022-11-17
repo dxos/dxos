@@ -1,0 +1,79 @@
+{
+  "sourceRoot": "packages/experimental/registry-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/registry-client/src/index.ts",
+        "outputPath": "packages/experimental/registry-client/dist",
+        "tsConfig": "packages/experimental/registry-client/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "options": {
+        "bundlePackages": [
+          "@polkadot/api",
+          "@polkadot/keyring",
+          "@polkadot/metadata",
+          "@polkadot/rpc-core",
+          "@polkadot/types",
+          "@polkadot/util",
+          "@polkadot/util-crypto"
+        ],
+        "entryPoints": [
+          "packages/experimental/registry-client/src/index.ts"
+        ],
+        "outfile": "packages/experimental/registry-client/dist/browser.js"
+      },
+      "outputs": [
+        "{options.outfile}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/registry-client/**/*.{ts,js}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "coveragePath": "coverage/packages/experimental/registry-client",
+        "outputPath": "tmp/mocha/packages/experimental/registry-client",
+        "resultsPath": "test-results/packages/experimental/registry-client",
+        "testPatterns": [
+          "packages/experimental/registry-client/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/registry-client/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

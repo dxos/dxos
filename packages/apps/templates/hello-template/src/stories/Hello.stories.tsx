@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxosTheme';
+import { ComponentStory, ComponentMeta } from '@storybook/react';
 import React from 'react';
 
-import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
-import { ProfileInitializer } from '@dxos/react-client-testing';
+import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
+import { Button } from '@dxos/react-uikit';
 
-import { ONLINE_CONFIG } from './config';
-
-export default {
-  title: 'HelloWorld/Hello'
-};
-
-const App = () => {
-  const profile = useProfile();
+const Hello = () => {
   const client = useClient();
+  const profile = useIdentity();
+
+  if (!profile) {
+    return <Button onClick={() => client.halo.createProfile()}>Create Profile</Button>;
+  }
 
   return (
     <div style={{ padding: 8 }}>
@@ -25,10 +25,19 @@ const App = () => {
   );
 };
 
-export const Primary = () => (
-  <ClientProvider config={ONLINE_CONFIG}>
-    <ProfileInitializer>
-      <App />
-    </ProfileInitializer>
-  </ClientProvider>
-);
+const Template: ComponentStory<typeof Hello> = () => <Hello />;
+
+export const Primary = Template.bind({});
+Primary.args = {};
+Primary.decorators = [
+  (Story) => (
+    <ClientProvider>
+      <Story />
+    </ClientProvider>
+  )
+];
+
+export default {
+  title: 'HelloWorld/Hello',
+  component: Hello
+} as ComponentMeta<typeof Hello>;

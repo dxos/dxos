@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "composite": true,
@@ -11,12 +12,17 @@
     ]
   },
   "exclude": [
-    "node_modules",
     "dist",
+    "node_modules",
     "out"
   ],
   "include": [
     "src/**/*",
     "testing/**/*"
+  ],
+  "references": [
+    {
+      "path": "../executors/protobuf-compiler"
+    }
   ]
 }

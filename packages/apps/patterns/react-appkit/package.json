@@ -1,0 +1,52 @@
+{
+  "name": "@dxos/react-appkit",
+  "version": "0.1.5",
+  "description": "DXOS opinions for building React applications",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@dxos/telemetry": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "classnames": "^2.3.2",
+    "url-join": "^5.0.0"
+  },
+  "devDependencies": {
+    "@dxos/react-client-testing": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "phosphor-react": "^1.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0",
+    "storybook-dark-mode": "^1.1.2",
+    "vite": "3.0.9"
+  },
+  "peerDependencies": {
+    "phosphor-react": "^1.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

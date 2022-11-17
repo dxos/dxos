@@ -4,45 +4,54 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/mesh/rpc/src/index.ts",
         "outputPath": "packages/core/mesh/rpc/dist",
         "tsConfig": "packages/core/mesh/rpc/tsconfig.json",
-        "main": "packages/core/mesh/rpc/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/mesh/rpc/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/rpc",
+        "outputPath": "tmp/mocha/packages/core/mesh/rpc",
+        "resultsPath": "test-results/packages/core/mesh/rpc",
         "testPatterns": [
           "packages/core/mesh/rpc/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/rpc/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/rpc",
-        "resultsPath": "test-results/packages/core/mesh/rpc",
-        "coveragePath": "coverage/packages/core/mesh/rpc"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

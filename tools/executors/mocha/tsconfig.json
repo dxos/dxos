@@ -5,7 +5,8 @@
     "outDir": "dist"
   },
   "include": [
-    "src",
-    "index.d.ts"
-  ]
+    "index.d.ts",
+    "src"
+  ],
+  "references": []
 }

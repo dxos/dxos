@@ -10,20 +10,22 @@
       "node"
     ]
   },
-  "include": [
-    "src",
-    "playwright"
-  ],
   "exclude": [
-    "vite.config.ts",
-    "*.t.ts"
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
     {
-      "path": "./tsconfig.node.json"
+      "path": "../../../experimental/react-client-testing"
     },
     {
-      "path": "./tsconfig.plate.json"
+      "path": "../../../deprecated/react-components"
+    },
+    {
+      "path": "../../../deprecated/react-toolkit"
     },
     {
       "path": "../../../sdk/client"
@@ -35,13 +37,7 @@
       "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../../sdk/react-client-testing"
-    },
-    {
-      "path": "../../../sdk/react-components"
-    },
-    {
-      "path": "../../../sdk/react-toolkit"
+      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

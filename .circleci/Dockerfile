@@ -1,6 +1,6 @@
 FROM cimg/base:2022.04
 
-ENV NODE_VERSION 16.14.0
+ENV NODE_VERSION 18.12.1
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#global-npm-dependencies
 ENV NPM_CONFIG_PREFIX=/home/circleci/.npm-global
 ENV PATH=$PATH:/home/circleci/.npm-global/bin

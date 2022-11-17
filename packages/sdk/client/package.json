@@ -1,23 +1,25 @@
 {
   "name": "@dxos/client",
-  "version": "2.33.8",
+  "version": "0.1.5",
   "description": "Core DXOS Client API.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "repository": "github:dxos/dxos",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
+    "node:util": "util",
     "./dist/src/index.js": "./dist/browser/index.js"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -27,6 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -36,7 +39,9 @@
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "readable-stream": "^3.6.0"
+    "json-stable-stringify": "^1.0.1",
+    "readable-stream": "^3.6.0",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@dxos/credentials": "workspace:*",
@@ -50,6 +55,8 @@
     "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
+    "@types/json-stable-stringify": "^1.0.32",
+    "@types/node": "^18.11.9",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
   },

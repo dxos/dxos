@@ -8,19 +8,36 @@ export type Input = {
   monorepo?: boolean
 }
 
+const yjsPlugin = /* javascript */ `{
+  name: 'yjs',
+  setup: ({ onResolve }) => {
+    onResolve({ filter: /yjs/ }, () => {
+      return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+    })
+  }
+}`;
+
 const monorepoConfig = /* javascript */ `
   optimizeDeps: {
     force: true,
     include: [
       '@dxos/client',
       '@dxos/config',
+      '@dxos/react-appkit',
       '@dxos/react-client',
-      '@dxos/react-components',
-      '@dxos/react-toolkit'
-    ]
+      '@dxos/react-composer',
+      '@dxos/react-ui',
+      '@dxos/react-uikit',
+      '@dxos/text-model',
+      '@dxos/util'
+    ],
+    esbuildOptions: {
+      // TODO(wittjosiah): Remove.
+      plugins: [${yjsPlugin}]
+    }
   },
   build: {
-    outDir: 'out/example/app/hello',
+    outDir: 'out/hello',
     commonjsOptions: {
       include: [
         /packages/,
@@ -31,23 +48,68 @@ const monorepoConfig = /* javascript */ `
 `;
 
 const basicBuildConfig = /* javascript */ `
+  optimizeDeps: {
+    esbuildOptions: {
+      plugins: [${yjsPlugin}]
+    }
+  },
   build: {
-    outDir: 'out/example/app/hello'
-  }
+    outDir: 'out/hello'
+  },
 `;
 
 // TODO(wittjosiah): Nx executor to execute in place.
 const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `
+import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
+import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+  server: {
+    host: true
+  },
   ${input.monorepo ? monorepoConfig : basicBuildConfig}
   plugins: [
-    dxosPlugin(${input.monorepo ? '__dirname' : ''})
+    dxosPlugin(${input.monorepo ? '__dirname' : ''}),
+    themePlugin({
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
+      ]
+    }),
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30000000
+      },
+      includeAssets: ['favicon.ico'],
+      manifest: {
+        name: 'Hello DXOS',
+        short_name: 'Hello',
+        description: 'DXOS Hello World Application',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'icons/icon-32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-256.png',
+            sizes: '256x256',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ]
 });
 `;

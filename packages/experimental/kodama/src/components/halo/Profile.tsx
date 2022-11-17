@@ -5,12 +5,12 @@
 import React from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { useProfile } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 
 import { Table } from '../util';
 
 export const Profile = () => {
-  const profile = useProfile();
+  const profile = useIdentity();
   if (!profile) {
     return null;
   }
@@ -29,12 +29,12 @@ export const Profile = () => {
       ]}
       rows={[
         {
-          property: 'Public key',
-          value: truncateKey(profile.publicKey, 4)
+          property: 'Identity key',
+          value: truncateKey(profile.identityKey, 4)
         },
         {
-          property: 'Username',
-          value: profile.username
+          property: 'Display name',
+          value: profile.displayName
         }
       ]}
     />

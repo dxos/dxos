@@ -5,8 +5,8 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
     "module": "ESNext",
+    "outDir": "dist",
     "types": [
       "node",
       "sharedworker"
@@ -18,19 +18,58 @@
   ],
   "references": [
     {
+      "path": "../../sdk/vite-plugin"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../sdk/react-uikit"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/telemetry"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-client-testing"
-    },
-    {
-      "path": "./tsconfig.node.json"
     }
   ]
 }

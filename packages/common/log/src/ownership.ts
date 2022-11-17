@@ -8,6 +8,10 @@ const kOwnershipScope = Symbol('kOwnershipScope');
 const kCurrentOwnershipScope = Symbol('kCurrentOwnershipScope');
 const kDebugInfoProperties = Symbol('kDebugInfoProperties');
 
+/**
+ *
+ */
+// TODO(burdon): Document.
 export class OwnershipScope {
   public instance: any;
 

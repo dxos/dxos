@@ -1,6 +1,5 @@
 # Interface `Echo`
-> Declared in [`packages/sdk/client/src/packlets/api/echo.ts`]()
+> Declared in [`packages/sdk/client/src/packlets/proxies/echo-proxy.ts`]()
 
-ECHO API.
+TODO(burdon): Public API (move comments here).
 ## Properties
-### `info: object`

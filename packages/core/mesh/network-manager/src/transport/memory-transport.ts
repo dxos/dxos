@@ -5,19 +5,28 @@
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { Transport, TransportFactory } from './transport';
-
-type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey];
+import { Transport, TransportFactory, TransportOptions } from './transport';
 
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
+
+/**
+ * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
+ */
+const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
+  new Transform({
+    objectMode: true,
+    transform: (chunk, _, cb) => {
+      setTimeout(() => cb(null, chunk), delay); // TODO(burdon): Randomize.
+    }
+  });
 
 /**
  * Fake transport.
@@ -25,72 +34,72 @@ const MEMORY_TRANSPORT_DELAY = 1;
 // TODO(burdon): Remove static variables.
 export class MemoryTransport implements Transport {
   // TODO(burdon): Remove global properties.
-  private static readonly _connections = new ComplexMap<ConnectionKey, MemoryTransport>(
-    ([topic, nodeId, remoteId]) => topic.toHex() + nodeId.toHex() + remoteId.toHex()
-  );
+  private static readonly _connections = new ComplexMap<PublicKey, MemoryTransport>(PublicKey.hash);
 
   public readonly closed = new Event<void>();
   public readonly connected = new Event<void>();
   public readonly errors = new ErrorStream();
 
-  private readonly _ownKey: ConnectionKey;
-  private readonly _remoteKey: ConnectionKey;
+  private readonly _ownId = PublicKey.random();
+  private _remoteId!: PublicKey;
+  private readonly _remote = new Trigger<PublicKey>();
 
   private readonly _outgoingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
   private readonly _incomingDelay = createStreamDelay(MEMORY_TRANSPORT_DELAY);
 
   private _remoteConnection?: MemoryTransport;
 
-  constructor(
-    private readonly _ownId: PublicKey,
-    private readonly _remoteId: PublicKey,
-    private readonly _sessionId: PublicKey,
-    private readonly _topic: PublicKey,
-    private readonly _stream: NodeJS.ReadWriteStream
-  ) {
-    log(`Registering connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+  constructor(private readonly params: TransportOptions) {
+    log('creating', this._ownId);
 
-    this._ownKey = [this._topic, this._ownId, this._remoteId];
-    this._remoteKey = [this._topic, this._remoteId, this._ownId];
-
-    assert(!MemoryTransport._connections.has(this._ownKey), 'Duplicate in-memory connection');
-    MemoryTransport._connections.set(this._ownKey, this);
-
-    this._remoteConnection = MemoryTransport._connections.get(this._remoteKey);
-    if (this._remoteConnection) {
-      this._remoteConnection._remoteConnection = this;
-
-      log(`Connecting to existing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
-      this._stream
-        .pipe(this._outgoingDelay)
-        .pipe(this._remoteConnection._stream)
-        .pipe(this._incomingDelay)
-        .pipe(this._stream);
-
-      this.connected.emit();
-      this._remoteConnection.connected.emit();
+    if (this.params.initiator) {
+      setTimeout(async () => this.params.sendSignal({ json: JSON.stringify({ transportId: this._ownId.toHex() }) }));
     }
-  }
 
-  get remoteId(): PublicKey {
-    return this._remoteId;
-  }
+    assert(!MemoryTransport._connections.has(this._ownId), 'Duplicate memory connection');
+    MemoryTransport._connections.set(this._ownId, this);
 
-  get sessionId(): PublicKey {
-    return this._sessionId;
+    this._remote.wait().then(
+      (remoteId) => {
+        this._remoteId = remoteId;
+        this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
+        if (this._remoteConnection) {
+          this._remoteConnection._remoteConnection = this;
+          this._remoteConnection._remoteId = this._ownId;
+
+          log('connected', { ownId: this._ownId, remoteId: this._remoteId });
+          this.params.stream
+            .pipe(this._outgoingDelay)
+            .pipe(this._remoteConnection.params.stream)
+            .pipe(this._incomingDelay)
+            .pipe(this.params.stream);
+
+          this.connected.emit();
+          this._remoteConnection.connected.emit();
+        }
+      },
+      async (err) => {
+        log.catch(err);
+      }
+    );
   }
 
   async signal(signal: Signal) {
-    // No-op.
+    const { json } = signal;
+    if (json) {
+      const { transportId } = JSON.parse(json);
+      if (transportId) {
+        this._remote.wake(PublicKey.from(transportId));
+      }
+    }
   }
 
   async close(): Promise<void> {
-    log(`Closing connection topic=${this._topic} peerId=${this._ownId} remoteId=${this._remoteId}`);
+    log('closing', this._ownId);
 
-    MemoryTransport._connections.delete(this._ownKey);
-
+    MemoryTransport._connections.delete(this._ownId);
     if (this._remoteConnection) {
-      MemoryTransport._connections.delete(this._remoteKey);
+      MemoryTransport._connections.delete(this._remoteId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
       //  NOTE(burdon): Using readable-stream.wrap() might help (see feed-store).
@@ -109,22 +118,10 @@ export class MemoryTransport implements Transport {
     }
 
     this.closed.emit();
-    log('Closed.');
+    log('closed');
   }
 }
 
-// TODO(burdon): Remove non-testing usage (i.e., Client config defaults).
 export const MemoryTransportFactory: TransportFactory = {
-  create: (opts) => new MemoryTransport(opts.ownId, opts.remoteId, opts.sessionId, opts.topic, opts.stream)
+  create: (params) => new MemoryTransport(params)
 };
-
-/**
- * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
- */
-const createStreamDelay = (delay: number): NodeJS.ReadWriteStream =>
-  new Transform({
-    objectMode: true,
-    transform: (chunk, enc, cb) => {
-      setTimeout(() => cb(null, chunk), delay);
-    }
-  });

@@ -4,23 +4,23 @@
 
 import React from 'react';
 
-import { ClientProvider, useClient, useParties } from '@dxos/react-client';
+import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { Button } from '@dxos/react-uikit';
 
 import { SpaceList } from './SpaceList';
 
 export default {
-  title: 'react-appkit/PartyList'
+  title: 'react-appkit/SpaceList'
 };
 
 const Story = () => {
   const client = useClient();
-  const spaces = useParties();
+  const spaces = useSpaces();
 
   return (
     <div>
-      <Button onClick={() => client.echo.createParty()}>Add Space</Button>
+      <Button onClick={() => client.echo.createSpace()}>Add Space</Button>
 
       <SpaceList spaces={spaces} />
     </div>

@@ -8,13 +8,13 @@ import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 
-import { Event, promiseTimeout, sleep } from '@dxos/async';
+import { Event, asyncTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
@@ -25,7 +25,7 @@ const ATTEMPT_DELAY = 3_000;
 interface BotHandleOptions {
   config?: Config;
   packageSpecifier?: BotPackageSpecifier;
-  partyKey?: PublicKey;
+  spaceKey?: PublicKey;
 }
 
 /**
@@ -51,13 +51,13 @@ export class BotHandle {
     private readonly _botContainer: BotContainer,
     options: BotHandleOptions = {}
   ) {
-    const { config = new Config({ version: 1 }), packageSpecifier, partyKey } = options;
+    const { config = new Config({ version: 1 }), packageSpecifier, spaceKey } = options;
     this._bot = {
       id,
       status: Bot.Status.SPAWNING,
       desiredState: Bot.Status.RUNNING,
       packageSpecifier,
-      partyKey,
+      spaceKey,
       attemptsToAchieveDesiredState: 0
     };
     this._config = new Config(config.values);
@@ -141,7 +141,7 @@ export class BotHandle {
     );
   }
 
-  async spawn(invitation?: InvitationDescriptor): Promise<Bot> {
+  async spawn(invitation?: Invitation): Promise<Bot> {
     this.bot.status = Bot.Status.STARTING;
     await this._spawn();
     await this._initialize(invitation);
@@ -198,7 +198,7 @@ export class BotHandle {
 
     this._reportingStream = undefined;
     try {
-      await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
+      await asyncTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
     } catch (err: any) {
       this._log(`Failed to stop bot: ${err}`);
     }
@@ -320,7 +320,7 @@ export class BotHandle {
       logFilePath: this.getLogFilePath(this.startTimestamp)
     });
 
-    this._log('Openning RPC channel');
+    this._log('Opening RPC channel');
     this._rpc = createRpcClient(schema.getService('dxos.bot.BotService'), {
       port,
       timeout: 20_000 // TODO(dmaretskyi): Turn long-running RPCs into streams and shorten the timeout.
@@ -328,7 +328,7 @@ export class BotHandle {
     await this._rpc.open();
   }
 
-  private async _initialize(invitation?: InvitationDescriptor): Promise<void> {
+  private async _initialize(invitation?: Invitation): Promise<void> {
     this._log('Initializing bot');
     await this.rpc.initialize({
       config: this.config.values,

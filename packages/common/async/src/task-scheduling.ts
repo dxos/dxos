@@ -1,28 +1,8 @@
+import { Context } from '@dxos/context';
+import { MaybePromise } from '@dxos/util';
+
 export type ClearCallback = () => void
 
-/**
- * Schedule a task to run in the next event loop iteration.
- */
-export const scheduleTask = (task: () => Promise<void>): ClearCallback => {
-  const id = setTimeout(task);
-  return () => clearTimeout(id);
-}
-
-/**
- * Run the task in the next event loop iteration, and then repeat in `interval` ms after the previous iteration completes.
- */
-export const repeatTask = (task: () => Promise<void>, interval: number): ClearCallback => {
-  let id: NodeJS.Timeout;
-
-  const run = async () => {
-    await task();
-    id = setTimeout(run, interval);
-  };
-
-  id = setTimeout(run, interval);
-
-  return () => clearTimeout(id);
-}
 
 /**
  * A task that can be scheduled to run in the next event loop iteration.
@@ -30,33 +10,70 @@ export const repeatTask = (task: () => Promise<void>, interval: number): ClearCa
  * If the task is triggered while it is running, the next run would occur immediately after the current run has finished.
  */
 export class DeferredTask {
-  private _handle: ClearCallback | null = null; 
+  private _scheduled = false;
   private _promise: Promise<void> | null = null;
 
-  constructor(private readonly _callback: () => Promise<void>) {}
+  constructor(
+    private readonly _ctx: Context,
+    private readonly _callback: () => Promise<void>
+  ) { }
 
   schedule() {
-    if (this._handle) {
+    if (this._scheduled) {
       return; // Already scheduled.
     }
-    this._handle = scheduleTask(async () => {
+    scheduleTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
       try {
         await this._promise;
-      } catch(err) {
+      } catch (err) {
         Promise.reject(err); // Unhandled promise rejection.
       }
 
-      // Reset the handle. New tasks can now be scheduled. They would wait for the callback to finish.
-      this._handle = null;
+      // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
+      this._scheduled = false;
 
       // Store the promise so that new tasks could wait for this one to finish.
       this._promise = this._callback();
     });
+    this._scheduled = true;
   }
+}
 
-  clear() {
-    // TODO(dmaretskyi): Disposing via context should handle errors in the callback.
-    this._handle?.();
+export const runInContext = (ctx: Context, fn: () => void) => {
+  try {
+    fn();
+  } catch (err: any) {
+    ctx.raise(err);
   }
+};
+
+export const runInContextAsync = async (ctx: Context, fn: () => MaybePromise<void>) => {
+  try {
+    await fn();
+  } catch (err: any) {
+    ctx.raise(err);
+  }
+};
+
+export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
+  const timeout = setTimeout(async () => {
+    await runInContextAsync(ctx, fn);
+  }, afterMs);
+
+  ctx.onDispose(() => {
+    clearTimeout(timeout);
+  });
+};
+
+/**
+ * Run the task in the next event loop iteration, and then repeat in `interval` ms after the previous iteration completes.
+ */
+export const repeatTask = (ctx: Context, task: () => Promise<void>, interval: number) => {
+  const run = async () => {
+    await task();
+    scheduleTask(ctx, run, interval);
+  };
+
+  scheduleTask(ctx, run, interval);
 }

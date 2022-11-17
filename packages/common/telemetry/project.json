@@ -4,40 +4,47 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/telemetry/src/index.ts",
         "outputPath": "packages/common/telemetry/dist",
         "tsConfig": "packages/common/telemetry/tsconfig.json",
-        "main": "packages/common/telemetry/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outfile}"
-      ],
       "options": {
+        "bundlePackages": [
+          "@segment/snippet"
+        ],
         "entryPoints": [
           "packages/common/telemetry/src/index.ts"
         ],
-        "outfile": "packages/common/telemetry/dist/browser.js",
-        "bundlePackages": [
-          "@segment/snippet"
-        ]
-      }
+        "outfile": "packages/common/telemetry/dist/browser.js"
+      },
+      "outputs": [
+        "{options.outfile}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/telemetry/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

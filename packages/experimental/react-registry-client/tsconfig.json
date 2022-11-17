@@ -1,0 +1,34 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/deprecated/protocols-toolchain"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../registry-client"
+    }
+  ]
+}

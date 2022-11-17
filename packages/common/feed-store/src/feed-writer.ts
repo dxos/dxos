@@ -18,3 +18,12 @@ export const createFeedWriter = <T extends {}>(cb: (data: T) => Promise<WriteRec
     return cb(data);
   }
 });
+
+export const writeMessages = async <T extends {}>(writer: FeedWriter<T>, messages: T[]): Promise<WriteReceipt[]> => {
+  const receipts: WriteReceipt[] = [];
+  // NOTE: Write messages sequentially.
+  for (const message of messages) {
+    receipts.push(await writer.write(message));
+  }
+  return receipts;
+};

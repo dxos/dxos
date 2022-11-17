@@ -3,5 +3,4 @@
 //
 
 export * from './DeviceList';
-export * from './InvitationList';
 export * from './SpaceList';

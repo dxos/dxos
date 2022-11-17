@@ -4,59 +4,66 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/codec-protobuf/src/index.ts",
         "outputPath": "packages/common/codec-protobuf/dist",
         "tsConfig": "packages/common/codec-protobuf/tsconfig.json",
-        "main": "packages/common/codec-protobuf/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outfile}"
-      ],
       "options": {
+        "bundlePackages": [
+          "protobufjs"
+        ],
         "entryPoints": [
           "packages/common/codec-protobuf/src/index.ts"
         ],
-        "outfile": "packages/common/codec-protobuf/dist/browser.js",
-        "bundlePackages": [
-          "protobufjs"
-        ]
-      }
+        "outfile": "packages/common/codec-protobuf/dist/browser.js"
+      },
+      "outputs": [
+        "{options.outfile}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/codec-protobuf/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/codec-protobuf",
+        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
+        "resultsPath": "test-results/packages/common/codec-protobuf",
         "testPatterns": [
           "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/codec-protobuf/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
-        "resultsPath": "test-results/packages/common/codec-protobuf",
-        "coveragePath": "coverage/packages/common/codec-protobuf"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

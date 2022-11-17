@@ -69,6 +69,7 @@ export class ExtensionInit extends Extension {
     if (data?.peerId) {
       assert(['undefined', 'string'].includes(typeof data.peerId), 'PeerId must be a string.');
     }
+
     return this.send(Buffer.from(JSON.stringify({ command, data })));
   }
 
@@ -99,6 +100,11 @@ export class ExtensionInit extends Extension {
         throw new Error('Connection closed during handshake.');
       }
     } catch (err: any) {
+      if (this.closing) {
+        // Ignore error if closing.
+        return;
+      }
+
       throw new ERR_PROTOCOL_INIT_INVALID(err.message);
     }
   }

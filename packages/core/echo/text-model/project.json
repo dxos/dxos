@@ -4,44 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/core/echo/text-model/src/index.ts",
         "outputPath": "packages/core/echo/text-model/dist",
         "tsConfig": "packages/core/echo/text-model/tsconfig.json",
-        "main": "packages/core/echo/text-model/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/core/echo/text-model/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/core/echo/text-model",
+        "outputPath": "tmp/mocha/packages/core/echo/text-model",
+        "resultsPath": "test-results/packages/core/echo/text-model",
         "testPatterns": [
           "packages/core/echo/text-model/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/echo/text-model/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/echo/text-model",
-        "resultsPath": "test-results/packages/core/echo/text-model",
-        "coveragePath": "coverage/packages/core/echo/text-model"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

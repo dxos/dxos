@@ -6,37 +6,23 @@ import React from 'react';
 
 // https://mui.com/components/material-icons
 import {
-  AccountCircle as ProfileIcon,
   Grain as ItemsIcon,
-  Dns as StorageIcon,
-  List as MessagesIcon,
   FilterTiltShift as SwarmIcon,
-  Group as PartiesIcon,
+  Group as SpacesIcon,
   List as FeedsIcon,
   // AppRegistration as RegistryIcon,
   Router as SignalIcon,
-  Settings as ConfigIcon,
-  SettingsBackupRestore as SnapshotsIcon,
-  Subject as LoggingIcon,
-  VpnKey as KeyIcon
+  Settings as ConfigIcon
 } from '@mui/icons-material';
 
 import {
   ConfigPanel,
-  CredentialMessagesPanel,
   FeedsPanel,
   ItemsPanel,
-  KeyringPanel,
-  LoggingPanel,
   // NetworkPanel,
-  PartiesPanel,
-  ProfilePanel,
-  // RegistryPanel,
-  RpcTracePanel,
+  SpacesPanel,
   Section,
   SignalPanel,
-  SnapshotsPanel,
-  StoragePanel,
   SwarmPanel
 } from './containers';
 
@@ -49,46 +35,46 @@ export const sections: Section[] = [
         title: 'Config',
         icon: <ConfigIcon />,
         panel: <ConfigPanel />
-      },
-      {
-        id: 'storage',
-        title: 'Storage',
-        icon: <StorageIcon />,
-        panel: <StoragePanel />
       }
+      // {
+      //   id: 'storage',
+      //   title: 'Storage',
+      //   icon: <StorageIcon />,
+      //   panel: <StoragePanel />
+      // }
     ]
   },
-  {
-    title: 'HALO',
-    items: [
-      {
-        id: 'halo.profile',
-        title: 'Profile',
-        icon: <ProfileIcon />,
-        panel: <ProfilePanel />
-      },
-      {
-        id: 'halo.keyring',
-        title: 'Keyring',
-        icon: <KeyIcon />,
-        panel: <KeyringPanel />
-      },
-      {
-        id: 'halo.messagess',
-        title: 'Messages',
-        icon: <MessagesIcon />,
-        panel: <CredentialMessagesPanel />
-      }
-    ]
-  },
+  // {
+  //   title: 'HALO',
+  //   items: [
+  //     {
+  //       id: 'halo.profile',
+  //       title: 'Profile',
+  //       icon: <ProfileIcon />,
+  //       panel: <ProfilePanel />
+  //     },
+  //     {
+  //       id: 'halo.keyring',
+  //       title: 'Keyring',
+  //       icon: <KeyIcon />,
+  //       panel: <KeyringPanel />
+  //     },
+  //     {
+  //       id: 'halo.messagess',
+  //       title: 'Messages',
+  //       icon: <MessagesIcon />,
+  //       panel: <CredentialMessagesPanel />
+  //     }
+  //   ]
+  // },
   {
     title: 'ECHO',
     items: [
       {
-        id: 'echo.parties',
-        title: 'Parties',
-        icon: <PartiesIcon />,
-        panel: <PartiesPanel />
+        id: 'echo.spaces',
+        title: 'Spaces',
+        icon: <SpacesIcon />,
+        panel: <SpacesPanel />
       },
       {
         id: 'echo.feeds',
@@ -101,13 +87,13 @@ export const sections: Section[] = [
         title: 'Items',
         icon: <ItemsIcon />,
         panel: <ItemsPanel />
-      },
-      {
-        id: 'echo.snapshots',
-        title: 'Snapshots',
-        icon: <SnapshotsIcon />,
-        panel: <SnapshotsPanel />
       }
+      // {
+      //   id: 'echo.snapshots',
+      //   title: 'Snapshots',
+      //   icon: <SnapshotsIcon />,
+      //   panel: <SnapshotsPanel />
+      // }
     ]
   },
   {
@@ -134,7 +120,7 @@ export const sections: Section[] = [
         panel: <SignalPanel />
       }
     ]
-  },
+  }
   // {
   //   title: 'DXNS',
   //   items: [
@@ -146,21 +132,21 @@ export const sections: Section[] = [
   //     }
   //   ]
   // },
-  {
-    title: 'DEBUG',
-    items: [
-      {
-        id: 'debug.logging',
-        title: 'Logging',
-        icon: <LoggingIcon />,
-        panel: <LoggingPanel />
-      },
-      {
-        id: 'rpc',
-        title: 'RPC Trace',
-        icon: <MessagesIcon />,
-        panel: <RpcTracePanel />
-      }
-    ]
-  }
+  // {
+  //   title: 'DEBUG',
+  //   items: [
+  //     {
+  //       id: 'debug.logging',
+  //       title: 'Logging',
+  //       icon: <LoggingIcon />,
+  //       panel: <LoggingPanel />
+  //     },
+  //     {
+  //       id: 'rpc',
+  //       title: 'RPC Trace',
+  //       icon: <MessagesIcon />,
+  //       panel: <RpcTracePanel />
+  //     }
+  //   ]
+  // }
 ];

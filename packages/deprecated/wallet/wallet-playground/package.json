@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/wallet-playground",
+  "version": "0.1.2",
+  "private": true,
+  "description": "DXOS Wallet Playground.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "bundle": "toolchain bundle:app",
+    "check": "true",
+    "start": "toolchain start"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/material": "^5.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6"
+  }
+}

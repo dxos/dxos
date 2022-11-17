@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { promiseTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
@@ -13,7 +13,7 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
 import { DataMirror } from './data-mirror';
-import { DataService } from './data-service';
+import { DataServiceImpl, DataServiceSubscriptions } from './data-service';
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
@@ -42,17 +42,19 @@ describe('DataMirror', function () {
     );
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
-    const dataServiceRouter = new DataService();
-    const partyKey = PublicKey.random();
-    dataServiceRouter.trackParty(partyKey, dataServiceHost);
+    const dataServiceSubscriptions = new DataServiceSubscriptions();
+    const dataService = new DataServiceImpl(dataServiceSubscriptions);
+
+    const spaceKey = PublicKey.random();
+    dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
     const mirrorItemManager = new ItemManager(modelFactory, PublicKey.random());
-    const dataMirror = new DataMirror(mirrorItemManager, dataServiceRouter, partyKey);
+    const dataMirror = new DataMirror(mirrorItemManager, dataService, spaceKey);
 
     dataMirror.open();
 
     // Create item
-    const promise = promiseTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
+    const promise = asyncTimeout(mirrorItemManager.debouncedUpdate.waitForCount(1), 1000, new Error('timeout'));
 
     const item = (await itemManager.createItem(ObjectModel.meta.type)) as Item<ObjectModel>;
 
@@ -66,7 +68,7 @@ describe('DataMirror', function () {
 
     // Mutate model
     await Promise.all([
-      promiseTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
+      asyncTimeout(mirroredItem!.model.update.waitForCount(1), 1000, new Error('timeout')),
       item.model.set('foo', 'bar')
     ]);
 

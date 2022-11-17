@@ -3,22 +3,15 @@
 //
 
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Client, Party } from '@dxos/client';
-import { useProfile } from '@dxos/react-client';
-import {
-  AuthChoices,
-  Button,
-  Heading,
-  Main,
-  QrCode,
-  useTranslation
-} from '@dxos/react-uikit';
+import { Client, Space } from '@dxos/client';
+import { useIdentity } from '@dxos/react-client';
+import { AuthChoices, Button, Heading, QrCode, useTranslation } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface RegistrationPageProps {
-  onRegister?: (client: Client) => Promise<Party>;
+  onRegister?: (client: Client) => Promise<Space>;
 }
 
 /**
@@ -26,18 +19,24 @@ export interface RegistrationPageProps {
  */
 export const LockPage = () => {
   const { t } = useTranslation('halo');
-  const profile = useProfile();
+  const profile = useIdentity();
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') ?? '';
 
   const handleUnlock = useCallback(() => {
-    navigate('/spaces');
+    navigate('/devices');
   }, []);
 
   return (
-    <Main className='max-w-lg mx-auto'>
-      <div role='none' className='text-center space-y-2'>
-        <QrCode value='https://halo.dxos.org' label={t('copy qrcode label')} />
+    <main className='max-is-lg mli-auto pli-7 mbs-7 space-b-6'>
+      <div role='none' className='text-center space-b-2'>
+        <QrCode
+          value='https://halo.dxos.org'
+          label={<p className='max-w-[4.5rem]'>{t('copy qrcode label')}</p>}
+          side='left'
+        />
         <Heading>{t('halo label')}</Heading>
       </div>
 
@@ -45,7 +44,7 @@ export const LockPage = () => {
         <>
           <p className='text-center'>
             {t('using halo as message', {
-              displayName: profile.username ?? humanize(profile.publicKey)
+              displayName: profile.displayName ?? humanize(profile.identityKey)
             })}
           </p>
         </>
@@ -54,15 +53,15 @@ export const LockPage = () => {
           <p className='text-center'>{t('identities empty message')}</p>
           <AuthChoices
             {...{
-              onJoin: () => navigate('/identity/join'),
-              onCreate: () => navigate('/identity/create'),
-              onRecover: () => navigate('/identity/recover')
+              onJoin: () => navigate(`/identity/join?redirect=${redirect}`),
+              onCreate: () => navigate(`/identity/create?redirect=${redirect}`),
+              onRecover: () => navigate(`/identity/recover?redirect=${redirect}`)
             }}
           />
         </>
       )}
 
-      <div role='none' className='text-center px-2 space-y-2'>
+      <div role='none' className='text-center px-2 space-b-2'>
         {profile && (
           <Button className='w-full' variant='primary' onClick={handleUnlock}>
             {t('unlock label')}
@@ -76,6 +75,6 @@ export const LockPage = () => {
           {t('generic help label', { ns: 'uikit' })}
         </Button>
       </div>
-    </Main>
+    </main>
   );
 };

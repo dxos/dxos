@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/experimental/react-client-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/react-client-testing/src/index.ts",
+        "outputPath": "packages/experimental/react-client-testing/dist",
+        "tsConfig": "packages/experimental/react-client-testing/tsconfig.json",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/react-client-testing/**/*.{ts,tsx,js,jsx}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

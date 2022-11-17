@@ -2,22 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { expect } from 'chai';
 
 import { valueEncoding, MetadataStore } from '@dxos/echo-db';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { createDefaultModelFactory } from '../services';
 import { IdentityManager } from './identity-manager';
 
-describe('identity-manager', function () {
+describe('identity/identity-manager', function () {
   const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
@@ -50,7 +49,7 @@ describe('identity-manager', function () {
       feedStore,
       keyring,
       networkManager,
-      new ModelFactory().registerModel(ObjectModel)
+      createDefaultModelFactory()
     );
 
     return {
@@ -65,7 +64,7 @@ describe('identity-manager', function () {
     afterTest(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
-    expect(identity).toBeTruthy();
+    expect(identity).to.exist;
   });
 
   it('reload from storage', async function () {
@@ -80,9 +79,9 @@ describe('identity-manager', function () {
     const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
 
-    expect(peer2.identityManager.identity).toBeDefined();
-    expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
-    expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey);
+    expect(peer2.identityManager.identity).to.exist;
+    expect(peer2.identityManager.identity!.identityKey).to.deep.eq(identity1.identityKey);
+    expect(peer2.identityManager.identity!.deviceKey).to.deep.eq(identity1.deviceKey);
 
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   });

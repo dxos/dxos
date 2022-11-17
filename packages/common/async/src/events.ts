@@ -2,13 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { EventEmitter } from 'events';
+import { Context } from '@dxos/context';
 
-import { throwUnhandledRejection } from '@dxos/debug';
+import { runInContextAsync } from './task-scheduling';
 
-import { promiseTimeout } from './async';
-
-type UnsubscribeCallback = () => void;
+export type UnsubscribeCallback = () => void;
 
 export type Effect = () => UnsubscribeCallback | undefined;
 
@@ -84,28 +82,27 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     return event;
   }
 
-  private readonly _listeners = new Set<(data: T) => void>();
-  private readonly _onceListeners = new Set<(data: T) => void>();
+  private readonly _listeners = new Map<(data: T) => void, (data: T) => void>();
+  private readonly _onceListeners = new Map<(data: T) => void, (data: T) => void>();
   private readonly _effects = new Set<MaterializedEffect>();
 
   /**
    * Emit an event.
-   *
-   * In most cases should only be called by the class or enitity containing the event.
-   *
-   * All listeners are called in order of subscription with presistent ones first.
-   * Calls are performed asynchronously through `setImmeidate` callback.
+   * In most cases should only be called by the class or entity containing the event.
+   * All listeners are called in order of subscription with persistent ones first.
+   * Listeners are called synchronously in the same stack.
+   * A thrown exception in the listener will stop the event from being emitted to the rest of the listeners.
    *
    * @param data param that will be passed to all listeners.
    */
   emit(data: T) {
-    for (const listener of this._listeners) {
-      void this._trigger(listener, data);
+    for (const [_key, listener] of this._listeners) {
+      listener(data);
     }
 
-    for (const listener of this._onceListeners) {
-      void this._trigger(listener, data);
-      this._onceListeners.delete(listener);
+    for (const [_key, listener] of this._onceListeners) {
+      listener(data);
+      this._onceListeners.delete(_key);
     }
   }
 
@@ -117,17 +114,20 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): UnsubscribeCallback {
-    if (this._onceListeners.has(callback)) {
-      this._onceListeners.delete(callback);
-    }
+  on(callback: (data: T) => void): UnsubscribeCallback;
+  on(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
+  on(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+    const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
 
-    this._listeners.add(callback);
+    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
+
+    this._listeners.set(callback, runCallback);
 
     if (this.listenerCount() === 1) {
       this._runEffects();
     }
 
+    ctx.onDispose(() => this.off(callback));
     return () => this.off(callback);
   }
 
@@ -156,14 +156,20 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): UnsubscribeCallback {
+  once(callback: (data: T) => void): UnsubscribeCallback;
+  once(ctx: Context, callback: (data: T) => void): UnsubscribeCallback;
+  once(_ctx: any, _callback?: (data: T) => void): UnsubscribeCallback {
+    const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
+
     if (this._listeners.has(callback)) {
       return () => {
         /* No-op. */
       };
     }
 
-    this._onceListeners.add(callback);
+    const runCallback = (data: T) => runInContextAsync(ctx, () => callback(data));
+
+    this._onceListeners.set(callback, runCallback);
     if (this.listenerCount() === 1) {
       this._runEffects();
     }
@@ -298,16 +304,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
     };
   }
 
-  private async _trigger(listener: (data: T) => void, data: T) {
-    try {
-      await waitImmediate(); // Acts like setTimeout but preserves the stack-trace.
-      listener(data);
-    } catch (err: any) {
-      // Stop error propagation.
-      throwUnhandledRejection(err);
-    }
-  }
-
   private _runEffects() {
     for (const handle of this._effects) {
       handle.cleanup = handle.effect();
@@ -384,60 +380,3 @@ export interface ReadOnlyEvent<T = void> {
    */
   discardParameter(): Event<void>;
 }
-
-/**
- * Like setTimeout but for async/await API. Useful for preserving stack-traces.
- */
-const waitImmediate = () => new Promise((resolve) => setTimeout(resolve));
-
-/**
- * Adds the listener and returns a function to remove it.
- * Promotes removing listeners when cleaning up objects (to prevent leaks).
- * @param {EventEmitter} eventEmitter
- * @param {string} eventName
- * @param {Function} callback
- */
-export const onEvent = (eventEmitter: EventEmitter, eventName: string, callback: (args: any) => void) => {
-  eventEmitter.on(eventName, callback);
-  return () => eventEmitter.off(eventName, callback);
-};
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const addListener = (eventEmitter: EventEmitter, eventName: string, callback: () => void) => {
-  const off = onEvent(eventEmitter, eventName, callback);
-  return {
-    remove: () => off()
-  };
-};
-
-/**
- * Waits for an event with an optional test condition.
- * @param {EventEmitter} eventEmitter
- * @param {string} eventName
- * @param {function} [test] Returns truthy value if the test passes.
- * @param {Number} [timeout]
- * @param {unknown} [error]
- * @returns {Promise<unknown>}
- */
-export const waitForEvent = (
-  eventEmitter: EventEmitter,
-  eventName: string,
-  test?: (args: any) => boolean,
-  timeout?: number,
-  error?: Error | string
-): Promise<any> => {
-  let off;
-
-  const promise = new Promise((resolve) => {
-    off = onEvent(eventEmitter, eventName, (...args) => {
-      if (!test || test(...args)) {
-        resolve(...args);
-      }
-    });
-  });
-
-  return timeout ? promiseTimeout(promise, timeout, error ?? new Error()).finally(off) : promise.finally(off);
-};

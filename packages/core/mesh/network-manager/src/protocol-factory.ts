@@ -34,6 +34,7 @@ export const protocolFactory = ({
   assert(getTopics);
   // eslint-disable-next-line no-unused-vars
   return ({ channel, initiator }) => {
+    log('creating protocol');
     const protocol = new Protocol({
       streamOptions: { live: true },
       discoveryToPublicKey: (dk) => {
@@ -51,7 +52,6 @@ export const protocolFactory = ({
 
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
 
-    log('Created protocol');
     return protocol;
   };
 };

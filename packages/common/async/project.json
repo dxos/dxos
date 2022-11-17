@@ -4,44 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/async/src/index.ts",
         "outputPath": "packages/common/async/dist",
         "tsConfig": "packages/common/async/tsconfig.json",
-        "main": "packages/common/async/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/async/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/async",
+        "outputPath": "tmp/mocha/packages/common/async",
+        "resultsPath": "test-results/packages/common/async",
         "testPatterns": [
           "packages/common/async/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/async/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/async",
-        "resultsPath": "test-results/packages/common/async",
-        "coveragePath": "coverage/packages/common/async"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

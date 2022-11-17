@@ -3,130 +3,107 @@
 //
 
 import { Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { raise } from '@dxos/debug';
+import { DataServiceImpl } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
-import {
-  createWebRTCTransportFactory,
-  MemoryTransportFactory,
-  NetworkManager,
-  TransportFactory
-} from '@dxos/network-manager';
+import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import { TextModel } from '@dxos/text-model';
 
-import { DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import {
-  subscribeToNetworkStatus as subscribeToSignalStatus,
-  subscribeToSignalTrace,
-  subscribeToSwarmInfo
-} from '../devtools/network';
+import { SpaceServiceImpl, ProfileServiceImpl, SystemServiceImpl, TracingServiceImpl } from '../deprecated';
+import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
+import { DevicesServiceImpl } from '../identity/devices-service-impl';
+import { HaloInvitationsServiceImpl, SpaceInvitationsServiceImpl } from '../invitations';
+import { SpacesServiceImpl } from '../spaces';
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
-import { createServices } from './service-factory';
-import { ClientServiceProvider, ClientServices } from './services';
-import { HaloSigner } from './signer';
-// import { DevtoolsHostEvents } from '../devtools';
+import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
+import { ServiceRegistry } from './service-registry';
 
-const SIGNAL_CONTEXT = new MemorySignalManagerContext();
-
-type ClientServiceHostParams = {
+type ClientServicesHostParams = {
   config: Config;
   modelFactory?: ModelFactory;
-  transportFactory?: TransportFactory;
-  signer?: HaloSigner;
+  networkManager: NetworkManager;
+};
+
+// TODO(burdon): Factor out to spaces.
+// TODO(burdon): Defaults (with TextModel).
+export const createDefaultModelFactory = () => {
+  return new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
 };
 
 /**
  * Remote service implementation.
  */
-export class ClientServiceHost implements ClientServiceProvider {
-  private readonly _config: Config;
-  private readonly _signer?: HaloSigner;
-  private readonly _devtoolsEvents = new DevtoolsHostEvents();
-  private readonly _context: ServiceContext;
-  private readonly _services: ClientServices;
+// TODO(burdon): Reconcile Host/Backend, etc.
+export class ClientServicesHost implements ClientServicesProvider {
+  private readonly _serviceContext: ServiceContext;
+  private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
 
   constructor({
     config,
-    modelFactory = new ModelFactory().registerModel(ObjectModel),
-    signer,
-    transportFactory
-  }: ClientServiceHostParams) {
-    this._config = config;
-    this._signer = signer;
-
+    modelFactory = createDefaultModelFactory(),
+    // TODO(burdon): Create ApolloLink abstraction (see Client).
+    networkManager
+  }: ClientServicesHostParams) {
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage } = createStorageObjects(this._config.get('runtime.client.storage', {})!);
+    const { storage } = createStorageObjects(config.get('runtime.client.storage', {})!);
 
-    const networkingEnabled = this._config.get('runtime.services.signal.server');
+    // TODO(burdon): Break into components.
+    this._serviceContext = new ServiceContext(storage, networkManager, modelFactory);
 
-    const networkManager = new NetworkManager({
-      signalManager: networkingEnabled
-        ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
-        : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory:
-        transportFactory ??
-        // TODO(burdon): Should require memory transport.
-        (networkingEnabled
-          ? createWebRTCTransportFactory({
-              iceServers: this._config.get('runtime.services.ice')
-            })
-          : MemoryTransportFactory),
-      log: true
+    // TODO(burdon): Start to think of DMG (dynamic services).
+    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
+      HaloInvitationsService: new HaloInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        this._serviceContext.haloInvitations
+      ),
+
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+
+      SpaceInvitationsService: new SpaceInvitationsServiceImpl(
+        this._serviceContext.identityManager,
+        () => this._serviceContext.spaceInvitations ?? raise(new Error('SpaceInvitations not initialized')),
+        () => this._serviceContext.spaceManager ?? raise(new Error('SpaceManager not initialized'))
+      ),
+
+      SpacesService: new SpacesServiceImpl(),
+
+      DataService: new DataServiceImpl(this._serviceContext.dataServiceSubscriptions),
+
+      // TODO(burdon): Move to new protobuf definitions.
+      ProfileService: new ProfileServiceImpl(this._serviceContext),
+      SpaceService: new SpaceServiceImpl(this._serviceContext),
+      SystemService: new SystemServiceImpl(config),
+      TracingService: new TracingServiceImpl(config),
+      DevtoolsHost: new DevtoolsServiceImpl({
+        events: new DevtoolsHostEvents(),
+        config,
+        context: this._serviceContext
+      })
     });
+  }
 
-    this._context = new ServiceContext(storage, networkManager, modelFactory);
-
-    this._services = {
-      ...createServices({
-        config: this._config,
-        echo: null,
-        context: this._context,
-        signer: this._signer
-      }),
-      DevtoolsHost: this._createDevtoolsService(networkManager) // TODO(burdon): Move into createServices.
-    };
+  get descriptors() {
+    return this._serviceRegistry.descriptors;
   }
 
   get services() {
-    return this._services;
+    return this._serviceRegistry.services;
   }
 
-  // TODO(dmaretskyi): progress.
-  async open(onProgressCallback?: ((progress: any) => void) | undefined) {
-    await this._context.open();
-    // this._devtoolsEvents.ready.emit();
+  async open() {
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('opening...', { deviceKey });
+    await this._serviceContext.open();
+    log('opened', { deviceKey });
   }
 
   async close() {
-    await this._context.close();
-  }
-
-  get echo() {
-    return todo();
-  }
-
-  /**
-   * Returns devtools context.
-   * Used by the DXOS DevTool Extension.
-   */
-  private _createDevtoolsService(networkManager: NetworkManager): DevtoolsHost {
-    const dependencies: DevtoolsServiceDependencies = {
-      networkManager
-      //   config: this._config,
-      //   echo: this._echo,
-      //   feedStore: this._echo.feedStore,
-      //   modelFactory: this._echo.modelFactory,
-      //   keyring: this._echo.halo.keyring,
-      //   debug // Export debug lib.
-    } as any;
-
-    // return createDevtoolsHost(dependencies, this._devtoolsEvents);
-    return {
-      subscribeToSwarmInfo: () => subscribeToSwarmInfo(dependencies),
-      subscribeToSignalStatus: () => subscribeToSignalStatus(dependencies),
-      subscribeToSignalTrace: () => subscribeToSignalTrace(dependencies)
-    } as any;
+    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+    log('closing...', { deviceKey });
+    await this._serviceContext.close();
+    log('closed', { deviceKey });
   }
 }

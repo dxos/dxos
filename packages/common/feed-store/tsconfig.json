@@ -6,7 +6,7 @@
       "@dxos/mocha",
       "@dxos/typings",
       "mocha",
-      "node",
+      "node"
     ]
   },
   "include": [
@@ -14,16 +14,31 @@
   ],
   "references": [
     {
+      "path": "../../core/halo/keyring"
+    },
+    {
       "path": "../async"
     },
     {
+      "path": "../codec-protobuf"
+    },
+    {
       "path": "../crypto"
+    },
+    {
+      "path": "../debug"
     },
     {
       "path": "../hypercore"
     },
     {
       "path": "../keys"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../log"
     },
     {
       "path": "../random-access-storage"

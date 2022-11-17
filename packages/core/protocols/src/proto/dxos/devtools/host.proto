@@ -4,8 +4,6 @@
 
 syntax = "proto3";
 
-import "dxos/devtools/swarmLog.proto";
-
 import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
 
@@ -50,13 +48,13 @@ service DevtoolsHost {
   // ECHO
   //
 
-  rpc SubscribeToParties(SubscribeToPartiesRequest) returns (stream SubscribeToPartiesResponse);
+  rpc SubscribeToSpaces(SubscribeToSpacesRequest) returns (stream SubscribeToSpacesResponse);
   rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
   rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
   rpc SubscribeToFeedBlocks(SubscribeToFeedBlocksRequest) returns (stream SubscribeToFeedBlocksResponse);
 
-  rpc GetPartySnapshot(GetPartySnapshotRequest) returns (GetPartySnapshotResponse);
-  rpc SavePartySnapshot(SavePartySnapshotRequest) returns (SavePartySnapshotResponse);
+  rpc GetSpaceSnapshot(GetSpaceSnapshotRequest) returns (GetSpaceSnapshotResponse);
+  rpc SaveSpaceSnapshot(SaveSpaceSnapshotRequest) returns (SaveSpaceSnapshotResponse);
   rpc ClearSnapshots(ClearSnapshotsRequest) returns (google.protobuf.Empty);
 
   //
@@ -114,7 +112,7 @@ message SubscribeToKeyringKeysResponse {
 // SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
-  optional dxos.keys.PublicKey party_key = 1;
+  optional dxos.keys.PublicKey space_key = 1;
 }
 
 message SubscribeToCredentialMessagesResponse {
@@ -144,23 +142,23 @@ message GetNetworkPeersResponse {
   repeated PeerInfo peers = 1;
 }
 
-// SubscribeToParties
+// SubscribeToSpaces
 
-message SubscribeToPartiesRequest {
-  repeated dxos.keys.PublicKey party_keys = 1;
+message SubscribeToSpacesRequest {
+  repeated dxos.keys.PublicKey space_keys = 1;
 }
 
-message SubscribeToPartiesResponse {
-  message PartyInfo {
+message SubscribeToSpacesResponse {
+  message SpaceInfo {
     dxos.keys.PublicKey key = 1;
     bool is_open = 2;
-    bool is_active = 3;
-    dxos.echo.timeframe.TimeframeVector timeframe = 4;
-    repeated dxos.keys.PublicKey feeds = 5;
-    map<string, string> properties = 6;
+    dxos.echo.timeframe.TimeframeVector timeframe = 3;
+    dxos.keys.PublicKey genesisFeed = 4;
+    dxos.keys.PublicKey controlFeed = 5;
+    dxos.keys.PublicKey dataFeed = 6;
   }
 
-  repeated PartyInfo parties = 1;
+  repeated SpaceInfo spaces = 1;
 }
 
 // SubscribeToItems
@@ -175,8 +173,7 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.keys.PublicKey party_key = 1;
-  repeated dxos.keys.PublicKey feed_keys = 2;
+  repeated dxos.keys.PublicKey feed_keys = 1;
 }
 
 message SubscribeToFeedsResponse {
@@ -191,41 +188,39 @@ message SubscribeToFeedsResponse {
 // SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
-  optional dxos.keys.PublicKey party_key = 1;
+  optional dxos.keys.PublicKey space_key = 1;
   optional dxos.keys.PublicKey feed_key = 2;
   optional int32 max_blocks = 3;
 }
 
 message SubscribeToFeedBlocksResponse {
   message Block {
-    bytes key = 1;
+    dxos.keys.PublicKey feed_key = 1;
     int32 seq = 2;
-    bool sync = 3;
-    string path = 4;
-    dxos.echo.feed.FeedMessage data = 5;
+    dxos.echo.feed.FeedMessage data = 3;
   }
 
   repeated Block blocks = 1;
 }
 
-// GetPartySnapshot
+// GetSpaceSnapshot
 
-message GetPartySnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+message GetSpaceSnapshotRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message GetPartySnapshotResponse {
-  optional dxos.echo.snapshot.PartySnapshot snapshot = 1;
+message GetSpaceSnapshotResponse {
+  optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
 }
 
-// SavePartySnapshot
+// SaveSpaceSnapshot
 
-message SavePartySnapshotRequest {
-  dxos.keys.PublicKey party_key = 1;
+message SaveSpaceSnapshotRequest {
+  dxos.keys.PublicKey space_key = 1;
 }
 
-message SavePartySnapshotResponse {
-  optional dxos.echo.snapshot.PartySnapshot snapshot = 1;
+message SaveSpaceSnapshotResponse {
+  optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
 }
 
 // ClearSnapshots

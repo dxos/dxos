@@ -43,34 +43,34 @@ First create a HALO profile by entering a username:
 
 Your keyphrase will be copied in to the clipboard.
 
-### Parties
+### Spaces
 
-Next create a Party:
+Next create a space:
 
-`> ECHO > Parties`
+`> ECHO > Spaces`
 
-Enter the Party name, then navigate to select the party.
+Enter the space name, then navigate to select the space.
 
 Next enter some items.
 
-`> ECHO > Parties > [select] > Items`
+`> ECHO > Spaces > [select] > Items`
 
 ### Sharing
 
 Open `kodama` in another terminal and create a new Profile.
 
-Using the **first** peer navigate to share the Party:
+Using the **first** peer navigate to share the space:
 
-`> ECHO > Parties > [select] > Share`
+`> ECHO > Spaces > [select] > Share`
 
 The invitation code will be copied into the clipboard.
 
-In the **second** peer join the Party.
+In the **second** peer join the space.
 
-`> ECHO > Parties > Join`
+`> ECHO > Spaces > Join`
 
 Paste the invitation key, then enter the 4-digit code.
-Next navigate to the Party and enter some items.
+Next navigate to the space and enter some items.
 
 ## Development
 

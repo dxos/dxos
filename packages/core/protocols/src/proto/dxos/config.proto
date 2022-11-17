@@ -62,18 +62,6 @@ message Module {
 
 message Runtime {
   message Client {
-    /// Whether the client services are local with ClientServiceHost or remote and need to be accessed via ClientServiceProxy. Defaults to AUTOMATIC.
-    enum Mode {
-      /// Connects to the browser wallet if avialable, otherwise runs services in the local mode.
-      AUTOMATIC = 0;
-
-      /// Run services in the local mode.
-      LOCAL = 1;
-
-      /// Connect to the browser wallet or to the remote services through the RPC port.
-      REMOTE = 2;
-    }
-
     message Storage {
       enum StorageDriver {
         RAM = 0;
@@ -104,9 +92,8 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
-    optional Mode mode = 6;
-
-    optional string remote_source = 7;
+    // TODO(burdon): Remove?
+    optional string remote_source = 6;
   }
 
   message App {

@@ -1,54 +1,69 @@
 {
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
-  "root": "docs",
   "projectType": "application",
   "targets": {
-    // TODO(wittjosiah): Run as apart of release please to ensure api docs are up to date.
+    "generate:api": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "generate:api"
+      },
+      "outputs": [
+        "docs/docs/api"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "docs/**/*.{ts,tsx,js,jsx}"
+        ],
+        "format": "unix"
+      }
+    },
+    "plate": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "plate"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
     "prerelease": {
       "executor": "nx:run-script",
       "inputs": [
-        "default",
-        "^production",
         {
           "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "DX_RELEASE"
+          "env": "NODE_ENV"
         },
         {
-          "env": "SEGMENT_API_KEY"
-        }
-      ],
-      "outputs": [
-        "docs/docs/api",
-        "docs/docs/.vuepress/dist"
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        "^production",
+        "default"
       ],
       "options": {
         "script": "prerelease"
-      }
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
-      "options": {
-        "lintFilePatterns": [
-          "docs/**/*.{ts,tsx,js,jsx}"
-        ]
-      }
-    },
-    "generate:api": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "docs/docs/api"
-      ],
-      "options": {
-        "script": "generate:api"
       },
-      "dependsOn": [
-        "^build"
+      "outputs": [
+        "docs/docs/.vuepress/dist",
+        "docs/docs/api"
       ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
-  }
+  },
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "docs"
 }

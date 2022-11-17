@@ -10,26 +10,22 @@
       "node"
     ]
   },
-  "include": [
-    "src",
-    "playwright"
-  ],
   "exclude": [
-    "vite.config.ts",
-    "*.t.ts"
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.plate.json"
-    },
     {
       "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/vite-plugin"
     }
   ]
 }

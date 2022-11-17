@@ -4,41 +4,54 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
       "options": {
+        "main": "tools/beast/src/index.ts",
         "outputPath": "tools/beast/dist",
         "tsConfig": "tools/beast/tsconfig.json",
-        "main": "tools/beast/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "tools/beast/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/tools/beast",
+        "outputPath": "tmp/mocha/tools/beast",
+        "resultsPath": "test-results/tools/beast",
         "testPatterns": [
           "tools/beast/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "tools/beast/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/tools/beast",
-        "resultsPath": "test-results/tools/beast",
-        "coveragePath": "coverage/tools/beast"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   }
 }

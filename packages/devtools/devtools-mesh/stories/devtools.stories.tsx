@@ -24,7 +24,7 @@ import {
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarmLog';
+import { SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
@@ -44,7 +44,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   });
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
-  await networkManager.joinProtocolSwarm({
+  await networkManager.openSwarmConnection({
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),

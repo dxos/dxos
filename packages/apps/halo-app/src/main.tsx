@@ -6,17 +6,29 @@ import '@dxosTheme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { FatalError } from '@dxos/react-appkit';
+
+import { App } from './App';
+
 // import debug from 'debug'
 // import { log } from '@dxos/log'
 
 // debug.enable('dxos:*')
-// log.config.filter='debug'
+// log.config({ filter: 'debug' })
 
-import { App } from './App';
+const root = createRoot(document.getElementById('root')!);
 
-createRoot(document.getElementById('root')!)
-  .render(
-      // <StrictMode>
-      <App />
-      // </StrictMode>
+if (typeof SharedWorker !== 'undefined') {
+  root.render(
+    // <StrictMode>
+    <App />
+    // </StrictMode>
   );
+} else {
+  // TODO(wittjosiah): Gracefully fallback to compatibility mode.
+  //   Support single app at a time by running client in window with a warning.
+  //   Main use case is Android Chrome where an alternative of Firefox can be suggested.
+  //   https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker#browser_compatibility
+  //   https://bugs.chromium.org/p/chromium/issues/detail?id=154571
+  root.render(<FatalError error={new Error('Requires a browser with support for shared workers.')} />);
+}

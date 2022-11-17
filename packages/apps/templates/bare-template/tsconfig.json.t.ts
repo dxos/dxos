@@ -4,7 +4,7 @@
 
 import { TemplateFunction } from '@dxos/plate';
 
-import rootTsconfig from '../../../tsconfig.json';
+import rootTsconfig from '../../../../tsconfig.json';
 
 export type Input = {
   monorepo?: boolean
@@ -24,8 +24,7 @@ const template: TemplateFunction<Input> = ({ input }) => {
   };
 
   const include = [
-    'src',
-    'playwright'
+    'src'
   ];
 
   const exclude = [
@@ -39,7 +38,7 @@ const template: TemplateFunction<Input> = ({ input }) => {
   ];
 
   const tsconfig = input.monorepo ? {
-    extends: '../../../tsconfig.json',
+    extends: '../../../../tsconfig.json',
     compilerOptions,
     include,
     exclude: [
@@ -49,20 +48,29 @@ const template: TemplateFunction<Input> = ({ input }) => {
     references: [
       ...references,
       {
+        path: '../../../sdk/client'
+      },
+      {
+        path: '../../../sdk/config'
+      },
+      {
+        path: '../../../sdk/vite-plugin'
+      },
+      {
         path: './tsconfig.plate.json'
-      },
-      {
-        path: '../../../packages/sdk/client'
-      },
-      {
-        path: '../../../packages/sdk/config'
       }
     ]
   } : {
     ...rootTsconfig,
-    compilerOptions,
+    compilerOptions: {
+      ...rootTsconfig,
+      ...compilerOptions
+    },
     include,
-    exclude,
+    exclude: [
+      ...rootTsconfig.exclude,
+      'vite.config.ts'
+    ],
     references
   };
 

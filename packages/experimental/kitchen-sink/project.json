@@ -2,23 +2,29 @@
   "sourceRoot": "packages/experimental/kitchen-sink/src",
   "projectType": "application",
   "targets": {
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "packages/experimental/kitchen-sink/**/*.{ts,tsx,js,jsx}"
-        ]
-      }
-    },
     "e2e": {
       "executor": "@dxos/playwright:playwright",
       "options": {
+        "config": "packages/experimental/kitchen-sink/playwright/config.ts",
         "testPatterns": [
           "packages/experimental/kitchen-sink/playwright/tests/*.test.ts"
-        ],
-        "config": "packages/experimental/kitchen-sink/playwright/config.ts"
+        ]
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/kitchen-sink/**/*.{ts,tsx,js,jsx}"
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

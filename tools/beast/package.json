@@ -1,18 +1,25 @@
 {
   "name": "@dxos/beast",
-  "version": "2.33.8",
+  "version": "0.1.5",
   "private": true,
-  "description": "Code analyzer.",
+  "description": "Tools.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "beast": "./bin/beast.js"
   },
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "scripts": {
     "check": "true",
     "info": "tsc --showConfig | jq",
     "update-docs": "ts-node --esm ./src/main.ts --base-dir=../../ docs"
+  },
+  "mocha": {
+    "loader": "ts-node/esm",
+    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
@@ -34,13 +41,9 @@
     "@types/lodash.pick": "^4.4.7",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/yargs": "~16.0.1",
     "mocha": "^8.4.0",
-    "typescript": "^4.7.2"
-  },
-  "mocha": {
-    "loader": "ts-node/esm",
-    "spec": "src/**/*.test.ts"
+    "typescript": "^4.8.4"
   }
 }

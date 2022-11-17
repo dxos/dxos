@@ -1,14 +1,18 @@
 {
   "name": "@dxos/ridoculous",
-  "version": "2.33.8",
+  "version": "0.1.5",
+  "private": true,
   "description": "Markdown processing CLI and library.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
+  "author": "info@dxos.org",
   "type": "module",
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "ridoculous": "./bin/ridoculous.js"
   },
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "check": "true",
@@ -16,6 +20,10 @@
     "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
     "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
+  },
+  "mocha": {
+    "loader": "ts-node/esm",
+    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
@@ -43,18 +51,15 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protobuf-compiler": "workspace:*",
     "@types/debug": "^4.1.7",
+    "@types/diff": "^5.0.2",
     "@types/glob": "~7.1.3",
     "@types/js-yaml": "^4.0.5",
-    "@types/node": "^16.11.58",
+    "@types/node": "^18.11.9",
     "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
     "diff": "~5.1.0",
     "mocha": "^8.4.0",
     "ts-node": "10.9.1",
-    "typescript": "^4.7.2"
-  },
-  "mocha": {
-    "loader": "ts-node/esm",
-    "spec": "src/**/*.test.ts"
+    "typescript": "^4.8.4"
   }
 }

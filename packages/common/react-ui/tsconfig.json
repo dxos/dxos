@@ -10,13 +10,13 @@
       "node"
     ]
   },
+  "exclude": [
+    "plugin.d.ts",
+    "vite.config.ts"
+  ],
   "include": [
-    "src/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-  ],
-  "exclude": [
-    "vite.config.ts",
-    "*.t.ts"
+    "src/*.ts"
   ]
 }

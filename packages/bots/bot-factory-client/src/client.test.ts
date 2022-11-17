@@ -15,6 +15,7 @@ describe('In-Memory', function () {
       signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
       transportFactory: MemoryTransportFactory
     });
+
     const client = new BotFactoryClient(networkManager);
     expect(client).toBeDefined();
   });

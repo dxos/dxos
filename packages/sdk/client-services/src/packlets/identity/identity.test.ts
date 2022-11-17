@@ -10,20 +10,19 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { createDefaultModelFactory } from '../services';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
 
-const modelFactory = new ModelFactory().registerModel(ObjectModel);
+const modelFactory = createDefaultModelFactory();
 
-describe('halo/identity', function () {
+describe('identity/identity', function () {
   it('create', async function () {
     const keyring = new Keyring();
     const identityKey = await keyring.createKey();

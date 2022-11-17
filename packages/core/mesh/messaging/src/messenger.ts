@@ -44,7 +44,7 @@ export class Messenger {
   constructor({ signalManager, retryDelay = 100, timeout = 3000 }: MessengerOptions) {
     this._signalManager = signalManager;
     this._signalManager.onMessage.on(async (message) => {
-      log(`Received message from ${message.author}`);
+      log('received message', { from: message.author });
       await this._handleMessage(message);
     });
 
@@ -58,28 +58,20 @@ export class Messenger {
       payload
     };
 
-    log('sent message', {
-      messageId: reliablePayload.messageId,
-      author,
-      recipient
-    });
+    log('sent message', { messageId: reliablePayload.messageId, author, recipient });
 
     // Setting retry interval if signal was not acknowledged.
     const cancelRetry = exponentialBackoffInterval(async () => {
-      log(`Retrying message ${reliablePayload.messageId}`);
+      log('retrying message', { messageId: reliablePayload.messageId });
       try {
-        await this._encodeAndSend({
-          author,
-          recipient,
-          reliablePayload
-        });
+        await this._encodeAndSend({ author, recipient, reliablePayload });
       } catch (error) {
-        log.error(`ERROR failed to send message: ${error}`);
+        log.error('failed to send message', { error });
       }
     }, this._retryDelay);
 
     const timeout = setTimeout(() => {
-      log(`Message ${reliablePayload.messageId} was not delivered!`);
+      log('message not delivered', { messageId: reliablePayload.messageId });
       this._onAckCallbacks.delete(reliablePayload.messageId!);
       cancelRetry();
     }, this._timeout);
@@ -178,11 +170,11 @@ export class Messenger {
       .getCodecForType('dxos.mesh.messaging.ReliablePayload')
       .decode(payload.value, { preserveAny: true });
 
-    log(`Handling message with ${reliablePayload.messageId}`);
-
+    log('handling message', { messageId: reliablePayload.messageId });
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
       return;
     }
+
     this._receivedMessages.add(reliablePayload.messageId!);
     await this._sendAcknowledgement({
       author,
@@ -213,7 +205,8 @@ export class Messenger {
     recipient: PublicKey;
     messageId: PublicKey;
   }): Promise<void> {
-    log(`Sent ack: ${messageId} from ${recipient} to ${author}`);
+    log('sending ACK', { messageId, from: recipient, to: author });
+
     await this._signalManager.sendMessage({
       author: recipient,
       recipient: author,

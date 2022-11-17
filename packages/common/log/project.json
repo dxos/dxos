@@ -4,44 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "options": {
+        "main": "packages/common/log/src/index.ts",
         "outputPath": "packages/common/log/dist",
         "tsConfig": "packages/common/log/tsconfig.json",
-        "main": "packages/common/log/src/index.ts"
-      }
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/log/**/*.{ts,js}"
-        ]
-      }
+        ],
+        "format": "unix"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
+        "coveragePath": "coverage/packages/common/log",
+        "outputPath": "tmp/mocha/packages/common/log",
+        "resultsPath": "test-results/packages/common/log",
         "testPatterns": [
           "packages/common/log/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/common/log/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/common/log",
-        "resultsPath": "test-results/packages/common/log",
-        "coveragePath": "coverage/packages/common/log"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    },
+    "toolbox": {
+      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

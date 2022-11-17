@@ -6,6 +6,7 @@ import tailwindcssForms from '@tailwindcss/forms';
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
+import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
@@ -222,6 +223,12 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                         '100%': {
                           transform: 'translateX(calc(100% + 1rem))'
                         }
+                      },
+                      // Shimmer
+                      'shimmer-loop': {
+                        '100%': {
+                          transform: 'translateX(100%)'
+                        }
                       }
                     },
                     animation: {
@@ -247,11 +254,13 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       'toast-hide': 'toast-hide 100ms ease-in forwards',
                       'toast-slide-in-right': 'toast-slide-in-right 150ms cubic-bezier(0.16, 1, 0.3, 1)',
                       'toast-slide-in-bottom': 'toast-slide-in-bottom 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-                      'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards'
+                      'toast-swipe-out': 'toast-swipe-out 100ms ease-out forwards',
+                      // Shimmer
+                      shimmer: 'shimmer-loop 2s infinite'
                     }
                   }
                 },
-                plugins: [tailwindcssForms, tailwindcssRadix()],
+                plugins: [tailwindcssLogical, tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
                 content: [resolve(root || './', 'node_modules/@dxos/react-ui/dist/**/*.js'), ...config.content]
               }),
