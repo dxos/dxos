@@ -1,0 +1,46 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/react-ui"
+    },
+    {
+      "path": "../../../core/echo/object-model"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/react-uikit"
+    },
+    {
+      "path": "../../../sdk/vite-plugin"
+    }
+  ]
+}
