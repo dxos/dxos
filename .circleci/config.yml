@@ -151,6 +151,16 @@ jobs:
           environment:
             NODE_ENV: production
             NODE_OPTIONS: --max_old_space_size=5120
+      - run:
+          name: Deploy Devtools
+          working_directory: ./packages/devtools/devtools
+          command: |
+            ../.circleci/scripts/publish.sh production
+            ../.circleci/scripts/publish.sh
+          no_output_timeout: 30m
+          environment:
+            NODE_ENV: production
+            NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
   main:
