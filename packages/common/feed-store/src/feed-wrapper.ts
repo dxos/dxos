@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { createBinder } from '@dxos/util';
 
 import { FeedWriter } from './feed-writer';
+import { log } from '@dxos/log';
 
 /**
  * Async feed wrapper.
@@ -60,7 +61,9 @@ export class FeedWrapper<T extends {}> {
   createFeedWriter(): FeedWriter<T> {
     return {
       write: async (data: T) => {
+        log('write', { feed: this._key, seq: this._hypercore.length, data });
         const seq = await this.append(data);
+        log('write complete', { feed: this._key, seq });
         return {
           feedKey: this.key,
           seq
