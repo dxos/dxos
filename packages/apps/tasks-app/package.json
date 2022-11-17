@@ -1,0 +1,34 @@
+{
+  "name": "@dxos/tasks-app",
+  "version": "0.1.5",
+  "private": true,
+  "description": "DXOS tasks application.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-list": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
+    "@dxos/sentry": "workspace:*",
+    "@sentry/react": "^7.17.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.3.0"
+  },
+  "devDependencies": {
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "vite": "3.0.9",
+    "vite-plugin-pwa": "^0.12.4",
+    "workbox-window": "^6.5.4"
+  }
+}
