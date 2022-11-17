@@ -20,7 +20,9 @@ export const loadJson = async <T>(filename: string, throwOnError = true): Promis
   }
 };
 
-export const saveJson = async (filepath: string, value: any) => {
+export const saveJson = async (filepath: string, value: any, verbose = false) => {
   await writeFile(filepath, JSON.stringify(value, undefined, 2) + '\n', 'utf-8');
-  console.log(`Updated: ${chalk.green(filepath)}`);
+  if (verbose) {
+    console.log(`Updated: ${chalk.green(filepath)}`);
+  }
 };

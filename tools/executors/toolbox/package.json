@@ -10,6 +10,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true",
+    "toolbox": "ts-node ./src/toolbox.ts",
     "update": "ts-node ./src/update.ts"
   },
   "dependencies": {

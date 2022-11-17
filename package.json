@@ -19,7 +19,8 @@
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "lint": "nx run-many --target=lint --fix",
     "build": "nx run-many --target=build",
-    "test": "nx run-many --target=test"
+    "test": "nx run-many --target=test",
+    "postinstall": "node -r @swc-node/register tools/executors/toolbox/src/toolbox.ts"
   },
   "dependencies": {
     "execa": "^5.1.0",
