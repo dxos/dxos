@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/experimental/spyglass/src/index.ts",
         "outputPath": "packages/experimental/spyglass/dist",
-        "tsConfig": "packages/experimental/spyglass/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/experimental/spyglass/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
