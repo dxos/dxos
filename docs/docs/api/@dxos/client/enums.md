@@ -2,6 +2,29 @@
 title: Enumerations
 ---
 # Enumerations
+### [`State`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `AUTHENTICATING`
+- `CANCELLED`
+- `CONNECTED`
+- `CONNECTING`
+- `ERROR`
+- `INIT`
+- `SUCCESS`
+- `TIMEOUT`
+### [`Type`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `INTERACTIVE`
+- `INTERACTIVE_TESTING`
+- `OFFLINE`
 ### [`ItemFilterDeleted`]()
 
 Controls how deleted items are filtered.
@@ -20,5 +43,5 @@ Values:
 - `DXNS_ADDRESS`
 - `FEED`
 - `IDENTITY`
-- `PARTY`
+- `SPACE`
 - `UNKNOWN`

@@ -145,11 +145,23 @@ class Toolbox {
   }
 
   /**
+   * Update root package file.
+   * - Sort
+   */
+  async updateRootPackage() {
+    console.log('Updating package.json');
+    const packagePath = join(this.rootDir, 'package.json');
+    const packageJson = await loadJson<PackageJson>(packagePath);
+    const updated = sortPackageJson(packageJson);
+    await saveJson(packagePath, updated, this.options.verbose);
+  }
+
+  /**
    * Update project files.
    * - Sort keys.
    */
   async updateProjects() {
-    console.log('Updating project.json');
+    console.log('Updating all project.json');
     for (const project of this.projects) {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
@@ -183,7 +195,7 @@ class Toolbox {
    * - Sort keys.
    */
   async updatePackages() {
-    console.log('Updating package.json');
+    console.log('Updating all package.json');
     for (const project of this.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
@@ -200,7 +212,7 @@ class Toolbox {
    * - Update references.
    */
   async updateTsConfig() {
-    console.log('Updating tsconfig.json');
+    console.log('Updating all tsconfig.json');
     for (const project of this.projects) {
       const projectPath = join(project.path, 'package.json');
       const projectPackage = await loadJson<PackageJson>(projectPath);
@@ -250,6 +262,7 @@ const run = async () => {
   const toolbox = new Toolbox({ verbose: false });
   await toolbox.init();
   await toolbox.updateWorkspace();
+  await toolbox.updateRootPackage();
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();

@@ -15,9 +15,12 @@ import {
   Fallback,
   FatalError,
   GenericFallback,
+  ManageSpacePage,
   RequireIdentity,
   ServiceWorkerToast,
-  SpacesPage
+  SpacesPage,
+  useTelemetry,
+  translations
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
 import { DOCUMENT_TYPE } from '@dxos/react-composer';
@@ -26,6 +29,7 @@ import { captureException } from '@dxos/sentry';
 import { TextModel } from '@dxos/text-model';
 
 import { SpacePage } from './pages';
+import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
@@ -37,8 +41,7 @@ const clientProvider = async () => {
 };
 
 const Routes = () => {
-  // TODO(wittjosiah): useTelemetry.
-
+  useTelemetry({ namespace: 'composer-app' });
   const config = useConfig();
   // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
   // TODO(wittjosiah): Config defaults should be available from the config.
@@ -67,6 +70,10 @@ const Routes = () => {
             {
               path: '/spaces/:space',
               element: <SpacePage />
+            },
+            {
+              path: '/spaces/:space/settings',
+              element: <ManageSpacePage />
             }
           ]
         }
@@ -88,7 +95,10 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider
+      resourceExtensions={[translations, composerTranslations]}
+      fallback={<Fallback message='Loading...' />}
+    >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>

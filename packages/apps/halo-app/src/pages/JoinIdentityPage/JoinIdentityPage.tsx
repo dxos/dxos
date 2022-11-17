@@ -19,7 +19,7 @@ export const JoinIdentityPage = () => {
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
   const [invitationCode, setInvitationCode] = useState(invitationParam ?? '');
-  const redirectUrl = searchParams.get('redirect') ?? '/spaces';
+  const redirectUrl = searchParams.get('redirect') ?? '/devices';
   const redirect = useCallback(
     () => (redirectUrl.startsWith('http') ? window.location.replace(redirectUrl) : navigate(redirectUrl)),
     [redirectUrl]

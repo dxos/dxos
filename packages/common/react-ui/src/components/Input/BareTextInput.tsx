@@ -11,7 +11,8 @@ import { InputProps, InputSize } from './InputProps';
 const sizeMap: Record<InputSize, string> = {
   md: 'text-sm',
   lg: 'text-base',
-  pin: ''
+  pin: '',
+  textarea: ''
 };
 
 export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange'> &

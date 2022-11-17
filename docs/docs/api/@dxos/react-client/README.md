@@ -49,7 +49,7 @@ The [HALO Invitation Story](./stories/halo-invitations.stories.tsx) demonstrates
 
 https://user-images.githubusercontent.com/3523355/137532718-a21f1f27-9854-4c0b-831a-e9ff92feac49.mov
 
-The [Party Invitation Story](./stories/party-invitations.stories.tsx) demonstrates multiple clients creating and sharing parties.
+The [space Invitation Story](./stories/space-invitations.stories.tsx) demonstrates multiple clients creating and sharing spaces.
 
 https://user-images.githubusercontent.com/3523355/137532717-e77395dc-96f9-4e4b-8f67-e6bd026a3abe.mov
 

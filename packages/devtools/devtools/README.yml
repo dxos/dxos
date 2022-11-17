@@ -1,0 +1,11 @@
+usage: |
+  Standalone devtool app used to inspect DXOS client state.
+  It listens for a DXOS client in shared worker started by any app.
+
+  `dx.yml` contains `runtime.client.remoteSource` default endpoint with remote client. 
+  It is used to listen for a halo-app shared worker (`pnpm nx serve halo-app`).
+
+  ```bash
+  pnpm nx serve devtools
+  ```
+

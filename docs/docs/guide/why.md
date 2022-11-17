@@ -1,6 +1,6 @@
 ---
-position: 1
-label: "Why DXOS?"
+order: 1
+title: "Why DXOS?"
 prev: README.md
 next: quick-start
 ---

@@ -29,7 +29,7 @@ Options:
 Type: `boolean`
 
 Determines if this is our key?
-Usually true if  `secret_key`  is present; may be false for "inception keys" such as the Party key.
+Usually true if  `secret_key`  is present; may be false for "inception keys" such as the Space key.
 
 Options:
   - proto3_optional = true

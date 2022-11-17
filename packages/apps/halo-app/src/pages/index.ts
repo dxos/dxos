@@ -9,7 +9,6 @@ export * from './CreateIdentityPage';
 export * from './DevicesPage';
 export * from './IdentityPage';
 export * from './JoinIdentityPage';
-export * from './JoinSpacePage';
 export * from './LockPage';
 export * from './RecoverIdentityPage';
 export * from './RequireIdentity';
