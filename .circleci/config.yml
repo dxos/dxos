@@ -143,7 +143,7 @@ jobs:
             NODE_OPTIONS: --max_old_space_size=4096
       - run:
           name: Deploy Tasks
-          working_directory: ./packages/apps/task-app
+          working_directory: ./packages/apps/tasks-app
           command: |
             ../../../.circleci/scripts/publish.sh production
             ../../../.circleci/scripts/publish.sh
