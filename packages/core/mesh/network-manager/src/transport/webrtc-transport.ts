@@ -57,11 +57,11 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('error', async (err) => {
       this.errors.raise(err);
-      await this.close();
+      await this.destroy();
     });
   }
 
-  async close() {
+  async destroy() {
     log('closing...');
     await this._disconnectStreams();
     this._peer!.destroy();
@@ -83,7 +83,7 @@ export class WebRTCTransport implements Transport {
 
 // TODO(dmaretskyi): Convert to class.
 export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
-  create: (params) =>
+  createTransport: (params) =>
     new WebRTCTransport({
       ...params,
       webrtcConfig

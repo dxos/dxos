@@ -130,7 +130,7 @@ export class Connection {
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
     assert(!this._transport);
-    this._transport = this._transportFactory.create({
+    this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => {
@@ -172,11 +172,11 @@ export class Connection {
     // TODO(dmaretskyi): CLOSING state.
     log('closing', { peerId: this.ownId });
 
-    // This will try to gracefull close the stream flushing any unsent data packets.
+    // This will try to gracefully close the stream flushing any unsent data packets.
     await this._protocol.close();
 
     // After the transport is closed streams are disconnected.
-    await this._transport?.close();
+    await this._transport?.destroy();
 
     this._changeState(ConnectionState.CLOSED);
     log('closed', { peerId: this.ownId });

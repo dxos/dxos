@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { errors } from '@playwright/test';
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
@@ -31,7 +32,7 @@ const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
 };
 
 export const MemoryTransportFactory: TransportFactory = {
-  create: (params) => new MemoryTransport(params)
+  createTransport: (params) => new MemoryTransport(params)
 };
 
 /**
@@ -54,43 +55,46 @@ export class MemoryTransport implements Transport {
   private _remoteId!: PublicKey;
   private _remoteConnection?: MemoryTransport;
 
-  constructor(private readonly params: TransportOptions) {
+  constructor(private readonly options: TransportOptions) {
     log('creating', { id: this._id });
 
-    if (this.params.initiator) {
-      setTimeout(async () => this.params.sendSignal({ json: JSON.stringify({ transportId: this._id.toHex() }) }));
+    if (this.options.initiator) {
+      // prettier-ignore
+      setTimeout(async () => this.options.sendSignal({
+        json: JSON.stringify({ transportId: this._id.toHex() })
+      }));
     }
 
     assert(!MemoryTransport._connections.has(this._id), 'Duplicate memory connection');
     MemoryTransport._connections.set(this._id, this);
 
-    this._remote.wait().then(
-      (remoteId) => {
+    this._remote
+      .wait({ timeout: this.options.timeout ?? 1000 })
+      .then((remoteId) => {
         this._remoteId = remoteId;
         this._remoteConnection = MemoryTransport._connections.get(this._remoteId);
         if (this._remoteConnection) {
+          assert(!this._remoteConnection._remoteConnection, new Error(`Remote already connected: ${this._remoteId}`));
           this._remoteConnection._remoteConnection = this;
           this._remoteConnection._remoteId = this._id;
 
           log('connected', { id: this._id, remote: this._remoteId });
-          this.params.stream
+          this.options.stream
             .pipe(this._outgoingDelay)
-            .pipe(this._remoteConnection.params.stream)
+            .pipe(this._remoteConnection.options.stream)
             .pipe(this._incomingDelay)
-            .pipe(this.params.stream);
+            .pipe(this.options.stream);
 
           this.connected.emit();
           this._remoteConnection.connected.emit();
         }
-      },
-      async (err) => {
-        log.catch(err);
-      }
-    );
+      })
+      .catch((err) => {
+        this.errors.raise(err);
+      });
   }
 
-  // TODO(burdon): Add open method.
-  async close(): Promise<void> {
+  async destroy(): Promise<void> {
     log('closing', { id: this._id });
 
     MemoryTransport._connections.delete(this._id);

@@ -35,7 +35,7 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
 
   afterTest(() => networkManager.close());
   const plugin = new RpcPlugin(onConnect);
-  await networkManager.openSwarmConnection({
+  await networkManager.joinSwarm({
     topic,
     peerId,
     protocol: createProtocolFactory(topic, peerId, [plugin]),

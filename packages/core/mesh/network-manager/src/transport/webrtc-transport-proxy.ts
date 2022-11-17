@@ -79,7 +79,7 @@ export class WebRTCTransportProxy implements Transport {
         break;
       }
       case ConnectionState.CLOSED: {
-        await this.close();
+        await this.destroy();
         break;
       }
     }
@@ -102,7 +102,7 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   // TODO(burdon): Move open from constructor.
-  async close(): Promise<void> {
+  async destroy(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -148,7 +148,7 @@ export class WebRTCTransportProxyFactory implements TransportFactory {
     return this;
   }
 
-  create(options: TransportOptions): Transport {
+  createTransport(options: TransportOptions): Transport {
     assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
 
     const transport = new WebRTCTransportProxy({

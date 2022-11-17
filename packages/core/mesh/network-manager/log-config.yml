@@ -4,7 +4,9 @@ formatter:
 depth: 1
 
 filter:
-  - network-manager:debug
-  - test-protocol:debug
+  - test-suite:debug
+  - memory-transport:debug
+#  - network-manager:debug
+#  - test-protocol:debug
 #  - mesh-protocol:debug
 #  - protocol:debug

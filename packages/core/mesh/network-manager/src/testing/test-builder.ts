@@ -14,6 +14,7 @@ import { FullyConnectedTopology, Topology } from '../topology';
 import {
   MemoryTransportFactory,
   TransportFactory,
+  WebRTCTransport,
   WebRTCTransportProxyFactory,
   WebRTCTransportService
 } from '../transport';
@@ -24,6 +25,7 @@ export const TEST_SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 export type TestBuilderOptions = {
   signalHosts?: string[];
+  bridge?: boolean;
 };
 
 /**
@@ -42,14 +44,10 @@ export class TestBuilder {
     return new MemorySignalManager(this._signalContext);
   }
 
-  createPeer(options: TestPeerOptions = {}) {
-    return new TestPeer(this, options);
+  createPeer() {
+    return new TestPeer(this);
   }
 }
-
-export type TestPeerOptions = {
-  bridge?: boolean;
-};
 
 /**
  * Testing network peer.
@@ -62,20 +60,24 @@ export class TestPeer {
 
   private readonly _swarms = new ComplexSet<PublicKey>(PublicKey.hash);
   private readonly _networkManager: NetworkManager;
-  private readonly _client?: ProtoRpcPeer<any>;
-  private readonly _server?: ProtoRpcPeer<any>;
 
-  constructor(testBuilder: TestBuilder, options: TestPeerOptions = {}) {
+  private _proxy?: ProtoRpcPeer<any>;
+  private _service?: ProtoRpcPeer<any>;
+
+  constructor(private readonly testBuilder: TestBuilder) {
+    this._networkManager = this.createNetworkManager();
+  }
+
+  createNetworkManager() {
     let transportFactory: TransportFactory = MemoryTransportFactory;
-    if (testBuilder.options.signalHosts) {
-      const webrtcTransportFactory = new WebRTCTransportProxyFactory();
 
-      // TODO(burdon): Explain what we're doing here.
-      if (options.bridge) {
-        const [clientPort, serverPort] = createLinkedPorts();
+    if (this.testBuilder.options.signalHosts) {
+      if (this.testBuilder.options.bridge) {
+        // Simulates bridge to shared worker.
+        const [proxyPort, servicePort] = createLinkedPorts();
 
-        this._client = createProtoRpcPeer({
-          port: clientPort,
+        this._proxy = createProtoRpcPeer({
+          port: proxyPort,
           requested: {
             BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
           },
@@ -85,8 +87,8 @@ export class TestPeer {
           }
         });
 
-        this._server = createProtoRpcPeer({
-          port: serverPort,
+        this._service = createProtoRpcPeer({
+          port: servicePort,
           exposed: {
             BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
           },
@@ -97,29 +99,31 @@ export class TestPeer {
           }
         });
 
-        webrtcTransportFactory.setBridgeService(this._client.rpc.BridgeService);
+        transportFactory = new WebRTCTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+      } else {
+        transportFactory = {
+          createTransport: (params) => new WebRTCTransport(params)
+        };
       }
-
-      transportFactory = webrtcTransportFactory;
     }
 
-    this._networkManager = new NetworkManager({
-      signalManager: testBuilder.createSignalManager(),
+    return new NetworkManager({
+      signalManager: this.testBuilder.createSignalManager(),
       transportFactory
     });
   }
 
   async open() {
-    await this._client?.open();
-    await this._server?.open();
+    await this._proxy?.open();
+    await this._service?.open();
   }
 
   async close() {
     await Promise.all(Array.from(this._swarms.values()).map((topic) => this.leaveSwarm(topic)));
     this._swarms.clear();
 
-    await this._client?.close();
-    await this._server?.close();
+    await this._proxy?.close();
+    await this._service?.close();
     await this._networkManager.close();
   }
 

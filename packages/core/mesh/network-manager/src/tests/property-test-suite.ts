@@ -6,78 +6,19 @@ import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
-import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { Protocol } from '@dxos/mesh-protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
-import { createPeer, TestBuilder } from '../testing';
 import { FullyConnectedTopology } from '../topology';
-import { MemoryTransportFactory } from '../transport';
-import { testSuite } from './test-suite';
 
-describe('memory transport', function () {
-  const testBuilder = new TestBuilder();
-
-  testSuite({
-    testBuilder,
-    getTransportFactory: async () => MemoryTransportFactory
-  });
-
-  // TODO(burdon): Move to test suite?
-  it.skip('many peers and connections', async function () {
-    const numTopics = 5;
-    const peersPerTopic = 5;
-
-    await Promise.all(
-      range(numTopics).map(async () => {
-        const topic = PublicKey.random();
-
-        await Promise.all(
-          range(peersPerTopic).map(async (_, index) => {
-            const peerId = PublicKey.random();
-            const { plugin } = await createPeer({
-              topic,
-              peerId,
-              transportFactory: MemoryTransportFactory
-            });
-
-            const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
-
-            plugin.on('connect', async (protocol: Protocol) => {
-              const { peerId } = protocol.getSession() ?? {};
-              const remoteId = PublicKey.from(peerId);
-              await plugin.send(remoteId.asBuffer(), 'ping');
-            });
-
-            plugin.on('receive', async (protocol: Protocol, data: any) => {
-              const { peerId } = protocol.getSession() ?? {};
-              const remoteId = PublicKey.from(peerId);
-
-              if (data === 'ping') {
-                await plugin.send(remoteId.asBuffer(), 'pong');
-              } else if (data === 'pong') {
-                pongReceived();
-              } else {
-                throw new Error(`Invalid message: ${data}`);
-              }
-            });
-
-            await done();
-          })
-        );
-      })
-    );
-  });
-
-  // TODO(burdon): Move to test suite (or multiple).
+export const propertyTestSuite = () => {
   // TODO(dmaretskyi): Run this with actual webrtc and signal servers.
   // This test performs random actions in the real system and compares it's state with a simplified model.
-  it('property-based tests', async function () {
+  it.skip('property-based tests', async function () {
     /**
      * The simplified model of the system.
      */
@@ -221,7 +162,7 @@ describe('memory transport', function () {
 
     await fc.assert(
       fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async (cmds) => {
-        const s: ModelRunSetup<Model, Real> = () => ({
+        const setup: ModelRunSetup<Model, Real> = () => ({
           model: {
             topic: PublicKey.random(),
             peers: new ComplexSet(PublicKey.hash),
@@ -231,7 +172,8 @@ describe('memory transport', function () {
             peers: new ComplexMap(PublicKey.hash)
           }
         });
-        await fc.asyncModelRun(s, cmds);
+
+        await fc.asyncModelRun(setup, cmds);
       }),
       {
         examples: [
@@ -272,4 +214,4 @@ describe('memory transport', function () {
       }
     );
   });
-});
+};

@@ -34,7 +34,7 @@ const createPair = () => {
     initiator: true
   });
 
-  afterTest(() => connection1.close());
+  afterTest(() => connection1.destroy());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
@@ -47,7 +47,7 @@ const createPair = () => {
     initiator: false
   });
 
-  afterTest(() => connection2.close());
+  afterTest(() => connection2.destroy());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
   return {

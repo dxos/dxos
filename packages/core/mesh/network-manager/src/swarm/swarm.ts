@@ -59,6 +59,8 @@ export class Swarm {
 
   readonly errors = new ErrorStream();
 
+  // TODO(burdon): Swarm => Peer.create/destroy =< Connection.open/close
+
   // TODO(burdon): Split up properties.
   constructor(
     private readonly _topic: PublicKey,
@@ -107,6 +109,28 @@ export class Swarm {
     return this._topic;
   }
 
+  // TODO(burdon): async open?
+  async destroy() {
+    log('destroying', { topic: this._topic });
+    await this._topology.destroy();
+    await Promise.all(Array.from(this._connections.keys()).map((key) => this._closeConnection(key)));
+  }
+
+  async setTopology(topology: Topology) {
+    if (topology === this._topology) {
+      return;
+    }
+    log('setting topology', {
+      topic: this._topic,
+      previous: getClassName(this._topology),
+      topology: getClassName(topology)
+    });
+    await this._topology.destroy();
+    this._topology = topology;
+    this._topology.init(this._getSwarmController());
+    this._topology.update();
+  }
+
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
 
@@ -140,7 +164,7 @@ export class Swarm {
 
     // Check if we are already trying to connect to that peer.
     if (this._connections.has(remoteId)) {
-      // Peer with the highest Id closes it's connection, and accepts remote peer's offer.
+      // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
         log("closing local connection and accepting remote peer's offer", {
           topic: this._topic,
@@ -193,27 +217,6 @@ export class Swarm {
     await connection.signal(message);
   }
 
-  async setTopology(topology: Topology) {
-    if (topology === this._topology) {
-      return;
-    }
-    log('setting topology', {
-      topic: this._topic,
-      previous: getClassName(this._topology),
-      topology: getClassName(topology)
-    });
-    await this._topology.destroy();
-    this._topology = topology;
-    this._topology.init(this._getSwarmController());
-    this._topology.update();
-  }
-
-  async destroy() {
-    log('destroying', { topic: this._topic });
-    await this._topology.destroy();
-    await Promise.all(Array.from(this._connections.keys()).map((key) => this._closeConnection(key)));
-  }
-
   private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
@@ -233,7 +236,9 @@ export class Swarm {
     };
   }
 
-  // TODO(burdon): Make async.
+  /**
+   * Creates a connection then sends message over signal network.
+   */
   private async _initiateConnection(remoteId: PublicKey) {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
@@ -255,8 +260,10 @@ export class Swarm {
     log('initiated', { topic: this._topic });
   }
 
-  // TODO(burdon): Make async.
-  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
+  /**
+   * Synchronously create a connection, which must be initialized.
+   */
+  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
     log('creating connection', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
     assert(!this._connections.has(remoteId), 'Peer already connected.');
 
@@ -315,7 +322,6 @@ export class Swarm {
     return connection;
   }
 
-  // TODO(burdon): Make async.
   private async _closeConnection(peerId: PublicKey) {
     log('closing...', { topic: this._topic, peerId });
     const connection = this._connections.get(peerId);
