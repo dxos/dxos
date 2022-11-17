@@ -5,12 +5,11 @@
 import { Activity, Eraser } from 'phosphor-react';
 import React, { useState } from 'react';
 
+import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
 import { QrCode, useTranslation, Button, getSize, Input, AlertDialog } from '@dxos/react-uikit';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
-
-import { BASE_PROPERTIES, DX_TELEMETRY, getIdentifier } from '../../telemetry';
 
 export const IdentityPage = () => {
   const client = useClient();
@@ -53,10 +52,10 @@ export const IdentityPage = () => {
           <Button
             onClick={() => {
               Telemetry.event({
-                identityId: getIdentifier(client),
+                identityId: getTelemetryIdentifier(client),
                 name: 'halo-app:telemetry:toggle',
                 properties: {
-                  ...BASE_PROPERTIES,
+                  ...BASE_TELEMETRY_PROPERTIES,
                   value: !telemetryDisabled
                 }
               });

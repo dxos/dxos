@@ -10,13 +10,23 @@ import { useClient } from '@dxos/react-client';
 import * as Sentry from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
 
-import { DX_ENVIRONMENT, DX_RELEASE, BASE_PROPERTIES, getIdentifier, DX_TELEMETRY } from './base-properties';
-import { setupWindowListeners } from './listeners';
+import {
+  BASE_TELEMETRY_PROPERTIES,
+  DX_ENVIRONMENT,
+  DX_RELEASE,
+  DX_TELEMETRY,
+  getTelemetryIdentifier,
+  setupTelemetryListeners
+} from '../telemetry';
 
 const SENTRY_DESTINATION = process.env.SENTRY_DESTINATION;
 const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 
-export const useTelemetry = () => {
+export type UseTelemetryOptions = {
+  namespace: string;
+};
+
+export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
   const location = useLocation();
   const client = useClient();
   const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
@@ -42,22 +52,22 @@ export const useTelemetry = () => {
     });
 
     Telemetry.event({
-      identityId: getIdentifier(client),
-      name: 'halo-app.page.load',
+      identityId: getTelemetryIdentifier(client),
+      name: `${namespace}.page.load`,
       properties: {
-        ...BASE_PROPERTIES,
+        ...BASE_TELEMETRY_PROPERTIES,
         href: window.location.href,
         loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart
       }
     });
 
-    return setupWindowListeners(client);
+    return setupTelemetryListeners(namespace, client);
   }, []);
 
   useAsyncEffect(async () => {
     Telemetry.page({
-      identityId: getIdentifier(client),
-      properties: BASE_PROPERTIES
+      identityId: getTelemetryIdentifier(client),
+      properties: BASE_TELEMETRY_PROPERTIES
     });
   }, [location]);
 };
