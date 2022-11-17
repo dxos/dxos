@@ -16,9 +16,18 @@ const elevationClassNameMap = new Map<number, string>([
   [6, 'shadow-2xl']
 ]);
 
-export const defaultGroup = ({ elevation }: { elevation: Elevation }) => {
+export const defaultGroup = ({
+  elevation,
+  rounding,
+  spacing
+}: {
+  elevation: Elevation;
+  rounding?: string;
+  spacing?: string;
+}) => {
   return cx(
-    'rounded-lg p-4',
+    rounding ?? 'rounded-lg',
+    spacing ?? 'p-4',
     elevation === 0
       ? 'bg-transparent border border-neutral-200 dark:border-neutral-700'
       : 'bg-white dark:bg-neutral-800 elevated-buttons',
