@@ -11,6 +11,7 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest } from '@dxos/testutils';
 
 import { TestAgentBuilder } from './testing';
+import { Item } from '../database';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -175,5 +176,51 @@ describe('space/space', function () {
     await builder.close();
     expect(space1.isOpen).toBeFalsy();
     expect(space2.isOpen).toBeFalsy();
+  });
+
+  it.only('event is being emitted', async function () {
+    const builder = new TestAgentBuilder();
+    const agent = await builder.createPeer();
+    const space = await agent.createSpace();
+
+    await space.open();
+    afterTest(() => space.close());
+
+    {
+      // Genesis
+      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+      const credentials = [
+        ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey)),
+        await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
+      ];
+
+      for (const credential of credentials) {
+        await space.controlPipeline.writer.write({
+          '@type': 'dxos.echo.feed.CredentialsMessage',
+          credential
+        });
+      }
+
+      // TODO(burdon): Debugging only.
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+    }
+
+    console.log(1);
+    const item: Item<ObjectModel> = await space.database.createItem({ type: 'dxos:item/space' });
+    console.log(2);
+
+    const selection = space.database.select({ type: 'dxos:item/space' });
+
+    const result = selection.exec();
+    console.log('result', result.value[0].model.toObject());
+    let updateCount = 0;
+    result.update.on(() => {
+      updateCount++;
+    });
+
+    await item.model.set('key', 'value');
+    console.log('result', result.value[0].model.toObject());
+
+    expect(updateCount).toEqual(1);
   });
 });
