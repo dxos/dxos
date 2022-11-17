@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
     "util": "^0.12.4"
   },

@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/devtools/devtools/src/index.ts",
         "outputPath": "packages/devtools/devtools/dist",
-        "tsConfig": "packages/devtools/devtools/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/devtools/devtools/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -47,10 +47,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/devtools/devtools/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

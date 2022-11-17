@@ -21,10 +21,10 @@
   ],
   "references": [
     {
-      "path": "../../../tools/vite-plugin"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/react-ui"
@@ -40,6 +40,9 @@
     },
     {
       "path": "../react-client"
+    },
+    {
+      "path": "../vite-plugin"
     }
   ]
 }

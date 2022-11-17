@@ -18,22 +18,22 @@
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
+      "path": "../../../../tools/deprecated/protocols-toolchain"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../../sdk/client"
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../../react-components"
     },
     {
-      "path": "../../sdk/react-toolkit"
+      "path": "../../react-toolkit"
     }
   ]
 }

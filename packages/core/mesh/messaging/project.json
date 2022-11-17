@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/core/mesh/messaging/src/index.ts",
         "outputPath": "packages/core/mesh/messaging/dist",
-        "tsConfig": "packages/core/mesh/messaging/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/core/mesh/messaging/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/mesh/messaging/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

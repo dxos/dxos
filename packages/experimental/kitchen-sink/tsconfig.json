@@ -67,6 +67,12 @@
       "path": "../client-testing"
     },
     {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
+    },
+    {
       "path": "../react-client-testing"
     },
     {
@@ -74,12 +80,6 @@
     },
     {
       "path": "../react-ipfs"
-    },
-    {
-      "path": "../gem-core"
-    },
-    {
-      "path": "../gem-spore"
     }
   ]
 }

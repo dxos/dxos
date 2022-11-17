@@ -20,8 +20,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0"
   },
