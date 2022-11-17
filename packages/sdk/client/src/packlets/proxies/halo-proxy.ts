@@ -33,6 +33,7 @@ type CreateProfileOptions = {
  */
 export interface Halo {
   get profile(): Profile | undefined;
+  get invitations(): InvitationObservable[];
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
   subscribeToProfile(callback: (profile: Profile) => void): void;
@@ -77,6 +78,10 @@ export class HaloProxy implements Halo {
    */
   get profile(): Profile | undefined {
     return this._profile;
+  }
+
+  get invitations() {
+    return this._invitations;
   }
 
   /**
