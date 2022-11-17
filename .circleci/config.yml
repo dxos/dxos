@@ -158,7 +158,7 @@ jobs:
           no_output_timeout: 30m
           environment:
             NODE_ENV: production
-            NODE_OPTIONS: --max_old_space_size=5120
+            NODE_OPTIONS: --max_old_space_size=4096
 
 workflows:
   main:
