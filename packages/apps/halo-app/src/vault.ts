@@ -10,9 +10,8 @@ if (typeof SharedWorker === 'undefined') {
   throw new Error('Browser does not support shared workers.');
 }
 
-const WORKER_MODULE = new URL('./shared-worker', import.meta.url);
-
-const worker = new SharedWorker(WORKER_MODULE, { type: 'module', name: 'dxos-vault' });
+// Url must be within SharedWorker instantiation for bundling to work as expected.
+const worker = new SharedWorker(new URL('./shared-worker', import.meta.url), { type: 'module', name: 'dxos-vault' });
 const portMuxer = new PortMuxer(worker.port);
 
 const iframeRuntime: IFrameRuntime = new IFrameRuntime({
