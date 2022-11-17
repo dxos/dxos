@@ -37,9 +37,6 @@
       "outputs": [
         "packages/experimental/gem-core/coverage"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

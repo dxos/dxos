@@ -13,9 +13,6 @@
       "outputs": [
         "tools/protobuf-test/dist"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }
