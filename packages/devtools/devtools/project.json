@@ -36,6 +36,31 @@
     },
     "bundle": {
       "executor": "@nxext/vite:build",
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_RELEASE"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "SENTRY_DESTINATION"
+        },
+        {
+          "env": "TELEMETRY_API_KEY"
+        },
+        {
+          "env": "IPDATA_API_KEY"
+        },
+        "^production",
+        "production"
+      ],
       "options": {
         "configFile": "packages/devtools/devtools/vite.config.ts",
         "outputPath": "packages/devtools/devtools/out/devtools"
