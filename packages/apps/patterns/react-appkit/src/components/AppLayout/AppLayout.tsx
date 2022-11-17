@@ -59,7 +59,7 @@ export const AppLayout = ({
 
   return (
     <main className='max-is-5xl mli-auto pli-7'>
-      <div role='none' className={cx('flex flex-wrap items-center gap-x-2 gap-y-4 my-4')}>
+      <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
         {space ? (
           <>
             <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
@@ -68,9 +68,8 @@ export const AppLayout = ({
                 <Planet className={getSize(4)} />
               </Button>
             </Tooltip>
-            <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
-            <div role='none' className='grow flex gap-2'>
+            <Heading className='flex-auto text-center truncate pbe-1'>{humanize(space.key)}</Heading>
+            <div role='none' className='flex gap-2'>
               {/* TODO(wittjosiah): There probably shouldn't be a popover here, or "manage identity" should link out to HALO. */}
               {/* TODO(wittjosiah): We probably don't want to rely on invitation singleton, dialog version prepping for HALO provide? */}
               <Presence
@@ -87,8 +86,7 @@ export const AppLayout = ({
           </>
         ) : (
           <>
-            <Heading>{t('spaces label')}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
+            <Heading className='flex-auto text-center'>{t('spaces label')}</Heading>
             <div role='none' className='grow flex gap-2'>
               <JoinSpaceDialog
                 initialInvitationCode={invitationParam ?? undefined}

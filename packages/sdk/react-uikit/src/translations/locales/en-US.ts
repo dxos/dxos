@@ -46,5 +46,6 @@ export const uikit = {
   'pending label': 'Pending',
   'more options label': 'More options',
   'empty space message': 'Nobody else is in this space… yet.',
-  'space members label': 'Members'
+  'space members label': 'Members',
+  'go to space label': 'Done'
 };

@@ -19,8 +19,6 @@ export const halo = {
   'reset device label': 'Reset this device',
   'join label': 'Join',
   'manage label': 'Manage',
-  'go to space label': 'Done',
-  'create invitation label': 'Invite',
   'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:',
   'enable telemetry description':
     'This will enable basic telemetry data from HALO to be sent to DXOS. Changing this setting will reload the application.',

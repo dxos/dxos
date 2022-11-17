@@ -29,7 +29,7 @@ export const ManageSpacePage = ({
   createInvitationUrl = defaultCreateInvitationUrl,
   spacesPath = '/'
 }: ManageSpacePageProps) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation('appkit');
   const navigate = useNavigate();
   const { space: spaceHex } = useParams();
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
