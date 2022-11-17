@@ -15,16 +15,20 @@ import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
-import { createPeer } from '../testing';
+import { createPeer, TestBuilder } from '../testing';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory } from '../transport';
 import { testSuite } from './test-suite';
 
 describe('memory transport', function () {
+  const testBuilder = new TestBuilder();
+
   testSuite({
+    testBuilder,
     getTransportFactory: async () => MemoryTransportFactory
   });
 
+  // TODO(burdon): Move to test suite?
   it.skip('many peers and connections', async function () {
     const numTopics = 5;
     const peersPerTopic = 5;
@@ -70,8 +74,9 @@ describe('memory transport', function () {
     );
   });
 
-  // This test performs random actions in the real system and compares it's state with a simplified model.
+  // TODO(burdon): Move to test suite (or multiple).
   // TODO(dmaretskyi): Run this with actual webrtc and signal servers.
+  // This test performs random actions in the real system and compares it's state with a simplified model.
   it('property-based tests', async function () {
     /**
      * The simplified model of the system.
@@ -124,6 +129,7 @@ describe('memory transport', function () {
 
       check = (model: Model) => !model.peers.has(this.peerId);
       async run(model: Model, real: Real) {
+        // TODO(burdon): ???
         throw new Error('Not implemented.');
         // model.peers.add(this.peerId);
         // const networkManager = testBuilder.createNetworkManager();

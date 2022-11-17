@@ -21,50 +21,85 @@ import { testSuite } from './test-suite';
 // TODO(burdon): log.catch prints error message twice.
 //  E RPC has not been opened. Error: RPC has not been opened.
 
-describe
-  .skip('WebRTC transport', async function () {
-    let topic: PublicKey;
-    let peer1Id: PublicKey;
-    let peer2Id: PublicKey;
+describe('WebRTC transport', async function () {
+  let topic: PublicKey;
+  let peer1Id: PublicKey;
+  let peer2Id: PublicKey;
 
-    beforeEach(function () {
-      topic = PublicKey.random();
-      peer1Id = PublicKey.random();
-      peer2Id = PublicKey.random();
+  beforeEach(function () {
+    topic = PublicKey.random();
+    peer1Id = PublicKey.random();
+    peer2Id = PublicKey.random();
+  });
+
+  testSuite({
+    signalUrl: TEST_SIGNAL_URL,
+    getTransportFactory: async () => createWebRTCTransportFactory()
+  });
+
+  // TODO(burdon): Factor out config and remove consts.
+  it.skip('two peers with different signal & turn servers', async function () {
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
+      topic,
+      peerId: peer1Id,
+      signalHosts: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
+      transportFactory: createWebRTCTransportFactory({
+        iceServers: {
+          urls: 'turn:apollo3.kube.moon.dxos.network:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        }
+      })
     });
 
-    testSuite({
-      signalUrl: TEST_SIGNAL_URL,
-      getTransportFactory: async () => createWebRTCTransportFactory()
+    await sleep(3000);
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
+      topic,
+      peerId: peer2Id,
+      signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'],
+      transportFactory: createWebRTCTransportFactory({
+        iceServers: {
+          urls: 'turn:apollo2.kube.moon.dxos.network:3478',
+          username: 'dxos',
+          credential: 'dxos'
+        }
+      })
     });
 
-    // TODO(burdon): Factor out config and remove consts.
-    it.skip('two peers with different signal & turn servers', async function () {
-      const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
+    const received: any[] = [];
+    const mockReceive = (p: Protocol, s: string) => {
+      received.push(p, s);
+      return undefined;
+    };
+
+    plugin1.on('receive', mockReceive);
+    plugin2.on('connect', async () => {
+      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
+    });
+
+    await waitForExpect(() => {
+      expect(received.length).toBe(2);
+      expect(received[0]).toBeInstanceOf(Protocol);
+      expect(received[1]).toBe('{"message": "Hello"}');
+    });
+
+    await networkManager1.close();
+    await networkManager2.close();
+  }).timeout(10_000);
+
+  describe('StarTopology', function () {
+    it('two peers connect to each other', async function () {
+      const { plugin: plugin1 } = await createPeer({
         topic,
         peerId: peer1Id,
-        signalHosts: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
-        transportFactory: createWebRTCTransportFactory({
-          iceServers: {
-            urls: 'turn:apollo3.kube.moon.dxos.network:3478',
-            username: 'dxos',
-            credential: 'dxos'
-          }
-        })
+        topology: new StarTopology(peer1Id),
+        transportFactory: createWebRTCTransportFactory()
       });
-
-      await sleep(3000);
-      const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
+      const { plugin: plugin2 } = await createPeer({
         topic,
         peerId: peer2Id,
-        signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'],
-        transportFactory: createWebRTCTransportFactory({
-          iceServers: {
-            urls: 'turn:apollo2.kube.moon.dxos.network:3478',
-            username: 'dxos',
-            credential: 'dxos'
-          }
-        })
+        topology: new StarTopology(peer1Id),
+        transportFactory: createWebRTCTransportFactory()
       });
 
       const received: any[] = [];
@@ -83,46 +118,9 @@ describe
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('{"message": "Hello"}');
       });
-
-      await networkManager1.close();
-      await networkManager2.close();
     }).timeout(10_000);
-
-    describe('StarTopology', function () {
-      it('two peers connect to each other', async function () {
-        const { plugin: plugin1 } = await createPeer({
-          topic,
-          peerId: peer1Id,
-          topology: new StarTopology(peer1Id),
-          transportFactory: createWebRTCTransportFactory()
-        });
-        const { plugin: plugin2 } = await createPeer({
-          topic,
-          peerId: peer2Id,
-          topology: new StarTopology(peer1Id),
-          transportFactory: createWebRTCTransportFactory()
-        });
-
-        const received: any[] = [];
-        const mockReceive = (p: Protocol, s: string) => {
-          received.push(p, s);
-          return undefined;
-        };
-
-        plugin1.on('receive', mockReceive);
-        plugin2.on('connect', async () => {
-          await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
-        });
-
-        await waitForExpect(() => {
-          expect(received.length).toBe(2);
-          expect(received[0]).toBeInstanceOf(Protocol);
-          expect(received[1]).toBe('{"message": "Hello"}');
-        });
-      }).timeout(10_000);
-    });
-  })
-  .timeout(10_000);
+  });
+}).timeout(10_000);
 
 // TODO(burdon): Skipped.
 describe.skip('WebRTC proxy transport', function () {

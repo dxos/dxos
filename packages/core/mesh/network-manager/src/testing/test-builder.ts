@@ -63,12 +63,8 @@ export class TestPeer {
   private readonly _server?: ProtoRpcPeer<any>;
 
   constructor(testBuilder: TestBuilder) {
-    const signalManager = testBuilder.createSignalManager();
-
-    let transportFactory: TransportFactory;
-    if (!testBuilder.options.signalUrl) {
-      transportFactory = MemoryTransportFactory;
-    } else {
+    let transportFactory: TransportFactory = MemoryTransportFactory;
+    if (testBuilder.options.signalUrl) {
       // TODO(burdon): Explain what we're doing here.
       const [clientPort, serverPort] = createLinkedPorts();
 
@@ -99,7 +95,7 @@ export class TestPeer {
     }
 
     this._networkManager = new NetworkManager({
-      signalManager,
+      signalManager: testBuilder.createSignalManager(),
       transportFactory
     });
   }
@@ -111,12 +107,15 @@ export class TestPeer {
 
   async close() {
     await Promise.all(Array.from(this._swarms.values()).map((topic) => this.leaveSwarm(topic)));
+    this._swarms.clear();
+
     await this._client?.close();
     await this._server?.close();
     await this._networkManager.close();
   }
 
   // TODO(burdon): Need to create new plugin instance per swarm?
+  //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
   async joinSwarm(topic: PublicKey, topology = new FullyConnectedTopology()) {
     await this._networkManager.joinSwarm({
       topic,

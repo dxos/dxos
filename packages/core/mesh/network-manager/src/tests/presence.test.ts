@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from 'expect';
+import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
@@ -17,7 +17,7 @@ import { MemoryTransportFactory } from '../transport';
 
 const signalContext = new MemorySignalManagerContext();
 
-// TODO(burdon): Move to TestBuilder.
+// TODO(burdon): Move to TestBuilder (configure plugins).
 const createPeer = async (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
@@ -41,29 +41,18 @@ const createPeer = async (topic: PublicKey) => {
 };
 
 describe('Presence', function () {
-  it('sees connected peers', async function () {
+  it('detects connected peers', async function () {
     const topic = PublicKey.random();
     const peer1 = await createPeer(topic);
     const peer2 = await createPeer(topic);
 
+    // TODO(burdon): Use triggers instead of waitForExpect.
     await waitForExpect(() => {
-      expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(
+      expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).to.deep.eq(
         [peer1, peer2].map((key) => key.peerId.toHex()).sort()
       );
 
-      expect(peer2.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(
-        [peer1, peer2].map((key) => key.peerId.toHex()).sort()
-      );
-    });
-  });
-
-  it('removes disconnected peers', async function () {
-    const topic = PublicKey.random();
-    const peer1 = await createPeer(topic);
-    const peer2 = await createPeer(topic);
-
-    await waitForExpect(() => {
-      expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(
+      expect(peer2.presence.peers.map((key) => key.toString('hex')).sort()).to.deep.eq(
         [peer1, peer2].map((key) => key.peerId.toHex()).sort()
       );
     });
@@ -71,8 +60,12 @@ describe('Presence', function () {
     await peer2.networkManager.leaveSwarm(topic);
 
     await waitForExpect(() => {
-      expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).toEqual(
-        [peer1].map((x) => x.peerId.toHex()).sort()
+      expect(peer1.presence.peers.map((key) => key.toString('hex')).sort()).to.deep.eq(
+        [peer1].map((key) => key.peerId.toHex()).sort()
+      );
+
+      expect(peer2.presence.peers.map((key) => key.toString('hex')).sort()).to.deep.eq(
+        [peer2].map((key) => key.peerId.toHex()).sort()
       );
     });
   });
