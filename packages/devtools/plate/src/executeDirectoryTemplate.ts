@@ -86,7 +86,7 @@ export const executeDirectoryTemplate = async <TInput>(
       .map(
         (r) =>
           new File({
-            path: path.join(outputDirectory, r.slice(templateDirectory.length - 1)),
+            path: path.join(outputDirectory, r.slice(templateDirectory.length).replace(/\/$/, '')),
             copyFrom: r,
             overwrite
           })
