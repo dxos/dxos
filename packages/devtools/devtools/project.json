@@ -44,9 +44,6 @@
           "env": "DX_ENVIRONMENT"
         },
         {
-          "env": "DX_RELEASE"
-        },
-        {
           "env": "NODE_ENV"
         },
         {
