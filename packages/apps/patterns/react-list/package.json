@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/react-list",
+  "version": "0.1.5",
+  "description": "A list editing experience component for DXOS.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-appkit": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-uikit": "workspace:*",
+    "@dxos/object-model": "workspace:*",
+    "classnames": "^2.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "phosphor-react": "^1.4.1"
+  },
+  "devDependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "phosphor-react": "^1.4.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
