@@ -4,12 +4,12 @@
 
 import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
+import { Space, Invitation } from '@dxos/client';
 import { useClient, useIdentity, useSpace } from '@dxos/react-client';
-import { Button, getSize, Heading, JoinSpaceDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
@@ -51,6 +51,7 @@ export const AppLayout = ({
   const invitationParam = searchParams.get('invitation');
   const pathSegments = location.pathname.split('/').length;
   const isManagingSpace = !!spaceHex && pathSegments > 3;
+  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -88,10 +89,11 @@ export const AppLayout = ({
           <>
             <Heading className='flex-auto text-center'>{t('spaces label')}</Heading>
             <div role='none' className='grow flex gap-2'>
-              <JoinSpaceDialog
+              <JoinDialog
                 initialInvitationCode={invitationParam ?? undefined}
                 parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                onJoin={(spaceKey) => navigate(generatePath(spacePath, { space: spaceKey.toHex() }))}
+                onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
+                acceptInvitation={acceptInvitation}
                 dialogProps={{
                   initiallyOpen: Boolean(invitationParam),
                   openTrigger: (
