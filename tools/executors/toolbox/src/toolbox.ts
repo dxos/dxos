@@ -13,6 +13,10 @@ import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
 
+const raise = (err: Error) => {
+  throw err;
+};
+
 export type ToolboxConfig = {
   project?: {
     ignored?: string[];
@@ -249,10 +253,6 @@ class Toolbox {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
 }
-
-const raise = (err: Error) => {
-  throw err;
-};
 
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
