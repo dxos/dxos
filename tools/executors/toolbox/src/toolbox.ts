@@ -34,6 +34,7 @@ type ToolboxOptions = {
   tsConfigFixedKeys?: string[];
 };
 
+// TODO(burdon): Move to config file.
 const defaultOptions = {
   ignoredProjects: ['@dxos/dxos', '@dxos/docs', '@dxos/readme'],
   fixedProjectKeys: ['sourceRoot', 'projectType', 'targets'],
