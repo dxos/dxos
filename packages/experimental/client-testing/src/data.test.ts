@@ -35,7 +35,7 @@ type DataType = {
 const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
 
-describe.only('Builders', function () {
+describe.skip('Builders', function () {
   it.only('sanity', async function () {
     const builder = new TestBuilder();
     await builder.initialize();
