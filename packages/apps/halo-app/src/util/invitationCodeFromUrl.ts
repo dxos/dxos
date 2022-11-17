@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import urlJoin from 'url-join';
+
 import { log } from '@dxos/log';
 
 export const invitationCodeFromUrl = (text: string) => {
@@ -13,4 +15,9 @@ export const invitationCodeFromUrl = (text: string) => {
     log.catch(err);
     return text;
   }
+};
+
+export const createInvitationUrl = (path: string, invitationCode: string) => {
+  const { origin, pathname } = window.location;
+  return urlJoin(origin, pathname, `/#${path}`, `?invitation=${invitationCode}`);
 };

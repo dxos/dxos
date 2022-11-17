@@ -19,9 +19,11 @@
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "lint": "nx run-many --target=lint --fix",
     "build": "nx run-many --target=build",
-    "test": "nx run-many --target=test"
+    "test": "nx run-many --target=test",
+    "conform": "conform"
   },
   "dependencies": {
+    "@dxos/conform": "workspace:^0.1.0",
     "execa": "^5.1.0",
     "tslib": "^2.3.0"
   },
@@ -37,10 +39,10 @@
     "@dxos/plate": "workspace:*",
     "@dxos/playwright": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
-    "@dxos/typings": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typedoc-plugin-plate": "workspace:*",
+    "@dxos/typings": "workspace:*",
     "@mdx-js/react": "^2.1.3",
     "@nrwl/devkit": "14.5.7",
     "@nrwl/eslint-plugin-nx": "14.5.7",
@@ -67,6 +69,7 @@
     "@types/chai": "^4.2.15",
     "@types/chai-as-promised": "^7.1.5",
     "@types/glob": "~7.1.3",
+    "@types/json-stringify-safe": "5.0.0",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.set": "^4.3.7",
     "@types/mocha": "^8.2.2",
@@ -89,6 +92,7 @@
     "husky": "^8.0.0",
     "jsdom": "^20.0.1",
     "jsdom-global": "^3.0.2",
+    "json-stringify-safe": "^5.0.1",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "mocha": "^8.4.0",
@@ -110,9 +114,7 @@
     "uuid": "^8.3.2",
     "vite": "3.0.9",
     "wait-for-expect": "^3.0.2",
-    "webpack": "^5.74.0",
-    "json-stringify-safe": "^5.0.1",
-    "@types/json-stringify-safe": "5.0.0"
+    "webpack": "^5.74.0"
   },
   "engines": {
     "node": ">=12.0.0"

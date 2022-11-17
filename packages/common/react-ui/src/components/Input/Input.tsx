@@ -9,6 +9,7 @@ import { useId } from '../../hooks';
 import { defaultDescription, valenceColorText } from '../../styles';
 import { BarePinInput } from './BarePinInput';
 import { BareTextInput } from './BareTextInput';
+import { BareTextareaInput, BareTextareaInputProps } from './BareTextareaInput';
 import { InputProps as NaturalInputProps } from './InputProps';
 
 export type InputProps = NaturalInputProps;
@@ -41,7 +42,7 @@ export const Input = ({
   const [internalValue, setInternalValue] = useState<string>(initialValue?.toString() || '');
 
   const onInternalChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const nextValue = e.target?.value || '';
       setInternalValue(nextValue);
       onChange &&
@@ -72,6 +73,8 @@ export const Input = ({
   const bareInput =
     size === 'pin' ? (
       <BarePinInput {...bareInputBaseProps} length={length} />
+    ) : size === 'textarea' ? (
+      <BareTextareaInput {...(bareInputBaseProps as BareTextareaInputProps)} />
     ) : (
       <BareTextInput {...bareInputBaseProps} size={size} />
     );

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-BRANCH=$(git branch --show-current)
 ROOT=$(git rev-parse --show-toplevel)
 PACKAGE=${PWD##*/}
 PACKAGE_CAPS=${PACKAGE^^}
@@ -12,7 +11,7 @@ eval "export TELEMETRY_API_KEY=$"${PACKAGE_ENV}_SEGMENT_API_KEY""
 if [ $1 = "production" ]; then
   export DX_ENVIRONMENT=production
   DX_CONFIG="$ROOT/packages/devtools/cli/config/config.yml"
-  VERSION=$(cat package.json | jq '.version')
+  VERSION=$(cat package.json | jq -r '.version')
 
   $ROOT/packages/devtools/cli/bin/run app publish \
     --config=$DX_CONFIG \

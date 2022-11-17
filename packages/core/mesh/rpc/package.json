@@ -1,7 +1,7 @@
 {
   "name": "@dxos/rpc",
   "version": "0.1.5",
-  "description": "Tiny RPC library.",
+  "description": "A lightweight, transport-agnostic RPC implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

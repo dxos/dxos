@@ -43,30 +43,16 @@ export default defineConfig({
       '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-async',
-      '@dxos/react-composer',
       '@dxos/react-client',
+      '@dxos/react-ui',
       '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/sentry',
       '@dxos/telemetry',
-      '@dxos/text-model',
       '@dxos/util'
-    ],
-    esbuildOptions: {
-      // TODO(wittjosiah): Remove.
-      plugins: [
-        {
-          name: 'yjs',
-          setup: ({ onResolve }) => {
-            onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
-            })
-          }
-        }
-      ]
-    }
+    ]
   },
   build: {
     // TODO(wittjosiah): Remove.

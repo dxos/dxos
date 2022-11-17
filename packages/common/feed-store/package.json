@@ -28,6 +28,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/hypercore": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",

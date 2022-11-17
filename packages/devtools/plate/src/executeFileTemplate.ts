@@ -6,7 +6,7 @@ import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';
 
-import { File, MaybePromise, promise } from './file';
+import { File, getFileType, MaybePromise, promise } from './file';
 
 /** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
@@ -55,6 +55,7 @@ export type ExecuteFileTemplateOptions<TInput = {}> = {
   templateRelativeTo?: string;
   outputDirectory: string;
   input?: TInput;
+  overwrite?: boolean;
 };
 
 export type TemplateContext<TInput = {}> = ExecuteFileTemplateOptions<TInput> & {
@@ -74,7 +75,7 @@ export type TemplateFunction<TInput = void> = Functor<TemplateContext<TInput>, T
 export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateFile, outputDirectory, templateRelativeTo } = options;
+  const { templateFile, outputDirectory, templateRelativeTo, overwrite } = options;
   const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath);
@@ -98,12 +99,18 @@ export const executeFileTemplate = async <TInput>(
     );
     return typeof result === 'string'
       ? [
-          new File({
+          new (getFileType(nominalOutputPath))({
             content: result,
-            path: nominalOutputPath
+            path: nominalOutputPath,
+            ...(typeof overwrite !== 'undefined' ? { overwrite: !!overwrite } : {})
           })
         ]
-      : result;
+      : result.map((outfile) => {
+          if (overwrite === false) {
+            outfile.allowOverwrite = false;
+          }
+          return outfile;
+        });
   } catch (err) {
     console.error(`problem in template ${templateFullPath}`);
     throw err;
