@@ -30,7 +30,6 @@ import {
   DevicesPage,
   IdentityPage,
   JoinIdentityPage,
-  JoinSpacePage,
   LockPage,
   RecoverIdentityPage,
   RequireIdentity,
@@ -75,10 +74,6 @@ const Routes = () => {
       path: '/',
       element: <RequireIdentity redirect='/' />,
       children: [
-        {
-          path: '/spaces/join',
-          element: <JoinSpacePage />
-        },
         {
           path: '/',
           element: <AppLayout />,

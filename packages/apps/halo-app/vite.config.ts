@@ -44,6 +44,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
+      '@dxos/react-ui',
       '@dxos/react-uikit',
       '@dxos/rpc',
       '@dxos/network-manager',

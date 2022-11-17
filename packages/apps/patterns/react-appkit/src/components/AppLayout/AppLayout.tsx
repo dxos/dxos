@@ -5,10 +5,9 @@
 import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
 import React from 'react';
-import { Outlet, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import urlJoin from 'url-join';
+import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { InvitationEncoder, Space } from '@dxos/client';
+import { Space } from '@dxos/client';
 import { useClient, useIdentity, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, JoinSpaceDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
@@ -27,20 +26,31 @@ const invitationCodeFromUrl = (text: string) => {
 };
 
 export interface AppLayoutProps {
+  homePath?: string;
+  spacePath?: string;
+  manageSpacePath?: string;
   onSpaceCreate?: (space: Space) => MaybePromise<void>;
 }
 
-export const AppLayout = ({ onSpaceCreate }: AppLayoutProps) => {
+export const AppLayout = ({
+  homePath = '/',
+  spacePath = '/spaces/:space',
+  manageSpacePath = '/spaces/:space/settings',
+  onSpaceCreate
+}: AppLayoutProps) => {
   const { t } = useTranslation('appkit');
-  const navigate = useNavigate();
-  const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useSpace(spaceKey);
-  const identity = useIdentity();
-
   const client = useClient();
+  const identity = useIdentity();
+  const { space: spaceHex } = useParams();
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(homePath));
+  const space = useSpace(spaceKey);
+
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
+  const pathSegments = location.pathname.split('/').length;
+  const isManagingSpace = !!spaceHex && pathSegments > 3;
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
@@ -53,7 +63,7 @@ export const AppLayout = ({ onSpaceCreate }: AppLayoutProps) => {
         {space ? (
           <>
             <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
-              <Button compact onClick={() => navigate('/')} className='flex gap-1'>
+              <Button compact onClick={() => navigate(homePath)} className='flex gap-1'>
                 <CaretLeft className={getSize(4)} />
                 <Planet className={getSize(4)} />
               </Button>
@@ -66,13 +76,12 @@ export const AppLayout = ({ onSpaceCreate }: AppLayoutProps) => {
               <Presence
                 profile={identity!}
                 space={space}
-                createInvitationUrl={(invitation) => {
-                  const { origin, pathname } = window.location;
-                  return urlJoin(origin, pathname, `/#?invitation=${InvitationEncoder.encode(invitation)}`);
-                }}
                 className='flex-none'
                 size={10}
                 sideOffset={4}
+                managingSpace={isManagingSpace}
+                onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
+                onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
               />
             </div>
           </>
@@ -84,7 +93,7 @@ export const AppLayout = ({ onSpaceCreate }: AppLayoutProps) => {
               <JoinSpaceDialog
                 initialInvitationCode={invitationParam ?? undefined}
                 parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                onJoin={(space) => navigate(`/${space.toHex()}`)}
+                onJoin={(spaceKey) => navigate(generatePath(spacePath, { space: spaceKey.toHex() }))}
                 dialogProps={{
                   initiallyOpen: Boolean(invitationParam),
                   openTrigger: (
