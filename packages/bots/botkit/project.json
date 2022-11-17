@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/bots/botkit/src/index.ts",
         "outputPath": "packages/bots/botkit/dist",
-        "tsConfig": "packages/bots/botkit/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/bots/botkit/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/bots/botkit/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

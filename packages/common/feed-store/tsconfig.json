@@ -23,6 +23,9 @@
       "path": "../codec-protobuf"
     },
     {
+      "path": "../context"
+    },
+    {
       "path": "../crypto"
     },
     {

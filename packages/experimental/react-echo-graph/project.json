@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/experimental/react-echo-graph/src/index.ts",
         "outputPath": "packages/experimental/react-echo-graph/dist",
-        "tsConfig": "packages/experimental/react-echo-graph/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/experimental/react-echo-graph/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -19,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/react-echo-graph/**/*.{ts,tsx,js,jsx}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

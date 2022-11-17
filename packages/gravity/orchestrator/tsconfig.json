@@ -63,13 +63,13 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/registry-client"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/registry-client"
     }
   ]
 }

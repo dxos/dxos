@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/bots/bot-factory-client/src/index.ts",
         "outputPath": "packages/bots/bot-factory-client/dist",
-        "tsConfig": "packages/bots/bot-factory-client/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/bots/bot-factory-client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -34,10 +34,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/bots/bot-factory-client/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

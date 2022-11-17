@@ -13,7 +13,13 @@
   ],
   "references": [
     {
+      "path": "../context"
+    },
+    {
       "path": "../debug"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

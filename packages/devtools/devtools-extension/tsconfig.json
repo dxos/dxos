@@ -37,13 +37,13 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../deprecated/react-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/react-toolkit"
     },
     {
       "path": "../devtools"

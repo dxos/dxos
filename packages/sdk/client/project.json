@@ -7,10 +7,10 @@
       "options": {
         "main": "packages/sdk/client/src/index.ts",
         "outputPath": "packages/sdk/client/dist",
-        "tsConfig": "packages/sdk/client/tsconfig.json",
         "transformers": [
           "@dxos/log-hook/transformer"
-        ]
+        ],
+        "tsConfig": "packages/sdk/client/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -40,10 +40,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"

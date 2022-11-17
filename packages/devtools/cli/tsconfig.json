@@ -16,9 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/plate"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -44,6 +41,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../plate"
     }
   ]
 }
