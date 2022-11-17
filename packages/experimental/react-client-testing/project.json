@@ -27,9 +27,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

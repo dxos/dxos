@@ -70,9 +70,6 @@
         "{options.outputPath}",
         "{options.resultsPath}"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

@@ -1,12 +1,28 @@
 {
-  "config": {
-    "package": {
-      "common": [
-        "license",
-        "author",
-        "homepage",
-        "bugs"
-      ]
-    }
+  "project": {
+    "ignored": [
+      "@dxos/dxos",
+      "@dxos/docs",
+      "@dxos/readme"
+    ],
+    "fixedKeys": [
+      "sourceRoot",
+      "projectType",
+      "targets"
+    ]
+  },
+  "package": {
+    "commonKeys": [
+      "license",
+      "author",
+      "homepage",
+      "bugs"
+    ]
+  },
+  "tsconfig": {
+    "fixedKeys": [
+      "extends",
+      "compilerOptions"
+    ]
   }
 }

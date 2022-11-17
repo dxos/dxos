@@ -14,6 +14,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "../patterns/react-appkit/src/components/AppShell/pwa.d.ts",
     "src"
   ],
   "references": [
