@@ -9,8 +9,7 @@ import folderSize from 'get-folder-size';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import type { ConfigProto } from '@dxos/config';
-import { log } from '@dxos/debug';
+import type { Config } from '@dxos/client';
 
 import { PackageModule } from './common';
 import { uploadToIPFS } from './ipfs-upload';
@@ -27,7 +26,7 @@ const getFolderSize = promisify(folderSize);
 const encodeName = (name: string) => name.replaceAll(':', '/');
 
 export interface PublishParams {
-  config?: ConfigProto;
+  config?: Config;
   module: PackageModule;
 }
 
@@ -41,7 +40,7 @@ interface PublishArgs {
 
 export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { config, module }: PublishParams) => {
   assert(module.name, 'Module name is required to publish.');
-  verbose && log(`Publishing ${module.name}...`);
+  verbose && console.log(`Publishing ${module.name}...`);
 
   const moduleOut = `out/${encodeName(module.name)}`;
   const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
@@ -60,7 +59,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { co
   verbose && bar.update(total);
   verbose && bar.stop();
 
-  verbose && log(`Published ${module.name} to IPFS with cid ${cid.toString()}`);
+  verbose && console.log(`Published ${module.name} to IPFS with cid ${cid.toString()}`);
 
   return cid;
 };

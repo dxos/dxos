@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kai",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "private": true,
   "description": "Kai Web shell.",
   "homepage": "https://dxos.org",
@@ -16,9 +16,8 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain bundle:app",
     "check": "true",
-    "start": "toolchain start"
+    "start": "esbuild-server server"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -36,6 +35,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/esbuild-server": "~2.29.0",
     "@types/faker": "^5.5.9",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

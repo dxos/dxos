@@ -26,9 +26,7 @@ export default class Create extends BaseCommand {
   static override flags = {
     ...BaseCommand.flags,
     tag: Flags.string({
-      description: 'Git tag or branch of the DXOS repo to checkout.',
-      // TODO(wittjosiah): Use release branch.
-      default: 'main'
+      description: 'Git tag or branch of the DXOS repo to checkout.'
     }),
     template: Flags.string({
       char: 't',
@@ -41,7 +39,7 @@ export default class Create extends BaseCommand {
   async run(): Promise<any> {
     const { args, flags } = await this.parse(Create);
     const { name } = args;
-    const { tag, template } = flags;
+    const { tag = `v${this.config.version}`, template } = flags;
 
     // TODO(wittjosiah): Cross-platform.
     const tmpDirectory = `/tmp/dxos-app-create-${Date.now()}`;

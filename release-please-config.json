@@ -417,16 +417,6 @@
         },
         {
           "type": "json",
-          "path": "tools/deprecated/protocols-toolchain/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/deprecated/toolchain-node-library/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/eslint-plugin/package.json",
           "jsonpath": "$.version"
         },

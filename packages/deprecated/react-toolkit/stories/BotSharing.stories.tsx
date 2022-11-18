@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { ClientProvider, useClient, useSpaces } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -72,7 +72,7 @@ const Sender = () => {
  * https://github.com/dxos/dxos/tree/main/packages/bot
  */
 export const Primary = () => {
-  const config: ConfigProto = {
+  const config = new Config({
     runtime: {
       client: {
         debug: 'dxos:bot*'
@@ -91,7 +91,7 @@ export const Primary = () => {
         }
       }
     }
-  };
+  });
 
   return (
     <FullScreen>

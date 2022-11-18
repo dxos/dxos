@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.8](https://github.com/dxos/dxos/compare/v0.1.7...v0.1.8) (2022-11-18)
+
+
+### Bug Fixes
+
+* **docs:** Production bundle doesn't crash at hydration ([#1925](https://github.com/dxos/dxos/issues/1925)) ([bf97cfb](https://github.com/dxos/dxos/commit/bf97cfbdff36e2fc97ceac5719481338d0f38360))
+* **hello-template:** Cleanup missing config/deps ([#1926](https://github.com/dxos/dxos/issues/1926)) ([45b96c4](https://github.com/dxos/dxos/commit/45b96c41e086366ce4c1b4fe262948f122847d45))
+
+## [0.1.7](https://github.com/dxos/dxos/compare/v0.1.6...v0.1.7) (2022-11-18)
+
+
+### Features
+
+* Add support for turning if vault to other apps ([#1919](https://github.com/dxos/dxos/issues/1919)) ([717c3be](https://github.com/dxos/dxos/commit/717c3befd65ff7c489d9c38c5491feeb7a65940a))
+* **cli:** Seed default config file if config is missing ([#1916](https://github.com/dxos/dxos/issues/1916)) ([ceb4bc6](https://github.com/dxos/dxos/commit/ceb4bc68c6bb599e2ac6fdda364265ed94e114b0))
+
+
+### Bug Fixes
+
+* **cli:** Clone created apps from git tag matching the cli version ([#1914](https://github.com/dxos/dxos/issues/1914)) ([8cebf8d](https://github.com/dxos/dxos/commit/8cebf8de26894786a6acb2a169036804f9d3ee5f))
+* compiler options in the templates ([#1910](https://github.com/dxos/dxos/issues/1910)) ([eee5096](https://github.com/dxos/dxos/commit/eee50965158ff3e91a8a896e2b0325544198929d))
+* Demo feedback responses ([#1918](https://github.com/dxos/dxos/issues/1918)) ([7c990a8](https://github.com/dxos/dxos/commit/7c990a8bcbf5244e1aaebf3a27da04bd51f50ac4))
+* Halo invitations ([#1911](https://github.com/dxos/dxos/issues/1911)) ([a7f4ce9](https://github.com/dxos/dxos/commit/a7f4ce97f6780d9e92b3cf38803685827afbbf1d))
+* **halo-app:** Fix redirect when creating identity ([#1917](https://github.com/dxos/dxos/issues/1917)) ([e997f6b](https://github.com/dxos/dxos/commit/e997f6b077d101a5a3fd4d0cdda59fb5c55a407d))
+* **plate:** Only remove trailing slash from path if it exists ([#1915](https://github.com/dxos/dxos/issues/1915)) ([7cfc396](https://github.com/dxos/dxos/commit/7cfc396c65a64d4f575de7c4cc3fb3f0426dd9a2))
+
 ## [0.1.6](https://github.com/dxos/dxos/compare/v0.1.5...v0.1.6) (2022-11-17)
 
 
