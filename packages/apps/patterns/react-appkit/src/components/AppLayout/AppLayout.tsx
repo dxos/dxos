@@ -59,6 +59,12 @@ export const AppLayout = ({
     await onSpaceCreate?.(space);
   };
 
+  const handleManageProfile = () => {
+    const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+    const tab = window.open(remoteSource.origin, '_blank');
+    tab?.focus();
+  };
+
   return (
     <main className='max-is-5xl mli-auto pli-7'>
       <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
@@ -83,13 +89,7 @@ export const AppLayout = ({
                 managingSpace={isManagingSpace}
                 onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
                 onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
-                onClickManageProfile={() => {
-                  const remoteSource = new URL(
-                    client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org'
-                  );
-                  const tab = window.open(remoteSource.origin, '_blank');
-                  tab?.focus();
-                }}
+                onClickManageProfile={handleManageProfile}
               />
             </div>
           </>
@@ -127,6 +127,7 @@ export const AppLayout = ({
                     managingSpace={isManagingSpace}
                     onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
                     onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
+                    onClickManageProfile={handleManageProfile}
                   />
                 </>
               }

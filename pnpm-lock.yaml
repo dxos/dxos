@@ -622,6 +622,7 @@ importers:
       '@storybook/mdx2-csf': ^0.0.3
       '@storybook/react': ^6.5.10
       '@storybook/testing-library': ^0.0.13
+      '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
@@ -666,6 +667,7 @@ importers:
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 6.5.12_kefrgnmgwbasxcdmkdpnfjvqkm
       '@storybook/testing-library': 0.0.13_biqbaboplfbrettd7655fr4n2y
+      '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.1.0_vite@3.0.9
@@ -12385,7 +12387,7 @@ packages:
     dependencies:
       '@types/decompress': 4.2.4
       '@types/got': 8.3.6
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/encoding-down/5.0.0:
@@ -12398,7 +12400,7 @@ packages:
   /@types/end-of-stream/1.4.1:
     resolution: {integrity: sha512-dYCSlUtCGXuP2axeKD5l1vj/04iNXW8TLXryDa0uA8u8EsNE68jn27ZLg7jAPV+qJAlk1wC4WtRdIoZXvuUl0A==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/eslint-scope/3.7.4:
@@ -12591,7 +12593,7 @@ packages:
     dependencies:
       '@types/abstract-leveldown': 7.2.0
       '@types/level-errors': 3.0.0
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/linkify-it/3.0.2:
@@ -12763,6 +12765,7 @@ packages:
 
   /@types/node/18.11.0:
     resolution: {integrity: sha512-IOXCvVRToe7e0ny7HpT/X9Rb2RYtElG1a+VshjwT00HxrM2dWBApHQoqsI6WiY7Q03vdf2bCrIGzVrkF/5t10w==}
+    dev: true
 
   /@types/node/18.11.9:
     resolution: {integrity: sha512-CRpX21/kGdzjOpFsZSkcrXMGIBWMGNIHXXBVFSH+ggkftxg+XYP20TESbh+zFvFj3EQOl5byk0HTRn1IL6hbqg==}
@@ -12805,7 +12808,7 @@ packages:
   /@types/pump/1.1.1:
     resolution: {integrity: sha512-wpRerjHDxFBQ4r8XNv3xHJZeuqrBBoeQ/fhgkooV2F7KsPIYRROb/+f9ODgZfOEyO5/w2ej4YQdpPPXipT8DAA==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/qrcode-terminal/0.12.0:
@@ -12819,7 +12822,7 @@ packages:
   /@types/randombytes/2.0.0:
     resolution: {integrity: sha512-bz8PhAVlwN72vqefzxa14DKNT8jK/mV66CSjwdVQM/k3Th3EPKfUtdMniwZgMedQTFuywAsfjnZsg+pEnltaMA==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/react-copy-to-clipboard/5.0.4:
@@ -12854,7 +12857,7 @@ packages:
   /@types/readable-stream/2.3.14:
     resolution: {integrity: sha512-8jQ5Mp7bsDJEnW/69i6nAaQMoLwAVJVc7ZRAVTrdh/o6XueQsX38TEvKuYyoQj76/mg7WdlRfMrtl9pDLCJWsg==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
       safe-buffer: 5.2.1
     dev: true
 
@@ -12891,7 +12894,7 @@ packages:
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/sinon/10.0.13:
@@ -12915,7 +12918,7 @@ packages:
   /@types/stream-to-array/2.3.0:
     resolution: {integrity: sha512-s8Y6/EV1LPn9fDlJKSlD8r+14hWXVDn+wPAGwWRzTUq/4MqdoQNEzQxP6Jq91qvFYxR3OlFAPXcv6ToplnAgFQ==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/string-hash/1.1.1:
@@ -13008,7 +13011,7 @@ packages:
   /@types/ws/7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
     dependencies:
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
     dev: true
 
   /@types/yargs-parser/21.0.0:
@@ -28752,7 +28755,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.11.0
+      '@types/node': 18.11.9
       long: 4.0.0
 
   /protocol-buffers-encodings/1.2.0:
