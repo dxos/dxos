@@ -36,7 +36,7 @@ export class Peer {
     log('creating connection', { topic, peerId: ownPeerId, remoteId: this.id, initiator, sessionId });
     assert(!this.connection, 'Already connected.');
 
-    const connection = new Connection(
+    this.connection = new Connection(
       topic,
       ownPeerId,
       this.id,
@@ -46,17 +46,13 @@ export class Peer {
       protocol,
       transportFactory,
     );
-
-    this.connection = connection;
-
-    connection.errors.handle((err) => {
+    this.connection.errors.handle((err) => {
       onError(err);
     });
-
-    connection.stateChanged.on((state) => {
+    this.connection.stateChanged.on((state) => {
       onStateChange(state);
     });
 
-    return connection; 
+    return this.connection; 
   }
 }
