@@ -182,8 +182,10 @@ export class Swarm {
       return { accept: false };
     }
 
+    const peer = this._getOrCreatePeer(remoteId);
+
     // Check if we are already trying to connect to that peer.
-    if (this._peers.get(remoteId)?.connection) {
+    if (peer.connection) {
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
         log("closing local connection and accepting remote peer's offer", {
@@ -202,7 +204,7 @@ export class Swarm {
 
     let accept = false;
     if (await this._topology.onOffer(remoteId)) {
-      if (!this._peers.get(remoteId)?.connection) {
+      if (!peer.connection) {
         // Connection might have been already established.
         assert(message.sessionId);
         const connection = this._createConnection(false, message.author, message.sessionId);
