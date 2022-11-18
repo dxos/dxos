@@ -42,6 +42,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/patterns/react-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
