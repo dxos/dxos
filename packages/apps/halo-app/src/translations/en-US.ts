@@ -6,7 +6,7 @@ export const halo = {
   'halo label': 'HALO',
   'identities empty message': 'There are no identities on this device yet.',
   'copy qrcode label': 'Copy your profile code',
-  'using halo as message': 'Using HALO as {{displayName}}.',
+  'using halo as message': 'Using HALO as <nameStyle>{{displayName}}</nameStyle>.',
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
