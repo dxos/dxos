@@ -4,7 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
@@ -50,7 +51,11 @@ export class ModelFactory {
     validateModelClass(constructor);
     const { meta } = constructor;
     this._models.set(meta.type, { meta, constructor });
-    this.registered.emit(constructor);
+
+    scheduleTask(new Context(), () => {
+      this.registered.emit(constructor);
+    });
+
     return this;
   }
 

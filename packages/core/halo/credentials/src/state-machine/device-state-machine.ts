@@ -14,9 +14,10 @@ import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../cr
  * Processes device invitation credentials.
  */
 export class DeviceStateMachine {
+  // TODO(burdon): Return values via getter.
   public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(PublicKey.hash);
-
   public readonly deviceChainReady = new Trigger();
+
   public deviceCredentialChain?: Chain;
 
   // prettier-ignore
@@ -26,9 +27,9 @@ export class DeviceStateMachine {
   ) {}
 
   async process(credential: Credential) {
-    log('credential processed:', credential);
+    log('processing credential...', { identityKey: this._identityKey, deviceKey: this._deviceKey, credential });
 
-    // Save device key chain credential when processed by the space state machine.
+    // Save device keychain credential when processed by the space state machine.
     if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
       this.deviceCredentialChain = { credential };
       this.deviceChainReady.wake();
@@ -36,10 +37,16 @@ export class DeviceStateMachine {
 
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
-      case 'dxos.halo.credentials.AuthorizedDevice':
+      case 'dxos.halo.credentials.AuthorizedDevice': {
         // TODO(dmaretskyi): Extra validation for the credential?
         this.authorizedDeviceKeys.add(assertion.deviceKey);
+        log('added device', {
+          localDeviceKey: this._deviceKey,
+          deviceKey: assertion.deviceKey,
+          size: this.authorizedDeviceKeys.size
+        });
         break;
+      }
     }
   }
 }

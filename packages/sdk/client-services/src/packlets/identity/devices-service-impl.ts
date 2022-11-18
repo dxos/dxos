@@ -31,7 +31,6 @@ export class DevicesServiceImpl implements DevicesService {
       };
 
       const dispose = new EventSubscriptions();
-
       dispose.add(
         this._identityManager.stateUpdate.on(() => {
           update();

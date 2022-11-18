@@ -1,6 +1,6 @@
 ---
-position: 1
-label: The DXOS Platform
+order: 0
+title: The DXOS Platform
 next: ./quick-start
 prev: ./why
 ---

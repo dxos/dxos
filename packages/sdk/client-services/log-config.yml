@@ -1,6 +1,10 @@
 formatter:
   column: 100
 
+# depth: 0
+
 filter:
   - warn
+  - identity-manager:debug
   - invitations:debug
+  - credentials:debug

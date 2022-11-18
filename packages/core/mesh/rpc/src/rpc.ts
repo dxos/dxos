@@ -288,7 +288,7 @@ export class RpcPeer {
       return response.payload;
     } else if (response.error) {
       throw new SerializedRpcError(
-        response.error.name ?? 'UnknownError',
+        response.error.name ?? 'Error',
         response.error.message ?? 'Unknown Error',
         response.error.stack ?? '',
         method
@@ -317,11 +317,15 @@ export class RpcPeer {
         } else if (response.close) {
           close();
         } else if (response.error) {
-          assert(response.error.name);
-          assert(response.error.message);
-          assert(response.error.stack);
           // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(new SerializedRpcError(response.error.name, response.error.message, response.error.stack, method));
+          close(
+            new SerializedRpcError(
+              response.error.name ?? 'Error',
+              response.error.message ?? 'Unknown Error',
+              response.error.stack ?? '',
+              method
+            )
+          );
         } else if (response.payload) {
           next(response.payload);
         } else {

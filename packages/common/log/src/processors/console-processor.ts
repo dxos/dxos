@@ -95,7 +95,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     // https://nodejs.org/api/util.html#utilinspectobject-options
     parts.context = inspect(
       pickBy(context, (value?: unknown) => value !== undefined),
-      { depth: undefined, colors: true, maxArrayLength: 8, sorted: true }
+      { depth: config.options.depth, colors: true, maxArrayLength: 8, sorted: false }
     );
   }
 

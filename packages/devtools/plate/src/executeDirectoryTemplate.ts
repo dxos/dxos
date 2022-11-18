@@ -8,55 +8,77 @@ import readDir from 'recursive-readdir';
 
 import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
 import { File } from './file';
+import { logger } from './logger';
+import { runPromises } from './runPromises';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /index(\.d)?\.[tj]s/];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /^index(\.d)?\.[tj]s/];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string;
   outputDirectory: string;
   input?: Partial<TInput>;
+  parallel?: boolean;
   filterGlob?: string;
   filterRegEx?: RegExp;
   filterExclude?: RegExp;
+  verbose?: boolean;
+  overwrite?: boolean;
 };
 
 export const executeDirectoryTemplate = async <TInput>(
   options: ExecuteDirectoryTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
-  const { templateDirectory, filterRegEx, filterExclude, outputDirectory, input, filterGlob } = options;
-  console.debug(options);
+  const {
+    templateDirectory,
+    filterRegEx,
+    filterExclude,
+    outputDirectory,
+    input,
+    filterGlob,
+    parallel = true,
+    verbose = false,
+    overwrite
+  } = options;
+  const debug = logger(verbose);
+  debug(options);
   const allFiles = (await readDir(templateDirectory)).filter(
     (file) =>
       !TEMPLATE_DIRECTORY_IGNORE.some((pattern) => pattern.test(file)) &&
       (filterGlob ? minimatch(file, filterGlob) : filterRegEx ? filterRegEx.test(file) : true) &&
       (filterExclude ? !filterExclude.test(file) : true)
   );
+  debug('all files:\n', allFiles.join('\n'));
   const templateFiles = allFiles.filter(isTemplateFile);
   const regularFiles = allFiles.filter((file) => !isTemplateFile(file));
-  console.debug(`${templateFiles.length} template files:`);
-  console.debug(templateFiles.join('\n'));
-  console.debug(`${regularFiles.length} regular files:`);
-  console.debug(regularFiles.join('\n'));
-  console.debug('executing templates...');
+  debug(`${templateFiles.length} template files:`);
+  debug(templateFiles.join('\n'));
+  debug(`${regularFiles.length} regular files:`);
+  debug(regularFiles.join('\n'));
+  debug('executing templates...');
   const templatingPromises = templateFiles?.map((t) =>
     executeFileTemplate({
       templateFile: path.relative(templateDirectory, t),
       templateRelativeTo: templateDirectory,
       outputDirectory,
-      input
+      input,
+      overwrite
     })
   );
-  const templateOutputs: TemplatingResult[] = [];
-  for (const index in templatingPromises) {
-    const promise = templatingPromises[index];
-    process.stdout.write(`executing: ${templateFiles[index]} ... `);
-    templateOutputs.push(await promise);
-    process.stdout.write('OK\n');
-  }
-  console.debug('templates executed.');
+  const runner = runPromises({
+    before: (_p, i) => {
+      debug(`${templateFiles[Number(i)]} ... `);
+    },
+    after: (_p, i) => {
+      debug(`${templateFiles[Number(i)]} done`);
+    }
+  });
+  const templateOutputs = await (parallel
+    ? runner.inParallel(templatingPromises)
+    : runner.inSequence(templatingPromises));
+  debug('templates executed.');
   const stringPath = (p: string | string[]) => (typeof p === 'string' ? p : path.join(...p));
   const isOverwrittenByTemplateOutput = (f: string): boolean => {
-    return templateOutputs.some((files) => files.some((file) => stringPath(file.path) === f));
+    return templateOutputs.some((files) => files.some((file) => !!file && stringPath(file.path) === f));
   };
   return [
     ...regularFiles
@@ -64,8 +86,9 @@ export const executeDirectoryTemplate = async <TInput>(
       .map(
         (r) =>
           new File({
-            path: path.join(outputDirectory, r.slice(templateDirectory.length)),
-            copyFrom: r
+            path: path.join(outputDirectory, r.slice(templateDirectory.length - 1)),
+            copyFrom: r,
+            overwrite
           })
       ),
     ...flatten(templateOutputs)

@@ -6,9 +6,9 @@ import { ComponentProps, ReactNode } from 'react';
 
 import { MessageValence } from '../../props';
 
-export type InputSize = 'md' | 'lg' | 'pin';
+export type InputSize = 'md' | 'lg' | 'pin' | 'textarea';
 
-export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref'> {
+interface InputPropsExtension {
   label: ReactNode;
   labelVisuallyHidden?: boolean;
   description?: ReactNode;
@@ -21,3 +21,11 @@ export interface InputProps extends Omit<ComponentProps<'input'>, 'value' | 'onC
   validationValence?: MessageValence;
   length?: number;
 }
+
+export interface InputProps
+  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size' | 'ref'>,
+    InputPropsExtension {}
+
+export interface TextareaProps
+  extends Omit<ComponentProps<'textarea'>, 'value' | 'onChange' | 'size' | 'ref'>,
+    InputPropsExtension {}

@@ -3,3 +3,4 @@
 //
 
 export * from './file-generator';
+export * from './package-exports';

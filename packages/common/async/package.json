@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Async utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,8 +20,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/debug": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0"
   },

@@ -5,21 +5,21 @@
 import '@dxosTheme';
 import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { HashRouter, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame, InvitationEncoder, Item } from '@dxos/client';
+import { Client, fromIFrame, InvitationEncoder, Item, Invitation } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
-import { ServiceWorkerToast, SpaceList, useSafeSpaceKey } from '@dxos/react-appkit';
+import { ServiceWorkerToast, SpaceList, useSafeSpaceKey, translations } from '@dxos/react-appkit';
 import { ClientProvider, useClient, useSpaces, useSpace, useIdentity, useSelection } from '@dxos/react-client';
 import { Composer, DOCUMENT_TYPE } from '@dxos/react-composer';
 import {
   Button,
   getSize,
   Heading,
-  JoinSpaceDialog,
+  JoinDialog,
   Loading,
   Presence,
   Tooltip,
@@ -48,7 +48,7 @@ export const App = () => {
   } = useRegisterSW({ onRegisterError: (err) => console.error(err) });
 
   return (
-    <UiKitProvider resourceExtensions={translationResources}>
+    <UiKitProvider resourceExtensions={[translations, translationResources]}>
       <ClientProvider client={clientProvider}>
         <HashRouter>
           <Routes>
@@ -75,6 +75,7 @@ const SpacesView = () => {
   const [searchParams] = useSearchParams();
   const invitationParam = searchParams.get('invitation');
   const { t } = useTranslation('hello');
+  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
 
   const handleOpenHalo = () => {
     const remoteSource = client.config.get('runtime.client.remoteSource')?.split('/').slice(0, -1).join('/');
@@ -112,10 +113,11 @@ const SpacesView = () => {
         <div role='none' className='grow-[99] min-w-[2rem]' />
         <div role='none' className='grow flex gap-2'>
           {/* 5. Joining. */}
-          <JoinSpaceDialog
+          <JoinDialog
             initialInvitationCode={invitationParam ?? undefined}
             parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-            onJoin={(space) => navigate(`/${space.toHex()}`)}
+            onJoin={({ spaceKey }) => navigate(`/${spaceKey!.toHex()}`)}
+            acceptInvitation={acceptInvitation}
             dialogProps={{
               initiallyOpen: Boolean(invitationParam),
               openTrigger: (

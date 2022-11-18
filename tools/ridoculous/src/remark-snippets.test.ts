@@ -28,7 +28,7 @@ test('remarkSnippets with remark', async () => {
 
   // Test markdown.
   const processed = String(value);
-  const [snippet] = processed.match(/```([\s\S]*?)```/gm);
+  const [snippet] = processed.match(/```([\s\S]*?)```/gm) ?? [];
 
   // Test inserted file.
   const text = removeTrailing(fs.readFileSync('./testing/src/test.proto').toString());

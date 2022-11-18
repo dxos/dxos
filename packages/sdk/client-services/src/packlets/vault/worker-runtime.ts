@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'node:assert';
-
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager, WebRTCTransportProxyFactory } from '@dxos/network-manager';
-import { PortMuxer } from '@dxos/rpc-tunnel';
+import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
+// NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type CreateSessionParams = {
-  portMuxer: PortMuxer;
+  appPort: RpcPort;
+  systemPort: RpcPort;
 };
 
 /**
@@ -25,7 +25,7 @@ export type CreateSessionParams = {
  */
 export class WorkerRuntime {
   private readonly _transportFactory = new WebRTCTransportProxyFactory();
-  private readonly _ready = new Trigger();
+  private readonly _ready = new Trigger<Error | undefined>();
   private readonly sessions = new Set<WorkerSession>();
   private _sessionForNetworking?: WorkerSession;
   private _clientServices!: ClientServicesHost;
@@ -34,24 +34,28 @@ export class WorkerRuntime {
   // prettier-ignore
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>
-  ) {}
+  ) { }
 
   async start() {
-    this._config = await this._configProvider();
-    const signalServer = this._config.get('runtime.services.signal.server');
-    // TODO(wittjosiah): Networking shouldn't be required.
-    assert(signalServer);
-    this._clientServices = new ClientServicesHost({
-      config: this._config,
-      networkManager: new NetworkManager({
-        log: true,
-        signalManager: new WebsocketSignalManager([signalServer]),
-        transportFactory: this._transportFactory
-      })
-    });
+    try {
+      this._config = await this._configProvider();
+      const signalServer = this._config.get('runtime.services.signal.server');
+      this._clientServices = new ClientServicesHost({
+        config: this._config,
+        networkManager: new NetworkManager({
+          log: true,
+          signalManager: signalServer
+            ? new WebsocketSignalManager([signalServer])
+            : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
+          transportFactory: this._transportFactory
+        })
+      });
 
-    await this._clientServices.open();
-    this._ready.wake();
+      await this._clientServices.open();
+      this._ready.wake(undefined);
+    } catch (err: any) {
+      this._ready.wake(err);
+    }
   }
 
   async stop() {
@@ -62,16 +66,18 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ portMuxer }: CreateSessionParams) {
-    const appPort = portMuxer.createWorkerPort({ channel: 'dxos:app' });
-    const systemPort = portMuxer.createWorkerPort({ channel: 'dxos:system' });
-
-    await this._ready.wait();
-
+  async createSession({ appPort, systemPort }: CreateSessionParams) {
     const session = new WorkerSession({
-      clientServices: this._clientServices,
+      getServices: async () => {
+        const error = await this._ready.wait();
+        if (error !== undefined) {
+          throw error;
+        }
+        return this._clientServices;
+      },
       appPort,
-      systemPort
+      systemPort,
+      readySignal: this._ready
     });
 
     // When tab is closed.

@@ -9,7 +9,6 @@ import { join } from 'node:path';
 import { resolve } from 'path';
 
 import { preconfigureProtobufjs } from './configure';
-import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { registerResolver } from './parser';
 import { parseAndGenerateSchema } from './type-generator';
@@ -23,14 +22,15 @@ export interface GenerateExecutorOptions {
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing generate...');
+  console.info('Executing protobuf generator...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);
   }
 
+  // TODO(burdon): Path options aren't "balanced".
   const src = join(options.basePath, options.srcPath);
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
-  const baseDir = resolve(process.cwd(), options.basePath);
+  const baseDir = resolve(context.cwd, options.basePath);
   const outDir = join(options.basePath, options.outputPath);
   const packageRoot = context.workspace.projects[context.projectName!].root;
 
@@ -47,20 +47,20 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
-  const outdirPath = resolve(process.cwd(), outDir);
+  const outDirPath = resolve(process.cwd(), outDir);
 
   // Initialize.
   registerResolver(baseDir);
   preconfigureProtobufjs();
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDir, outdirPath);
   await parseAndGenerateSchema(
     substitutionsModule,
     protoFilePaths,
     baseDir,
-    outdirPath,
+    outDirPath,
     packageRoot,
-    options.exportPath
+    options.exportPath,
+    context.isVerbose
   );
 
   return { success: true };

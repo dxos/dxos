@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './iframe-service-proxy';
 export * from './service-context';
 export * from './service-definitions';
 export * from './service-host';

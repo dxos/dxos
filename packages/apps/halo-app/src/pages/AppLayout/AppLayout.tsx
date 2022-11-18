@@ -23,7 +23,6 @@ export const AppLayout = () => {
 
   const pathSegments = location.pathname.split('/').length;
   const isRootPath = pathSegments < 3;
-  const isManagingSpace = !!spaceHex && pathSegments > 3;
 
   const centerMenuItems = [
     {
@@ -35,9 +34,9 @@ export const AppLayout = () => {
       separator: true
     } as NavMenuSeparatorProps,
     {
-      label: t('spaces label'),
-      icon: <Planet {...iconAttributes} />,
-      pathName: '/spaces'
+      label: t('devices label'),
+      icon: <DeviceMobileCamera {...iconAttributes} />,
+      pathName: '/devices'
     },
     {
       label: t('contacts label'),
@@ -50,9 +49,9 @@ export const AppLayout = () => {
       pathName: '/apps'
     },
     {
-      label: t('devices label'),
-      icon: <DeviceMobileCamera {...iconAttributes} />,
-      pathName: '/devices'
+      label: t('spaces label'),
+      icon: <Planet {...iconAttributes} />,
+      pathName: '/spaces'
     }
   ];
 
@@ -113,10 +112,7 @@ export const AppLayout = () => {
           className='flex-none'
           size={10}
           sideOffset={4}
-          managingSpace={isManagingSpace}
           onClickManageProfile={() => navigate('/identity')}
-          onClickGoToSpace={() => navigate(`/spaces/${spaceHex}`)}
-          onClickManageSpace={() => navigate(`/spaces/${spaceHex}/settings`)}
         />
       </div>
 
