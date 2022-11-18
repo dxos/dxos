@@ -35,6 +35,9 @@ const config: UserConfig = defineUserConfig({
     logo: '/images/dxos.svg',
     logoDark: '/images/dxos-white.svg',
     repo: 'dxos/dxos',
+    // TODO(wittjosiah): Use release tag?
+    docsBranch: 'main',
+    docsDir: 'docs/docs',
     sidebar: {
       '/guide/': 'structure',
       '/api/': await apiSidebar()
