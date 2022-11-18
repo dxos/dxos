@@ -13,8 +13,8 @@ export interface DeviceListProps {
 export const DeviceList = ({ devices }: DeviceListProps) => {
   return (
     <>
-      {devices.map((device) => (
-        <Device key={device.publicKey.toHex()} {...device} />
+      {devices.map((device, index) => (
+        <Device key={device.publicKey.toHex()} {...device} isCurrentDevice={index === 0} />
       ))}
     </>
   );

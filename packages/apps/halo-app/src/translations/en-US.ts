@@ -25,5 +25,6 @@ export const halo = {
   'enable telemetry label': 'Enable app telemetry',
   'disable telemetry description':
     'This will stop all telemetry data from HALO from being sent to DXOS. Changing this setting will reload the application.',
-  'disable telemetry label': 'Disable app telemetry'
+  'disable telemetry label': 'Disable app telemetry',
+  'current device label': 'This device'
 };
