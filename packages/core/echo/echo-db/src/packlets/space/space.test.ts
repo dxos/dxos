@@ -5,13 +5,14 @@
 import assert from 'assert';
 import expect from 'expect';
 
+import { sleep } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest } from '@dxos/testutils';
 
-import { TestAgentBuilder } from './testing';
 import { Item } from '../database';
+import { TestAgentBuilder } from './testing';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -178,7 +179,7 @@ describe('space/space', function () {
     expect(space2.isOpen).toBeFalsy();
   });
 
-  it.only('event is being emitted', async function () {
+  it('event is being emitted', async function () {
     const builder = new TestAgentBuilder();
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
@@ -214,7 +215,7 @@ describe('space/space', function () {
     result.update.on(() => {
       updateCount++;
     });
-
+    await sleep(50);
     await item.model.set('key', 'value');
 
     expect(result.value[0].model.toObject()).toEqual({ key: 'value' });
