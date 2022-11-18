@@ -3,31 +3,48 @@
 //
 
 import { Activity, Eraser } from 'phosphor-react';
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
-import { QrCode, useTranslation, Button, getSize, Input, AlertDialog } from '@dxos/react-uikit';
+import { useTranslation, Button, getSize, Input, AlertDialog, Avatar, defaultGroup } from '@dxos/react-uikit';
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
 export const IdentityPage = () => {
   const client = useClient();
   const profile = useIdentity();
-  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
+  const profileHex = profile!.identityKey.toHex();
   const telemetryDisabled = DX_TELEMETRY === 'true';
   const { t } = useTranslation('halo');
 
   const confirmString = humanize(profile!.identityKey.toHex());
 
+  const onChangeDisplayName = useCallback(
+    (nextValue: string) => {
+      if (profile) {
+        // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
+        profile.displayName = nextValue;
+      }
+    },
+    [profile]
+  );
+
   return (
-    <main className='flex flex-col items-center max-is-lg mli-auto pli-7'>
+    <main className='flex flex-col items-center gap-2 max-is-lg mli-auto pli-7'>
       {/* TODO(wittjosiah): Update with device invite. */}
-      <QrCode label={t('copy qrcode label')} value='https://halo.dxos.org' side='left' />
+      <Avatar
+        size={32}
+        variant='circle'
+        className={defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' })}
+        fallbackValue={profileHex}
+        label={profile?.displayName ?? humanize(profileHex)}
+      />
       <Input
         label={t('displayName label', { ns: 'uikit' })}
-        initialValue={displayName}
-        onChange={(nextValue) => setDisplayName(nextValue)}
+        placeholder={humanize(profileHex)}
+        initialValue={profile?.displayName}
+        onChange={onChangeDisplayName}
         className='w-full'
       />
       {/* TODO(wittjosiah): Allow updating displayName. */}

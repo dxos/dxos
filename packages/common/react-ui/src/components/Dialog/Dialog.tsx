@@ -40,10 +40,10 @@ export const Dialog = ({
     <Transition.Root show={isOpen}>
       <Transition.Child
         as={Fragment}
-        enter='ease-out duration-300'
+        enter='linear duration-300'
         enterFrom='opacity-0'
         enterTo='opacity-100'
-        leave='ease-in duration-200'
+        leave='linear duration-200'
         leaveFrom='opacity-100'
         leaveTo='opacity-0'
       >
@@ -87,7 +87,7 @@ export const Dialog = ({
           {children}
 
           {closeLabel && (
-            <Tooltip content={closeLabel}>
+            <Tooltip zIndex='z-[51]' content={closeLabel}>
               <DialogPrimitive.Close
                 className={cx(
                   'absolute top-3.5 right-3.5 inline-flex items-center justify-center rounded-sm p-1',
