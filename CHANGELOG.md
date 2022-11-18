@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.8](https://github.com/dxos/dxos/compare/v0.1.7...v0.1.8) (2022-11-18)
+
+
+### Bug Fixes
+
+* **docs:** Production bundle doesn't crash at hydration ([#1925](https://github.com/dxos/dxos/issues/1925)) ([bf97cfb](https://github.com/dxos/dxos/commit/bf97cfbdff36e2fc97ceac5719481338d0f38360))
+* **hello-template:** Cleanup missing config/deps ([#1926](https://github.com/dxos/dxos/issues/1926)) ([45b96c4](https://github.com/dxos/dxos/commit/45b96c41e086366ce4c1b4fe262948f122847d45))
+
 ## [0.1.7](https://github.com/dxos/dxos/compare/v0.1.6...v0.1.7) (2022-11-18)
 
 
