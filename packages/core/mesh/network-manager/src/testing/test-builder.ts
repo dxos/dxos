@@ -7,7 +7,7 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { schema } from '@dxos/protocols';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
-import { ComplexSet } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
 import { FullyConnectedTopology, Topology } from '../topology';
@@ -55,11 +55,12 @@ export class TestBuilder {
 export class TestPeer {
   readonly peerId = PublicKey.random();
 
-  // TODO(burdon): Configure plugins.
-  readonly plugin = new TestProtocolPlugin(this.peerId.asBuffer()); // TODO(burdon): PublicKey.
+  private readonly _swarms = new ComplexMap<PublicKey, TestSwarmConnection>(PublicKey.hash);
 
-  private readonly _swarms = new ComplexSet<PublicKey>(PublicKey.hash);
-  private readonly _networkManager: NetworkManager;
+  /**
+   * @internal
+   */
+  readonly _networkManager: NetworkManager;
 
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
@@ -120,7 +121,7 @@ export class TestPeer {
   }
 
   async close() {
-    await Promise.all(Array.from(this._swarms.values()).map((topic) => this.leaveSwarm(topic)));
+    await Promise.all(Array.from(this._swarms.values()).map((swarm) => swarm.leave()));
     this._swarms.clear();
 
     await this._proxy?.close();
@@ -128,22 +129,52 @@ export class TestPeer {
     await this._networkManager.close();
   }
 
+  getSwarm(topic: PublicKey): TestSwarmConnection {
+    const swarm = this._swarms.get(topic);
+    if (!swarm) {
+      throw new Error(`Swarm not found for topic: ${topic}`);
+    }
+
+    return swarm;
+  }
+
+  createSwarm(topic: PublicKey): TestSwarmConnection {
+    // TODO(burdon): Multiple.
+    // if (this._swarms.get(topic)) {
+    //   throw new Error(`Swarm already exists for topic: ${topic.truncate()}`);
+    // }
+
+    const swarm = new TestSwarmConnection(this, topic);
+    this._swarms.set(topic, swarm);
+    return swarm;
+  }
+}
+
+export class TestSwarmConnection {
+  plugin: TestProtocolPlugin;
+
+  constructor(readonly peer: TestPeer, readonly topic: PublicKey) {
+    // TODO(burdon): Configure plugins.
+    // TODO(burdon): Prevent reuse?
+    this.plugin = new TestProtocolPlugin(this.peer.peerId.asBuffer()); // TODO(burdon): PublicKey.
+  }
+
   // TODO(burdon): Need to create new plugin instance per swarm?
   //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
-  async joinSwarm(topic: PublicKey, topology = new FullyConnectedTopology()) {
-    await this._networkManager.joinSwarm({
-      topic,
-      peerId: this.peerId,
-      protocol: testProtocolProvider(topic.asBuffer(), this.peerId, this.plugin),
+  async join(topology = new FullyConnectedTopology()) {
+    await this.peer._networkManager.joinSwarm({
+      topic: this.topic,
+      peerId: this.peer.peerId,
+      protocol: testProtocolProvider(this.topic.asBuffer(), this.peer.peerId, this.plugin),
       topology
     });
 
-    this._swarms.add(topic);
+    return this;
   }
 
-  async leaveSwarm(topic: PublicKey) {
-    await this._networkManager.leaveSwarm(topic);
-    this._swarms.delete(topic);
+  async leave() {
+    await this.peer._networkManager.leaveSwarm(this.topic);
+    return this;
   }
 }
 

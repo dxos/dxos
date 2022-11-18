@@ -98,6 +98,7 @@ export class MemoryTransport implements Transport {
 
     MemoryTransport._connections.delete(this._id);
     if (this._remoteConnection) {
+      log('closing', { id: this._remoteId });
       MemoryTransport._connections.delete(this._remoteId);
 
       // TODO(dmaretskyi): Hypercore streams do not seem to have the unpipe method.
@@ -114,10 +115,11 @@ export class MemoryTransport implements Transport {
       this._remoteConnection.closed.emit();
       this._remoteConnection._remoteConnection = undefined;
       this._remoteConnection = undefined;
+      log('closed', { id: this._remoteId });
     }
 
     this.closed.emit();
-    log('closed');
+    log('closed', { id: this._id });
   }
 
   async signal(signal: Signal) {
