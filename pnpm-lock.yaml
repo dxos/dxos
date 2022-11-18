@@ -2315,8 +2315,6 @@ importers:
       '@dxos/react-toolkit': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
-      '@dxos/sentry': workspace:*
-      '@dxos/telemetry': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/vite-plugin': workspace:*
@@ -2369,8 +2367,6 @@ importers:
       '@dxos/react-toolkit': link:../../deprecated/react-toolkit
       '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/sentry': link:../../common/sentry
-      '@dxos/telemetry': link:../../common/telemetry
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
       '@emotion/react': 11.10.5_cuziicjcvwawlf5iuhzacuhqcy

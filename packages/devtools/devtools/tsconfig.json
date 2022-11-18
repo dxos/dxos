@@ -33,12 +33,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/sentry"
-    },
-    {
-      "path": "../../common/telemetry"
-    },
-    {
       "path": "../../common/timeframe"
     },
     {
