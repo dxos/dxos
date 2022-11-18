@@ -7,8 +7,8 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromDefaults, fromIFrame } from '@dxos/client';
-import { Config, Defaults, Dynamics, Envs } from '@dxos/config';
+import { fromHost, fromIFrame } from '@dxos/client';
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
   ErrorProvider,
@@ -41,15 +41,7 @@ import haloTranslations from './translations';
 
 log.config({ filter: process.env.LOG_FILTER, prefix: process.env.LOG_BROWSER_PREFIX });
 
-const configProvider = async () => new Config(await Dynamics(), await Envs(), Defaults());
-
-const clientProvider = async () => {
-  const config = await configProvider();
-  const services = process.env.DX_VAULT === 'false' ? fromDefaults(config) : fromIFrame(config);
-  const client = new Client({ config, services });
-  await client.initialize();
-  return client;
-};
+const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => {
   useTelemetry({ namespace: 'halo-app' });
@@ -109,7 +101,11 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
+          <ClientProvider
+            config={configProvider}
+            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
+            fallback={<GenericFallback />}
+          >
             <HashRouter>
               <Routes />
               {needRefresh ? (

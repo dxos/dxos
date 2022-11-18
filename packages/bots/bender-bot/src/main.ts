@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { failUndefined, raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { BotService } from '@dxos/protocols/proto/dxos/service/scheduler';
@@ -29,7 +29,7 @@ const main = async () => {
   log('Received bot config', { config: JSON.stringify(botConfig) });
   // assert(botConfig.spec.invitation['@type'] as keyof TYPES === 'dxos.echo.invitations.InvitationEncoder');
 
-  const client = new Client({ config: botConfig.clientConfig });
+  const client = new Client({ config: new Config(botConfig.clientConfig) });
   await client.initialize();
   log('Initialized');
 

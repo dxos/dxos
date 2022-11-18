@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export { Config } from '@dxos/config';
+
 // TODO(burdon): Remove (create wrapper class).
 export { generateSeedPhrase } from '@dxos/credentials';
 

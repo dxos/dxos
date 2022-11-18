@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useState } from 'react';
 
-import { defaultConfig, Item } from '@dxos/client';
+import { Item } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { Loading } from '@dxos/react-uikit';
@@ -45,7 +45,7 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={defaultConfig}>
+    <ClientProvider>
       <Story />
     </ClientProvider>
   )

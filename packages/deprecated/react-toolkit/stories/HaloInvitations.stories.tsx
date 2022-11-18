@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { defaultConfig } from '@dxos/client';
 import { ClientProvider, useSpaces, useIdentity } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
@@ -123,7 +122,7 @@ export const Remote = () => {
             justifyContent: 'space-around'
           }}
         >
-          <ClientProvider config={defaultConfig}>
+          <ClientProvider>
             <Column>
               <User remote sharing joining />
             </Column>
