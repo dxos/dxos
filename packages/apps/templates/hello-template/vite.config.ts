@@ -55,6 +55,7 @@ export default defineConfig({
       content: [
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js'),
         resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
       ]
     }),
