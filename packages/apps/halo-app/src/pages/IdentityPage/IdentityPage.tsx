@@ -3,7 +3,7 @@
 //
 
 import { Activity, Eraser } from 'phosphor-react';
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { BASE_TELEMETRY_PROPERTIES, DX_TELEMETRY, getTelemetryIdentifier } from '@dxos/react-appkit';
 import { useClient, useIdentity } from '@dxos/react-client';
@@ -15,11 +15,20 @@ export const IdentityPage = () => {
   const client = useClient();
   const profile = useIdentity();
   const profileHex = profile!.identityKey.toHex();
-  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const telemetryDisabled = DX_TELEMETRY === 'true';
   const { t } = useTranslation('halo');
 
   const confirmString = humanize(profile!.identityKey.toHex());
+
+  const onChangeDisplayName = useCallback(
+    (nextValue: string) => {
+      if (profile) {
+        // TODO(thure): This doesn't appear to be a property with a setter, and I can't find a setter method for this, but it does persist at least in memory.
+        profile.displayName = nextValue;
+      }
+    },
+    [profile]
+  );
 
   return (
     <main className='flex flex-col items-center gap-2 max-is-lg mli-auto pli-7'>
@@ -29,13 +38,13 @@ export const IdentityPage = () => {
         variant='circle'
         className={defaultGroup({ elevation: 3, spacing: 'p-1', rounding: 'rounded-full' })}
         fallbackValue={profileHex}
-        label={displayName ?? humanize(profileHex)}
+        label={profile?.displayName ?? humanize(profileHex)}
       />
       <Input
         label={t('displayName label', { ns: 'uikit' })}
         placeholder={humanize(profileHex)}
-        initialValue={displayName}
-        onChange={(nextValue) => setDisplayName(nextValue)}
+        initialValue={profile?.displayName}
+        onChange={onChangeDisplayName}
         className='w-full'
       />
       {/* TODO(wittjosiah): Allow updating displayName. */}
