@@ -13,8 +13,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
 
-import { Client } from '@dxos/client';
-import { ConfigProto } from '@dxos/config';
+import { Client, Config } from '@dxos/client';
 
 import {
   ClientSigner,
@@ -65,7 +64,7 @@ describe.skip('Signatures', function () {
     const uri = '//Alice';
     keypair = keyring.addFromUri(uri);
 
-    const config: ConfigProto = {
+    const config = new Config({
       version: 1,
       runtime: {
         services: {
@@ -74,7 +73,7 @@ describe.skip('Signatures', function () {
           }
         }
       }
-    };
+    });
 
     client = new Client({ config });
 

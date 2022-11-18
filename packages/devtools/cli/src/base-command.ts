@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, Config, Flags } from '@oclif/core';
+import { Command, Config as OclifConfig, Flags } from '@oclif/core';
 import assert from 'assert';
 import chalk from 'chalk';
 import debug from 'debug';
@@ -12,8 +12,7 @@ import fetch from 'node-fetch';
 import * as path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { Client } from '@dxos/client';
-import { ConfigProto } from '@dxos/config';
+import { Client, Config } from '@dxos/client';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
@@ -33,7 +32,7 @@ const log = debug('dxos:cli:main');
 const ENV_DX_CONFIG = 'DX_CONFIG';
 
 export abstract class BaseCommand extends Command {
-  private _clientConfig?: ConfigProto;
+  private _clientConfig?: Config;
   private _client?: Client;
   private _startTime: Date;
   private _failing = false;
@@ -54,7 +53,7 @@ export abstract class BaseCommand extends Command {
     })
   };
 
-  constructor(argv: string[], config: Config) {
+  constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
 
     this._startTime = new Date();
@@ -126,7 +125,7 @@ export abstract class BaseCommand extends Command {
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       try {
-        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
+        this._clientConfig = new Config(yaml.load(String(fs.readFileSync(configFile))) as any);
       } catch (err) {
         Sentry.captureException(err);
         console.error(`Invalid config file: ${configFile}`);
@@ -207,7 +206,7 @@ export abstract class BaseCommand extends Command {
     try {
       assert(this._clientConfig);
 
-      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
+      const wsEndpoint = this._clientConfig.get('runtime.services.publisher.server');
       assert(wsEndpoint);
 
       rpc = new PublisherRpcPeer(wsEndpoint);
