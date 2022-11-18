@@ -242,7 +242,7 @@ importers:
       vue: ^3.2.45
       vue-router: ^4.1.6
       vuepress: ^2.0.0-beta.53
-      vuepress-theme-hope: ^2.0.0-beta.121
+      vuepress-theme-hope: ^2.0.0-beta.122
     devDependencies:
       '@dxos/plate': link:../packages/devtools/plate
       '@dxos/react-client': link:../packages/sdk/react-client
@@ -12387,7 +12387,7 @@ packages:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
       '@types/eslint': 8.4.10
-      '@types/estree': 0.0.51
+      '@types/estree': 1.0.0
     dev: true
 
   /@types/eslint/8.4.10:
