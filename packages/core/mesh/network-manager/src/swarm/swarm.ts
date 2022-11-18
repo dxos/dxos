@@ -134,6 +134,15 @@ export class Swarm {
     this._topology.update();
   }
 
+  private _getOrCreatePeer(peerId: PublicKey): Peer {
+    let peer = this._peers.get(peerId);
+    if (!peer) {
+      peer = new Peer(peerId);
+      this._peers.set(peerId, peer);
+    }
+    return peer;
+  }
+
   onSwarmEvent(swarmEvent: SwarmEvent) {
     log('swarm event', { topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
 
@@ -141,10 +150,7 @@ export class Swarm {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
       log('new peer', { topic: this._topic, peerId });
       if (!peerId.equals(this._ownPeerId)) {
-        if (!this._peers.has(peerId)) {
-          this._peers.set(peerId, new Peer(peerId));
-        }
-        const peer = this._peers.get(peerId)!;
+        const peer = this._getOrCreatePeer(peerId);
         peer.advertizing = true;
       }
     } else if (swarmEvent.peerLeft) {
@@ -282,10 +288,7 @@ export class Swarm {
    * Synchronously create a connection, which must be initialized.
    */
   private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
-    if (!this._peers.has(remoteId)) {
-      this._peers.set(remoteId, new Peer(remoteId));
-    }
-    const peer = this._peers.get(remoteId)!;
+    const peer = this._getOrCreatePeer(remoteId);
 
     const connection = peer.createConnection(
       this._topic,
