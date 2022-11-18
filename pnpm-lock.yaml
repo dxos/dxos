@@ -2786,6 +2786,7 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/esbuild-server': ~2.29.0
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@emotion/css': ^11.7.1
@@ -2813,6 +2814,7 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
+      '@dxos/esbuild-server': 2.29.0_@types+react@18.0.21
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -5786,6 +5788,7 @@ packages:
 
   /@dxos/esbuild-server/2.29.0:
     resolution: {integrity: sha512-5jsQ800UgsX80Mbp5tGct/r3U1/4nzQDkyCWN2gbKnLBs/Nd3WTkLOTgbRd/GIBN6DSTkCdycPEVDXI0+P13uw==}
+    deprecated: Versions published prior to open sourcing are no longer supported
     hasBin: true
     dependencies:
       '@babel/core': 7.19.3
@@ -5817,6 +5820,7 @@ packages:
 
   /@dxos/esbuild-server/2.29.0_@types+react@18.0.21:
     resolution: {integrity: sha512-5jsQ800UgsX80Mbp5tGct/r3U1/4nzQDkyCWN2gbKnLBs/Nd3WTkLOTgbRd/GIBN6DSTkCdycPEVDXI0+P13uw==}
+    deprecated: Versions published prior to open sourcing are no longer supported
     hasBin: true
     dependencies:
       '@babel/core': 7.19.3
