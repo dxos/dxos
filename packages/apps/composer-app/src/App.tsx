@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Space } from '@dxos/client';
+import { fromHost, fromIFrame, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   AppLayout,
@@ -95,7 +95,11 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider config={configProvider} fallback={<GenericFallback />}>
+          <ClientProvider
+            config={configProvider}
+            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
+            fallback={<GenericFallback />}
+          >
             <HashRouter>
               <Routes />
               {needRefresh ? (
