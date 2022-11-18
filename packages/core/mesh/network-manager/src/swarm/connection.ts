@@ -207,6 +207,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
+    assert(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
   }
