@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { Client, Space } from '@dxos/client';
+import { Client, Config, Space } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
 import {
   BotReport,
@@ -26,7 +26,7 @@ export class Bot implements BotService {
     log('Client bot start initializing');
 
     this.id = request.id;
-    this.client = new Client({ config: request.config });
+    this.client = new Client({ config: new Config(request.config) });
     log('Client config:', JSON.stringify(request.config));
 
     log('Client bot initialize');
@@ -46,7 +46,7 @@ export class Bot implements BotService {
 
   async start(request: StartRequest) {
     log('Client bot start initilizing');
-    this.client = new Client({ config: request.config });
+    this.client = new Client({ config: new Config(request.config) });
 
     log('Client bot initialize');
     await this.client.initialize();

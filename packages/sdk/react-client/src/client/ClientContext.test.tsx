@@ -6,8 +6,7 @@ import { renderHook, screen, render } from '@testing-library/react';
 import expect from 'expect';
 import React, { Component, PropsWithChildren } from 'react';
 
-import { Client } from '@dxos/client';
-import { ConfigProto } from '@dxos/config';
+import { Client, Config, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
 
 import { ClientProvider, useClient } from './ClientContext';
@@ -57,7 +56,7 @@ describe('Client hook', function () {
   });
 
   it('should return client when used properly in a context', function () {
-    const config: ConfigProto = {
+    const config = new Config({
       version: 1,
       runtime: {
         client: {
@@ -66,9 +65,9 @@ describe('Client hook', function () {
           }
         }
       }
-    };
+    });
 
-    const client = new Client({ config });
+    const client = new Client({ config, services: fromHost(config) });
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(result.current).toEqual(client);
@@ -79,7 +78,7 @@ describe('ClientProvider', function () {
   let client: Client;
 
   before(async function () {
-    client = new Client();
+    client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
   });

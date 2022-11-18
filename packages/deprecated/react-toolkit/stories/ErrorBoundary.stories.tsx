@@ -3,11 +3,10 @@
 //
 
 import debug from 'debug';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Alert, Box, Button } from '@mui/material';
 
-import { Client } from '@dxos/client';
 import { DXOSError } from '@dxos/debug';
 import { ClientProvider } from '@dxos/react-client';
 
@@ -102,7 +101,7 @@ const TestApp = () => {
 
 export const Primary = () => {
   // Forward reference to client (since can't use context here).
-  const clientRef = useRef<Client>();
+  // const clientRef = useRef<Client>();
 
   // Cast to any to suppress warning about undefined return value.
   const App = TestApp as any;
@@ -111,10 +110,10 @@ export const Primary = () => {
     <ErrorBoundary
       onError={(error) => error.message.startsWith('FATAL')}
       onReset={async () => {
-        await clientRef.current!.reset();
+        // await clientRef.current!.reset();
       }}
     >
-      <ClientProvider clientRef={clientRef}>
+      <ClientProvider>
         <App />
       </ClientProvider>
     </ErrorBoundary>

@@ -7,7 +7,7 @@ import { HashRouter } from 'react-router-dom';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client, fromDefaults, fromIFrame } from '@dxos/client';
+import { Client, fromHost, fromIFrame } from '@dxos/client';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
@@ -50,7 +50,7 @@ export const App = () => {
         await client.destroy();
         await servicesProvider.close();
       }
-      const newServicesProvider = remoteSource ? fromIFrame(config) : fromDefaults(config);
+      const newServicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
       setServicesProvider(newServicesProvider);
       const newClient = new Client({ config, services: newServicesProvider });
       await newClient.initialize();

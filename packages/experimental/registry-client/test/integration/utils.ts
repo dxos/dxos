@@ -5,7 +5,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { defaultConfig, Client } from '@dxos/client';
+import { Client } from '@dxos/client';
 
 import {
   AuctionsClient,
@@ -33,7 +33,7 @@ export const setupRegistryClient = async () => {
   const alice = (await createKeyring()).addFromUri('//Alice');
   const bob = (await createKeyring()).addFromUri('//Bob');
 
-  const client = new Client({ config: defaultConfig });
+  const client = new Client();
   await client.initialize();
   // await client.halo.addKeyRecord({
   //   publicKey: PublicKey.from(decodeAddress(alice.address)),
