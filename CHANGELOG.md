@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/dxos/dxos/compare/v0.1.8...v0.1.9) (2022-11-18)
+
+
+### Bug Fixes
+
+* Include react-list in the release please config ([#1929](https://github.com/dxos/dxos/issues/1929)) ([3069bf4](https://github.com/dxos/dxos/commit/3069bf4fc71ffaa114b12c39ea09f7da857c2909))
+
 ## [0.1.8](https://github.com/dxos/dxos/compare/v0.1.7...v0.1.8) (2022-11-18)
 
 
