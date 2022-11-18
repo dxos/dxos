@@ -80,11 +80,11 @@ export const Input = ({
     );
 
   return (
-    <div className={cx('my-4', className)} role='none'>
+    <div role='none' className={cx('mlb-4', className)}>
       <label
         htmlFor={inputId}
         className={cx(
-          'block mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
+          'block pbe-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
           labelVisuallyHidden && 'sr-only'
         )}
       >

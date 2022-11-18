@@ -8,6 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { InvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
+import { Heading } from '@dxos/react-ui';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
 import { DeviceList } from '../../components';
@@ -43,6 +44,9 @@ export const DevicesPage = () => {
         }
       />
       <DeviceList devices={devices} />
+      <Heading level={2} className='text-xl mbs-4'>
+        {t('device invitations label')}
+      </Heading>
       <InvitationList
         invitations={invitations as unknown as InvitationObservable[] | undefined}
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
