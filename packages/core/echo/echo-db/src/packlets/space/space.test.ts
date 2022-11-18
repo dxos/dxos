@@ -13,6 +13,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Item } from '../database';
 import { TestAgentBuilder } from './testing';
+import waitForExpect from 'wait-for-expect';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -179,46 +180,51 @@ describe('space/space', function () {
     expect(space2.isOpen).toBeFalsy();
   });
 
-  it('event is being emitted', async function () {
-    const builder = new TestAgentBuilder();
-    const agent = await builder.createPeer();
-    const space = await agent.createSpace();
+  Array(50)
+    .fill(0)
+    .forEach((_, index) => {
+      it.only('event is being emitted', async function () {
+        const builder = new TestAgentBuilder();
+        const agent = await builder.createPeer();
+        const space = await agent.createSpace();
 
-    await space.open();
-    afterTest(() => space.close());
+        await space.open();
+        afterTest(() => space.close());
 
-    {
-      // Genesis
-      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
-      const credentials = [
-        ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey)),
-        await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
-      ];
+        {
+          // Genesis
+          const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+          const credentials = [
+            ...(await generator.createSpaceGenesis(space.key, space.controlFeedKey)),
+            await generator.createFeedAdmission(space.key, space.dataFeedKey, AdmittedFeed.Designation.DATA)
+          ];
 
-      for (const credential of credentials) {
-        await space.controlPipeline.writer.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
+          for (const credential of credentials) {
+            await space.controlPipeline.writer.write({
+              '@type': 'dxos.echo.feed.CredentialsMessage',
+              credential
+            });
+          }
+
+          // TODO(burdon): Debugging only.
+          await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
+        }
+
+        const item: Item<ObjectModel> = await space.database.createItem({ type: 'dxos:item/space' });
+
+        const selection = space.database.select({ type: 'dxos:item/space' });
+
+        const result = selection.exec();
+        let updateCount = 0;
+        result.update.on(() => {
+          updateCount++;
         });
-      }
+        await item.model.set('key', 'value');
 
-      // TODO(burdon): Debugging only.
-      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
-    }
-
-    const item: Item<ObjectModel> = await space.database.createItem({ type: 'dxos:item/space' });
-
-    const selection = space.database.select({ type: 'dxos:item/space' });
-
-    const result = selection.exec();
-    let updateCount = 0;
-    result.update.on(() => {
-      updateCount++;
+        expect(result.value[0].model.toObject()).toEqual({ key: 'value' });
+        await waitForExpect(() => {
+          expect(updateCount).toEqual(1);
+        });
+      });
     });
-    await sleep(50);
-    await item.model.set('key', 'value');
-
-    expect(result.value[0].model.toObject()).toEqual({ key: 'value' });
-    expect(updateCount).toEqual(1);
-  });
 });
