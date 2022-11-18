@@ -7,20 +7,20 @@ import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
 import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto, fromConfig } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
-import { defaultConfig, EXPECTED_CONFIG_VERSION } from './config';
-import { fromDefaults } from './utils';
+import { EXPECTED_CONFIG_VERSION } from './config';
+import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
 export type ClientOptions = {
-  config?: Config | ConfigProto;
+  config?: Config;
   services?: ClientServicesProvider;
   modelFactory?: ModelFactory;
 };
@@ -45,8 +45,8 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
-    this._config = fromConfig(config ?? defaultConfig);
-    this._services = services ?? fromDefaults(this._config);
+    this._config = config ?? new Config();
+    this._services = services ?? fromIFrame(this._config);
     // NOTE: Defaults to the same as the backend services.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { MemoryRegistryClientBackend, RegistryClient, RegistryType } from '@dxos/registry-client';
 
 import { RegistryProvider, useRegistry } from '../src';
@@ -44,7 +44,7 @@ export const Memory = () => {
 };
 
 export const Testnet = () => {
-  const config: ConfigProto = {
+  const config = new Config({
     runtime: {
       services: {
         dxns: {
@@ -52,7 +52,7 @@ export const Testnet = () => {
         }
       }
     }
-  };
+  });
 
   return (
     <RegistryProvider config={config}>
