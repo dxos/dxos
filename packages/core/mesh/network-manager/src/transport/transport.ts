@@ -15,7 +15,7 @@ export interface Transport {
   errors: ErrorStream;
 
   destroy(): Promise<void>;
-  signal(signal: Signal): Promise<void>; // TODO(burdon): Remove async?
+  signal(signal: Signal): void;
 }
 
 export type TransportOptions = {

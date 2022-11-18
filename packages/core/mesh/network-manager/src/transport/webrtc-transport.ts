@@ -69,7 +69,7 @@ export class WebRTCTransport implements Transport {
     log('closed');
   }
 
-  async signal(signal: Signal) {
+  signal(signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));

@@ -48,7 +48,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, skip = false) => {
     await leaveSwarm(topic, [peer1, peer2]);
   });
 
-  it.skip('joins swarm multiple times', async () => {
+  it.only('joins swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
