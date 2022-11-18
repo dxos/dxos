@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame, Space } from '@dxos/client';
+import { fromHost, fromIFrame, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   AppLayout,
@@ -32,13 +32,6 @@ import { SpacePage } from './pages';
 import composerTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
-
-const clientProvider = async () => {
-  const config = await configProvider();
-  const client = new Client({ config, services: fromIFrame(config) });
-  await client.initialize();
-  return client;
-};
 
 const Routes = () => {
   useTelemetry({ namespace: 'composer-app' });
@@ -102,7 +95,11 @@ export const App = () => {
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
+          <ClientProvider
+            config={configProvider}
+            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
+            fallback={<GenericFallback />}
+          >
             <HashRouter>
               <Routes />
               {needRefresh ? (

@@ -83,6 +83,13 @@ export const AppLayout = ({
                 managingSpace={isManagingSpace}
                 onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
                 onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
+                onClickManageProfile={() => {
+                  const remoteSource = new URL(
+                    client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org'
+                  );
+                  const tab = window.open(remoteSource.origin, '_blank');
+                  tab?.focus();
+                }}
               />
             </div>
           </>

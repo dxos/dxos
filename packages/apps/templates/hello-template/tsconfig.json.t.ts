@@ -75,7 +75,7 @@ const template: TemplateFunction<Input> = ({ input }) => {
   } : {
     ...rootTsconfig,
     compilerOptions: {
-      ...rootTsconfig,
+      ...rootTsconfig.compilerOptions,
       ...compilerOptions
     },
     include,

@@ -11,7 +11,7 @@ export default class Reset extends BaseCommand {
 
   async run(): Promise<any> {
     // TODO(burdon): Warning prompt.
-    const path = this.clientConfig?.runtime?.client?.storage?.path;
+    const path = this.clientConfig?.get('runtime.client.storage.path');
     if (path) {
       fs.rmSync(path, { recursive: true });
       this.ok();

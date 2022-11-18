@@ -1,9 +1,7 @@
 {
   "project": {
     "ignored": [
-      "@dxos/dxos",
-      "@dxos/docs",
-      "@dxos/readme"
+      "@dxos/dxos"
     ],
     "fixedKeys": [
       "sourceRoot",

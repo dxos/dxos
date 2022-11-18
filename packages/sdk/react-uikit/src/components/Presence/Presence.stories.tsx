@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { defaultConfig, invitationObservable, InvitationEncoder, Space } from '@dxos/client';
+import { invitationObservable, InvitationEncoder, Space } from '@dxos/client';
 import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -43,7 +43,7 @@ Default.args = {};
 Default.decorators = [
   // TODO(wittjosiah): Factor out.
   (Story) => (
-    <ClientProvider config={defaultConfig}>
+    <ClientProvider>
       <Story />
     </ClientProvider>
   )
@@ -52,10 +52,10 @@ Default.decorators = [
 const SharingTemplate = () => {
   return (
     <>
-      <ClientProvider config={defaultConfig}>
+      <ClientProvider>
         <Template />
       </ClientProvider>
-      <ClientProvider config={defaultConfig}>
+      <ClientProvider>
         <Group label={{ children: 'Joiner' }} className='w-1/2'>
           <JoinPanel />
         </Group>
