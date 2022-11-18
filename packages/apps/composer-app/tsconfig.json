@@ -14,9 +14,19 @@
     "vite.config.ts"
   ],
   "include": [
+    "../patterns/react-appkit/src/components/AppShell/pwa.d.ts",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/react-ui"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../core/echo/text-model"
+    },
     {
       "path": "../../sdk/client"
     },
@@ -27,7 +37,16 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-uikit"
+    },
+    {
       "path": "../../sdk/vite-plugin"
+    },
+    {
+      "path": "../patterns/react-appkit"
+    },
+    {
+      "path": "../patterns/react-composer"
     }
   ]
 }

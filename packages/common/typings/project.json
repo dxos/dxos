@@ -10,9 +10,6 @@
           "@dxos/log-hook/transformer"
         ]
       }
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

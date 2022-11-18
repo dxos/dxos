@@ -7,17 +7,17 @@ import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogProps } from '@dxos/react-ui';
 
-import { JoinSpacePanel, JoinSpacePanelProps } from './JoinSpacePanel';
+import { JoinPanel, JoinPanelProps } from './JoinPanel';
 
-export interface JoinSpaceDialogProps extends JoinSpacePanelProps {
+export interface JoinSpaceDialogProps extends JoinPanelProps {
   dialogProps?: Partial<DialogProps>;
 }
 
-export const JoinSpaceDialog = ({ dialogProps, ...props }: JoinSpaceDialogProps) => {
+export const JoinDialog = ({ dialogProps, ...props }: JoinSpaceDialogProps) => {
   const { t } = useTranslation();
   return (
     <Dialog title={t('join space label')} {...dialogProps}>
-      <JoinSpacePanel {...props} />
+      <JoinPanel {...props} />
     </Dialog>
   );
 };

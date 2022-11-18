@@ -11,6 +11,9 @@
       "path": "../keys"
     },
     {
+      "path": "../log"
+    },
+    {
       "path": "../util"
     }
   ]

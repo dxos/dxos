@@ -12,11 +12,11 @@
       "node"
     ]
   },
-  "include": [
-    "src",
-  ],
   "exclude": [
-    "**/deprecated",
+    "**/deprecated"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
     {
@@ -39,6 +39,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/testutils"

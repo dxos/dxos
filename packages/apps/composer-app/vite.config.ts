@@ -7,13 +7,15 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import packageJson from './package.json';
+
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
-const env = (value?: string) => value ? `"${value}"` : undefined;
-const DX_RELEASE = process.env.NODE_ENV === 'production'
-  ? `@dxos/composer-app@${packageJson.version}`
-  : undefined;
+import packageJson from './package.json';
+
+const env = (value?: string) => (value ? `"${value}"` : undefined);
+const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/composer-app@${packageJson.version}` : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -49,8 +51,8 @@ export default defineConfig({
           name: 'yjs',
           setup: ({ onResolve }) => {
             onResolve({ filter: /yjs/ }, () => {
-              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
-            })
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') };
+            });
           }
         }
       ]
@@ -69,7 +71,8 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js'),
-        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js')
+        resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js'),
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.js')
       ]
     }),
     react(),

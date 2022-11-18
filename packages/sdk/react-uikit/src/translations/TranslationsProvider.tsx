@@ -28,7 +28,7 @@ void i18Next.use(initReactI18next).init({
 export interface TranslationsProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
-  resourceExtensions?: Resource;
+  resourceExtensions?: Resource[];
 }
 
 const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
@@ -38,10 +38,12 @@ const TranslationsProviderLoaded = ({ children }: PropsWithChildren<{}>) => {
 
 export const TranslationsProvider = ({ fallback, resourceExtensions, children }: TranslationsProviderProps) => {
   useEffect(() => {
-    if (resourceExtensions) {
-      Object.keys(resourceExtensions).forEach((language) => {
-        Object.keys(resourceExtensions[language]).forEach((ns) => {
-          i18Next.addResourceBundle(language, ns, resourceExtensions[language][ns]);
+    if (resourceExtensions && resourceExtensions.length) {
+      resourceExtensions.forEach((resource) => {
+        Object.keys(resource).forEach((language) => {
+          Object.keys(resource[language]).forEach((ns) => {
+            i18Next.addResourceBundle(language, ns, resource[language][ns]);
+          });
         });
       });
     }

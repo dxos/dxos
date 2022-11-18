@@ -1,7 +1,7 @@
 {
   "name": "@dxos/client-services",
+  "version": "0.1.6",
   "description": "DXOS client services implementation",
-  "version": "0.1.5",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

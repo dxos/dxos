@@ -7,6 +7,9 @@
       "options": {
         "main": "tools/x/src/index.ts",
         "outputPath": "tools/x/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
         "tsConfig": "tools/x/tsconfig.json"
       },
       "outputs": [
@@ -16,10 +19,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "tools/x/**/*.{ts,js}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"
@@ -46,9 +49,6 @@
         "{options.outputPath}",
         "{options.resultsPath}"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

@@ -19,7 +19,13 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/react-async"
     },
     {
       "path": "../../../common/react-ui"
@@ -41,6 +47,9 @@
     },
     {
       "path": "../../../sdk/vite-plugin"
+    },
+    {
+      "path": "../react-appkit"
     }
   ]
 }
