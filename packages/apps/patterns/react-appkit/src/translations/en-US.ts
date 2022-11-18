@@ -24,5 +24,7 @@ export const appkit = {
   'back to spaces label': 'Back to spaces',
   'empty invitations message': 'No pending invitations',
   'invitations label': 'Invitations',
-  'create invitation label': 'Invite'
+  'create invitation label': 'Invite',
+  'current identity label': 'You',
+  'empty members message': 'No members in this space'
 };

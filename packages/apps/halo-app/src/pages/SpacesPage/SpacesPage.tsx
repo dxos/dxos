@@ -16,8 +16,7 @@ export const SpacesPage = () => {
   return (
     <main className='max-is-5xl mli-auto pli-7'>
       <Heading className='mbe-6'>{t('spaces label')}</Heading>
-
-      {spaces?.length > 0 && <SpaceList spaces={spaces} />}
+      <SpaceList spaces={spaces} />
     </main>
   );
 };
