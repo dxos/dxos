@@ -17,8 +17,7 @@
     "src"
   ],
   "scripts": {
-    "book": "toolchain book",
-    "build:book": "toolchain build:book",
+    "book": "esbuild-server book",
     "check": "true"
   },
   "dependencies": {
@@ -45,8 +44,8 @@
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
     "@dxos/keys": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
     "@dxos/react-components": "workspace:*",
