@@ -148,14 +148,18 @@ export class Swarm {
           onConnected: () => {
             this.connected.emit(peerId);
           },
-          onDisconnected: () => {
+          onDisconnected: async () => {
+            if (!peer!.advertizing) {
+              await this._destroyPeer(peer!.id);
+            }
+            
             this.disconnected.emit(peerId);
             this._topology.update();
           },
           onRejected: () => {
             // If the peer rejected our connection remove it from the set of candidates.
-            // TODO(dmaretskyi): Dispose the peer first!!!.
-            this._peers.delete(peerId); // TODO(dmaretskyi): Set flag instead.
+            // TODO(dmaretskyi): Set flag instead.
+            void this._destroyPeer(peerId);
           },
           onAccepted: () => {
             this._topology.update();
@@ -165,6 +169,12 @@ export class Swarm {
       this._peers.set(peerId, peer);
     }
     return peer;
+  }
+
+  private async _destroyPeer(peerId: PublicKey) {
+    assert(this._peers.has(peerId));
+    await this._peers.get(peerId)!.destroy();
+    this._peers.delete(peerId);
   }
 
   onSwarmEvent(swarmEvent: SwarmEvent) {
@@ -183,7 +193,7 @@ export class Swarm {
         peer.advertizing = false;
 
         if (!peer.connection) {
-          this._peers.delete(peer.id);
+          void this._destroyPeer(peer.id);
         }
       }
     }
@@ -332,10 +342,5 @@ export class Swarm {
     }
 
     await peer.closeConnection();
-
-    // TODO(dmaretskyi): Replace with callback.
-    if (!peer.advertizing) {
-      this._peers.delete(peerId);
-    }
   }
 }

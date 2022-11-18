@@ -1,3 +1,4 @@
+import { synchronized } from "@dxos/async";
 import { PublicKey } from "@dxos/keys";
 import { log } from "@dxos/log";
 import { Protocol } from "@dxos/mesh-protocol";
@@ -132,5 +133,13 @@ export class Peer {
       return;
     }
     await this.connection.signal(message);
+  }
+
+  @synchronized
+  async destroy() {
+    log('Destroying peer', { peerId: this.id, topic: this.topic });
+
+    // Won't throw.
+    await this?.connection?.close();
   }
 }
