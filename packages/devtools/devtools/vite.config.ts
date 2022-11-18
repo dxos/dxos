@@ -46,6 +46,7 @@ export default defineConfig({
       '@dxos/network-manager',
       '@dxos/object-model',
       '@dxos/protocols',
+      '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-components',
@@ -56,8 +57,7 @@ export default defineConfig({
       '@dxos/sentry',
       '@dxos/telemetry',
       '@dxos/text-model',
-      '@dxos/timeframe',
-      '@dxos/util'
+      '@dxos/timeframe'
     ]
   },
   build: {

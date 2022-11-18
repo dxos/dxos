@@ -3,12 +3,14 @@
 //
 
 import React, { useState } from 'react';
+import { HashRouter } from 'react-router-dom';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
 import { Client, fromDefaults, fromIFrame } from '@dxos/client';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { useTelemetry } from '@dxos/react-appkit';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientContext } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
@@ -17,6 +19,11 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
+
+export const Telemetry = () => {
+  useTelemetry({ namespace: 'devtools' });
+  return null;
+};
 
 export const App = () => {
   const [client, setClient] = useState<Client>();
@@ -65,13 +72,17 @@ export const App = () => {
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
           <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
-            <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-              <PanelsContainer sections={sections} />
-            </Box>
+            <HashRouter>
+              <Telemetry />
 
-            <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
-              <Controls onConfigChange={onConfigChange} />
-            </Box>
+              <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                <PanelsContainer sections={sections} />
+              </Box>
+
+              <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
+                <Controls onConfigChange={onConfigChange} />
+              </Box>
+            </HashRouter>
           </ClientContext.Provider>
         </FullScreen>
       </ThemeProvider>
