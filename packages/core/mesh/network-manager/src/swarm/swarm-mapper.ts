@@ -56,9 +56,9 @@ export class SwarmMapper {
     );
 
     this._subscriptions.add(
-      _swarm.connectionRemoved.on((connection) => {
-        this._connectionSubscriptions.get(connection.remoteId)?.();
-        this._connectionSubscriptions.delete(connection.remoteId);
+      _swarm.disconnected.on((peerId) => {
+        this._connectionSubscriptions.get(peerId)?.();
+        this._connectionSubscriptions.delete(peerId);
         this._update();
       })
     );

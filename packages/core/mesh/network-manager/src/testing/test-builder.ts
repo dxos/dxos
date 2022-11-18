@@ -6,11 +6,10 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { afterTest } from '@dxos/testutils';
 import { ComplexMap } from '@dxos/util';
 
 import { NetworkManager } from '../network-manager';
-import { FullyConnectedTopology, Topology } from '../topology';
+import { FullyConnectedTopology } from '../topology';
 import {
   MemoryTransportFactory,
   TransportFactory,
@@ -150,6 +149,7 @@ export class TestPeer {
   }
 }
 
+// TODO(burdon): Reconcile with new Swarm concept.
 export class TestSwarmConnection {
   plugin: TestProtocolPlugin;
 
@@ -177,47 +177,3 @@ export class TestSwarmConnection {
     return this;
   }
 }
-
-//
-// TODO(burdon): Remove.
-//
-
-const signalContext = new MemorySignalManagerContext();
-
-export interface CreatePeerOptions {
-  topic: PublicKey;
-  peerId: PublicKey;
-  topology?: Topology;
-  signalHosts?: string[];
-  transportFactory: TransportFactory;
-}
-
-/**
- * @deprecated
- */
-export const createPeer = async ({
-  topic,
-  peerId,
-  topology = new FullyConnectedTopology(),
-  signalHosts,
-  transportFactory
-}: CreatePeerOptions) => {
-  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
-  await signalManager.subscribeMessages(peerId);
-  const networkManager = new NetworkManager({
-    signalManager,
-    transportFactory
-  });
-
-  afterTest(() => networkManager.close());
-
-  // TODO(burdon): Use keys everywhere.
-  const plugin = new TestProtocolPlugin(peerId.asBuffer());
-  const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId, plugin);
-  await networkManager.joinSwarm({ topic, peerId, protocol: protocolProvider, topology });
-
-  return {
-    networkManager,
-    plugin
-  };
-};

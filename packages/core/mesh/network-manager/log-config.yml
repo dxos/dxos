@@ -4,8 +4,10 @@ formatter:
 depth: 1
 
 filter:
+  - warn
   - test-suite:debug
   - memory-transport:debug
+#  - swarm:debug
 #  - network-manager:debug
 #  - test-protocol:debug
 #  - mesh-protocol:debug

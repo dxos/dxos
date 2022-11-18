@@ -42,9 +42,16 @@ const createPeer = async (topic: PublicKey) => {
 
 describe('Presence', function () {
   it('detects connected peers', async function () {
+    // TODO(burdon): Configure plugins.
+    // const testBuilder = new TestBuilder();
+    // const peer1 = testBuilder.createPeer();
+    // const peer2 = testBuilder.createPeer();
+
     const topic = PublicKey.random();
     const peer1 = await createPeer(topic);
     const peer2 = await createPeer(topic);
+    // await peer1.joinSwarm(topic);
+    // await peer2.joinSwarm(topic);
 
     // TODO(burdon): Use triggers instead of waitForExpect.
     await waitForExpect(() => {

@@ -66,6 +66,7 @@ export type NetworkManagerOptions = {
 /**
  * Manages connection to the swarm.
  */
+// TODO(dmaretskyi): Rename to SwarmManager.
 export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 
@@ -86,12 +87,12 @@ export class NetworkManager {
     this._signalManager = signalManager;
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) => this._swarms.get(topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
-
     this._signalConnection = {
       join: (opts) => this._signalManager.join(opts),
       leave: (opts) => this._signalManager.leave(opts)
     };
 
+    // TODO(burdon): Inject listener (generic pattern).
     if (log) {
       this._connectionLog = new ConnectionLog();
     }

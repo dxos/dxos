@@ -108,7 +108,7 @@ export class Connection {
 
         if (answer.accept) {
           try {
-            this.open();
+            this.openConnection();
           } catch (err: any) {
             this.errors.raise(err);
           }
@@ -124,8 +124,11 @@ export class Connection {
       });
   }
 
+  /**
+   * Create an underlying transport and prepares it for the connection.
+   */
   // TODO(burdon): Make async?
-  open() {
+  openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
@@ -169,17 +172,24 @@ export class Connection {
       return;
     }
 
-    // TODO(dmaretskyi): CLOSING state.
-    log('closing', { peerId: this.ownId });
+    log('closing...', { peerId: this.ownId });
 
-    // This will try to gracefully close the stream flushing any unsent data packets.
-    await this._protocol.close();
+    try {
+      // Gracefully close the stream flushing any unsent data packets.
+      await this._protocol.close();
+    } catch (err: any) {
+      log.catch(err);
+    }
 
-    // After the transport is closed streams are disconnected.
-    await this._transport?.destroy();
+    try {
+      // After the transport is closed streams are disconnected.
+      await this._transport?.destroy();
+    } catch (err: any) {
+      log.catch(err);
+    }
 
-    this._changeState(ConnectionState.CLOSED);
     log('closed', { peerId: this.ownId });
+    this._changeState(ConnectionState.CLOSED);
   }
 
   async signal(msg: SignalMessage) {
@@ -204,6 +214,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
+    assert(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
   }

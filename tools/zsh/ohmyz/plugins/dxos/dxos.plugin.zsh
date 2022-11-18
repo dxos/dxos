@@ -24,28 +24,31 @@ alias nx="pnpm -w nx"
 
 # Run target in local directory (e.g., `p build`).
 function p () {
-  nx $1 "${PWD##*/}" "$@"
+  TARGET=$1
+  shift 1
+
+  nx $TARGET "${PWD##*/}" "$@"
 }
 
 # Break NX cache (e.g., `pc test`).
 function pc () {
-  nx $1 "${PWD##*/}" "$@" "${RANDOM}"
+  TARGET=$1
+  shift 1
+
+  nx $TARGET "${PWD##*/}" "$@" "${RANDOM}"
 }
 
-# TODO(burdon): Fix args.
 # Run everything (e.g., `pa build`).
 function pa () {
-  X=$1
-  shift()
-  echo $1 $@
-  return
+  TARGET=$1
+  shift 1
 
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    nx run-many --target=$@
+    nx run-many --target=$TARGET $@
   else;
     pushd $ROOT
-    nx run-many --target=$@
+    nx run-many --target=$TARGET $@
     popd
   fi;
 }

@@ -94,11 +94,13 @@ export class WebRTCTransportProxy implements Transport {
     await this._params.sendSignal(signalEvent.payload);
   }
 
-  async signal(signal: Signal): Promise<void> {
-    await this._params.bridgeService.sendSignal({
-      proxyId: this._proxyId,
-      signal
-    });
+  signal(signal: Signal): void {
+    this._params.bridgeService
+      .sendSignal({
+        proxyId: this._proxyId,
+        signal
+      })
+      .catch((err) => this.errors.raise(err));
   }
 
   // TODO(burdon): Move open from constructor.
