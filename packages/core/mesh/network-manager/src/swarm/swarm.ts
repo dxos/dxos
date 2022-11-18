@@ -15,8 +15,7 @@ import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { MessageRouter } from '../signal';
-import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
+import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';

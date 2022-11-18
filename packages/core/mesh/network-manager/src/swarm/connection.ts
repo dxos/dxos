@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessaging } from '../signal';
+import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 
 /**
@@ -72,7 +72,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _signalMessaging: SignalMessaging,
+    private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 
-import { SignalMessage, SignalMessaging } from '../signal';
+import { SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
 import { Connection, ConnectionState } from './connection';
 
@@ -56,7 +56,7 @@ export class Peer {
    */
   createConnection(
     // TODO(dmaretskyi): Move into constructor?
-    signalMessaging: SignalMessaging,
+    signalMessaging: SignalMessenger,
     initiator: boolean,
     sessionId: PublicKey,
     protocol: Protocol,

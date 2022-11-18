@@ -12,7 +12,7 @@ import { WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { MessageRouter } from './message-router';
-import { SignalMessage } from './signal-messaging';
+import { SignalMessage } from './signal-messenger';
 
 describe('Signal Integration Test', function () {
   let broker: TestBroker;
