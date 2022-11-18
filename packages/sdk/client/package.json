@@ -50,7 +50,6 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@koush/wrtc": "^0.5.3",
