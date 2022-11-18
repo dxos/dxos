@@ -48,5 +48,6 @@ export const uikit = {
   'empty space message': 'Nobody else is in this space… yet.',
   'space members label': 'Members',
   'go to space label': 'Done',
-  'halo logo alt': 'Halo logo'
+  'halo logo alt': 'Halo logo',
+  'close label': 'Close'
 };
