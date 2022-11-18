@@ -41,7 +41,6 @@
     "@dxos/telemetry": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.0",
@@ -52,7 +51,6 @@
     "protobufjs": "^6.9.0",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
-    "react-router-dom": "^6.3.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {

@@ -16,13 +16,7 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
-import { useTelemetry } from './telemetry';
 import { theme } from './theme';
-
-const Telemetry = () => {
-  useTelemetry();
-  return null;
-};
 
 export const App = () => {
   const [client, setClient] = useState<Client>();
@@ -71,7 +65,6 @@ export const App = () => {
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
           <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
-            <Telemetry />
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
             </Box>

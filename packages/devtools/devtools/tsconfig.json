@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/patterns/react-appkit"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -28,6 +31,12 @@
     },
     {
       "path": "../../common/react-async"
+    },
+    {
+      "path": "../../common/sentry"
+    },
+    {
+      "path": "../../common/telemetry"
     },
     {
       "path": "../../common/timeframe"
