@@ -108,7 +108,7 @@ export class Connection {
 
         if (answer.accept) {
           try {
-            this.open();
+            this.openConnection();
           } catch (err: any) {
             this.errors.raise(err);
           }
@@ -124,8 +124,11 @@ export class Connection {
       });
   }
 
+  /**
+   * Create an underlying transport and prepares it for the connection.
+   */
   // TODO(burdon): Make async?
-  open() {
+  openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 

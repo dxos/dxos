@@ -141,7 +141,7 @@ export class Swarm {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
       log('new peer', { topic: this._topic, peerId });
       if (!peerId.equals(this._ownPeerId)) {
-        if(!this._peers.has(peerId)) {
+        if (!this._peers.has(peerId)) {
           this._peers.set(peerId, new Peer(peerId));
         }
         const peer = this._peers.get(peerId)!;
@@ -151,8 +151,8 @@ export class Swarm {
       const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
       if (peer) {
         peer.advertizing = false;
-        
-        if(!peer.connection) {
+
+        if (!peer.connection) {
           this._peers.delete(peer.id);
         }
       }
@@ -201,7 +201,7 @@ export class Swarm {
         assert(message.sessionId);
         const connection = this._createConnection(false, message.author, message.sessionId);
         try {
-          connection.open();
+          connection.openConnection();
         } catch (err: any) {
           this.errors.raise(err);
         }
@@ -282,79 +282,72 @@ export class Swarm {
    * Synchronously create a connection, which must be initialized.
    */
   private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
-    log('creating connection', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
-    assert(!this._peers.get(remoteId)?.connection, 'Peer already connected.');
-
-    const connection = new Connection(
-      this._topic,
-      this._ownPeerId,
-      remoteId,
-      sessionId,
-      initiator,
-      this._swarmMessenger,
-      this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
-      this._transportFactory
-    );
-
-    if(!this._peers.has(remoteId)) {
+    if (!this._peers.has(remoteId)) {
       this._peers.set(remoteId, new Peer(remoteId));
     }
     const peer = this._peers.get(remoteId)!;
-    peer.connection = connection;
-    this.connectionAdded.emit(connection);
 
-    connection.errors.handle((err) => {
-      // TODO(burdon): Change to warn? Why does this fail during tests?
-      log('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
-      this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
-    });
-
-    connection.stateChanged.on((state) => {
-      switch (state) {
-        case ConnectionState.CONNECTED: {
-          this.connected.emit(remoteId);
-          break;
-        }
-
-        case ConnectionState.REJECTED: {
-          // If the peer rejected our connection remove it from the set of candidates.
-          this._peers.delete(remoteId); // TODO(dmaretskyi): Set flag instead.
-          break;
-        }
-
-        case ConnectionState.ACCEPTED: {
-          this._topology.update();
-          break;
-        }
-
-        case ConnectionState.CLOSED: {
-          log('connection closed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
-          // Connection might have been already closed or replace by a different one.
-          // Only remove the connection if it has the same session id.
-          // TODO(dmaretskyi): Seems like a race-condition lets simplify this code.
-          if (this._peers.get(remoteId)?.connection?.sessionId.equals(sessionId)) {
-            this._peers.get(remoteId)!.connection = undefined;
-            this.connectionRemoved.emit(connection);
-            this._topology.update();
+    const connection = peer.createConnection(
+      this._topic,
+      this._ownPeerId,
+      this._swarmMessenger,
+      initiator,
+      sessionId,
+      this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
+      this._transportFactory,
+      state => {
+        switch (state) {
+          case ConnectionState.CONNECTED: {
+            this.connected.emit(remoteId);
+            break;
           }
-          break;
-        }
-      }
-    });
 
+          case ConnectionState.REJECTED: {
+            // If the peer rejected our connection remove it from the set of candidates.
+            this._peers.delete(remoteId); // TODO(dmaretskyi): Set flag instead.
+            break;
+          }
+
+          case ConnectionState.ACCEPTED: {
+            this._topology.update();
+            break;
+          }
+
+          case ConnectionState.CLOSED: {
+            log('connection closed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
+            // Connection might have been already closed or replace by a different one.
+            // Only remove the connection if it has the same session id.
+            // TODO(dmaretskyi): Seems like a race-condition lets simplify this code.
+            if (this._peers.get(remoteId)?.connection?.sessionId.equals(sessionId)) {
+              this._peers.get(remoteId)!.connection = undefined;
+              this.connectionRemoved.emit(connection);
+              this._topology.update();
+            }
+            break;
+          }
+        }
+      },
+      err => {
+        // TODO(burdon): Change to warn? Why does this fail during tests?
+        log('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
+        this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
+      }
+    )
+
+    this.connectionAdded.emit(connection);
     return connection;
   }
 
   private async _closeConnection(peerId: PublicKey) {
     log('closing...', { topic: this._topic, peerId });
     const peer = this._peers.get(peerId);
-    if(!peer || !peer.connection) {
+    if (!peer || !peer.connection) {
       return;
     }
     const connection = peer.connection;
     peer.connection = undefined;
-    
-    if(!peer.advertizing) {
+
+    if (!peer.advertizing) {
       this._peers.delete(peerId);
     }
 
