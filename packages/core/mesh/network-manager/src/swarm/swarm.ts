@@ -140,23 +140,28 @@ export class Swarm {
   private _getOrCreatePeer(peerId: PublicKey): Peer {
     let peer = this._peers.get(peerId);
     if (!peer) {
-      peer = new Peer(peerId, {
-        onConnected: () => {
-          this.connected.emit(peerId);
-        },
-        onDisconnected: () => {
-          this.disconnected.emit(peerId);
-          this._topology.update();
-        },
-        onRejected: () => {
-          // If the peer rejected our connection remove it from the set of candidates.
-          // TODO(dmaretskyi): Dispose the peer first!!!.
-          this._peers.delete(peerId); // TODO(dmaretskyi): Set flag instead.
-        },
-        onAccepted: () => {
-          this._topology.update();
+      peer = new Peer(
+        peerId,
+        this._topic,
+        this._ownPeerId,
+        {
+          onConnected: () => {
+            this.connected.emit(peerId);
+          },
+          onDisconnected: () => {
+            this.disconnected.emit(peerId);
+            this._topology.update();
+          },
+          onRejected: () => {
+            // If the peer rejected our connection remove it from the set of candidates.
+            // TODO(dmaretskyi): Dispose the peer first!!!.
+            this._peers.delete(peerId); // TODO(dmaretskyi): Set flag instead.
+          },
+          onAccepted: () => {
+            this._topology.update();
+          }
         }
-      });
+      );
       this._peers.set(peerId, peer);
     }
     return peer;
@@ -308,8 +313,7 @@ export class Swarm {
     const peer = this._getOrCreatePeer(remoteId);
 
     const connection = peer.createConnection(
-      this._topic,
-      this._ownPeerId,
+
       this._swarmMessenger,
       initiator,
       sessionId,

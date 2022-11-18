@@ -39,6 +39,8 @@ export class Peer {
 
   constructor(
     public readonly id: PublicKey,
+    public readonly topic: PublicKey,
+    public readonly localPeerId: PublicKey,
     private readonly _callbacks: PeerCallbacks,
   ) { }
 
@@ -47,20 +49,18 @@ export class Peer {
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
   createConnection(
-    // TODO(dmaretskyi): Make some of those fields.
-    topic: PublicKey,
-    localPeerId: PublicKey,
+    // TODO(dmaretskyi): Move into constructor?
     signalMessaging: SignalMessaging,
     initiator: boolean,
     sessionId: PublicKey,
     protocol: Protocol,
     transportFactory: TransportFactory,
   ) {
-    log('creating connection', { topic, peerId: localPeerId, remoteId: this.id, initiator, sessionId });
+    log('creating connection', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator, sessionId });
     assert(!this.connection, 'Already connected.');
     const connection = new Connection(
-      topic,
-      localPeerId,
+      this.topic,
+      this.localPeerId,
       this.id,
       sessionId,
       initiator,
@@ -86,7 +86,7 @@ export class Peer {
         }
 
         case ConnectionState.CLOSED: {
-          log('connection closed', { topic, peerId: localPeerId, remoteId: this.id, initiator });
+          log('connection closed', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
           assert(this.connection === connection, 'Connection mismatch (race condition).');
 
           this.connection = undefined;
@@ -96,7 +96,7 @@ export class Peer {
       }
     });
     connection.errors.handle((err) => {
-      log.warn('connection error', { topic, peerId: localPeerId, remoteId: this.id, initiator });
+      log.warn('connection error', { topic: this.topic, peerId: this.localPeerId, remoteId: this.id, initiator });
 
       // Calls `onStateChange` with CLOSED state.
       void this.closeConnection().catch(() => {
