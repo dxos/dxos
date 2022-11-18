@@ -5,14 +5,14 @@
 import { Command, Config as OclifConfig, Flags } from '@oclif/core';
 import assert from 'assert';
 import chalk from 'chalk';
-import debug from 'debug';
-import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import fetch from 'node-fetch';
-import * as path from 'node:path';
+import { readFile, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
+import { log } from '@dxos/log';
 import * as Sentry from '@dxos/sentry';
 import { captureException } from '@dxos/sentry';
 import * as Telemetry from '@dxos/telemetry';
@@ -27,9 +27,21 @@ import {
   TELEMETRY_API_KEY
 } from './util';
 
-const log = debug('dxos:cli:main');
-
 const ENV_DX_CONFIG = 'DX_CONFIG';
+
+// TODO(wittjosiah): Factor out.
+const exists = async (...args: string[]): Promise<boolean> => {
+  try {
+    const result = await stat(join(...args));
+    return !!result;
+  } catch (err: any) {
+    if (/ENOENT/.test(err.message)) {
+      return false;
+    } else {
+      throw err;
+    }
+  }
+};
 
 export abstract class BaseCommand extends Command {
   private _clientConfig?: Config;
@@ -42,9 +54,7 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      default: async (context: any) => {
-        return path.join(context.config.configDir, 'config.yml');
-      }
+      default: async (context: any) => join(context.config.configDir, 'config.yml')
     }),
 
     timeout: Flags.integer({
@@ -123,20 +133,21 @@ export abstract class BaseCommand extends Command {
     // Load user config file.
     const { flags } = await this.parse(this.constructor as any);
     const { config: configFile } = flags as any;
-    if (fs.existsSync(configFile)) {
-      try {
-        this._clientConfig = new Config(yaml.load(String(fs.readFileSync(configFile))) as any);
-      } catch (err) {
-        Sentry.captureException(err);
-        console.error(`Invalid config file: ${configFile}`);
-      }
-    } else {
-      if (configFile) {
-        console.error(`Config file not found: ${configFile}`);
-      } else {
-        console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
-      }
 
+    const configExists = await exists(configFile);
+    const configContent = await readFile(
+      configExists ? configFile : join(__dirname, '../../config/config.yml'),
+      'utf-8'
+    );
+    if (!configExists) {
+      void writeFile(configFile, configContent, 'utf-8');
+    }
+
+    try {
+      this._clientConfig = new Config(yaml.load(configContent) as any);
+    } catch (err) {
+      Sentry.captureException(err);
+      console.error(`Invalid config file: ${configFile}`);
       process.exit(1);
     }
   }
