@@ -55,4 +55,27 @@ export class Peer {
 
     return this.connection; 
   }
+
+  async closeConnection() {
+    if(!this.connection) {
+      return;
+    }
+    const connection = this.connection;
+    log('closing...', { peerId: this.id, sessionId: connection.sessionId });
+
+    try {
+      // Will trigger `onStateChange` callback which might clean up the connection.
+      await connection.close();
+    } catch(err) {
+      log.catch(err);
+    }
+
+    // Race condition protection: if the connection get's cleaned up by `onStateChange` callback,
+    // it might have been started again by the time we get here.
+    if(this.connection === connection) {
+      this.connection = undefined;
+    }
+
+    log('closed', { peerId: this.id, sessionId: connection.sessionId });
+  }
 }

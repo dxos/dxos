@@ -339,20 +339,16 @@ export class Swarm {
   }
 
   private async _closeConnection(peerId: PublicKey) {
-    log('closing...', { topic: this._topic, peerId });
     const peer = this._peers.get(peerId);
-    if (!peer || !peer.connection) {
+    if (!peer) {
       return;
     }
-    const connection = peer.connection;
-    peer.connection = undefined;
+    
+    await peer.closeConnection();
 
+    // TODO(dmaretskyi): Replace with callback.
     if (!peer.advertizing) {
       this._peers.delete(peerId);
     }
-
-    // TODO(dmaretskyi): Place this before the connection is removed so we keep it in state until it's fully closed.
-    await connection.close();
-    log('closed', { topic: this._topic });
   }
 }
