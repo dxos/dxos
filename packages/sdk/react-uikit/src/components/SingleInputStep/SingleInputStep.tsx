@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import React from 'react';
+import React, { useCallback, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button, GroupProps, Input, InputProps, Loading } from '@dxos/react-ui';
@@ -38,6 +38,7 @@ export const SingleInputStep = ({
   inputProps
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
+  const onKeyUp = useCallback((e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onNext(), [onNext]);
   return (
     <>
       <Input
@@ -48,6 +49,7 @@ export const SingleInputStep = ({
         {...(inputPlaceholder && { placeholder: t(inputPlaceholder) })}
         {...(pending && { disabled: true })}
         onChange={onChange}
+        onKeyUp={onKeyUp}
       />
       <div role='none' aria-live='polite' className='flex gap-4 justify-end items-center'>
         <Button variant='primary' onClick={onNext} {...(pending && { disabled: true })} className='order-last'>

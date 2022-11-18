@@ -13,6 +13,7 @@ import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
+import { HeadingWithActions } from '../HeadingWithActions';
 
 const invitationCodeFromUrl = (text: string) => {
   try {
@@ -87,28 +88,35 @@ export const AppLayout = ({
           </>
         ) : (
           <>
-            <Heading className='flex-auto text-center'>{t('spaces label')}</Heading>
-            <div role='none' className='grow flex gap-2'>
-              <JoinDialog
-                initialInvitationCode={invitationParam ?? undefined}
-                parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
-                acceptInvitation={acceptInvitation}
-                dialogProps={{
-                  initiallyOpen: Boolean(invitationParam),
-                  openTrigger: (
-                    <Button className='grow flex gap-1'>
-                      <Rocket className={getSize(5)} />
-                      {t('join space label', { ns: 'uikit' })}
-                    </Button>
-                  )
-                }}
-              />
-              <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
-                <Plus className={getSize(5)} />
-                {t('create space label', { ns: 'uikit' })}
-              </Button>
-            </div>
+            <HeadingWithActions
+              className='flex-auto text-center'
+              actions={
+                <>
+                  <JoinDialog
+                    initialInvitationCode={invitationParam ?? undefined}
+                    parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
+                    onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
+                    acceptInvitation={acceptInvitation}
+                    dialogProps={{
+                      initiallyOpen: Boolean(invitationParam),
+                      openTrigger: (
+                        <Button className='grow flex gap-1'>
+                          <Rocket className={getSize(5)} />
+                          {t('join space label', { ns: 'uikit' })}
+                        </Button>
+                      )
+                    }}
+                  />
+                  <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+                    <Plus className={getSize(5)} />
+                    {t('create space label', { ns: 'uikit' })}
+                  </Button>
+                </>
+              }
+              heading={{
+                children: t('spaces label')
+              }}
+            />
           </>
         )}
       </div>
