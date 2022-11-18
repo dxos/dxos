@@ -15,6 +15,7 @@ export interface TooltipProps extends Omit<ComponentProps<typeof TooltipPrimitiv
   compact?: boolean;
   tooltipLabelsTrigger?: boolean;
   mountAsSibling?: boolean;
+  zIndex?: string;
 }
 
 export const Tooltip = ({
@@ -23,6 +24,7 @@ export const Tooltip = ({
   compact,
   tooltipLabelsTrigger,
   mountAsSibling,
+  zIndex = 'z-[2]',
   ...contentProps
 }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +39,8 @@ export const Tooltip = ({
         'radix-side-right:animate-slide-left-fade',
         'radix-side-bottom:animate-slide-up-fade',
         'radix-side-left:animate-slide-right-fade',
-        'z-[2] inline-flex items-center rounded-md',
+        'inline-flex items-center rounded-md',
+        zIndex,
         !compact && 'px-4 py-2.5',
         'shadow-lg bg-white dark:bg-neutral-800',
         !isOpen && 'sr-only',
