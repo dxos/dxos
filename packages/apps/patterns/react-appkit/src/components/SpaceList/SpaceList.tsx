@@ -23,23 +23,26 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
         const title = space.properties.get('title') ?? humanize(keyHex);
 
         return (
-          <div
+          <Link
+            to={`/spaces/${keyHex}`}
             role='group'
             key={keyHex}
             className={cx(
               defaultGroup({ elevation: 1, spacing: 'p-2', rounding: 'rounded' }),
-              'flex items-stretch gap-2'
+              'flex items-stretch gap-2',
+              defaultHover({}),
+              defaultFocus
             )}
           >
             <Heading level={2} className='grow flex items-center mb-0'>
-              <Link
-                to={`/spaces/${keyHex}`}
-                className={cx('flex gap-1 items-center pr-2 rounded', defaultHover({}), defaultFocus)}
-              >
-                <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
-              </Link>
+              <Avatar
+                size={12}
+                fallbackValue={keyHex}
+                className='flex gap-1 items-center pr-2 rounded'
+                label={<p className='text-lg grow'>{title}</p>}
+              />
             </Heading>
-          </div>
+          </Link>
         );
       })}
     </div>

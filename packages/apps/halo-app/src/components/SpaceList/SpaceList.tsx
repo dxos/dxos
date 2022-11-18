@@ -38,21 +38,23 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
         const title = space.properties.get('title') ?? humanize(keyHex);
 
         return (
-          <div
-            role='group'
+          <Link
+            to={`/spaces/${keyHex}`}
             key={keyHex}
             className={cx(
               defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
-              'flex items-stretch gap-2 mbe-2'
+              'flex items-stretch gap-2 mbe-2',
+              defaultHover({}),
+              defaultFocus
             )}
           >
             <Heading level={2} className='grow flex items-center mbe-0'>
-              <Link
-                to={`/spaces/${keyHex}`}
-                className={cx('flex gap-1 items-center pr-2 rounded', defaultHover({}), defaultFocus)}
-              >
-                <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
-              </Link>
+              <Avatar
+                size={12}
+                fallbackValue={keyHex}
+                className='flex gap-1 items-center pr-2 rounded'
+                label={<p className='text-lg grow'>{title}</p>}
+              />
             </Heading>
             {/* <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('manage space label', { ns: 'uikit' })} side='top' tooltipLabelsTrigger>
@@ -66,7 +68,7 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 </Link>
               </Tooltip>
             </div> */}
-          </div>
+          </Link>
         );
       })}
     </>

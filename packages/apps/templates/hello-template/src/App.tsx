@@ -134,8 +134,7 @@ const SpacesView = () => {
           </Button>
         </div>
       </div>
-
-      {spaces?.length > 0 && <SpaceList spaces={spaces} />}
+      <SpaceList spaces={spaces} />
     </main>
   );
 };
