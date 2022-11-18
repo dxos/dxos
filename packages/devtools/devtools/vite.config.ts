@@ -54,8 +54,6 @@ export default defineConfig({
       '@dxos/react-toolkit',
       '@dxos/registry-client',
       '@dxos/rpc',
-      '@dxos/sentry',
-      '@dxos/telemetry',
       '@dxos/text-model',
       '@dxos/timeframe'
     ]
