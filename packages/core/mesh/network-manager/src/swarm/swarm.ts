@@ -45,16 +45,19 @@ export class Swarm {
 
   /**
    * New connection to a peer is started.
+   * @internal
    */
   readonly connectionAdded = new Event<Connection>();
 
   /**
    * Connection to a peer is dropped.
+   * @internal
    */
-  readonly connectionRemoved = new Event<Connection>();
+  readonly disconnected = new Event<PublicKey>();
 
   /**
    * Connection is established to a new peer.
+   * @internal
    */
   readonly connected = new Event<PublicKey>();
 
@@ -137,7 +140,23 @@ export class Swarm {
   private _getOrCreatePeer(peerId: PublicKey): Peer {
     let peer = this._peers.get(peerId);
     if (!peer) {
-      peer = new Peer(peerId);
+      peer = new Peer(peerId, {
+        onConnected: () => {
+          this.connected.emit(peerId);
+        },
+        onDisconnected: () => {
+          this.disconnected.emit(peerId);
+          this._topology.update();
+        },
+        onRejected: () => {
+          // If the peer rejected our connection remove it from the set of candidates.
+          // TODO(dmaretskyi): Dispose the peer first!!!.
+          this._peers.delete(peerId); // TODO(dmaretskyi): Set flag instead.
+        },
+        onAccepted: () => {
+          this._topology.update();
+        }
+      });
       this._peers.set(peerId, peer);
     }
     return peer;
@@ -296,43 +315,6 @@ export class Swarm {
       sessionId,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory,
-      state => {
-        switch (state) {
-          case ConnectionState.CONNECTED: {
-            this.connected.emit(remoteId);
-            break;
-          }
-
-          case ConnectionState.REJECTED: {
-            // If the peer rejected our connection remove it from the set of candidates.
-            this._peers.delete(remoteId); // TODO(dmaretskyi): Set flag instead.
-            break;
-          }
-
-          case ConnectionState.ACCEPTED: {
-            this._topology.update();
-            break;
-          }
-
-          case ConnectionState.CLOSED: {
-            log('connection closed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
-            // Connection might have been already closed or replace by a different one.
-            // Only remove the connection if it has the same session id.
-            // TODO(dmaretskyi): Seems like a race-condition lets simplify this code.
-            if (this._peers.get(remoteId)?.connection?.sessionId.equals(sessionId)) {
-              this._peers.get(remoteId)!.connection = undefined;
-              this.connectionRemoved.emit(connection);
-              this._topology.update();
-            }
-            break;
-          }
-        }
-      },
-      err => {
-        // TODO(burdon): Change to warn? Why does this fail during tests?
-        log('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
-        this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
-      }
     )
 
     this.connectionAdded.emit(connection);
@@ -344,7 +326,7 @@ export class Swarm {
     if (!peer) {
       return;
     }
-    
+
     await peer.closeConnection();
 
     // TODO(dmaretskyi): Replace with callback.

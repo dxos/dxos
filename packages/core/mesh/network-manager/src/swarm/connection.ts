@@ -171,18 +171,25 @@ export class Connection {
     if (this._state === ConnectionState.CLOSED) {
       return;
     }
+    
+    log('closing...', { peerId: this.ownId });
 
-    // TODO(dmaretskyi): CLOSING state.
-    log('closing', { peerId: this.ownId });
+    try {
+      // Gracefully close the stream flushing any unsent data packets.
+      await this._protocol.close();
+    } catch(err: any) {
+      log.catch(err);
+    }
 
-    // This will try to gracefully close the stream flushing any unsent data packets.
-    await this._protocol.close();
+    try {
+      // After the transport is closed streams are disconnected.
+      await this._transport?.destroy();  
+    } catch(err: any) {
+      log.catch(err);
+    }
 
-    // After the transport is closed streams are disconnected.
-    await this._transport?.destroy();
-
-    this._changeState(ConnectionState.CLOSED);
     log('closed', { peerId: this.ownId });
+    this._changeState(ConnectionState.CLOSED);
   }
 
   async signal(msg: SignalMessage) {

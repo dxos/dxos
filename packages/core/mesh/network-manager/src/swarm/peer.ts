@@ -1,14 +1,37 @@
 import { PublicKey } from "@dxos/keys";
 import { log } from "@dxos/log";
 import { Protocol } from "@dxos/mesh-protocol";
+import { Callback } from "@dxos/util";
 import assert from "assert";
 import { SignalMessage, SignalMessaging } from "../signal";
 import { TransportFactory } from "../transport";
 import { Connection, ConnectionState } from "./connection";
 
+interface PeerCallbacks {
+  /**
+   * Connection opened.
+   */
+  onConnected: () => void;
+
+  /**
+   * Connection closed.
+   */
+  onDisconnected: () => void;
+
+  /**
+   * Peer accepted our offer to connect.
+   */
+  onAccepted: () => void;
+
+  /**
+   * Peer rejected our offer to connect.
+   */
+  onRejected: () => void;
+}
+
 export class Peer {
   public connection?: Connection;
-  
+
   /**
    * Whether the peer is currently advertizing itself on the signal-network. 
    */
@@ -16,7 +39,8 @@ export class Peer {
 
   constructor(
     public readonly id: PublicKey,
-  ) {}
+    private readonly _callbacks: PeerCallbacks,
+  ) { }
 
   /**
    * Create new connection.
@@ -25,21 +49,18 @@ export class Peer {
   createConnection(
     // TODO(dmaretskyi): Make some of those fields.
     topic: PublicKey,
-    ownPeerId: PublicKey,
-    signalMessaging: SignalMessaging, 
+    localPeerId: PublicKey,
+    signalMessaging: SignalMessaging,
     initiator: boolean,
     sessionId: PublicKey,
     protocol: Protocol,
     transportFactory: TransportFactory,
-    onStateChange: (state: ConnectionState) => void,
-    onError: (error: Error) => void,
   ) {
-    log('creating connection', { topic, peerId: ownPeerId, remoteId: this.id, initiator, sessionId });
+    log('creating connection', { topic, peerId: localPeerId, remoteId: this.id, initiator, sessionId });
     assert(!this.connection, 'Already connected.');
-
-    this.connection = new Connection(
+    const connection = new Connection(
       topic,
-      ownPeerId,
+      localPeerId,
       this.id,
       sessionId,
       initiator,
@@ -47,34 +68,59 @@ export class Peer {
       protocol,
       transportFactory,
     );
-    this.connection.errors.handle((err) => {
-      onError(err);
+    connection.stateChanged.on((state) => {
+      switch (state) {
+        case ConnectionState.CONNECTED: {
+          this._callbacks.onConnected();
+          break;
+        }
+
+        case ConnectionState.REJECTED: {
+          this._callbacks.onRejected();
+          break;
+        }
+
+        case ConnectionState.ACCEPTED: {
+          this._callbacks.onAccepted();
+          break;
+        }
+
+        case ConnectionState.CLOSED: {
+          log('connection closed', { topic, peerId: localPeerId, remoteId: this.id, initiator });
+          assert(this.connection === connection, 'Connection mismatch (race condition).');
+
+          this.connection = undefined;
+          this._callbacks.onDisconnected();
+          break;
+        }
+      }
     });
-    this.connection.stateChanged.on((state) => {
-      onStateChange(state);
+    connection.errors.handle((err) => {
+      log.warn('connection error', { topic, peerId: localPeerId, remoteId: this.id, initiator });
+
+      // Calls `onStateChange` with CLOSED state.
+      void this.closeConnection().catch(() => {
+        log.catch(err);
+      });
     });
 
-    return this.connection; 
+    this.connection = connection;
+
+    return connection;
   }
 
   async closeConnection() {
-    if(!this.connection) {
+    if (!this.connection) {
       return;
     }
     const connection = this.connection;
     log('closing...', { peerId: this.id, sessionId: connection.sessionId });
 
     try {
-      // Will trigger `onStateChange` callback which might clean up the connection.
+      // Triggers `onStateChange` callback which will clean up the connection.
       await connection.close();
-    } catch(err) {
+    } catch (err) {
       log.catch(err);
-    }
-
-    // Race condition protection: if the connection get's cleaned up by `onStateChange` callback,
-    // it might have been started again by the time we get here.
-    if(this.connection === connection) {
-      this.connection = undefined;
     }
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
