@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "baseUrl": ".",
     "esModuleInterop": true,
     "jsx": "react",
     "lib": [
@@ -27,9 +28,6 @@
     "stories"
   ],
   "references": [
-    {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
     {
       "path": "../../common/async"
     },
