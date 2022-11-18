@@ -1,6 +1,6 @@
 ---
-position: 1.5
-label: Quick start
+order: 1
+title: Quick start
 next: how-it-works
 prev: why
 ---

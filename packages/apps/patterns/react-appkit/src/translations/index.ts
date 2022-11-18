@@ -4,6 +4,6 @@
 
 import * as enUS from './en-US';
 
-export default {
+export const translations = {
   'en-US': enUS
 };

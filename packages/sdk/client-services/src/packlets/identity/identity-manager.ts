@@ -74,54 +74,6 @@ export class IdentityManager {
     await this._identity?.close();
   }
 
-  private async _constructIdentity(identityRecord: IdentityRecord) {
-    assert(!this._identity);
-    log('constructing identity', { identityRecord });
-
-    const space = await this._constructSpace({
-      spaceRecord: identityRecord.haloSpace,
-      swarmIdentity: {
-        peerKey: identityRecord.deviceKey,
-        credentialProvider: MOCK_AUTH_PROVIDER,
-        credentialAuthenticator: MOCK_AUTH_VERIFIER
-      }
-    });
-
-    log('done', { identityKey: identityRecord.identityKey });
-    return new Identity({
-      space,
-      signer: this._keyring,
-      identityKey: identityRecord.identityKey,
-      deviceKey: identityRecord.deviceKey
-    });
-  }
-
-  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
-    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
-    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
-
-    // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    // NOTE: Must be initialized after writable feeds so that it is in a writable state.
-    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
-
-    const protocol = new SpaceProtocol({
-      topic: spaceRecord.spaceKey,
-      identity: swarmIdentity,
-      networkManager: this._networkManager
-    });
-
-    return new Space({
-      spaceKey: spaceRecord.spaceKey,
-      protocol,
-      genesisFeed,
-      controlFeed,
-      dataFeed,
-      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
-      databaseFactory: async ({ databaseBackend }) =>
-        new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
-    });
-  }
-
   async createIdentity() {
     assert(!this._identity, 'Identity already exists.');
     log('creating identity...');
@@ -169,6 +121,7 @@ export class IdentityManager {
       }
     }
 
+    // TODO(burdon): ???
     // await this._keyring.deleteKey(identityRecord.identity_key);
     // await this._keyring.deleteKey(identityRecord.halo_space.space_key);
 
@@ -177,7 +130,7 @@ export class IdentityManager {
     await this._identity.ready();
     this.stateUpdate.emit();
 
-    log('created identity', { identityKey: identity.identityKey });
+    log('created identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
     return identity;
   }
 
@@ -203,5 +156,53 @@ export class IdentityManager {
     this._identity = identity;
     this.stateUpdate.emit();
     return identity;
+  }
+
+  private async _constructIdentity(identityRecord: IdentityRecord) {
+    assert(!this._identity);
+    log('constructing identity', { identityRecord });
+
+    const space = await this._constructSpace({
+      spaceRecord: identityRecord.haloSpace,
+      swarmIdentity: {
+        peerKey: identityRecord.deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
+      }
+    });
+
+    log('done', { identityKey: identityRecord.identityKey });
+    return new Identity({
+      space,
+      signer: this._keyring,
+      identityKey: identityRecord.identityKey,
+      deviceKey: identityRecord.deviceKey
+    });
+  }
+
+  private async _constructSpace({ spaceRecord, swarmIdentity }: ConstructSpaceParams) {
+    const controlFeed = await this._feedStore.openFeed(spaceRecord.writeControlFeedKey, { writable: true });
+    const dataFeed = await this._feedStore.openFeed(spaceRecord.writeDataFeedKey, { writable: true });
+
+    // The genesis feed will be the same as the control feed if the space was created by the local agent.
+    // NOTE: Must be initialized after writable feeds so that it is in a writable state.
+    const genesisFeed = await this._feedStore.openFeed(spaceRecord.genesisFeedKey);
+
+    const protocol = new SpaceProtocol({
+      topic: spaceRecord.spaceKey,
+      identity: swarmIdentity,
+      networkManager: this._networkManager
+    });
+
+    return new Space({
+      spaceKey: spaceRecord.spaceKey,
+      protocol,
+      genesisFeed,
+      controlFeed,
+      dataFeed,
+      feedProvider: (feedKey) => this._feedStore.openFeed(feedKey),
+      databaseFactory: async ({ databaseBackend }) =>
+        new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
+    });
   }
 }

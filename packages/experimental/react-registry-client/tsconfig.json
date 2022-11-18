@@ -13,9 +13,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
-    {
       "path": "../../common/codec-protobuf"
     },
     {

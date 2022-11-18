@@ -7,7 +7,7 @@
 import { expect } from 'chai';
 
 import { waitForCondition } from '@dxos/async';
-import { ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/testutils';
 
@@ -16,7 +16,7 @@ import { TestClientBuilder } from '../testing';
 
 describe('Halo', function () {
   it('reopens with persistent storage', async function () {
-    const config: ConfigProto = {
+    const config = new Config({
       version: 1,
       runtime: {
         client: {
@@ -26,7 +26,7 @@ describe('Halo', function () {
           }
         }
       }
-    };
+    });
 
     const testBuilder = new TestClientBuilder(config);
 

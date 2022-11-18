@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-components",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "Low-level material components.",
   "homepage": "https://dxos.org",
@@ -14,8 +14,7 @@
     "src"
   ],
   "scripts": {
-    "book": "toolchain book",
-    "build:book": "toolchain build:book",
+    "book": "esbuild-server book",
     "check": "true"
   },
   "dependencies": {
@@ -38,8 +37,8 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.0",

@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -36,16 +33,16 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../gem/gem-core"
+      "path": "../../deprecated/react-components"
     },
     {
-      "path": "../../gem/gem-spore"
+      "path": "../../deprecated/react-toolkit"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../../experimental/gem-core"
     },
     {
-      "path": "../../sdk/react-toolkit"
+      "path": "../../experimental/gem-spore"
     }
   ]
 }

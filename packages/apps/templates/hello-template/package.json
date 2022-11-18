@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "DXOS 'hello world' application template.",
   "homepage": "https://dxos.org",
@@ -22,9 +22,9 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-composer": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",

@@ -3,12 +3,12 @@
 //
 
 import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto, fromConfig } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { Client, defaultConfig } from '../client';
+import { Client } from '../client';
 
 export const testConfigWithLocalSignal: ConfigProto = {
   version: 1,
@@ -27,11 +27,11 @@ export class TestClientBuilder {
 
   // prettier-ignore
   constructor (
-    config: Config | ConfigProto = defaultConfig,
+    config?: Config,
     private readonly _modelFactory = createDefaultModelFactory(),
     private readonly _signalManagerContext = new MemorySignalManagerContext()
   ) {
-    this._config = fromConfig(config);
+    this._config = config ?? new Config();
   }
 
   get config(): Config {

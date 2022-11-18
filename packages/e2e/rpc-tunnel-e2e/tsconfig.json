@@ -17,9 +17,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/vite-plugin"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -41,7 +38,10 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/react-components"
+      "path": "../../deprecated/react-components"
+    },
+    {
+      "path": "../../sdk/vite-plugin"
     }
   ]
 }

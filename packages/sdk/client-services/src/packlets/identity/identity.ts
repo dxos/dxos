@@ -14,7 +14,12 @@ import {
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
+import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { TypedMessage } from '@dxos/protocols';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
 export type IdentityParams = {
@@ -46,7 +51,7 @@ export class Identity {
 
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
-    // Save device key chain credential when processed by the space state machine.
+    // Save device keychain credential when processed by the space state machine.
     this._space.onCredentialProcessed.set(async (credential) => {
       await this._deviceStateMachine.process(credential);
       this.stateUpdate.emit();
@@ -91,6 +96,14 @@ export class Identity {
     return this._space.database ?? failUndefined();
   }
 
+  getAdmissionCredentials(): HaloAdmissionCredentials {
+    return {
+      deviceKey: this.deviceKey,
+      controlFeedKey: this._space.controlFeedKey,
+      dataFeedKey: this._space.dataFeedKey
+    };
+  }
+
   /**
    * Issues credentials as identity.
    * Requires identity to be ready.
@@ -109,5 +122,49 @@ export class Identity {
    */
   getDeviceCredentialSigner(): CredentialSigner {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
+  }
+
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: HaloAdmissionCredentials) {
+    log('Admitting device:', {
+      identityKey: this.identityKey,
+      hostDevice: this.deviceKey,
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey
+    });
+    const signer = this.getIdentityCredentialSigner();
+    await writeMessages(
+      this.controlPipeline.writer,
+      [
+        await signer.createCredential({
+          subject: deviceKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            identityKey: this.identityKey,
+            deviceKey
+          }
+        }),
+        await signer.createCredential({
+          subject: controlFeedKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.haloSpaceKey,
+            deviceKey,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.CONTROL
+          }
+        }),
+        await signer.createCredential({
+          subject: dataFeedKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: this.haloSpaceKey,
+            deviceKey,
+            identityKey: this.identityKey,
+            designation: AdmittedFeed.Designation.DATA
+          }
+        })
+      ].map((credential): TypedMessage => ({ '@type': 'dxos.echo.feed.CredentialsMessage', credential }))
+    );
   }
 }

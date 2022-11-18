@@ -16,9 +16,12 @@ export const RecoverIdentityPage = () => {
   const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') ?? '/spaces';
+  const redirectUrl = searchParams.get('redirect');
   const redirect = useCallback(
-    () => (redirectUrl.startsWith('http') ? window.location.replace(redirectUrl) : navigate(redirectUrl)),
+    () =>
+      redirectUrl?.startsWith('http')
+        ? window.location.replace(redirectUrl)
+        : navigate(redirectUrl && redirectUrl.length ? redirectUrl : '/devices'),
     [redirectUrl]
   );
 

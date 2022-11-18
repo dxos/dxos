@@ -1,6 +1,6 @@
 {
   "name": "@dxos/timeframe",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Timeframe vector clock.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
     "debug": "^4.3.3",
     "util": "^0.12.4"
   },

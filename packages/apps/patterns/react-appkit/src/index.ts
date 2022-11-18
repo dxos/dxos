@@ -4,3 +4,5 @@
 
 export * from './components';
 export * from './hooks';
+export * from './telemetry';
+export * from './translations';

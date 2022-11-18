@@ -5,10 +5,10 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/experimental/kai/**/*.{ts,tsx,js,jsx}"
-        ],
-        "format": "unix"
+        ]
       },
       "outputs": [
         "{options.outputFile}"
@@ -35,9 +35,6 @@
         "{options.outputPath}",
         "{options.resultsPath}"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   },
   "implicitDependencies": [

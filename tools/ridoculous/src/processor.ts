@@ -24,7 +24,7 @@ interface Options {
 export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, outDir, verbose }: Options = {}) => {
   const parser = createParser({ autoNumber, baseDir, html, verbose });
 
-  const globFiles = glob.sync(path.join(baseDir ?? '', files));
+  const globFiles = glob.sync(path.join(baseDir ?? '', files ?? ''));
   for (const filename of globFiles) {
     if (dryRun || verbose) {
       console.log(`Parsing: ${chalk.green(filename)}`);
@@ -44,7 +44,7 @@ export const processFiles = async ({ autoNumber, baseDir, dryRun, files, html, o
         base: undefined,
         ext: html ? '.html' : '.md'
       });
-      const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
+      const outFilename = path.join(outDir ?? '', path.relative(baseDir ?? '.', f));
       console.log(`Updating: ${chalk.green(outFilename)}`);
 
       if (!dryRun) {

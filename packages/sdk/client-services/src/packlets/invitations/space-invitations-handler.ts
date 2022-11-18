@@ -29,6 +29,7 @@ import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-ha
 /**
  * Handles the life-cycle of Space invitations between peers.
  */
+// TODO(dmaretskyi): Split into Host and Guest parts.
 export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   constructor(
     networkManager: NetworkManager,

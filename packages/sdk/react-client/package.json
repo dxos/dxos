@@ -1,16 +1,16 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:util": "util"
   },
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true"
   },

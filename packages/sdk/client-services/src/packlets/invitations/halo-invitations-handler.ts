@@ -5,9 +5,8 @@
 import assert from 'assert';
 
 import { sleep, Trigger } from '@dxos/async';
-import { createDeviceAuthorization, generatePasscode } from '@dxos/credentials';
+import { generatePasscode } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
@@ -30,6 +29,7 @@ import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-ha
 /**
  * Handles the life-cycle of Halo invitations between peers.
  */
+// TODO(dmaretskyi): Split into Host and Guest parts.
 export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   // prettier-ignore
   constructor(
@@ -88,7 +88,8 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
               authenticationCode = code;
             },
 
-            presentAdmissionCredentials: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
+            // TODO(burdon): Not used: controlFeedKey, dataFeedKey.
+            presentAdmissionCredentials: async (credentials) => {
               try {
                 // Check authenticated.
                 if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
@@ -100,19 +101,12 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
                   }
                 }
 
-                log('writing guest credentials', { host: identity.deviceKey, guest: deviceKey });
+                log('writing guest credentials', { host: identity.deviceKey, guest: credentials.deviceKey });
                 // TODO(burdon): Check if already admitted.
-                await writeMessages(
-                  identity.controlPipeline.writer,
-                  await createDeviceAuthorization(
-                    identity.getIdentityCredentialSigner(),
-                    identity.identityKey,
-                    identity.deviceKey
-                  )
-                );
+                await identity.admitDevice(credentials);
 
                 // Updating credentials complete.
-                complete.wake(deviceKey);
+                complete.wake(credentials.deviceKey);
               } catch (err) {
                 // TODO(burdon): Generic RPC callback to report error to client.
                 observable.callback.onError(err);
@@ -224,11 +218,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
 
         // 4. Send admission credentials to host (with local identity keys).
         log('presenting admission credentials', { guest: identity.deviceKey, identityKey });
-        await peer.rpc.HaloHostService.presentAdmissionCredentials({
-          deviceKey: identity.deviceKey,
-          controlFeedKey: PublicKey.random(), // TODO(burdon): ???
-          dataFeedKey: PublicKey.random()
-        });
+        await peer.rpc.HaloHostService.presentAdmissionCredentials(identity.getAdmissionCredentials());
 
         // 5. Success.
         log('admitted by host', { guest: identity.deviceKey, identityKey });

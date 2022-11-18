@@ -16,22 +16,22 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "docs/**/*.{ts,tsx,js,jsx}"
-        ],
-        "format": "unix"
+        ]
       }
     },
     "plate": {
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "nx:run-script",
       "options": {
         "script": "plate"
       },
       "outputs": [
         "{options.outputFile}"
-      ],
-      "dependsOn": [
-        "^build"
       ]
     },
     "prerelease": {

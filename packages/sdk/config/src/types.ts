@@ -3,11 +3,6 @@
 //
 
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
-import { MaybeFunction, MaybePromise } from '@dxos/util';
-
-import { Config } from './config';
-
-export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigProto>>;
 
 export const FILE_DEFAULTS = 'defaults.yml';
 export const FILE_ENVS = 'envs-map.yml';

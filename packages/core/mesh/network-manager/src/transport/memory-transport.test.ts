@@ -82,7 +82,7 @@ describe('MemoryTransport', function () {
     });
   });
 
-  it('10 pairs of peers connecting at the same time', async function () {
+  it.skip('10 pairs of peers connecting at the same time', async function () {
     await Promise.all(
       range(10).map(async () => {
         const { plugin1, plugin2, peer1Id } = createPair();

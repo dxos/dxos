@@ -12,16 +12,13 @@
       "node"
     ]
   },
-  "include": [
-    "src",
-  ],
   "exclude": [
-    "**/deprecated",
+    "**/deprecated"
+  ],
+  "include": [
+    "src"
   ],
   "references": [
-    {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
     {
       "path": "../../common/async"
     },
@@ -39,6 +36,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/testutils"

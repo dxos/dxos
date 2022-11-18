@@ -2,23 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { InvitationObservable } from '@dxos/client';
 
+import { useClient } from '../client';
 import { useInvitationStatus } from '../invitations';
 
-// import { useClient } from '../client';
-
 export const useHaloInvitations = (): InvitationObservable[] => {
-  // const client = useClient();
-  const [invitations, _setInvitations] = useState<InvitationObservable[]>([]);
+  const client = useClient();
+  const [invitations, setInvitations] = useState<InvitationObservable[]>(client.halo?.invitations ?? []);
 
-  // useEffect(() => {
-  //   return client.halo.invitationsUpdate.on(() => {
-  //     setInvitations(client.halo.invitations);
-  //   });
-  // }, []);
+  useEffect(() => {
+    return client.halo.invitationsUpdate.on(() => {
+      setInvitations(client.halo.invitations);
+    });
+  }, [client.halo]);
 
   return invitations;
 };

@@ -17,9 +17,6 @@
   ],
   "references": [
     {
-      "path": "../../../tools/deprecated/protocols-toolchain"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -35,13 +32,13 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../react-client-testing"
-    },
-    {
       "path": "../gem-core"
     },
     {
       "path": "../gem-spore"
+    },
+    {
+      "path": "../react-client-testing"
     }
   ]
 }
