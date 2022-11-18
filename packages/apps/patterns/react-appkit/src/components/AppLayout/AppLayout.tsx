@@ -111,6 +111,16 @@ export const AppLayout = ({
                     <Plus className={getSize(5)} />
                     {t('create space label', { ns: 'uikit' })}
                   </Button>
+                  <Presence
+                    profile={identity!}
+                    space={space}
+                    className='flex-none'
+                    size={10}
+                    sideOffset={4}
+                    managingSpace={isManagingSpace}
+                    onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
+                    onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
+                  />
                 </>
               }
               heading={{
