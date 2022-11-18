@@ -27,14 +27,15 @@ export const getPeerId = (protocol: Protocol) => {
 };
 
 /**
- * @return {ProtocolProvider}
+ * @deprecated
  */
-// TODO(dboreham): Try to encapsulate swarmKey, nodeId.
-export const testProtocolProvider = (swarmKey: Buffer, peerId: PublicKey, protocolPlugin: any) => {
-  log('creating protocol-factory', { swarmKey: PublicKey.from(swarmKey), peerId });
+// TODO(burdon): Reconcile with transportProtocolProvider.
+export const testProtocolProvider = (topic: Buffer, peerId: PublicKey, protocolPlugin: any) => {
+  log('creating protocol-factory', { topic: PublicKey.from(topic), peerId });
+
   return protocolFactory({
-    getTopics: () => [swarmKey],
-    session: { peerId: peerId.toString() }, // TODO(burdon): Key.
+    getTopics: () => [topic],
+    session: { peerId: peerId.toHex() }, // TODO(burdon): PublicKey.
     plugins: [protocolPlugin]
   });
 };
