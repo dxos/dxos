@@ -57,7 +57,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
     swarm: networkManager.getSwarm(controlTopic)!,
     map: networkManager.getSwarmMap(controlTopic)!,
     log: networkManager.connectionLog!,
-    signal: networkManager.signal
+    signal: networkManager.signalManager
   };
 };
 

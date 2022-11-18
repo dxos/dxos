@@ -66,13 +66,12 @@ export type NetworkManagerOptions = {
 /**
  * Manages connection to the swarm.
  */
-// TODO(dmaretskyi): Rename to SwarmManager.
+// TODO(dmaretskyi): Rename SwarmManager.
 export class NetworkManager {
-  private readonly _transportFactory: TransportFactory;
-
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(PublicKey.hash);
   private readonly _mappers = new ComplexMap<PublicKey, SwarmMapper>(PublicKey.hash);
 
+  private readonly _transportFactory: TransportFactory;
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
@@ -98,18 +97,19 @@ export class NetworkManager {
     }
   }
 
-  get signal() {
+  // TODO(burdon): Remove access (Devtools only).
+  get connectionLog() {
+    return this._connectionLog;
+  }
+
+  // TODO(burdon): Remove access (Devtools only).
+  get signalManager() {
     return this._signalManager;
   }
 
   // TODO(burdon): Reconcile with "discovery_key".
   get topics() {
     return Array.from(this._swarms.keys());
-  }
-
-  // TODO(burdon): Factor out devtools.
-  get connectionLog() {
-    return this._connectionLog;
   }
 
   getSwarmMap(topic: PublicKey): SwarmMapper | undefined {
