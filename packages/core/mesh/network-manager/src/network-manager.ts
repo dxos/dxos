@@ -66,6 +66,7 @@ export type NetworkManagerOptions = {
 /**
  * Manages connection to the swarm.
  */
+// TODO(dmaretskyi): Rename to SwarmManager.
 export class NetworkManager {
   private readonly _transportFactory: TransportFactory;
 

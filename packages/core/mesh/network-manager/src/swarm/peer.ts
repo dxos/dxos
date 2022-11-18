@@ -2,7 +2,7 @@ import { PublicKey } from "@dxos/keys";
 import { log } from "@dxos/log";
 import { Protocol } from "@dxos/mesh-protocol";
 import assert from "assert";
-import { SignalMessaging } from "../signal";
+import { SignalMessage, SignalMessaging } from "../signal";
 import { TransportFactory } from "../transport";
 import { Connection, ConnectionState } from "./connection";
 
@@ -19,7 +19,8 @@ export class Peer {
   ) {}
 
   /**
-   * Initialize connection.
+   * Create new connection.
+   * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
   createConnection(
     // TODO(dmaretskyi): Make some of those fields.
@@ -77,5 +78,13 @@ export class Peer {
     }
 
     log('closed', { peerId: this.id, sessionId: connection.sessionId });
+  }
+
+  async onSignal(message: SignalMessage) {
+    if (!this.connection) {
+      log('dropping signal message for non-existent connection', { message });
+      return;
+    }
+    await this.connection.signal(message);
   }
 }

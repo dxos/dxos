@@ -230,13 +230,9 @@ export class Swarm {
     );
     assert(message.topic?.equals(this._topic));
     assert(message.author);
-    const connection = this._peers.get(message.author)?.connection;
-    if (!connection) {
-      log('dropping signal message for non-existent connection', { topic: this._topic, message });
-      return;
-    }
 
-    await connection.signal(message);
+    const peer = this._getOrCreatePeer(message.author);
+    await peer.onSignal(message);
   }
 
   private _getSwarmController(): SwarmController {
