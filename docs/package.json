@@ -7,11 +7,10 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
-    "TODO(wittjosiah)": "Resolve the asset path issue here.",
+    "bundle": "vuepress build docs",
     "clean:plate": "rm -rf docs/api",
-    "docs:build": "vuepress build docs",
     "plate": "plate src/templates/api --input docs/api.json --output docs/api",
-    "prerelease": "pnpm run typedoc && pnpm run clean:plate && pnpm run plate && pnpm run docs:build",
+    "prerelease": "pnpm run typedoc && pnpm run clean:plate && pnpm run plate && pnpm run bundle",
     "serve": "vuepress dev docs",
     "typedoc": "typedoc"
   },
@@ -45,6 +44,6 @@
     "vue": "^3.2.40",
     "vue-router": "^4.1.6",
     "vuepress": "^2.0.0-beta.53",
-    "vuepress-theme-hope": "^2.0.0-beta.122"
+    "vuepress-theme-hope": "^2.0.0-beta.121"
   }
 }
