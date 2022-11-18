@@ -22,7 +22,7 @@ export interface SpaceListProps {
 // TODO(wittjosiah): Unify with @dxos/react-appkit SpaceList.
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
   return (
-    <div role='none' className='m-0 flex flex-col gap-4'>
+    <>
       {spaces.map((space) => {
         const keyHex = space.key.toHex();
         const title = space.properties.get('title') ?? humanize(keyHex);
@@ -40,9 +40,9 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                   <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
                 </Link>
               ),
-              className: 'grow flex items-center mb-0'
+              className: 'grow flex items-center mbe-0'
             }}
-            className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
+            className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2 mbe-2')}
           >
             {/* <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('manage space label', { ns: 'uikit' })} side='top' tooltipLabelsTrigger>
@@ -59,6 +59,6 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
           </Group>
         );
       })}
-    </div>
+    </>
   );
 };

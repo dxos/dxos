@@ -69,9 +69,6 @@
         "configFile": "packages/apps/tasks-app/vite.config.ts",
         "outputPath": "packages/apps/tasks-app/out/tasks"
       }
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

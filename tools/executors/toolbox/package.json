@@ -10,7 +10,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true",
-    "update": "ts-node ./src/update.ts"
+    "toolbox": "ts-node ./src/toolbox.ts"
   },
   "dependencies": {
     "chalk": "^4.1.0",

@@ -27,9 +27,6 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
