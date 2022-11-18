@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/protocols-toolchain",
+  "version": "0.1.6",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "bin": {
+    "toolchain": "./main.js"
+  },
+  "scripts": {
+    "build": "ts-node src/main.ts build",
+    "check": "true",
+    "test": "true"
+  },
+  "dependencies": {
+    "@dxos/toolchain-node-library": "workspace:*",
+    "typescript": "^4.8.4",
+    "yargs": "~16.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "@types/yargs": "~16.0.1",
+    "ts-node": "10.9.1"
+  }
+}

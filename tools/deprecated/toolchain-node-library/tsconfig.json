@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../executors/protobuf-compiler"
+    }
+  ]
+}

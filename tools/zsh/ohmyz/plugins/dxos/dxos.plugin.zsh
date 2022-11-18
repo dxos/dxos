@@ -21,25 +21,35 @@ alias gb='git branch -vv'
 #
 
 alias nx="pnpm -w nx"
+alias pi="pnpm i"
 
 # Run target in local directory (e.g., `p build`).
 function p () {
-  nx $1 "${PWD##*/}" "$@"
+  TARGET=$1
+  shift 1
+
+  nx $TARGET "${PWD##*/}" "$@"
 }
 
 # Break NX cache (e.g., `pc test`).
 function pc () {
-  nx $1 "${PWD##*/}" "$@" "${RANDOM}"
+  TARGET=$1
+  shift 1
+
+  nx $TARGET "${PWD##*/}" "$@" "${RANDOM}"
 }
 
 # Run everything (e.g., `pa build`).
 function pa () {
+  TARGET=$1
+  shift 1
+
   ROOT=$(git rev-parse --show-toplevel)
   if [ "$ROOT" = "$PWD" ]; then
-    nx run-many --target=$1
+    nx run-many --target=$TARGET $@
   else;
     pushd $ROOT
-    nx run-many --target=$1
+    nx run-many --target=$TARGET $@
     popd
   fi;
 }
