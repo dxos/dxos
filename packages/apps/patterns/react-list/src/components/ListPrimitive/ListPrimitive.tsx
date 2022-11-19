@@ -3,8 +3,9 @@
 //
 
 import cx from 'classnames';
+import throttle from 'lodash.throttle';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useState } from 'react';
+import React, { ComponentProps, useCallback, useMemo, useState } from 'react';
 
 import { defaultGroup, defaultHover } from '@dxos/react-ui';
 import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
@@ -63,6 +64,7 @@ export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<Co
   items: ListItems;
   onAction?: (action: ListAction) => void;
   createListItemId?: () => Promise<ListItemId>;
+  onChangePeriod?: number;
 }
 
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
@@ -225,6 +227,7 @@ export const ListPrimitive = ({
   items: propsItems,
   onAction,
   createListItemId = defaultCreateListItemId,
+  onChangePeriod = 0,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
@@ -238,38 +241,70 @@ export const ListPrimitive = ({
     [listId]
   );
 
+  // Title
+
   const titleId = `${listId}__title`;
   const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '', rejectTextUpdatesWhenFocused);
+  const propagateTitle = useCallback(
+    (nextValue: string) => {
+      console.log('[list title propagate]');
+      return onAction?.({ listId, next: { title: nextValue } });
+    },
+    [onAction]
+  );
+  const throttledPropagateTitle = useMemo(() => throttle(propagateTitle, onChangePeriod), [propagateTitle]);
   const onChangeTitle = useCallback(
     (nextValue: string) => {
       setTitle(nextValue);
-      onAction?.({ listId, next: { title: nextValue } });
+      throttledPropagateTitle(nextValue);
     },
     [onAction, listId]
   );
+
+  // Description
 
   const descriptionId = `${listId}__description`;
   const [description, setDescription, _descriptionSession] = usePropStatefully(
     propsDescription ?? '',
     rejectTextUpdatesWhenFocused
   );
+  const propagateDescription = useCallback(
+    (nextValue: string) => onAction?.({ listId, next: { description: nextValue } }),
+    [onAction]
+  );
+  const throttledPropagateDescription = useMemo(
+    () => throttle(propagateDescription, onChangePeriod),
+    [propagateDescription]
+  );
   const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
-      onAction?.({ listId, next: { description: nextValue } });
+      throttledPropagateDescription(nextValue);
     },
     [onAction, listId]
   );
 
+  // Items & order
+
   const [items, setItems, itemsSession] = usePropStatefully(propsItems ?? {}, itemsEquivalent);
   const order = Object.keys(items);
 
+  const propagateItem = useCallback(
+    ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
+      console.log('[propagate list item]', next);
+      return onAction?.({ listId, listItemId: id, next });
+    },
+    [listId, onAction]
+  );
+  const throttledPropagateItem = useMemo(() => throttle(propagateItem, onChangePeriod), [propagateItem]);
   const updateItem = useCallback(
     ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
       setItems(Object.assign(items, { [id]: { ...items[id], ...next } }));
-      onAction?.({ listId, listItemId: id, next });
+      'title' in next && throttledPropagateItem({ id, title: next.title });
+      'description' in next && throttledPropagateItem({ id, description: next.description });
+      'annotations' in next && onAction?.({ listId, listItemId: id, next: { annotations: next.annotations } });
     },
-    [items, onAction]
+    [items, listId, onAction]
   );
 
   const updateOrder = useCallback(
@@ -314,6 +349,8 @@ export const ListPrimitive = ({
       })
       .finally(() => setCreating(false));
   }, [items, createListItemId, onAction]);
+
+  // Render
 
   return (
     <div
