@@ -9,8 +9,8 @@ import { defaultInput } from '../../styles/input';
 import { InputProps, InputSize } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {
-  md: 'text-sm',
-  lg: 'text-base',
+  md: 'text-base',
+  lg: 'text-lg',
   pin: '',
   textarea: ''
 };

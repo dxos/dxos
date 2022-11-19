@@ -15,7 +15,7 @@ export const buttonStyles = (props: ButtonProps) => {
   return cx(
     'inline-flex select-none items-center justify-center text-sm font-medium',
     props.rounding ?? 'rounded-md',
-    props.compact ? 'p-1.5' : 'pli-4 plb-2',
+    props.spacing ?? (props.compact ? 'p-1.5' : 'pli-4 plb-2'),
     'transition-color duration-100',
     defaultHover(props),
     resolvedVariant === 'default' &&

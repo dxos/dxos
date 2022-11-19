@@ -8,5 +8,6 @@ export interface ButtonProps extends ComponentProps<'button'> {
   variant?: 'default' | 'primary' | 'outline';
   compact?: boolean;
   rounding?: string;
+  spacing?: string;
   disabled?: boolean;
 }

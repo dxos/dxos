@@ -27,6 +27,7 @@ export const Input = ({
   className,
   size,
   length = 6,
+  spacing,
   validationMessage,
   validationValence,
   ...inputProps
@@ -80,7 +81,7 @@ export const Input = ({
     );
 
   return (
-    <div role='none' className={cx('mlb-4', className)}>
+    <div role='none' className={cx(spacing ?? 'mlb-4', className)}>
       <label
         htmlFor={inputId}
         className={cx(

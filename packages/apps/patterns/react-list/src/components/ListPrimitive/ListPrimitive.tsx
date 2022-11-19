@@ -141,7 +141,7 @@ const ListItemPrimitive = ({
   return (
     <li
       key={id}
-      className='flex items-center gap-2 pli-4'
+      className='flex items-center gap-2 pli-4 mbe-2'
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -154,8 +154,8 @@ const ListItemPrimitive = ({
             'aria-describedby': descriptionId
           }),
           className: cx(
-            getSize(4),
-            'text-primary-600 bg-neutral-50 rounded border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
+            getSize(5),
+            'text-primary-600 bg-neutral-50 rounded-full border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
             defaultFocus,
             defaultHover({})
           ),
@@ -171,6 +171,7 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
+          spacing=''
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
           labelVisuallyHidden
@@ -200,8 +201,8 @@ const ListItemPrimitive = ({
       {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
       {/*  </Button> */}
       {/* </ButtonGroup> */}
-      <Button compact onClick={onClickDelete}>
-        <Minus />
+      <Button onClick={onClickDelete} rounding='rounded' spacing='p-1' className='self-stretch'>
+        <Minus className={getSize(4)} />
         <span className='sr-only'>{t('delete list item label')}</span>
       </Button>
     </li>
@@ -377,6 +378,7 @@ export const ListPrimitive = ({
         onChange={onChangeTitle}
         className='mli-4'
         data-itemid={listId}
+        size='lg'
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
@@ -404,7 +406,7 @@ export const ListPrimitive = ({
       </ol>
       <div role='none' className='mli-4 mlb-4'>
         <Button className='is-full' onClick={createItem} disabled={creating}>
-          <Plus />
+          <Plus className={getSize(5)} />
           <span className='sr-only'>{t('add list item label')}</span>
         </Button>
       </div>

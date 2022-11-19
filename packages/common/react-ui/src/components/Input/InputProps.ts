@@ -20,6 +20,7 @@ interface InputPropsExtension {
   validationMessage?: ReactNode;
   validationValence?: MessageValence;
   length?: number;
+  spacing?: string;
 }
 
 export interface InputProps
