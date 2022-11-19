@@ -20,6 +20,7 @@ export const before = (pluginOptions: PluginOptions, program: ts.Program): ts.Cu
   return (context) => {
     return {
       transformSourceFile: (sourceFile) => {
+        // console.log('-', sourceFile.fileName);
         let enabled = false;
 
         const visitor = (node: ts.Node): ts.Node => {

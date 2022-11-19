@@ -25,7 +25,7 @@ class Test {
   id = ++Test._count;
   _log = new Logger(() => ({ id: this.id }));
   test(value: number) {
-    this._log.info('hello', { value });
+    this._log.info('test', { value });
   }
 }
 
