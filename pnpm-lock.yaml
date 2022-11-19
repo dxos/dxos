@@ -3288,6 +3288,37 @@ importers:
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
+  packages/gravity/gravity-agent:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
+      '@types/js-yaml': ^4.0.5
+      '@types/node': ^18.11.9
+      '@types/yargs': ~16.0.1
+      assert: ^2.0.0
+      debug: ^4.3.3
+      js-yaml: ^4.1.0
+      source-map-support: ^0.5.12
+      util: ^0.12.4
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/log': link:../../common/log
+      assert: 2.0.0
+      debug: 4.3.4
+      js-yaml: 4.1.0
+      util: 0.12.5
+      yargs: 16.2.0
+    devDependencies:
+      '@types/js-yaml': 4.0.5
+      '@types/node': 18.11.9
+      '@types/yargs': 16.0.4
+      source-map-support: 0.5.21
+
   packages/gravity/gravity-dashboard:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3382,13 +3413,11 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -3400,53 +3429,37 @@ importers:
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
-      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
-      '@koush/wrtc': ^0.5.3
-      '@types/debug': ^4.1.7
-      '@types/json-stable-stringify': ^1.0.32
       '@types/node': ^18.11.9
-      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
-      json-stable-stringify: ^1.0.1
-      readable-stream: ^3.6.0
       source-map-support: ^0.5.12
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-      '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
-      json-stable-stringify: 1.0.1
-      readable-stream: 3.6.0
       util: 0.12.5
     devDependencies:
-      '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/testutils': link:../../common/testutils
-      '@dxos/text-model': link:../../core/echo/text-model
-      '@koush/wrtc': 0.5.3
-      '@types/debug': 4.1.7
-      '@types/json-stable-stringify': 1.0.34
       '@types/node': 18.11.9
-      '@types/readable-stream': 2.3.14
       source-map-support: 0.5.21
 
   packages/sdk/client-services:
