@@ -9,14 +9,20 @@
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph e2e [e2e]
+  style e2e fill:transparent
   dxos/rpc-tunnel-e2e("@dxos/rpc-tunnel-e2e"):::root
   click dxos/rpc-tunnel-e2e "dxos/dxos/tree/main/packages/e2e/rpc-tunnel-e2e/docs"
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -33,6 +39,7 @@ subgraph common [common]
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -47,10 +54,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/rpc("@dxos/rpc"):::def
     click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
@@ -59,12 +68,12 @@ subgraph core [core]
 end
 
 subgraph deprecated [deprecated]
+  style deprecated fill:transparent
   dxos/react-components("@dxos/react-components"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/protocols --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf

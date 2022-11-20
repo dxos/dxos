@@ -9,21 +9,29 @@ Network generator.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph core [core]
+  style core fill:transparent
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/network-generator("@dxos/network-generator"):::root
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
   end
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -38,7 +46,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 ```
 

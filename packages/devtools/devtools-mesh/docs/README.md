@@ -9,14 +9,20 @@
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph devtools [devtools]
+  style devtools fill:transparent
   dxos/devtools-mesh("@dxos/devtools-mesh"):::root
   click dxos/devtools-mesh "dxos/dxos/tree/main/packages/devtools/devtools-mesh/docs"
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -35,6 +41,7 @@ subgraph common [common]
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
@@ -49,6 +56,7 @@ subgraph common [common]
 end
 
 subgraph experimental [experimental]
+  style experimental fill:transparent
   dxos/gem-core("@dxos/gem-core"):::def
   click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
   dxos/gem-spore("@dxos/gem-spore"):::def
@@ -60,10 +68,12 @@ subgraph experimental [experimental]
 end
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/messaging("@dxos/messaging"):::def
     click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
     dxos/rpc("@dxos/rpc"):::def
@@ -87,6 +97,7 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
+    style halo fill:transparent
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -94,6 +105,7 @@ subgraph core [core]
   end
 
   subgraph echo [echo]
+    style echo fill:transparent
     dxos/echo-db("@dxos/echo-db"):::def
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -106,6 +118,7 @@ subgraph core [core]
 end
 
 subgraph deprecated [deprecated]
+  style deprecated fill:transparent
   dxos/react-components("@dxos/react-components"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
   dxos/react-toolkit("@dxos/react-toolkit"):::def
@@ -113,6 +126,7 @@ subgraph deprecated [deprecated]
 end
 
 subgraph sdk [sdk]
+  style sdk fill:transparent
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
   dxos/client("@dxos/client"):::def
@@ -122,7 +136,6 @@ subgraph sdk [sdk]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/devtools-mesh --> dxos/gem-spore
 dxos/gem-spore --> dxos/gem-core
 dxos/async --> dxos/context

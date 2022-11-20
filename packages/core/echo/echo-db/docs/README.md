@@ -19,13 +19,19 @@ class ItemManager
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph echo [echo]
+    style echo fill:transparent
     dxos/echo-db("@dxos/echo-db"):::root
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -35,6 +41,7 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
+    style halo fill:transparent
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -42,6 +49,7 @@ subgraph core [core]
   end
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -64,6 +72,7 @@ subgraph core [core]
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -80,6 +89,7 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -94,7 +104,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/credentials --> dxos/feed-store
 dxos/feed-store --> dxos/hypercore

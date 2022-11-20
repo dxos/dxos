@@ -9,20 +9,25 @@ Gravity dashboard.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph gravity [gravity]
+  style gravity fill:transparent
   dxos/gravity-dashboard("@dxos/gravity-dashboard"):::root
   click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
 end
 
 subgraph experimental [experimental]
+  style experimental fill:transparent
   dxos/gem-core("@dxos/gem-core"):::def
   click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/gravity-dashboard --> dxos/gem-core
 ```
 

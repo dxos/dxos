@@ -9,18 +9,21 @@ Logger
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/log("@dxos/log"):::root
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

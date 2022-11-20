@@ -9,14 +9,20 @@ The bender bot.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph bots [bots]
+  style bots fill:transparent
   dxos/bender-bot("@dxos/bender-bot"):::root
   click dxos/bender-bot "dxos/dxos/tree/main/packages/bots/bender-bot/docs"
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -33,6 +39,7 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -47,6 +54,7 @@ subgraph common [common]
 end
 
 subgraph sdk [sdk]
+  style sdk fill:transparent
   dxos/client("@dxos/client"):::def
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
@@ -56,10 +64,12 @@ subgraph sdk [sdk]
 end
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph halo [halo]
+    style halo fill:transparent
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -67,6 +77,7 @@ subgraph core [core]
   end
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -90,6 +101,7 @@ subgraph core [core]
   end
 
   subgraph echo [echo]
+    style echo fill:transparent
     dxos/echo-db("@dxos/echo-db"):::def
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -102,7 +114,6 @@ subgraph core [core]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/bender-bot --> dxos/client
 dxos/client --> dxos/client-services

@@ -9,13 +9,19 @@ Messaging
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/messaging("@dxos/messaging"):::root
     click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
     dxos/rpc("@dxos/rpc"):::def
@@ -24,6 +30,7 @@ subgraph core [core]
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -38,6 +45,7 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -52,7 +60,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/protocols --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf

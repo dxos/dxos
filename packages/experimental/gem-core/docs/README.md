@@ -9,15 +9,17 @@ Gem core components and utils.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph experimental [experimental]
+  style experimental fill:transparent
   dxos/gem-core("@dxos/gem-core"):::root
   click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

@@ -9,20 +9,27 @@ Low-level material components.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph deprecated [deprecated]
+  style deprecated fill:transparent
   dxos/react-components("@dxos/react-components"):::root
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -37,7 +44,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/react-components --> dxos/react-async
 ```

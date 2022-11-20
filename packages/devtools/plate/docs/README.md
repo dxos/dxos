@@ -9,15 +9,17 @@
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph devtools [devtools]
+  style devtools fill:transparent
   dxos/plate("@dxos/plate"):::root
   click dxos/plate "dxos/dxos/tree/main/packages/devtools/plate/docs"
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

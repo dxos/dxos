@@ -9,20 +9,23 @@ Multiple random storage types.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/random-access-storage("@dxos/random-access-storage"):::root
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

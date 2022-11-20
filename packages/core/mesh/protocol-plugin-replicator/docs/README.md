@@ -9,13 +9,19 @@ Protocol plugin replicator.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::root
     click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
@@ -25,12 +31,14 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
+    style halo fill:transparent
     dxos/keyring("@dxos/keyring"):::def
     click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   end
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -45,6 +53,7 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -59,7 +68,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/keyring --> dxos/protocols

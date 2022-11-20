@@ -9,9 +9,14 @@ A consistent store for hypercore feeds.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/feed-store("@dxos/feed-store"):::root
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/context("@dxos/context"):::def
@@ -26,6 +31,7 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -40,7 +46,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 dxos/feed-store --> dxos/hypercore
 dxos/hypercore --> dxos/codec-protobuf

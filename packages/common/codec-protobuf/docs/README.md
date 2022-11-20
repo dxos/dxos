@@ -9,15 +9,21 @@
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/codec-protobuf("@dxos/codec-protobuf"):::root
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -32,7 +38,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/async --> dxos/context
 ```
 

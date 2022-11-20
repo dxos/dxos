@@ -9,18 +9,21 @@ Debug utilities
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/debug("@dxos/debug"):::root
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

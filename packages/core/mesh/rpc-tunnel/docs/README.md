@@ -9,13 +9,19 @@ RPC ports over various transports.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
+    style mesh fill:transparent
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::root
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
     dxos/rpc("@dxos/rpc"):::def
@@ -24,6 +30,7 @@ subgraph core [core]
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -38,6 +45,7 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/async("@dxos/async"):::def
@@ -52,7 +60,6 @@ subgraph common [common]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/rpc-tunnel --> dxos/rpc
 dxos/async --> dxos/context
 dxos/rpc --> dxos/protocols

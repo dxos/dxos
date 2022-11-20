@@ -68,7 +68,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
     const sections = [
       // Current style.
-      Flowchart.style && this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
+      this.style && line(Flowchart.renderStyle({ id: this.id, properties: this.style }), indent + 1),
 
       // Nodes.
       section(
@@ -146,11 +146,10 @@ export class Flowchart implements Diagram, SubgraphBuilder {
     const section = (label: string, lines: string[]) => (lines.length ? ['', `%% ${label}`, ...lines] : undefined);
 
     const sections = [
-      Flowchart.style &&
-        section(
-          'Classes',
-          Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
-        ),
+      section(
+        'Classes',
+        Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
+      ),
       section('Nodes', this._root.build()),
       section(
         'Links',
@@ -205,18 +204,27 @@ export class Flowchart implements Diagram, SubgraphBuilder {
 
   static renderStyle({ id, properties }: Style): string {
     if (!Flowchart.style) {
-      return '';
+      // Support light/dark theme.
+      return `style ${id} fill:transparent`;
     }
 
     return `style ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
   static renderLinkStyle({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      return '';
+    }
+
     return `linkStyle ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
   // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-and-classes
   static renderClassDef({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      return '';
+    }
+
     return `classDef ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
@@ -227,7 +235,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
 
     return [
       def,
-      Flowchart.style && node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
+      node.style && Flowchart.renderStyle({ id: node.id, properties: node.style }),
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`

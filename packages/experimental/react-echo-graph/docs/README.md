@@ -9,9 +9,14 @@ Low level components using gem library.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph experimental [experimental]
+  style experimental fill:transparent
   dxos/react-echo-graph("@dxos/react-echo-graph"):::root
   click dxos/react-echo-graph "dxos/dxos/tree/main/packages/experimental/react-echo-graph/docs"
   dxos/gem-core("@dxos/gem-core"):::def
@@ -21,7 +26,6 @@ subgraph experimental [experimental]
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/react-echo-graph --> dxos/gem-spore
 dxos/gem-spore --> dxos/gem-core
 ```

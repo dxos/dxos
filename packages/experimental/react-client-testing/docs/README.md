@@ -9,15 +9,17 @@ Tools for react testing.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph experimental [experimental]
+  style experimental fill:transparent
   dxos/react-client-testing("@dxos/react-client-testing"):::root
   click dxos/react-client-testing "dxos/dxos/tree/main/packages/experimental/react-client-testing/docs"
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

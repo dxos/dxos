@@ -9,13 +9,19 @@ Async utils.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/context("@dxos/context"):::root
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
@@ -26,9 +32,6 @@ subgraph common [common]
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
   end
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

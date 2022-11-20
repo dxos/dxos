@@ -9,15 +9,17 @@ Typescript defs.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/typings("@dxos/typings"):::root
   click dxos/typings "dxos/dxos/tree/main/packages/common/typings/docs"
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies

@@ -9,22 +9,27 @@ Telemetry logging for product usage statistics
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph common [common]
+  style common fill:transparent
   dxos/telemetry("@dxos/telemetry"):::root
   click dxos/telemetry "dxos/dxos/tree/main/packages/common/telemetry/docs"
   dxos/sentry("@dxos/sentry"):::def
   click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/telemetry --> dxos/sentry
 ```
 

@@ -9,9 +9,14 @@ Plugin to enable Vite to build DXOS apps.
 
 flowchart LR
 
+%% Classes
+
+
+
 %% Nodes
 
 subgraph sdk [sdk]
+  style sdk fill:transparent
   dxos/vite-plugin("@dxos/vite-plugin"):::root
   click dxos/vite-plugin "dxos/dxos/tree/main/packages/sdk/vite-plugin/docs"
   dxos/config("@dxos/config"):::def
@@ -19,6 +24,7 @@ subgraph sdk [sdk]
 end
 
 subgraph common [common]
+  style common fill:transparent
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/context("@dxos/context"):::def
@@ -33,6 +39,7 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
+    style _ fill:transparent
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -47,12 +54,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
+  style core fill:transparent
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
 
 %% Links
-linkStyle default stroke:#333,stroke-width:1px
 dxos/vite-plugin --> dxos/config
 dxos/async --> dxos/context
 dxos/config --> dxos/protocols
