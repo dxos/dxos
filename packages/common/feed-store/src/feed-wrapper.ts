@@ -72,6 +72,14 @@ export class FeedWrapper<T extends {}> {
     };
   }
 
+  get opened() {
+    return this._hypercore.opened;
+  }
+
+  get closed() {
+    return this._hypercore.closed;
+  }
+
   on = this._binder.fn(this._hypercore.on);
   off = this._binder.fn(this._hypercore.off);
 
@@ -79,7 +87,12 @@ export class FeedWrapper<T extends {}> {
   close = this._binder.async(this._hypercore.close);
 
   get = this._binder.async(this._hypercore.get);
-  append = this._binder.async(this._hypercore.append);
+  __append = this._binder.async(this._hypercore.append);
+  async append(data: any) {
+    log('>>', { err: new Error() });
+    return await this.__append(data);
+  }
+
   download = this._binder.async(this._hypercore.download);
 
   replicate = this._binder.fn(this._hypercore.replicate);

@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 
 import { Agent } from './agent';
 
+// TODO(burdon): Run local signal server for tests.
 describe('Agent', function () {
-  // TODO(burdon): Run local signal server for tests.
-  it.only('create and starts a basic agent', async function () {
+  it('creates and starts a basic agent', async function () {
     const config: ConfigProto = { version: 1 };
     const agent = new Agent(config);
     await agent.initialize();
@@ -22,6 +22,15 @@ describe('Agent', function () {
     expect(agent.started).to.be.true;
     await agent.stop();
     expect(agent.started).to.be.false;
+    await agent.destroy();
+  });
+
+  it.only('creates a space', async function () {
+    const config: ConfigProto = { version: 1 };
+    const agent = new Agent(config);
+    await agent.initialize();
+    const space = await agent.client!.echo.createSpace();
+    expect(space.key).to.exist;
     await agent.destroy();
   });
 
@@ -36,7 +45,8 @@ describe('Agent', function () {
       // TODO(burdon): Change API (remove halo/echo accessors).
       const space = await agent.client!.echo.createSpace();
 
-      if (false) {
+      const skip = true;
+      if (!skip) {
         const observable = await space.createInvitation({ swarmKey });
         log('invitation', { invitation: observable.invitation });
         expect(swarmKey).to.deep.eq(observable.invitation?.swarmKey);
@@ -57,7 +67,6 @@ describe('Agent', function () {
       await agent.stop();
 
       // TODO(burdon): Need to start/stop services.
-      // TODO(burdon): Race condition after creating space: Error closed (random-access-storage).
       // TODO(burdon): Race condition: SPACE_NOT_FOUND.
       await agent.destroy();
     }

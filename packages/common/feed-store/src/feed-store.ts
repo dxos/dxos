@@ -2,7 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import assert from 'assert';
+
+import { Event, sleep } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -20,7 +22,6 @@ export interface FeedStoreOptions<T extends {}> {
  */
 export class FeedStore<T extends {}> {
   private readonly _feeds: ComplexMap<PublicKey, FeedWrapper<T>> = new ComplexMap(PublicKey.hash);
-
   private readonly _factory: FeedFactory<T>;
 
   readonly feedOpened = new Event<FeedWrapper<T>>();
@@ -38,7 +39,7 @@ export class FeedStore<T extends {}> {
   }
 
   /**
-   * Get the an open feed if it exists.
+   * Get the open feed if it exists.
    */
   getFeed(publicKey: PublicKey): FeedWrapper<T> | undefined {
     return this._feeds.get(publicKey);
@@ -79,7 +80,18 @@ export class FeedStore<T extends {}> {
    */
   async close() {
     log('closing...');
-    await Promise.all(Array.from(this._feeds.values()).map((feed) => feed.close()));
+    await Promise.all(
+      Array.from(this._feeds.values()).map(async (feed) => {
+        await feed.close();
+        assert(feed.closed);
+        // TODO(burdon): Hypercore may be leaking a promise: stack:
+        //  FeedFactory.createFeed => createCrypto.sign => Feed._append =>
+        //  https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L1525
+        //  Uncaught Error: Closed [random-access-storage/index.js:181:38]
+        await sleep(100);
+      })
+    );
+
     this._feeds.clear();
     log('closed');
   }
