@@ -27,10 +27,12 @@ export class Agent {
     assert(!this._client);
     this._client = new Client({ config: this._config, services: fromHost(this._config) });
     await this._client.initialize();
+    await this._client.halo.createProfile();
   }
 
   async destroy() {
     assert(this._client);
+    await this.stop();
     await this._client.destroy();
     this._client = undefined;
   }
