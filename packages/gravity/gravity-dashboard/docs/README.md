@@ -21,10 +21,10 @@ subgraph gravity [gravity]
   click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
 end
 
-subgraph gem [gem]
-  style gem fill:#ebf1fa,stroke:#333
+subgraph experimental [experimental]
+  style experimental fill:#ecfaeb,stroke:#333
   dxos/gem-core("@dxos/gem-core"):::def
-  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+  click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
 end
 
 %% Links
@@ -36,4 +36,4 @@ dxos/gravity-dashboard --> dxos/gem-core
 
 | Module | Direct |
 |---|---|
-| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-core`](../../../experimental/gem-core/docs/README.md) | &check; |

@@ -14,7 +14,7 @@ export class ProjectProcessor {
   private readonly _project: Project;
 
   constructor(private readonly _baseDir: string, private readonly _projectMap: ProjectMap, packageName: string) {
-    const subDir = this._projectMap.getProjectByPackage(packageName)?.subdir;
+    const subDir = this._projectMap.getProjectByPackage(packageName)?.subDir;
     const projectDir = path.join(this._baseDir, subDir!);
 
     // https://ts-morph.com/details/index

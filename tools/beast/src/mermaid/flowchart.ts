@@ -4,6 +4,8 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { Diagram } from './diagram';
+
 // TODO(burdon): Make types relevant to ERD, etc.
 
 type Style = {
@@ -44,13 +46,13 @@ const ROOT_SUBGRAPH_ID = '_root_';
  */
 class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
-  private readonly _subgraphs = new Set<SubgraphBuilder>();
+  private readonly _subGraphs = new Set<SubgraphBuilder>();
 
   constructor(readonly id: string, readonly label?: string, readonly style?: string) {}
 
   addSubgraph({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
-    this._subgraphs.add(subgraph);
+    this._subGraphs.add(subgraph);
     return subgraph;
   }
 
@@ -77,7 +79,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
       // Recursively render subgraphs.
       section(
-        Array.from(this._subgraphs.values())
+        Array.from(this._subGraphs.values())
           .map((subgraph) => ['', subgraph.build(indent + 1)].flat())
           .flat()
       )
@@ -106,10 +108,9 @@ export const FlowchartDefaultOptions: FlowchartOptions = {
 
 /**
  * Mermaid Flowchart builder.
- * https://mermaid.live
- * https://mermaid-js.github.io/mermaid/#/README
+ * https://mermaid-js.github.io/mermaid/#/flowchart
  */
-export class Flowchart implements SubgraphBuilder {
+export class Flowchart implements Diagram, SubgraphBuilder {
   private readonly _classDefs = new Set<Style>();
   private readonly _root: SubgraphBuilder = new SubgraphImpl(ROOT_SUBGRAPH_ID);
   private readonly _links = new Set<Link>();

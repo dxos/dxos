@@ -14,6 +14,7 @@ import {
 //
 
 export type WorkspaceJson = {
+  readonly baseDir: string;
   readonly projects: { [idx: string]: string };
 };
 
@@ -22,6 +23,11 @@ export type PackageJson = {
   readonly description: string;
   readonly version: string;
   readonly dependencies: { [idx: string]: string };
+  readonly beast?: {
+    classDiagram?: {
+      root: string;
+    };
+  };
 };
 
 //
@@ -31,7 +37,7 @@ export type PackageJson = {
 export type Project = {
   // Potential clash with ts-morph.
   readonly name: string;
-  readonly subdir: string;
+  readonly subDir: string;
   readonly package: PackageJson; // TODO(burdon): Change to Package.
   readonly dependencies: Set<Project>;
   readonly descendents: Set<string>; // Includes modules that are not workspace projects.

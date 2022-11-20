@@ -39,7 +39,6 @@ type ClientServicesHostParams = {
 export class ClientServicesHost implements ClientServicesProvider {
   private readonly _serviceContext: ServiceContext;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
-  private _xxx = 1;
 
   constructor({
     config,

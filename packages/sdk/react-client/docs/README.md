@@ -29,14 +29,20 @@ end
 
 subgraph common [common]
   style common fill:#faebee,stroke:#333
+  dxos/context("@dxos/context"):::def
+  click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/hypercore("@dxos/hypercore"):::def
+  click dxos/hypercore "dxos/dxos/tree/main/packages/common/hypercore/docs"
   dxos/crypto("@dxos/crypto"):::def
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
-  dxos/feed-store("@dxos/feed-store"):::def
-  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
+  dxos/timeframe("@dxos/timeframe"):::def
+  click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
+  dxos/feed-store("@dxos/feed-store"):::def
+  click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
@@ -44,23 +50,15 @@ subgraph common [common]
     style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
-    dxos/util("@dxos/util"):::def
-    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
-    dxos/log("@dxos/log"):::def
-    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
-    dxos/testutils("@dxos/testutils"):::def
-    click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs"
   end
-end
-
-subgraph bots [bots]
-  style bots fill:#ebecfa,stroke:#333
-  dxos/bot-factory-client("@dxos/bot-factory-client"):::def
-  click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
 end
 
 subgraph core [core]
@@ -68,10 +66,16 @@ subgraph core [core]
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
+  subgraph halo [halo]
+    style halo fill:#f1ebfa,stroke:#333
+    dxos/credentials("@dxos/credentials"):::def
+    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+  end
+
   subgraph mesh [mesh]
     style mesh fill:#ebfaef,stroke:#333
-    dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
-    click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -86,18 +90,12 @@ subgraph core [core]
     click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
     dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
     click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
+    dxos/network-generator("@dxos/network-generator"):::def
+    click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
+    dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
+    click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
-  end
-
-  subgraph halo [halo]
-    style halo fill:#f1ebfa,stroke:#333
-    dxos/credentials("@dxos/credentials"):::def
-    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-    dxos/halo-protocol("@dxos/halo-protocol"):::def
-    click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
-    dxos/keyring("@dxos/keyring"):::def
-    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   end
 
   subgraph echo [echo]
@@ -108,33 +106,31 @@ subgraph core [core]
     click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
     dxos/object-model("@dxos/object-model"):::def
     click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+    dxos/text-model("@dxos/text-model"):::def
+    click dxos/text-model "dxos/dxos/tree/main/packages/core/echo/text-model/docs"
   end
 end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
-dxos/react-client --> dxos/bot-factory-client
-dxos/bot-factory-client --> dxos/protocol-plugin-rpc
-dxos/protocol-plugin-rpc --> dxos/mesh-protocol
-dxos/mesh-protocol --> dxos/codec-protobuf
-dxos/protocol-plugin-rpc --> dxos/messaging
-dxos/protocols --> dxos/codec-protobuf
-dxos/messaging --> dxos/rpc
-dxos/rpc --> dxos/protocols
+dxos/async --> dxos/context
 dxos/react-client --> dxos/client
 dxos/client --> dxos/client-services
 dxos/client-services --> dxos/config
 dxos/config --> dxos/protocols
-dxos/credentials --> dxos/crypto
+dxos/protocols --> dxos/hypercore
+dxos/hypercore --> dxos/codec-protobuf
+dxos/hypercore --> dxos/crypto
+dxos/hypercore --> dxos/random-access-storage
+dxos/protocols --> dxos/timeframe
 dxos/credentials --> dxos/feed-store
-dxos/credentials --> dxos/mesh-protocol
-dxos/credentials --> dxos/protocols
-dxos/client-services --> dxos/echo-db
-dxos/echo-db --> dxos/halo-protocol
-dxos/halo-protocol --> dxos/keyring
-dxos/keyring --> dxos/crypto
+dxos/feed-store --> dxos/hypercore
+dxos/credentials --> dxos/keyring
 dxos/keyring --> dxos/protocols
-dxos/keyring --> dxos/random-access-storage
+dxos/credentials --> dxos/mesh-protocol
+dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/messaging --> dxos/rpc
+dxos/rpc --> dxos/protocols
 dxos/model-factory --> dxos/feed-store
 dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
@@ -142,7 +138,6 @@ dxos/network-manager --> dxos/credentials
 dxos/network-manager --> dxos/messaging
 dxos/network-manager --> dxos/protocol-plugin-presence
 dxos/protocol-plugin-presence --> dxos/broadcast
-dxos/broadcast --> dxos/crypto
 dxos/broadcast --> dxos/protocols
 dxos/protocol-plugin-presence --> dxos/mesh-protocol
 dxos/echo-db --> dxos/object-model
@@ -150,7 +145,12 @@ dxos/object-model --> dxos/model-factory
 dxos/echo-db --> dxos/protocol-plugin-replicator
 dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
+dxos/protocol-plugin-replicator --> dxos/network-generator
 dxos/echo-db --> dxos/protocol-plugin-rpc
+dxos/protocol-plugin-rpc --> dxos/mesh-protocol
+dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/client-services --> dxos/text-model
+dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 dxos/react-client --> dxos/react-async
@@ -161,24 +161,25 @@ dxos/react-client --> dxos/react-async
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
-| [`@dxos/bot-factory-client`](../../../bots/bot-factory-client/docs/README.md) | &check; |
 | [`@dxos/broadcast`](../../../core/mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client`](../../client/docs/README.md) | &check; |
 | [`@dxos/client-services`](../../client-services/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/config`](../../config/docs/README.md) | &check; |
+| [`@dxos/context`](../../../common/context/docs/README.md) |  |
 | [`@dxos/credentials`](../../../core/halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../core/echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/halo-protocol`](../../../core/halo/halo-protocol/docs/README.md) |  |
+| [`@dxos/hypercore`](../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
-| [`@dxos/log`](../../../common/log/docs/README.md) |  |
+| [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../../core/mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../core/mesh/messaging/docs/README.md) | &check; |
 | [`@dxos/model-factory`](../../../core/echo/model-factory/docs/README.md) |  |
+| [`@dxos/network-generator`](../../../core/mesh/network-generator/docs/README.md) |  |
 | [`@dxos/network-manager`](../../../core/mesh/network-manager/docs/README.md) |  |
 | [`@dxos/object-model`](../../../core/echo/object-model/docs/README.md) |  |
 | [`@dxos/protocol-plugin-presence`](../../../core/mesh/protocol-plugin-presence/docs/README.md) |  |
@@ -189,5 +190,6 @@ dxos/react-client --> dxos/react-async
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) | &check; |
-| [`@dxos/testutils`](../../../common/testutils/docs/README.md) |  |
+| [`@dxos/text-model`](../../../core/echo/text-model/docs/README.md) |  |
+| [`@dxos/timeframe`](../../../common/timeframe/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

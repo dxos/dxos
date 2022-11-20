@@ -57,5 +57,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagram": {
+      "root": "src/packlets/services/service-host.ts"
+    }
   }
 }

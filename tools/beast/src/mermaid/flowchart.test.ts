@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { Flowchart } from './mermaid';
+import { Flowchart } from './flowchart';
 
 describe('Mermaid builder', function () {
   it('Flowchart', function () {
@@ -13,7 +13,6 @@ describe('Mermaid builder', function () {
     });
 
     flowchart.addClassDef('test', { fill: 'red' });
-
     flowchart
       .addSubgraph({
         id: 'G1',
@@ -36,9 +35,7 @@ describe('Mermaid builder', function () {
       .addNode({ id: 'C' });
 
     flowchart.addSubgraph({ id: 'G3' });
-
     flowchart.addNode({ id: 'D' });
-
     flowchart
       .addLink({ source: 'A', target: 'B' })
       .addLink({ source: 'B', target: 'C' })
@@ -52,7 +49,6 @@ describe('Mermaid builder', function () {
 
     const output = flowchart.render();
     expect(output).toBeTruthy();
-
     console.log(output);
   });
 });

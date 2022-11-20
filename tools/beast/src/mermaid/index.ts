@@ -2,4 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './mermaid';
+export * from './class-diagram';
+export * from './diagram';
+export * from './flowchart';

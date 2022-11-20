@@ -15,18 +15,14 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph sdk [sdk]
-  style sdk fill:#f9faeb,stroke:#333
+subgraph experimental [experimental]
+  style experimental fill:#ecfaeb,stroke:#333
   dxos/react-echo-graph("@dxos/react-echo-graph"):::root
-  click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs"
-end
-
-subgraph gem [gem]
-  style gem fill:#ebf1fa,stroke:#333
+  click dxos/react-echo-graph "dxos/dxos/tree/main/packages/experimental/react-echo-graph/docs"
   dxos/gem-core("@dxos/gem-core"):::def
-  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+  click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
   dxos/gem-spore("@dxos/gem-spore"):::def
-  click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
+  click dxos/gem-spore "dxos/dxos/tree/main/packages/experimental/gem-spore/docs"
 end
 
 %% Links
@@ -39,5 +35,5 @@ dxos/gem-spore --> dxos/gem-core
 
 | Module | Direct |
 |---|---|
-| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
-| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
+| [`@dxos/gem-core`](../../gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../gem-spore/docs/README.md) | &check; |

@@ -144,13 +144,15 @@ const main = () => {
           verbose,
           include
         }).init();
+
         const builder = new PackageDependencyBuilder(baseDir, processor, {
           verbose,
           exclude: exclude?.split(',')
         });
+
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
-            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+            console.log(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
           }
 
           builder.createDocs(project, outDir, baseUrl);

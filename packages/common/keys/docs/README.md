@@ -22,6 +22,8 @@ subgraph common [common]
     style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::root
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end
 
@@ -33,3 +35,4 @@ linkStyle default stroke:#333,stroke-width:1px
 
 | Module | Direct |
 |---|---|
+| [`@dxos/debug`](../../debug/docs/README.md) | &check; |
