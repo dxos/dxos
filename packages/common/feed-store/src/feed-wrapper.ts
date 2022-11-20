@@ -89,6 +89,7 @@ export class FeedWrapper<T extends {}> {
   get = this._binder.async(this._hypercore.get);
   __append = this._binder.async(this._hypercore.append);
   async append(data: any) {
+    // TODO(burdon): Intercept.
     log('>>', { err: new Error() });
     return await this.__append(data);
   }

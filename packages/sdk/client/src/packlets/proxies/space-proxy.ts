@@ -193,13 +193,19 @@ export class SpaceProxy implements Space {
     });
   }
 
-  async _setOpen(open: boolean) {
-    await this._clientServices.services.SpaceService.setSpaceState({
-      spaceKey: this.key,
-      open
-    });
+  get properties(): ObjectProperties {
+    return this._item!.model;
   }
 
+  get invitations() {
+    return this._invitations;
+  }
+
+  // TODO(burdon): Remove deprecated methods.
+
+  /**
+   * @deprecated
+   */
   async setActive(active: boolean) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
@@ -208,14 +214,6 @@ export class SpaceProxy implements Space {
     //   active_global,
     //   active_device
     // });
-  }
-
-  get properties(): ObjectProperties {
-    return this._item!.model;
-  }
-
-  get invitations() {
-    return this._invitations;
   }
 
   /**
@@ -286,6 +284,13 @@ export class SpaceProxy implements Space {
   createSnapshot(): Promise<SpaceSnapshot> {
     return todo();
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
+  }
+
+  async _setOpen(open: boolean) {
+    await this._clientServices.services.SpaceService.setSpaceState({
+      spaceKey: this.key,
+      open
+    });
   }
 
   /**
