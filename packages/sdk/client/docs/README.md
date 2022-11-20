@@ -2,6 +2,29 @@
 
 Core DXOS Client API.
 
+## Class Diagram
+
+```mermaid
+classDiagram
+
+class Client
+Config --o Client : _config
+ModelFactory --o Client : _modelFactory
+HaloProxy --o Client : _halo
+EchoProxy --o Client : _echo
+class Config
+class ModelFactory
+class HaloProxy
+EventSubscriptions --o HaloProxy : _subscriptions
+HaloInvitationsProxy --o HaloProxy : _invitationProxy
+class EventSubscriptions
+class HaloInvitationsProxy
+class EchoProxy
+SpaceInvitationsProxy --o EchoProxy : _invitationProxy
+EventSubscriptions --o EchoProxy : _subscriptions
+class SpaceInvitationsProxy
+```
+
 ## Dependency Graph
 
 ```mermaid

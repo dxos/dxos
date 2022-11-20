@@ -64,5 +64,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagram": {
+      "root": "src/packlets/client/client.ts"
+    }
   }
 }
