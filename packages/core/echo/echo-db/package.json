@@ -54,5 +54,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagram": {
+      "root": "src/packlets/database/database.ts"
+    }
   }
 }

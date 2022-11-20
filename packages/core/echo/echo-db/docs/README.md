@@ -2,6 +2,16 @@
 
 ECHO database.
 
+## Class Diagram
+
+```mermaid
+classDiagram
+
+class Database
+ItemManager --o Database : _itemManager
+class ItemManager
+```
+
 ## Dependency Graph
 
 ```mermaid
