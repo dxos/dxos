@@ -17,6 +17,7 @@ describe('Agent', function () {
     const config: ConfigProto = { version: 1 };
     const swarmKey = PublicKey.random();
 
+<<<<<<< HEAD
     {
       const agent = new Agent(config);
       await agent.initialize();
@@ -48,5 +49,13 @@ describe('Agent', function () {
       // TODO(burdon): Race condition after creating space: Error closed (random-access-storage).
       await agent.destroy();
     }
+=======
+    // TODO(burdon): Define actions/state machines.
+    //  (e.g., CreateSpace, CreateInvitation, AcceptInvitation, MutateSpace).
+    await agent.start();
+    expect(agent.started).to.be.true;
+    await agent.stop();
+    await agent.destroy();
+>>>>>>> 5bef75edae9cd4431bb4e154997ac29c815a469f
   });
 });
