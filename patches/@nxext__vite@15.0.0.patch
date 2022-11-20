@@ -11,3 +11,16 @@ index 929139232bf12d84b4b6e04523684efd012b5fa7..c4ca5dd47d90fcac3727a4799729e396
              const extensions = getFileExtensions(opts.extensions);
              resolver = createResolver(tsConfigBaseJson, extensions);
          },
+diff --git a/src/generators/library/library.js b/src/generators/library/library.js
+index 888cedf5c7a6f0cbd61016a022c37f68f6b5d6c2..a5d8d742ce4451c8c4730ba10ec8ec3865b15f42 100644
+--- a/src/generators/library/library.js
++++ b/src/generators/library/library.js
+@@ -95,7 +95,7 @@ function addProject(host, options) {
+     }, options.standaloneConfig);
+ }
+ function updateBaseTsConfig(host, options) {
+-    (0, devkit_1.updateJson)(host, 'tsconfig.base.json', (json) => {
++    (0, devkit_1.updateJson)(host, 'tsconfig.json', (json) => {
+         const c = json.compilerOptions;
+         c.paths = c.paths || {};
+         delete c.paths[options.name];
