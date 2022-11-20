@@ -9,10 +9,6 @@ Temporary bucket for misc functions, which should graduate into separate package
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
-
 %% Nodes
 
 subgraph common [common]

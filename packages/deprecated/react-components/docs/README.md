@@ -9,10 +9,6 @@ Low-level material components.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
-
 %% Nodes
 
 subgraph deprecated [deprecated]

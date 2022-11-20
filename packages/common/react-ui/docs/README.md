@@ -9,10 +9,6 @@ Vite plugin which configures a low-level design system for DXOS.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
-
 %% Nodes
 
 subgraph common [common]

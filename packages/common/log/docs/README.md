@@ -9,10 +9,6 @@ Logger
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
-
 %% Nodes
 
 subgraph common [common]

@@ -146,10 +146,11 @@ export class Flowchart implements Diagram, SubgraphBuilder {
     const section = (label: string, lines: string[]) => (lines.length ? ['', `%% ${label}`, ...lines] : undefined);
 
     const sections = [
-      section(
-        'Classes',
-        Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
-      ),
+      Flowchart.style &&
+        section(
+          'Classes',
+          Array.from(this._classDefs.values()).map((classDef) => Flowchart.renderClassDef(classDef))
+        ),
       section('Nodes', this._root.build()),
       section(
         'Links',

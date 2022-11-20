@@ -9,10 +9,6 @@ Standalone devtool app used to inspect DXOS client state
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
-
 %% Nodes
 
 subgraph devtools [devtools]
