@@ -13,8 +13,7 @@
   },
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/config": "workspace:*",

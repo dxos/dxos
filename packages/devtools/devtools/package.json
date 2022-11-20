@@ -9,9 +9,6 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

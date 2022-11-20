@@ -9,7 +9,6 @@
   "author": "DXOS.org",
   "scripts": {
     "book": "esbuild-server book",
-    "check": "true",
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha --require ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
