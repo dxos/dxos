@@ -3,7 +3,7 @@
 //
 
 import fs from 'fs';
-import minimatch from 'minimatch';
+import minimatch, { Minimatch } from 'minimatch';
 import path from 'path';
 
 import { PackageJson, Project, ProjectMap, WorkspaceJson } from '../types';
@@ -29,7 +29,16 @@ export class WorkspaceProcessor implements ProjectMap {
 
   getProjects(filter?: string): Project[] {
     const projects = array(this._projectsByPackage);
-    return filter ? projects.filter((p) => minimatch(p.name, filter)) : projects;
+    if (!filter) {
+      return projects;
+    }
+
+    const match = new Minimatch(filter, {});
+    return projects.filter((project) => {
+      const m = match.match(project.subDir);
+      // console.log('>>', filter, project.subDir, m, project.subDir.indexOf(filter));
+      return m;
+    });
   }
 
   getProjectByName(name: string): Project | undefined {

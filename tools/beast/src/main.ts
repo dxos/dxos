@@ -126,7 +126,7 @@ const main = () => {
       handler: ({
         verbose,
         baseDir,
-        pattern = '*',
+        pattern = 'packages/**',
         baseUrl,
         outDir,
         include,
