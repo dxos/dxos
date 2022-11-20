@@ -84,9 +84,8 @@ export class FeedStore<T extends {}> {
       Array.from(this._feeds.values()).map(async (feed) => {
         await feed.close();
         assert(feed.closed);
-        // TODO(burdon): Hypercore may be leaking a promise: stack:
-        //  FeedFactory.createFeed => createCrypto.sign => Feed._append =>
-        //  https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L1525
+        // TODO(burdon): SpaceProxy still being initialized.
+        //  SpaceProxy.initialize => Database.createItem => ... => FeedWrapper.append
         //  Uncaught Error: Closed [random-access-storage/index.js:181:38]
         await sleep(100);
       })
