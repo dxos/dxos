@@ -1,0 +1,5 @@
+formatter:
+  column: 80
+
+filter:
+  - beast:debug

@@ -8,8 +8,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
 
-import { PackageDependencyBuilder } from './package-dependency-builder';
-import { WorkspaceProcessor } from './workspace-processor';
+import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
 
 const main = () => {
   log.info('Started');

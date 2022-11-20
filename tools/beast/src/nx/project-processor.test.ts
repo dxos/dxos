@@ -7,7 +7,7 @@ import pick from 'lodash.pick';
 import path from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
-import { Flowchart } from './mermaid';
+import { Flowchart } from '../mermaid';
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
 

@@ -21,25 +21,25 @@ import { ServiceContext } from './service-context';
 import { ClientServicesProvider, ClientServices, clientServiceBundle } from './service-definitions';
 import { ServiceRegistry } from './service-registry';
 
-type ClientServicesHostParams = {
-  config: Config;
-  modelFactory?: ModelFactory;
-  networkManager: NetworkManager;
-};
-
 // TODO(burdon): Factor out to spaces.
 // TODO(burdon): Defaults (with TextModel).
 export const createDefaultModelFactory = () => {
   return new ModelFactory().registerModel(ObjectModel).registerModel(TextModel);
 };
 
+type ClientServicesHostParams = {
+  config: Config;
+  modelFactory?: ModelFactory;
+  networkManager: NetworkManager;
+};
+
 /**
  * Remote service implementation.
  */
-// TODO(burdon): Reconcile Host/Backend, etc.
 export class ClientServicesHost implements ClientServicesProvider {
   private readonly _serviceContext: ServiceContext;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
+  private _xxx = 1;
 
   constructor({
     config,
