@@ -2,5 +2,4 @@ formatter:
   column: 80
 
 filter:
-  - debug
   - gravity:debug

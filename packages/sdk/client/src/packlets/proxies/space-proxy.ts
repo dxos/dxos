@@ -261,8 +261,8 @@ export class SpaceProxy implements Space {
   async createInvitation(options?: InvitationsOptions) {
     return new Promise<InvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
-
       this._invitations.push(invitation);
+
       const unsubscribe = invitation.subscribe({
         onConnecting: () => {
           this.invitationsUpdate.emit(invitation);

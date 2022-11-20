@@ -23,6 +23,10 @@ export class Agent {
     return this._running;
   }
 
+  get client() {
+    return this._client;
+  }
+
   async initialize() {
     assert(!this._client);
     this._client = new Client({ config: this._config, services: fromHost(this._config) });
