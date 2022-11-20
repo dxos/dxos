@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/react-echo-graph("@dxos/react-echo-graph"):::root
   click dxos/react-echo-graph "dxos/dxos/tree/main/packages/experimental/react-echo-graph/docs"
   dxos/gem-core("@dxos/gem-core"):::def

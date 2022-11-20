@@ -16,13 +16,11 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph gravity [gravity]
-  style gravity fill:#faebeb,stroke:#333
   dxos/gravity-dashboard("@dxos/gravity-dashboard"):::root
   click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
 end
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/gem-core("@dxos/gem-core"):::def
   click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
 end

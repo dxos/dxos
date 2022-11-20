@@ -68,7 +68,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
     const sections = [
       // Current style.
-      this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
+      Flowchart.style && this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
 
       // Nodes.
       section(
@@ -188,6 +188,9 @@ export class Flowchart implements Diagram, SubgraphBuilder {
   // Renderers
   //
 
+  // TODO(burdon): Config.
+  static style = false;
+
   // https://mermaid-js.github.io/mermaid/#/directives
   static renderDirective(directive: string, properties: any): string {
     return `%%{ ${directive}: ${JSON.stringify(properties).replace(/"/g, "'")} }%%`;
@@ -200,6 +203,10 @@ export class Flowchart implements Diagram, SubgraphBuilder {
   }
 
   static renderStyle({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      return '';
+    }
+
     return `style ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
@@ -219,7 +226,7 @@ export class Flowchart implements Diagram, SubgraphBuilder {
 
     return [
       def,
-      node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
+      Flowchart.style && node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`

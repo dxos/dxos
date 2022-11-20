@@ -16,12 +16,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
-    style mesh fill:#ebfaef,stroke:#333
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::root
     click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
     dxos/rpc("@dxos/rpc"):::def
@@ -30,7 +28,6 @@ subgraph core [core]
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -45,7 +42,6 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/async("@dxos/async"):::def

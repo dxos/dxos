@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/feed-store("@dxos/feed-store"):::root
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/context("@dxos/context"):::def
@@ -31,7 +30,6 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def

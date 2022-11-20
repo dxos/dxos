@@ -16,16 +16,13 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/spyglass("@dxos/spyglass"):::root
   click dxos/spyglass "dxos/dxos/tree/main/packages/experimental/spyglass/docs"
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
     dxos/debug("@dxos/debug"):::def

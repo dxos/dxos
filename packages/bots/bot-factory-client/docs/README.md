@@ -16,13 +16,11 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph bots [bots]
-  style bots fill:#ebecfa,stroke:#333
   dxos/bot-factory-client("@dxos/bot-factory-client"):::root
   click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -37,7 +35,6 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -52,12 +49,10 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
-    style mesh fill:#ebfaef,stroke:#333
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def

@@ -16,12 +16,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::root
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def

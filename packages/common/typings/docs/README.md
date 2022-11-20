@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/typings("@dxos/typings"):::root
   click dxos/typings "dxos/dxos/tree/main/packages/common/typings/docs"
 end

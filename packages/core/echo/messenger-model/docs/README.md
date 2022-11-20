@@ -16,12 +16,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph echo [echo]
-    style echo fill:#ebf2fa,stroke:#333
     dxos/messenger-model("@dxos/messenger-model"):::root
     click dxos/messenger-model "dxos/dxos/tree/main/packages/core/echo/messenger-model/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -30,7 +28,6 @@ subgraph core [core]
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/context("@dxos/context"):::def
@@ -47,7 +44,6 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def

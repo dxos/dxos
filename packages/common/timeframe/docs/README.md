@@ -16,12 +16,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/timeframe("@dxos/timeframe"):::root
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
     dxos/debug("@dxos/debug"):::def

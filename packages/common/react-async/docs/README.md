@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/react-async("@dxos/react-async"):::root
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 end

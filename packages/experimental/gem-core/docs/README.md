@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/gem-core("@dxos/gem-core"):::root
   click dxos/gem-core "dxos/dxos/tree/main/packages/experimental/gem-core/docs"
 end

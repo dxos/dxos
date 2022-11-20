@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/react-client-testing("@dxos/react-client-testing"):::root
   click dxos/react-client-testing "dxos/dxos/tree/main/packages/experimental/react-client-testing/docs"
 end

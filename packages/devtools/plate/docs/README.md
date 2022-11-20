@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph devtools [devtools]
-  style devtools fill:#ebf8fa,stroke:#333
   dxos/plate("@dxos/plate"):::root
   click dxos/plate "dxos/dxos/tree/main/packages/devtools/plate/docs"
 end

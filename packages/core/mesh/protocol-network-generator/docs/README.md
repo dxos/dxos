@@ -16,10 +16,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
 
   subgraph mesh [mesh]
-    style mesh fill:#ebfaef,stroke:#333
     dxos/protocol-network-generator("@dxos/protocol-network-generator"):::root
     click dxos/protocol-network-generator "dxos/dxos/tree/main/packages/core/mesh/protocol-network-generator/docs"
     dxos/network-generator("@dxos/network-generator"):::def
@@ -28,12 +26,10 @@ subgraph core [core]
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/async("@dxos/async"):::def

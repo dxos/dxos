@@ -16,13 +16,11 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/react-ipfs("@dxos/react-ipfs"):::root
   click dxos/react-ipfs "dxos/dxos/tree/main/packages/experimental/react-ipfs/docs"
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#f9faeb,stroke:#333
   dxos/client("@dxos/client"):::def
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
@@ -34,7 +32,6 @@ subgraph sdk [sdk]
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -53,7 +50,6 @@ subgraph common [common]
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -68,12 +64,10 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph halo [halo]
-    style halo fill:#f1ebfa,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -81,7 +75,6 @@ subgraph core [core]
   end
 
   subgraph mesh [mesh]
-    style mesh fill:#ebfaef,stroke:#333
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -105,7 +98,6 @@ subgraph core [core]
   end
 
   subgraph echo [echo]
-    style echo fill:#ebf2fa,stroke:#333
     dxos/echo-db("@dxos/echo-db"):::def
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def

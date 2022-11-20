@@ -16,20 +16,17 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph deprecated [deprecated]
-  style deprecated fill:#ebeffa,stroke:#333
   dxos/react-components("@dxos/react-components"):::root
   click dxos/react-components "dxos/dxos/tree/main/packages/deprecated/react-components/docs"
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def

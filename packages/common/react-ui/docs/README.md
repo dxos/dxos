@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/react-ui("@dxos/react-ui"):::root
   click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
 end

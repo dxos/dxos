@@ -16,13 +16,11 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph gravity [gravity]
-  style gravity fill:#faebeb,stroke:#333
   dxos/gravity-orchestrator("@dxos/gravity-orchestrator"):::root
   click dxos/gravity-orchestrator "dxos/dxos/tree/main/packages/gravity/orchestrator/docs"
 end
 
 subgraph bots [bots]
-  style bots fill:#ebecfa,stroke:#333
   dxos/bot-factory-client("@dxos/bot-factory-client"):::def
   click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
   dxos/botkit("@dxos/botkit"):::def
@@ -30,7 +28,6 @@ subgraph bots [bots]
 end
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/context("@dxos/context"):::def
   click dxos/context "dxos/dxos/tree/main/packages/common/context/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -47,7 +44,6 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/log("@dxos/log"):::def
@@ -64,12 +60,10 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
-    style mesh fill:#ebfaef,stroke:#333
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
@@ -95,7 +89,6 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
-    style halo fill:#f1ebfa,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -103,7 +96,6 @@ subgraph core [core]
   end
 
   subgraph echo [echo]
-    style echo fill:#ebf2fa,stroke:#333
     dxos/echo-db("@dxos/echo-db"):::def
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -116,7 +108,6 @@ subgraph core [core]
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#f9faeb,stroke:#333
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
   dxos/client("@dxos/client"):::def
@@ -126,7 +117,6 @@ subgraph sdk [sdk]
 end
 
 subgraph experimental [experimental]
-  style experimental fill:#ecfaeb,stroke:#333
   dxos/registry-client("@dxos/registry-client"):::def
   click dxos/registry-client "dxos/dxos/tree/main/packages/experimental/registry-client/docs"
 end

@@ -16,7 +16,6 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
   dxos/sentry("@dxos/sentry"):::root
   click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
 end
