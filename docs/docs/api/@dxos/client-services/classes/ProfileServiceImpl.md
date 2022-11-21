@@ -1,42 +1,41 @@
 # Class `ProfileServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/deprecated/profile.ts:22`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L22)
+<sub>Declared in [packages/sdk/client-services/src/packlets/deprecated/profile.ts:22](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L22)</sub>
 
 
 Profile service implementation.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L25)
+### [constructor(context)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L25)
 
 
-Returns: [`ProfileServiceImpl`](/api/@dxos/client-services/classes/ProfileServiceImpl)
+Returns: <code>[ProfileServiceImpl](/api/@dxos/client-services/classes/ProfileServiceImpl)</code>
 
 Arguments: 
 
-`context`: [`ServiceContext`](/api/@dxos/client-services/classes/ServiceContext)
+`context`: <code>[ServiceContext](/api/@dxos/client-services/classes/ServiceContext)</code>
 
 ## Properties
 
-
 ## Methods
-### [`createProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L43)
+### [createProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L43)
 
 
-Returns: `Promise<Profile>`
-
-Arguments: 
-
-`request`: `CreateProfileRequest`
-### [`recoverProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L48)
-
-
-Returns: `Promise<Profile>`
+Returns: <code>Promise&lt;Profile&gt;</code>
 
 Arguments: 
 
-`request`: `RecoverProfileRequest`
-### [`subscribeProfile`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L27)
+`request`: <code>CreateProfileRequest</code>
+### [recoverProfile(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L48)
 
 
-Returns: `Stream<SubscribeProfileResponse>`
+Returns: <code>Promise&lt;Profile&gt;</code>
+
+Arguments: 
+
+`request`: <code>RecoverProfileRequest</code>
+### [subscribeProfile()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/profile.ts#L27)
+
+
+Returns: <code>Stream&lt;SubscribeProfileResponse&gt;</code>
 
 Arguments: none

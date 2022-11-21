@@ -4,38 +4,38 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`debug`]()
-Type: `string`
+### [debug]()
+Type: <code>string</code>
 
 Options:
   - (env) = "DEBUG"
   - proto3_optional = true
-### [`enableSnapshots`]()
-Type: `boolean`
+### [enableSnapshots]()
+Type: <code>boolean</code>
 
 Options:
   - proto3_optional = true
-### [`invitationExpiration`]()
-Type: `number`
+### [invitationExpiration]()
+Type: <code>number</code>
 
 Milliseconds
 
 Options:
   - proto3_optional = true
-### [`remoteSource`]()
-Type: `string`
+### [remoteSource]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`snapshotInterval`]()
-Type: `number`
+### [snapshotInterval]()
+Type: <code>number</code>
 
 Milliseconds
 
 Options:
   - proto3_optional = true
-### [`storage`]()
-Type: [`Storage`](/api/@dxos/config/interfaces/Storage)
+### [storage]()
+Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
 
 Options:
   - proto3_optional = true

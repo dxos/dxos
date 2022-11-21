@@ -6,7 +6,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "esnext",
+    "module": "ESNext",
     "outDir": "dist",
     "types": [
       "@vuepress/client/types",
@@ -15,6 +15,7 @@
   },
   "include": [
     "src",
+    "typings.d.ts",
     "vuepress.config.ts"
   ],
   "references": [
@@ -22,13 +23,16 @@
       "path": "../packages/common/telemetry"
     },
     {
-      "path": "../packages/devtools/plate"
-    },
-    {
       "path": "../packages/sdk/react-client"
     },
     {
-      "path": "../tools/typedoc-plugin-plate"
+      "path": "../tools/apidoc"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "allowJs": true
+    },
+    "esm": true
+  }
 }

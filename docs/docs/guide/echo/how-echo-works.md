@@ -1,5 +1,6 @@
 ---
-position: 10
-label: How ECHO Works
+order: 10
+title: How ECHO Works
 ---
+
 # How ECHO Works

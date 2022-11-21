@@ -4,16 +4,16 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`license`]()
-Type: `string`
+### [license]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`modules`]()
-Type: [`Module`](/api/@dxos/config/interfaces/Module)`[]`
-### [`repos`]()
-Type: [`Repo`](/api/@dxos/config/interfaces/Repo)`[]`age`]()
-Type: `string`
+### [modules]()
+Type: <code>[Module](/api/@dxos/config/interfaces/Module)[]</code>
+### [repos]()
+Type: <code>[Repo](/api/@dxos/config/interfaces/Repo)[]</code>ackage]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true

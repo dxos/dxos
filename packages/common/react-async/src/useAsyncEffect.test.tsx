@@ -21,7 +21,7 @@ const Test = () => {
   useAsyncEffect(async (isMounted) => {
     const value = await doAsync('DXOS');
     if (isMounted()) {
-      act(() => {
+      void act(() => {
         setValue(value);
       });
     }
@@ -43,7 +43,7 @@ describe('useAsyncEffect', function () {
   });
 
   it('gets async value.', async function () {
-    act(() => {
+    void act(() => {
       createRoot(rootContainer).render(<Test />);
     });
 

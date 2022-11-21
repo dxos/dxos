@@ -1,40 +1,33 @@
 # Class `IFrameRuntime`
-Declared in [`packages/sdk/client-services/dist/src/packlets/vault/iframe-runtime.d.ts:8`]()
+<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/iframe-runtime.d.ts:10]()</sub>
 
 
 Manages the client connection to the shared worker.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(options)]()
 
 
-Returns: [`IFrameRuntime`](/api/@dxos/client/classes/IFrameRuntime)
+Returns: <code>[IFrameRuntime](/api/@dxos/client/classes/IFrameRuntime)</code>
 
 Arguments: 
 
-`__namedParameters`: `IframeRuntimeParams`
+`options`: <code>IframeRuntimeParams</code>
 
 ## Properties
 
-
 ## Methods
-### [`close`]()
+### [close()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`open`]()
+### [open(origin)]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`origin`: `string`
-### [`start`]()
-
-
-Returns: `void`
-
-Arguments: none
+`origin`: <code>string</code>

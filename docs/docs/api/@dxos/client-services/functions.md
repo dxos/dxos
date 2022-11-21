@@ -2,115 +2,115 @@
 title: Functions
 ---
 # Functions
-### [`createDefaultModelFactory`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L32)
+### [createDefaultModelFactory()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/services/service-host.ts#L32)
 
 
-Returns: `ModelFactory`
+Returns: <code>ModelFactory</code>
 
 Arguments: none
-### [`createHaloAuthProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/authenticator.ts#L12)
+### [createHaloAuthProvider(signer)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/authenticator.ts#L12)
 
 
-Returns: `AuthProvider`
-
-Arguments: 
-
-`signer`: `CredentialSigner`
-### [`createHaloAuthVerifier`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/authenticator.ts#L26)
-
-
-Returns: `AuthVerifier`
+Returns: <code>AuthProvider</code>
 
 Arguments: 
 
-`getDeviceSet`: `function`
-### [`createStorageObjects`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/storage/storage.ts#L19)
+`signer`: <code>CredentialSigner</code>
+### [createHaloAuthVerifier(getDeviceSet)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/identity/authenticator.ts#L26)
 
 
-Returns: `object`
-
-Arguments: 
-
-`config`: `Storage`
-### [`getNetworkPeers`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L74)
-
-
-Returns: `GetNetworkPeersResponse`
+Returns: <code>AuthVerifier</code>
 
 Arguments: 
 
-`__namedParameters`: `object`
+`getDeviceSet`: <code>function</code>
+### [createStorageObjects(config)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/storage/storage.ts#L19)
 
-`request`: `GetNetworkPeersRequest`
-### [`invitationObservable`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L103)
+
+Returns: <code>object</code>
+
+Arguments: 
+
+`config`: <code>Storage</code>
+### [getNetworkPeers(options, request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L74)
+
+
+Returns: <code>GetNetworkPeersResponse</code>
+
+Arguments: 
+
+`options`: <code>object</code>
+
+`request`: <code>GetNetworkPeersRequest</code>
+### [invitationObservable(observable)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L103)
 
 
 Util to wrap observable with promise.
 
-Returns: `Promise<Invitation>`
+Returns: <code>Promise&lt;Invitation&gt;</code>
 
 Arguments: 
 
-`observable`: `Observable<`[`InvitationEvents`](/api/@dxos/client-services/interfaces/InvitationEvents)`>`
-### [`subscribeToFeedBlocks`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/feeds.ts#L54)
+`observable`: <code>Observable&lt;[InvitationEvents](/api/@dxos/client-services/interfaces/InvitationEvents)&gt;</code>
+### [subscribeToFeedBlocks(options, options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/feeds.ts#L54)
 
 
-Returns: `Stream<SubscribeToFeedBlocksResponse>`
-
-Arguments: 
-
-`__namedParameters`: `object`
-
-`__namedParameters`: `SubscribeToFeedBlocksRequest`
-### [`subscribeToFeeds`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/feeds.ts#L18)
-
-
-Returns: `Stream<SubscribeToFeedsResponse>`
+Returns: <code>Stream&lt;SubscribeToFeedBlocksResponse&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: `object`
+`options`: <code>object</code>
 
-`__namedParameters`: `SubscribeToFeedsRequest`
-### [`subscribeToNetworkStatus`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L18)
-
-
-Returns: `Stream<SubscribeToSignalStatusResponse>`
-
-Arguments: 
-
-`__namedParameters`: `object`
-### [`subscribeToNetworkTopics`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L43)
+`options`: <code>SubscribeToFeedBlocksRequest</code>
+### [subscribeToFeeds(options, options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/feeds.ts#L18)
 
 
-Returns: `Stream<SubscribeToNetworkTopicsResponse>`
+Returns: <code>Stream&lt;SubscribeToFeedsResponse&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: `object`
-### [`subscribeToSignalTrace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L33)
+`options`: <code>object</code>
+
+`options`: <code>SubscribeToFeedsRequest</code>
+### [subscribeToNetworkStatus(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L18)
 
 
-Returns: `Stream<SubscribeToSignalTraceResponse>`
-
-Arguments: 
-
-`__namedParameters`: `object`
-### [`subscribeToSpaces`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/spaces.ts#L12)
-
-
-Returns: `Stream<SubscribeToSpacesResponse>`
+Returns: <code>Stream&lt;SubscribeToSignalStatusResponse&gt;</code>
 
 Arguments: 
 
-`context`: [`ServiceContext`](/api/@dxos/client-services/classes/ServiceContext)
-
-`__namedParameters`: `SubscribeToSpacesRequest`
-### [`subscribeToSwarmInfo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L62)
+`options`: <code>object</code>
+### [subscribeToNetworkTopics(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L43)
 
 
-Returns: `Stream<SubscribeToSwarmInfoResponse>`
+Returns: <code>Stream&lt;SubscribeToNetworkTopicsResponse&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: `object`
+`options`: <code>object</code>
+### [subscribeToSignalTrace(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L33)
+
+
+Returns: <code>Stream&lt;SubscribeToSignalTraceResponse&gt;</code>
+
+Arguments: 
+
+`options`: <code>object</code>
+### [subscribeToSpaces(context, options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/spaces.ts#L12)
+
+
+Returns: <code>Stream&lt;SubscribeToSpacesResponse&gt;</code>
+
+Arguments: 
+
+`context`: <code>[ServiceContext](/api/@dxos/client-services/classes/ServiceContext)</code>
+
+`options`: <code>SubscribeToSpacesRequest</code>
+### [subscribeToSwarmInfo(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/network.ts#L62)
+
+
+Returns: <code>Stream&lt;SubscribeToSwarmInfoResponse&gt;</code>
+
+Arguments: 
+
+`options`: <code>object</code>
