@@ -4,10 +4,10 @@
 
 import expect from 'expect';
 import pick from 'lodash.pick';
-import path from 'path';
+import { join } from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
-import { Flowchart } from './mermaid';
+import { Flowchart } from '../mermaid';
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
 
@@ -19,12 +19,12 @@ import { WorkspaceProcessor } from './workspace-processor';
 //  Also track `new` construction of decorated objects.
 //  https://www.typescriptlang.org/docs/handbook/decorators.html
 
-const baseDir = path.join(__dirname, '../../..');
+const baseDir = join(process.cwd());
 
 describe('Code analysis', function () {
   it('Sanity', function () {
-    const processor = new WorkspaceProcessor(baseDir).init();
-    const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
+    const workspace = new WorkspaceProcessor(baseDir).init();
+    const builder = new ProjectProcessor(workspace, '@dxos/client');
 
     const root = builder.getClass('Client');
     console.log(root?.getName());
@@ -32,8 +32,8 @@ describe('Code analysis', function () {
   });
 
   it('Create graph', function () {
-    const processor = new WorkspaceProcessor(baseDir).init();
-    const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
+    const workspace = new WorkspaceProcessor(baseDir).init();
+    const builder = new ProjectProcessor(workspace, '@dxos/client');
 
     const process = (flowchart: Flowchart, root: ClassDeclaration, depth: number) => {
       const struct = root.getStructure();

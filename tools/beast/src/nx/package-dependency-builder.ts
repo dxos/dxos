@@ -4,11 +4,13 @@
 
 import ColorHash from 'color-hash';
 import fs from 'fs';
-import path from 'path';
+import path, { join } from 'path';
 
-import { Flowchart, SubgraphBuilder } from './mermaid';
-import { Project, ProjectMap } from './types';
-import { array } from './util';
+import { ClassDiagram, Flowchart, SubgraphBuilder } from '../mermaid';
+import { WorkspaceProcessor } from '../nx';
+import { ClassProcessor } from '../ts';
+import { Project } from '../types';
+import { array } from '../util';
 
 const colorHash = new ColorHash({
   lightness: 0.95,
@@ -27,30 +29,44 @@ type PackageDependencyBuilderOptions = {
  */
 export class PackageDependencyBuilder {
   constructor(
-    private readonly _baseDir: string,
-    private readonly _projectMap: ProjectMap,
+    private readonly _workspace: WorkspaceProcessor,
     private readonly _options: PackageDependencyBuilderOptions
   ) {}
 
   /**
    * Create docs page.
    */
-  // TODO(burdon): Use remark lib (see ridoculous).
   createDocs(project: Project, docsDir: string, baseUrl: string) {
-    const baseDir = path.join(this._baseDir, project.subdir, docsDir);
+    const baseDir = path.join(this._workspace.baseDir, project.subDir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
 
+    // Build README.
+    // TODO(burdon): Use remark lib (see ridoculous).
+    const sections: string[] = [];
+
+    // TODO(burdon): Support multiple diagrams.
+    const classDiagrams = this.generateClassDiagrams(project);
+    if (classDiagrams) {
+      sections.push('\n## Class Diagrams\n', ...classDiagrams);
+    }
+
+    const packageGraph = this.generatePackageGraph(project, docsDir, baseUrl);
+    if (packageGraph) {
+      sections.push('\n## Dependency Graph\n', packageGraph);
+    }
+
+    const dependenciesTable = this.generateDependenciesTable(project, docsDir);
+    if (dependenciesTable) {
+      sections.push('\n## Dependencies\n', this.generateDependenciesTable(project, docsDir));
+    }
+
+    // prettier-ignore
     const content = [
       `# ${project.package.name}\n`,
       project.package.description,
-      '',
-      '## Dependency Graph\n',
-      this.generatePackageGraph(project, docsDir, baseUrl),
-      '',
-      '## Dependencies\n',
-      this.generateDependenciesTable(project, docsDir),
+      ...sections,
       ''
     ];
 
@@ -58,13 +74,40 @@ export class PackageDependencyBuilder {
   }
 
   /**
+   * Generate class diagram.
+   */
+  private generateClassDiagrams(project: Project) {
+    return project.package.beast?.classDiagrams?.map((config) => {
+      const { root, dependencies, glob = 'src/**/*.ts' } = config;
+      const sources = [join(this._workspace.baseDir, project.subDir, glob)];
+
+      dependencies?.forEach((name) => {
+        const project = this._workspace.getProjectByPackage(name);
+        if (project) {
+          sources.push(join(this._workspace.baseDir, project.subDir, glob));
+        }
+      });
+
+      const classProcessor = new ClassProcessor(sources);
+      classProcessor.processFile(join(this._workspace.baseDir, project.subDir, root));
+
+      const classDiagram = new ClassDiagram();
+      classProcessor.getClasses().forEach((def) => {
+        classDiagram.addClass(def);
+      });
+
+      return classDiagram.render();
+    });
+  }
+
+  /**
    * Create table.
    */
   private generateDependenciesTable(project: Project, docsDir: string) {
-    const dir = project.subdir;
+    const dir = project.subDir;
     const createLink = (p: Project) => {
       const name = p.package.name;
-      const link = path.join('../', path.relative(dir, p.subdir), docsDir, 'README.md');
+      const link = path.join('../', path.relative(dir, p.subDir), docsDir, 'README.md');
       return `[\`${name}\`](${link})`;
     };
 
@@ -73,7 +116,7 @@ export class PackageDependencyBuilder {
     array(project.descendents)
       .sort()
       .forEach((packageName) => {
-        const sub = this._projectMap.getProjectByPackage(packageName)!;
+        const sub = this._workspace.getProjectByPackage(packageName)!;
         const link = createLink(sub);
         content.push(
           `| ${link} | ${
@@ -181,7 +224,7 @@ export class PackageDependencyBuilder {
 
         array(visited).forEach((project) => {
           // Skip top-level "packages" directory.
-          const [, ...parts] = project.subdir.split('/');
+          const [, ...parts] = project.subDir.split('/');
           parts.pop();
           if (this._options.exclude?.includes(project.package.name)) {
             parts.push('_');
@@ -219,7 +262,7 @@ export class PackageDependencyBuilder {
                 id: safeName(packageName),
                 label: packageName,
                 className: packageName === project.package.name ? 'root' : 'def',
-                href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
+                href: path.join(baseUrl, this._workspace.getProjectByPackage(packageName)!.subDir, docsDir)
               });
             });
 

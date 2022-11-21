@@ -12,6 +12,7 @@ import { SystemService } from '@dxos/protocols/proto/dxos/client';
 export class SystemServiceImpl implements SystemService {
   constructor(private readonly _config: Config) {}
 
+  // TODO(burdon): Remove.
   async initSession() {
     // Ok.
   }
@@ -20,6 +21,7 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
+  // TODO(burdon): Reset ServiceContext
   async reset(request: any) {
     todo();
   }
