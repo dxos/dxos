@@ -24,12 +24,6 @@ export interface LogMetadata {
 
   // Useful for pre-processor hook debugging.
   bugcheck?: string;
-
-  /**
-   * A callback that will invoke the provided function with provided arguments.
-   * Useful in the browser to force a `console.log` call to have a certain stack-trace.
-   */
-  callSite?: (fn: Function, args: any[]) => void;
 }
 
 /**

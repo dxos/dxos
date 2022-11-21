@@ -160,8 +160,7 @@ class TraceInjector extends Visitor {
         value: ID_BUGCHECK_STRING,
         optional: false,
         span: ZERO_SPAN
-      },
-      // TODO(dmaretskyi): callSite.
+      }
     });
   }
 }
