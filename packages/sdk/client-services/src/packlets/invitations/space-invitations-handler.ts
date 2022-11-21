@@ -206,7 +206,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
         // 1. Send request.
         log('sending admission request', { guest: this._signingContext.deviceKey });
-        const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
+        const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission({});
 
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).

@@ -38,6 +38,10 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey;
 };
 
+export type CreateIdentityOptions = {
+  displayName?: string;
+}
+
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {
   readonly stateUpdate = new Event();
@@ -74,7 +78,7 @@ export class IdentityManager {
     await this._identity?.close();
   }
 
-  async createIdentity() {
+  async createIdentity({ displayName }: CreateIdentityOptions = {}) {
     assert(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -109,9 +113,15 @@ export class IdentityManager {
           AdmittedFeed.Designation.DATA
         ),
 
-        // Device authorization (writes device chain).
-        await generator.createDeviceAuthorization(identityRecord.deviceKey)
       ];
+      
+      if(displayName) {
+        credentials.push(await generator.createProfileCredential({ displayName }));
+      }
+      
+      // Device authorization (writes device chain).
+      // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
+      credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey))
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({

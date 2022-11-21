@@ -5,7 +5,7 @@
 import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
-import { AdmittedFeed, Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, Credential, ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, CredentialSigner } from './credential-factory';
 
@@ -116,6 +116,18 @@ export class CredentialGenerator {
         identityKey: this._identityKey,
         deviceKey: this._deviceKey,
         designation
+      }
+    });
+  }
+
+  async createProfileCredential(profile: ProfileDocument): Promise<Credential> {
+    return createCredential({
+      signer: this._signer,
+      issuer: this._identityKey,
+      subject: this._identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityProfile',
+        profile
       }
     });
   }

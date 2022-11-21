@@ -21,7 +21,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
-import { IdentityManager } from '../identity';
+import { CreateIdentityOptions, IdentityManager } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 
 /**
@@ -92,8 +92,8 @@ export class ServiceContext {
     log('closed');
   }
 
-  async createIdentity() {
-    const identity = await this.identityManager.createIdentity();
+  async createIdentity(params: CreateIdentityOptions = {}) {
+    const identity = await this.identityManager.createIdentity(params);
     this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;

@@ -11,7 +11,7 @@ import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
 
 describe('Halo', function () {
-  it('creates a profile', async function () {
+  it.only('creates a profile', async function () {
     const testBuilder = new TestClientBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -22,6 +22,7 @@ describe('Halo', function () {
     expect(client.halo.profile).exist;
 
     expect(await client.halo.queryDevices()).to.have.lengthOf(1);
+    expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 
   it.skip('device invitations', async function () {

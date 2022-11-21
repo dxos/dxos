@@ -4,6 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
+import { log } from '@dxos/log';
 import {
   CreateProfileRequest,
   Profile,
@@ -26,12 +27,12 @@ export class ProfileServiceImpl implements ProfileService {
 
   subscribeProfile(): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
-      const emitNext = () =>
-        next({
+      const emitNext = () => next({
           profile: this.context.identityManager.identity
             ? {
                 identityKey: this.context.identityManager.identity.identityKey,
-                deviceKey: this.context.identityManager.identity.deviceKey
+                deviceKey: this.context.identityManager.identity.deviceKey,
+                displayName: this.context.identityManager.identity.profileDocument?.displayName
               }
             : undefined
         });
@@ -42,10 +43,13 @@ export class ProfileServiceImpl implements ProfileService {
   }
 
   async createProfile(request: CreateProfileRequest): Promise<Profile> {
-    await this.context.createIdentity();
+    await this.context.createIdentity({
+      displayName: request.displayName
+    });
     return {
       identityKey: this.context.identityManager.identity!.identityKey,
-      deviceKey: this.context.identityManager.identity!.deviceKey
+      deviceKey: this.context.identityManager.identity!.deviceKey,
+      displayName: this.context.identityManager.identity!.profileDocument?.displayName
     };
   }
 
