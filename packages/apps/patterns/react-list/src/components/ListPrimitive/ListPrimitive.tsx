@@ -5,7 +5,7 @@
 import cx from 'classnames';
 import throttle from 'lodash.throttle';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useMemo, useState } from 'react';
+import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
 
 import {
   defaultFocus,
@@ -79,7 +79,8 @@ export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<Com
   updateItem: (item: ListItemProps) => void;
   updateOrder: (id: ListItemId, delta: number) => void;
   deleteItem: (id: ListItemId) => void;
-  isFirst?: boolean;
+  createItem: () => void;
+  orderIndex: number;
   isLast?: boolean;
   autoFocus?: boolean;
 }
@@ -93,8 +94,9 @@ const ListItemPrimitive = ({
   annotations: propsAnnotations,
   updateItem,
   deleteItem,
+  createItem,
   updateOrder,
-  isFirst,
+  orderIndex,
   isLast,
   autoFocus
 }: ListItemPrimitiveComponentProps) => {
@@ -148,6 +150,19 @@ const ListItemPrimitive = ({
     deleteItem(id);
   }, [deleteItem, id]);
 
+  const onKeyUp = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        if (isLast) {
+          createItem();
+        } else {
+          (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
+        }
+      }
+    },
+    [orderIndex, isLast]
+  );
+
   return (
     <li
       key={id}
@@ -191,6 +206,8 @@ const ListItemPrimitive = ({
           borders='border-0'
           rounding='rounded'
           autoFocus={autoFocus}
+          onKeyUp={onKeyUp}
+          data-orderindex={orderIndex}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -262,7 +279,6 @@ export const ListPrimitive = ({
   const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '', rejectTextUpdatesWhenFocused);
   const propagateTitle = useCallback(
     (nextValue: string) => {
-      console.log('[list title propagate]');
       return onAction?.({ listId, next: { title: nextValue } });
     },
     [onAction]
@@ -306,7 +322,6 @@ export const ListPrimitive = ({
 
   const propagateItem = useCallback(
     ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
-      console.log('[propagate list item]', next);
       return onAction?.({ listId, listItemId: id, next });
     },
     [listId, onAction]
@@ -324,7 +339,6 @@ export const ListPrimitive = ({
 
   const updateOrder = useCallback(
     (id: ListItemId, delta: number) => {
-      const order = Object.keys(items);
       const fromIndex = order.indexOf(id);
       const toIndex = fromIndex + delta;
       const nextOrder = Array.from(order);
@@ -413,9 +427,9 @@ export const ListPrimitive = ({
           return (
             <ListItemPrimitive
               key={`${itemsSession}__${listItemId}`}
-              isFirst={index === 0}
+              orderIndex={index}
               isLast={index === order.length - 1}
-              {...{ id: listItemId, updateItem, updateOrder, deleteItem }}
+              {...{ id: listItemId, updateItem, updateOrder, deleteItem, createItem }}
               {...items[listItemId]}
               autoFocus={listItemId === autoFocus}
             />
