@@ -3,7 +3,6 @@
 //
 
 import React, { useState } from 'react';
-import { HashRouter } from 'react-router-dom';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
@@ -21,7 +20,7 @@ import { sections } from './sections';
 import { theme } from './theme';
 
 export const Telemetry = () => {
-  useTelemetry({ namespace: 'devtools' });
+  useTelemetry({ namespace: 'devtools', router: false });
   return null;
 };
 
@@ -72,17 +71,15 @@ export const App = () => {
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
           <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
-            <HashRouter>
-              <Telemetry />
+            <Telemetry />
 
-              <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-                <PanelsContainer sections={sections} />
-              </Box>
+            <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              <PanelsContainer sections={sections} />
+            </Box>
 
-              <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
-                <Controls onConfigChange={onConfigChange} />
-              </Box>
-            </HashRouter>
+            <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
+              <Controls onConfigChange={onConfigChange} />
+            </Box>
           </ClientContext.Provider>
         </FullScreen>
       </ThemeProvider>
