@@ -298,7 +298,7 @@ export class SpaceProxy implements Space {
     this._key = space.publicKey;
     this._isOpen = space.isOpen;
     this._isActive = space.isActive;
-    log('update', { space})
+    log('update', { space });
     this.stateUpdate.emit();
   }
 }

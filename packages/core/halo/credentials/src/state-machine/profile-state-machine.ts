@@ -13,18 +13,18 @@ import { getCredentialAssertion } from '../credentials';
  */
 export class ProfileStateMachine {
   // TODO(burdon): Return values via getter.
-  public profile?: ProfileDocument
+  public profile?: ProfileDocument;
 
   // prettier-ignore
   constructor(
-    private readonly _identityKey: PublicKey,
+    private readonly _identityKey: PublicKey
   ) {}
 
   async process(credential: Credential) {
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.IdentityProfile': {
-        if(!credential.issuer.equals(this._identityKey) || !credential.subject.id.equals(this._identityKey)) {
+        if (!credential.issuer.equals(this._identityKey) || !credential.subject.id.equals(this._identityKey)) {
           log.warn('Invalid profile credential', { expectedIdentity: this._identityKey, credential });
           return;
         }
@@ -33,7 +33,7 @@ export class ProfileStateMachine {
         this.profile = assertion.profile;
         log('updated profile', {
           identityKey: this._identityKey,
-          profile: this.profile,
+          profile: this.profile
         });
         break;
       }

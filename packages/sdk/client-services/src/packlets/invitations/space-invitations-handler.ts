@@ -14,6 +14,7 @@ import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } 
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
@@ -25,7 +26,6 @@ import {
   ON_CLOSE_DELAY
 } from './invitations';
 import { AbstractInvitationsHandler, InvitationsOptions } from './invitations-handler';
-import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
  * Handles the life-cycle of Space invitations between peers.
@@ -215,7 +215,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         // 1. Send request.
         log('sending admission request', { guest: this._signingContext.deviceKey });
         const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission({
-          profile: this._signingContext.profile,
+          profile: this._signingContext.profile
         });
 
         // 2. Get authentication code.

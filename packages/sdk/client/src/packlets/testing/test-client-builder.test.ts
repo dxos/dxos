@@ -242,8 +242,8 @@ describe('Client services', function () {
 
     const space2 = await trigger.wait();
 
-    for(const space of [space1, space2]) {
-      await space.queryMembers().waitFor(members => members.length === 2)
+    for (const space of [space1, space2]) {
+      await space.queryMembers().waitFor((members) => members.length === 2);
       expect(space.queryMembers().value).to.deep.equal([
         {
           identityKey: client1.halo.profile!.identityKey,
@@ -259,7 +259,7 @@ describe('Client services', function () {
             displayName: 'Peer 2'
           }
         }
-      ])
+      ]);
     }
 
     await syncItems(space1, space2);

@@ -40,7 +40,7 @@ export type JoinIdentityParams = {
 
 export type CreateIdentityOptions = {
   displayName?: string;
-}
+};
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {
@@ -111,17 +111,16 @@ export class IdentityManager {
           identityRecord.haloSpace.spaceKey,
           identityRecord.haloSpace.writeDataFeedKey,
           AdmittedFeed.Designation.DATA
-        ),
-
+        )
       ];
-      
-      if(displayName) {
+
+      if (displayName) {
         credentials.push(await generator.createProfileCredential({ displayName }));
       }
-      
+
       // Device authorization (writes device chain).
       // NOTE: This credential is written last. This is a hack to make sure that display name is set before identity is "ready".
-      credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey))
+      credentials.push(await generator.createDeviceAuthorization(identityRecord.deviceKey));
 
       for (const credential of credentials) {
         await identity.controlPipeline.writer.write({

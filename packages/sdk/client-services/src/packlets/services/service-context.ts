@@ -108,7 +108,7 @@ export class ServiceContext {
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
-      profile: identity.profileDocument,
+      profile: identity.profileDocument
     };
 
     // Create in constructor (avoid all of these private variables).

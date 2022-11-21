@@ -4,7 +4,6 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
-import { log } from '@dxos/log';
 import {
   CreateProfileRequest,
   Profile,
@@ -27,7 +26,8 @@ export class ProfileServiceImpl implements ProfileService {
 
   subscribeProfile(): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
-      const emitNext = () => next({
+      const emitNext = () =>
+        next({
           profile: this.context.identityManager.identity
             ? {
                 identityKey: this.context.identityManager.identity.identityKey,
