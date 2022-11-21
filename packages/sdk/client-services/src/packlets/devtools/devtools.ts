@@ -39,7 +39,13 @@ import {
 
 import { ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
-import { subscribeToNetworkStatus, subscribeToSignalTrace, subscribeToSwarmInfo } from './network';
+import {
+  getNetworkPeers,
+  subscribeToNetworkStatus,
+  subscribeToNetworkTopics,
+  subscribeToSignalTrace,
+  subscribeToSwarmInfo
+} from './network';
 import { subscribeToSpaces } from './spaces';
 
 export class DevtoolsHostEvents {
@@ -120,12 +126,12 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     throw new Error();
   }
 
-  getNetworkPeers(request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
-    throw new Error();
+  async getNetworkPeers(request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
+    return getNetworkPeers({ networkManager: this.params.context.networkManager }, request);
   }
 
   subscribeToNetworkTopics(request: void): Stream<SubscribeToNetworkTopicsResponse> {
-    throw new Error();
+    return subscribeToNetworkTopics({ networkManager: this.params.context.networkManager });
   }
 
   subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {

@@ -54,9 +54,11 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: N
         close(err);
       }
     };
-    networkManager.topicsUpdated.on(update);
 
+    const unsubscribe = networkManager.topicsUpdated.on(update);
     update();
+
+    return unsubscribe;
   });
 
 export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: NetworkManager }) =>
