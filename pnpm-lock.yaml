@@ -38,7 +38,6 @@ importers:
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/toolbox': workspace:*
-      '@dxos/typedoc-plugin-plate': workspace:*
       '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
@@ -134,7 +133,6 @@ importers:
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
       '@dxos/toolbox': link:tools/executors/toolbox
-      '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
       '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.9.3
@@ -213,21 +211,20 @@ importers:
 
   docs:
     specifiers:
-      '@dxos/plate': workspace:*
+      '@dxos/apidoc': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/telemetry': workspace:*
-      '@dxos/typedoc-plugin-plate': workspace:*
       '@types/eslint': ^8.4.6
-      '@types/markdown-it': ^12.2.3
       '@types/markdown-it-container': ^2.0.5
+      '@types/node': ^18.11.9
       '@types/prettier': ^2.7.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
+      '@types/recursive-readdir': ^2.2.0
       '@vuepress/bundler-vite': ^2.0.0-beta.53
       '@vuepress/client': ^2.0.0-beta.53
       '@vuepress/plugin-register-components': ^2.0.0-beta.53
       '@vuepress/plugin-search': ^2.0.0-beta.53
-      '@vuepress/plugin-toc': ^2.0.0-beta.7
       change-case: ^4.1.2
       eslint: ^8.24.0
       front-matter: ^4.0.2
@@ -237,6 +234,7 @@ importers:
       prettier: ^2.7.1
       react: ^18.2.0
       react-dom: ^18.2.0
+      ts-node: 10.9.1
       typedoc: 0.23.15
       typescript: ^4.8.4
       vue: ^3.2.45
@@ -244,21 +242,20 @@ importers:
       vuepress: ^2.0.0-beta.53
       vuepress-theme-hope: ^2.0.0-beta.122
     devDependencies:
-      '@dxos/plate': link:../packages/devtools/plate
+      '@dxos/apidoc': link:../tools/apidoc
       '@dxos/react-client': link:../packages/sdk/react-client
       '@dxos/telemetry': link:../packages/common/telemetry
-      '@dxos/typedoc-plugin-plate': link:../tools/typedoc-plugin-plate
       '@types/eslint': 8.4.10
-      '@types/markdown-it': 12.2.3
       '@types/markdown-it-container': 2.0.5
+      '@types/node': 18.11.9
       '@types/prettier': 2.7.1
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
-      '@vuepress/bundler-vite': 2.0.0-beta.53
+      '@types/recursive-readdir': 2.2.1
+      '@vuepress/bundler-vite': 2.0.0-beta.53_ts-node@10.9.1
       '@vuepress/client': 2.0.0-beta.53
       '@vuepress/plugin-register-components': 2.0.0-beta.53
       '@vuepress/plugin-search': 2.0.0-beta.53
-      '@vuepress/plugin-toc': 2.0.0-beta.7
       change-case: 4.1.2
       eslint: 8.28.0
       front-matter: 4.0.2
@@ -268,11 +265,12 @@ importers:
       prettier: 2.7.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3
       typescript: 4.9.3
       vue: 3.2.45
       vue-router: 4.1.6_vue@3.2.45
-      vuepress: 2.0.0-beta.53_54nmke4n2vj3tdp5cd33kvtiom
+      vuepress: 2.0.0-beta.53_lhhsf6pmijd7r5cwjxqbh7fo24
       vuepress-theme-hope: 2.0.0-beta.124
 
   packages/apps/composer-app:
@@ -3689,6 +3687,54 @@ importers:
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
+  tools/apidoc:
+    specifiers:
+      '@dxos/plate': workspace:*
+      '@linkedmd/markdown-it-directive': ^1.0.1
+      '@types/lodash.memoize': ^4.1.7
+      '@types/markdown-it': ^12.2.3
+      '@types/minimatch': ^5.1.2
+      '@types/recursive-readdir': ^2.2.0
+      lodash.memoize: ^4.1.2
+      markdown-it: ^13.0.1
+      minimatch: ^5.1.0
+      prettier: ^2.7.1
+      recursive-readdir: ^2.2.2
+      remark-code-import: ^1.1.1
+      remark-directive: ^2.0.1
+      remark-frontmatter: ^4.0.1
+      remark-parse: ^10.0.1
+      remark-prettier: ^2.0.0
+      remark-stringify: ^10.0.2
+      typedoc: 0.23.15
+      typescript: ^4.8.4
+      unified: ^10.1.2
+      unist-util-visit: ^4.1.0
+      vfile: ^5.3.6
+    devDependencies:
+      '@dxos/plate': link:../../packages/devtools/plate
+      '@linkedmd/markdown-it-directive': 1.0.1
+      '@types/lodash.memoize': 4.1.7
+      '@types/markdown-it': 12.2.3
+      '@types/minimatch': 5.1.2
+      '@types/recursive-readdir': 2.2.1
+      lodash.memoize: 4.1.2
+      markdown-it: 13.0.1
+      minimatch: 5.1.0
+      prettier: 2.7.1
+      recursive-readdir: 2.2.3
+      remark-code-import: 1.1.1
+      remark-directive: 2.0.1
+      remark-frontmatter: 4.0.1
+      remark-parse: 10.0.1
+      remark-prettier: 2.0.0_prettier@2.7.1
+      remark-stringify: 10.0.2
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3
+      typescript: 4.9.3
+      unified: 10.1.2
+      unist-util-visit: 4.1.1
+      vfile: 5.3.6
+
   tools/beast:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3985,26 +4031,6 @@ importers:
       mocha: 8.4.0
       ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       typescript: 4.9.3
-
-  tools/typedoc-plugin-plate:
-    specifiers:
-      '@dxos/plate': workspace:*
-      '@types/node': ^18.11.9
-      '@vuepress/client': ^2.0.0-beta.53
-      change-case: ^4.1.2
-      typedoc: 0.23.15
-      typescript: ^4.8.4
-      vue: ^3.2.45
-      vuepress: ^2.0.0-beta.53
-    devDependencies:
-      '@dxos/plate': link:../../packages/devtools/plate
-      '@types/node': 18.11.9
-      '@vuepress/client': 2.0.0-beta.53
-      change-case: 4.1.2
-      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3
-      typescript: 4.9.3
-      vue: 3.2.45
-      vuepress: 2.0.0-beta.53_54nmke4n2vj3tdp5cd33kvtiom
 
   tools/x:
     specifiers:
@@ -6719,6 +6745,12 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  /@linkedmd/markdown-it-directive/1.0.1:
+    resolution: {integrity: sha512-57sL3dCymeVXCC1rmQhccayi9I/kBt0KQEnaIR3c3zGYc0uxJtdvoZk21md1d6uIHswO1IEQkBrClBwe4d/+Ew==}
+    dependencies:
+      markdown-it: 10.0.0
+    dev: true
 
   /@lit/reactive-element/1.4.2:
     resolution: {integrity: sha512-VMOxsWh/QDwrxPsgkSQnuZ+8mfNy1OTjzzUdLBvvZtpahwPTHTeVZ51RZRqO4xfKVrR+btIPA8D01IL3xeG66w==}
@@ -12616,6 +12648,12 @@ packages:
       '@types/lodash': 4.14.189
     dev: true
 
+  /@types/lodash.memoize/4.1.7:
+    resolution: {integrity: sha512-lGN7WeO4vO6sICVpf041Q7BX/9k1Y24Zo3FY0aUezr1QlKznpjzsDk3T3wvH8ofYzoK0QupN9TWcFAFZlyPwQQ==}
+    dependencies:
+      '@types/lodash': 4.14.189
+    dev: true
+
   /@types/lodash.merge/4.6.7:
     resolution: {integrity: sha512-OwxUJ9E50gw3LnAefSHJPHaBLGEKmQBQ7CZe/xflHkyy/wH2zVyEIAKReHvVrrn7zKdF58p16We9kMfh7v0RRQ==}
     dependencies:
@@ -13355,7 +13393,7 @@ packages:
     resolution: {integrity: sha512-Ewzq5Yhimg7pSztDV+RH1UDKBzmtqieXQlpTVm2AwraoRL/Rks96mvd8Vgi7Lj+h+TH8dv7mXD3FRZR3TUvbSg==}
     dev: true
 
-  /@vuepress/bundler-vite/2.0.0-beta.53:
+  /@vuepress/bundler-vite/2.0.0-beta.53_ts-node@10.9.1:
     resolution: {integrity: sha512-zkqkV+EnoTi7cTRi6xjb0SRg0GzRYwceJu80/6q7Bd+h+VktqhapcHAZ8QaIsq8OxCXbg3sms/A9kg3UxBnRqg==}
     dependencies:
       '@vitejs/plugin-vue': 3.2.0_vite@3.1.8+vue@3.2.45
@@ -13366,7 +13404,7 @@ packages:
       autoprefixer: 10.4.13_postcss@8.4.19
       connect-history-api-fallback: 2.0.0
       postcss: 8.4.19
-      postcss-load-config: 4.0.1_postcss@8.4.19
+      postcss-load-config: 4.0.1_v776zzvn44o7tpgzieipaairwm
       rollup: 2.79.1
       vite: 3.1.8
       vue: 3.2.45
@@ -13404,14 +13442,6 @@ packages:
       vue-router: 4.1.6_vue@3.2.45
     dev: true
 
-  /@vuepress/client/2.0.0-beta.7:
-    resolution: {integrity: sha512-XD78Qahk0wM2JQmVdknQHpn9RQb8YtopeisEBnBpoLdk3Ya7TErPUClGGEbNGRylOaq6Va4ikudwmjl1dtTT9Q==}
-    dependencies:
-      '@vuepress/shared': 2.0.0-beta.7
-      vue: 3.2.45
-      vue-router: 4.1.6_vue@3.2.45
-    dev: true
-
   /@vuepress/core/2.0.0-beta.53:
     resolution: {integrity: sha512-s642hM+PpiNphLm/KZvva45OYKX6hWRh2Y+C92TDGzCMxiONI8ZxGLqXRCw5bKw5NGh91s+P4sf3iaY+JxL1Ig==}
     dependencies:
@@ -13420,19 +13450,6 @@ packages:
       '@vuepress/shared': 2.0.0-beta.53
       '@vuepress/utils': 2.0.0-beta.53
       vue: 3.2.45
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@vuepress/core/2.0.0-beta.7:
-    resolution: {integrity: sha512-4zKo3j6NLlyUc06yCEYCqfMxNYvZZOAZQS4yl+vaAwClbWnY2azU6mz0l6GqM4aFOLS+kUjexMtGFwh6e8jYYg==}
-    dependencies:
-      '@vuepress/client': 2.0.0-beta.7
-      '@vuepress/markdown': 2.0.0-beta.7
-      '@vuepress/shared': 2.0.0-beta.7
-      '@vuepress/utils': 2.0.0-beta.7
-      gray-matter: 4.0.3
-      toml: 3.0.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13456,19 +13473,6 @@ packages:
       markdown-it-anchor: 8.6.5_ea7kj7wzjkld5jo2noyjqxi764
       markdown-it-emoji: 2.0.2
       mdurl: 1.0.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@vuepress/markdown/2.0.0-beta.7:
-    resolution: {integrity: sha512-1kphJO/t8TX0tEFc2hlelGlfeQl9EtSQi9fd2sYRtf2eI8fqURluFilS1X+Va4kFjHb/yW8ZGaD9uxycA0nZXA==}
-    dependencies:
-      '@types/markdown-it': 12.2.3
-      '@vuepress/shared': 2.0.0-beta.7
-      '@vuepress/utils': 2.0.0-beta.7
-      markdown-it: 12.3.2
-      markdown-it-anchor: 7.1.0_markdown-it@12.3.2
-      markdown-it-emoji: 2.0.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13615,27 +13619,10 @@ packages:
       - supports-color
     dev: true
 
-  /@vuepress/plugin-toc/2.0.0-beta.7:
-    resolution: {integrity: sha512-0aZu8t0Cp30QmSH4CK5PpWip7rY4/4lo0NEUQLJurRL9Ti3bsSLZTO6o0E1VPGlDJr/2JPJZmpFzmowfXAL89Q==}
-    dependencies:
-      '@vuepress/client': 2.0.0-beta.7
-      '@vuepress/core': 2.0.0-beta.7
-      '@vuepress/utils': 2.0.0-beta.7
-      vue: 3.2.45
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /@vuepress/shared/2.0.0-beta.53:
     resolution: {integrity: sha512-B0qWorGxC3ruSHdZcJW24XtEDEU3L3uPr0xzTeKVfHjOM4b9hN83YzBtW4n/WPnmk1RXVE9266Ulh9ZL5okGOw==}
     dependencies:
       '@mdit-vue/types': 0.11.0
-      '@vue/shared': 3.2.45
-    dev: true
-
-  /@vuepress/shared/2.0.0-beta.7:
-    resolution: {integrity: sha512-yqaWY5DtVBE7+r4FSWLxxs8u0cznAs/NH4QabadfJ+463KbcSJ2zBgLg7YcRlUdTKqlxsTymyB4Hfpva79GUIw==}
-    dependencies:
       '@vue/shared': 3.2.45
     dev: true
 
@@ -13683,24 +13670,6 @@ packages:
       globby: 13.1.2
       hash-sum: 2.0.0
       ora: 6.1.2
-      upath: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /@vuepress/utils/2.0.0-beta.7:
-    resolution: {integrity: sha512-/Mu7Thv2iHqNz7hMTUlduFohk8i9bdRy4UIV5f30g5NjWMBDbxkigbbN64IX8rd+Bv+SdfWpY4M0oABAS2B+vA==}
-    dependencies:
-      '@types/debug': 4.1.7
-      '@types/fs-extra': 9.0.13
-      '@types/hash-sum': 1.0.0
-      '@vuepress/shared': 2.0.0-beta.7
-      chalk: 4.1.2
-      debug: 4.3.4
-      fs-extra: 9.1.0
-      globby: 11.1.0
-      hash-sum: 2.0.0
-      ora: 5.4.1
       upath: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -18531,8 +18500,8 @@ packages:
     dependencies:
       ansi-colors: 4.1.3
 
-  /entities/2.1.0:
-    resolution: {integrity: sha512-hCx1oky9PFrJ611mf0ifBLBRW8lUUVRlFolb5gWRfIELabBlbp9xZvrqZLZAs+NxFnbfQoeGd8wDkygjg7U85w==}
+  /entities/2.0.3:
+    resolution: {integrity: sha512-MyoZ0jgnLvB2X3Lg5HqpFmn1kybDiIfEQmKzTb5apr51Rb+T3KdmMiqa70T+bhGnyv7bQ6WMj2QMHpGMmlrUYQ==}
     dev: true
 
   /entities/2.2.0:
@@ -20136,7 +20105,6 @@ packages:
 
   /fast-diff/1.2.0:
     resolution: {integrity: sha512-xJuoT5+L99XlZ8twedaRf6Ax2TgQVxvgZOYoPKqZufmJib0tL2tegPBOZb1pVNgIhlqDlA0eO0c3wBvQcmzx4w==}
-    dev: false
 
   /fast-fifo/1.1.0:
     resolution: {integrity: sha512-Kl29QoNbNvn4nhDsLYjyIAaIqaJB6rBx5p3sL9VjaefJ+eMFBWVZiaoguaoZfzEKr5RhAti0UgM8703akGPJ6g==}
@@ -22920,6 +22888,7 @@ packages:
   /is-interactive/1.0.0:
     resolution: {integrity: sha512-2HvIEKRoqS62guEC+qBjpvRubdX910WCMuJTZ+I9yvqKU2/12eSL549HMwtabb4oupdj2sMP50k+XJfB/8JE6w==}
     engines: {node: '>=8'}
+    dev: false
 
   /is-interactive/2.0.0:
     resolution: {integrity: sha512-qP1vozQRI+BMOPcjFzrjXuQvdak2pHNUMZoeG2eRbiSqyvbEf/wQtEOTOX1guk6E3t36RkaqiSt8A/6YElNxLQ==}
@@ -23134,6 +23103,7 @@ packages:
   /is-unicode-supported/0.1.0:
     resolution: {integrity: sha512-knxG2q4UC3u8stRGyAVJCOdxFmv5DZiRcdlIaAQXAbSfJya+OhopNotLQrstBhququ4ZpuKbDc/8S6mgXgPFPw==}
     engines: {node: '>=10'}
+    dev: false
 
   /is-unicode-supported/1.3.0:
     resolution: {integrity: sha512-43r2mRvz+8JRIKnWJ+3j8JtjRKZ6GmjzfaE/qiBJnikNnYv/6bagRJ1kUhNk8R5EX/GkobD+r+sfxCPJsiKBLQ==}
@@ -24967,8 +24937,8 @@ packages:
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  /linkify-it/3.0.3:
-    resolution: {integrity: sha512-ynTsyrFSdE5oZ/O9GEf00kPngmOfVwazR5GKDq6EYfhlpFug3J2zybX56a2PRRpc9P+FuSoGNAwjlbDs9jJBPQ==}
+  /linkify-it/2.2.0:
+    resolution: {integrity: sha512-GnAl/knGn+i1U/wjBz3akz2stz+HrHLsxMwHQGofCDfPvlf+gDKN58UtfmUquTY4/MXeE2x7k19KQmeoZi94Iw==}
     dependencies:
       uc.micro: 1.0.6
     dev: true
@@ -25215,6 +25185,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
+    dev: false
 
   /log-symbols/5.1.0:
     resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
@@ -25453,14 +25424,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /markdown-it-anchor/7.1.0_markdown-it@12.3.2:
-    resolution: {integrity: sha512-loQggrwsIkkP7TOrESvmYkV2ikbQNNKhHcWyqC7/C2CmfHl1tkUizJJU8C5aGgg7J6oXVQJx17gk7i47tNn/lQ==}
-    peerDependencies:
-      markdown-it: '*'
-    dependencies:
-      markdown-it: 12.3.2
-    dev: true
-
   /markdown-it-anchor/8.6.5_ea7kj7wzjkld5jo2noyjqxi764:
     resolution: {integrity: sha512-PI1qEHHkTNWT+X6Ip9w+paonfIQ+QZP9sCeMYi47oqhH+EsW8CrJ8J7CzV19QVOj6il8ATGbK2nTECj22ZHGvQ==}
     peerDependencies:
@@ -25485,13 +25448,13 @@ packages:
       highlight.js: 11.6.0
     dev: true
 
-  /markdown-it/12.3.2:
-    resolution: {integrity: sha512-TchMembfxfNVpHkbtriWltGWc+m3xszaRD0CZup7GFFhzIgQqxIfn3eGj1yZpfuflzPvfkt611B2Q/Bsk1YnGg==}
+  /markdown-it/10.0.0:
+    resolution: {integrity: sha512-YWOP1j7UbDNz+TumYP1kpwnP0aEa711cJjrAQrzd0UXlbJfc5aAq0F/PZHjiioqDC1NKgvIMX+o+9Bk7yuM2dg==}
     hasBin: true
     dependencies:
-      argparse: 2.0.1
-      entities: 2.1.0
-      linkify-it: 3.0.3
+      argparse: 1.0.10
+      entities: 2.0.3
+      linkify-it: 2.2.0
       mdurl: 1.0.1
       uc.micro: 1.0.6
     dev: true
@@ -25601,6 +25564,17 @@ packages:
       '@types/unist': 2.0.6
       unist-util-visit: 4.1.1
 
+  /mdast-util-directive/2.2.2:
+    resolution: {integrity: sha512-6BuW4dFkCbTIf9peVMXdtWylI6ovMidVjnHyJpx7IDhwk3GosIgUs87Rl3x6T6kP5iAf1qIE3lMn6CgWw40d+g==}
+    dependencies:
+      '@types/mdast': 3.0.10
+      '@types/unist': 2.0.6
+      mdast-util-to-markdown: 1.3.0
+      parse-entities: 4.0.0
+      stringify-entities: 4.0.3
+      unist-util-visit-parents: 5.1.1
+    dev: true
+
   /mdast-util-find-and-replace/2.2.1:
     resolution: {integrity: sha512-SobxkQXFAdd4b5WmEakmkVoh18icjQRxGy5OWTCzgsLRm1Fu/KCtwD1HIQSsmq5ZRjVH0Ehwg6/Fn3xIUk+nKw==}
     dependencies:
@@ -25626,6 +25600,12 @@ packages:
       uvu: 0.5.6
     transitivePeerDependencies:
       - supports-color
+
+  /mdast-util-frontmatter/1.0.0:
+    resolution: {integrity: sha512-7itKvp0arEVNpCktOET/eLFAYaZ+0cNjVtFtIPxgQ5tV+3i+D4SDDTjTzPWl44LT59PC+xdx+glNTawBdF98Mw==}
+    dependencies:
+      micromark-extension-frontmatter: 1.0.0
+    dev: true
 
   /mdast-util-gfm-autolink-literal/1.0.2:
     resolution: {integrity: sha512-FzopkOd4xTTBeGXhXSBU0OCDDh5lUj2rd+HQqG92Ld+jL4lpUfgX2AT2OHAVP9aEeDKp7G92fuooSZcYJA3cRg==}
@@ -25981,6 +25961,26 @@ packages:
       micromark-util-symbol: 1.0.1
       micromark-util-types: 1.0.2
       uvu: 0.5.6
+
+  /micromark-extension-directive/2.1.2:
+    resolution: {integrity: sha512-brqLEztt14/73snVXYsq9Cv6ng67O+Sy69ZuM0s8ZhN/GFI9rnyXyj0Y0DaCwi648vCImv7/U1H5TzR7wMv5jw==}
+    dependencies:
+      micromark-factory-space: 1.0.0
+      micromark-factory-whitespace: 1.0.0
+      micromark-util-character: 1.1.0
+      micromark-util-symbol: 1.0.1
+      micromark-util-types: 1.0.2
+      parse-entities: 4.0.0
+      uvu: 0.5.6
+    dev: true
+
+  /micromark-extension-frontmatter/1.0.0:
+    resolution: {integrity: sha512-EXjmRnupoX6yYuUJSQhrQ9ggK0iQtQlpi6xeJzVD5xscyAI+giqco5fdymayZhJMbIFecjnE2yz85S9NzIgQpg==}
+    dependencies:
+      fault: 2.0.1
+      micromark-util-character: 1.1.0
+      micromark-util-symbol: 1.0.1
+    dev: true
 
   /micromark-extension-gfm-autolink-literal/1.0.3:
     resolution: {integrity: sha512-i3dmvU0htawfWED8aHMMAzAVp/F0Z+0bPh3YrbTPPL1v4YAlCZpy5rBO5p0LPYiZo0zFVkoYh7vDU7yQSiCMjg==}
@@ -27653,6 +27653,7 @@ packages:
       log-symbols: 4.1.0
       strip-ansi: 6.0.1
       wcwidth: 1.0.1
+    dev: false
 
   /ora/6.1.2:
     resolution: {integrity: sha512-EJQ3NiP5Xo94wJXIzAyOtSb0QEIAUu7m8t6UZ9krbz0vAJqr92JpcK/lEXg91q6B9pEGqrykkd2EQplnifDSBw==}
@@ -28387,7 +28388,7 @@ packages:
       yaml: 1.10.2
     dev: false
 
-  /postcss-load-config/4.0.1_postcss@8.4.19:
+  /postcss-load-config/4.0.1_v776zzvn44o7tpgzieipaairwm:
     resolution: {integrity: sha512-vEJIc8RdiBRu3oRAI0ymerOn+7rPuMvRXslTvZUKZonDHFIczxztIyJ1urxM1x9JXEikvpWWTUUqal5j/8QgvA==}
     engines: {node: '>= 14'}
     peerDependencies:
@@ -28401,6 +28402,7 @@ packages:
     dependencies:
       lilconfig: 2.0.6
       postcss: 8.4.19
+      ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       yaml: 2.1.3
     dev: true
 
@@ -28570,7 +28572,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       fast-diff: 1.2.0
-    dev: false
 
   /prettier/2.3.0:
     resolution: {integrity: sha512-kXtO4s0Lz/DW/IJ9QdWhAf7/NmPWQXkFr/r/WkR3vyI+0v8amTDxiaQSLzs8NBlytfLWX/7uQUMIW677yLKl4w==}
@@ -29657,7 +29658,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       minimatch: 3.1.2
-    dev: false
 
   /redent/1.0.0:
     resolution: {integrity: sha512-qtW5hKzGQZqKoh6JNSD+4lfitfPKGz42e6QwiRmPM5mmKtR0N41AbJRYu0xJi7nhOJ4WDgRkKvAk6tw4WIwR4g==}
@@ -29794,6 +29794,24 @@ packages:
       es6-error: 4.1.1
     dev: true
 
+  /remark-code-import/1.1.1:
+    resolution: {integrity: sha512-qQfvI5ihBIzb7J+Zc+6ZisuJBbylQAXMktD4BC5hHlOmjFLLd9Y4HhTVcUnasF3fV/3MoeTX1GA3dmnWCzDlpA==}
+    engines: {node: '>= 12'}
+    dependencies:
+      strip-indent: 4.0.0
+      to-gatsby-remark-plugin: 0.1.0
+      unist-util-visit: 4.1.1
+    dev: true
+
+  /remark-directive/2.0.1:
+    resolution: {integrity: sha512-oosbsUAkU/qmUE78anLaJePnPis4ihsE7Agp0T/oqTzvTea8pOiaYEtfInU/+xMOVTS9PN5AhGOiaIVe4GD8gw==}
+    dependencies:
+      '@types/mdast': 3.0.10
+      mdast-util-directive: 2.2.2
+      micromark-extension-directive: 2.1.2
+      unified: 10.1.2
+    dev: true
+
   /remark-external-links/8.0.0:
     resolution: {integrity: sha512-5vPSX0kHoSsqtdftSHhIYofVINC8qmp0nctkeU9YoJwV3YfiBRiI6cbFRJ0oI/1F9xS+bopXG0m2KS8VFscuKA==}
     dependencies:
@@ -29806,6 +29824,15 @@ packages:
 
   /remark-footnotes/2.0.0:
     resolution: {integrity: sha512-3Clt8ZMH75Ayjp9q4CorNeyjwIxHFcTkaektplKGl2A1jNGEUey8cKL0ZC5vJwfcD5GFGsNLImLG/NGzWIzoMQ==}
+    dev: true
+
+  /remark-frontmatter/4.0.1:
+    resolution: {integrity: sha512-38fJrB0KnmD3E33a5jZC/5+gGAC2WKNiPw1/fdXJvijBlhA7RCsvJklrYJakS0HedninvaCYW8lQGf9C918GfA==}
+    dependencies:
+      '@types/mdast': 3.0.10
+      mdast-util-frontmatter: 1.0.0
+      micromark-extension-frontmatter: 1.0.0
+      unified: 10.1.2
     dev: true
 
   /remark-gfm/3.0.1:
@@ -29903,6 +29930,20 @@ packages:
       xtend: 4.0.2
     dev: true
 
+  /remark-prettier/2.0.0_prettier@2.7.1:
+    resolution: {integrity: sha512-66v8KoqnBivhcfjtahHmHU7qkQuVPq/JIsqTW8suqI8mVuHCpxjapoY2XIBLjC5J7suYICVtNRBXRwrRX7a1hA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      prettier: ^2
+    dependencies:
+      '@types/mdast': 3.0.10
+      '@types/prettier': 2.7.1
+      mdast-util-to-markdown: 1.3.0
+      prettier: 2.7.1
+      prettier-linter-helpers: 1.0.0
+      vfile-location: 4.0.1
+    dev: true
+
   /remark-rehype/10.1.0:
     resolution: {integrity: sha512-EFmR5zppdBp0WQeDVZ/b66CWJipB2q2VLNFMabzDSGR66Z2fQii83G5gTBbgGEnEEA0QRussvrFHxk1HWGJskw==}
     dependencies:
@@ -29931,7 +29972,6 @@ packages:
       '@types/mdast': 3.0.10
       mdast-util-to-markdown: 1.3.0
       unified: 10.1.2
-    dev: false
 
   /remark/14.0.2:
     resolution: {integrity: sha512-A3ARm2V4BgiRXaUo5K0dRvJ1lbogrbXnhkJRmD0yw092/Yl0kOCZt1k9ZeElEwkZsWGsMumz6qL5MfNJH9nOBA==}
@@ -31652,6 +31692,13 @@ packages:
       min-indent: 1.0.1
     dev: true
 
+  /strip-indent/4.0.0:
+    resolution: {integrity: sha512-mnVSV2l+Zv6BLpSD/8V87CW/y9EmmbYzGCIavsnsI6/nwn26DwffM/yztm30Z/I2DY9wdS3vXVCMnHDgZaVNoA==}
+    engines: {node: '>=12'}
+    dependencies:
+      min-indent: 1.0.1
+    dev: true
+
   /strip-json-comments/2.0.1:
     resolution: {integrity: sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==}
     engines: {node: '>=0.10.0'}
@@ -32322,6 +32369,12 @@ packages:
       vinyl: 1.2.0
     dev: true
 
+  /to-gatsby-remark-plugin/0.1.0:
+    resolution: {integrity: sha512-blmhJ/gIrytWnWLgPSRCkhCPeki6UBK2daa3k9mGahN7GjwHu8KrS7F70MvwlsG7IE794JLgwAdCbi4hU4faFQ==}
+    dependencies:
+      to-vfile: 6.1.0
+    dev: true
+
   /to-object-path/0.3.0:
     resolution: {integrity: sha512-9mWHdnGRuh3onocaHzukyvCZhzvr6tiflAy/JRFXcJX0TjgfWA9pk9t8CMbzmBE4Jfw58pXbkngtBtqYxzNEyg==}
     engines: {node: '>=0.10.0'}
@@ -32355,6 +32408,13 @@ packages:
       regex-not: 1.0.2
       safe-regex: 1.1.0
 
+  /to-vfile/6.1.0:
+    resolution: {integrity: sha512-BxX8EkCxOAZe+D/ToHdDsJcVI4HqQfmw0tCkp31zf3dNP/XWIAjU4CmeuSwsSoOzOTqHPOL0KUzyZqJplkD0Qw==}
+    dependencies:
+      is-buffer: 2.0.5
+      vfile: 4.2.1
+    dev: true
+
   /to-vfile/7.2.3:
     resolution: {integrity: sha512-QO0A9aE6Z/YkmQadJ0syxpmNXtcQiu0qAtCKYKD5cS3EfgfFTAXfgLX6AOaBrSfWSek5nfsMf3gBZ9KGVFcLuw==}
     dependencies:
@@ -32374,10 +32434,6 @@ packages:
   /toidentifier/1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
-    dev: true
-
-  /toml/3.0.0:
-    resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
     dev: true
 
   /tosource/1.0.0:
@@ -33997,14 +34053,14 @@ packages:
       - supports-color
     dev: true
 
-  /vuepress-vite/2.0.0-beta.53_54nmke4n2vj3tdp5cd33kvtiom:
+  /vuepress-vite/2.0.0-beta.53_lhhsf6pmijd7r5cwjxqbh7fo24:
     resolution: {integrity: sha512-kITVMM+LcV5mDQXQXAKgK0adAGMm7oyPls6HPTLM9gUvpSs2A19zfwf8zFoxIF9X+ANay4Tg87egtnJOcp8Wcg==}
     hasBin: true
     peerDependencies:
       '@vuepress/client': ^2.0.0-beta.50
       vue: ^3.2.37
     dependencies:
-      '@vuepress/bundler-vite': 2.0.0-beta.53
+      '@vuepress/bundler-vite': 2.0.0-beta.53_ts-node@10.9.1
       '@vuepress/cli': 2.0.0-beta.53
       '@vuepress/client': 2.0.0-beta.53
       '@vuepress/core': 2.0.0-beta.53
@@ -34021,11 +34077,11 @@ packages:
       - ts-node
     dev: true
 
-  /vuepress/2.0.0-beta.53_54nmke4n2vj3tdp5cd33kvtiom:
+  /vuepress/2.0.0-beta.53_lhhsf6pmijd7r5cwjxqbh7fo24:
     resolution: {integrity: sha512-swnH25oCHAE0ZIXBAp4gaalIsrxLLn+mguekOybwLcTNQUgbcqf8EXwVxOgN663JzPuHcxRAJg3nN/swKsFifQ==}
     hasBin: true
     dependencies:
-      vuepress-vite: 2.0.0-beta.53_54nmke4n2vj3tdp5cd33kvtiom
+      vuepress-vite: 2.0.0-beta.53_lhhsf6pmijd7r5cwjxqbh7fo24
     transitivePeerDependencies:
       - '@vue/composition-api'
       - '@vuepress/client'

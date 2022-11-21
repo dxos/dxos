@@ -1,47 +1,47 @@
 # Class `TestClientBuilder`
-Declared in [`packages/sdk/client/src/packlets/testing/test-client-builder.ts:25`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L25)
+<sub>Declared in [packages/sdk/client/src/packlets/testing/test-client-builder.ts:25](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L25)</sub>
 
 
 
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L29)
+### [constructor(\[config\], _modelFactory, _signalManagerContext)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L29)
 
 
-Returns: [`TestClientBuilder`](/api/@dxos/client/classes/TestClientBuilder)
+Returns: <code>[TestClientBuilder](/api/@dxos/client/classes/TestClientBuilder)</code>
 
 Arguments: 
 
-`config`: `Config | Config`
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-`_modelFactory`: `ModelFactory`
+`_modelFactory`: <code>ModelFactory</code>
 
-`_signalManagerContext`: `MemorySignalManagerContext`
+`_signalManagerContext`: <code>MemorySignalManagerContext</code>
 
 ## Properties
-### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L37)
-Type: `Config`
-### [`networkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L44)
-Type: `NetworkManager`
+### [config](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L37)
+Type: <code>[Config](/api/@dxos/client/classes/Config)</code>
+### [networkManager](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L44)
+Type: <code>NetworkManager</code>
 
 Get network manager using local shared memory or remote signal manager.
 
 ## Methods
-### [`createClientServer`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L78)
+### [createClientServer(host)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L78)
 
 
 Create client/server.
 
-Returns: `[`[`Client`](/api/@dxos/client/classes/Client)`, ProtoRpcPeer<object>]`
+Returns: <code>[[Client](/api/@dxos/client/classes/Client), ProtoRpcPeer&lt;object&gt;]</code>
 
 Arguments: 
 
-`host`: [`ClientServicesHost`](/api/@dxos/client/classes/ClientServicesHost)
-### [`createClientServicesHost`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L67)
+`host`: <code>[ClientServicesHost](/api/@dxos/client/classes/ClientServicesHost)</code>
+### [createClientServicesHost()](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/testing/test-client-builder.ts#L67)
 
 
 Create backend service handlers.
 
-Returns: [`ClientServicesHost`](/api/@dxos/client/classes/ClientServicesHost)
+Returns: <code>[ClientServicesHost](/api/@dxos/client/classes/ClientServicesHost)</code>
 
 Arguments: none

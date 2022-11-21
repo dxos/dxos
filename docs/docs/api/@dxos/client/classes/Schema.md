@@ -1,65 +1,65 @@
 # Class `Schema`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:21]()</sub>
 
 
 Wrapper for ECHO Item that represents an  `ObjectModel`  schema.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_schema)]()
 
 
-Returns: [`Schema`](/api/@dxos/client/classes/Schema)
+Returns: <code>[Schema](/api/@dxos/client/classes/Schema)</code>
 
 Arguments: 
 
-`_schema`: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
+`_schema`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
 
 ## Properties
-### [`fields`]()
-Type: [`SchemaField`](/api/@dxos/client/types/SchemaField)`[]`
-### [`name`]()
-Type: `string`
+### [fields]()
+Type: <code>[SchemaField](/api/@dxos/client/types/SchemaField)[]</code>
+### [name]()
+Type: <code>string</code>
 
 ## Methods
-### [`addField`]()
+### [addField(newField)]()
 
 
-Returns: `Promise<void>`
-
-Arguments: 
-
-`newField`: [`SchemaField`](/api/@dxos/client/types/SchemaField)
-### [`deleteField`]()
-
-
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`key`: `string`
-### [`editField`]()
+`newField`: <code>[SchemaField](/api/@dxos/client/types/SchemaField)</code>
+### [deleteField(key)]()
 
 
-Returns: `Promise<void>`
-
-Arguments: 
-
-`currentKey`: `string`
-
-`editedField`: [`SchemaField`](/api/@dxos/client/types/SchemaField)
-### [`getField`]()
-
-
-Returns: `undefined | `[`SchemaField`](/api/@dxos/client/types/SchemaField)
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`key`: `string`
-### [`validate`]()
+`key`: <code>string</code>
+### [editField(currentKey, editedField)]()
 
 
-Returns: `boolean`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`model`: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
+`currentKey`: <code>string</code>
+
+`editedField`: <code>[SchemaField](/api/@dxos/client/types/SchemaField)</code>
+### [getField(key)]()
+
+
+Returns: <code>undefined | [SchemaField](/api/@dxos/client/types/SchemaField)</code>
+
+Arguments: 
+
+`key`: <code>string</code>
+### [validate(model)]()
+
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`model`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>

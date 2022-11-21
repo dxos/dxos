@@ -1,6 +1,9 @@
 ---
-title: Overview
+order: 1
+title: Developer Tools
 dir:
-  text: Developer Tooling
+  title: Developer Tooling
   order: 20
 ---
+
+*   [Browser Developer Tool](./browser-devtools)

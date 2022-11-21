@@ -4,18 +4,18 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`config`]()
-Type: `string`
+### [config]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`keyPhrase`]()
-Type: `string`
+### [keyPhrase]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`loginApp`]()
-Type: `string`
+### [loginApp]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
