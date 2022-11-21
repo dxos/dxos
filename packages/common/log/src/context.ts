@@ -3,7 +3,6 @@
 //
 
 import { LogConfig, LogFilter, LogLevel } from './config';
-import { OwnershipScope } from './experimental/ownership';
 
 /**
  * Optional object passed to the logging API.

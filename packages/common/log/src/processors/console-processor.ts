@@ -8,6 +8,7 @@ import { inspect } from 'node:util';
 
 import { LogConfig, LogLevel, shortLevelName } from '../config';
 import { LogProcessor, shouldLog } from '../context';
+import { gatherLogInfoFromScope } from '../scope';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',
@@ -74,7 +75,7 @@ export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => 
 const formatter = DEFAULT_FORMATTER;
 
 export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
-  const { level, message, context, meta, error } = entry;
+  let { level, message, context, meta, error } = entry;
   if (!shouldLog(config, level, meta?.file ?? '')) {
     return;
   }
@@ -84,6 +85,12 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   if (meta) {
     parts.path = getRelativeFilename(meta.file);
     parts.line = meta.line;
+
+    // TODO(dmaretskyi): Add the same to the browser-processor.
+    const scopeInfo = gatherLogInfoFromScope(meta.scope);
+    if(Object.keys(scopeInfo).length > 0) {
+      context = Object.assign(context ?? {}, scopeInfo);
+    }
   }
 
   if (context instanceof Error) {

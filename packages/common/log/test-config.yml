@@ -1,7 +1,7 @@
 formatter:
   column: 60
 
-processor: debug
+# processor: debug
 
 filter:
   - warn
