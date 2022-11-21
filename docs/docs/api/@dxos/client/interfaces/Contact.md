@@ -4,10 +4,10 @@
 Defined in:
    file://./../../dxos/client.proto
 ## Properties
-### [`displayName`]()
-Type: `string`
+### [displayName]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`publicKey`]()
-Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [publicKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>

@@ -1,123 +1,123 @@
 # Class `Database`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:33`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:33]()</sub>
 
 
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_modelFactory, _backend, memberKey)]()
 
 
 Creates a new database instance.  `database.initialize()`  must be called afterwards to complete the initialization.
 
-Returns: [`Database`](/api/@dxos/client/classes/Database)
+Returns: <code>[Database](/api/@dxos/client/classes/Database)</code>
 
 Arguments: 
 
-`_modelFactory`: `ModelFactory`
+`_modelFactory`: <code>ModelFactory</code>
 
-`_backend`: `DatabaseBackend`
+`_backend`: <code>DatabaseBackend</code>
 
-`memberKey`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+`memberKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 ## Properties
-### [`entityUpdate`]()
-Type: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<any>>`
+### [entityUpdate]()
+Type: <code>Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;&gt;</code>
 
 Fired immediately after any update in the entities.
 If the information about which entity got updated is not required prefer using  `update` .
-### [`isReadOnly`]()
-Type: `boolean`
-### [`state`]()
-Type: `State`
-### [`update`]()
-Type: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<any>[]>`
+### [isReadOnly]()
+Type: <code>boolean</code>
+### [state]()
+Type: <code>State</code>
+### [update]()
+Type: <code>Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;[]&gt;</code>
 
 Fired when any item is updated.
 Contains a list of all entities changed from the last update.
 
 ## Methods
-### [`createDataServiceHost`]()
+### [createDataServiceHost()]()
 
 
-Returns: `DataServiceHost`
+Returns: <code>DataServiceHost</code>
 
 Arguments: none
-### [`createItem`]()
+### [createItem(\[options\])]()
 
 
 Creates a new item with the given queryable type and model.
 
-Returns: `Promise<`[`Item`](/api/@dxos/client/classes/Item)`<M>>`
+Returns: <code>Promise&lt;[Item](/api/@dxos/client/classes/Item)&lt;M&gt;&gt;</code>
 
 Arguments: 
 
-`options`: `CreateItemOption<M>`
-### [`createLink`]()
+`options`: <code>CreateItemOption&lt;M&gt;</code>
+### [createLink(options)]()
 
 
-Returns: `Promise<`[`Link`](/api/@dxos/client/classes/Link)`<M, S, T>>`
+Returns: <code>Promise&lt;[Link](/api/@dxos/client/classes/Link)&lt;M, S, T&gt;&gt;</code>
 
 Arguments: 
 
-`options`: `CreateLinkOptions<M, S, T>`
-### [`createSnapshot`]()
+`options`: <code>CreateLinkOptions&lt;M, S, T&gt;</code>
+### [createSnapshot()]()
 
 
-Returns: `DatabaseSnapshot`
-
-Arguments: none
-### [`destroy`]()
-
-
-Returns: `Promise<void>`
+Returns: <code>DatabaseSnapshot</code>
 
 Arguments: none
-### [`getItem`]()
+### [destroy()]()
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: none
+### [getItem(itemId)]()
 
 
 Retrieves a item from the index.
 
-Returns: `undefined | `[`Item`](/api/@dxos/client/classes/Item)`<any>`
+Returns: <code>undefined | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;</code>
 
 Arguments: 
 
-`itemId`: `string`
-### [`initialize`]()
+`itemId`: <code>string</code>
+### [initialize()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`reduce`]()
+### [reduce(result, \[filter\])]()
 
 
 Returns a reducer selection context.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`result`: `R`
+`result`: <code>R</code>
 
-`filter`: `RootFilter`
-### [`select`]()
+`filter`: <code>RootFilter</code>
+### [select(\[filter\])]()
 
 
 Returns a selection context, which can be used to traverse the object graph.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, void>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, void&gt;</code>
 
 Arguments: 
 
-`filter`: `RootFilter`
-### [`waitForItem`]()
+`filter`: <code>RootFilter</code>
+### [waitForItem(filter)]()
 
 
 Waits for item matching the filter to be present and returns it.
 
-Returns: `Promise<`[`Item`](/api/@dxos/client/classes/Item)`<T>>`
+Returns: <code>Promise&lt;[Item](/api/@dxos/client/classes/Item)&lt;T&gt;&gt;</code>
 
 Arguments: 
 
-`filter`: `RootFilter`
+`filter`: <code>RootFilter</code>

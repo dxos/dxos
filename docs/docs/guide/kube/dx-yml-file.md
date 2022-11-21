@@ -4,9 +4,11 @@ label: dx.yml file
 ---
 
 # `dx.yml` file
+
 This file defines how your application is to be configured and deployed.
 
 Sample configuration:
+
 ```yaml
 version: 1
 

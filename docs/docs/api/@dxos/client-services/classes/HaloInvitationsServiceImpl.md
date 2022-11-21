@@ -1,70 +1,69 @@
 # Class `HaloInvitationsServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts:14`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L14)
+<sub>Declared in [packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts:14](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L14)</sub>
 
 
 Adapts invitation service observable to client/service stream.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L16)
+### [constructor(identityManager, invitationsHandler)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L16)
 
 
-Returns: [`HaloInvitationsServiceImpl`](/api/@dxos/client-services/classes/HaloInvitationsServiceImpl)
+Returns: <code>[HaloInvitationsServiceImpl](/api/@dxos/client-services/classes/HaloInvitationsServiceImpl)</code>
 
 Arguments: 
 
-`identityManager`: [`IdentityManager`](/api/@dxos/client-services/classes/IdentityManager)
+`identityManager`: <code>[IdentityManager](/api/@dxos/client-services/classes/IdentityManager)</code>
 
-`invitationsHandler`: [`InvitationsHandler`](/api/@dxos/client-services/interfaces/InvitationsHandler)`<void>`
+`invitationsHandler`: <code>[InvitationsHandler](/api/@dxos/client-services/interfaces/InvitationsHandler)&lt;void&gt;</code>
 
 ## Properties
 
-
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L102)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L102)
 
 
-Returns: `Stream<Invitation>`
-
-Arguments: 
-
-`invitation`: `Invitation`
-
-`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
-### [`authenticate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L162)
-
-
-Returns: `Promise<void>`
+Returns: <code>Stream&lt;Invitation&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: `AuthenticationRequest`
-### [`cancelInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L173)
+`invitation`: <code>Invitation</code>
+
+`options`: <code>[InvitationsOptions](/api/@dxos/client-services/types/InvitationsOptions)</code>
+### [authenticate(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L162)
 
 
-Returns: `Promise<void>`
-
-Arguments: 
-
-`invitation`: `Invitation`
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L39)
-
-
-Returns: `Stream<Invitation>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`invitation`: `Invitation`
-### [`getContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L23)
+`options`: <code>AuthenticationRequest</code>
+### [cancelInvitation(invitation)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L173)
 
 
-Returns: `void`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`invitation`: `Invitation`
-### [`getLoggingContext`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L31)
+`invitation`: <code>Invitation</code>
+### [createInvitation(invitation)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L39)
 
 
-Returns: `object`
+Returns: <code>Stream&lt;Invitation&gt;</code>
+
+Arguments: 
+
+`invitation`: <code>Invitation</code>
+### [getContext(invitation)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/halo-invitations-service.ts#L23)
+
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`invitation`: <code>Invitation</code>
+### [getLoggingContext()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-service.ts#L31)
+
+
+Returns: <code>object</code>
 
 Arguments: none

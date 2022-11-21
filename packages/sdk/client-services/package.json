@@ -57,5 +57,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/services/service-host.ts",
+        "dependencies": [
+          "@dxos/echo-db"
+        ]
+      }
+    ]
   }
 }

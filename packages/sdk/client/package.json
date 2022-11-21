@@ -64,5 +64,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/client/client.ts",
+        "dependencies": [
+          "@dxos/client-services"
+        ]
+      }
+    ]
   }
 }

@@ -51,6 +51,7 @@ export class Database {
   /**
    * Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
    */
+  // prettier-ignore
   constructor(
     private readonly _modelFactory: ModelFactory,
     private readonly _backend: DatabaseBackend,
