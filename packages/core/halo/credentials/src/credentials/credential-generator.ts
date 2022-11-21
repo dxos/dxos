@@ -25,7 +25,7 @@ export class CredentialGenerator {
   /**
    * Create genesis messages for new Space.
    */
-  async createSpaceGenesis(spaceKey: PublicKey, controlKey: PublicKey): Promise<Credential[]> {
+  async createSpaceGenesis(spaceKey: PublicKey, controlKey: PublicKey, creatorProfile?: ProfileDocument): Promise<Credential[]> {
     return [
       await createCredential({
         signer: this._signer,
@@ -44,7 +44,8 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.ADMIN
+          role: SpaceMember.Role.ADMIN,
+          profile: creatorProfile,
         }
       }),
 
@@ -163,7 +164,8 @@ export const createAdmissionCredentials = async (
   deviceKey: PublicKey,
   spaceKey: PublicKey,
   controlFeedKey: PublicKey,
-  dataFeedKey: PublicKey
+  dataFeedKey: PublicKey,
+  profile?: ProfileDocument,
 ): Promise<TypedMessage[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -171,7 +173,8 @@ export const createAdmissionCredentials = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
-        role: SpaceMember.Role.ADMIN // TODO(burdon): Configure.
+        role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
+        profile
       }
     }),
 

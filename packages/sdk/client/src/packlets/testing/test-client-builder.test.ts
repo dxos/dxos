@@ -180,7 +180,7 @@ describe('Client services', function () {
     });
   });
 
-  it.only('synchronizes data between two spaces after competing invitation', async function () {
+  it('synchronizes data between two spaces after competing invitation', async function () {
     const testBuilder = new TestClientBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
@@ -242,23 +242,25 @@ describe('Client services', function () {
 
     const space2 = await trigger.wait();
 
-    await space1.queryMembers().waitFor(members => members.length === 2)
-    expect(space1.queryMembers().value).to.equal([
-      {
-        identityKey: client1.halo.profile!.identityKey,
-        profile: {
+    for(const space of [space1, space2]) {
+      await space.queryMembers().waitFor(members => members.length === 2)
+      expect(space.queryMembers().value).to.deep.equal([
+        {
           identityKey: client1.halo.profile!.identityKey,
-          displayName: 'Peer 1'
-        }
-      },
-      {
-        identityKey: client2.halo.profile!.identityKey,
-        profile: {
+          profile: {
+            identityKey: client1.halo.profile!.identityKey,
+            displayName: 'Peer 1'
+          }
+        },
+        {
           identityKey: client2.halo.profile!.identityKey,
-          displayName: 'Peer 2'
+          profile: {
+            identityKey: client2.halo.profile!.identityKey,
+            displayName: 'Peer 2'
+          }
         }
-      }
-    ])
+      ])
+    }
 
     await syncItems(space1, space2);
   });

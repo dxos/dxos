@@ -107,7 +107,8 @@ export class ServiceContext {
       credentialAuthenticator: MOCK_AUTH_VERIFIER,
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
-      deviceKey: identity.deviceKey
+      deviceKey: identity.deviceKey,
+      profile: identity.profileDocument,
     };
 
     // Create in constructor (avoid all of these private variables).
