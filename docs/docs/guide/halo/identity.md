@@ -1,4 +1,3 @@
-
 # Obtaining a user identity
 
 ```tsx

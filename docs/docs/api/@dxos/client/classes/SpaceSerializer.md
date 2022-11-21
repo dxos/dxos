@@ -1,36 +1,35 @@
 # Class `SpaceSerializer`
-Declared in [`packages/sdk/client/src/packlets/client/serializer.ts:16`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L16)
+<sub>Declared in [packages/sdk/client/src/packlets/client/serializer.ts:16](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L16)</sub>
 
 
 Import/export space.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L18)
+### [constructor(_client)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L18)
 
 
-Returns: [`SpaceSerializer`](/api/@dxos/client/classes/SpaceSerializer)
+Returns: <code>[SpaceSerializer](/api/@dxos/client/classes/SpaceSerializer)</code>
 
 Arguments: 
 
-`_client`: [`Client`](/api/@dxos/client/classes/Client)
+`_client`: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
 ## Properties
 
-
 ## Methods
-### [`deserializeSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L27)
+### [deserializeSpace(data)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L27)
 
 
-Returns: `Promise<`[`Space`](/api/@dxos/client/interfaces/Space)`>`
-
-Arguments: 
-
-`data`: `Uint8Array`
-### [`serializeSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L22)
-
-
-Returns: `Promise<Blob>`
+Returns: <code>Promise&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
 
 Arguments: 
 
-`space`: [`Space`](/api/@dxos/client/interfaces/Space)
+`data`: <code>Uint8Array</code>
+### [serializeSpace(space)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/serializer.ts#L22)
+
+
+Returns: <code>Promise&lt;Blob&gt;</code>
+
+Arguments: 
+
+`space`: <code>[Space](/api/@dxos/client/interfaces/Space)</code>

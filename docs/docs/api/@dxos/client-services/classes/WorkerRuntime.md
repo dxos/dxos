@@ -1,5 +1,5 @@
 # Class `WorkerRuntime`
-Declared in [`packages/sdk/client-services/src/packlets/vault/worker-runtime.ts:26`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L26)
+<sub>Declared in [packages/sdk/client-services/src/packlets/vault/worker-runtime.ts:26](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L26)</sub>
 
 
 Runtime for the shared worker.
@@ -7,38 +7,37 @@ Manages connections from proxies (in tabs).
 Tabs make requests to the  `ClientServicesHost` , and provide a WebRTC gateway.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L35)
+### [constructor(_configProvider)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L35)
 
 
-Returns: [`WorkerRuntime`](/api/@dxos/client-services/classes/WorkerRuntime)
+Returns: <code>[WorkerRuntime](/api/@dxos/client-services/classes/WorkerRuntime)</code>
 
 Arguments: 
 
-`_configProvider`: `function`
+`_configProvider`: <code>function</code>
 
 ## Properties
 
-
 ## Methods
-### [`createSession`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L65)
+### [createSession(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L69)
 
 
 Create a new session.
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: [`CreateSessionParams`](/api/@dxos/client-services/types/CreateSessionParams)
-### [`start`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L39)
+`options`: <code>[CreateSessionParams](/api/@dxos/client-services/types/CreateSessionParams)</code>
+### [start()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L39)
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`stop`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L57)
+### [stop()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/vault/worker-runtime.ts#L61)
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none

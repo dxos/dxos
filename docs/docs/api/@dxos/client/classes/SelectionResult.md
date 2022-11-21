@@ -1,65 +1,65 @@
 # Class `SelectionResult`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:16`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:16]()</sub>
 
 
 Query subscription.
 Represents a live-query (subscription) that can notify about future updates to the relevant subset of items.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_execute, _update, _root, _reducer)]()
 
 
-Returns: [`SelectionResult`](/api/@dxos/client/classes/SelectionResult)`<T, R>`
+Returns: <code>[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;</code>
 
 Arguments: 
 
-`_execute`: `function`
+`_execute`: <code>function</code>
 
-`_update`: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<Model<any, any>>[]>`
+`_update`: <code>Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;Model&lt;any, any&gt;&gt;[]&gt;</code>
 
-`_root`: `SelectionRoot`
+`_root`: <code>SelectionRoot</code>
 
-`_reducer`: `boolean`
+`_reducer`: <code>boolean</code>
 
 ## Properties
-### [`update`]()
-Type: `Event<`[`SelectionResult`](/api/@dxos/client/classes/SelectionResult)`<T, any>>`
+### [update]()
+Type: <code>Event&lt;[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, any&gt;&gt;</code>
 
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
-### [`entities`]()
-Type: `T[]`
+### [entities]()
+Type: <code>T[]</code>
 
 Get the result of this selection.
-### [`root`]()
-Type: `SelectionRoot`
+### [root]()
+Type: <code>SelectionRoot</code>
 
 The root of the selection. Either a database or an item. Must be a stable reference.
-### [`value`]()
-Type: `[object Object] extends [object Object] ? [object Object] : [object Object]`
+### [value]()
+Type: <code>[object Object] extends [object Object] ? [object Object] : [object Object]</code>
 
 Returns the selection or reducer result.
 
 ## Methods
-### [`expectOne`]()
+### [expectOne()]()
 
 
 Return the first element if the set has exactly one element.
 
-Returns: `T`
+Returns: <code>T</code>
 
 Arguments: none
-### [`refresh`]()
+### [refresh()]()
 
 
 Re-run query.
 
-Returns: [`SelectionResult`](/api/@dxos/client/classes/SelectionResult)`<T, R>`
+Returns: <code>[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;</code>
 
 Arguments: none
-### [`toString`]()
+### [toString()]()
 
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none

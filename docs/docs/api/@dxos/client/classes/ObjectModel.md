@@ -1,159 +1,159 @@
 # Class `ObjectModel`
-Declared in [`packages/core/echo/object-model/dist/src/object-model.d.ts:24`]()
+<sub>Declared in [packages/core/echo/object-model/dist/src/object-model.d.ts:24]()</sub>
 
 
 Object mutation model.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_meta, _itemId, _getState, \[_mutationWriter\])]()
 
 
-Returns: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
+Returns: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
 
 Arguments: 
 
-`_meta`: `ModelMeta<any, any, any>`
+`_meta`: <code>ModelMeta&lt;any, any, any&gt;</code>
 
-`_itemId`: `string`
+`_itemId`: <code>string</code>
 
-`_getState`: `function`
+`_getState`: <code>function</code>
 
-`_mutationWriter`: `MutationWriter<ObjectMutationSet>`
+`_mutationWriter`: <code>MutationWriter&lt;ObjectMutationSet&gt;</code>
 
 ## Properties
-### [`_getState`]()
-Type: `function`
-### [`update`]()
-Type: `Event<Model<ObjectModelState, ObjectMutationSet>>`
-### [`meta`]()
-Type: `ModelMeta<any, any, any>`
-### [`itemId`]()
-Type: `string`
-### [`modelMeta`]()
-Type: `ModelMeta<any, any, any>`
-### [`readOnly`]()
-Type: `boolean`
+### [_getState]()
+Type: <code>function</code>
+### [update]()
+Type: <code>Event&lt;Model&lt;ObjectModelState, ObjectMutationSet&gt;&gt;</code>
+### [meta]()
+Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+### [itemId]()
+Type: <code>string</code>
+### [modelMeta]()
+Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+### [readOnly]()
+Type: <code>boolean</code>
 
 ## Methods
-### [`addToSet`]()
+### [addToSet(key, value)]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`key`: `string`
+`key`: <code>string</code>
 
-`value`: `any`
-### [`builder`]()
+`value`: <code>any</code>
+### [builder()]()
 
 
-Returns: `MutationBuilder`
+Returns: <code>MutationBuilder</code>
 
 Arguments: none
-### [`get`]()
+### [get(key, \[defaultValue\])]()
 
 
-Returns: `any`
-
-Arguments: 
-
-`key`: `string`
-
-`defaultValue`: `unknown`
-### [`getProperty`]()
-
-
-Returns: `any`
+Returns: <code>any</code>
 
 Arguments: 
 
-`key`: `string`
+`key`: <code>string</code>
 
-`defaultValue`: `any`
-### [`pushToArray`]()
-
-
-Returns: `Promise<void>`
-
-Arguments: 
-
-`key`: `string`
-
-`value`: `any`
-### [`removeFromSet`]()
+`defaultValue`: <code>unknown</code>
+### [getProperty(key, \[defaultValue\])]()
 
 
-Returns: `Promise<void>`
+Returns: <code>any</code>
 
 Arguments: 
 
-`key`: `string`
+`key`: <code>string</code>
 
-`value`: `any`
-### [`set`]()
-
-
-Returns: `Promise<void>`
-
-Arguments: 
-
-`key`: `string`
-
-`value`: `unknown`
-### [`setProperties`]()
+`defaultValue`: <code>any</code>
+### [pushToArray(key, value)]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`properties`: `any`
-### [`setProperty`]()
+`key`: <code>string</code>
+
+`value`: <code>any</code>
+### [removeFromSet(key, value)]()
 
 
-Returns: `Promise<void>`
-
-Arguments: 
-
-`key`: `string`
-
-`value`: `any`
-### [`subscribe`]()
-
-
-Returns: `UnsubscribeCallback`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`listener`: `function`
-### [`toJSON`]()
+`key`: <code>string</code>
+
+`value`: <code>any</code>
+### [set(key, value)]()
 
 
-Returns: `object`
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`key`: <code>string</code>
+
+`value`: <code>unknown</code>
+### [setProperties(properties)]()
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`properties`: <code>any</code>
+### [setProperty(key, value)]()
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`key`: <code>string</code>
+
+`value`: <code>any</code>
+### [subscribe(listener)]()
+
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`listener`: <code>function</code>
+### [toJSON()]()
+
+
+Returns: <code>object</code>
 
 Arguments: none
-### [`toObject`]()
+### [toObject()]()
 
 
 Returns an immutable object.
 
-Returns: `ObjectModelState`
+Returns: <code>ObjectModelState</code>
 
 Arguments: none
-### [`toString`]()
+### [toString()]()
 
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none
-### [`write`]()
+### [write(mutation)]()
 
 
 Writes the raw mutation to the output stream.
 
-Returns: `Promise<MutationWriteReceipt>`
+Returns: <code>Promise&lt;MutationWriteReceipt&gt;</code>
 
 Arguments: 
 
-`mutation`: `ObjectMutationSet`
+`mutation`: <code>ObjectMutationSet</code>

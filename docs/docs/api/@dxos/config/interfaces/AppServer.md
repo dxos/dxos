@@ -4,13 +4,13 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`prefix`]()
-Type: `string`
+### [prefix]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`server`]()
-Type: `string`
+### [server]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true

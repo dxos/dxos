@@ -1,45 +1,45 @@
 # Class `InvalidConfigurationError`
-Declared in [`packages/sdk/client-services/src/errors.ts:9`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/errors.ts#L9)
+<sub>Declared in [packages/sdk/client-services/src/errors.ts:9](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/errors.ts#L9)</sub>
 
 
 
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/errors.ts#L10)
+### [constructor(message)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/errors.ts#L10)
 
 
-Returns: [`InvalidConfigurationError`](/api/@dxos/client-services/classes/InvalidConfigurationError)
+Returns: <code>[InvalidConfigurationError](/api/@dxos/client-services/classes/InvalidConfigurationError)</code>
 
 Arguments: 
 
-`message`: `string`
+`message`: <code>string</code>
 
 ## Properties
-### [`cause`]()
-Type: `unknown`
-### [`code`]()
-Type: `string`
-### [`message`]()
-Type: `string`
-### [`name`]()
-Type: `string`
-### [`stack`]()
-Type: `string`
-### [`prepareStackTrace`]()
-Type: `function`
-### [`stackTraceLimit`]()
-Type: `number`
+### [cause]()
+Type: <code>unknown</code>
+### [code]()
+Type: <code>string</code>
+### [message]()
+Type: <code>string</code>
+### [name]()
+Type: <code>string</code>
+### [stack]()
+Type: <code>string</code>
+### [prepareStackTrace]()
+Type: <code>function</code>
+### [stackTraceLimit]()
+Type: <code>number</code>
 
 ## Methods
-### [`captureStackTrace`]()
+### [captureStackTrace(targetObject, \[constructorOpt\])]()
 
 
 Create .stack property on a target object
 
-Returns: `void`
+Returns: <code>void</code>
 
 Arguments: 
 
-`targetObject`: `object`
+`targetObject`: <code>object</code>
 
-`constructorOpt`: `Function`
+`constructorOpt`: <code>Function</code>

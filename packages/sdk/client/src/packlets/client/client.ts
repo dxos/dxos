@@ -19,16 +19,25 @@ import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
+/**
+ * This options object configures the DXOS Client
+ */
 export type ClientOptions = {
+  /** client configuration object */
   config?: Config;
+  /** custom services provider */
   services?: ClientServicesProvider;
+  /** custom model factory */
   modelFactory?: ModelFactory;
 };
 
 /**
- * The Client class encapsulates DXOS's core client-side API.
+ * The Client class encapsulates the core client-side API of DXOS.
  */
 export class Client {
+  /**
+   * The version of this client API
+   */
   public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
@@ -72,15 +81,17 @@ export class Client {
     };
   }
 
+  /**
+   * Current configuration object
+   */
   get config(): Config {
     return this._config;
   }
 
-  /**
-   * Has the Client been initialized?
-   * Initialize by calling `.initialize()`
-   */
   // TODO(burdon): Rename isOpen.
+  /**
+   * Returns true if the client has been initialized. Initialize by calling `.initialize()`
+   */
   get initialized() {
     return this._initialized;
   }
