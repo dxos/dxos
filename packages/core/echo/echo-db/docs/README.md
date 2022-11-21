@@ -38,7 +38,6 @@ class ItemManager {
   deconstructItem()
   initializeModel()
 }
-ItemManager *-- Event : debouncedUpdate
 ```
 
 ## Dependency Graph

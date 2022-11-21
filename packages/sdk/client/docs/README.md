@@ -18,9 +18,6 @@ class Client {
   destroy()
   reset()
 }
-Client --> Config : _config
-Client --> ModelFactory : _modelFactory
-Client --> ClientServicesProvider : _services
 Client --> HaloProxy : _halo
 Client --> EchoProxy : _echo
 class HaloProxy {
@@ -38,9 +35,6 @@ class HaloProxy {
   _open()
   _close()
 }
-HaloProxy *-- InvitationObservable[] : _invitations
-HaloProxy --> Profile : _profile
-HaloProxy --> Contact[] : _contacts
 class EchoProxy {
   modelFactory
   networkManager
