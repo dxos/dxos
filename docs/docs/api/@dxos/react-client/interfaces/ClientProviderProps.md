@@ -3,27 +3,23 @@
 
 
 ## Properties
-### [`children`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L41)
-Type: `ReactNode`
-### [`client`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L54)
-Type: [`ClientProvider`](/api/@dxos/react-client/functions/ClientProvider)
+### [children](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L38)
+Type: <code>ReactNode</code>
+### [client](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L57)
+Type: <code>Client | Provider&lt;Promise&lt;Client&gt;&gt;</code>
 
 Client object or async provider to enable to caller to do custom initialization.
-### [`clientRef`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L49)
-Type: `MutableRefObject<undefined | Client>`
 
-Forward reference to provide client object to outercontainer since it won't have access to the context.
-### [`config`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L64)
-Type: `ConfigProvider`
+Most apps won't need this.
+### [config](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L43)
+Type: <code>Config | Provider&lt;Promise&lt;Config&gt;&gt;</code>
 
 Config object or async provider.
-### [`fallback`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L59)
-Type: `ReactNode`
+### [fallback](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L62)
+Type: <code>ReactNode</code>
 
 ReactNode to display until the client is available.
-### [`onInitialize`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L75)
-Type: `function`
-### [`options`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L69)
-Type: `ClientOptions`
-
-Runtime objects.
+### [onInitialize](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L69)
+Type: <code>function</code>
+### [services](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L50)
+Type: <code>function</code>

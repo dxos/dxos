@@ -1,9 +1,12 @@
 # Type `SchemaDef`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14]()</sub>
 
 
 
 
-```ts
-type SchemaDef = object
-```
+## Properties
+### [fields]()
+Type: <code>[SchemaField](/api/@dxos/client/types/SchemaField)[]</code>
+
+### [schema]()
+Type: <code>string</code>

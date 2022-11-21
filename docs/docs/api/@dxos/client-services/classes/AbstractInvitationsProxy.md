@@ -1,49 +1,48 @@
 # Class `AbstractInvitationsProxy`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts:29`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L29)
+<sub>Declared in [packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts:29](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L29)</sub>
 
 
 Adapts invitations service observable to client/service stream.
 Common base class for HALO and Spaces implementations.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L31)
+### [constructor(_invitationsService)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L31)
 
 
-Returns: [`AbstractInvitationsProxy`](/api/@dxos/client-services/classes/AbstractInvitationsProxy)`<T>`
+Returns: <code>[AbstractInvitationsProxy](/api/@dxos/client-services/classes/AbstractInvitationsProxy)&lt;T&gt;</code>
 
 Arguments: 
 
-`_invitationsService`: [`InvitationsService`](/api/@dxos/client-services/interfaces/InvitationsService)
+`_invitationsService`: <code>[InvitationsService](/api/@dxos/client-services/interfaces/InvitationsService)</code>
 
 ## Properties
 
-
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L95)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L95)
 
 
-Returns: [`AuthenticatingInvitationObservable`](/api/@dxos/client-services/interfaces/AuthenticatingInvitationObservable)
-
-Arguments: 
-
-`invitation`: `Invitation`
-
-`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L37)
-
-
-Returns: [`InvitationObservable`](/api/@dxos/client-services/interfaces/InvitationObservable)
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/client-services/interfaces/AuthenticatingInvitationObservable)</code>
 
 Arguments: 
 
-`context`: `T`
+`invitation`: <code>Invitation</code>
 
-`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
-### [`getInvitationOptions`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L35)
+`options`: <code>[InvitationsOptions](/api/@dxos/client-services/types/InvitationsOptions)</code>
+### [createInvitation(context, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L37)
 
 
-Returns: `Invitation`
+Returns: <code>[InvitationObservable](/api/@dxos/client-services/interfaces/InvitationObservable)</code>
 
 Arguments: 
 
-`context`: `T`
+`context`: <code>T</code>
+
+`options`: <code>[InvitationsOptions](/api/@dxos/client-services/types/InvitationsOptions)</code>
+### [getInvitationOptions(context)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-proxy.ts#L35)
+
+
+Returns: <code>Invitation</code>
+
+Arguments: 
+
+`context`: <code>T</code>

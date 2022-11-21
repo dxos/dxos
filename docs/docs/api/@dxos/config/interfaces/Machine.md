@@ -4,28 +4,28 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`dnsDomain`]()
-Type: `string`
+### [dnsDomain]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`doAccessToken`]()
-Type: `string`
+### [doAccessToken]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`githubAccessToken`]()
-Type: `string`
+### [githubAccessToken]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`githubUsername`]()
-Type: `string`
+### [githubUsername]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`npmAccessToken`]()
-Type: `string`
+### [npmAccessToken]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
