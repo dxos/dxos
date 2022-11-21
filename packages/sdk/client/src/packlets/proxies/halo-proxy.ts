@@ -85,6 +85,39 @@ export class HaloProxy implements Halo {
   }
 
   /**
+   * Allocate resources and set-up internal subscriptions.
+   */
+  async open() {
+    const gotProfile = this.profileChanged.waitForCount(1);
+    // const gotContacts = this._contactsChanged.waitForCount(1);
+
+    const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
+    profileStream.subscribe((data) => {
+      this._profile = data.profile;
+      this.profileChanged.emit();
+    });
+
+    this._subscriptions.add(() => profileStream.close());
+
+    // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
+    // contactsStream.subscribe(data => {
+    //   this._contacts = data.contacts as SpaceMember[];
+    //   this._contactsChanged.emit();
+    // });
+
+    // this._subscriptions.add(() => contactsStream.close());
+
+    await Promise.all([gotProfile]);
+  }
+
+  /**
+   * Destroy the instance and clean-up subscriptions.
+   */
+  async close() {
+    this._subscriptions.clear();
+  }
+
+  /**
    * @deprecated
    */
   // TODO(burdon): Replaced with query/stream.
@@ -198,38 +231,5 @@ export class HaloProxy implements Halo {
         }
       );
     });
-  }
-
-  /**
-   * Allocate resources and set-up internal subscriptions.
-   */
-  private async _open() {
-    const gotProfile = this.profileChanged.waitForCount(1);
-    // const gotContacts = this._contactsChanged.waitForCount(1);
-
-    const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
-    profileStream.subscribe((data) => {
-      this._profile = data.profile;
-      this.profileChanged.emit();
-    });
-
-    this._subscriptions.add(() => profileStream.close());
-
-    // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
-    // contactsStream.subscribe(data => {
-    //   this._contacts = data.contacts as SpaceMember[];
-    //   this._contactsChanged.emit();
-    // });
-
-    // this._subscriptions.add(() => contactsStream.close());
-
-    await Promise.all([gotProfile]);
-  }
-
-  /**
-   * Destroy the instance and clean-up subscriptions.
-   */
-  private _close() {
-    this._subscriptions.clear();
   }
 }

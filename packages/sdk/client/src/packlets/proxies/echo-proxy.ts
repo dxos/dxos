@@ -78,7 +78,7 @@ export class EchoProxy implements Echo {
     return (this._serviceProvider as any).echo.networkManager;
   }
 
-  private async _open() {
+  async open() {
     const gotSpaces = this._spacesChanged.waitForCount(1);
 
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
@@ -128,7 +128,7 @@ export class EchoProxy implements Echo {
     await gotSpaces;
   }
 
-  private async _close() {
+  async close() {
     for (const space of this._spaces.values()) {
       await space.destroy();
     }

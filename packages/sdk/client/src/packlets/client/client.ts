@@ -131,8 +131,8 @@ export class Client {
 
     await this._services.services.SystemService.initSession();
 
-    await this._halo._open();
-    await this._echo._open();
+    await this._halo.open();
+    await this._echo.open();
 
     // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
@@ -147,8 +147,8 @@ export class Client {
       return;
     }
 
-    await this._halo._close();
-    await this._echo._close();
+    await this._halo.close();
+    await this._echo.close();
 
     await this._services.close();
 
