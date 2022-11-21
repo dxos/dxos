@@ -7,7 +7,7 @@ import { Hypercore, HypercoreProperties } from 'hypercore';
 import { Readable } from 'streamx';
 import { inspect } from 'util';
 
-import { inspectObject } from '@dxos/debug';
+import { inspectObject, StackTrace } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
@@ -18,6 +18,8 @@ import { FeedWriter } from './feed-writer';
  * Async feed wrapper.
  */
 export class FeedWrapper<T extends {}> {
+  private readonly _pendingWrites = new Set<StackTrace>();
+
   private readonly _binder = createBinder(this._hypercore);
 
   constructor(
@@ -84,14 +86,35 @@ export class FeedWrapper<T extends {}> {
   off = this._binder.fn(this._hypercore.off);
 
   open = this._binder.async(this._hypercore.open);
-  close = this._binder.async(this._hypercore.close);
+  _close = this._binder.async(this._hypercore.close);
+  async close() {
+    if (this._pendingWrites.size) {
+      log.warn(`Closing feed with pending writes:`, {
+        count: this._pendingWrites.size,
+        writes: [...this._pendingWrites].map(stack => stack.getStack())
+      });
+    }
+
+    await this._close();
+  }
 
   get = this._binder.async(this._hypercore.get);
   __append = this._binder.async(this._hypercore.append);
   async append(data: any) {
-    // TODO(burdon): Intercept.
-    log('>>', { err: new Error() });
-    return await this.__append(data);
+    // Cheap to capture unless you call getStack().
+    const stack = new StackTrace();
+    try {
+      this._pendingWrites.add(stack);
+
+      // TODO(burdon): Intercept.
+      // log('>>', { data, stack: stack.getStack() });
+      const res = await this.__append(data);
+      // log('>> DONE', { data, stack: stack.getStack(), seq: res });
+      return res;
+
+    } finally {
+      this._pendingWrites.delete(stack);
+    }
   }
 
   download = this._binder.async(this._hypercore.download);
