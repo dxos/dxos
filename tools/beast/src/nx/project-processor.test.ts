@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 import pick from 'lodash.pick';
-import path from 'path';
+import { join } from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
 import { Flowchart } from '../mermaid';
@@ -19,10 +19,9 @@ import { WorkspaceProcessor } from './workspace-processor';
 //  Also track `new` construction of decorated objects.
 //  https://www.typescriptlang.org/docs/handbook/decorators.html
 
-const baseDir = path.join(__dirname, '../../..');
-
 describe('Code analysis', function () {
   it('Sanity', function () {
+    const baseDir = join(process.cwd());
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 
@@ -32,6 +31,7 @@ describe('Code analysis', function () {
   });
 
   it('Create graph', function () {
+    const baseDir = join(process.cwd());
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 

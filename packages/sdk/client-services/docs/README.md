@@ -2,10 +2,11 @@
 
 DXOS client services implementation
 
-## Class Diagram
+## Class Diagrams
 
 ```mermaid
 classDiagram
+direction TB
 
 class ClientServicesHost {
   descriptors
@@ -33,6 +34,51 @@ class DataServiceSubscriptions {
   unregisterSpace()
   getDataService()
 }
+DataServiceSubscriptions *-- "Map" DataServiceHost : _spaces
+class DataServiceHost {
+  subscribeEntitySet()
+  subscribeEntityStream()
+  write()
+}
+DataServiceHost --> ItemManager : _itemManager
+DataServiceHost --> ItemDemuxer : _itemDemuxer
+class ItemManager {
+  entities
+  items
+  links
+  createItem()
+  createLink()
+  constructItem()
+  constructLink()
+  processModelMessage()
+  getItem()
+  getUninitializedEntities()
+  deconstructItem()
+  initializeModel()
+}
+ItemManager *-- "Map" Entity : _entities
+class Entity {
+  id
+  type
+  modelType
+  modelMeta
+  model
+  subscribe()
+}
+Entity --> ItemManager : _itemManager
+class ItemDemuxer {
+  open()
+  createSnapshot()
+  createItemSnapshot()
+  createLinkSnapshot()
+  restoreFromSnapshot()
+}
+ItemDemuxer --> ItemManager : _itemManager
+ItemDemuxer *-- ItemDemuxerOptions : _options
+class ItemDemuxerOptions {
+<interface>
+  snapshots
+}
 class MetadataStore {
   version
   spaces
@@ -50,6 +96,7 @@ class IdentityManager {
   acceptIdentity()
 }
 IdentityManager --> Identity : _identity
+IdentityManager --> MetadataStore : _metadataStore
 class Identity {
   authorizedDeviceKeys
   controlPipeline
@@ -80,7 +127,7 @@ class Space {
 Space --> ControlPipeline : _controlPipeline
 Space --> SpaceProtocol : _protocol
 Space --> Pipeline : _dataPipeline
-Space --> FeedDatabaseBackend : _databaseBackend
+Space --> DatabaseBackendHost : _databaseBackend
 Space --> Database : _database
 class ControlPipeline {
   spaceState
@@ -112,6 +159,7 @@ class PipelineState {
   timeframe
   waitUntilTimeframe()
 }
+PipelineState --> TimeframeClock : _timeframeClock
 class SpaceProtocol {
   peers
   addFeed()
@@ -119,14 +167,22 @@ class SpaceProtocol {
   stop()
 }
 SpaceProtocol *-- ReplicatorPlugin : _replicator
+SpaceProtocol --> SwarmIdentity : _swarmIdentity
 SpaceProtocol --> AuthPlugin : _authPlugin
 class ReplicatorPlugin {
   addFeed()
 }
+class SwarmIdentity {
+<interface>
+  peerKey
+  credentialProvider
+  credentialAuthenticator
+}
 class AuthPlugin {
   createExtension()
 }
-class FeedDatabaseBackend {
+AuthPlugin --> SwarmIdentity : _swarmIdentity
+class DatabaseBackendHost {
   isReadOnly
   echoProcessor
   open()
@@ -135,29 +191,9 @@ class FeedDatabaseBackend {
   createSnapshot()
   createDataServiceHost()
 }
-FeedDatabaseBackend --> ItemManager : _itemManager
-FeedDatabaseBackend --> ItemDemuxer : _itemDemuxer
-class ItemManager {
-  entities
-  items
-  links
-  createItem()
-  createLink()
-  constructItem()
-  constructLink()
-  processModelMessage()
-  getItem()
-  getUninitializedEntities()
-  deconstructItem()
-  initializeModel()
-}
-class ItemDemuxer {
-  open()
-  createSnapshot()
-  createItemSnapshot()
-  createLinkSnapshot()
-  restoreFromSnapshot()
-}
+DatabaseBackendHost --> ItemManager : _itemManager
+DatabaseBackendHost --> ItemDemuxer : _itemDemuxer
+DatabaseBackendHost *-- ItemDemuxerOptions : _options
 class Database {
   addType()
   create()
@@ -166,6 +202,7 @@ class HaloInvitationsHandler {
   createInvitation()
   acceptInvitation()
 }
+HaloInvitationsHandler --> IdentityManager : _identityManager
 class SpaceManager {
   spaces
   open()
@@ -173,12 +210,24 @@ class SpaceManager {
   createSpace()
   acceptSpace()
 }
+SpaceManager *-- "Map" Space : _spaces
 SpaceManager --> MetadataStore : _metadataStore
 SpaceManager --> DataServiceSubscriptions : _dataServiceSubscriptions
+SpaceManager --> SigningContext : _signingContext
+class SigningContext {
+<interface>
+  identityKey
+  deviceKey
+  credentialProvider
+  credentialAuthenticator
+  credentialSigner
+}
 class SpaceInvitationsHandler {
   createInvitation()
   acceptInvitation()
 }
+SpaceInvitationsHandler --> SpaceManager : _spaceManager
+SpaceInvitationsHandler --> SigningContext : _signingContext
 class ServiceRegistry {
   descriptors
   services

@@ -11,11 +11,11 @@ import { Timeframe } from '@dxos/timeframe';
 import { DataServiceImpl, DataServiceSubscriptions } from './data-service';
 import { DataServiceHost } from './data-service-host';
 import { Database } from './database';
-import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
+import { DatabaseBackendHost, DatabaseBackendProxy } from './database-backend';
 
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
-  const backend = new FeedDatabaseBackend(feed, undefined, { snapshots: true });
+  const backend = new DatabaseBackendHost(feed, undefined, { snapshots: true });
 
   feed.written.on(([data, meta]) =>
     backend.echoProcessor({
@@ -44,7 +44,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const spaceKey = PublicKey.random();
   dataServiceSubscriptions.registerSpace(spaceKey, dataServiceHost);
 
-  const database = new Database(modelFactory, new RemoteDatabaseBackend(dataService, spaceKey), PublicKey.random());
+  const database = new Database(modelFactory, new DatabaseBackendProxy(dataService, spaceKey), PublicKey.random());
 
   await database.initialize();
   return database;

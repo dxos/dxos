@@ -42,8 +42,7 @@ export interface DatabaseBackend {
  * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
  * Write operations result in mutations being written to the outgoing stream.
  */
-// TODO(burdon): Why "Feed" Database? (Host?)
-export class FeedDatabaseBackend implements DatabaseBackend {
+export class DatabaseBackendHost implements DatabaseBackend {
   private _echoProcessor!: EchoProcessor;
   private _itemManager!: ItemManager;
   private _itemDemuxer!: ItemDemuxer;
@@ -91,7 +90,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
  * Database backend that is backed by the DataService instance.
  * Uses DataMirror to populate entities in ItemManager.
  */
-export class RemoteDatabaseBackend implements DatabaseBackend {
+export class DatabaseBackendProxy implements DatabaseBackend {
   private readonly _subscriptions = new EventSubscriptions();
   private _itemManager!: ItemManager;
 

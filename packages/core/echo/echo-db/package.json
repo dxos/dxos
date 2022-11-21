@@ -56,8 +56,13 @@
     "access": "public"
   },
   "beast": {
-    "classDiagram": {
-      "root": "src/packlets/database/database.ts"
-    }
+    "classDiagrams": [
+      {
+        "root": "src/packlets/database/database.ts"
+      },
+      {
+        "root": "src/packlets/database/database-backend.ts"
+      }
+    ]
   }
 }

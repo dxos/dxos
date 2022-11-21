@@ -59,11 +59,13 @@
     "access": "public"
   },
   "beast": {
-    "classDiagram": {
-      "root": "src/packlets/services/service-host.ts",
-      "dependencies": [
-        "@dxos/echo-db"
-      ]
-    }
+    "classDiagrams": [
+      {
+        "root": "src/packlets/services/service-host.ts",
+        "dependencies": [
+          "@dxos/echo-db"
+        ]
+      }
+    ]
   }
 }

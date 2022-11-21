@@ -66,8 +66,13 @@
     "access": "public"
   },
   "beast": {
-    "classDiagram": {
-      "root": "src/packlets/client/client.ts"
-    }
+    "classDiagrams": [
+      {
+        "root": "src/packlets/client/client.ts",
+        "dependencies": [
+          "@dxos/client-services"
+        ]
+      }
+    ]
   }
 }

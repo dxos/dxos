@@ -2,28 +2,35 @@
 
 Core DXOS Client API.
 
-## Class Diagram
+## Class Diagrams
 
 ```mermaid
 classDiagram
+direction TB
 
 class Client {
   config
   initialized
   halo
   echo
-  [inspect.custom]()
   toJSON()
   initialize()
   destroy()
   reset()
 }
+Client --> ClientServicesProvider : _services
 Client --> HaloProxy : _halo
 Client --> EchoProxy : _echo
+class ClientServicesProvider {
+<interface>
+  descriptors
+  services
+  open()
+  close()
+}
 class HaloProxy {
   profile
   invitations
-  [inspect.custom]()
   toJSON()
   subscribeToProfile()
   createProfile()
@@ -32,21 +39,72 @@ class HaloProxy {
   createInvitation()
   acceptInvitation()
   queryDevices()
-  _open()
-  _close()
+}
+HaloProxy *-- HaloInvitationsProxy : _invitationProxy
+HaloProxy --> ClientServicesProvider : _serviceProvider
+class HaloInvitationsProxy {
+  getInvitationOptions()
 }
 class EchoProxy {
   modelFactory
   networkManager
-  [inspect.custom]()
   toJSON()
-  _open()
-  _close()
   createSpace()
   cloneSpace()
   getSpace()
   querySpaces()
   acceptInvitation()
+}
+EchoProxy *-- "Map" SpaceProxy : _spaces
+EchoProxy *-- SpaceInvitationsProxy : _invitationProxy
+EchoProxy --> ClientServicesProvider : _serviceProvider
+EchoProxy --> HaloProxy : _haloProxy
+class SpaceProxy {
+  key
+  isOpen
+  isActive
+  database
+  select
+  reduce
+  properties
+  invitations
+  initialize()
+  destroy()
+  open()
+  close()
+  getDetails()
+  _setOpen()
+  setActive()
+  setTitle()
+  getTitle()
+  setProperty()
+  getProperty()
+  queryMembers()
+  createInvitation()
+  createSnapshot()
+  _processSpaceUpdate()
+}
+SpaceProxy *-- SpaceInvitationsProxy : _invitationProxy
+SpaceProxy --> ClientServicesProvider : _clientServices
+SpaceProxy --> Space : _space
+class SpaceInvitationsProxy {
+  getInvitationOptions()
+}
+class Space {
+<interface>
+  initialize()
+  destroy()
+  open()
+  close()
+  setActive()
+  setTitle()
+  getTitle()
+  getDetails()
+  setProperty()
+  getProperty()
+  queryMembers()
+  createInvitation()
+  createSnapshot()
 }
 ```
 

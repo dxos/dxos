@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { execSync } from 'child_process';
 import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -10,6 +9,7 @@ import { hideBin } from 'yargs/helpers';
 import { log } from '@dxos/log';
 
 import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
+import { getBaseDir } from './util';
 
 const main = () => {
   log.info('Started');
@@ -24,7 +24,7 @@ const main = () => {
     })
     .option('base-dir', {
       type: 'string',
-      default: execSync('git rev-parse --show-toplevel').toString().trim()
+      default: getBaseDir()
     })
 
     .command({

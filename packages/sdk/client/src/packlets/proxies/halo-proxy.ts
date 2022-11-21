@@ -202,9 +202,8 @@ export class HaloProxy implements Halo {
 
   /**
    * Allocate resources and set-up internal subscriptions.
-   * @internal
    */
-  async _open() {
+  private async _open() {
     const gotProfile = this.profileChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -229,9 +228,8 @@ export class HaloProxy implements Halo {
 
   /**
    * Destroy the instance and clean-up subscriptions.
-   * @internal
    */
-  _close() {
+  private _close() {
     this._subscriptions.clear();
   }
 }

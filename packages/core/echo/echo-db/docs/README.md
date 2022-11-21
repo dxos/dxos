@@ -2,10 +2,11 @@
 
 ECHO database.
 
-## Class Diagram
+## Class Diagrams
 
 ```mermaid
 classDiagram
+direction TB
 
 class Database {
   state
@@ -24,6 +25,7 @@ class Database {
   createDataServiceHost()
 }
 Database --> ItemManager : _itemManager
+Database --> DatabaseBackend : _backend
 class ItemManager {
   entities
   items
@@ -38,6 +40,88 @@ class ItemManager {
   deconstructItem()
   initializeModel()
 }
+ItemManager *-- "Map" Entity : _entities
+class Entity {
+  id
+  type
+  modelType
+  modelMeta
+  model
+  subscribe()
+}
+Entity --> ItemManager : _itemManager
+class DatabaseBackend {
+<interface>
+  isReadOnly
+  open()
+  close()
+  getWriteStream()
+  createSnapshot()
+  createDataServiceHost()
+}
+```
+```mermaid
+classDiagram
+direction TB
+
+class DatabaseBackendHost {
+  isReadOnly
+  echoProcessor
+  open()
+  close()
+  getWriteStream()
+  createSnapshot()
+  createDataServiceHost()
+}
+DatabaseBackendHost --> ItemManager : _itemManager
+DatabaseBackendHost --> ItemDemuxer : _itemDemuxer
+DatabaseBackendHost *-- ItemDemuxerOptions : _options
+class ItemManager {
+  entities
+  items
+  links
+  createItem()
+  createLink()
+  constructItem()
+  constructLink()
+  processModelMessage()
+  getItem()
+  getUninitializedEntities()
+  deconstructItem()
+  initializeModel()
+}
+ItemManager *-- "Map" Entity : _entities
+class Entity {
+  id
+  type
+  modelType
+  modelMeta
+  model
+  subscribe()
+}
+Entity --> ItemManager : _itemManager
+class ItemDemuxer {
+  open()
+  createSnapshot()
+  createItemSnapshot()
+  createLinkSnapshot()
+  restoreFromSnapshot()
+}
+ItemDemuxer --> ItemManager : _itemManager
+ItemDemuxer *-- ItemDemuxerOptions : _options
+class ItemDemuxerOptions {
+<interface>
+  snapshots
+}
+class DatabaseBackendProxy {
+  isReadOnly
+  open()
+  close()
+  getWriteStream()
+  createSnapshot()
+  createDataServiceHost()
+}
+DatabaseBackendProxy --> ItemManager : _itemManager
 ```
 
 ## Dependency Graph

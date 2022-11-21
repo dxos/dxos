@@ -46,9 +46,10 @@ export class PackageDependencyBuilder {
     // TODO(burdon): Use remark lib (see ridoculous).
     const sections: string[] = [];
 
-    const classDiagram = this.generateClassDiagram(project);
-    if (classDiagram) {
-      sections.push('\n## Class Diagram\n', classDiagram);
+    // TODO(burdon): Support multiple diagrams.
+    const classDiagrams = this.generateClassDiagrams(project);
+    if (classDiagrams) {
+      sections.push('\n## Class Diagrams\n', ...classDiagrams);
     }
 
     const packageGraph = this.generatePackageGraph(project, docsDir, baseUrl);
@@ -75,31 +76,28 @@ export class PackageDependencyBuilder {
   /**
    * Generate class diagram.
    */
-  private generateClassDiagram(project: Project) {
-    const config = project.package.beast?.classDiagram;
-    if (!config) {
-      return;
-    }
+  private generateClassDiagrams(project: Project) {
+    return project.package.beast?.classDiagrams?.map((config) => {
+      const { root, dependencies, glob = 'src/**/*.ts' } = config;
+      const sources = [join(this._workspace.baseDir, project.subDir, glob)];
 
-    const { root, dependencies, glob = 'src/**/*.ts' } = config;
-    const sources = [join(this._workspace.baseDir, project.subDir, glob)];
+      dependencies?.forEach((name) => {
+        const project = this._workspace.getProjectByPackage(name);
+        if (project) {
+          sources.push(join(this._workspace.baseDir, project.subDir, glob));
+        }
+      });
 
-    dependencies?.forEach((name) => {
-      const project = this._workspace.getProjectByPackage(name);
-      if (project) {
-        sources.push(join(this._workspace.baseDir, project.subDir, glob));
-      }
+      const classProcessor = new ClassProcessor(sources);
+      classProcessor.processFile(join(this._workspace.baseDir, project.subDir, root));
+
+      const classDiagram = new ClassDiagram();
+      classProcessor.getClasses().forEach((def) => {
+        classDiagram.addClass(def);
+      });
+
+      return classDiagram.render();
     });
-
-    const classProcessor = new ClassProcessor(sources);
-    classProcessor.processFile(join(this._workspace.baseDir, project.subDir, root));
-
-    const classDiagram = new ClassDiagram();
-    classProcessor.getClasses().forEach((def) => {
-      classDiagram.addClass(def);
-    });
-
-    return classDiagram.render();
   }
 
   /**

@@ -2,6 +2,81 @@
 
 A consistent store for hypercore feeds.
 
+## Class Diagrams
+
+```mermaid
+classDiagram
+direction TB
+
+class FeedStore {
+  size
+  feeds
+  getFeed()
+  openFeed()
+  close()
+}
+FeedStore *-- "Map" FeedWrapper : _feeds
+FeedStore --> FeedFactory : _factory
+FeedStore --> FeedStoreOptions : { factory }
+class FeedWrapper {
+  key
+  core
+  properties
+  toJSON()
+  createReadableStream()
+  createFeedWriter()
+}
+class FeedFactory {
+  createFeed()
+}
+class FeedStoreOptions {
+<interface>
+  factory
+}
+```
+```mermaid
+classDiagram
+direction TB
+
+class AbstractFeedIterator {
+  isOpen
+  isRunning
+  toJSON()
+  open()
+  close()
+  start()
+  stop()
+  _generator()
+}
+class FeedIterator {
+  _onOpen()
+  _onClose()
+  _nextBlock()
+}
+FeedIterator --> FeedQueue : _queue
+FeedIterator --> FeedWrapper : _feed
+class FeedQueue {
+  feed
+  isOpen
+  length
+  index
+  toJSON()
+  open()
+  close()
+  peek()
+  pop()
+}
+FeedQueue --> FeedWrapper : _feed
+class FeedWrapper {
+  key
+  core
+  properties
+  toJSON()
+  createReadableStream()
+  createFeedWriter()
+}
+```
+
 ## Dependency Graph
 
 ```mermaid

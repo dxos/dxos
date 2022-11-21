@@ -22,11 +22,11 @@ export type WorkspaceJson = {
  * Project config in `package.json`.
  */
 export type PackageConfig = {
-  classDiagram?: {
+  classDiagrams?: {
     root: string;
     dependencies?: string[];
     glob?: string;
-  };
+  }[];
 };
 
 export type PackageJson = {
