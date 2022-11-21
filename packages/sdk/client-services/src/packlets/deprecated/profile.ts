@@ -30,7 +30,8 @@ export class ProfileServiceImpl implements ProfileService {
         next({
           profile: this.context.identityManager.identity
             ? {
-                identityKey: this.context.identityManager.identity.identityKey
+                identityKey: this.context.identityManager.identity.identityKey,
+                deviceKey: this.context.identityManager.identity.deviceKey
               }
             : undefined
         });
@@ -42,7 +43,10 @@ export class ProfileServiceImpl implements ProfileService {
 
   async createProfile(request: CreateProfileRequest): Promise<Profile> {
     await this.context.createIdentity();
-    return { identityKey: this.context.identityManager.identity!.identityKey };
+    return {
+      identityKey: this.context.identityManager.identity!.identityKey,
+      deviceKey: this.context.identityManager.identity!.deviceKey
+    };
   }
 
   async recoverProfile(request: RecoverProfileRequest): Promise<Profile> {
