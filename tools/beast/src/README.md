@@ -4,10 +4,16 @@ Code analysis tools.
 
 ## Usage
 
-To Update a particular package:
+To update all packages:
 
 ```bash
-log client-services
+LOG_CONFIG=./log-config.yml pnpm run update
+```
+
+To update a particular package:
+
+```bash
+LOG_CONFIG=./log-config.yml pnpm run update "**/echo-db"
 ```
 
 ## Testing

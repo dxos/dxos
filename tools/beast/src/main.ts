@@ -140,6 +140,10 @@ const main = () => {
         include: string;
         exclude: string;
       }) => {
+        // TODO(burdon): Calculate basedir from git rev-parse util.
+        log('docs', { pattern });
+        console.log('xx', pattern);
+
         const processor = new WorkspaceProcessor(baseDir, {
           verbose,
           include
