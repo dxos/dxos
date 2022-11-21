@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
@@ -13,6 +13,7 @@ import {
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
@@ -86,6 +87,7 @@ export class SpaceProxy implements Space {
   public readonly invitationsUpdate = new Event<InvitationObservable>();
   public readonly stateUpdate = new Event();
 
+  private _initializing = false;
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
@@ -161,19 +163,28 @@ export class SpaceProxy implements Space {
   /**
    * Called by EchoProxy open.
    */
+  @synchronized
   async initialize() {
-    await this._database!.initialize();
+    if (this._initializing) {
+      return;
+    }
+    this._initializing = true;
 
+    await this._database!.initialize();
+    
     // Root item for properties.
     this._item = await this._database?.createItem({ type: SPACE_ITEM_TYPE });
-
+    
     this.stateUpdate.emit();
+    log('initialized')
   }
 
   /**
    * Called by EchoProxy close.
    */
+  @synchronized
   async destroy() {
+    log('destroying...')
     if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }

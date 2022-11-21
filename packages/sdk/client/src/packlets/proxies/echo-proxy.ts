@@ -41,6 +41,8 @@ export class EchoProxy implements Echo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
 
+  private _destroying = false;
+
   // prettier-ignore
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
@@ -81,7 +83,7 @@ export class EchoProxy implements Echo {
   /**
    * @internal
    */
-  async _open() {
+  async _initialize() {
     const gotSpaces = this._spacesChanged.waitForCount(1);
 
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
@@ -89,6 +91,9 @@ export class EchoProxy implements Echo {
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
+          if(this._destroying) {
+            return;
+          }
 
           const spaceProxy = new SpaceProxy(
             this._serviceProvider,
@@ -97,8 +102,9 @@ export class EchoProxy implements Echo {
             this._haloProxy.profile!.identityKey
           );
 
-          await spaceProxy.initialize();
+          // NOTE: Must reference space in a map before initializing.
           this._spaces.set(spaceProxy.key, spaceProxy);
+          await spaceProxy.initialize();
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on(entity => {
@@ -134,7 +140,9 @@ export class EchoProxy implements Echo {
   /**
    * @internal
    */
-  async _close() {
+  async _destroy() {
+    this._destroying = true;
+
     for (const space of this._spaces.values()) {
       await space.destroy();
     }
