@@ -4,6 +4,8 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { Diagram } from './diagram';
+
 // TODO(burdon): Make types relevant to ERD, etc.
 
 type Style = {
@@ -44,13 +46,13 @@ const ROOT_SUBGRAPH_ID = '_root_';
  */
 class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
-  private readonly _subgraphs = new Set<SubgraphBuilder>();
+  private readonly _subGraphs = new Set<SubgraphBuilder>();
 
   constructor(readonly id: string, readonly label?: string, readonly style?: string) {}
 
   addSubgraph({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
-    this._subgraphs.add(subgraph);
+    this._subGraphs.add(subgraph);
     return subgraph;
   }
 
@@ -66,7 +68,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
     const sections = [
       // Current style.
-      this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
+      this.style && line(Flowchart.renderStyle({ id: this.id, properties: this.style }), indent + 1),
 
       // Nodes.
       section(
@@ -77,7 +79,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
       // Recursively render subgraphs.
       section(
-        Array.from(this._subgraphs.values())
+        Array.from(this._subGraphs.values())
           .map((subgraph) => ['', subgraph.build(indent + 1)].flat())
           .flat()
       )
@@ -106,10 +108,9 @@ export const FlowchartDefaultOptions: FlowchartOptions = {
 
 /**
  * Mermaid Flowchart builder.
- * https://mermaid.live
- * https://mermaid-js.github.io/mermaid/#/README
+ * https://mermaid-js.github.io/mermaid/#/flowchart
  */
-export class Flowchart implements SubgraphBuilder {
+export class Flowchart implements Diagram, SubgraphBuilder {
   private readonly _classDefs = new Set<Style>();
   private readonly _root: SubgraphBuilder = new SubgraphImpl(ROOT_SUBGRAPH_ID);
   private readonly _links = new Set<Link>();
@@ -187,6 +188,9 @@ export class Flowchart implements SubgraphBuilder {
   // Renderers
   //
 
+  // TODO(burdon): Config.
+  static style = false;
+
   // https://mermaid-js.github.io/mermaid/#/directives
   static renderDirective(directive: string, properties: any): string {
     return `%%{ ${directive}: ${JSON.stringify(properties).replace(/"/g, "'")} }%%`;
@@ -199,15 +203,28 @@ export class Flowchart implements SubgraphBuilder {
   }
 
   static renderStyle({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      // Support light/dark theme.
+      return `style ${id} fill:transparent`;
+    }
+
     return `style ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
   static renderLinkStyle({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      return '';
+    }
+
     return `linkStyle ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
   // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-and-classes
   static renderClassDef({ id, properties }: Style): string {
+    if (!Flowchart.style) {
+      return '';
+    }
+
     return `classDef ${id} ${Flowchart.renderProperties(properties)}`;
   }
 
@@ -218,7 +235,7 @@ export class Flowchart implements SubgraphBuilder {
 
     return [
       def,
-      node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
+      node.style && Flowchart.renderStyle({ id: node.id, properties: node.style }),
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`
