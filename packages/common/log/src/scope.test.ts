@@ -1,12 +1,10 @@
 import { log } from "./log";
 import { logInfo } from "./scope";
 
-describe.only('Scope capture', () => {
+describe('Scope capture', () => {
   it('field instance', function () {
- 
-    class Outer {
-
-      constructor(private readonly _id: string) {}
+    class Container {
+      constructor(private readonly _id: string) { }
 
       @logInfo
       get id() {
@@ -18,8 +16,8 @@ describe.only('Scope capture', () => {
       }
     }
 
-    const foo = new Outer('foo');
-    const bar = new Outer('bar');
+    const foo = new Container('foo');
+    const bar = new Container('bar');
 
     foo.run();
     bar.run();
