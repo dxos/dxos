@@ -18,15 +18,30 @@ ClientServicesHost --> ServiceRegistry : _serviceRegistry
 class ServiceContext {
   open()
   close()
+  destroy()
   createIdentity()
 }
+ServiceContext *-- DataServiceSubscriptions : dataServiceSubscriptions
 ServiceContext --> MetadataStore : metadataStore
-ServiceContext --> FeedStore : feedStore
-ServiceContext --> Keyring : keyring
 ServiceContext --> IdentityManager : identityManager
 ServiceContext --> HaloInvitationsHandler : haloInvitations
 ServiceContext --> SpaceManager : spaceManager
 ServiceContext --> SpaceInvitationsHandler : spaceInvitations
+class DataServiceSubscriptions {
+  clear()
+  registerSpace()
+  unregisterSpace()
+  getDataService()
+}
+class MetadataStore {
+  version
+  spaces
+  load()
+  clear()
+  getIdentityRecord()
+  setIdentityRecord()
+  addSpace()
+}
 class IdentityManager {
   identity
   open()
@@ -50,14 +65,116 @@ class Identity {
   admitDevice()
 }
 Identity --> Space : _space
-Identity --> Signer : _signer
-Identity --> DeviceStateMachine : _deviceStateMachine
-Identity --> PublicKey : identityKey
-Identity --> PublicKey : deviceKey
+class Space {
+  key
+  isOpen
+  database
+  genesisFeedKey
+  controlFeedKey
+  dataFeedKey
+  spaceState
+  controlPipeline
+  open()
+  close()
+}
+Space --> ControlPipeline : _controlPipeline
+Space --> SpaceProtocol : _protocol
+Space --> Pipeline : _dataPipeline
+Space --> FeedDatabaseBackend : _databaseBackend
+Space --> Database : _database
+class ControlPipeline {
+  spaceState
+  pipeline
+  setWriteFeed()
+  start()
+  stop()
+}
+ControlPipeline --> Pipeline : _pipeline
+class Pipeline {
+  state
+  writer
+  addFeed()
+  setWriteFeed()
+  start()
+  stop()
+  consume()
+}
+Pipeline *-- TimeframeClock : _timeframeClock
+Pipeline *-- PipelineState : _state
+class TimeframeClock {
+  timeframe
+  updateTimeframe()
+  hasGaps()
+  waitUntilReached()
+}
+class PipelineState {
+  endTimeframe
+  timeframe
+  waitUntilTimeframe()
+}
+class SpaceProtocol {
+  peers
+  addFeed()
+  start()
+  stop()
+}
+SpaceProtocol *-- ReplicatorPlugin : _replicator
+SpaceProtocol --> AuthPlugin : _authPlugin
+class ReplicatorPlugin {
+  addFeed()
+}
+class AuthPlugin {
+  createExtension()
+}
+class FeedDatabaseBackend {
+  isReadOnly
+  echoProcessor
+  open()
+  close()
+  getWriteStream()
+  createSnapshot()
+  createDataServiceHost()
+}
+FeedDatabaseBackend --> ItemManager : _itemManager
+FeedDatabaseBackend --> ItemDemuxer : _itemDemuxer
+class ItemManager {
+  entities
+  items
+  links
+  createItem()
+  createLink()
+  constructItem()
+  constructLink()
+  processModelMessage()
+  getItem()
+  getUninitializedEntities()
+  deconstructItem()
+  initializeModel()
+}
+class ItemDemuxer {
+  open()
+  createSnapshot()
+  createItemSnapshot()
+  createLinkSnapshot()
+  restoreFromSnapshot()
+}
+class Database {
+  addType()
+  create()
+}
 class HaloInvitationsHandler {
   createInvitation()
   acceptInvitation()
 }
+class SpaceManager {
+  spaces
+  open()
+  close()
+  createSpace()
+  acceptSpace()
+}
+SpaceManager --> MetadataStore : _metadataStore
+SpaceManager --> DataServiceSubscriptions : _dataServiceSubscriptions
 class SpaceInvitationsHandler {
   createInvitation()
   acceptInvitation()

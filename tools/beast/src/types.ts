@@ -18,16 +18,23 @@ export type WorkspaceJson = {
   readonly projects: { [idx: string]: string };
 };
 
+/**
+ * Project config in `package.json`.
+ */
+export type PackageConfig = {
+  classDiagram?: {
+    root: string;
+    dependencies?: string[];
+    glob?: string;
+  };
+};
+
 export type PackageJson = {
   readonly name: string;
   readonly description: string;
   readonly version: string;
   readonly dependencies: { [idx: string]: string };
-  readonly beast?: {
-    classDiagram?: {
-      root: string;
-    };
-  };
+  readonly beast?: PackageConfig;
 };
 
 //
@@ -65,13 +72,3 @@ export type Class = {
 export type Property = {
   readonly struct: PropertyDeclarationStructure;
 };
-
-//
-// Interfaces
-//
-
-export interface ProjectMap {
-  getProjects(filter?: string): Project[];
-  getProjectByName(name: string): Project | undefined;
-  getProjectByPackage(packageName: string): Project | undefined;
-}

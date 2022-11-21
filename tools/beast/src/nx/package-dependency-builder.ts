@@ -5,11 +5,11 @@
 import ColorHash from 'color-hash';
 import fs from 'fs';
 import path, { join } from 'path';
-import process from 'process';
 
 import { ClassDiagram, Flowchart, SubgraphBuilder } from '../mermaid';
+import { WorkspaceProcessor } from '../nx';
 import { ClassProcessor } from '../ts';
-import { Project, ProjectMap } from '../types';
+import { Project } from '../types';
 import { array } from '../util';
 
 const colorHash = new ColorHash({
@@ -29,21 +29,21 @@ type PackageDependencyBuilderOptions = {
  */
 export class PackageDependencyBuilder {
   constructor(
-    private readonly _baseDir: string,
-    private readonly _projectMap: ProjectMap,
+    private readonly _workspace: WorkspaceProcessor,
     private readonly _options: PackageDependencyBuilderOptions
   ) {}
 
   /**
    * Create docs page.
    */
-  // TODO(burdon): Use remark lib (see ridoculous).
   createDocs(project: Project, docsDir: string, baseUrl: string) {
-    const baseDir = path.join(this._baseDir, project.subDir, docsDir);
+    const baseDir = path.join(this._workspace.baseDir, project.subDir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
 
+    // Build README.
+    // TODO(burdon): Use remark lib (see ridoculous).
     const sections: string[] = [];
 
     const classDiagram = this.generateClassDiagram(project);
@@ -76,18 +76,30 @@ export class PackageDependencyBuilder {
    * Generate class diagram.
    */
   private generateClassDiagram(project: Project) {
-    const classDiagramRoot = project.package.beast?.classDiagram?.root;
-    if (classDiagramRoot) {
-      const classProcessor = new ClassProcessor(join(process.cwd(), this._baseDir, project.subDir));
-      classProcessor.processFile(classDiagramRoot);
-
-      const classDiagram = new ClassDiagram();
-      classProcessor.getClasses().forEach((def) => {
-        classDiagram.addClass(def);
-      });
-
-      return classDiagram.render();
+    const config = project.package.beast?.classDiagram;
+    if (!config) {
+      return;
     }
+
+    const { root, dependencies, glob = 'src/**/*.ts' } = config;
+    const sources = [join(this._workspace.baseDir, project.subDir, glob)];
+
+    dependencies?.forEach((name) => {
+      const project = this._workspace.getProjectByPackage(name);
+      if (project) {
+        sources.push(join(this._workspace.baseDir, project.subDir, glob));
+      }
+    });
+
+    const classProcessor = new ClassProcessor(sources);
+    classProcessor.processFile(join(this._workspace.baseDir, project.subDir, root));
+
+    const classDiagram = new ClassDiagram();
+    classProcessor.getClasses().forEach((def) => {
+      classDiagram.addClass(def);
+    });
+
+    return classDiagram.render();
   }
 
   /**
@@ -106,7 +118,7 @@ export class PackageDependencyBuilder {
     array(project.descendents)
       .sort()
       .forEach((packageName) => {
-        const sub = this._projectMap.getProjectByPackage(packageName)!;
+        const sub = this._workspace.getProjectByPackage(packageName)!;
         const link = createLink(sub);
         content.push(
           `| ${link} | ${
@@ -252,7 +264,7 @@ export class PackageDependencyBuilder {
                 id: safeName(packageName),
                 label: packageName,
                 className: packageName === project.package.name ? 'root' : 'def',
-                href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subDir, docsDir)
+                href: path.join(baseUrl, this._workspace.getProjectByPackage(packageName)!.subDir, docsDir)
               });
             });
 

@@ -6,7 +6,7 @@ import fs from 'fs';
 import minimatch, { Minimatch } from 'minimatch';
 import path from 'path';
 
-import { PackageJson, Project, ProjectMap, WorkspaceJson } from '../types';
+import { PackageJson, Project, WorkspaceJson } from '../types';
 import { array } from '../util';
 
 type WorkspaceProcessorOptions = {
@@ -17,7 +17,7 @@ type WorkspaceProcessorOptions = {
 /**
  * Process packages in workspace.
  */
-export class WorkspaceProcessor implements ProjectMap {
+export class WorkspaceProcessor {
   private readonly _projectsByName = new Map<string, Project>();
   private readonly _projectsByPackage = new Map<string, Project>();
 
@@ -27,6 +27,10 @@ export class WorkspaceProcessor implements ProjectMap {
     private readonly _options: WorkspaceProcessorOptions = {}
   ) {}
 
+  get baseDir() {
+    return this._baseDir;
+  }
+
   getProjects(filter?: string): Project[] {
     const projects = array(this._projectsByPackage);
     if (!filter) {
@@ -35,9 +39,7 @@ export class WorkspaceProcessor implements ProjectMap {
 
     const match = new Minimatch(filter, {});
     return projects.filter((project) => {
-      const m = match.match(project.subDir);
-      // console.log('>>', filter, project.subDir, m, project.subDir.indexOf(filter));
-      return m;
+      return match.match(project.subDir);
     });
   }
 

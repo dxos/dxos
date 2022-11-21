@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { execSync } from 'child_process';
 import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -23,7 +24,7 @@ const main = () => {
     })
     .option('base-dir', {
       type: 'string',
-      default: process.cwd()
+      default: execSync('git rev-parse --show-toplevel').toString().trim()
     })
 
     .command({
@@ -53,14 +54,12 @@ const main = () => {
         json,
         verbose,
         baseDir,
-        project: name,
-        filter
+        project: name
       }: {
         json?: boolean;
         verbose?: boolean;
         baseDir: string;
         project?: string;
-        filter?: string;
       }) => {
         if (!name) {
           process.exit(1);
@@ -140,16 +139,8 @@ const main = () => {
         include: string;
         exclude: string;
       }) => {
-        // TODO(burdon): Calculate basedir from git rev-parse util.
-        log('docs', { pattern });
-        console.log('xx', pattern);
-
-        const processor = new WorkspaceProcessor(baseDir, {
-          verbose,
-          include
-        }).init();
-
-        const builder = new PackageDependencyBuilder(baseDir, processor, {
+        const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
+        const builder = new PackageDependencyBuilder(processor, {
           verbose,
           exclude: exclude?.split(',')
         });

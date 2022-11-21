@@ -23,8 +23,8 @@ const baseDir = path.join(__dirname, '../../..');
 
 describe('Code analysis', function () {
   it('Sanity', function () {
-    const processor = new WorkspaceProcessor(baseDir).init();
-    const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
+    const workspace = new WorkspaceProcessor(baseDir).init();
+    const builder = new ProjectProcessor(workspace, '@dxos/client');
 
     const root = builder.getClass('Client');
     console.log(root?.getName());
@@ -32,8 +32,8 @@ describe('Code analysis', function () {
   });
 
   it('Create graph', function () {
-    const processor = new WorkspaceProcessor(baseDir).init();
-    const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
+    const workspace = new WorkspaceProcessor(baseDir).init();
+    const builder = new ProjectProcessor(workspace, '@dxos/client');
 
     const process = (flowchart: Flowchart, root: ClassDeclaration, depth: number) => {
       const struct = root.getStructure();

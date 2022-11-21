@@ -106,7 +106,6 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  // TODO(burdon): Rename open; remove callback (return observer).
   async initialize() {
     if (this._initialized) {
       return;
@@ -132,7 +131,6 @@ export class Client {
    * Cleanup, release resources.
    */
   @synchronized
-  // TODO(burdon): Rename close (make sure re-entrant).
   async destroy() {
     if (!this._initialized) {
       return;
@@ -153,6 +151,7 @@ export class Client {
   // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
   @synchronized
   async reset() {
+    await this.destroy();
     await this._services.services?.SystemService.reset();
     this._halo.profileChanged.emit();
     this._initialized = false;

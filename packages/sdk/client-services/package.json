@@ -60,7 +60,10 @@
   },
   "beast": {
     "classDiagram": {
-      "root": "src/packlets/services/service-host.ts"
+      "root": "src/packlets/services/service-host.ts",
+      "dependencies": [
+        "@dxos/echo-db"
+      ]
     }
   }
 }

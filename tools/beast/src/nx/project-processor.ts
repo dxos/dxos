@@ -5,7 +5,7 @@
 import path from 'path';
 import { ClassDeclaration, Project } from 'ts-morph';
 
-import { ProjectMap } from '../types';
+import { WorkspaceProcessor } from '../nx';
 
 /**
  * Process Nx project and package.
@@ -13,9 +13,13 @@ import { ProjectMap } from '../types';
 export class ProjectProcessor {
   private readonly _project: Project;
 
-  constructor(private readonly _baseDir: string, private readonly _projectMap: ProjectMap, packageName: string) {
-    const subDir = this._projectMap.getProjectByPackage(packageName)?.subDir;
-    const projectDir = path.join(this._baseDir, subDir!);
+  // prettier-ignore
+  constructor(
+    private readonly _workspace: WorkspaceProcessor,
+    packageName: string
+  ) {
+    const subDir = this._workspace.getProjectByPackage(packageName)?.subDir;
+    const projectDir = path.join(this._workspace.baseDir, subDir!);
 
     // https://ts-morph.com/details/index
     this._project = new Project({

@@ -32,16 +32,23 @@ export class ClassProcessor {
   private readonly _project = new Project();
   private readonly _classes = new Map<string, ClassDefinition>();
 
-  constructor(private readonly rootDir: string, private readonly glob = 'src/**/*.ts') {
+  // prettier-ignore
+  constructor(
+    private readonly sources: string[]
+  ) {
     // https://ts-morph.com/setup
-    this._project.addSourceFilesAtPaths(`${this.rootDir}/${glob}`);
+    this._project.addSourceFilesAtPaths(sources);
+    log('files', { sources, count: this._project.getSourceFiles().length });
   }
 
   getClasses() {
     return Array.from(this._classes.values());
   }
 
-  // TODO(burdon): Only searches current project.
+  /**
+   * Search all source files for referenced class.
+   */
+  // TODO(burdon): This would strictly require the import statement to disambiguate.
   findClass(className: string): ClassDeclaration | undefined {
     for (const sourceFile of this._project.getSourceFiles()) {
       const classDef = sourceFile.getClass(className);
@@ -53,8 +60,11 @@ export class ClassProcessor {
     return undefined;
   }
 
-  processFile(path: string) {
-    const sourceFile: SourceFile = this._project.getSourceFileOrThrow(`${this.rootDir}/${path}`);
+  /**
+   * Process classes in referenced file.
+   */
+  processFile(filePath: string) {
+    const sourceFile: SourceFile = this._project.getSourceFileOrThrow(filePath);
     const classes = sourceFile.getClasses();
     classes.forEach((name) => {
       const clazz = sourceFile.getClass(name.getName()!)!;
@@ -62,7 +72,10 @@ export class ClassProcessor {
     });
   }
 
-  processClass(classDeclaration: ClassDeclaration): ClassDefinition {
+  /**
+   * Recursively process class definitions.
+   */
+  processClass(classDeclaration: ClassDeclaration): ClassDefinition | undefined {
     // Structure can be stringified.
     // TODO(burdon): extends, implements, getAccessors
     const { name, methods, properties, getAccessors } = classDeclaration.getStructure();
@@ -89,39 +102,39 @@ export class ClassProcessor {
     });
 
     properties?.forEach((property) => {
-      const { name: propertyName, type, initializer, isReadonly } = property;
+      const { name: propertyName, initializer, isReadonly } = property;
 
-      // TODO(burdon): Provide source roots for other packages.
-      //  Check import statements.
-      if (!type) {
-        log(`Unknown type for ${classDef!.name}.${propertyName}`);
+      const tsProperty = classDeclaration
+        .getProperties()
+        .find((property) => property.getStructure().name === propertyName);
+
+      // TODO(burdon): The type returned from getStructure() is null if from another package.
+      //  Also, symbol is undefined for literals, but getType isn't well-formed.
+      const propertyType = tsProperty?.getType().compilerType.symbol?.escapedName;
+      if (!propertyType) {
+        log.warn(`Unknown type for ${classDef!.name}.${propertyName}`);
+        return;
       }
 
-      // TODO(burdon): Handle typed maps.
-      if (type && typeof type === 'string') {
-        const [propertyType] = type.split('<'); // TODO(burdon): Remove generic.
+      // Skip type definitions.
+      if (propertyType === '__type') {
+        return;
+      }
+
+      assert(propertyType);
+      {
         const classDeclaration = this.findClass(propertyType);
         if (classDeclaration) {
           const propertyClassDef = this.processClass(classDeclaration);
-          classDef!.properties.push({
-            name: propertyName,
-            type: 'class',
-            classDef: propertyClassDef
-          });
-        } else {
-          // TODO(burdon): Provide source roots for other packages.
-          log(`Type not found: ${propertyType}`);
-          classDef!.properties.push({
-            name: propertyName,
-            type: 'class',
-            initializer: !!initializer,
-            readonly: isReadonly,
-            classDef: {
-              name: propertyType,
-              methods: [],
-              properties: []
-            }
-          });
+          if (propertyClassDef) {
+            classDef!.properties.push({
+              name: propertyName,
+              type: 'class',
+              initializer: !!initializer,
+              readonly: isReadonly,
+              classDef: propertyClassDef
+            });
+          }
         }
       }
     });
