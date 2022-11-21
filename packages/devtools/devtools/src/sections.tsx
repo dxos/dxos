@@ -19,7 +19,7 @@ import {
   ConfigPanel,
   FeedsPanel,
   ItemsPanel,
-  // NetworkPanel,
+  NetworkPanel,
   SpacesPanel,
   Section,
   SignalPanel,
@@ -99,14 +99,12 @@ export const sections: Section[] = [
   {
     title: 'MESH',
     items: [
-      /*
       {
         id: 'mesh.network',
         title: 'Network Graph',
-        icon: SwarmIcon,
-        panel: NetworkPanel
+        icon: <SwarmIcon />,
+        panel: <NetworkPanel />
       },
-      */
       {
         id: 'mesh.swarminfo',
         title: 'Swarm',
