@@ -3,11 +3,11 @@
 //
 
 import fs from 'fs';
-import minimatch from 'minimatch';
+import minimatch, { Minimatch } from 'minimatch';
 import path from 'path';
 
-import { PackageJson, Project, ProjectMap, WorkspaceJson } from './types';
-import { array } from './util';
+import { PackageJson, Project, WorkspaceJson } from '../types';
+import { array } from '../util';
 
 type WorkspaceProcessorOptions = {
   verbose?: boolean;
@@ -17,15 +17,30 @@ type WorkspaceProcessorOptions = {
 /**
  * Process packages in workspace.
  */
-export class WorkspaceProcessor implements ProjectMap {
+export class WorkspaceProcessor {
   private readonly _projectsByName = new Map<string, Project>();
   private readonly _projectsByPackage = new Map<string, Project>();
 
-  constructor(private readonly _baseDir: string, private readonly _options: WorkspaceProcessorOptions = {}) {}
+  // prettier-ignore
+  constructor(
+    private readonly _baseDir: string,
+    private readonly _options: WorkspaceProcessorOptions = {}
+  ) {}
+
+  get baseDir() {
+    return this._baseDir;
+  }
 
   getProjects(filter?: string): Project[] {
     const projects = array(this._projectsByPackage);
-    return filter ? projects.filter((p) => minimatch(p.name, filter)) : projects;
+    if (!filter) {
+      return projects;
+    }
+
+    const match = new Minimatch(filter, {});
+    return projects.filter((project) => {
+      return match.match(project.subDir);
+    });
   }
 
   getProjectByName(name: string): Project | undefined {
@@ -46,7 +61,7 @@ export class WorkspaceProcessor implements ProjectMap {
       const packageJson = this.readJson<PackageJson>(path.join(subdir, 'package.json'));
       const project: Project = {
         name,
-        subdir,
+        subDir: subdir,
         package: packageJson,
         dependencies: new Set<Project>(),
         descendents: new Set<string>(),

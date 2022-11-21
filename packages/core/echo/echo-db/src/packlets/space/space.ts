@@ -16,7 +16,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { createMappedFeedWriter } from '../common';
-import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
+import { Database, DatabaseBackend, DatabaseBackendHost } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { SpaceProtocol } from './space-protocol';
@@ -71,7 +71,7 @@ export class Space implements ISpace {
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
-  private _databaseBackend?: FeedDatabaseBackend;
+  private _databaseBackend?: DatabaseBackendHost;
   private _database?: Database;
 
   constructor({
@@ -219,7 +219,7 @@ export class Space implements ISpace {
         this._dataPipeline.writer ?? failUndefined()
       );
 
-      this._databaseBackend = new FeedDatabaseBackend(
+      this._databaseBackend = new DatabaseBackendHost(
         feedWriter,
         {}, // TODO(dmaretskyi): Populate snapshot.
         {
@@ -230,9 +230,7 @@ export class Space implements ISpace {
 
     // Connect pipeline to the database.
     {
-      this._database = await this._databaseFactory({
-        databaseBackend: this._databaseBackend
-      });
+      this._database = await this._databaseFactory({ databaseBackend: this._databaseBackend });
       await this._database.initialize();
     }
 
