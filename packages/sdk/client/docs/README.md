@@ -7,26 +7,53 @@ Core DXOS Client API.
 ```mermaid
 classDiagram
 
-class Client
-Config --o Client : _config
-ModelFactory --o Client : _modelFactory
-ClientServicesProvider --o Client : _services
-HaloProxy --o Client : _halo
-EchoProxy --o Client : _echo
-class HaloProxy
-EventSubscriptions --o HaloProxy : _subscriptions
-Event --o HaloProxy : _contactsChanged
-HaloInvitationsProxy --o HaloProxy : _invitationProxy
-Array --o HaloProxy : _invitations
-Event --o HaloProxy : invitationsUpdate
-Event --o HaloProxy : profileChanged
-Profile --o HaloProxy : _profile
-Array --o HaloProxy : _contacts
-class EchoProxy
-ComplexMap --o EchoProxy : _spaces
-SpaceInvitationsProxy --o EchoProxy : _invitationProxy
-EventSubscriptions --o EchoProxy : _subscriptions
-Event --o EchoProxy : _spacesChanged
+class Client {
+  config
+  initialized
+  halo
+  echo
+  [inspect.custom]()
+  toJSON()
+  initialize()
+  destroy()
+  reset()
+}
+Client --> Config : _config
+Client --> ModelFactory : _modelFactory
+Client --> ClientServicesProvider : _services
+Client --> HaloProxy : _halo
+Client --> EchoProxy : _echo
+class HaloProxy {
+  profile
+  invitations
+  [inspect.custom]()
+  toJSON()
+  subscribeToProfile()
+  createProfile()
+  recoverProfile()
+  queryContacts()
+  createInvitation()
+  acceptInvitation()
+  queryDevices()
+  _open()
+  _close()
+}
+HaloProxy *-- InvitationObservable[] : _invitations
+HaloProxy --> Profile : _profile
+HaloProxy --> Contact[] : _contacts
+class EchoProxy {
+  modelFactory
+  networkManager
+  [inspect.custom]()
+  toJSON()
+  _open()
+  _close()
+  createSpace()
+  cloneSpace()
+  getSpace()
+  querySpaces()
+  acceptInvitation()
+}
 ```
 
 ## Dependency Graph

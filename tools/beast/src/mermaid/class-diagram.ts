@@ -38,7 +38,7 @@ export class ClassDiagram implements Diagram {
         .filter(({ type }) => type === 'class')
         .forEach(({ name: propertyName, initializer, readonly, classDef }) => {
           const composition = initializer && readonly;
-          const arrow = composition ? '-->' : '-->';
+          const arrow = composition ? '*--' : '-->';
           lines.push(`${name} ${arrow} ${classDef!.name} : ${propertyName}`);
         });
 

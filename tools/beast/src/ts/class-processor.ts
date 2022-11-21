@@ -73,6 +73,8 @@ export class ClassProcessor {
       return classDef;
     }
 
+    // TODO(burdon): Doesn't show constructor setters.
+
     classDef = { name, methods: [], properties: [] };
     this._classes.set(name, classDef);
 

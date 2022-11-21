@@ -7,14 +7,38 @@ ECHO database.
 ```mermaid
 classDiagram
 
-class Database
-ItemManager --o Database : _itemManager
-State --o Database : _state
-class ItemManager
-Event --o ItemManager : update
-Event --o ItemManager : debouncedUpdate
-Map --o ItemManager : _entities
-Map --o ItemManager : _pendingItems
+class Database {
+  state
+  isReadOnly
+  update
+  entityUpdate
+  initialize()
+  destroy()
+  createItem()
+  createLink()
+  getItem()
+  waitForItem()
+  select()
+  reduce()
+  createSnapshot()
+  createDataServiceHost()
+}
+Database --> ItemManager : _itemManager
+class ItemManager {
+  entities
+  items
+  links
+  createItem()
+  createLink()
+  constructItem()
+  constructLink()
+  processModelMessage()
+  getItem()
+  getUninitializedEntities()
+  deconstructItem()
+  initializeModel()
+}
+ItemManager *-- Event : debouncedUpdate
 ```
 
 ## Dependency Graph

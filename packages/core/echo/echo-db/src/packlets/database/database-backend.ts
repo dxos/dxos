@@ -42,6 +42,7 @@ export interface DatabaseBackend {
  * Mutations are read from the incoming streams and applied to the ItemManager via ItemDemuxer.
  * Write operations result in mutations being written to the outgoing stream.
  */
+// TODO(burdon): Why "Feed" Database? (Host?)
 export class FeedDatabaseBackend implements DatabaseBackend {
   private _echoProcessor!: EchoProcessor;
   private _itemManager!: ItemManager;
