@@ -72,13 +72,13 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
         invitationCode: action.status === Invitation.State.CONNECTED ? action.invitationCode : prev.invitationCode,
         authenticationCode:
           action.status === Invitation.State.CONNECTED ? action.authenticationCode : prev.authenticationCode,
-        // `error` gets reset each time we leave the error state
+        // `error` gets set each time we enter the error state
         ...(action.status === Invitation.State.ERROR && { error: action.error }),
-        // `haltedAt` gets reset each time we leave the error or cancelled state
+        // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
         ...((action.status === Invitation.State.ERROR ||
           action.status === Invitation.State.CANCELLED ||
           action.status === Invitation.State.TIMEOUT) && {
-          haltedAt: action.haltedAt
+          haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt
         })
       } as InvitationReducerState;
     },
