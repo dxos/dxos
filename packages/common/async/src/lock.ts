@@ -2,9 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-import { trigger } from './trigger';
-
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
  *
@@ -35,7 +32,7 @@ export class Lock {
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
     let release!: () => void;
-    this._queue = new Promise(resolve => {
+    this._queue = new Promise((resolve) => {
       release = resolve;
     });
 
@@ -78,7 +75,7 @@ export const synchronized = (
 ) => {
   const method = descriptor.value!;
   descriptor.value = async function (this: any & LockableClass, ...args: any) {
-    const lock = this[classLockSymbol] ??= new Lock();
+    const lock = (this[classLockSymbol] ??= new Lock());
     const release = await lock.acquire();
 
     try {
