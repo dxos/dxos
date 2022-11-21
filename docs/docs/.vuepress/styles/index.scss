@@ -1,4 +1,19 @@
+@use "sass:map";
+@import './tailwind-colors.scss';
+@import './palette.scss';
 
+html[data-theme=light] {
+  th, td {
+    border-color: $zinc-200;
+  }
+}
+
+html[data-theme=dark] {
+  th, td {
+    border-color: $zinc-700;
+  }
+}
+  
 // TODO(wittjosiah): Can the plugin add this?
 .showcase-preview {
   border: 1px solid var(--c-border);
@@ -42,6 +57,60 @@ div[class^="language-"] {
 .navbar nav.nav-links {
   margin-left: 2rem !important;
 }
+
+code {
+  background-color: $zinc-200;
+}
+
+html[data-theme=light] {
+  div[class*=language-] > button.copy:not(.pure) {
+    background-color: $zinc-300;
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    &:hover {
+      background-color: map.get($theme-color, 'light');
+    }
+  }
+}
+
+html[data-theme=dark] {
+  div[class*=language-] > button.copy:not(.pure) {
+    background-color: $zinc-700;
+    .copy-icon {
+      color: $zinc-400;
+    }
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.075);
+    &:hover {
+      background-color: map.get($theme-color, 'dark');
+      .copy-icon {
+        color: $zinc-800;
+      }
+    }
+  }
+}
+
+.navbar .nav-item > .nav-link:hover::after, .navbar .nav-item > .nav-link.active::after {
+  bottom: -16px;
+}
+
+html[data-theme=dark] .home.project .hero {
+  img.dark {
+    // opacity: 0.8 !important;
+  }
+  h1 {
+    color: white;
+  }
+}
+
+html[data-theme=light] .home.project .hero {
+  img.dark {
+    // opacity: 0.8 !important;
+  }
+  h1 {
+    color: black;
+  }
+}
+
+
 
 /// DEFAULT THEME CUSTOMIZATION FOLLOWS
 /// 

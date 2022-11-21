@@ -1,60 +1,62 @@
 # Class `Config`
-Declared in [`packages/sdk/config/src/config.ts:102`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L102)
+<sub>Declared in [packages/sdk/config/src/config.ts:100](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L100)</sub>
 
 
 Global configuration object.
 NOTE: Config objects are immutable.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L110)
+### [constructor(config, objects)](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L108)
 
 
 Creates an immutable instance.
 
-Returns: [`Config`](/api/@dxos/config/classes/Config)
+Returns: <code>[Config](/api/@dxos/config/classes/Config)</code>
 
 Arguments: 
 
-`objects`: `[`[`Config`](/api/@dxos/config/interfaces/Config)`, ...`[`Config`](/api/@dxos/config/interfaces/Config)`[]]`
+`config`: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
+
+`objects`: <code>[Config](/api/@dxos/config/interfaces/Config)[]</code>
 
 ## Properties
-### [`values`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L117)
-Type: [`Config`](/api/@dxos/config/interfaces/Config)
+### [values](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L115)
+Type: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
 Returns an immutable config JSON object.
 
 ## Methods
-### [`get`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L128)
+### [get(key, \[defaultValue\])](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L126)
 
 
 Returns the given config property.
 
-Returns: [`DeepIndex`](/api/@dxos/config/types/DeepIndex)`<`[`Config`](/api/@dxos/config/interfaces/Config)`, `[`ParseKey`](/api/@dxos/config/types/ParseKey)`<K>, undefined>`
+Returns: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;</code>
 
 Arguments: 
 
-`key`: `K`
+`key`: <code>K</code>
 
-`defaultValue`: [`DeepIndex`](/api/@dxos/config/types/DeepIndex)`<`[`Config`](/api/@dxos/config/interfaces/Config)`, `[`ParseKey`](/api/@dxos/config/types/ParseKey)`<K>, undefined>`
-### [`getOrThrow`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L149)
+`defaultValue`: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;</code>
+### [getOrThrow(key)](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L147)
 
 
 Returns the given config property or throw if it doesn't exist.
 
-Returns: `Exclude<`[`DeepIndex`](/api/@dxos/config/types/DeepIndex)`<`[`Config`](/api/@dxos/config/interfaces/Config)`, `[`ParseKey`](/api/@dxos/config/types/ParseKey)`<K>, undefined>, undefined>`
+Returns: <code>Exclude&lt;[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;, undefined&gt;, undefined&gt;</code>
 
 Arguments: 
 
-`key`: `K`
-### [`getUnchecked`](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L140)
+`key`: <code>K</code>
+### [getUnchecked(key, \[defaultValue\])](https://github.com/dxos/protocols/blob/main/packages/sdk/config/src/config.ts#L138)
 
 
 Returns config key without type checking.
 
-Returns: `T`
+Returns: <code>T</code>
 
 Arguments: 
 
-`key`: `string`
+`key`: <code>string</code>
 
-`defaultValue`: `T`
+`defaultValue`: <code>T</code>

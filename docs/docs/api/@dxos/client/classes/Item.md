@@ -1,5 +1,5 @@
 # Class `Item`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:14]()</sub>
 
 
 A globally addressable data item.
@@ -7,101 +7,101 @@ Items are hermetic data structures contained within a Space. They may be hierarc
 The Item data structure is governed by a Model class, which implements data consistency.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(itemManager, itemId, itemType, stateManager, \[_writeStream\], \[parent\])]()
 
 
 Items are constructed by the  `Database`  object.
 
-Returns: [`Item`](/api/@dxos/client/classes/Item)`<M>`
+Returns: <code>[Item](/api/@dxos/client/classes/Item)&lt;M&gt;</code>
 
 Arguments: 
 
-`itemManager`: `ItemManager`
+`itemManager`: <code>ItemManager</code>
 
-`itemId`: `string`
+`itemId`: <code>string</code>
 
-`itemType`: `undefined | string`
+`itemType`: <code>undefined | string</code>
 
-`stateManager`: `StateManager<NonNullable<M>>`
+`stateManager`: <code>StateManager&lt;NonNullable&lt;M&gt;&gt;</code>
 
-`_writeStream`: `FeedWriter<EchoEnvelope>`
+`_writeStream`: <code>FeedWriter&lt;EchoEnvelope&gt;</code>
 
-`parent`: `"null" | `[`Item`](/api/@dxos/client/classes/Item)`<any>`
+`parent`: <code>"null" | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;</code>
 
 ## Properties
-### [`_itemManager`]()
-Type: `ItemManager`
-### [`_onUpdate`]()
-Type: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<any>>`
-### [`children`]()
-Type: [`Item`](/api/@dxos/client/classes/Item)`<any>[]`
-### [`deleted`]()
-Type: `boolean`
-### [`id`]()
-Type: `string`
-### [`links`]()
-Type: [`Link`](/api/@dxos/client/classes/Link)`<any, any, any>[]`
-### [`model`]()
-Type: `M`
-### [`modelMeta`]()
-Type: `ModelMeta<any, any, any>`
-### [`modelType`]()
-Type: `string`
-### [`parent`]()
-Type: `"null" | `[`Item`](/api/@dxos/client/classes/Item)`<any>`
-### [`readOnly`]()
-Type: `boolean`
-### [`refs`]()
-Type: [`Link`](/api/@dxos/client/classes/Link)`<any, any, any>[]`
-### [`type`]()
-Type: `undefined | string`
+### [_itemManager]()
+Type: <code>ItemManager</code>
+### [_onUpdate]()
+Type: <code>Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;any&gt;&gt;</code>
+### [children]()
+Type: <code>[Item](/api/@dxos/client/classes/Item)&lt;any&gt;[]</code>
+### [deleted]()
+Type: <code>boolean</code>
+### [id]()
+Type: <code>string</code>
+### [links]()
+Type: <code>[Link](/api/@dxos/client/classes/Link)&lt;any, any, any&gt;[]</code>
+### [model]()
+Type: <code>M</code>
+### [modelMeta]()
+Type: <code>ModelMeta&lt;any, any, any&gt;</code>
+### [modelType]()
+Type: <code>string</code>
+### [parent]()
+Type: <code>"null" | [Item](/api/@dxos/client/classes/Item)&lt;any&gt;</code>
+### [readOnly]()
+Type: <code>boolean</code>
+### [refs]()
+Type: <code>[Link](/api/@dxos/client/classes/Link)&lt;any, any, any&gt;[]</code>
+### [type]()
+Type: <code>undefined | string</code>
 
 ## Methods
-### [`delete`]()
+### [delete()]()
 
 
 Delete the item.
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`restore`]()
+### [restore()]()
 
 
 Restore deleted item.
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`select`]()
+### [select()]()
 
 
 Returns a selection context, which can be used to traverse the object graph starting from this item.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, void>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, void&gt;</code>
 
 Arguments: none
-### [`setParent`]()
+### [setParent(parentId)]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`parentId`: `string`
-### [`subscribe`]()
+`parentId`: <code>string</code>
+### [subscribe(listener)]()
 
 
 Subscribe for updates.
 
-Returns: `UnsubscribeCallback`
+Returns: <code>UnsubscribeCallback</code>
 
 Arguments: 
 
-`listener`: `function`
-### [`toString`]()
+`listener`: <code>function</code>
+### [toString()]()
 
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none

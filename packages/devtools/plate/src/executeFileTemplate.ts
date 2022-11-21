@@ -1,7 +1,6 @@
 //
 // Copyright 2022 DXOS.org
 //
-
 import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';
@@ -22,25 +21,32 @@ export const getOutputNameFromTemplateName = (s: string): string => {
   return out ?? s;
 };
 
-const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> => {
+export type LoadTemplateOptions = {
+  compilerOptions?: object;
+  moduleLoaderFunction?: (m: string) => any;
+};
+
+const loadTemplate = async <I = any>(p: string, options?: LoadTemplateOptions): Promise<TemplateFunction<I>> => {
   if (!isTemplateFile(p)) {
     throw new Error(`only *.t.ts or *.t.js template files are supported. attempted file: ${p}`);
   }
-  // const outpath = p.replace(/\.t\.ts$/, ".t.js");
-  // TODO(wittjosiah): Make this conditional on whether the template is typescript.
-  tsnode.register({
-    transpileOnly: true,
-    swc: true,
-    skipIgnore: true,
-    compilerOptions: {
-      strict: false,
-      target: 'es5',
-      module: 'commonjs'
-    }
-  });
+  if (/\.tsx?$/.test(p)) {
+    tsnode.register({
+      transpileOnly: true,
+      swc: true,
+      skipIgnore: true,
+      compilerOptions: {
+        strict: false,
+        target: 'es5',
+        module: 'commonjs',
+        ...options?.compilerOptions
+      }
+    });
+  }
   let mod;
+  const loader = options?.moduleLoaderFunction ?? ((m: string) => import(m));
   try {
-    mod = await import(p);
+    mod = await loader(p);
     const fn = mod?.default ?? mod;
     return typeof fn === 'function' ? fn : typeof fn === 'string' ? () => fn : null;
   } catch (err) {
@@ -50,7 +56,7 @@ const loadTemplate = async <I = any>(p: string): Promise<TemplateFunction<I>> =>
   }
 };
 
-export type ExecuteFileTemplateOptions<TInput = {}> = {
+export type ExecuteFileTemplateOptions<TInput = {}> = LoadTemplateOptions & {
   templateFile: string;
   templateRelativeTo?: string;
   outputDirectory: string;
@@ -78,7 +84,7 @@ export const executeFileTemplate = async <TInput>(
   const { templateFile, outputDirectory, templateRelativeTo, overwrite } = options;
   const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
-  const templateFunction = await loadTemplate(templateFullPath);
+  const templateFunction = await loadTemplate(templateFullPath, options);
   if (!templateFunction) {
     return [];
   }

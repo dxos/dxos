@@ -4,23 +4,23 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`keyStorage`]()
-Type: [`StorageDriver`](/api/@dxos/config/enums#StorageDriver)
+### [keyStorage]()
+Type: <code>[StorageDriver](/api/@dxos/config/enums#StorageDriver)</code>
 
 Options:
   - proto3_optional = true
-### [`path`]()
-Type: `string`
+### [path]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`persistent`]()
-Type: `boolean`
+### [persistent]()
+Type: <code>boolean</code>
 
 Options:
   - proto3_optional = true
-### [`storageType`]()
-Type: [`StorageDriver`](/api/@dxos/config/enums#StorageDriver)
+### [storageType]()
+Type: <code>[StorageDriver](/api/@dxos/config/enums#StorageDriver)</code>
 
 Options:
   - proto3_optional = true

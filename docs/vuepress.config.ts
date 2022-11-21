@@ -7,8 +7,9 @@ import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
 import { resolve } from 'node:path';
 import { defineUserConfig, UserConfig } from 'vuepress';
-// import { tocPlugin } from "@vuepress/plugin-toc";
 import { hopeTheme } from 'vuepress-theme-hope';
+
+import { MarkdownIt } from '@dxos/apidoc';
 
 import { showcasePlugin, apiSidebar, telemetryPlugin } from './src';
 
@@ -28,8 +29,12 @@ const config: UserConfig = defineUserConfig({
     '!assets',
     '!contributing',
     '!design',
-    '!legacy'
+    '!legacy',
+    '!specs'
   ],
+  extendsMarkdown: (md) => {
+    md.use(MarkdownIt.apiDocRenderDirective);
+  },
   theme: hopeTheme({
     hostname: process.env.HOSTNAME ?? 'https://docs.dxos.org',
     logo: '/images/dxos.svg',
@@ -56,7 +61,14 @@ const config: UserConfig = defineUserConfig({
         text: 'API',
         link: '/api/'
       }
-    ]
+    ],
+    plugins: {
+      mdEnhance: {
+        sub: true,
+        sup: true,
+        attrs: true
+      }
+    }
   }),
   // Config: https://vuepress.github.io/reference/default-theme/config.html
   // theme: defaultTheme({
@@ -95,7 +107,6 @@ const config: UserConfig = defineUserConfig({
     searchPlugin(),
     telemetryPlugin(),
     await showcasePlugin()
-    // (tocPlugin as Function)({})
   ],
   bundler: viteBundler({
     viteOptions: {
