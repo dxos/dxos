@@ -7,4 +7,4 @@ export * from './context';
 export * from './log';
 export * from './processors';
 
-export { getCurrentOwnershipScope } from './ownership';
+export { getCurrentOwnershipScope } from './experimental/ownership';

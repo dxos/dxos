@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { log } from './log';
+import { log } from '../log';
 import { debugInfo, ownershipClass } from './ownership';
 
 describe('classes', function () {
