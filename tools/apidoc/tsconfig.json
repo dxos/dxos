@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "./src/typings.d.ds"
+  ],
+  "references": [
+    {
+      "path": "../../packages/devtools/plate"
+    }
+  ]
+}

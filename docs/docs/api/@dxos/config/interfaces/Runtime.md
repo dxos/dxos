@@ -4,38 +4,38 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`app`]()
-Type: [`App`](/api/@dxos/config/interfaces/App)
+### [app]()
+Type: <code>[App](/api/@dxos/config/interfaces/App)</code>
 
 Options:
   - proto3_optional = true
-### [`cli`]()
-Type: [`CLI`](/api/@dxos/config/interfaces/CLI)
+### [cli]()
+Type: <code>[CLI](/api/@dxos/config/interfaces/CLI)</code>
 
 Options:
   - proto3_optional = true
-### [`client`]()
-Type: [`Client`](/api/@dxos/config/interfaces/Client)
+### [client]()
+Type: <code>[Client](/api/@dxos/config/interfaces/Client)</code>
 
 Options:
   - proto3_optional = true
-### [`kube`]()
-Type: [`Kube`](/api/@dxos/config/interfaces/Kube)
+### [kube]()
+Type: <code>[Kube](/api/@dxos/config/interfaces/Kube)</code>
 
 Options:
   - proto3_optional = true
-### [`props`]()
-Type: [`Props`](/api/@dxos/config/interfaces/Props)
+### [props]()
+Type: <code>[Props](/api/@dxos/config/interfaces/Props)</code>
 
 Options:
   - proto3_optional = true
-### [`services`]()
-Type: [`Services`](/api/@dxos/config/interfaces/Services)
+### [services]()
+Type: <code>[Services](/api/@dxos/config/interfaces/Services)</code>
 
 Options:
   - proto3_optional = true
-### [`system`]()
-Type: [`System`](/api/@dxos/config/interfaces/System)
+### [system]()
+Type: <code>[System](/api/@dxos/config/interfaces/System)</code>
 
 Options:
   - proto3_optional = true

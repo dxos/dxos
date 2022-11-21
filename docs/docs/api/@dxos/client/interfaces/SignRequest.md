@@ -4,9 +4,9 @@
 Defined in:
    file://./../../dxos/client.proto
 ## Properties
-### [`payload`]()
-Type: `Uint8Array`
-### [`publicKey`]()
-Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [payload]()
+Type: <code>Uint8Array</code>
+### [publicKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 The public key of the key that is supposed to be used for signing.

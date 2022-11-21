@@ -45,7 +45,7 @@ describe('useStateMutator', function () {
   });
 
   it('udpates the value.', async function () {
-    act(() => {
+    void act(() => {
       createRoot(rootContainer).render(<Test />);
     });
 

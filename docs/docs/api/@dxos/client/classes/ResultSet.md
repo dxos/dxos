@@ -1,51 +1,51 @@
 # Class `ResultSet`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:6]()</sub>
 
 
 Reactive query results.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(itemUpdate, getter)]()
 
 
-Returns: [`ResultSet`](/api/@dxos/client/classes/ResultSet)`<T>`
+Returns: <code>[ResultSet](/api/@dxos/client/classes/ResultSet)&lt;T&gt;</code>
 
 Arguments: 
 
-`itemUpdate`: `ReadOnlyEvent<void>`
+`itemUpdate`: <code>ReadOnlyEvent&lt;void&gt;</code>
 
-`getter`: `function`
+`getter`: <code>function</code>
 
 ## Properties
-### [`update`]()
-Type: `ReadOnlyEvent<T[]>`
+### [update]()
+Type: <code>ReadOnlyEvent&lt;T[]&gt;</code>
 
 Triggered when  `value`  updates.
-### [`first`]()
-Type: `T`
-### [`value`]()
-Type: `T[]`
+### [first]()
+Type: <code>T</code>
+### [value]()
+Type: <code>T[]</code>
 
 ## Methods
-### [`subscribe`]()
+### [subscribe(listener)]()
 
 
 Subscribe for updates.
 
-Returns: `UnsubscribeCallback`
+Returns: <code>UnsubscribeCallback</code>
 
 Arguments: 
 
-`listener`: `function`
-### [`waitFor`]()
+`listener`: <code>function</code>
+### [waitFor(condition)]()
 
 
 Waits for condition to be true and then returns the value that passed the condition first.
 
 Current value is also checked.
 
-Returns: `Promise<T[]>`
+Returns: <code>Promise&lt;T[]&gt;</code>
 
 Arguments: 
 
-`condition`: `function`
+`condition`: <code>function</code>
