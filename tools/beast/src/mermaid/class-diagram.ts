@@ -17,20 +17,29 @@ export class ClassDiagram implements Diagram {
   }
 
   build(): string[] {
-    const defs = Array.from(this._classes.values()).map(({ name, properties }) => {
+    const defs = Array.from(this._classes.values()).map(({ name, methods, properties }) => {
+      const members = [
+        ...properties
+          .filter(({ classDef }) => !classDef)
+          .map(({ name, type }) => (type ? `  ${type} ${name}` : `  ${name}`)),
+        ...methods.map(({ name }) => `  ${name}()`)
+      ];
+
       const lines = [];
-      const literals = properties.filter(({ clazz }) => !clazz);
-      if (literals.length) {
-        lines.push(...[`class ${name} {`, ...literals.map(({ property, type }) => `  ${type} ${property}`), '}']);
+      if (members.length) {
+        lines.push(...[`class ${name} {`, ...members, '}']);
       } else {
         lines.push(`class ${name}`);
       }
 
+      // TODO(burdon): Composition vs. aggregation vs. association (ref).
       // https://mermaid-js.github.io/mermaid/#/classDiagram?id=defining-relationship
       properties
         .filter(({ type }) => type === 'class')
-        .forEach(({ property, clazz }) => {
-          lines.push(`${clazz!.name} --o ${name} : ${property}`);
+        .forEach(({ name: propertyName, initializer, readonly, classDef }) => {
+          const composition = initializer && readonly;
+          const arrow = composition ? '-->' : '-->';
+          lines.push(`${name} ${arrow} ${classDef!.name} : ${propertyName}`);
         });
 
       return lines.join('\n');

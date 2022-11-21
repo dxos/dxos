@@ -7,7 +7,7 @@ Code analysis tools.
 To Update a particular package:
 
 ```bash
-npm run update-docs client-services
+log client-services
 ```
 
 ## Testing

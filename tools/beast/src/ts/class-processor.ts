@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import { ClassDeclaration, Node, Project, SourceFile } from 'ts-morph';
+import { ClassDeclaration, Project, SourceFile } from 'ts-morph';
 
 import { log } from '@dxos/log';
 
@@ -12,10 +12,16 @@ import { log } from '@dxos/log';
 
 export type ClassDefinition = {
   name: string;
+  methods: {
+    async?: boolean; // TODO(burdon): Implement.
+    name: string;
+  }[];
   properties: {
-    property: string;
-    type: string;
-    clazz?: ClassDefinition;
+    name: string;
+    type?: string;
+    initializer?: boolean;
+    readonly?: boolean;
+    classDef?: ClassDefinition;
   }[];
 };
 
@@ -35,6 +41,18 @@ export class ClassProcessor {
     return Array.from(this._classes.values());
   }
 
+  // TODO(burdon): Only searches current project.
+  findClass(className: string): ClassDeclaration | undefined {
+    for (const sourceFile of this._project.getSourceFiles()) {
+      const classDef = sourceFile.getClass(className);
+      if (classDef) {
+        return classDef;
+      }
+    }
+
+    return undefined;
+  }
+
   processFile(path: string) {
     const sourceFile: SourceFile = this._project.getSourceFileOrThrow(`${this.rootDir}/${path}`);
     const classes = sourceFile.getClasses();
@@ -44,60 +62,68 @@ export class ClassProcessor {
     });
   }
 
-  processClass(clazz: ClassDeclaration): ClassDefinition {
-    const name = clazz.getName();
+  processClass(classDeclaration: ClassDeclaration): ClassDefinition {
+    // Structure can be stringified.
+    // TODO(burdon): extends, implements, getAccessors
+    const { name, methods, properties, getAccessors } = classDeclaration.getStructure();
     assert(name);
-    log('class', { class: name });
-    let def = this._classes.get(name);
-    if (def) {
-      return def;
+    log(`Processing ${name}`);
+    let classDef = this._classes.get(name);
+    if (classDef) {
+      return classDef;
     }
 
-    def = {
-      name,
-      properties: []
-    };
+    classDef = { name, methods: [], properties: [] };
+    this._classes.set(name, classDef);
 
-    this._classes.set(name, def);
+    methods?.forEach(({ name: methodName, scope }) => {
+      if (!scope || scope === 'public') {
+        classDef!.methods.push({ name: methodName });
+      }
+    });
 
-    // https://ts-morph.com/details/classes#properties
-    const properties = clazz.getProperties();
-    properties.forEach((property) => {
-      const node: Node = property;
-      const text = node.print();
-      const propertyName = property.getName();
-      const propertyType = property.getType();
+    getAccessors?.forEach(({ name }) => {
+      classDef!.properties.push({ name });
+    });
 
-      if (!propertyType.isLiteral()) {
-        if (!propertyType.compilerType.symbol) {
-          log('Missing symbol', { type: propertyType.getText(), text });
-          return;
-        }
+    properties?.forEach((property) => {
+      const { name: propertyName, type, initializer, isReadonly } = property;
 
-        // TODO(burdon): Sets/Maps of classes.
-        // TODO(burdon): ServiceContext is class but ServiceRegistry<ClientServices> is not.
-        //  Type not known?
-        const symbol = propertyType.compilerType.symbol.getName();
-        log('property', { property: propertyName, symbol, clazz: propertyType.isClassOrInterface() });
-        if (propertyType.isClassOrInterface()) {
-          const fileName = propertyType.compilerType.symbol.valueDeclaration?.parent.getSourceFile().fileName;
-          if (fileName) {
-            const sourceFile = this._project.getSourceFileOrThrow(fileName);
-            const clazz = sourceFile.getClass(symbol);
-            if (clazz) {
-              // TODO(burdon): Check for circular deps.
-              const classDef = this.processClass(clazz);
-              def!.properties.push({
-                property: propertyName,
-                type: 'class',
-                clazz: classDef
-              });
+      // TODO(burdon): Provide source roots for other packages.
+      //  Check import statements.
+      if (!type) {
+        log(`Unknown type for ${classDef!.name}.${propertyName}`);
+      }
+
+      // TODO(burdon): Handle typed maps.
+      if (type && typeof type === 'string') {
+        const [propertyType] = type.split('<'); // TODO(burdon): Remove generic.
+        const classDeclaration = this.findClass(propertyType);
+        if (classDeclaration) {
+          const propertyClassDef = this.processClass(classDeclaration);
+          classDef!.properties.push({
+            name: propertyName,
+            type: 'class',
+            classDef: propertyClassDef
+          });
+        } else {
+          // TODO(burdon): Provide source roots for other packages.
+          log(`Type not found: ${propertyType}`);
+          classDef!.properties.push({
+            name: propertyName,
+            type: 'class',
+            initializer: !!initializer,
+            readonly: isReadonly,
+            classDef: {
+              name: propertyType,
+              methods: [],
+              properties: []
             }
-          }
+          });
         }
       }
     });
 
-    return def;
+    return classDef;
   }
 }

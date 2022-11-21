@@ -9,7 +9,12 @@ classDiagram
 
 class Database
 ItemManager --o Database : _itemManager
+State --o Database : _state
 class ItemManager
+Event --o ItemManager : update
+Event --o ItemManager : debouncedUpdate
+Map --o ItemManager : _entities
+Map --o ItemManager : _pendingItems
 ```
 
 ## Dependency Graph

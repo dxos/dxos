@@ -10,19 +10,23 @@ classDiagram
 class Client
 Config --o Client : _config
 ModelFactory --o Client : _modelFactory
+ClientServicesProvider --o Client : _services
 HaloProxy --o Client : _halo
 EchoProxy --o Client : _echo
-class Config
-class ModelFactory
 class HaloProxy
 EventSubscriptions --o HaloProxy : _subscriptions
+Event --o HaloProxy : _contactsChanged
 HaloInvitationsProxy --o HaloProxy : _invitationProxy
-class EventSubscriptions
-class HaloInvitationsProxy
+Array --o HaloProxy : _invitations
+Event --o HaloProxy : invitationsUpdate
+Event --o HaloProxy : profileChanged
+Profile --o HaloProxy : _profile
+Array --o HaloProxy : _contacts
 class EchoProxy
+ComplexMap --o EchoProxy : _spaces
 SpaceInvitationsProxy --o EchoProxy : _invitationProxy
 EventSubscriptions --o EchoProxy : _subscriptions
-class SpaceInvitationsProxy
+Event --o EchoProxy : _spacesChanged
 ```
 
 ## Dependency Graph

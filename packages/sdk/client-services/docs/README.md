@@ -7,32 +7,65 @@ DXOS client services implementation
 ```mermaid
 classDiagram
 
-class ClientServicesHost
-ServiceContext --o ClientServicesHost : _serviceContext
-class ServiceContext
-DataServiceSubscriptions --o ServiceContext : dataServiceSubscriptions
-MetadataStore --o ServiceContext : metadataStore
-Keyring --o ServiceContext : keyring
-IdentityManager --o ServiceContext : identityManager
-HaloInvitationsHandler --o ServiceContext : haloInvitations
-SpaceManager --o ServiceContext : spaceManager
-SpaceInvitationsHandler --o ServiceContext : spaceInvitations
-class DataServiceSubscriptions
-class MetadataStore
-class Keyring
-class IdentityManager
-Identity --o IdentityManager : _identity
-class Identity
-Space --o Identity : _space
-DeviceStateMachine --o Identity : _deviceStateMachine
-PublicKey --o Identity : identityKey
-PublicKey --o Identity : deviceKey
-class Space
-class DeviceStateMachine
-class PublicKey
-class HaloInvitationsHandler
-class SpaceManager
-class SpaceInvitationsHandler
+class ClientServicesHost {
+  descriptors
+  services
+  open()
+  close()
+}
+ClientServicesHost --> ServiceContext : _serviceContext
+ClientServicesHost --> ServiceRegistry : _serviceRegistry
+class ServiceContext {
+  open()
+  close()
+  createIdentity()
+}
+ServiceContext --> MetadataStore : metadataStore
+ServiceContext --> FeedStore : feedStore
+ServiceContext --> Keyring : keyring
+ServiceContext --> IdentityManager : identityManager
+ServiceContext --> HaloInvitationsHandler : haloInvitations
+ServiceContext --> SpaceManager : spaceManager
+ServiceContext --> SpaceInvitationsHandler : spaceInvitations
+class IdentityManager {
+  identity
+  open()
+  close()
+  createIdentity()
+  acceptIdentity()
+}
+IdentityManager --> Identity : _identity
+class Identity {
+  authorizedDeviceKeys
+  controlPipeline
+  haloSpaceKey
+  haloGenesisFeedKey
+  haloDatabase
+  open()
+  close()
+  ready()
+  getAdmissionCredentials()
+  getIdentityCredentialSigner()
+  getDeviceCredentialSigner()
+  admitDevice()
+}
+Identity --> Space : _space
+Identity --> Signer : _signer
+Identity --> DeviceStateMachine : _deviceStateMachine
+Identity --> PublicKey : identityKey
+Identity --> PublicKey : deviceKey
+class HaloInvitationsHandler {
+  createInvitation()
+  acceptInvitation()
+}
+class SpaceInvitationsHandler {
+  createInvitation()
+  acceptInvitation()
+}
+class ServiceRegistry {
+  descriptors
+  services
+}
 ```
 
 ## Dependency Graph
