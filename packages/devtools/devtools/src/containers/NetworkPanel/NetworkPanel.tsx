@@ -83,6 +83,7 @@ export const NetworkPanel = () => {
         }}
       >
         <Autocomplete
+          size='medium'
           label='Topic'
           options={options.map((topic) => topic.topic)}
           value={selectedTopic as any}
