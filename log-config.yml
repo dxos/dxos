@@ -1,5 +1,8 @@
 formatter:
   column: 100
 
+processor: debug
+
 filter:
-  - warn
+  # - warn
+  - debug

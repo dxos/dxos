@@ -151,22 +151,8 @@ class TraceInjector extends Visitor {
         value: position.line,
         span: ZERO_SPAN
       },
-      ownershipScope: {
-        type: 'CallExpression',
-        callee: {
-          type: 'Identifier',
-          value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
-          optional: false,
-          span: ZERO_SPAN
-        },
-        arguments: [
-          {
-            expression: {
-              type: 'ThisExpression',
-              span: ZERO_SPAN
-            }
-          }
-        ],
+      scope: {
+        type: 'ThisExpression',
         span: ZERO_SPAN
       },
       bugcheck: {

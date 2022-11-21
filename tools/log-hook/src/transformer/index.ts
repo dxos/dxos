@@ -96,8 +96,9 @@ const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root
       f.createPropertyAssignment(
         'line',
         f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1)
-      )
-      // TODO(dmaretskyi): Ownership scope & bugcheck.
+      ),
+      f.createPropertyAssignment('scope', f.createThis()),
+      f.createPropertyAssignment('bugcheck', f.createIdentifier('ID_BUGCHECK_STRING'))
     ],
     false
   );

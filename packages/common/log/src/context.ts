@@ -17,8 +17,11 @@ export interface LogMetadata {
   file: string;
   line: number;
 
-  // TODO(burdon): Document.
-  ownershipScope: OwnershipScope | undefined;
+  /**
+   * Value of `this` at the site of the log call.
+   * Will be set to the class instance if the call is inside a method, or to the `globalThis` (`window` or `global`) otherwise.
+   */
+  scope: any | undefined;
 
   // Useful for pre-processor hook debugging.
   bugcheck?: string;
