@@ -97,8 +97,8 @@ export class EchoProxy implements Echo {
             this._haloProxy.profile!.identityKey
           );
 
-          await spaceProxy.initialize();
           this._spaces.set(spaceProxy.key, spaceProxy);
+          await spaceProxy.initialize();
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on(entity => {

@@ -3,4 +3,6 @@ formatter:
 
 filter:
   - warn
-  - profile:debug
+  - member:debug
+  - deprecated/space:debug
+  - space-proxy:debug

@@ -11,7 +11,7 @@ import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
 
 describe('Halo', function () {
-  it.only('creates a profile', async function () {
+  it('creates a profile', async function () {
     const testBuilder = new TestClientBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });

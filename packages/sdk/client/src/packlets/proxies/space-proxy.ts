@@ -13,6 +13,7 @@ import {
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Space as SpaceType, SpaceDetails, SpaceMember } from '@dxos/protocols/proto/dxos/client';
@@ -297,6 +298,7 @@ export class SpaceProxy implements Space {
     this._key = space.publicKey;
     this._isOpen = space.isOpen;
     this._isActive = space.isActive;
+    log('update', { space})
     this.stateUpdate.emit();
   }
 }

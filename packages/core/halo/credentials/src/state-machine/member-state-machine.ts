@@ -9,6 +9,7 @@ import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credent
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
+import { log } from '@dxos/log';
 
 export interface MemberInfo {
   key: PublicKey;
@@ -59,6 +60,7 @@ export class MemberStateMachine {
       assertion
     };
     this._members.set(credential.subject.id, info);
+    log('member added', { member: credential.subject.id, space: this._spaceKey, role: assertion.role, profile: assertion.profile });
     await this.onMemberAdmitted.callIfSet(info);
   }
 }
