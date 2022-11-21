@@ -28,6 +28,9 @@ export const Input = ({
   size,
   length = 6,
   spacing,
+  borders,
+  typography,
+  rounding,
   validationMessage,
   validationValence,
   ...inputProps
@@ -68,7 +71,10 @@ export const Input = ({
     value: internalValue,
     onChange: onInternalChange,
     validationMessage,
-    validationValence
+    validationValence,
+    borders,
+    typography,
+    rounding
   };
 
   const bareInput =

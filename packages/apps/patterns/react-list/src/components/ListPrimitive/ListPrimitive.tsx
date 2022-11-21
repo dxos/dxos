@@ -7,8 +7,16 @@ import throttle from 'lodash.throttle';
 import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useMemo, useState } from 'react';
 
-import { defaultGroup, defaultHover } from '@dxos/react-ui';
-import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
+import {
+  defaultFocus,
+  Input,
+  useTranslation,
+  getSize,
+  Button,
+  randomString,
+  defaultGroup,
+  defaultHover
+} from '@dxos/react-uikit';
 
 import { usePropStatefully } from '../../hooks';
 
@@ -73,6 +81,7 @@ export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<Com
   deleteItem: (id: ListItemId) => void;
   isFirst?: boolean;
   isLast?: boolean;
+  autoFocus?: boolean;
 }
 
 const defaultCreateListItemId = async () => randomString(8);
@@ -86,7 +95,8 @@ const ListItemPrimitive = ({
   deleteItem,
   updateOrder,
   isFirst,
-  isLast
+  isLast,
+  autoFocus
 }: ListItemPrimitiveComponentProps) => {
   const checkId = `${id}__checkbox`;
   const labelId = `${id}__title`;
@@ -178,6 +188,9 @@ const ListItemPrimitive = ({
           initialValue={title}
           onChange={onChangeTitle}
           data-itemid={id}
+          borders='border-0'
+          rounding='rounded'
+          autoFocus={autoFocus}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -201,7 +214,7 @@ const ListItemPrimitive = ({
       {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
       {/*  </Button> */}
       {/* </ButtonGroup> */}
-      <Button onClick={onClickDelete} rounding='rounded' spacing='p-1' className='self-stretch'>
+      <Button onClick={onClickDelete} variant='ghost' spacing='p-1' className='self-stretch'>
         <Minus className={getSize(4)} />
         <span className='sr-only'>{t('delete list item label')}</span>
       </Button>
@@ -234,6 +247,7 @@ export const ListPrimitive = ({
   const { t } = useTranslation('appkit');
 
   const [creating, setCreating] = useState(false);
+  const [autoFocus, setAutofocus] = useState<string | null>(null);
 
   const rejectTextUpdatesWhenFocused = useCallback(
     (a: string, b: string) => {
@@ -346,6 +360,7 @@ export const ListPrimitive = ({
         };
         const created = { id };
         setItems(next.items);
+        setAutofocus(id);
         onAction?.({ listId, next: {}, created });
       })
       .finally(() => setCreating(false));
@@ -357,7 +372,7 @@ export const ListPrimitive = ({
     <div
       role='group'
       {...divProps}
-      className={cx(defaultGroup({ elevation: 3, spacing: '' }), 'plb-2', divProps.className)}
+      className={cx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
       aria-labelledby={titleId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -376,9 +391,11 @@ export const ListPrimitive = ({
         labelVisuallyHidden
         initialValue={title}
         onChange={onChangeTitle}
-        className='mli-4'
         data-itemid={listId}
-        size='lg'
+        spacing='mli-2 mbe-2'
+        borders='border-0'
+        rounding='rounded'
+        typography='text-xl font-display font-semibold'
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
@@ -400,6 +417,7 @@ export const ListPrimitive = ({
               isLast={index === order.length - 1}
               {...{ id: listItemId, updateItem, updateOrder, deleteItem }}
               {...items[listItemId]}
+              autoFocus={listItemId === autoFocus}
             />
           );
         })}
