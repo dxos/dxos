@@ -74,6 +74,7 @@ message Profile {
   // TODO(burdon): Remove identity from Profile (space of identity).
   dxos.keys.PublicKey identity_key = 1;
   optional string displayName = 2;
+  // TODO(mykola): Factor out. It was added to make deviceKey available in the HaloProxy.
   optional dxos.keys.PublicKey device_key = 3;
 }
 
