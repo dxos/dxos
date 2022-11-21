@@ -25,6 +25,9 @@ export class Lock {
   private _queue = Promise.resolve();
 
   /**
+   * Acquires the lock.
+   * Caller is responsible for releasing the lock using the returned callback.
+   * NOTE: Using `executeSynchronized` is preferred over using `acquire` directly.
    * @returns Release callback
    */
   async acquire(): Promise<() => void> {
