@@ -1,6 +1,6 @@
 # @dxos/async
 
-Async utils.
+Async utilities.
 
 ## Dependency Graph
 

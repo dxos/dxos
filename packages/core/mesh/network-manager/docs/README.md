@@ -2,6 +2,123 @@
 
 Network Manager
 
+## Class Diagrams
+
+```mermaid
+classDiagram
+direction TB
+
+class NetworkManager {
+  signal
+  topics
+  connectionLog
+  getSwarmMap()
+  getSwarm()
+  openSwarmConnection()
+  closeSwarmConnection()
+  start()
+  destroy()
+}
+NetworkManager --> TransportFactory : _transportFactory
+NetworkManager *-- "Map" Swarm : _swarms
+NetworkManager *-- "Map" SwarmMapper : _mappers
+NetworkManager --> SignalConnection : _signalConnection
+NetworkManager --> ConnectionLog : _connectionLog
+class TransportFactory {
+<interface>
+  create()
+}
+class Swarm {
+  connections
+  ownPeerId
+  label
+  topic
+  onSwarmEvent()
+  onOffer()
+  onSignal()
+  setTopology()
+  destroy()
+}
+Swarm *-- "Map" Connection : _connections
+Swarm --> MessageRouter : _swarmMessenger
+Swarm --> Topology : _topology
+Swarm --> TransportFactory : _transportFactory
+class Connection {
+  state
+  transport
+  protocol
+  initiate()
+  open()
+  close()
+  signal()
+}
+Connection --> Transport : _transport
+Connection --> SignalMessaging : _signalMessaging
+Connection --> TransportFactory : _transportFactory
+class Transport {
+<interface>
+  closed
+  connected
+  errors
+  signal()
+  close()
+}
+class SignalMessaging {
+<interface>
+  offer()
+  signal()
+}
+class MessageRouter {
+  receiveMessage()
+  signal()
+  offer()
+}
+MessageRouter *-- "Map" OfferRecord : _offerRecords
+MessageRouter --> MessageRouterOptions : { sendMessage, onSignal, onOffer, topic }
+class OfferRecord {
+<interface>
+  resolve
+  reject
+}
+class MessageRouterOptions {
+<interface>
+  sendMessage
+  onOffer
+  onSignal
+  topic
+}
+class Topology {
+<interface>
+  init()
+  update()
+  onOffer()
+  destroy()
+}
+class SwarmMapper {
+  peers
+  destroy()
+}
+SwarmMapper *-- "Map" PeerInfo : _peers
+SwarmMapper --> Swarm : _swarm
+class PeerInfo {
+<interface>
+  id
+  state
+  connections
+}
+class SignalConnection {
+<interface>
+  join()
+  leave()
+}
+class ConnectionLog {
+  swarms
+  getSwarmInfo()
+  swarmJoined()
+  swarmLeft()
+}
+```
+
 ## Dependency Graph
 
 ```mermaid
