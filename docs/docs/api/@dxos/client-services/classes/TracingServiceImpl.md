@@ -1,32 +1,31 @@
 # Class `TracingServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/deprecated/tracing.ts:11`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L11)
+<sub>Declared in [packages/sdk/client-services/src/packlets/deprecated/tracing.ts:11](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L11)</sub>
 
 
 
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L12)
+### [constructor(_config)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L12)
 
 
-Returns: [`TracingServiceImpl`](/api/@dxos/client-services/classes/TracingServiceImpl)
+Returns: <code>[TracingServiceImpl](/api/@dxos/client-services/classes/TracingServiceImpl)</code>
 
 Arguments: 
 
-`_config`: `Config`
+`_config`: <code>Config</code>
 
 ## Properties
 
-
 ## Methods
-### [`setTracingOptions`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L14)
+### [setTracingOptions()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L14)
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`subscribeToRpcTrace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L18)
+### [subscribeToRpcTrace()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/deprecated/tracing.ts#L18)
 
 
-Returns: `any`
+Returns: <code>any</code>
 
 Arguments: none

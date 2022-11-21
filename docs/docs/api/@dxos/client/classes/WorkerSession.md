@@ -1,37 +1,37 @@
 # Class `WorkerSession`
-Declared in [`packages/sdk/client-services/dist/src/packlets/vault/worker-session.d.ts:16`]()
+<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/worker-session.d.ts:18]()</sub>
 
 
 Represents a tab connection within the worker.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(options)]()
 
 
-Returns: [`WorkerSession`](/api/@dxos/client/classes/WorkerSession)
+Returns: <code>[WorkerSession](/api/@dxos/client/classes/WorkerSession)</code>
 
 Arguments: 
 
-`__namedParameters`: `WorkerSessionParams`
+`options`: <code>WorkerSessionParams</code>
 
 ## Properties
-### [`bridgeService`]()
-Type: `BridgeService`
-### [`onClose`]()
-Type: `Callback<function>`
-### [`origin`]()
-Type: `string`
+### [bridgeService]()
+Type: <code>BridgeService</code>
+### [onClose]()
+Type: <code>Callback&lt;function&gt;</code>
+### [origin]()
+Type: <code>string</code>
 
 ## Methods
-### [`close`]()
+### [close()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`open`]()
+### [open()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none

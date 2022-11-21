@@ -1,168 +1,167 @@
 # Class `DevtoolsServiceImpl`
-Declared in [`packages/sdk/client-services/src/packlets/devtools/devtools.ts:58`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L58)
+<sub>Declared in [packages/sdk/client-services/src/packlets/devtools/devtools.ts:58](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L58)</sub>
 
 
 
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L59)
+### [constructor(params)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L59)
 
 
-Returns: [`DevtoolsServiceImpl`](/api/@dxos/client-services/classes/DevtoolsServiceImpl)
+Returns: <code>[DevtoolsServiceImpl](/api/@dxos/client-services/classes/DevtoolsServiceImpl)</code>
 
 Arguments: 
 
-`params`: [`DevtoolsServiceParams`](/api/@dxos/client-services/types/DevtoolsServiceParams)
+`params`: <code>[DevtoolsServiceParams](/api/@dxos/client-services/types/DevtoolsServiceParams)</code>
 
 ## Properties
 
-
 ## Methods
-### [`clearSnapshots`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L119)
+### [clearSnapshots(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L119)
 
 
-Returns: `Promise<void>`
-
-Arguments: 
-
-`request`: `ClearSnapshotsRequest`
-### [`disableDebugLogging`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L81)
-
-
-Returns: `Promise<EnableDebugLoggingResponse>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`request`: `EnableDebugLoggingRequest`
-### [`enableDebugLogging`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L77)
+`request`: <code>ClearSnapshotsRequest</code>
+### [disableDebugLogging(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L81)
 
 
-Returns: `Promise<EnableDebugLoggingResponse>`
-
-Arguments: 
-
-`request`: `EnableDebugLoggingRequest`
-### [`events`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L61)
-
-
-Returns: `Stream<Event>`
+Returns: <code>Promise&lt;EnableDebugLoggingResponse&gt;</code>
 
 Arguments: 
 
-`request`: `void`
-### [`getConfig`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L69)
+`request`: <code>EnableDebugLoggingRequest</code>
+### [enableDebugLogging(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L77)
 
 
-Returns: `Promise<GetConfigResponse>`
-
-Arguments: 
-
-`request`: `void`
-### [`getNetworkPeers`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L123)
-
-
-Returns: `Promise<GetNetworkPeersResponse>`
+Returns: <code>Promise&lt;EnableDebugLoggingResponse&gt;</code>
 
 Arguments: 
 
-`request`: `GetNetworkPeersRequest`
-### [`getSpaceSnapshot`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L111)
+`request`: <code>EnableDebugLoggingRequest</code>
+### [events(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L61)
 
 
-Returns: `Promise<GetSpaceSnapshotResponse>`
-
-Arguments: 
-
-`request`: `GetSpaceSnapshotRequest`
-### [`resetStorage`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L73)
-
-
-Returns: `Promise<void>`
+Returns: <code>Stream&lt;Event&gt;</code>
 
 Arguments: 
 
-`request`: `ResetStorageRequest`
-### [`saveSpaceSnapshot`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L115)
+`request`: <code>void</code>
+### [getConfig(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L69)
 
 
-Returns: `Promise<SaveSpaceSnapshotResponse>`
-
-Arguments: 
-
-`request`: `SaveSpaceSnapshotRequest`
-### [`subscribeToCredentialMessages`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L89)
-
-
-Returns: `Stream<SubscribeToCredentialMessagesResponse>`
+Returns: <code>Promise&lt;GetConfigResponse&gt;</code>
 
 Arguments: 
 
-`request`: `SubscribeToCredentialMessagesRequest`
-### [`subscribeToFeedBlocks`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L107)
+`request`: <code>void</code>
+### [getNetworkPeers(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L123)
 
 
-Returns: `Stream<SubscribeToFeedBlocksResponse>`
-
-Arguments: 
-
-`request`: `SubscribeToFeedBlocksRequest`
-### [`subscribeToFeeds`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L103)
-
-
-Returns: `Stream<SubscribeToFeedsResponse>`
+Returns: <code>Promise&lt;GetNetworkPeersResponse&gt;</code>
 
 Arguments: 
 
-`request`: `SubscribeToFeedsRequest`
-### [`subscribeToItems`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L99)
+`request`: <code>GetNetworkPeersRequest</code>
+### [getSpaceSnapshot(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L111)
 
 
-Returns: `Stream<SubscribeToItemsResponse>`
-
-Arguments: 
-
-`request`: `SubscribeToItemsRequest`
-### [`subscribeToKeyringKeys`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L85)
-
-
-Returns: `Stream<SubscribeToKeyringKeysResponse>`
+Returns: <code>Promise&lt;GetSpaceSnapshotResponse&gt;</code>
 
 Arguments: 
 
-`request`: `SubscribeToKeyringKeysRequest`
-### [`subscribeToNetworkTopics`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L127)
+`request`: <code>GetSpaceSnapshotRequest</code>
+### [resetStorage(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L73)
 
 
-Returns: `Stream<SubscribeToNetworkTopicsResponse>`
-
-Arguments: 
-
-`request`: `void`
-### [`subscribeToSignalStatus`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L131)
-
-
-Returns: `Stream<SubscribeToSignalStatusResponse>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`request`: `void`
-### [`subscribeToSignalTrace`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L135)
+`request`: <code>ResetStorageRequest</code>
+### [saveSpaceSnapshot(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L115)
 
 
-Returns: `Stream<SubscribeToSignalTraceResponse>`
+Returns: <code>Promise&lt;SaveSpaceSnapshotResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SaveSpaceSnapshotRequest</code>
+### [subscribeToCredentialMessages(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L89)
+
+
+Returns: <code>Stream&lt;SubscribeToCredentialMessagesResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SubscribeToCredentialMessagesRequest</code>
+### [subscribeToFeedBlocks(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L107)
+
+
+Returns: <code>Stream&lt;SubscribeToFeedBlocksResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SubscribeToFeedBlocksRequest</code>
+### [subscribeToFeeds(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L103)
+
+
+Returns: <code>Stream&lt;SubscribeToFeedsResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SubscribeToFeedsRequest</code>
+### [subscribeToItems(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L99)
+
+
+Returns: <code>Stream&lt;SubscribeToItemsResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SubscribeToItemsRequest</code>
+### [subscribeToKeyringKeys(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L85)
+
+
+Returns: <code>Stream&lt;SubscribeToKeyringKeysResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>SubscribeToKeyringKeysRequest</code>
+### [subscribeToNetworkTopics(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L127)
+
+
+Returns: <code>Stream&lt;SubscribeToNetworkTopicsResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>void</code>
+### [subscribeToSignalStatus(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L131)
+
+
+Returns: <code>Stream&lt;SubscribeToSignalStatusResponse&gt;</code>
+
+Arguments: 
+
+`request`: <code>void</code>
+### [subscribeToSignalTrace()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L135)
+
+
+Returns: <code>Stream&lt;SubscribeToSignalTraceResponse&gt;</code>
 
 Arguments: none
-### [`subscribeToSpaces`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L95)
+### [subscribeToSpaces(request)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L95)
 
 
-Returns: `Stream<SubscribeToSpacesResponse>`
+Returns: <code>Stream&lt;SubscribeToSpacesResponse&gt;</code>
 
 Arguments: 
 
-`request`: `SubscribeToSpacesRequest`
-### [`subscribeToSwarmInfo`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L139)
+`request`: <code>SubscribeToSpacesRequest</code>
+### [subscribeToSwarmInfo()](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/devtools/devtools.ts#L139)
 
 
-Returns: `Stream<SubscribeToSwarmInfoResponse>`
+Returns: <code>Stream&lt;SubscribeToSwarmInfoResponse&gt;</code>
 
 Arguments: none

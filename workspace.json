@@ -1,6 +1,7 @@
 {
   "version": 2,
   "projects": {
+    "apidoc": "tools/apidoc",
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
@@ -25,6 +26,7 @@
     "devtools": "packages/devtools/devtools",
     "devtools-extension": "packages/devtools/devtools-extension",
     "devtools-mesh": "packages/devtools/devtools-mesh",
+    "docs": "docs",
     "echo-db": "packages/core/echo/echo-db",
     "esbuild": "tools/executors/esbuild",
     "eslint-plugin": "tools/eslint-plugin",
@@ -89,7 +91,6 @@
     "text-model": "packages/core/echo/text-model",
     "timeframe": "packages/common/timeframe",
     "toolbox": "tools/executors/toolbox",
-    "typedoc-plugin-plate": "tools/typedoc-plugin-plate",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
     "vite-plugin": "packages/sdk/vite-plugin",

@@ -1,7 +1,8 @@
 ---
-position: 3
-label: Mutations
+order: 6
+title: Mutations
 ---
+
 # Mutating data
 
 ```tsx

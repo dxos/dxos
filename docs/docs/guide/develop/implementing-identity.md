@@ -4,4 +4,5 @@ label: Implementing identity
 prev: ./synchronizing-state
 next: ./user-interfaces
 ---
+
 # Implementing identity
