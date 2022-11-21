@@ -19,16 +19,25 @@ import { fromConfig, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
+/**
+ * This options object configures the DXOS Client
+ */
 export type ClientOptions = {
+  /** client configuration object */
   config?: Config | ConfigProto; // TODO(burdon): Rename ConfigProto to ConfigType.
+  /** custom services provider */
   services?: ClientServicesProvider;
+  /** custom model factory */
   modelFactory?: ModelFactory;
 };
 
 /**
- * The Client class encapsulates DXOS's core client-side API.
+ * The Client class encapsulates the core client-side API of DXOS.
  */
 export class Client {
+  /**
+   * The version of this client API
+   */
   public readonly version = DXOS_VERSION;
 
   private readonly _config: Config;
@@ -73,15 +82,17 @@ export class Client {
     };
   }
 
+  /**
+   * Current configuration object
+   */
   get config(): Config {
     return this._config;
   }
 
-  /**
-   * Has the Client been initialized?
-   * Initialize by calling `.initialize()`
-   */
   // TODO(burdon): Rename isOpen.
+  /**
+   * Returns true if the client has been initialized. Initialize by calling `.initialize()`
+   */
   get initialized() {
     return this._initialized;
   }
@@ -107,7 +118,6 @@ export class Client {
    * Required before using the Client instance.
    */
   @synchronized
-  // TODO(burdon): Rename open; remove callback (return observer).
   async initialize() {
     if (this._initialized) {
       return;
@@ -122,8 +132,8 @@ export class Client {
 
     await this._services.services.SystemService.initSession();
 
-    await this._halo._open();
-    await this._echo._initialize();
+    await this._halo.open();
+    await this._echo.open();
 
     // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
@@ -133,14 +143,13 @@ export class Client {
    * Cleanup, release resources.
    */
   @synchronized
-  // TODO(burdon): Rename close (make sure re-entrant).
   async destroy() {
     if (!this._initialized) {
       return;
     }
 
-    await this._halo._close();
-    await this._echo._destroy();
+    await this._halo.close();
+    await this._echo.close();
 
     await this._services.close();
 
@@ -154,6 +163,7 @@ export class Client {
   // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
   @synchronized
   async reset() {
+    await this.destroy();
     await this._services.services?.SystemService.reset();
     this._halo.profileChanged.emit();
     this._initialized = false;

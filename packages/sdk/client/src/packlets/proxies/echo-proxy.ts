@@ -80,18 +80,14 @@ export class EchoProxy implements Echo {
     return (this._serviceProvider as any).echo.networkManager;
   }
 
-  /**
-   * @internal
-   */
-  async _initialize() {
+  async open() {
     const gotSpaces = this._spacesChanged.waitForCount(1);
-
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
     spacesStream.subscribe(async (data) => {
       for (const space of data.spaces ?? []) {
         if (!this._spaces.has(space.publicKey)) {
           await this._haloProxy.profileChanged.waitForCondition(() => !!this._haloProxy.profile);
-          if(this._destroying) {
+          if (this._destroying) {
             return;
           }
 
@@ -137,12 +133,7 @@ export class EchoProxy implements Echo {
     await gotSpaces;
   }
 
-  /**
-   * @internal
-   */
-  async _destroy() {
-    this._destroying = true;
-
+  async close() {
     for (const space of this._spaces.values()) {
       await space.destroy();
     }

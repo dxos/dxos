@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import assert from 'assert';
 import React, { ReactNode, useState, Context, createContext, useContext } from 'react';
 
 import { Client } from '@dxos/client';
@@ -47,7 +48,7 @@ export interface ClientProviderProps {
    *
    * Most apps won't need this.
    */
-  services?: (config?: Config) => ClientServicesProvider;
+  services?: (config: Config) => ClientServicesProvider;
 
   /**
    * Client object or async provider to enable to caller to do custom initialization.
@@ -100,6 +101,7 @@ export const ClientProvider = ({
     } else {
       // Asynchronously construct client (config may be undefined).
       const config = await getAsyncValue(configProvider);
+      assert(config);
       log('resolved config', { config });
       const services = createServices?.(config);
       log('created services', { services });

@@ -6,14 +6,20 @@ import minimatch from 'minimatch';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import { executeFileTemplate, TemplatingResult, isTemplateFile, TEMPLATE_FILE_IGNORE } from './executeFileTemplate';
+import {
+  executeFileTemplate,
+  TemplatingResult,
+  isTemplateFile,
+  TEMPLATE_FILE_IGNORE,
+  LoadTemplateOptions
+} from './executeFileTemplate';
 import { File } from './file';
 import { logger } from './logger';
 import { runPromises } from './runPromises';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /^index(\.d)?\.[tj]s/];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /index(\.d)?\.[tj]s/];
 
-export type ExecuteDirectoryTemplateOptions<TInput> = {
+export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions & {
   templateDirectory: string;
   outputDirectory: string;
   input?: Partial<TInput>;
@@ -37,7 +43,8 @@ export const executeDirectoryTemplate = async <TInput>(
     filterGlob,
     parallel = true,
     verbose = false,
-    overwrite
+    overwrite,
+    ...restOptions
   } = options;
   const debug = logger(verbose);
   debug(options);
@@ -61,7 +68,8 @@ export const executeDirectoryTemplate = async <TInput>(
       templateRelativeTo: templateDirectory,
       outputDirectory,
       input,
-      overwrite
+      overwrite,
+      ...restOptions
     })
   );
   const runner = runPromises({

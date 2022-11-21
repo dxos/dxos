@@ -6,64 +6,64 @@ Represents the invitation state passed between client and service.
 Defined in:
    file://./../../../dxos/client/services.proto
 ## Properties
-### [`authenticationCode`]()
-Type: `string`
+### [authenticationCode]()
+Type: <code>string</code>
 
 Authentication code created by host.
 
 Options:
   - proto3_optional = true
-### [`errorCode`]()
-Type: `number`
+### [errorCode]()
+Type: <code>number</code>
 
 Local error code.
 
 Options:
   - proto3_optional = true
-### [`identityKey`]()
-Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [identityKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Guest's identity (only present if OFFLINE).
 
 Options:
   - proto3_optional = true
-### [`invitationId`]()
-Type: `string`
+### [invitationId]()
+Type: <code>string</code>
 
 Local identifier.
 
 Options:
   - proto3_optional = true
-### [`spaceKey`]()
-Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [spaceKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Space key (if data invitation).
 
 Options:
   - proto3_optional = true
-### [`state`]()
-Type: [`State`](/api/@dxos/client/enums#State)
+### [state]()
+Type: <code>[State](/api/@dxos/client/enums#State)</code>
 
 Local state.
 
 Options:
   - proto3_optional = true
-### [`swarmKey`]()
-Type: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+### [swarmKey]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Swarm rendezvous (random).
 
 Options:
   - proto3_optional = true
-### [`timeout`]()
-Type: `number`
+### [timeout]()
+Type: <code>number</code>
 
 Timeout (ms).
 
 Options:
   - proto3_optional = true
-### [`type`]()
-Type: [`Type`](/api/@dxos/client/enums#Type)
+### [type]()
+Type: <code>[Type](/api/@dxos/client/enums#Type)</code>
 
 Determined when created.
 

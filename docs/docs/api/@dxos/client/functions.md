@@ -2,65 +2,65 @@
 title: Functions
 ---
 # Functions
-### [`createDevtoolsRpcServer`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L54)
+### [createDevtoolsRpcServer(client, clientServices)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/devtools/devtools.ts#L54)
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`client`: [`Client`](/api/@dxos/client/classes/Client)
+`client`: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
-`clientServices`: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesProvider)
-### [`createNetworkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L43)
+`clientServices`: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
+### [createNetworkManager(config, options)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L36)
 
 
 Creates a WebRTC network manager connected to the specified signal server.
 
-Returns: `NetworkManager`
+Returns: <code>NetworkManager</code>
 
 Arguments: 
 
-`config`: `Config`
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-`options`: `Partial<NetworkManagerOptions>`
-### [`fromDefaults`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L31)
+`options`: <code>Partial&lt;NetworkManagerOptions&gt;</code>
+### [fromHost(config)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L28)
 
 
-Creates stand-alone services.
+Creates stand-alone services without rpc.
 
-Returns: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesProvider)
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
 Arguments: 
 
-`config`: `Config | Config`
-### [`fromIFrame`](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L26)
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
+### [fromIFrame(config, channel)](https://github.com/dxos/protocols/blob/main/packages/sdk/client/src/packlets/client/utils.ts#L22)
 
 
 Create services provider proxy connected via iFrame to host.
 
-Returns: [`ClientServicesProvider`](/api/@dxos/client/interfaces/ClientServicesProvider)
+Returns: <code>[ClientServicesProvider](/api/@dxos/client/interfaces/ClientServicesProvider)</code>
 
 Arguments: 
 
-`config`: `Config | Config`
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
-`channel`: `string`
-### [`generateSeedPhrase`]()
+`channel`: <code>string</code>
+### [generateSeedPhrase()]()
 
 
 Generate bip39 seed phrase (aka mnemonic).
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none
-### [`invitationObservable`]()
+### [invitationObservable(observable)]()
 
 
 Util to wrap observable with promise.
 
-Returns: `Promise<`[`Invitation`](/api/@dxos/client/interfaces/Invitation)`>`
+Returns: <code>Promise&lt;[Invitation](/api/@dxos/client/interfaces/Invitation)&gt;</code>
 
 Arguments: 
 
-`observable`: `Observable<`[`InvitationEvents`](/api/@dxos/client/interfaces/InvitationEvents)`>`
+`observable`: <code>Observable&lt;[InvitationEvents](/api/@dxos/client/interfaces/InvitationEvents)&gt;</code>

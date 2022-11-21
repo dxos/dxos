@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -54,5 +54,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/client/client.ts",
+        "dependencies": [
+          "@dxos/client-services"
+        ]
+      }
+    ]
   }
 }

@@ -4,6 +4,7 @@
 
 export * from './main';
 export * from './mermaid';
-export * from './project-processor';
+export * from './nx';
+export * from './ts';
 export * from './types';
-export * from './workspace-processor';
+export * from './util';

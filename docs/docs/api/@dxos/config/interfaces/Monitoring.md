@@ -4,11 +4,11 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`enabled`]()
-Type: `boolean`
-### [`endpoint`]()
-Type: `string`
-### [`interval`]()
-Type: `string`
+### [enabled]()
+Type: <code>boolean</code>
+### [endpoint]()
+Type: <code>string</code>
+### [interval]()
+Type: <code>string</code>
 
 Seconds

@@ -2,128 +2,128 @@
 title: Functions
 ---
 # Functions
-### [`ClientProvider`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L29)
+### [ClientProvider(options)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L76)
 
 
 Root component that provides the DXOS client instance to child components.
 To be used with the  `useClient`  hook.
 
-Returns: `Element`
+Returns: <code>Element</code>
 
 Arguments: 
 
-`__namedParameters`: [`ClientProviderProps`](/api/@dxos/react-client/interfaces/ClientProviderProps)
-### [`useClient`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L35)
+`options`: <code>[ClientProviderProps](/api/@dxos/react-client/interfaces/ClientProviderProps)</code>
+### [useClient()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/ClientContext.tsx#L32)
 
 
 Hook returning instance of DXOS client.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `Client`
+Returns: <code>Client</code>
 
 Arguments: none
-### [`useClientServices`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useClientServices.ts#L12)
+### [useClientServices()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useClientServices.ts#L12)
 
 
-Returns: `undefined | ClientServices`
+Returns: <code>undefined | ClientServices</code>
 
 Arguments: none
-### [`useConfig`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useConfig.ts#L15)
+### [useConfig()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useConfig.ts#L15)
 
 
 Hook returning config object used to initialize the DXOS client instance.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `Config`
+Returns: <code>Config</code>
 
 Arguments: none
-### [`useContacts`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useContacts.ts#L16)
+### [useContacts()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useContacts.ts#L16)
 
 
 Returns all known Contacts across all Spaces.
 Contacts are known members of a common Space.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `Contact[]`
+Returns: <code>Contact[]</code>
 
 Arguments: none
-### [`useDevices`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useDevices.ts#L12)
+### [useDevices()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useDevices.ts#L12)
 
 
-Returns: `DeviceInfo[]`
-
-Arguments: none
-### [`useDevtools`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useDevtools.ts#L12)
-
-
-Returns: `undefined | DevtoolsHost`
+Returns: <code>DeviceInfo[]</code>
 
 Arguments: none
-### [`useHaloInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L26)
+### [useDevtools()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/client/useDevtools.ts#L12)
 
 
-Returns: `object`
+Returns: <code>undefined | DevtoolsHost</code>
+
+Arguments: none
+### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L25)
+
+
+Returns: <code>object</code>
 
 Arguments: 
 
-`invitationId`: `string`
-### [`useHaloInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L13)
+`invitationId`: <code>string</code>
+### [useHaloInvitations()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L12)
 
 
-Returns: `InvitationObservable[]`
+Returns: <code>InvitationObservable[]</code>
 
 Arguments: none
-### [`useIdentity`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L13)
+### [useIdentity()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/halo/useIdentity.ts#L13)
 
 
 Hook returning DXOS identity object.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `undefined | Profile`
+Returns: <code>undefined | Profile</code>
 
 Arguments: none
-### [`useInvitationStatus`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L62)
+### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L62)
 
 
-Returns: `object`
-
-Arguments: 
-
-`initialObservable`: `InvitationObservable`
-### [`useMembers`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
-
-
-Returns: `SpaceMember[]`
+Returns: <code>object</code>
 
 Arguments: 
 
-`spaceKey`: `undefined | PublicKey`
-### [`useReducer`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L54)
+`initialObservable`: <code>InvitationObservable</code>
+### [useMembers(spaceKey)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useMembers.ts#L11)
+
+
+Returns: <code>SpaceMember[]</code>
+
+Arguments: 
+
+`spaceKey`: <code>undefined | PublicKey</code>
+### [useReducer(selection, value, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L54)
 
 
 Hook to process selection reducer.
 
-Returns: `undefined | R`
+Returns: <code>undefined | R</code>
 
 Arguments: 
 
-`selection`: `Falsy | Selection<T, void> | SelectionResult<T, any>`
+`selection`: <code>Falsy | Selection&lt;T, void&gt; | SelectionResult&lt;T, any&gt;</code>
 
-`value`: `R`
+`value`: <code>R</code>
 
-`deps`: `readonly any[]`
-### [`useResultSet`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useResultSet.ts#L17)
+`deps`: <code>readonly any[]</code>
+### [useResultSet(resultSet)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useResultSet.ts#L17)
 
 
 A convenience hook used for subscribing to changing values of a result set.
 Result sets are reactive query results from ECHO.
 
-Returns: `T[]`
+Returns: <code>T[]</code>
 
 Arguments: 
 
-`resultSet`: `ResultSet<T>`
-### [`useSelection`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
+`resultSet`: <code>ResultSet&lt;T&gt;</code>
+### [useSelection(selection, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSelection.ts#L21)
 
 
 Hook to generate values from a selection using a selector function.
@@ -133,62 +133,62 @@ All values that may change the selection result,
 apart from changes in ECHO database itself, must be passed to deps array
 for updates to work correctly.
 
-Returns: `undefined | T[]`
+Returns: <code>undefined | T[]</code>
 
 Arguments: 
 
-`selection`: `Selection<T, void> | SelectionResult<T, any> | Falsy`
+`selection`: <code>Selection&lt;T, void&gt; | SelectionResult&lt;T, any&gt; | Falsy</code>
 
-`deps`: `readonly any[]`
-### [`useSpace`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
+`deps`: <code>readonly any[]</code>
+### [useSpace(\[spaceKey\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L16)
 
 
 Get a specific Space.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `undefined | Space`
+Returns: <code>undefined | Space</code>
 
 Arguments: 
 
-`spaceKey`: `PublicKeyLike`
-### [`useSpaceInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L30)
+`spaceKey`: <code>PublicKeyLike</code>
+### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L30)
 
 
-Returns: `object`
-
-Arguments: 
-
-`spaceKey`: `PublicKey`
-
-`invitationId`: `string`
-### [`useSpaceInvitations`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L13)
-
-
-Returns: `InvitationObservable[]`
+Returns: <code>object</code>
 
 Arguments: 
 
-`spaceKey`: `PublicKey`
-### [`useSpaces`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L25)
+`spaceKey`: <code>PublicKey</code>
+
+`invitationId`: <code>string</code>
+### [useSpaceInvitations(\[spaceKey\])](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L13)
+
+
+Returns: <code>InvitationObservable[]</code>
+
+Arguments: 
+
+`spaceKey`: <code>PublicKey</code>
+### [useSpaces()](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/echo/useSpaces.ts#L25)
 
 
 Get all Spaces available to current user.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: `Space[]`
+Returns: <code>Space[]</code>
 
 Arguments: none
-### [`useStream`](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useStream.ts#L12)
+### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/protocols/blob/main/packages/sdk/react-client/src/util/useStream.ts#L12)
 
 
 Subscribe to service API streams.
 
-Returns: `T`
+Returns: <code>T</code>
 
 Arguments: 
 
-`streamFactory`: `function`
+`streamFactory`: <code>function</code>
 
-`defaultValue`: `T`
+`defaultValue`: <code>T</code>
 
-`deps`: `DependencyList`
+`deps`: <code>DependencyList</code>

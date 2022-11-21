@@ -1,75 +1,75 @@
 # Class `OrderedList`
-Declared in [`packages/core/echo/object-model/dist/src/ordered-list.d.ts:7`]()
+<sub>Declared in [packages/core/echo/object-model/dist/src/ordered-list.d.ts:7]()</sub>
 
 
 Utility class that wraps an  `ObjectModel`  and implements a linked list via key-values on a given property.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_model, \[_property\])]()
 
 
-Returns: [`OrderedList`](/api/@dxos/client/classes/OrderedList)
+Returns: <code>[OrderedList](/api/@dxos/client/classes/OrderedList)</code>
 
 Arguments: 
 
-`_model`: [`ObjectModel`](/api/@dxos/client/classes/ObjectModel)
+`_model`: <code>[ObjectModel](/api/@dxos/client/classes/ObjectModel)</code>
 
-`_property`: `string`
+`_property`: <code>string</code>
 
 ## Properties
-### [`update`]()
-Type: `Event<string[]>`
-### [`id`]()
-Type: `string`
-### [`values`]()
-Type: `string[]`
+### [update]()
+Type: <code>Event&lt;string[]&gt;</code>
+### [id]()
+Type: <code>string</code>
+### [values]()
+Type: <code>string[]</code>
 
 Get ordered values.
 
 ## Methods
-### [`destroy`]()
+### [destroy()]()
 
 
-Returns: `void`
+Returns: <code>void</code>
 
 Arguments: none
-### [`init`]()
+### [init(\[values\])]()
 
 
 Clears the ordered set with the optional values.
 
-Returns: `Promise<string[]>`
+Returns: <code>Promise&lt;string[]&gt;</code>
 
 Arguments: 
 
-`values`: `string[]`
-### [`insert`]()
+`values`: <code>string[]</code>
+### [insert(left, right)]()
 
 
 Links the ordered items, possibly linking them to existing items.
 
-Returns: `Promise<string[]>`
+Returns: <code>Promise&lt;string[]&gt;</code>
 
 Arguments: 
 
-`left`: `string`
+`left`: <code>string</code>
 
-`right`: `string`
-### [`refresh`]()
+`right`: <code>string</code>
+### [refresh()]()
 
 
 Refresh list from properties.
 
-Returns: [`OrderedList`](/api/@dxos/client/classes/OrderedList)
+Returns: <code>[OrderedList](/api/@dxos/client/classes/OrderedList)</code>
 
 Arguments: none
-### [`remove`]()
+### [remove(values)]()
 
 
 Removes the given element, possibly linked currently connected items.
 
-Returns: `Promise<string[]>`
+Returns: <code>Promise&lt;string[]&gt;</code>
 
 Arguments: 
 
-`values`: `string[]`
+`values`: <code>string[]</code>

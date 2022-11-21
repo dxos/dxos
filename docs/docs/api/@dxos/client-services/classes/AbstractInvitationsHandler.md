@@ -1,41 +1,41 @@
 # Class `AbstractInvitationsHandler`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts:51`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L51)
+<sub>Declared in [packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts:51](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L51)</sub>
 
 
 Base class for Halo/Space invitations handlers.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L53)
+### [constructor(_networkManager)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L53)
 
 
-Returns: [`AbstractInvitationsHandler`](/api/@dxos/client-services/classes/AbstractInvitationsHandler)`<T>`
+Returns: <code>[AbstractInvitationsHandler](/api/@dxos/client-services/classes/AbstractInvitationsHandler)&lt;T&gt;</code>
 
 Arguments: 
 
-`_networkManager`: `NetworkManager`
+`_networkManager`: <code>NetworkManager</code>
 
 ## Properties
-### [`_networkManager`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L54)
-Type: `NetworkManager`
+### [_networkManager](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L54)
+Type: <code>NetworkManager</code>
 
 ## Methods
-### [`acceptInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L58)
+### [acceptInvitation(invitation, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L58)
 
 
-Returns: [`AuthenticatingInvitationObservable`](/api/@dxos/client-services/interfaces/AuthenticatingInvitationObservable)
-
-Arguments: 
-
-`invitation`: `Invitation`
-
-`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
-### [`createInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L57)
-
-
-Returns: [`InvitationObservable`](/api/@dxos/client-services/interfaces/InvitationObservable)
+Returns: <code>[AuthenticatingInvitationObservable](/api/@dxos/client-services/interfaces/AuthenticatingInvitationObservable)</code>
 
 Arguments: 
 
-`context`: `T`
+`invitation`: <code>Invitation</code>
 
-`options`: [`InvitationsOptions`](/api/@dxos/client-services/types/InvitationsOptions)
+`options`: <code>[InvitationsOptions](/api/@dxos/client-services/types/InvitationsOptions)</code>
+### [createInvitation(context, \[options\])](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations-handler.ts#L57)
+
+
+Returns: <code>[InvitationObservable](/api/@dxos/client-services/interfaces/InvitationObservable)</code>
+
+Arguments: 
+
+`context`: <code>T</code>
+
+`options`: <code>[InvitationsOptions](/api/@dxos/client-services/types/InvitationsOptions)</code>

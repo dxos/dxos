@@ -11,7 +11,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
+import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -111,7 +111,7 @@ export class SpaceProxy implements Space {
     // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._clientServices.services.DataService, this._key),
+      new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
