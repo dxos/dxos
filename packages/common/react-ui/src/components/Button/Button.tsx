@@ -9,11 +9,11 @@ import { ButtonProps } from './ButtonProps';
 import { buttonStyles } from './buttonStyles';
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ children, compact, variant, rounding, ...props }, ref) => (
+  ({ children, compact, spacing, variant, rounding, ...props }, ref) => (
     <button
       ref={ref}
       {...props}
-      className={cx(buttonStyles({ compact, variant, rounding, disabled: props.disabled }), props.className)}
+      className={cx(buttonStyles({ compact, spacing, variant, rounding, disabled: props.disabled }), props.className)}
       {...(props.disabled && { disabled: true })}
     >
       {children}
