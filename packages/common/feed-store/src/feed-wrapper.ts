@@ -86,38 +86,10 @@ export class FeedWrapper<T extends {}> {
   off = this._binder.fn(this._hypercore.off);
 
   open = this._binder.async(this._hypercore.open);
-  _close = this._binder.async(this._hypercore.close);
-  async close() {
-    if (this._pendingWrites.size) {
-      log.warn(`Closing feed with pending writes:`, {
-        count: this._pendingWrites.size,
-        writes: [...this._pendingWrites].map(stack => stack.getStack())
-      });
-    }
-
-    await this._close();
-  }
+  close = this._binder.async(this._hypercore.close);
 
   get = this._binder.async(this._hypercore.get);
-  __append = this._binder.async(this._hypercore.append);
-  async append(data: any) {
-    // Cheap to capture unless you call getStack().
-    const stack = new StackTrace();
-    try {
-      this._pendingWrites.add(stack);
-
-      // TODO(burdon): Intercept.
-      // log('>>', { data, stack: stack.getStack() });
-      const res = await this.__append(data);
-      // log('>> DONE', { data, stack: stack.getStack(), seq: res });
-      return res;
-
-    } finally {
-      this._pendingWrites.delete(stack);
-    }
-  }
-
+  append = this._binder.async(this._hypercore.append);
   download = this._binder.async(this._hypercore.download);
-
   replicate = this._binder.fn(this._hypercore.replicate);
 }
