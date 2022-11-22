@@ -16,13 +16,16 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
+import { Duplex } from 'stream';
 
 export type TeleportParams = {
+  initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
 };
 
 export class Teleport {
+  public readonly initiator: boolean
   public readonly localPeerId: PublicKey;
   public readonly remotePeerId: PublicKey;
 
@@ -41,7 +44,12 @@ export class Teleport {
   private readonly _extensions = new Map<string, TeleportExtension>();
   private readonly _remoteExtensions = new Set<string>();
 
-  constructor({ localPeerId, remotePeerId }: TeleportParams) {
+  constructor({ initiator, localPeerId, remotePeerId }: TeleportParams) {
+    assert(typeof initiator === 'boolean');
+    assert(PublicKey.isPublicKey(localPeerId));
+    assert(PublicKey.isPublicKey(remotePeerId));
+    assert(typeof initiator === 'boolean');
+    this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
 
@@ -120,6 +128,7 @@ export class Teleport {
     const extension = this._extensions.get(extensionName) ?? failUndefined();
 
     const context: ExtensionContext = {
+      initiator: this.initiator,
       localPeerId: this.localPeerId,
       remotePeerId: this.remotePeerId,
       createPort: (channelName: string, opts?: CreateChannelOpts) => {
@@ -142,9 +151,13 @@ export class Teleport {
 }
 
 export type ExtensionContext = {
+  /**
+   * One of the peers will be designated an initiator.
+   */
+  initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
-  createStream(tag: string, opts?: CreateChannelOpts): NodeJS.ReadWriteStream;
+  createStream(tag: string, opts?: CreateChannelOpts): Duplex;
   createPort(tag: string, opts?: CreateChannelOpts): RpcPort;
   close(err?: Error): void;
 };

@@ -13,11 +13,13 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { ExtensionContext, TeleportExtension } from './teleport';
 
 export class TestExtension implements TeleportExtension {
+  public extensionContext: ExtensionContext | undefined;
   private _rpc!: ProtoRpcPeer<{ TestService: TestService }>;
   private _opened = new Trigger();
 
   async onOpen(context: ExtensionContext) {
     log('onOpen', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId });
+    this.extensionContext = context;
     this._rpc = createProtoRpcPeer<{ TestService: TestService }, { TestService: TestService }>({
       port: context.createPort('rpc'),
       requested: {

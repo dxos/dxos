@@ -11,13 +11,14 @@ import { afterTest } from '@dxos/testutils';
 
 import { ExtensionContext, Teleport, TeleportExtension } from './teleport';
 import { TestExtension } from './test-extension';
+import { expect } from 'chai';
 
 const setup = () => {
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
 
-  const peer1 = new Teleport({ localPeerId: peerId1, remotePeerId: peerId2 });
-  const peer2 = new Teleport({ localPeerId: peerId2, remotePeerId: peerId1 });
+  const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
+  const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
 
   pipeline(peer1.stream, peer2.stream, (err) => {
     if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
@@ -50,6 +51,9 @@ describe('Teleport', function () {
     log('test1 done');
     await extension2.test();
     log('test2 done');
+
+    expect(extension1.extensionContext?.initiator).to.equal(true);
+    expect(extension2.extensionContext?.initiator).to.equal(false);
   });
 });
 

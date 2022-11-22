@@ -64,7 +64,7 @@ export class Muxer {
    * The stream is immediately readable and writable.
    * NOTE: The data will be buffered until the stream is opened remotely with the same tag (may cause a memory leak).
    */
-  createStream(tag: string, opts: CreateChannelOpts = {}): NodeJS.ReadWriteStream {
+  createStream(tag: string, opts: CreateChannelOpts = {}): Duplex {
     const channel = this._getOrCreateStream({
       tag,
       contentType: opts.contentType
