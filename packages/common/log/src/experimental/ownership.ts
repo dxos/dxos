@@ -83,4 +83,4 @@ export const debugInfo = (target: any, propertyKey: string, descriptor: Property
   (target[kDebugInfoProperties] ??= []).push(propertyKey);
 };
 
-export const getCurrentOwnershipScope = (thisRef: any) => undefined;
+export const getCurrentOwnershipScope = (thisRef: any) => thisRef;
