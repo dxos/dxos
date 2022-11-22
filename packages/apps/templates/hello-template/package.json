@@ -10,8 +10,8 @@
   "author": "DXOS.org",
   "scripts": {
     "build": "tsc",
-    "bundle": "vite build",
-    "deploy": "dx app publish",
+    "bundle": "NODE_OPTIONS=\"--max-old-space-size=4096\" vite build",
+    "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",
     "serve": "vite",
     "storybook": "start-storybook -p 9009 --no-open"
