@@ -5,11 +5,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, InvitationObservable, Invitation, AuthenticatingInvitationObservable } from '@dxos/client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitation,
+  InvitationEncoder
+} from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
+
+const pinLength = 6;
 
 export interface JoinPanelProps {
   // TODO(burdon): Use InvitationEncoder to parse/decode?
@@ -20,7 +27,7 @@ export interface JoinPanelProps {
 }
 
 interface JoinStep1Props extends JoinPanelProps {
-  connect: (wrapper: InvitationObservable) => void;
+  connect: (wrapper: CancellableInvitationObservable) => void;
   status: Invitation.State;
   cancel: () => void;
   error?: number;
@@ -90,6 +97,14 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
     authenticate(invitationSecret).finally(() => setPending(false));
   }, [invitationSecret]);
 
+  const onChange = useCallback(
+    (value: string) => {
+      setInvitationSecret(value);
+      value.length === pinLength && onAuthenticateNext();
+    },
+    [onAuthenticateNext]
+  );
+
   return (
     <SingleInputStep
       {...{
@@ -97,7 +112,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
         inputLabel: t('invitation secret label', { ns: 'uikit' }),
         inputProps: {
           size: 'pin',
-          length: 6,
+          length: pinLength,
           initialValue: '',
           autoFocus: true,
           className: 'text-center',
@@ -106,7 +121,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
             validationValence: 'error' as const
           })
         },
-        onChange: setInvitationSecret,
+        onChange,
         onNext: onAuthenticateNext,
         onCancelPending: cancel
       }}

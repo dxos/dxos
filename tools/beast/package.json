@@ -1,6 +1,6 @@
 {
   "name": "@dxos/beast",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -13,9 +13,8 @@
     "beast": "./bin/beast.js"
   },
   "scripts": {
-    "check": "true",
     "info": "tsc --showConfig | jq",
-    "update-docs": "ts-node --esm ./src/main.ts --base-dir=../../ docs"
+    "update": "node -r @dxos/log-hook/register -r @swc-node/register ./src/main.ts docs"
   },
   "mocha": {
     "loader": "ts-node/esm",

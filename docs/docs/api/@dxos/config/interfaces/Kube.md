@@ -4,52 +4,52 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`alias`]()
-Type: `string[]`
-### [`autoupdate`]()
-Type: [`Autoupdate`](/api/@dxos/config/interfaces/Autoupdate)
+### [alias]()
+Type: <code>string[]</code>
+### [autoupdate]()
+Type: <code>[Autoupdate](/api/@dxos/config/interfaces/Autoupdate)</code>
 
 Options:
   - proto3_optional = true
-### [`confhost`]()
-Type: `string`
+### [confhost]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`env`]()
-Type: `string[]`
-### [`host`]()
-Type: `string`
+### [env]()
+Type: <code>string[]</code>
+### [host]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`https`]()
-Type: [`Https`](/api/@dxos/config/interfaces/Https)
+### [https]()
+Type: <code>[Https](/api/@dxos/config/interfaces/Https)</code>
 
 Options:
   - proto3_optional = true
-### [`monitoring`]()
-Type: [`Monitoring`](/api/@dxos/config/interfaces/Monitoring)
+### [monitoring]()
+Type: <code>[Monitoring](/api/@dxos/config/interfaces/Monitoring)</code>
 
 Options:
   - proto3_optional = true
-### [`p2p`]()
-Type: [`P2P`](/api/@dxos/config/interfaces/P2P)
+### [p2p]()
+Type: <code>[P2P](/api/@dxos/config/interfaces/P2P)</code>
 
 Options:
   - proto3_optional = true
-### [`port`]()
-Type: `string`
+### [port]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`telemetry`]()
-Type: [`Telemetry`](/api/@dxos/config/interfaces/Telemetry)
+### [telemetry]()
+Type: <code>[Telemetry](/api/@dxos/config/interfaces/Telemetry)</code>
 
 Options:
   - proto3_optional = true
-### [`trace`]()
-Type: [`Trace`](/api/@dxos/config/interfaces/Trace)
+### [trace]()
+Type: <code>[Trace](/api/@dxos/config/interfaces/Trace)</code>
 
 Options:
   - proto3_optional = true

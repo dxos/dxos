@@ -12,9 +12,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "**/deprecated"
-  ],
   "include": [
     "src"
   ],
@@ -23,16 +20,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/feed-store"
     },
     {
       "path": "../../common/keys"
@@ -41,16 +32,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random-access-storage"
+    },
+    {
       "path": "../../common/testutils"
     },
     {
-      "path": "../../common/timeframe"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -87,6 +75,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

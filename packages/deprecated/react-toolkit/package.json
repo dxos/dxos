@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-toolkit",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Application framework components",
   "homepage": "https://dxos.org",
@@ -17,8 +17,7 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",

@@ -5,7 +5,7 @@
 import { Plus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import { InvitationObservable } from '@dxos/client';
+import { CancellableInvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
 import { Heading } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const DevicesPage = () => {
         {t('device invitations label')}
       </Heading>
       <InvitationList
-        invitations={invitations as unknown as InvitationObservable[] | undefined}
+        invitations={invitations as unknown as CancellableInvitationObservable[] | undefined}
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
       />
     </main>

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogOptions, LogConfig, LogLevel } from './config';
+import { LogConfig, LogLevel, LogOptions } from './config';
 import { LogContext, LogMetadata } from './context';
 import { getConfig } from './options';
 

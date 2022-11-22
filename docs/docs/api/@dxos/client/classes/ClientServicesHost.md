@@ -1,35 +1,35 @@
 # Class `ClientServicesHost`
-Declared in [`packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts:14`]()
+<sub>Declared in [packages/sdk/client-services/dist/src/packlets/services/service-host.d.ts:14]()</sub>
 
 
 Remote service implementation.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(options)]()
 
 
-Returns: [`ClientServicesHost`](/api/@dxos/client/classes/ClientServicesHost)
+Returns: <code>[ClientServicesHost](/api/@dxos/client/classes/ClientServicesHost)</code>
 
 Arguments: 
 
-`__namedParameters`: `ClientServicesHostParams`
+`options`: <code>ClientServicesHostParams</code>
 
 ## Properties
-### [`descriptors`]()
-Type: `ServiceBundle<ClientServices>`
-### [`services`]()
-Type: `ClientServices`
+### [descriptors]()
+Type: <code>ServiceBundle&lt;ClientServices&gt;</code>
+### [services]()
+Type: <code>ClientServices</code>
 
 ## Methods
-### [`close`]()
+### [close()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`open`]()
+### [open()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none

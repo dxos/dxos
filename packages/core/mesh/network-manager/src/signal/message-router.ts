@@ -11,7 +11,7 @@ import { schema } from '@dxos/protocols';
 import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, MakeOptional } from '@dxos/util';
 
-import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
+import { OfferMessage, SignalMessage, SignalMessenger } from './signal-messenger';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -28,7 +28,7 @@ interface MessageRouterOptions {
 /**
  * Adds offer/answer and signal interfaces.
  */
-export class MessageRouter implements SignalMessaging {
+export class MessageRouter implements SignalMessenger {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _sendMessage: (msg: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>;
 

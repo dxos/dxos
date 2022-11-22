@@ -18,7 +18,7 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 import { IdentityManager } from '../identity';
 import {
   AuthenticatingInvitationProvider,
-  InvitationObservable,
+  CancellableInvitationObservable,
   InvitationObservableProvider,
   AUTHENTICATION_CODE_LENGTH,
   INVITATION_TIMEOUT,
@@ -42,16 +42,16 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(context: void, options?: InvitationsOptions): InvitationObservable {
+  createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
-    const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
+    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._identityManager.identity ?? failUndefined();
 
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
-      swarmKey: PublicKey.random(),
+      swarmKey: swarmKey ?? PublicKey.random(),
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
 
@@ -140,7 +140,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
     setTimeout(async () => {
       const topic = invitation.swarmKey!;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
@@ -237,7 +237,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
         protocol: createProtocolFactory(topic, peerId, [plugin]),

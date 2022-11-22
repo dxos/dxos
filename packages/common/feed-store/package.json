@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,8 +19,7 @@
   "scripts": {
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
     "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
-    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
-    "check": "true"
+    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -51,5 +50,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/feed-store.ts"
+      },
+      {
+        "root": "src/feed-iterator.ts"
+      }
+    ]
   }
 }

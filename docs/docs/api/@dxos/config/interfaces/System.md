@@ -4,8 +4,8 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`debug`]()
-Type: `string`
+### [debug]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true

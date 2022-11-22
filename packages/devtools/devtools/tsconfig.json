@@ -12,10 +12,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../apps/patterns/react-appkit"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/async"
     },
     {
       "path": "../../common/debug"
@@ -33,9 +33,6 @@
       "path": "../../common/timeframe"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../core/echo/messenger-model"
     },
     {
@@ -48,16 +45,10 @@
       "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../core/halo/credentials"
-    },
-    {
       "path": "../../core/mesh/messaging"
     },
     {
       "path": "../../core/mesh/network-manager"
-    },
-    {
-      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"

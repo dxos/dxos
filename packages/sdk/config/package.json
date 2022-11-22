@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,12 +18,10 @@
     "rollup-plugin.js",
     "webpack-plugin.js"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",

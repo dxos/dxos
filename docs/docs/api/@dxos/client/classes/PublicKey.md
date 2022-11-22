@@ -1,5 +1,5 @@
 # Class `PublicKey`
-Declared in [`packages/common/keys/dist/src/public-key.d.ts:15`]()
+<sub>Declared in [packages/common/keys/dist/src/public-key.d.ts:15]()</sub>
 
 
 The purpose of this class is to assure consistent use of keys throughout the project.
@@ -7,163 +7,162 @@ Keys should be maintained as buffers in objects and proto definitions, and conve
 strings as late as possible (eg, to log/display).
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_value)]()
 
 
-Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`_value`: `Uint8Array`
+`_value`: <code>Uint8Array</code>
 
 ## Properties
 
-
 ## Methods
-### [`[custom]`]()
+### [\[custom\](depth, options)]()
 
 
 Used by Node.js to get textual representation of this object when it's printed with a  `console.log`  statement.
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: 
 
-`depth`: `number`
+`depth`: <code>number</code>
 
-`options`: `InspectOptionsStylized`
-### [`asBuffer`]()
-
-
-Returns: `Buffer`
-
-Arguments: none
-### [`asUint8Array`]()
+`options`: <code>InspectOptionsStylized</code>
+### [asBuffer()]()
 
 
-Returns: `Uint8Array`
+Returns: <code>Buffer</code>
 
 Arguments: none
-### [`equals`]()
+### [asUint8Array()]()
+
+
+Returns: <code>Uint8Array</code>
+
+Arguments: none
+### [equals(other)]()
 
 
 Test this key for equality with some other key.
 
-Returns: `boolean`
+Returns: <code>boolean</code>
 
 Arguments: 
 
-`other`: `PublicKeyLike`
-### [`toHex`]()
+`other`: <code>PublicKeyLike</code>
+### [toHex()]()
 
 
-Returns: `string`
-
-Arguments: none
-### [`toJSON`]()
-
-
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none
-### [`toString`]()
+### [toJSON()]()
 
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: none
-### [`truncate`]()
+### [toString()]()
 
 
-Returns: `string`
+Returns: <code>string</code>
+
+Arguments: none
+### [truncate(\[length\])]()
+
+
+Returns: <code>string</code>
 
 Arguments: 
 
-`length`: `number`
-### [`assertValidPublicKey`]()
+`length`: <code>number</code>
+### [assertValidPublicKey(value)]()
 
 
 Asserts that provided values is an instance of PublicKey.
 
-Returns: `asserts value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>asserts value is [PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`value`: `any`
-### [`bufferize`]()
+`value`: <code>any</code>
+### [bufferize(str)]()
 
 
-Returns: `Buffer`
+Returns: <code>Buffer</code>
 
 Arguments: 
 
-`str`: `string`
-### [`equals`]()
+`str`: <code>string</code>
+### [equals(left, right)]()
 
 
 Tests two keys for equality.
 
-Returns: `boolean`
+Returns: <code>boolean</code>
 
 Arguments: 
 
-`left`: `PublicKeyLike`
+`left`: <code>PublicKeyLike</code>
 
-`right`: `PublicKeyLike`
-### [`from`]()
+`right`: <code>PublicKeyLike</code>
+### [from(source)]()
 
 
 Creates new instance of PublicKey automatically determining the input format.
 
-Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`source`: `PublicKeyLike`
-### [`fromHex`]()
+`source`: <code>PublicKeyLike</code>
+### [fromHex(hex)]()
 
 
 Creates new instance of PublicKey from hex string.
 
-Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`hex`: `string`
-### [`hash`]()
+`hex`: <code>string</code>
+### [hash(key)]()
 
 
 To be used with ComplexMap and ComplexSet.
 Returns a scalar representation for this key.
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: 
 
-`key`: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
-### [`isPublicKey`]()
+`key`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+### [isPublicKey(value)]()
 
 
 Tests if provided values is an instance of PublicKey.
 
-Returns: `value is `[`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>value is [PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: 
 
-`value`: `any`
-### [`random`]()
+`value`: <code>any</code>
+### [random()]()
 
 
 Creates a new key.
 
-Returns: [`PublicKey`](/api/@dxos/client/classes/PublicKey)
+Returns: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Arguments: none
-### [`stringify`]()
+### [stringify(key)]()
 
 
-Returns: `string`
+Returns: <code>string</code>
 
 Arguments: 
 
-`key`: `Uint8Array | Buffer`
+`key`: <code>Uint8Array | Buffer</code>

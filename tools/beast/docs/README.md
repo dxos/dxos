@@ -1,6 +1,6 @@
 # @dxos/beast
 
-Code analyzer.
+Tools.
 
 ## Dependency Graph
 

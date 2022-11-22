@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-db",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,9 +15,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -54,5 +51,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/database/database.ts"
+      },
+      {
+        "root": "src/packlets/database/database-backend.ts"
+      }
+    ]
   }
 }

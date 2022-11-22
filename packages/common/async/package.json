@@ -1,7 +1,7 @@
 {
   "name": "@dxos/async",
-  "version": "0.1.9",
-  "description": "Async utils.",
+  "version": "0.1.10",
+  "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
