@@ -78,7 +78,7 @@ describe('ClientProvider', function () {
   let client: Client;
 
   before(async function () {
-    client = new Client({ services: fromHost() });
+    client = new Client({ services: fromHost({}) });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
   });

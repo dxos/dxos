@@ -32,6 +32,7 @@ export const protocolFactory = ({
   getTopics
 }: ProtocolFactoryOptions): ProtocolProvider => {
   assert(getTopics);
+
   // eslint-disable-next-line no-unused-vars
   return ({ channel, initiator }) => {
     log('creating protocol');
@@ -42,6 +43,7 @@ export const protocolFactory = ({
         if (publicKey) {
           protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
+
         assert(publicKey, 'PublicKey not found in discovery.');
         return publicKey;
       },
@@ -51,7 +53,6 @@ export const protocolFactory = ({
     });
 
     protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
-
     return protocol;
   };
 };
@@ -75,9 +76,10 @@ export const transportProtocolProvider = (
   rendezvousKey: Buffer,
   peerId: Buffer,
   protocolPlugin: any
-): ProtocolProvider =>
-  protocolFactory({
+): ProtocolProvider => {
+  return protocolFactory({
     getTopics: () => [rendezvousKey],
     session: { peerId: PublicKey.stringify(peerId) },
     plugins: [protocolPlugin]
   });
+};

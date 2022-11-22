@@ -10,26 +10,26 @@ Key utils and definitions.
 flowchart LR
 
 %% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+
 
 %% Nodes
 
 subgraph common [common]
-  style common fill:#faebee,stroke:#333
+  style common fill:transparent
 
   subgraph _ [ ]
-    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
+    style _ fill:transparent
     dxos/keys("@dxos/keys"):::root
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
+| [`@dxos/debug`](../../debug/docs/README.md) | &check; |

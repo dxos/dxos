@@ -87,10 +87,13 @@ export class ServiceContext {
     await this.identityManager.close();
     await this.spaceManager?.close();
     await this.feedStore.close();
-    await this.networkManager.destroy(); // TODO(burdon): Close.
+    await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
   }
+
+  // TODO(burdon): Rename.
+  async destroy() {}
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();

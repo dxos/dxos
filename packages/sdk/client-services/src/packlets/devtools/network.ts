@@ -19,14 +19,14 @@ export const subscribeToNetworkStatus = ({ networkManager }: { networkManager: N
   new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
     const update = () => {
       try {
-        const status = networkManager.signal.getStatus();
+        const status = networkManager.signalManager.getStatus();
         next({ servers: status });
       } catch (err: any) {
         close(err);
       }
     };
 
-    networkManager.signal.statusChanged.on(update);
+    networkManager.signalManager.statusChanged.on(update);
     update();
   });
 
@@ -34,7 +34,7 @@ export const subscribeToSignalTrace = ({ networkManager }: { networkManager: Net
   new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
     next({ events: [] });
     const trace: CommandTrace[] = [];
-    networkManager.signal.commandTrace.on((msg) => {
+    networkManager.signalManager.commandTrace.on((msg) => {
       trace.push(msg);
       next({ events: trace.map((msg) => JSON.stringify(msg)) });
     });

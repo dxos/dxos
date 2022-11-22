@@ -12,15 +12,15 @@ import { log } from '@dxos/log';
 import { Messenger } from '@dxos/messaging';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { MessageRouter } from '../signal';
-import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
+import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
-import { Connection, ConnectionState } from './connection';
+import { Connection } from './connection';
+import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
 
@@ -33,9 +33,11 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
-  private readonly _connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
-  private readonly _discoveredPeers = new ComplexSet<PublicKey>(PublicKey.hash);
+  private readonly _peers = new ComplexMap<PublicKey, Peer>(PublicKey.hash);
+
   private readonly _swarmMessenger: MessageRouter;
+
+  private _destroyed = false;
 
   /**
    * Unique id of the swarm, local to the current peer, generated when swarm is joined.
@@ -44,20 +46,25 @@ export class Swarm {
 
   /**
    * New connection to a peer is started.
+   * @internal
    */
   readonly connectionAdded = new Event<Connection>();
 
   /**
    * Connection to a peer is dropped.
+   * @internal
    */
-  readonly connectionRemoved = new Event<Connection>();
+  readonly disconnected = new Event<PublicKey>();
 
   /**
    * Connection is established to a new peer.
+   * @internal
    */
   readonly connected = new Event<PublicKey>();
 
   readonly errors = new ErrorStream();
+
+  // TODO(burdon): Swarm => Peer.create/destroy =< Connection.open/close
 
   // TODO(burdon): Split up properties.
   constructor(
@@ -69,7 +76,7 @@ export class Swarm {
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
-    log('creating swarm', { topic: this._topic, peerId: _ownPeerId });
+    log('creating swarm', { id: this.id, topic: this._topic, peerId: _ownPeerId });
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new MessageRouter({
@@ -89,7 +96,9 @@ export class Swarm {
   }
 
   get connections() {
-    return Array.from(this._connections.values());
+    return Array.from(this._peers.values())
+      .map((peer) => peer.connection)
+      .filter(isNotNullOrUndefined);
   }
 
   get ownPeerId() {
@@ -107,40 +116,123 @@ export class Swarm {
     return this._topic;
   }
 
+  // TODO(burdon): async open?
+  async destroy() {
+    log('destroying', { id: this.id, topic: this._topic });
+    this._destroyed = true;
+    await this._topology.destroy();
+    await Promise.all(Array.from(this._peers.keys()).map((key) => this._closeConnection(key)));
+  }
+
+  async setTopology(topology: Topology) {
+    if (topology === this._topology) {
+      return;
+    }
+    log('setting topology', {
+      id: this.id,
+      topic: this._topic,
+      previous: getClassName(this._topology),
+      topology: getClassName(topology)
+    });
+
+    await this._topology.destroy();
+    this._topology = topology;
+    this._topology.init(this._getSwarmController());
+    this._topology.update();
+  }
+
+  private _getOrCreatePeer(peerId: PublicKey): Peer {
+    let peer = this._peers.get(peerId);
+    if (!peer) {
+      peer = new Peer(peerId, this._topic, this._ownPeerId, {
+        onConnected: () => {
+          this.connected.emit(peerId);
+        },
+        onDisconnected: async () => {
+          if (!peer!.advertizing) {
+            await this._destroyPeer(peer!.id);
+          }
+
+          this.disconnected.emit(peerId);
+          this._topology.update();
+        },
+        onRejected: () => {
+          // If the peer rejected our connection remove it from the set of candidates.
+          // TODO(dmaretskyi): Set flag instead.
+          if (this._peers.has(peerId)) {
+            void this._destroyPeer(peerId);
+          }
+        },
+        onAccepted: () => {
+          this._topology.update();
+        }
+      });
+      this._peers.set(peerId, peer);
+    }
+
+    return peer;
+  }
+
+  private async _destroyPeer(peerId: PublicKey) {
+    assert(this._peers.has(peerId));
+    await this._peers.get(peerId)!.destroy();
+    this._peers.delete(peerId);
+  }
+
   onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { topic: this._topic, swarmEvent });
+    log('swarm event', { id: this.id, topic: this._topic, swarmEvent }); // TODO(burdon): Stringify.
+    if (this._destroyed) {
+      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      return;
+    }
+
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
-      log('new peer', { topic: this._topic, peerId });
+      log('new peer', { id: this.id, topic: this._topic, peerId });
       if (!peerId.equals(this._ownPeerId)) {
-        this._discoveredPeers.add(peerId);
+        const peer = this._getOrCreatePeer(peerId);
+        peer.advertizing = true;
       }
     } else if (swarmEvent.peerLeft) {
-      this._discoveredPeers.delete(PublicKey.from(swarmEvent.peerLeft.peer));
+      const peer = this._peers.get(PublicKey.from(swarmEvent.peerLeft.peer));
+      if (peer) {
+        peer.advertizing = false;
+        if (!peer.connection) {
+          void this._destroyPeer(peer.id);
+        }
+      }
     }
 
     this._topology.update();
   }
 
   async onOffer(message: OfferMessage): Promise<Answer> {
-    log('offer', { topic: this._topic, message });
+    log('offer', { id: this.id, topic: this._topic, message });
+    if (this._destroyed) {
+      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      return { accept: false };
+    }
+
     // Id of the peer offering us the connection.
     assert(message.author);
     const remoteId = message.author;
     if (!message.recipient?.equals(this._ownPeerId)) {
-      log('rejecting offer with incorrect peerId', { topic: this._topic, message });
+      log('rejecting offer with incorrect peerId', { id: this.id, topic: this._topic, message });
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
-      log('rejecting offer with incorrect topic', { topic: this._topic, message });
+      log('rejecting offer with incorrect topic', { id: this.id, topic: this._topic, message });
       return { accept: false };
     }
 
+    const peer = this._getOrCreatePeer(remoteId);
+
     // Check if we are already trying to connect to that peer.
-    if (this._connections.has(remoteId)) {
-      // Peer with the highest Id closes it's connection, and accepts remote peer's offer.
+    if (peer.connection) {
+      // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this._ownPeerId.toHex()) {
         log("closing local connection and accepting remote peer's offer", {
+          id: this.id,
           topic: this._topic,
           peerId: this._ownPeerId
         });
@@ -156,12 +248,12 @@ export class Swarm {
 
     let accept = false;
     if (await this._topology.onOffer(remoteId)) {
-      if (!this._connections.has(remoteId)) {
+      if (!peer.connection) {
         // Connection might have been already established.
         assert(message.sessionId);
         const connection = this._createConnection(false, message.author, message.sessionId);
         try {
-          connection.open();
+          connection.openConnection();
         } catch (err: any) {
           this.errors.raise(err);
         }
@@ -175,49 +267,32 @@ export class Swarm {
   }
 
   async onSignal(message: SignalMessage): Promise<void> {
-    log('signal', { topic: this._topic, message });
+    log('signal', { id: this.id, topic: this._topic, message });
+    if (this._destroyed) {
+      log.warn('ignored for destroyed swarm', { peerId: this.id, topic: this._topic });
+      return;
+    }
     assert(
       message.recipient?.equals(this._ownPeerId),
       `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`
     );
     assert(message.topic?.equals(this._topic));
     assert(message.author);
-    const connection = this._connections.get(message.author);
-    if (!connection) {
-      log('dropping signal message for non-existent connection', { topic: this._topic, message });
-      return;
-    }
 
-    await connection.signal(message);
-  }
-
-  async setTopology(topology: Topology) {
-    if (topology === this._topology) {
-      return;
-    }
-    log('setting topology', {
-      topic: this._topic,
-      previous: getClassName(this._topology),
-      topology: getClassName(topology)
-    });
-    await this._topology.destroy();
-    this._topology = topology;
-    this._topology.init(this._getSwarmController());
-    this._topology.update();
-  }
-
-  async destroy() {
-    log('destroying', { topic: this._topic });
-    await this._topology.destroy();
-    await Promise.all(Array.from(this._connections.keys()).map((key) => this._closeConnection(key)));
+    const peer = this._getOrCreatePeer(message.author);
+    await peer.onSignal(message);
   }
 
   private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
         ownPeerId: this._ownPeerId,
-        connected: Array.from(this._connections.keys()),
-        candidates: Array.from(this._discoveredPeers.keys()).filter((key) => !this._connections.has(key))
+        connected: Array.from(this._peers.values())
+          .filter((peer) => peer.connection)
+          .map((peer) => peer.id),
+        candidates: Array.from(this._peers.values())
+          .filter((peer) => !peer.connection && peer.advertizing)
+          .map((peer) => peer.id)
       }),
       connect: (peer) => this._initiateConnection(peer),
       disconnect: async (peer) => {
@@ -231,7 +306,9 @@ export class Swarm {
     };
   }
 
-  // TODO(burdon): Make async.
+  /**
+   * Creates a connection then sends message over signal network.
+   */
   private async _initiateConnection(remoteId: PublicKey) {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
@@ -239,90 +316,44 @@ export class Swarm {
       await sleep(INITIATION_DELAY);
     }
 
-    if (this._connections.has(remoteId)) {
+    if (this._peers.get(remoteId)?.connection) {
       // Do nothing if peer is already connected.
       return;
     }
 
     const sessionId = PublicKey.random();
 
-    log('initiating...', { topic: this._topic, peerId: remoteId, sessionId });
+    log('initiating...', { id: this.id, topic: this._topic, peerId: remoteId, sessionId });
     const connection = this._createConnection(true, remoteId, sessionId);
     connection.initiate();
     this._topology.update();
-    log('initiated', { topic: this._topic });
+    log('initiated', { id: this.id, topic: this._topic });
   }
 
-  // TODO(burdon): Make async.
-  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
-    log('creating connection', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
-    assert(!this._connections.has(remoteId), 'Peer already connected.');
+  /**
+   * Synchronously create a connection, which must be initialized.
+   */
+  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey): Connection {
+    const peer = this._getOrCreatePeer(remoteId);
 
-    const connection = new Connection(
-      this._topic,
-      this._ownPeerId,
-      remoteId,
-      sessionId,
-      initiator,
+    const connection = peer.createConnection(
       this._swarmMessenger,
+      initiator,
+      sessionId,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
 
-    this._connections.set(remoteId, connection);
     this.connectionAdded.emit(connection);
-
-    connection.errors.handle((err) => {
-      // TODO(burdon): Change to warn? Why does this fail during tests?
-      log('connection failed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator, err });
-      this._closeConnection(remoteId).catch((err) => this.errors.raise(err));
-    });
-
-    connection.stateChanged.on((state) => {
-      switch (state) {
-        case ConnectionState.CONNECTED: {
-          this.connected.emit(remoteId);
-          break;
-        }
-
-        case ConnectionState.REJECTED: {
-          // If the peer rejected our connection remove it from the set of candidates.
-          this._discoveredPeers.delete(remoteId);
-          break;
-        }
-
-        case ConnectionState.ACCEPTED: {
-          this._topology.update();
-          break;
-        }
-
-        case ConnectionState.CLOSED: {
-          log('connection closed', { topic: this._topic, peerId: this._ownPeerId, remoteId, initiator });
-          // Connection might have been already closed or replace by a different one.
-          // Only remove the connection if it has the same session id.
-          if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
-            this._connections.delete(remoteId);
-            this.connectionRemoved.emit(connection);
-            this._topology.update();
-          }
-          break;
-        }
-      }
-    });
-
     return connection;
   }
 
-  // TODO(burdon): Make async.
   private async _closeConnection(peerId: PublicKey) {
-    log('closing...', { topic: this._topic, peerId });
-    const connection = this._connections.get(peerId);
-    if (!connection) {
+    const peer = this._peers.get(peerId);
+    if (!peer) {
       return;
     }
 
-    this._connections.delete(peerId);
-    await connection.close();
-    log('closed', { topic: this._topic });
+    await peer.closeConnection();
   }
 }

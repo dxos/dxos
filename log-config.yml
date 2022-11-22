@@ -5,4 +5,7 @@ formatter:
 
 filter:
   # - warn
-  - debug
+  # - feed-wrapper:debug
+  # - service-host:debug
+  # - client:debug
+  - warn

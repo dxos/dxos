@@ -60,7 +60,6 @@ export class FeedFactory<T extends {}> {
     }
 
     // Required due to hypercore's 32-byte key limit.
-    // TODO(burdon): Add details.
     const key = sha256(publicKey.toHex());
 
     const opts = Object.assign(
