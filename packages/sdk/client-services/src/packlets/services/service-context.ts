@@ -87,13 +87,17 @@ export class ServiceContext {
     await this.identityManager.close();
     await this.spaceManager?.close();
     await this.feedStore.close();
-    await this.networkManager.destroy(); // TODO(burdon): Close.
+    await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
   }
 
+  // TODO(burdon): Rename.
+  async destroy() {}
+
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
+
     this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;

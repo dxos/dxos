@@ -31,7 +31,7 @@ export class BotController {
 
   async start(topic: PublicKey): Promise<void> {
     const plugin = new RpcPlugin(this._onPeerConnect.bind(this));
-    this._connection = await this._networkManager.openSwarmConnection({
+    this._connection = await this._networkManager.joinSwarm({
       topic,
       peerId: topic,
       protocol: createProtocolFactory(topic, topic, [plugin]),

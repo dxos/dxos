@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
 import { ClientServicesProvider } from '@dxos/client-services';
+import { log } from '@dxos/log';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { Client } from '../client';
-
-const log = debug('dxos:client:devtools');
-const error = log.extend('error');
 
 /**
  * A hook bound to window.__DXOS__.
@@ -69,7 +65,7 @@ export const createDevtoolsRpcServer = async (client: Client, clientServices: Cl
       });
 
       await server.open().catch((err) => {
-        error(`Failed to open RPC server: ${err}`);
+        log.error(`Failed to open RPC server: ${err}`);
         return false;
       });
 

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
@@ -11,7 +11,7 @@ import {
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, ISpace, RemoteDatabaseBackend, ResultSet } from '@dxos/echo-db';
+import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -87,6 +87,7 @@ export class SpaceProxy implements Space {
   public readonly invitationsUpdate = new Event<InvitationObservable>();
   public readonly stateUpdate = new Event();
 
+  private _initializing = false;
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
@@ -110,7 +111,7 @@ export class SpaceProxy implements Space {
     // if (true) { // TODO(dima?): Always run database in remote mode for now.
     this._database = new Database(
       this._modelFactory,
-      new RemoteDatabaseBackend(this._clientServices.services.DataService, this._key),
+      new DatabaseBackendProxy(this._clientServices.services.DataService, this._key),
       memberKey
     );
     // } else if (false) {
@@ -162,19 +163,28 @@ export class SpaceProxy implements Space {
   /**
    * Called by EchoProxy open.
    */
+  @synchronized
   async initialize() {
+    if (this._initializing) {
+      return;
+    }
+    this._initializing = true;
+
     await this._database!.initialize();
 
     // Root item for properties.
     this._item = await this._database?.createItem({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
+    log('initialized');
   }
 
   /**
    * Called by EchoProxy close.
    */
+  @synchronized
   async destroy() {
+    log('destroying...');
     if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
@@ -194,13 +204,19 @@ export class SpaceProxy implements Space {
     });
   }
 
-  async _setOpen(open: boolean) {
-    await this._clientServices.services.SpaceService.setSpaceState({
-      spaceKey: this.key,
-      open
-    });
+  get properties(): ObjectProperties {
+    return this._item!.model;
   }
 
+  get invitations() {
+    return this._invitations;
+  }
+
+  // TODO(burdon): Remove deprecated methods.
+
+  /**
+   * @deprecated
+   */
   async setActive(active: boolean) {
     // const active_global = options.global ? active : undefined;
     // const active_device = options.device ? active : undefined;
@@ -209,14 +225,6 @@ export class SpaceProxy implements Space {
     //   active_global,
     //   active_device
     // });
-  }
-
-  get properties(): ObjectProperties {
-    return this._item!.model;
-  }
-
-  get invitations() {
-    return this._invitations;
   }
 
   /**
@@ -262,8 +270,8 @@ export class SpaceProxy implements Space {
   async createInvitation(options?: InvitationsOptions) {
     return new Promise<InvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
-
       this._invitations.push(invitation);
+
       const unsubscribe = invitation.subscribe({
         onConnecting: () => {
           this.invitationsUpdate.emit(invitation);
@@ -287,6 +295,13 @@ export class SpaceProxy implements Space {
   createSnapshot(): Promise<SpaceSnapshot> {
     return todo();
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
+  }
+
+  async _setOpen(open: boolean) {
+    await this._clientServices.services.SpaceService.setSpaceState({
+      spaceKey: this.key,
+      open
+    });
   }
 
   /**
