@@ -1,10 +1,14 @@
-import { log } from "./log";
-import { logInfo } from "./scope";
+//
+// Copyright 2022 DXOS.org
+//
 
-describe('Scope capture', () => {
+import { log } from './log';
+import { logInfo } from './scope';
+
+describe('Scope capture', function () {
   it('field instance', function () {
     class Container {
-      constructor(private readonly _id: string) { }
+      constructor(private readonly _id: string) {}
 
       @logInfo
       get id() {
@@ -12,7 +16,7 @@ describe('Scope capture', () => {
       }
 
       run() {
-        log('run')
+        log('run');
       }
     }
 
@@ -22,4 +26,4 @@ describe('Scope capture', () => {
     foo.run();
     bar.run();
   });
-})
+});

@@ -88,7 +88,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
 
     // TODO(dmaretskyi): Add the same to the browser-processor.
     const scopeInfo = gatherLogInfoFromScope(meta.scope);
-    if(Object.keys(scopeInfo).length > 0) {
+    if (Object.keys(scopeInfo).length > 0) {
       context = Object.assign(context ?? {}, scopeInfo);
     }
   }
