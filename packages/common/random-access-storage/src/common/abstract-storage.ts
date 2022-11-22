@@ -3,8 +3,10 @@
 //
 
 import { join } from 'node:path';
+import { inspect } from 'node:util';
 import type { RandomAccessStorage } from 'random-access-storage';
 
+import { inspectObject } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { Directory } from './directory';
@@ -25,8 +27,12 @@ export abstract class AbstractStorage implements Storage {
   // TODO(burdon): Make required.
   constructor(protected readonly path: string) {}
 
-  toString() {
-    return `Storage(${JSON.stringify({ type: this.type, path: this.path })})`;
+  [inspect.custom]() {
+    return inspectObject(this);
+  }
+
+  toJSON() {
+    return { type: this.type, path: this.path };
   }
 
   public get size() {
@@ -45,11 +51,16 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  async destroy() {
+  /**
+   * Delete all files.
+   */
+  async reset() {
     try {
+      log.warn('Erasing all data...');
       await this._closeFilesInPath('');
       await this._delete('');
       await this._destroy();
+      log('Erased...');
     } catch (err: any) {
       log.catch(err);
     }

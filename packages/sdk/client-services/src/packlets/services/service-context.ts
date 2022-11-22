@@ -27,6 +27,7 @@ import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations'
 /**
  * Shared backend for all client services.
  */
+
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 export class ServiceContext {
   public readonly initialized = new Trigger();
@@ -92,8 +93,12 @@ export class ServiceContext {
     log('closed');
   }
 
-  // TODO(burdon): Rename.
-  async destroy() {}
+  async reset() {
+    log('resetting...');
+    await this.close();
+    await this.storage.reset();
+    log('reset');
+  }
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);

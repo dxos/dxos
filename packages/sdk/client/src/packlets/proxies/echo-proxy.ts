@@ -7,14 +7,15 @@ import { inspect } from 'node:util';
 import { Event, EventSubscriptions, latch } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationObservable,
   InvitationsOptions,
   SpaceInvitationsProxy
 } from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -32,16 +33,16 @@ export interface Echo {
   cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
   getSpace(spaceKey: PublicKey): Space | undefined;
   querySpaces(): ResultSet<Space>;
-  acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
+  acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
 }
 
 export class EchoProxy implements Echo {
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
-  private readonly _invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
 
-  private _destroying = false;
+  private _invitationProxy?: SpaceInvitationsProxy;
+  private _destroying = false; // TODO(burdon): Standardize enum.
 
   // prettier-ignore
   constructor(
@@ -73,14 +74,21 @@ export class EchoProxy implements Echo {
    */
   get networkManager() {
     if (this._serviceProvider instanceof ClientServicesProxy) {
-      throw new Error('Network Manager not available in service proxy.');
+      throw new SystemError('Network manager not available in service proxy.');
     }
 
     // TODO(wittjosiah): Reconcile service provider host with interface.
     return (this._serviceProvider as any).echo.networkManager;
   }
 
+  // TODO(burdon): ???
+  get opened() {
+    return this._invitationProxy !== undefined;
+  }
+
   async open() {
+    this._invitationProxy = new SpaceInvitationsProxy(this._serviceProvider.services.SpaceInvitationsService);
+
     const gotSpaces = this._spacesChanged.waitForCount(1);
     const spacesStream = this._serviceProvider.services.SpaceService.subscribeSpaces();
     spacesStream.subscribe(async (data) => {
@@ -139,6 +147,7 @@ export class EchoProxy implements Echo {
     }
 
     await this._subscriptions.clear();
+    this._invitationProxy = undefined;
   }
 
   //
@@ -205,8 +214,12 @@ export class EchoProxy implements Echo {
    * Initiates an interactive accept invitation flow.
    */
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
+    }
+
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
+      const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
       const unsubscribe = acceptedInvitation.subscribe({
         onConnecting: () => {
           resolve(acceptedInvitation);

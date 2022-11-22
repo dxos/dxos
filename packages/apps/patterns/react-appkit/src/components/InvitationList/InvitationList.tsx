@@ -5,7 +5,7 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { InvitationObservable } from '@dxos/client';
+import { CancellableInvitationObservable } from '@dxos/client';
 import { defaultDisabled, Group } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-uikit';
 
@@ -13,7 +13,7 @@ import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
 export interface InvitationListProps {
   createInvitationUrl: PendingInvitationProps['createInvitationUrl'];
-  invitations?: InvitationObservable[];
+  invitations?: CancellableInvitationObservable[];
 }
 
 export const InvitationList = ({ createInvitationUrl, invitations }: InvitationListProps) => {
