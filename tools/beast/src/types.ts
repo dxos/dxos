@@ -14,7 +14,19 @@ import {
 //
 
 export type WorkspaceJson = {
+  readonly baseDir: string;
   readonly projects: { [idx: string]: string };
+};
+
+/**
+ * Project config in `package.json`.
+ */
+export type PackageConfig = {
+  classDiagrams?: {
+    root: string;
+    dependencies?: string[];
+    glob?: string;
+  }[];
 };
 
 export type PackageJson = {
@@ -22,6 +34,7 @@ export type PackageJson = {
   readonly description: string;
   readonly version: string;
   readonly dependencies: { [idx: string]: string };
+  readonly beast?: PackageConfig;
 };
 
 //
@@ -31,7 +44,7 @@ export type PackageJson = {
 export type Project = {
   // Potential clash with ts-morph.
   readonly name: string;
-  readonly subdir: string;
+  readonly subDir: string;
   readonly package: PackageJson; // TODO(burdon): Change to Package.
   readonly dependencies: Set<Project>;
   readonly descendents: Set<string>; // Includes modules that are not workspace projects.
@@ -59,13 +72,3 @@ export type Class = {
 export type Property = {
   readonly struct: PropertyDeclarationStructure;
 };
-
-//
-// Interfaces
-//
-
-export interface ProjectMap {
-  getProjects(filter?: string): Project[];
-  getProjectByName(name: string): Project | undefined;
-  getProjectByPackage(packageName: string): Project | undefined;
-}

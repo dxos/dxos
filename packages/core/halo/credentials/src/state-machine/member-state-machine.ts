@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
@@ -59,6 +60,12 @@ export class MemberStateMachine {
       assertion
     };
     this._members.set(credential.subject.id, info);
+    log('member added', {
+      member: credential.subject.id,
+      space: this._spaceKey,
+      role: assertion.role,
+      profile: assertion.profile
+    });
     await this.onMemberAdmitted.callIfSet(info);
   }
 }

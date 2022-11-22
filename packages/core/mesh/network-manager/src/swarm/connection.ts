@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessaging } from '../signal';
+import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 
 /**
@@ -72,7 +72,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _signalMessaging: SignalMessaging,
+    private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -108,7 +108,7 @@ export class Connection {
 
         if (answer.accept) {
           try {
-            this.open();
+            this.openConnection();
           } catch (err: any) {
             this.errors.raise(err);
           }
@@ -124,13 +124,16 @@ export class Connection {
       });
   }
 
+  /**
+   * Create an underlying transport and prepares it for the connection.
+   */
   // TODO(burdon): Make async?
-  open() {
+  openConnection() {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
     assert(!this._transport);
-    this._transport = this._transportFactory.create({
+    this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => {
@@ -169,17 +172,24 @@ export class Connection {
       return;
     }
 
-    // TODO(dmaretskyi): CLOSING state.
-    log('closing', { peerId: this.ownId });
+    log('closing...', { peerId: this.ownId });
 
-    // This will try to gracefull close the stream flushing any unsent data packets.
-    await this._protocol.close();
+    try {
+      // Gracefully close the stream flushing any unsent data packets.
+      await this._protocol.close();
+    } catch (err: any) {
+      log.catch(err);
+    }
 
-    // After the transport is closed streams are disconnected.
-    await this._transport?.close();
+    try {
+      // After the transport is closed streams are disconnected.
+      await this._transport?.destroy();
+    } catch (err: any) {
+      log.catch(err);
+    }
 
-    this._changeState(ConnectionState.CLOSED);
     log('closed', { peerId: this.ownId });
+    this._changeState(ConnectionState.CLOSED);
   }
 
   async signal(msg: SignalMessage) {
@@ -204,6 +214,7 @@ export class Connection {
   }
 
   private _changeState(state: ConnectionState): void {
+    assert(state !== this._state, 'Already in this state.');
     this._state = state;
     this.stateChanged.emit(state);
   }

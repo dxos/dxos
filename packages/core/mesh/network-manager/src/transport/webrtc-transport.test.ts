@@ -28,13 +28,12 @@ describe('WebRTCTransport', function () {
     const closedCb = () => {
       callsCounter++;
     };
-    connection.closed.once(closedCb);
 
+    connection.closed.once(closedCb);
     await sleep(10); // Let simple-peer process events.
-    await connection.close();
+    await connection.destroy();
 
     await sleep(10); // Process events.
-
     expect(callsCounter).toEqual(1);
   })
     .timeout(1_000)
@@ -58,7 +57,7 @@ describe('WebRTCTransport', function () {
         await connection2.signal(signal);
       }
     });
-    afterTest(() => connection1.close());
+    afterTest(() => connection1.destroy());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
@@ -74,7 +73,7 @@ describe('WebRTCTransport', function () {
         await connection1.signal(signal);
       }
     });
-    afterTest(() => connection2.close());
+    afterTest(() => connection2.destroy());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     const received: any[] = [];
@@ -83,7 +82,6 @@ describe('WebRTCTransport', function () {
       return undefined;
     };
     plugin1.on('receive', mockReceive);
-
     plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });

@@ -54,5 +54,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/network-manager.ts"
+      }
+    ]
   }
 }
