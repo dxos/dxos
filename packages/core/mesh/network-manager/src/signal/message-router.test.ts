@@ -16,7 +16,7 @@ import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
 import { MessageRouter } from './message-router';
-import { OfferMessage, SignalMessage } from './signal-messaging';
+import { OfferMessage, SignalMessage } from './signal-messenger';
 
 describe('MessageRouter', function () {
   let topic: PublicKey;
