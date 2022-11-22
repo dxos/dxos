@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 
-import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import { ID_BUGCHECK_STRING, preprocess } from './preprocessor';
 import { combineSourceMaps } from './source-map';
 
 // TODO(dmaretskyi): Move to separate package in tools.
@@ -83,12 +83,11 @@ export const register = () => {
   patchSourceMaps();
 };
 
-const BUGCHECK_STRING =
+export const BUGCHECK_STRING =
   'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
   ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
 const registerGlobals = () => {
-  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = () => null; // getCurrentOwnershipScope;
   (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
 };
 
