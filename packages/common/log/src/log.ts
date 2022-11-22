@@ -24,38 +24,6 @@ interface LogMethods {
 }
 
 /**
- * Logging instance with custom context.
- */
-// TODO(burdon): Meta isn't generated.
-export class Logger implements LogMethods {
-  constructor(private readonly _context?: () => any) {}
-
-  debug(message: string, context?: LogContext, meta?: LogMetadata) {
-    log.debug(message, Object.assign(this._context?.() ?? {}, context), meta);
-  }
-
-  info(message: string, context?: LogContext, meta?: LogMetadata) {
-    log.info(message, Object.assign(this._context?.() ?? {}, context), meta);
-  }
-
-  warn(message: string, context?: LogContext, meta?: LogMetadata) {
-    log.warn(message, Object.assign(this._context?.() ?? {}, context), meta);
-  }
-
-  error(message: string, context?: LogContext, meta?: LogMetadata) {
-    log.error(message, Object.assign(this._context?.() ?? {}, context), meta);
-  }
-
-  catch(error: any, context?: LogContext, meta?: LogMetadata) {
-    log.catch(error, Object.assign(this._context?.() ?? {}, context), meta);
-  }
-
-  break() {
-    log.break();
-  }
-}
-
-/**
  * Properties accessible on the logging function.
  */
 interface Log extends LogMethods, LogFunction {
@@ -103,7 +71,6 @@ const createLog = (): LogImp => {
 /**
  * Global logging function.
  */
-// TODO(burdon): Instance loggers? (e.g., provide additional displayed logging context/filtering).
 export const log: Log = ((globalThis as any).dx_log ??= createLog());
 
 /**
