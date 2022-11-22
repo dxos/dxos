@@ -87,7 +87,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   if (context instanceof Error) {
-    parts.context = inspect(level === LogLevel.ERROR ? context : String(context), { colors: true });
+    parts.context = inspect(context, { colors: true });
   } else if (context && Object.keys(context).length > 0) {
     // Remove undefined fields.
     // https://nodejs.org/api/util.html#utilinspectobject-options

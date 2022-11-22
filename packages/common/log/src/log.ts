@@ -48,7 +48,7 @@ const createLog = (): LogImp => {
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 
   // TODO(burdon): Not required since can determine value.
-  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta, error);
+  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.stack, context, meta, error);
 
   /**
    * Process the current log call.
