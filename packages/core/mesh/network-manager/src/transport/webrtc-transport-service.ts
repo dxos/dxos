@@ -102,7 +102,7 @@ export class WebRTCTransportService implements BridgeService {
   }
 
   async close({ proxyId }: CloseRequest) {
-    await this.transports.get(proxyId)?.transport.close();
+    await this.transports.get(proxyId)?.transport.destroy();
     await this.transports.get(proxyId)?.stream.end();
     this.transports.delete(proxyId);
     log('Closed.');

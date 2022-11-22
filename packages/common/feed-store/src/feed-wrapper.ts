@@ -7,7 +7,7 @@ import { Hypercore, HypercoreProperties } from 'hypercore';
 import { Readable } from 'streamx';
 import { inspect } from 'util';
 
-import { inspectObject } from '@dxos/debug';
+import { inspectObject, StackTrace } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBinder } from '@dxos/util';
@@ -18,6 +18,8 @@ import { FeedWriter } from './feed-writer';
  * Async feed wrapper.
  */
 export class FeedWrapper<T extends {}> {
+  private readonly _pendingWrites = new Set<StackTrace>();
+
   private readonly _binder = createBinder(this._hypercore);
 
   constructor(
@@ -72,6 +74,14 @@ export class FeedWrapper<T extends {}> {
     };
   }
 
+  get opened() {
+    return this._hypercore.opened;
+  }
+
+  get closed() {
+    return this._hypercore.closed;
+  }
+
   on = this._binder.fn(this._hypercore.on);
   off = this._binder.fn(this._hypercore.off);
 
@@ -81,6 +91,5 @@ export class FeedWrapper<T extends {}> {
   get = this._binder.async(this._hypercore.get);
   append = this._binder.async(this._hypercore.append);
   download = this._binder.async(this._hypercore.download);
-
   replicate = this._binder.fn(this._hypercore.replicate);
 }

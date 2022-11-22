@@ -21,7 +21,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Storage } from '@dxos/random-access-storage';
 
-import { IdentityManager } from '../identity';
+import { CreateIdentityOptions, IdentityManager } from '../identity';
 import { HaloInvitationsHandler, SpaceInvitationsHandler } from '../invitations';
 
 /**
@@ -87,7 +87,7 @@ export class ServiceContext {
     await this.identityManager.close();
     await this.spaceManager?.close();
     await this.feedStore.close();
-    await this.networkManager.destroy(); // TODO(burdon): Close.
+    await this.networkManager.close();
     this.dataServiceSubscriptions.clear();
     log('closed');
   }
@@ -95,8 +95,9 @@ export class ServiceContext {
   // TODO(burdon): Rename.
   async destroy() {}
 
-  async createIdentity() {
-    const identity = await this.identityManager.createIdentity();
+  async createIdentity(params: CreateIdentityOptions = {}) {
+    const identity = await this.identityManager.createIdentity(params);
+
     this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();
     return identity;
@@ -110,7 +111,8 @@ export class ServiceContext {
       credentialAuthenticator: MOCK_AUTH_VERIFIER,
       credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
-      deviceKey: identity.deviceKey
+      deviceKey: identity.deviceKey,
+      profile: identity.profileDocument
     };
 
     // Create in constructor (avoid all of these private variables).

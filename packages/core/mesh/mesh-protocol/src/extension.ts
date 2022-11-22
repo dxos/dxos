@@ -153,7 +153,7 @@ export class Extension extends Nanomessage {
    * Initializes the extension.
    */
   async openWithProtocol(protocol: Protocol) {
-    assert(!this._protocol);
+    assert(!this._protocol); // TODO(burdon): Flaky in tests.
     log('open', { name: this._name, id: PublicKey.from(protocol.id) });
 
     this._protocol = protocol;

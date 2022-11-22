@@ -23,16 +23,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/feed-store"
     },
     {
       "path": "../../common/keys"
@@ -44,13 +38,7 @@
       "path": "../../common/testutils"
     },
     {
-      "path": "../../common/timeframe"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-db"

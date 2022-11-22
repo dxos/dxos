@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
 import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ModelFactory } from '@dxos/model-factory';
 
@@ -15,7 +15,7 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
-import { fromIFrame } from './utils';
+import { fromConfig, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -24,7 +24,7 @@ import { fromIFrame } from './utils';
  */
 export type ClientOptions = {
   /** client configuration object */
-  config?: Config;
+  config?: Config | ConfigProto; // TODO(burdon): Rename ConfigProto to ConfigType.
   /** custom services provider */
   services?: ClientServicesProvider;
   /** custom model factory */
@@ -54,9 +54,10 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
-    this._config = config ?? new Config();
+    this._config = fromConfig(config);
     this._services = services ?? fromIFrame(this._config);
-    // NOTE: Defaults to the same as the backend services.
+
+    // NOTE: Must currently match the host.
     this._modelFactory = modelFactory ?? createDefaultModelFactory();
 
     this._halo = new HaloProxy(this._services);

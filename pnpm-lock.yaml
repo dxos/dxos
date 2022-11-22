@@ -16,9 +16,6 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
-  typedoc@0.23.15:
-    hash: k4qfemgm4ttpeeuk35ye3qqa2i
-    path: patches/typedoc@0.23.15.patch
 
 importers:
 
@@ -168,8 +165,8 @@ importers:
       '@types/react': 18.0.25
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.4
-      '@typescript-eslint/eslint-plugin': 5.43.0_7sz3lckvcvvmmnhj4g72liugr4
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/eslint-plugin': 5.43.0_nqj4bdx4ekws7aecttskpih4py
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       babel-loader: 8.3.0_npabyccmuonwo2rku4k53xo3hi
       chai: 4.3.7
       chai-as-promised: 7.1.1_chai@4.3.7
@@ -235,7 +232,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       ts-node: 10.9.1
-      typedoc: 0.23.15
+      typedoc: ^0.23.21
       typescript: ^4.8.4
       vue: ^3.2.45
       vue-router: ^4.1.6
@@ -266,7 +263,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
-      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3
+      typedoc: 0.23.21_typescript@4.9.3
       typescript: 4.9.3
       vue: 3.2.45
       vue-router: 4.1.6_vue@3.2.45
@@ -315,7 +312,7 @@ importers:
       '@types/react-dom': 18.0.9
       '@vitejs/plugin-react': 2.2.0_vite@3.0.9
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
 
   packages/apps/halo-app:
@@ -394,7 +391,7 @@ importers:
       '@vitejs/plugin-react': 2.2.0_vite@3.0.9
       typescript: 4.9.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
 
   packages/apps/patterns/react-appkit:
@@ -582,7 +579,7 @@ importers:
       '@types/react-dom': 18.0.9
       '@vitejs/plugin-react': 2.2.0_vite@3.0.9
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
 
   packages/apps/templates/bare-template:
@@ -677,7 +674,7 @@ importers:
       storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
       typescript: 4.9.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       webpack: 5.75.0
       workbox-window: 6.5.4
 
@@ -1160,7 +1157,7 @@ importers:
       postcss: 8.4.19
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
-      tailwindcss: 3.2.4
+      tailwindcss: 3.2.4_postcss@8.4.19
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
     devDependencies:
@@ -2313,6 +2310,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2363,6 +2361,7 @@ importers:
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../deprecated/react-components
@@ -2398,7 +2397,7 @@ importers:
       faker: 5.5.3
       typescript: 4.9.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.8_vite@3.0.9
+      vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
 
   packages/devtools/devtools-extension:
@@ -3243,13 +3242,13 @@ importers:
       util: 0.12.5
     devDependencies:
       '@polkadot/api': 4.17.1
-      '@polkadot/keyring': 6.11.1
+      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/typegen': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
       '@types/randombytes': 2.0.0
@@ -3289,6 +3288,39 @@ importers:
       mocha: 8.4.0
       ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       typescript: 4.9.3
+
+  packages/gravity/gravity-agent:
+    specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@types/js-yaml': ^4.0.5
+      '@types/node': ^18.11.9
+      '@types/yargs': ~16.0.1
+      assert: ^2.0.0
+      debug: ^4.3.3
+      js-yaml: ^4.1.0
+      source-map-support: ^0.5.12
+      util: ^0.12.4
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
+      '@dxos/config': link:../../sdk/config
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      assert: 2.0.0
+      debug: 4.3.4
+      js-yaml: 4.1.0
+      util: 0.12.5
+      yargs: 16.2.0
+    devDependencies:
+      '@types/js-yaml': 4.0.5
+      '@types/node': 18.11.9
+      '@types/yargs': 16.0.4
+      source-map-support: 0.5.21
 
   packages/gravity/gravity-dashboard:
     specifiers:
@@ -3384,13 +3416,11 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -3402,53 +3432,37 @@ importers:
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/text-model': workspace:*
-      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
-      '@koush/wrtc': ^0.5.3
-      '@types/debug': ^4.1.7
-      '@types/json-stable-stringify': ^1.0.32
       '@types/node': ^18.11.9
-      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
-      json-stable-stringify: ^1.0.1
-      readable-stream: ^3.6.0
       source-map-support: ^0.5.12
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../core/mesh/rpc
       '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-      '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
-      json-stable-stringify: 1.0.2
-      readable-stream: 3.6.0
       util: 0.12.5
     devDependencies:
-      '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/testutils': link:../../common/testutils
-      '@dxos/text-model': link:../../core/echo/text-model
-      '@koush/wrtc': 0.5.3
-      '@types/debug': 4.1.7
-      '@types/json-stable-stringify': 1.0.34
       '@types/node': 18.11.9
-      '@types/readable-stream': 2.3.15
       source-map-support: 0.5.21
 
   packages/sdk/client-services:
@@ -3710,7 +3724,7 @@ importers:
       remark-parse: ^10.0.1
       remark-prettier: ^2.0.0
       remark-stringify: ^10.0.2
-      typedoc: 0.23.15
+      typedoc: ^0.23.21
       typescript: ^4.8.4
       unified: ^10.1.2
       unist-util-visit: ^4.1.0
@@ -3733,7 +3747,7 @@ importers:
       remark-parse: 10.0.1
       remark-prettier: 2.0.0_prettier@2.7.1
       remark-stringify: 10.0.2
-      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3
+      typedoc: 0.23.21_typescript@4.9.3
       typescript: 4.9.3
       unified: 10.1.2
       unist-util-visit: 4.1.1
@@ -3844,8 +3858,8 @@ importers:
       '@dxos/eslint-plugin-rules': link:../eslint-rules
       '@rushstack/eslint-plugin-packlets': 0.4.1_hsf322ms6xhhd4b5ne6lb74y4a
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.28.0
-      '@typescript-eslint/eslint-plugin': 5.43.0_7sz3lckvcvvmmnhj4g72liugr4
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/eslint-plugin': 5.43.0_nqj4bdx4ekws7aecttskpih4py
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       eslint-config-semistandard: 16.0.0_zqshvg75esthlf3gqdkf7jxyty
       eslint-config-standard: 17.0.0_5dakk4wnrkkieagghiqvu5yn4y
       eslint-plugin-import: 2.26.0_ivdjtymx6ubvknadox4oh4qsue
@@ -7541,7 +7555,7 @@ packages:
     dependencies:
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.9.3
       '@nrwl/workspace': 14.5.7_2da5hqyulnor66zwzwvdekttrm
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       '@typescript-eslint/utils': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       chalk: 4.1.0
       confusing-browser-globals: 1.0.11
@@ -8193,7 +8207,7 @@ packages:
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
     transitivePeerDependencies:
       - encoding
@@ -8206,14 +8220,14 @@ packages:
     dependencies:
       '@babel/runtime': 7.20.1
       '@polkadot/api-derive': 4.17.1
-      '@polkadot/keyring': 6.11.1
+      '@polkadot/keyring': 6.11.1_w5wqjwuvue5eixzgnjxqpuw26i
       '@polkadot/metadata': 4.17.1
       '@polkadot/rpc-core': 4.17.1
       '@polkadot/rpc-provider': 4.17.1
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
       eventemitter3: 4.0.7
     transitivePeerDependencies:
@@ -8221,13 +8235,16 @@ packages:
       - supports-color
     dev: true
 
-  /@polkadot/keyring/6.11.1:
+  /@polkadot/keyring/6.11.1_w5wqjwuvue5eixzgnjxqpuw26i:
     resolution: {integrity: sha512-rW8INl7pO6Dmaffd6Df1yAYCRWa2RmWQ0LGfJeA/M6seVIkI6J3opZqAd4q2Op+h9a7z4TESQGk8yggOEL+Csg==}
     engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@polkadot/util': 6.11.1
+      '@polkadot/util-crypto': 6.11.1
     dependencies:
       '@babel/runtime': 7.20.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
     dev: true
 
   /@polkadot/metadata/4.17.1:
@@ -8238,7 +8255,7 @@ packages:
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
     dev: true
 
   /@polkadot/networks/6.11.1:
@@ -8270,7 +8287,7 @@ packages:
       '@babel/runtime': 7.20.1
       '@polkadot/types': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-fetch': 6.11.1
       '@polkadot/x-global': 6.11.1
       '@polkadot/x-ws': 6.11.1
@@ -8318,13 +8335,15 @@ packages:
       '@babel/runtime': 7.20.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
     dev: true
 
-  /@polkadot/util-crypto/6.11.1:
+  /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
     resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
     engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@polkadot/util': 6.11.1
     dependencies:
       '@babel/runtime': 7.20.1
       '@polkadot/networks': 6.11.1
@@ -11669,7 +11688,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.2.4
+      tailwindcss: 3.2.4_postcss@8.4.19
     dev: false
 
   /@tanstack/react-table/8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y:
@@ -13076,17 +13095,18 @@ packages:
     resolution: {integrity: sha512-S9q47ByT2pPvD65IvrWp7qppVMpk9WGMbVq9wbWZOHg6tnXSD4vyhao6nOSBwwfDdV2p3Kx9evA9vI+XWTfDvw==}
     dev: false
 
-  /@typescript-eslint/eslint-plugin/5.43.0_7sz3lckvcvvmmnhj4g72liugr4:
+  /@typescript-eslint/eslint-plugin/5.43.0_nqj4bdx4ekws7aecttskpih4py:
     resolution: {integrity: sha512-wNPzG+eDR6+hhW4yobEmpR36jrqqQv1vxBq5LJO3fBAktjkvekfr4BRl+3Fn1CM/A+s8/EiGUbOMDoYqWdbtXA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       '@typescript-eslint/scope-manager': 5.43.0
       '@typescript-eslint/type-utils': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       '@typescript-eslint/utils': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
@@ -13114,10 +13134,11 @@ packages:
       - typescript
     dev: false
 
-  /@typescript-eslint/parser/5.43.0_typescript@4.9.3:
+  /@typescript-eslint/parser/5.43.0_hsf322ms6xhhd4b5ne6lb74y4a:
     resolution: {integrity: sha512-2iHUK2Lh7PwNUlhFxxLI2haSDNyXvebBO9izhjhMoDC+S3XI9qt2DGFUsiJ89m2k7gGYch2aEpYqV5F/+nwZug==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
       typescript: '*'
     peerDependenciesMeta:
       typescript:
@@ -15228,6 +15249,7 @@ packages:
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    requiresBuild: true
     dependencies:
       file-uri-to-path: 1.0.0
     dev: true
@@ -19195,7 +19217,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       debug: 3.2.7
       eslint: 8.28.0
       eslint-import-resolver-node: 0.3.6
@@ -19235,7 +19257,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.43.0_typescript@4.9.3
+      '@typescript-eslint/parser': 5.43.0_hsf322ms6xhhd4b5ne6lb74y4a
       array-includes: 3.1.6
       array.prototype.flat: 1.3.1
       debug: 2.6.9
@@ -19366,7 +19388,7 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.43.0_7sz3lckvcvvmmnhj4g72liugr4
+      '@typescript-eslint/eslint-plugin': 5.43.0_nqj4bdx4ekws7aecttskpih4py
       eslint: 8.28.0
       eslint-rule-composer: 0.3.0
     dev: false
@@ -20356,6 +20378,7 @@ packages:
 
   /file-uri-to-path/1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -31954,10 +31977,12 @@ packages:
       - ts-node
     dev: false
 
-  /tailwindcss/3.2.4:
+  /tailwindcss/3.2.4_postcss@8.4.19:
     resolution: {integrity: sha512-AhwtHCKMtR71JgeYDaswmZXhPcW9iuI9Sp2LvZPo9upDZ7231ZJ7eA9RaURbhpXGVlrjX4cFNlB4ieTetEb7hQ==}
     engines: {node: '>=12.13.0'}
     hasBin: true
+    peerDependencies:
+      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3
@@ -32835,12 +32860,12 @@ packages:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
     dev: true
 
-  /typedoc/0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.9.3:
-    resolution: {integrity: sha512-x9Zu+tTnwxb9YdVr+zvX7LYzyBl1nieOr6lrSHbHsA22/RJK2m4Y525WIg5Mj4jWCmfL47v6f4hUzY7EIuwS5w==}
+  /typedoc/0.23.21_typescript@4.9.3:
+    resolution: {integrity: sha512-VNE9Jv7BgclvyH9moi2mluneSviD43dCE9pY8RWkO88/DrEgJZk9KpUk7WO468c9WWs/+aG6dOnoH7ccjnErhg==}
     engines: {node: '>= 14.14'}
     hasBin: true
     peerDependencies:
-      typescript: 4.6.x || 4.7.x || 4.8.x
+      typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x
     dependencies:
       lunr: 2.3.9
       marked: 4.2.2
@@ -32848,7 +32873,6 @@ packages:
       shiki: 0.11.1
       typescript: 4.9.3
     dev: true
-    patched: true
 
   /typescript/4.9.3:
     resolution: {integrity: sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==}
@@ -33636,10 +33660,11 @@ packages:
       replace-ext: 1.0.1
     dev: false
 
-  /vite-plugin-pwa/0.12.8_vite@3.0.9:
+  /vite-plugin-pwa/0.12.8_f7se6o6eqkwcix4u3svh6mkvda:
     resolution: {integrity: sha512-pSiFHmnJGMQJJL8aJzQ8SaraZBSBPMGvGUkCNzheIq9UQCEk/eP3UmANNmS9eupuhIpTK8AdxTOHcaMcAqAbCA==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
+      workbox-window: ^6.4.0
     dependencies:
       debug: 4.3.4
       fast-glob: 3.2.12
