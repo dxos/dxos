@@ -23,6 +23,11 @@ import { keyToHuman } from './utils';
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
+export const getProtocolFromStream = (stream: any): Protocol => {
+  assert(typeof stream === 'object' && typeof stream.pipe === 'function', 'stream is required');
+  return stream[kProtocol];
+};
+
 export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
   /**
    * Used to detect if attempting to connect to self.
@@ -128,6 +133,7 @@ export class Protocol {
             this._stream.destroy();
             return;
           }
+
           this._handleError(err);
         }
       }
@@ -135,7 +141,10 @@ export class Protocol {
 
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
-    this.error.on((error) => console.error(error));
+    this.error.on((err) => {
+      // NOTE: ERROR Writable stream closed prematurely Error: Writable stream closed prematurely
+      log.catch(err);
+    });
 
     this._extensionInit = new ExtensionInit({ timeout: this._initTimeout });
   }
@@ -256,6 +265,7 @@ export class Protocol {
     this._init = true;
     this.open().catch((err: any) => this._handleError(err));
 
+    log('initialized');
     return this;
   }
 
@@ -265,6 +275,7 @@ export class Protocol {
       return;
     }
 
+    log('opening...');
     await this._openExtensions();
     eos(this._stream as any, async () => {
       await this.close();
@@ -280,15 +291,22 @@ export class Protocol {
       return;
     }
 
+    log('closing...');
     this._connected = false;
     this._stream.finalize();
-    await this._extensionInit.close().catch((err: any) => this._handleError(err));
+    await this._extensionInit.close().catch((err: any) => {
+      this._handleError(err);
+    });
+
     for (const [name, extension] of this._extensionMap) {
       log('close extension', { name, key: PublicKey.from(this._stream.publicKey) });
-      await extension.close().catch((err: any) => this._handleError(err));
+      await extension.close().catch((err: any) => {
+        this._handleError(err);
+      });
     }
 
     this._isOpen = false;
+    log('closed');
   }
 
   async waitForHandshake(): Promise<void> {
@@ -418,13 +436,8 @@ export class Protocol {
     extension.emit('extension-message', message);
   };
 
-  private _handleError(error: Error) {
-    console.error(error);
-    process.nextTick(() => this._stream.destroy(error));
+  private _handleError(err: Error) {
+    log.catch(err);
+    process.nextTick(() => this._stream.destroy(err));
   }
 }
-
-export const getProtocolFromStream = (stream: any): Protocol => {
-  assert(typeof stream === 'object' && typeof stream.pipe === 'function', 'stream is required');
-  return stream[kProtocol];
-};

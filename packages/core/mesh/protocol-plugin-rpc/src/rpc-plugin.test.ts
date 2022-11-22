@@ -33,10 +33,9 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
     transportFactory: MemoryTransportFactory
   });
 
-  // TODO(burdon): Close connections.
-  afterTest(() => networkManager.destroy());
+  afterTest(() => networkManager.close());
   const plugin = new RpcPlugin(onConnect);
-  await networkManager.openSwarmConnection({
+  await networkManager.joinSwarm({
     topic,
     peerId,
     protocol: createProtocolFactory(topic, peerId, [plugin]),
