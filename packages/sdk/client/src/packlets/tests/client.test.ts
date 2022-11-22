@@ -4,10 +4,21 @@
 
 import { expect } from 'chai';
 
+import { afterTest } from '@dxos/testutils';
+
 import { Client } from '../client';
 import { TestClientBuilder } from '../testing';
 
 describe('Client', function () {
+  it('creates client with embedded services', async function () {
+    const testBuilder = new TestClientBuilder();
+
+    const client = new Client({ services: testBuilder.createClientServicesHost() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+    expect(client.initialized).to.be.true;
+  });
+
   it('initialize and destroy multiple times', async function () {
     const testBuilder = new TestClientBuilder();
 

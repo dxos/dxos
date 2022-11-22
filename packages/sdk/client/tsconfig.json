@@ -12,9 +12,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "**/deprecated"
-  ],
   "include": [
     "src"
   ],
