@@ -120,9 +120,12 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
         <JoinSpaceDialog open={showJoinSpace} onClose={() => setShowJoinSpace(false)} closeOnSuccess />
       </>
 
-      <ConfigSource onConfigChange={onConfigChange} />
+      <div id={'controls.config'}>
+        <ConfigSource onConfigChange={onConfigChange} />
+      </div>
 
       <Box
+        id={'controls.profile-and-spaces-creation'}
         sx={{
           paddingRight: 1
         }}
@@ -144,6 +147,7 @@ export const Controls = ({ onConfigChange }: ControlsProps) => {
       </Box>
 
       <Box
+        id={'controls.spaces'}
         sx={{
           display: 'flex',
           flexDirection: 'column',
