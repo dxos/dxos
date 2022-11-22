@@ -2,4 +2,7 @@ formatter:
   column: 100
 
 filter:
+  # - feed-wrapper:debug
+  - service-host:debug
+  - client:debug
   - warn
