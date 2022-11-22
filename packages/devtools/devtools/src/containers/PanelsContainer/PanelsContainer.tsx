@@ -86,7 +86,12 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
                 <ListItemText primary={title} />
               </ListItem>
               {items.map(({ id, title, icon }) => (
-                <ListItemButton key={id} selected={selected === id} onClick={(event) => handleListItemClick(event, id)}>
+                <ListItemButton
+                  key={id}
+                  id={id}
+                  selected={selected === id}
+                  onClick={(event) => handleListItemClick(event, id)}
+                >
                   <ListItemIcon
                     sx={{
                       '&.MuiListItemIcon-root': {
@@ -116,6 +121,7 @@ export const PanelsContainer = ({ sections }: { sections: Section[] }) => {
         {sections.map(({ items = [] }) =>
           items.map(({ id, panel }) => (
             <Box
+              id={`${id}-panel`}
               key={id}
               sx={{
                 display: selected === id ? 'flex' : 'none',

@@ -24,10 +24,11 @@ const TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY;
 
 export type UseTelemetryOptions = {
   namespace: string;
+  router?: boolean;
 };
 
-export const useTelemetry = ({ namespace }: UseTelemetryOptions) => {
-  const location = useLocation();
+export const useTelemetry = ({ namespace, router = true }: UseTelemetryOptions) => {
+  const location = router ? useLocation() : null;
   const client = useClient();
   const telemetryDisabled = useMemo(() => DX_TELEMETRY === 'true', []);
 
