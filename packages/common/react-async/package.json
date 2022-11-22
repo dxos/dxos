@@ -13,8 +13,7 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "immutability-helper": "^3.0.2"

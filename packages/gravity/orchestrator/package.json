@@ -7,7 +7,6 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
-    "check": "true",
     "multi-item-stress": "NODE_ENV=production node -r @swc-node/register src/multi-item-stress.ts",
     "multi-item-stress-profile": "NODE_ENV=production node --inspect-brk -r @swc-node/register src/multi-item-stress.ts",
     "single-item-stress": "NODE_ENV=production node -r @swc-node/register src/single-item-stress.ts",

@@ -19,8 +19,7 @@
   "scripts": {
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
     "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
-    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
-    "check": "true"
+    "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

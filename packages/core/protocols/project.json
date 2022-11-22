@@ -28,7 +28,7 @@
         "{options.outputFile}"
       ]
     },
-    "proto": {
+    "prebuild": {
       "executor": "@dxos/protobuf-compiler:generate",
       "options": {
         "basePath": "packages/core/protocols/src/proto",
