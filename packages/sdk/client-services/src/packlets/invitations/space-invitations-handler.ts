@@ -104,6 +104,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                     invitation.authenticationCode === undefined ||
                     authenticationCode !== invitation.authenticationCode
                   ) {
+                    invitation.authenticationCode &&
+                      log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
                     throw new Error('authentication code not set');
                   }
                 }
