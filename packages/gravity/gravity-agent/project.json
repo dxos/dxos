@@ -31,9 +31,8 @@
     "test": {
       "executor": "@dxos/mocha:mocha",
       "options": {
-        "checkLeaks": false,
         "coveragePath": "coverage/packages/gravity/gravity-agent",
-        "forceExit": true,
+        "environments": ["nodejs"],
         "outputPath": "tmp/mocha/packages/gravity/gravity-agent",
         "resultsPath": "test-results/packages/gravity/gravity-agent",
         "setup": "packages/core/mesh/signal/testing/setup.js",
@@ -52,7 +51,6 @@
     }
   },
   "implicitDependencies": [
-    "esbuild",
     "mocha"
   ]
 }
