@@ -120,7 +120,7 @@ describe('FeedStore', function () {
 
     // Delete.
     {
-      await storage.destroy();
+      await storage.reset();
     }
 
     // Read (should be empty).

@@ -28,6 +28,7 @@
     "devtools-mesh": "packages/devtools/devtools-mesh",
     "docs": "docs",
     "echo-db": "packages/core/echo/echo-db",
+    "errors": "packages/sdk/errors",
     "esbuild": "tools/executors/esbuild",
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-plugin-rules": "tools/eslint-rules",

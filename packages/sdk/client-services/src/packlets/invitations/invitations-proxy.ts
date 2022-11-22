@@ -12,7 +12,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   AuthenticatingInvitationObservable,
   AuthenticatingInvitationProvider,
-  InvitationObservable,
+  CancellableInvitationObservable,
   InvitationObservableProvider,
   InvitationsService
 } from './invitations';
@@ -34,7 +34,7 @@ export abstract class AbstractInvitationsProxy<T = void> implements InvitationsP
 
   abstract getInvitationOptions(context: T): Invitation;
 
-  createInvitation(context: T, options?: InvitationsOptions): InvitationObservable {
+  createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable {
     let invitationId: string;
     const observable = new InvitationObservableProvider(async () => {
       if (invitationId) {

@@ -88,6 +88,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

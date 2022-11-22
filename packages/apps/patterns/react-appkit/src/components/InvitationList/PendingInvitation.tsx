@@ -6,7 +6,7 @@ import cx from 'classnames';
 import { ProhibitInset } from 'phosphor-react';
 import React from 'react';
 
-import { Invitation, InvitationObservable } from '@dxos/client';
+import { Invitation, CancellableInvitationObservable } from '@dxos/client';
 import { useInvitationStatus } from '@dxos/react-client';
 import { Avatar, Button, CompactQrCode, defaultGroup, getSize, Loading, Tooltip } from '@dxos/react-ui';
 import { InvitationStatus, useTranslation } from '@dxos/react-uikit';
@@ -14,7 +14,7 @@ import { InvitationStatus, useTranslation } from '@dxos/react-uikit';
 import { HeadingWithActions } from '../HeadingWithActions';
 
 export interface PendingInvitationProps {
-  wrapper: InvitationObservable;
+  wrapper: CancellableInvitationObservable;
   createInvitationUrl: (invitation: string) => string;
 }
 

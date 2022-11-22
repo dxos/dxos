@@ -29,10 +29,9 @@ export { PublicKey } from '@dxos/keys';
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
 export {
-  invitationObservable,
   InvitationEvents,
   InvitationEncoder,
-  InvitationObservable,
+  CancellableInvitationObservable,
   AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
@@ -41,6 +40,8 @@ export {
   WorkerRuntime,
   WorkerSession
 } from '@dxos/client-services';
+
+export { ApiError } from '@dxos/errors';
 
 export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
