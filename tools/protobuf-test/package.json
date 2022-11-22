@@ -12,7 +12,6 @@
   ],
   "scripts": {
     "build": "true",
-    "check": "true",
     "test": "true"
   },
   "protobuf": "src/proto/example/testing/util.proto"

@@ -19,7 +19,6 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
     "debug": "npm run build && ./bin/kodama.js",
     "prepublishOnly": "npm run test && npm run build",
     "test:app": "npm run build && ./bin/test.js",

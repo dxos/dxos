@@ -16,9 +16,6 @@
     "dist",
     "index.js"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/network-generator": "workspace:*",

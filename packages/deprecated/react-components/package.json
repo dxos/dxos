@@ -14,8 +14,7 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

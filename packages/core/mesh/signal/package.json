@@ -12,7 +12,6 @@
     "node:assert": "assert"
   },
   "scripts": {
-    "check": "true",
     "start": "./bin/signal.js"
   },
   "dependencies": {

@@ -16,7 +16,6 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
     "start": "esbuild-server server"
   },
   "dependencies": {

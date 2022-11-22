@@ -11,9 +11,6 @@
     "node:assert": "assert"
   },
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",

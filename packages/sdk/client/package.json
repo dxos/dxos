@@ -18,9 +18,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",

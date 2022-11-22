@@ -16,9 +16,6 @@
     "src",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

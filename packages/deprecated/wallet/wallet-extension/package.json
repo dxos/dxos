@@ -10,8 +10,7 @@
   "scripts": {
     "book": "toolchain book",
     "browser-mocha": "browser-mocha --headless=false --setup browser-mocha/setup.js 'browser-mocha/*.test.ts' --browserArg=--disable-extensions-except=$(pwd)/dist --browserArg=--load-extension=$(pwd)/dist",
-    "bundle": "node scripts/build.js",
-    "check": "true"
+    "bundle": "node scripts/build.js"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
