@@ -15,7 +15,7 @@ import {
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
-import { ClientError } from '@dxos/errors';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -130,7 +130,6 @@ export class HaloProxy implements Halo {
   /**
    * @deprecated
    */
-  // TODO(burdon): Replaced with query/stream.
   subscribeToProfile(callback: (profile: Profile) => void): () => void {
     return this.profileChanged.on(() => callback(this._profile!));
   }
@@ -145,7 +144,7 @@ export class HaloProxy implements Halo {
    */
   async createProfile({ publicKey, secretKey, displayName, seedphrase }: CreateProfileOptions = {}): Promise<Profile> {
     if (seedphrase && (publicKey || secretKey)) {
-      throw new Error('Seedphrase must not be specified with existing keys');
+      throw new ApiError('Seedphrase must not be specified with existing keys');
     }
 
     if (seedphrase) {
@@ -181,9 +180,37 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable> {
-    if (this.opened) {
-      throw new ClientError('Client not open.');
+  /**
+   * Get set of authenticated devices.
+   */
+  // TODO(burdon): Standardize Promise vs. stream.
+  async queryDevices(): Promise<DeviceInfo[]> {
+    return new Promise((resolve, reject) => {
+      const stream = this._serviceProvider.services.DevicesService.queryDevices();
+      stream.subscribe(
+        (devices) => {
+          resolve(
+            devices.devices?.map((device) => ({
+              publicKey: device.deviceKey,
+              displayName: humanize(device.deviceKey)
+            })) ?? []
+          );
+          stream.close();
+        },
+        (error) => {
+          reject(error);
+          stream.close();
+        }
+      );
+    });
+  }
+
+  /**
+   * Initiates device invitation.
+   */
+  async createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable> {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
     }
 
     return new Promise<CancellableInvitationObservable>((resolve, reject) => {
@@ -207,9 +234,15 @@ export class HaloProxy implements Halo {
     });
   }
 
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
-    if (this.opened) {
-      throw new ClientError('Client not open.');
+  /**
+   * Initiates accepting invitation.
+   */
+  async acceptInvitation(
+    invitation: Invitation,
+    options?: InvitationsOptions
+  ): Promise<AuthenticatingInvitationObservable> {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
     }
 
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
@@ -227,27 +260,6 @@ export class HaloProxy implements Halo {
           reject(err);
         }
       });
-    });
-  }
-
-  async queryDevices(): Promise<DeviceInfo[]> {
-    return new Promise((resolve, reject) => {
-      const stream = this._serviceProvider.services.DevicesService.queryDevices();
-      stream.subscribe(
-        (devices) => {
-          resolve(
-            devices.devices?.map((device) => ({
-              publicKey: device.deviceKey,
-              displayName: humanize(device.deviceKey)
-            })) ?? []
-          );
-          stream.close();
-        },
-        (error) => {
-          reject(error);
-          stream.close();
-        }
-      );
     });
   }
 }

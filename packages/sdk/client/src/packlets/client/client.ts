@@ -9,7 +9,7 @@ import { synchronized } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
-import { InvalidConfigError } from '@dxos/errors';
+import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { DXOS_VERSION } from '../../version';
@@ -137,7 +137,6 @@ export class Client {
     await this._halo.open();
     await this._echo.open();
 
-    // TODO(burdon): Initialized === halo.initialized?
     this._initialized = true;
   }
 
@@ -165,7 +164,7 @@ export class Client {
    */
   async reset() {
     if (!this._initialized) {
-      throw new Error('Not open');
+      throw new ApiError('Client not open.');
     }
 
     await this._services.services?.SystemService.reset();

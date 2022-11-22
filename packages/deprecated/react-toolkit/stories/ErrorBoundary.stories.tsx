@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Alert, Box, Button } from '@mui/material';
 
-import { ClientError } from '@dxos/client';
+import { ApiError } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
 import { ErrorBoundary, ErrorView, useErrors } from '../src';
@@ -39,7 +39,7 @@ const TestApp = () => {
         const code = trigger === ErrorType.Async ? 'NON_FATAL' : 'FATAL';
         t = setTimeout(() => {
           setTrigger(undefined);
-          throw new ClientError(code, 'Async error.');
+          throw new ApiError(code, 'Async error.');
         }, 1000);
         break;
       }
@@ -53,7 +53,7 @@ const TestApp = () => {
             await new Promise((resolve, reject) => {
               t = setTimeout(() => {
                 setTrigger(undefined);
-                reject(new ClientError(code, 'Promise rejected.'));
+                reject(new ApiError(code, 'Promise rejected.'));
               }, 1000);
             })
         );

@@ -12,6 +12,7 @@ import {
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -138,7 +139,7 @@ export class SpaceProxy implements Space {
 
   get database(): Database {
     if (!this._database) {
-      throw new Error('Space not open.');
+      throw new ApiError('Space not open.');
     }
 
     return this._database;

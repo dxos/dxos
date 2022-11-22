@@ -90,11 +90,12 @@ export class AuthenticatingInvitationProvider
 }
 
 /**
- * Util to wrap observable with promise.
+ * Testing util to wrap non-authenticating observable with promise.
+ * Don't use this in production code.
  * @deprecated
  */
-// TODO(burdon): Replace with ObservableInvitationProvider.
-export const invitationObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
+// TODO(burdon): Throw error if auth requested.
+export const wrapObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({
       onSuccess: (invitation: Invitation) => {
@@ -102,7 +103,6 @@ export const invitationObservable = async (observable: CancellableInvitationObse
         unsubscribe();
         resolve(invitation);
       },
-
       onError: (err: Error) => {
         unsubscribe();
         reject(err);

@@ -15,6 +15,7 @@ import {
 } from '@dxos/client-services';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -73,7 +74,7 @@ export class EchoProxy implements Echo {
    */
   get networkManager() {
     if (this._serviceProvider instanceof ClientServicesProxy) {
-      throw new Error('Network Manager not available in service proxy.');
+      throw new SystemError('Network manager not available in service proxy.');
     }
 
     // TODO(wittjosiah): Reconcile service provider host with interface.
@@ -214,7 +215,7 @@ export class EchoProxy implements Echo {
    */
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
     if (!this.opened) {
-      throw new Error('Not opened');
+      throw new ApiError('Client not open.');
     }
 
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
