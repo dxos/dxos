@@ -32,8 +32,8 @@
     "assert": "^2.0.0"
   },
   "devDependencies": {
-    "@dxos/random-access-storage": "workspace:*",
     "@dxos/keyring": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"

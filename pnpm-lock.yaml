@@ -1963,16 +1963,16 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
-      '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../protocols
-      '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
     devDependencies:
+      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/testutils': link:../../../common/testutils
       typescript: 4.8.4
       wait-for-expect: 3.0.2

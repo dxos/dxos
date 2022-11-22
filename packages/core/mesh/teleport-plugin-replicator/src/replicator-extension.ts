@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys'
 import { Duplex } from 'stream'
 import { failUndefined } from '@dxos/debug'
 import { assert } from 'console'
+import { log } from '@dxos/log'
 
 export type ReplicationOptions = {
   upload: boolean
@@ -74,20 +75,24 @@ export class ReplicatorExtension implements TeleportExtension {
       handlers: {
         ReplicatorService: {
           updateFeeds: async ({ feeds }) => {
+            log('received feed info', { feeds });
             assert(this._extensionContext!.initiator === true, 'Invalid call');
           },
-          startReplication: async (request) => {
+          startReplication: async ({ info }) => {
+            log('startReplication', { info })
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
-            const streamTag = await this._acceptReplication(request.info);
+            const streamTag = await this._acceptReplication(info);
             return {
               streamTag
             }
           },
-          stopReplication: async (request) => {
+          stopReplication: async ({ info }) => {
+            log('stopReplication', { info })
+            // TODO(dmaretskyi): Make sure any peer can stop replication.
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
-            this._stopReplication(request.info.feedKey);
+            this._stopReplication(info.feedKey);
           },
         }
       },
@@ -121,6 +126,7 @@ export class ReplicatorExtension implements TeleportExtension {
    * Try to initiate feed replication.
    */
   private async _initiateReplication(feedInfo: FeedInfo) {
+    log('initiating replication', { feedInfo });
     assert(this._extensionContext!.initiator === true, 'Invalid call')
     assert(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
     const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo });
