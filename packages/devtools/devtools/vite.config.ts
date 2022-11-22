@@ -33,9 +33,7 @@ export default defineConfig({
       '@dxos/async',
       '@dxos/client',
       '@dxos/client-services',
-      '@dxos/codec-protobuf',
       '@dxos/config',
-      '@dxos/credentials',
       '@dxos/debug',
       '@dxos/devtools-mesh',
       '@dxos/feed-store',
@@ -53,7 +51,6 @@ export default defineConfig({
       '@dxos/react-registry-client',
       '@dxos/react-toolkit',
       '@dxos/registry-client',
-      '@dxos/rpc',
       '@dxos/text-model',
       '@dxos/timeframe'
     ]
