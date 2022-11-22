@@ -22,6 +22,7 @@ describe('Halo', function () {
     expect(client.halo.profile).exist;
 
     expect(await client.halo.queryDevices()).to.have.lengthOf(1);
+    expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 
   it.skip('device invitations', async function () {
