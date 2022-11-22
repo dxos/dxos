@@ -1946,9 +1946,11 @@ importers:
       '@dxos/context': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/teleport': workspace:*
       '@dxos/testutils': workspace:*
@@ -1961,9 +1963,11 @@ importers:
       '@dxos/context': link:../../../common/context
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
       '@dxos/protocols': link:../../protocols
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../rpc
       '@dxos/teleport': link:../teleport
       '@dxos/util': link:../../../common/util

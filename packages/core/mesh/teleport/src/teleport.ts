@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { asyncTimeout, EventSubscriptions, repeatTask, runInContextAsync } from '@dxos/async';
+import { asyncTimeout, EventSubscriptions, repeatTask, runInContextAsync, synchronized } from '@dxos/async';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context'
 import { failUndefined, todo } from '@dxos/debug';
@@ -86,7 +86,12 @@ export class Teleport {
     await this.destroy(err);
   }
 
+  @synchronized
   async destroy(err?: Error) {
+    if(this._ctx.disposed) {
+      return;
+    }
+
     await this._ctx.dispose();
     
     for (const extension of this._extensions.values()) {

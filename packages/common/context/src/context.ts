@@ -30,6 +30,10 @@ export class Context {
     this._onError = onError;
   }
 
+  get disposed() {
+    return this._isDisposed;
+  }
+
   /**
    * Schedules a callback to run when the context is disposed.
    * May be async, in this case the disposer might choose to wait for all resource to released.
