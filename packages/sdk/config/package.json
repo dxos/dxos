@@ -18,9 +18,6 @@
     "rollup-plugin.js",
     "webpack-plugin.js"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",

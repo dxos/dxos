@@ -11,9 +11,6 @@
     "node:util": "util"
   },
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

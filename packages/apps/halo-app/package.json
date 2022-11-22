@@ -8,10 +8,6 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "scripts": {
-    "check": "true",
-    "preview": "vite preview"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

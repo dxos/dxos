@@ -9,9 +9,6 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",

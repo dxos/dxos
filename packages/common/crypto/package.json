@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "browserslist": [
     "> 5%"
   ],

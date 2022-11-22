@@ -12,12 +12,10 @@
         "cacheableOperations": [
           "build",
           "bundle",
-          "check",
           "e2e",
           "lint",
           "prebuild",
           "prerelease",
-          "proto",
           "test"
         ],
         "parallel": 6,
@@ -52,7 +50,6 @@
       "dependsOn": [
         "^build",
         "^bundle",
-        "proto",
         "prebuild"
       ]
     },
@@ -66,24 +63,12 @@
       ],
       "dependsOn": [
         "^bundle",
-        "build",
-        "proto",
-        "prebuild"
-      ]
-    },
-    "check": {
-      "inputs": ["default", "^production"],
-      "dependsOn": [
-        "lint",
-        "test",
-        "proto",
         "build"
       ]
     },
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "proto",
         "build",
         "bundle"
       ]
@@ -104,18 +89,11 @@
         "^bundle"
       ]
     },
-    "proto": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^build"
-      ]
-    },
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
-        "^bundle",
-        "proto"
+        "^bundle"
       ]
     },
     "test": {
@@ -134,8 +112,7 @@
       ],
       "dependsOn": [
         "^build",
-        "^bundle",
-        "proto"
+        "^bundle"
       ]
     }
   },

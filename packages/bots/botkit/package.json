@@ -19,9 +19,6 @@
     "bin",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/bot-factory-client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
