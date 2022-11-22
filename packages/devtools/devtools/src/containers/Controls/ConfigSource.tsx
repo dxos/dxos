@@ -10,20 +10,18 @@ import { DEFAULT_CLIENT_ORIGIN } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 
 export type ConfigSourceProps = {
-  onConfigChange: (remoteSource?: string) => void;
+  onConfigChange: (params: { remoteSource?: string }) => void;
 };
 
 export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
   const client = useClient();
-  const [remoteSource, setRemoteSource] = useState<string>(
-    client.config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN
-  );
+  const [remoteSource, setRemoteSource] = useState<string>(DEFAULT_CLIENT_ORIGIN);
 
   const [remote, setRemote] = useState(Boolean(client.config.get('runtime.client.remoteSource')));
 
   const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newRemote = event.target.checked;
-    onConfigChange(event.target.checked ? remoteSource : undefined);
+    onConfigChange({ remoteSource: event.target.checked ? remoteSource : undefined });
     setRemote(newRemote);
   };
 
@@ -46,7 +44,7 @@ export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
         <Button
           disabled={!remote}
           variant='contained'
-          onClick={() => onConfigChange(remoteSource)}
+          onClick={() => onConfigChange({ remoteSource })}
           sx={{ marginLeft: 1 }}
         >
           Set

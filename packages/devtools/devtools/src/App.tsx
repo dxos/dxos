@@ -28,7 +28,7 @@ export const App = () => {
   const [client, setClient] = useState<Client>();
   const [servicesProvider, setServicesProvider] = useState<ClientServicesProvider>();
 
-  const onConfigChange = async (remoteSource?: string) => {
+  const onConfigChange = async ({ remoteSource = '' }: { remoteSource?: string } = {}) => {
     if (client && client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
@@ -58,7 +58,7 @@ export const App = () => {
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange();
+    await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
   }, []);
 
   if (!client) {
