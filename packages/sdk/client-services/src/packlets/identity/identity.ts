@@ -9,7 +9,8 @@ import {
   DeviceStateMachine,
   CredentialSigner,
   createCredentialSignerWithKey,
-  createCredentialSignerWithChain
+  createCredentialSignerWithChain,
+  ProfileStateMachine
 } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
@@ -18,7 +19,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { HaloAdmissionCredentials } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { ComplexSet } from '@dxos/util';
 
@@ -36,6 +37,7 @@ export class Identity {
   private readonly _space: Space;
   private readonly _signer: Signer;
   private readonly _deviceStateMachine: DeviceStateMachine;
+  private readonly _profileStateMachine: ProfileStateMachine;
 
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
@@ -50,10 +52,13 @@ export class Identity {
     this.deviceKey = deviceKey;
 
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
+    this._profileStateMachine = new ProfileStateMachine(this.identityKey);
 
-    // Save device keychain credential when processed by the space state machine.
+    // Process halo-specific credentials.
     this._space.onCredentialProcessed.set(async (credential) => {
+      // Save device keychain credential when processed by the space state machine.
       await this._deviceStateMachine.process(credential);
+      await this._profileStateMachine.process(credential);
       this.stateUpdate.emit();
     });
   }
@@ -75,6 +80,10 @@ export class Identity {
     await this._deviceStateMachine.deviceChainReady.wait();
 
     // TODO(dmaretskyi): Should we also wait for our feeds to be admitted?
+  }
+
+  get profileDocument(): ProfileDocument | undefined {
+    return this._profileStateMachine.profile;
   }
 
   /**

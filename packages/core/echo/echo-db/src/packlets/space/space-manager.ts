@@ -13,7 +13,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
 import { Database, DataServiceSubscriptions } from '../database';
@@ -35,6 +35,7 @@ export interface SigningContext {
   credentialProvider: AuthProvider;
   credentialAuthenticator: AuthVerifier;
   credentialSigner: CredentialSigner; // TODO(burdon): Already has keyring.
+  profile?: ProfileDocument;
 }
 
 export type SpaceManagerParams = {
@@ -130,7 +131,7 @@ export class SpaceManager {
       );
 
       const credentials = [
-        ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey)),
+        ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey, this._signingContext.profile)),
         await generator.createFeedAdmission(spaceKey, dataFeedKey, AdmittedFeed.Designation.DATA)
       ];
 
