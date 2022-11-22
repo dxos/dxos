@@ -69,9 +69,6 @@
         "configFile": "packages/apps/composer-app/vite.config.ts",
         "outputPath": "packages/apps/composer-app/out/composer"
       }
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

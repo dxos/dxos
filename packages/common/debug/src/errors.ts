@@ -13,8 +13,10 @@
  * @deprecated
  */
 export class DXOSError extends Error {
-  constructor(readonly code: string, message?: string) {
+  public context?: any;
+  constructor(readonly code: string, message?: string, context?: any) {
     super(message ? `${code}: ${message}` : code.toString());
+    this.context = context;
     // Restore prototype chain.
     // https://stackoverflow.com/a/48342359
     Object.setPrototypeOf(this, new.target.prototype);

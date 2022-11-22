@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.1.9](https://github.com/dxos/dxos/compare/v0.1.8...v0.1.9) (2022-11-18)
+
+
+### Bug Fixes
+
+* Include react-list in the release please config ([#1929](https://github.com/dxos/dxos/issues/1929)) ([3069bf4](https://github.com/dxos/dxos/commit/3069bf4fc71ffaa114b12c39ea09f7da857c2909))
+
+## [0.1.8](https://github.com/dxos/dxos/compare/v0.1.7...v0.1.8) (2022-11-18)
+
+
+### Bug Fixes
+
+* **docs:** Production bundle doesn't crash at hydration ([#1925](https://github.com/dxos/dxos/issues/1925)) ([bf97cfb](https://github.com/dxos/dxos/commit/bf97cfbdff36e2fc97ceac5719481338d0f38360))
+* **hello-template:** Cleanup missing config/deps ([#1926](https://github.com/dxos/dxos/issues/1926)) ([45b96c4](https://github.com/dxos/dxos/commit/45b96c41e086366ce4c1b4fe262948f122847d45))
+
+## [0.1.7](https://github.com/dxos/dxos/compare/v0.1.6...v0.1.7) (2022-11-18)
+
+
+### Features
+
+* Add support for turning if vault to other apps ([#1919](https://github.com/dxos/dxos/issues/1919)) ([717c3be](https://github.com/dxos/dxos/commit/717c3befd65ff7c489d9c38c5491feeb7a65940a))
+* **cli:** Seed default config file if config is missing ([#1916](https://github.com/dxos/dxos/issues/1916)) ([ceb4bc6](https://github.com/dxos/dxos/commit/ceb4bc68c6bb599e2ac6fdda364265ed94e114b0))
+
+
+### Bug Fixes
+
+* **cli:** Clone created apps from git tag matching the cli version ([#1914](https://github.com/dxos/dxos/issues/1914)) ([8cebf8d](https://github.com/dxos/dxos/commit/8cebf8de26894786a6acb2a169036804f9d3ee5f))
+* compiler options in the templates ([#1910](https://github.com/dxos/dxos/issues/1910)) ([eee5096](https://github.com/dxos/dxos/commit/eee50965158ff3e91a8a896e2b0325544198929d))
+* Demo feedback responses ([#1918](https://github.com/dxos/dxos/issues/1918)) ([7c990a8](https://github.com/dxos/dxos/commit/7c990a8bcbf5244e1aaebf3a27da04bd51f50ac4))
+* Halo invitations ([#1911](https://github.com/dxos/dxos/issues/1911)) ([a7f4ce9](https://github.com/dxos/dxos/commit/a7f4ce97f6780d9e92b3cf38803685827afbbf1d))
+* **halo-app:** Fix redirect when creating identity ([#1917](https://github.com/dxos/dxos/issues/1917)) ([e997f6b](https://github.com/dxos/dxos/commit/e997f6b077d101a5a3fd4d0cdda59fb5c55a407d))
+* **plate:** Only remove trailing slash from path if it exists ([#1915](https://github.com/dxos/dxos/issues/1915)) ([7cfc396](https://github.com/dxos/dxos/commit/7cfc396c65a64d4f575de7c4cc3fb3f0426dd9a2))
+
+## [0.1.6](https://github.com/dxos/dxos/compare/v0.1.5...v0.1.6) (2022-11-17)
+
+
+### Features
+
+* Add telemetry to composer & tasks apps ([#1887](https://github.com/dxos/dxos/issues/1887)) ([94baf04](https://github.com/dxos/dxos/commit/94baf049aac94dda6482c691b687e22565e58bc5))
+* **client:** halo invitations ([#1897](https://github.com/dxos/dxos/issues/1897)) ([f74a147](https://github.com/dxos/dxos/commit/f74a1473b68a6642ee67149b6b3df16f5be077b5))
+* complete HALO invitations ([#1869](https://github.com/dxos/dxos/issues/1869)) ([3cc8bbe](https://github.com/dxos/dxos/commit/3cc8bbe59e3c431870570a172f6c61db9e81ff58))
+* **composer-app:** Factor composer app out of halo ([#1879](https://github.com/dxos/dxos/issues/1879)) ([c85cd65](https://github.com/dxos/dxos/commit/c85cd6501bbd1cddbb0ff23ed1408688dc6dc28e))
+* Dynamic service resolution for dxRpc & shared-worker error handling ([#1883](https://github.com/dxos/dxos/issues/1883)) ([66aee38](https://github.com/dxos/dxos/commit/66aee38191bcb258d40e584828fba34738afb919))
+* **halo-app:** Use real devices list ([#1903](https://github.com/dxos/dxos/issues/1903)) ([fdd9477](https://github.com/dxos/dxos/commit/fdd94778394507207ade4de540858c8acfcb9ff8))
+* Integrate iframe service ([#1853](https://github.com/dxos/dxos/issues/1853)) ([73db00f](https://github.com/dxos/dxos/commit/73db00fb23e16dd5b8c0cf207ee85a7210e1da01))
+* Invitation design increment ([#1868](https://github.com/dxos/dxos/issues/1868)) ([a836694](https://github.com/dxos/dxos/commit/a836694621e1487ce379a8ff82645b7b9c9f27f1))
+* List pattern ([#1881](https://github.com/dxos/dxos/issues/1881)) ([efc482c](https://github.com/dxos/dxos/commit/efc482c4042d2453b2b6bc4fee31d9a6810edd6e))
+* Make events fire synchronously ([#1824](https://github.com/dxos/dxos/issues/1824)) ([fd7d6ea](https://github.com/dxos/dxos/commit/fd7d6eab69106152802c35c54ada0fde9aef0c66))
+* readme generator ([#1830](https://github.com/dxos/dxos/issues/1830)) ([1e6ef96](https://github.com/dxos/dxos/commit/1e6ef9682910035789e0e328bfc10d499c134736))
+* **tasks-app:** Setup application ([#1886](https://github.com/dxos/dxos/issues/1886)) ([6eda038](https://github.com/dxos/dxos/commit/6eda038009b1271ff21d3f82181a8d738c59fa5d))
+
+
+### Bug Fixes
+
+* Add dev config for apps ([#1901](https://github.com/dxos/dxos/issues/1901)) ([be13bbe](https://github.com/dxos/dxos/commit/be13bbe51b64cbd7832f6d3b28c4dd9512cdab5f))
+* App redirects with invitations ([#1904](https://github.com/dxos/dxos/issues/1904)) ([e48fb25](https://github.com/dxos/dxos/commit/e48fb2515b28c9af831d9333967132424b435b22))
+* Apps prod vite config ([#1900](https://github.com/dxos/dxos/issues/1900)) ([dda5d8c](https://github.com/dxos/dxos/commit/dda5d8c30249890019f10dea9d7b59ac827fb4fe))
+* Apps styles & translations ([#1895](https://github.com/dxos/dxos/issues/1895)) ([f49006a](https://github.com/dxos/dxos/commit/f49006aba9f5194f090f6522f899ef6bbe77d646))
+* devices are not admitted after halo-invitation. ([#1871](https://github.com/dxos/dxos/issues/1871)) ([60d8f84](https://github.com/dxos/dxos/commit/60d8f84c37223905f99f60fbd3533d5352a86da5))
+* **halo-app:** Ensure shared worker is bundled by vite ([#1907](https://github.com/dxos/dxos/issues/1907)) ([15cf8be](https://github.com/dxos/dxos/commit/15cf8beadd670e421806636587f5ce63a9a17607))
+* **hello-template:** vite config template ([#1864](https://github.com/dxos/dxos/issues/1864)) ([2bede71](https://github.com/dxos/dxos/commit/2bede713772f9f6bb4eeb603a31575a1cf1b183d))
+* react-list: Reject text updates when an input is focused ([#1908](https://github.com/dxos/dxos/issues/1908)) ([3acdf5d](https://github.com/dxos/dxos/commit/3acdf5da9929d458b1dc3a2bb16f7f7a82286c7e))
+* **react-ui:** publish plugin w/ types ([#1865](https://github.com/dxos/dxos/issues/1865)) ([2cea876](https://github.com/dxos/dxos/commit/2cea876adffd9558cbe86d9689943542b9435dd7))
+
 ## [0.1.5](https://github.com/dxos/dxos/compare/v0.1.4...v0.1.5) (2022-11-11)
 
 

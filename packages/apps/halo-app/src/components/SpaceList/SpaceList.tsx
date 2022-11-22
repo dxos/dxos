@@ -8,7 +8,16 @@ import { Link } from 'react-router-dom';
 
 import { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { Avatar, Group, defaultGroup, defaultHover, defaultFocus } from '@dxos/react-uikit';
+import {
+  Avatar,
+  Heading,
+  defaultGroup,
+  defaultHover,
+  defaultFocus,
+  defaultDisabled,
+  Group,
+  useTranslation
+} from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
@@ -21,29 +30,32 @@ export interface SpaceListProps {
 
 // TODO(wittjosiah): Unify with @dxos/react-appkit SpaceList.
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
-  return (
-    <div role='none' className='m-0 flex flex-col gap-4'>
+  const { t } = useTranslation('halo');
+  return spaces.length ? (
+    <>
       {spaces.map((space) => {
         const keyHex = space.key.toHex();
         const title = space.properties.get('title') ?? humanize(keyHex);
 
         return (
-          <Group
+          <Link
+            to={`/spaces/${keyHex}`}
             key={keyHex}
-            label={{
-              level: 2,
-              children: (
-                <Link
-                  to={`/spaces/${keyHex}`}
-                  className={cx('flex gap-1 items-center pr-2 rounded', defaultHover({}), defaultFocus)}
-                >
-                  <Avatar size={12} fallbackValue={keyHex} label={<p className='text-lg grow'>{title}</p>} />
-                </Link>
-              ),
-              className: 'grow flex items-center mb-0'
-            }}
-            className={cx(defaultGroup({ elevation: 1 }), 'flex items-stretch gap-2')}
+            className={cx(
+              defaultGroup({ elevation: 1, rounding: 'rounded', spacing: 'p-2' }),
+              'flex items-stretch gap-2 mbe-2',
+              defaultHover({}),
+              defaultFocus
+            )}
           >
+            <Heading level={2} className='grow flex items-center mbe-0'>
+              <Avatar
+                size={12}
+                fallbackValue={keyHex}
+                className='flex gap-1 items-center pr-2 rounded'
+                label={<p className='text-lg grow'>{title}</p>}
+              />
+            </Heading>
             {/* <div role='none' className='flex flex-col sm:flex-row sm:items-stretch gap-x-2 gap-y-1'>
               <Tooltip content={t('manage space label', { ns: 'uikit' })} side='top' tooltipLabelsTrigger>
                 <Link to={`/spaces/${keyHex}/settings`} className={cx('flex gap-1', buttonStyles({ compact: true }))}>
@@ -56,9 +68,21 @@ export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
                 </Link>
               </Tooltip>
             </div> */}
-          </Group>
+          </Link>
         );
       })}
-    </div>
+    </>
+  ) : (
+    <Group
+      className='mlb-4'
+      label={{
+        level: 2,
+        children: t('empty spaces label'),
+        className: cx('text-xl', defaultDisabled)
+      }}
+      elevation={0}
+    >
+      <p className={defaultDisabled}>{t('empty spaces message')}</p>
+    </Group>
   );
 };

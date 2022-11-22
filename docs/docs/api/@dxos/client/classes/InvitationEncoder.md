@@ -1,34 +1,33 @@
 # Class `InvitationEncoder`
-Declared in [`packages/sdk/client-services/dist/src/packlets/invitations/encoder.d.ts:5`]()
+<sub>Declared in [packages/sdk/client-services/dist/src/packlets/invitations/encoder.d.ts:5]()</sub>
 
 
 Encodes and decodes an invitation proto into/from alphanumeric chars.
 
 ## Constructors
-### [`constructor`]()
+### [constructor()]()
 
 
-Returns: [`InvitationEncoder`](/api/@dxos/client/classes/InvitationEncoder)
+Returns: <code>[InvitationEncoder](/api/@dxos/client/classes/InvitationEncoder)</code>
 
 Arguments: none
 
 ## Properties
 
-
 ## Methods
-### [`decode`]()
+### [decode(text)]()
 
 
-Returns: [`Invitation`](/api/@dxos/client/interfaces/Invitation)
-
-Arguments: 
-
-`text`: `string`
-### [`encode`]()
-
-
-Returns: `string`
+Returns: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 Arguments: 
 
-`invitation`: [`Invitation`](/api/@dxos/client/interfaces/Invitation)
+`text`: <code>string</code>
+### [encode(invitation)]()
+
+
+Returns: <code>string</code>
+
+Arguments: 
+
+`invitation`: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>

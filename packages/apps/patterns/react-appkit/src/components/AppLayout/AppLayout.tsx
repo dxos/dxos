@@ -4,15 +4,16 @@
 
 import cx from 'classnames';
 import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Space } from '@dxos/client';
+import { Space, Invitation } from '@dxos/client';
 import { useClient, useIdentity, useSpace } from '@dxos/react-client';
-import { Button, getSize, Heading, JoinSpaceDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
+import { HeadingWithActions } from '../HeadingWithActions';
 
 const invitationCodeFromUrl = (text: string) => {
   try {
@@ -51,15 +52,22 @@ export const AppLayout = ({
   const invitationParam = searchParams.get('invitation');
   const pathSegments = location.pathname.split('/').length;
   const isManagingSpace = !!spaceHex && pathSegments > 3;
+  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
 
   const handleCreateSpace = async () => {
     const space = await client.echo.createSpace();
     await onSpaceCreate?.(space);
   };
 
+  const handleManageProfile = () => {
+    const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+    const tab = window.open(remoteSource.origin, '_blank');
+    tab?.focus();
+  };
+
   return (
     <main className='max-is-5xl mli-auto pli-7'>
-      <div role='none' className={cx('flex flex-wrap items-center gap-x-2 gap-y-4 my-4')}>
+      <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
         {space ? (
           <>
             <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
@@ -68,9 +76,8 @@ export const AppLayout = ({
                 <Planet className={getSize(4)} />
               </Button>
             </Tooltip>
-            <Heading className='truncate pbe-1'>{humanize(space.key)}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
-            <div role='none' className='grow flex gap-2'>
+            <Heading className='flex-auto text-center truncate pbe-1'>{humanize(space.key)}</Heading>
+            <div role='none' className='flex gap-2'>
               {/* TODO(wittjosiah): There probably shouldn't be a popover here, or "manage identity" should link out to HALO. */}
               {/* TODO(wittjosiah): We probably don't want to rely on invitation singleton, dialog version prepping for HALO provide? */}
               <Presence
@@ -82,33 +89,52 @@ export const AppLayout = ({
                 managingSpace={isManagingSpace}
                 onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
                 onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
+                onClickManageProfile={handleManageProfile}
               />
             </div>
           </>
         ) : (
           <>
-            <Heading>{t('spaces label')}</Heading>
-            <div role='none' className='grow-[99] min-w-[2rem]' />
-            <div role='none' className='grow flex gap-2'>
-              <JoinSpaceDialog
-                initialInvitationCode={invitationParam ?? undefined}
-                parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                onJoin={(spaceKey) => navigate(generatePath(spacePath, { space: spaceKey.toHex() }))}
-                dialogProps={{
-                  initiallyOpen: Boolean(invitationParam),
-                  openTrigger: (
-                    <Button className='grow flex gap-1'>
-                      <Rocket className={getSize(5)} />
-                      {t('join space label', { ns: 'uikit' })}
-                    </Button>
-                  )
-                }}
-              />
-              <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
-                <Plus className={getSize(5)} />
-                {t('create space label', { ns: 'uikit' })}
-              </Button>
-            </div>
+            <HeadingWithActions
+              className='flex-auto text-center'
+              actions={
+                <>
+                  <JoinDialog
+                    initialInvitationCode={invitationParam ?? undefined}
+                    parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
+                    onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
+                    acceptInvitation={acceptInvitation}
+                    dialogProps={{
+                      initiallyOpen: Boolean(invitationParam),
+                      openTrigger: (
+                        <Button className='grow flex gap-1'>
+                          <Rocket className={getSize(5)} />
+                          {t('join space label', { ns: 'uikit' })}
+                        </Button>
+                      )
+                    }}
+                  />
+                  <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+                    <Plus className={getSize(5)} />
+                    {t('create space label', { ns: 'uikit' })}
+                  </Button>
+                  <Presence
+                    profile={identity!}
+                    space={space}
+                    className='flex-none'
+                    size={10}
+                    sideOffset={4}
+                    managingSpace={isManagingSpace}
+                    onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
+                    onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
+                    onClickManageProfile={handleManageProfile}
+                  />
+                </>
+              }
+              heading={{
+                children: t('spaces label')
+              }}
+            />
           </>
         )}
       </div>

@@ -10,26 +10,19 @@
 flowchart LR
 
 %% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+
 
 %% Nodes
 
-subgraph undefined [undefined]
-  style undefined fill:#faf7eb,stroke:#333
+subgraph devtools [devtools]
+  style devtools fill:transparent
   dxos/plate("@dxos/plate"):::root
-  click dxos/plate "dxos/dxos/tree/main/tools/plate/docs"
-  dxos/file("@dxos/file"):::def
-  click dxos/file "dxos/dxos/tree/main/tools/file/docs"
+  click dxos/plate "dxos/dxos/tree/main/packages/devtools/plate/docs"
 end
-
-%% Links
-linkStyle default stroke:#333,stroke-width:1px
-dxos/plate --> dxos/file
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/file`](../../file/docs/README.md) | &check; |

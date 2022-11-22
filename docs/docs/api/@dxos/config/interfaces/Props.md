@@ -4,8 +4,8 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`title`]()
-Type: `string`
+### [title]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true

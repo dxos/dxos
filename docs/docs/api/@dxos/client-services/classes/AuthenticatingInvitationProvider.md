@@ -1,59 +1,59 @@
 # Class `AuthenticatingInvitationProvider`
-Declared in [`packages/sdk/client-services/src/packlets/invitations/invitations.ts:82`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L82)
+<sub>Declared in [packages/sdk/client-services/src/packlets/invitations/invitations.ts:82](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L82)</sub>
 
 
 Cancelable observer that relays authentication requests.
 
 ## Constructors
-### [`constructor`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L87)
+### [constructor(_actions)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L87)
 
 
-Returns: [`AuthenticatingInvitationProvider`](/api/@dxos/client-services/classes/AuthenticatingInvitationProvider)
+Returns: <code>[AuthenticatingInvitationProvider](/api/@dxos/client-services/classes/AuthenticatingInvitationProvider)</code>
 
 Arguments: 
 
-`_actions`: [`AuthenticatingInvitationProviderActions`](/api/@dxos/client-services/interfaces/AuthenticatingInvitationProviderActions)
+`_actions`: <code>[AuthenticatingInvitationProviderActions](/api/@dxos/client-services/interfaces/AuthenticatingInvitationProviderActions)</code>
 
 ## Properties
-### [`_handlers`]()
-Type: [`InvitationEvents`](/api/@dxos/client-services/interfaces/InvitationEvents)`[]`
-### [`callback`]()
-Type: `Events`
+### [_handlers]()
+Type: <code>[InvitationEvents](/api/@dxos/client-services/interfaces/InvitationEvents)[]</code>
+### [callback]()
+Type: <code>Events</code>
 
 Proxy used to dispatch callbacks to each subscription.
-### [`cancelled`]()
-Type: `boolean`
-### [`invitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L56)
-Type: `undefined | Invitation`
+### [cancelled]()
+Type: <code>boolean</code>
+### [invitation](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L56)
+Type: <code>undefined | Invitation</code>
 
 ## Methods
-### [`authenticate`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L93)
+### [authenticate(authenticationCode)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L93)
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`authenticationCode`: `string`
-### [`cancel`]()
+`authenticationCode`: <code>string</code>
+### [cancel()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`setInvitation`](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L60)
+### [setInvitation(invitation)](https://github.com/dxos/protocols/blob/main/packages/sdk/client-services/src/packlets/invitations/invitations.ts#L60)
 
 
-Returns: `void`
-
-Arguments: 
-
-`invitation`: `Invitation`
-### [`subscribe`]()
-
-
-Returns: `UnsubscribeCallback`
+Returns: <code>void</code>
 
 Arguments: 
 
-`handler`: [`InvitationEvents`](/api/@dxos/client-services/interfaces/InvitationEvents)
+`invitation`: <code>Invitation</code>
+### [subscribe(handler)]()
+
+
+Returns: <code>UnsubscribeCallback</code>
+
+Arguments: 
+
+`handler`: <code>[InvitationEvents](/api/@dxos/client-services/interfaces/InvitationEvents)</code>

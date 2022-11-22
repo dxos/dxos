@@ -73,7 +73,7 @@ describe('WebRTCTransportProxy', function () {
       sendSignal,
       bridgeService: rpcClient.rpc.BridgeService
     });
-    afterTest(async () => await webRTCTransportProxy.close());
+    afterTest(async () => await webRTCTransportProxy.destroy());
 
     return { webRTCService: rpcService, webRTCTransportProxy };
   };
@@ -89,7 +89,7 @@ describe('WebRTCTransportProxy', function () {
     connection.closed.once(closedCb);
 
     await sleep(10); // Let simple-peer process events.
-    await connection.close();
+    await connection.destroy();
 
     await sleep(1); // Process events.
 

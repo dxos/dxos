@@ -7,7 +7,7 @@ import React from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Client, fromIFrame, ObjectModel, Space } from '@dxos/client';
+import { fromHost, fromIFrame, ObjectModel, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import {
   AppLayout,
@@ -19,7 +19,8 @@ import {
   RequireIdentity,
   ServiceWorkerToast,
   SpacesPage,
-  useTelemetry
+  useTelemetry,
+  translations
 } from '@dxos/react-appkit';
 import { ClientProvider, useConfig } from '@dxos/react-client';
 import { LIST_TYPE } from '@dxos/react-list';
@@ -27,16 +28,9 @@ import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
 import { SpacePage } from './pages';
-import translationResources from './translations';
+import tasksTranslations from './translations';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
-
-const clientProvider = async () => {
-  const config = await configProvider();
-  const client = new Client({ config, services: fromIFrame(config) });
-  await client.initialize();
-  return client;
-};
 
 const Routes = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
@@ -94,11 +88,15 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={translationResources} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider resourceExtensions={[translations, tasksTranslations]} fallback={<Fallback message='Loading...' />}>
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
-          <ClientProvider client={clientProvider} fallback={<GenericFallback />}>
+          <ClientProvider
+            config={configProvider}
+            services={(config) => (process.env.DX_VAULT === 'false' ? fromHost(config) : fromIFrame(config))}
+            fallback={<GenericFallback />}
+          >
             <HashRouter>
               <Routes />
               {needRefresh ? (

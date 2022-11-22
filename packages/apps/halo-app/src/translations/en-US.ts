@@ -6,7 +6,7 @@ export const halo = {
   'halo label': 'HALO',
   'identities empty message': 'There are no identities on this device yet.',
   'copy qrcode label': 'Copy your profile code',
-  'using halo as message': 'Using HALO as {{displayName}}.',
+  'using halo as message': 'Using HALO as <nameStyle>{{displayName}}</nameStyle>.',
   'unlock label': 'Unlock',
   'lock label': 'Lock',
   'spaces label': 'Spaces',
@@ -17,17 +17,19 @@ export const halo = {
   'apps label': 'Apps',
   'contacts label': 'Contacts',
   'reset device label': 'Reset this device',
-  'empty invitations message': 'No pending invitations',
-  'invitations label': 'Invitations',
   'join label': 'Join',
   'manage label': 'Manage',
-  'go to space label': 'Done',
-  'create invitation label': 'Invite',
   'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:',
   'enable telemetry description':
     'This will enable basic telemetry data from HALO to be sent to DXOS. Changing this setting will reload the application.',
   'enable telemetry label': 'Enable app telemetry',
   'disable telemetry description':
     'This will stop all telemetry data from HALO from being sent to DXOS. Changing this setting will reload the application.',
-  'disable telemetry label': 'Disable app telemetry'
+  'disable telemetry label': 'Disable app telemetry',
+  'current device label': 'This device',
+  'empty apps message': 'No apps to display… yet',
+  'empty contacts message': 'No contacts to display… yet',
+  'device invitations label': 'Devices pending authentication',
+  'empty spaces label': 'No spaces here',
+  'empty spaces message': 'Why not try creating one, or joining one in an app?'
 };

@@ -107,6 +107,79 @@ describe('Client services', function () {
     }
   });
 
+  it('creates identity and invites peer', async function () {
+    const testBuilder = new TestClientBuilder();
+
+    const peer1 = testBuilder.createClientServicesHost();
+    const peer2 = testBuilder.createClientServicesHost();
+
+    await peer1.open();
+    await peer2.open();
+
+    const [client1, server1] = testBuilder.createClientServer(peer1);
+    const [client2, server2] = testBuilder.createClientServer(peer2);
+
+    // Don't wait (otherwise will block).
+    {
+      void server1.open();
+      void server2.open();
+
+      await client1.initialize();
+      await client2.initialize();
+
+      await client1.halo.createProfile();
+    }
+
+    const success1 = new Trigger<Invitation>();
+    const success2 = new Trigger<Invitation>();
+
+    const authenticationCode = new Trigger<string>();
+
+    {
+      const observable1 = await client1.halo.createInvitation();
+      observable1.subscribe({
+        onConnected: (invitation: Invitation) => {
+          assert(invitation.authenticationCode);
+          authenticationCode.wake(invitation.authenticationCode);
+        },
+        onSuccess: (invitation: Invitation) => {
+          success1.wake(invitation);
+        },
+        onCancelled: () => raise(new Error()),
+        onTimeout: (err: Error) => raise(new Error(err.message)),
+        onError: (err: Error) => raise(new Error(err.message))
+      });
+
+      const observable2 = await client2.halo.acceptInvitation(observable1.invitation!);
+      observable2.subscribe({
+        onAuthenticating: async () => {
+          await observable2.authenticate(await authenticationCode.wait());
+        },
+        onSuccess: (invitation: Invitation) => {
+          // TODO(burdon): No device.
+          // expect(guest.identityManager.identity!.authorizedDeviceKeys.size).to.eq(1);
+          success2.wake(invitation);
+        },
+        onError: (err: Error) => raise(new Error(err.message))
+      });
+    }
+
+    // Check same identity.
+    const [invitation1, invitation2] = await Promise.all([success1.wait(), success2.wait()]);
+    expect(invitation1.identityKey).not.to.exist;
+    expect(invitation2.identityKey).to.deep.eq(client1.halo.profile!.identityKey);
+    expect(invitation2.identityKey).to.deep.eq(client2.halo.profile!.identityKey);
+    expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
+    expect(invitation2.state).to.eq(Invitation.State.SUCCESS);
+
+    // Check devices.
+    // TODO(burdon): Incorrect number of devices.
+    await waitForExpect(async () => {
+      expect((await client1.halo.queryDevices()).length).to.eq(2);
+      expect((await client2.halo.queryDevices()).length).to.eq(2);
+    });
+  });
+
   it('synchronizes data between two spaces after competing invitation', async function () {
     const testBuilder = new TestClientBuilder();
 
@@ -126,8 +199,8 @@ describe('Client services', function () {
 
       await client1.initialize();
       await client2.initialize();
-      await client1.halo.createProfile();
-      await client2.halo.createProfile();
+      await client1.halo.createProfile({ displayName: 'Peer 1' });
+      await client2.halo.createProfile({ displayName: 'Peer 2' });
     }
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
@@ -168,6 +241,26 @@ describe('Client services', function () {
     });
 
     const space2 = await trigger.wait();
+
+    for (const space of [space1, space2]) {
+      await space.queryMembers().waitFor((members) => members.length === 2);
+      expect(space.queryMembers().value).to.deep.equal([
+        {
+          identityKey: client1.halo.profile!.identityKey,
+          profile: {
+            identityKey: client1.halo.profile!.identityKey,
+            displayName: 'Peer 1'
+          }
+        },
+        {
+          identityKey: client2.halo.profile!.identityKey,
+          profile: {
+            identityKey: client2.halo.profile!.identityKey,
+            displayName: 'Peer 2'
+          }
+        }
+      ]);
+    }
 
     await syncItems(space1, space2);
   });

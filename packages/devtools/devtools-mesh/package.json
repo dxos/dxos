@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-mesh",
-  "version": "0.1.5",
+  "version": "0.1.9",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,8 +9,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "book": "toolchain book",
-    "build:book": "toolchain build:book",
+    "book": "esbuild-server book",
     "check": "true"
   },
   "dependencies": {
@@ -35,8 +34,8 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "react": "^18.2.0",

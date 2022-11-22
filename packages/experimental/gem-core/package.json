@@ -1,6 +1,6 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.1.5",
+  "version": "0.1.9",
   "description": "Gem core components and utils.",
   "homepage": "https://github.com/dxos/gem#readme",
   "bugs": "https://github.com/dxos/gem/issues",
@@ -36,7 +36,7 @@
     "@types/d3": "^7.1.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^28.0.0",
     "@types/lodash": "^4.14.182",
     "faker": "^5.5.3",
     "react": "^18.2.0",

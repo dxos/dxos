@@ -89,14 +89,13 @@ const ProfileMenu = (props: PresenceProps) => {
       sideOffset={sideOffset ?? 0}
       className='flex flex-col gap-4 items-center'
     >
+      <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
       {onClickManageProfile && (
         <Button className='flex w-full gap-2' onClick={onClickManageProfile}>
           <UserCircleGear className={getSize(5)} />
           <span>{t('manage profile label')}</span>
         </Button>
       )}
-      {/* TODO(wittjosiah): Just display here. */}
-      <DisplayNameInput profile={profile} />
     </Popover>
   );
 };
@@ -168,7 +167,7 @@ const SpaceMenu = (props: Omit<PresenceProps, 'space'> & { space: Space }) => {
 };
 
 const SpaceLink = ({ onClickGoToSpace }: Pick<PresenceProps, 'onClickGoToSpace'>) => {
-  const { t } = useTranslation('halo');
+  const { t } = useTranslation();
   return (
     <Button compact className='flex w-full gap-1 pli-2' onClick={onClickGoToSpace}>
       <span className='text-xs'>{t('go to space label')}</span>

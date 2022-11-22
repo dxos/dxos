@@ -14,6 +14,7 @@ import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } 
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
@@ -44,14 +45,14 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
    */
   createInvitation(space: Space, options?: InvitationsOptions): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
-    const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
+    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     assert(space);
 
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
-      swarmKey: PublicKey.random(),
+      swarmKey: swarmKey ?? PublicKey.random(),
       spaceKey: space.key,
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
@@ -64,19 +65,25 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     let authenticationCode: string;
     const complete = new Trigger<PublicKey>();
     const plugin = new RpcPlugin(async (port) => {
+      let guestProfile: ProfileDocument | undefined;
+
       const peer = createProtoRpcPeer({
         exposed: {
           SpaceHostService: schema.getService('dxos.halo.invitations.SpaceHostService')
         },
         handlers: {
           SpaceHostService: {
-            requestAdmission: async () => {
+            requestAdmission: async ({ profile }) => {
               log('responding with admission offer', {
+                guestProfile: profile,
                 host: this._signingContext.deviceKey,
                 spaceKey: space.key
               });
 
+              guestProfile = profile;
+
               // TODO(burdon): Is this the right place to set this state?
+              // TODO(dmaretskyi): Should we expose guest's profile in this callback?
               observable.callback.onAuthenticating?.(invitation);
               return {
                 spaceKey: space.key,
@@ -111,7 +118,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                     deviceKey,
                     space.key,
                     controlFeedKey,
-                    dataFeedKey
+                    dataFeedKey,
+                    guestProfile
                   )
                 );
 
@@ -150,7 +158,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     setTimeout(async () => {
       const topic = invitation.swarmKey!;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
@@ -206,7 +214,9 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
 
         // 1. Send request.
         log('sending admission request', { guest: this._signingContext.deviceKey });
-        const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission();
+        const { spaceKey, genesisFeedKey } = await peer.rpc.SpaceHostService.requestAdmission({
+          profile: this._signingContext.profile
+        });
 
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
@@ -248,7 +258,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
         protocol: createProtocolFactory(topic, peerId, [plugin]),

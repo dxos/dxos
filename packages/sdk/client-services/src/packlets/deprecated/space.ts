@@ -106,7 +106,7 @@ export class SpaceServiceImpl implements SpaceService {
                 identityKey: member.key,
                 profile: {
                   identityKey: member.key,
-                  displayName: humanize(member.key)
+                  displayName: member.assertion.profile?.displayName ?? humanize(member.key)
                 }
               }))
             })

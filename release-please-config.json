@@ -42,6 +42,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/patterns/react-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
@@ -413,16 +418,6 @@
         {
           "type": "json",
           "path": "tools/codemods/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/deprecated/protocols-toolchain/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/deprecated/toolchain-node-library/package.json",
           "jsonpath": "$.version"
         },
         {

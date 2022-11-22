@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.1.5",
+  "version": "0.1.9",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,40 +24,29 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
-    "@dxos/timeframe": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
-    "json-stable-stringify": "^1.0.1",
-    "readable-stream": "^3.6.0",
     "util": "^0.12.4"
   },
   "devDependencies": {
-    "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/feed-store": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
-    "@dxos/object-model": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@dxos/text-model": "workspace:*",
-    "@koush/wrtc": "^0.5.3",
-    "@types/debug": "^4.1.7",
-    "@types/json-stable-stringify": "^1.0.32",
     "@types/node": "^18.11.9",
-    "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
   },
   "engines": {
@@ -65,5 +54,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/client/client.ts",
+        "dependencies": [
+          "@dxos/client-services"
+        ]
+      }
+    ]
   }
 }
