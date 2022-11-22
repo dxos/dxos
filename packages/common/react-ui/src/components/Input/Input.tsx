@@ -27,6 +27,10 @@ export const Input = ({
   className,
   size,
   length = 6,
+  spacing,
+  borders,
+  typography,
+  rounding,
   validationMessage,
   validationValence,
   ...inputProps
@@ -67,7 +71,10 @@ export const Input = ({
     value: internalValue,
     onChange: onInternalChange,
     validationMessage,
-    validationValence
+    validationValence,
+    borders,
+    typography,
+    rounding
   };
 
   const bareInput =
@@ -80,7 +87,7 @@ export const Input = ({
     );
 
   return (
-    <div role='none' className={cx('mlb-4', className)}>
+    <div role='none' className={cx(spacing ?? 'mlb-4', className)}>
       <label
         htmlFor={inputId}
         className={cx(
