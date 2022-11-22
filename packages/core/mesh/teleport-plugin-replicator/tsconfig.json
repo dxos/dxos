@@ -11,5 +11,38 @@
     "test"
   ],
   "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/testutils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../rpc"
+    },
+    {
+      "path": "../teleport"
+    }
   ]
 }

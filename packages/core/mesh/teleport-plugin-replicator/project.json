@@ -4,45 +4,51 @@
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/teleport-plugin-replicator/src/index.ts",
+        "outputPath": "packages/core/mesh/teleport-plugin-replicator/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/mesh/teleport-plugin-replicator/tsconfig.json"
+      },
       "outputs": [
         "{options.outputPath}"
-      ],
-      "options": {
-        "outputPath": "packages/core/mesh/teleport-plugin-replicator/dist",
-        "tsConfig": "packages/core/mesh/teleport-plugin-replicator/tsconfig.json",
-        "main": "packages/core/mesh/teleport-plugin-replicator/src/index.ts"
-      }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
       "options": {
+        "format": "unix",
         "lintFilePatterns": [
           "packages/core/mesh/teleport-plugin-replicator/**/*.{ts,js}"
         ]
-      }
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}",
-        "{options.coveragePath}"
-      ],
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "coveragePath": "coverage/packages/core/mesh/teleport-plugin-replicator",
+        "outputPath": "tmp/mocha/packages/core/mesh/teleport-plugin-replicator",
+        "resultsPath": "test-results/packages/core/mesh/teleport-plugin-replicator",
         "testPatterns": [
           "packages/core/mesh/teleport-plugin-replicator/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
           "packages/core/mesh/teleport-plugin-replicator/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/packages/core/mesh/teleport-plugin-replicator",
-        "resultsPath": "test-results/packages/core/mesh/teleport-plugin-replicator",
-        "coveragePath": "coverage/packages/core/mesh/teleport-plugin-replicator"
-      }
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
     }
   },
   "implicitDependencies": [

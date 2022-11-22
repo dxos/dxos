@@ -11,5 +11,32 @@
     "test"
   ],
   "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/testutils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../rpc"
+    }
   ]
 }
