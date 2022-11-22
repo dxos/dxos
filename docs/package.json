@@ -11,7 +11,7 @@
     "apidoc": "apidoc",
     "bundle": "vuepress build docs",
     "clean:api": "rm -rf docs/api",
-    "prerelease": "rm -rf docs/api && apidoc",
+    "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
     "serve": "vuepress dev docs",
     "typedoc": "typedoc"
   },
