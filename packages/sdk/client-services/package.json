@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -57,5 +57,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "beast": {
+    "classDiagrams": [
+      {
+        "root": "src/packlets/services/service-host.ts",
+        "dependencies": [
+          "@dxos/echo-db"
+        ]
+      }
+    ]
   }
 }

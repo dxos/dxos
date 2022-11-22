@@ -1,5 +1,5 @@
 # Class `Selection`
-Declared in [`packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:32`]()
+<sub>Declared in [packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:32]()</sub>
 
 
 Selections are used to construct database subscriptions.
@@ -11,142 +11,142 @@ Implementation:
 Each Selection contains a visitor
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_visitor, _update, _root, \[_reducer\])]()
 
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<T, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;T, R&gt;</code>
 
 Arguments: 
 
-`_visitor`: `function`
+`_visitor`: <code>function</code>
 
-`_update`: `Event<`[`Entity`](/api/@dxos/client/classes/Entity)`<Model<any, any>>[]>`
+`_update`: <code>Event&lt;[Entity](/api/@dxos/client/classes/Entity)&lt;Model&lt;any, any&gt;&gt;[]&gt;</code>
 
-`_root`: `SelectionRoot`
+`_root`: <code>SelectionRoot</code>
 
-`_reducer`: `boolean`
+`_reducer`: <code>boolean</code>
 
 ## Properties
-### [`root`]()
-Type: `SelectionRoot`
+### [root]()
+Type: <code>SelectionRoot</code>
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 
 ## Methods
-### [`call`]()
+### [call(visitor)]()
 
 
 Visitor.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<T, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;T, R&gt;</code>
 
 Arguments: 
 
-`visitor`: `Callable<T, R>`
-### [`children`]()
+`visitor`: <code>Callable&lt;T, R&gt;</code>
+### [children(this, \[filter\])]()
 
 
 Select children of the items in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
-`filter`: `ItemFilter`
-### [`exec`]()
+`filter`: <code>ItemFilter</code>
+### [exec(\[options\])]()
 
 
 Finish the selection and return the result.
 
-Returns: [`SelectionResult`](/api/@dxos/client/classes/SelectionResult)`<T, R>`
+Returns: <code>[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;</code>
 
 Arguments: 
 
-`options`: `QueryOptions`
-### [`filter`]()
+`options`: <code>QueryOptions</code>
+### [filter(this, filter)]()
 
 
 Filter entities of this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
-`filter`: `ItemFilter`
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<U, R>`
+`filter`: <code>ItemFilter</code>
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;U, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<U, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;U, R&gt;</code>
 
-`filter`: `Predicate<U>`
-### [`links`]()
+`filter`: <code>Predicate&lt;U&gt;</code>
+### [links(this, \[filter\])]()
 
 
 Select links sourcing from the items in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Link`](/api/@dxos/client/classes/Link)`<Model<any, any>, any, any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Link](/api/@dxos/client/classes/Link)&lt;Model&lt;any, any&gt;, any, any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
-`filter`: `LinkFilter`
-### [`parent`]()
+`filter`: <code>LinkFilter</code>
+### [parent(this)]()
 
 
 Select parent of the items in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
-### [`query`]()
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
+### [query(\[options\])]()
 
 
-Returns: [`SelectionResult`](/api/@dxos/client/classes/SelectionResult)`<T, R>`
+Returns: <code>[SelectionResult](/api/@dxos/client/classes/SelectionResult)&lt;T, R&gt;</code>
 
 Arguments: 
 
-`options`: `QueryOptions`
-### [`refs`]()
+`options`: <code>QueryOptions</code>
+### [refs(this, \[filter\])]()
 
 
 Select links pointing to items in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Link`](/api/@dxos/client/classes/Link)`<Model<any, any>, any, any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Link](/api/@dxos/client/classes/Link)&lt;Model&lt;any, any&gt;, any, any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
-`filter`: `LinkFilter`
-### [`source`]()
+`filter`: <code>LinkFilter</code>
+### [source(this, \[filter\])]()
 
 
 Select sources of links in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Link`](/api/@dxos/client/classes/Link)`<Model<any, any>, any, any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Link](/api/@dxos/client/classes/Link)&lt;Model&lt;any, any&gt;, any, any&gt;, R&gt;</code>
 
-`filter`: `ItemFilter`
-### [`target`]()
+`filter`: <code>ItemFilter</code>
+### [target(this, \[filter\])]()
 
 
 Select targets of links in this selection.
 
-Returns: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Item`](/api/@dxos/client/classes/Item)`<any>, R>`
+Returns: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Item](/api/@dxos/client/classes/Item)&lt;any&gt;, R&gt;</code>
 
 Arguments: 
 
-`this`: [`Selection`](/api/@dxos/client/classes/Selection)`<`[`Link`](/api/@dxos/client/classes/Link)`<Model<any, any>, any, any>, R>`
+`this`: <code>[Selection](/api/@dxos/client/classes/Selection)&lt;[Link](/api/@dxos/client/classes/Link)&lt;Model&lt;any, any&gt;, any, any&gt;, R&gt;</code>
 
-`filter`: `ItemFilter`
+`filter`: <code>ItemFilter</code>

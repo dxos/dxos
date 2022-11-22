@@ -1,6 +1,7 @@
 {
   "version": 2,
   "projects": {
+    "apidoc": "tools/apidoc",
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
@@ -33,6 +34,7 @@
     "feed-store": "packages/common/feed-store",
     "gem-core": "packages/experimental/gem-core",
     "gem-spore": "packages/experimental/gem-spore",
+    "gravity-agent": "packages/gravity/gravity-agent",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "gravity-orchestrator": "packages/gravity/orchestrator",
     "halo-app": "packages/apps/halo-app",
@@ -90,7 +92,6 @@
     "text-model": "packages/core/echo/text-model",
     "timeframe": "packages/common/timeframe",
     "toolbox": "tools/executors/toolbox",
-    "typedoc-plugin-plate": "tools/typedoc-plugin-plate",
     "typings": "packages/common/typings",
     "util": "packages/common/util",
     "vite-plugin": "packages/sdk/vite-plugin",

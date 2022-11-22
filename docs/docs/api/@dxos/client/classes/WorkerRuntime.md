@@ -1,5 +1,5 @@
 # Class `WorkerRuntime`
-Declared in [`packages/sdk/client-services/dist/src/packlets/vault/worker-runtime.d.ts:12`]()
+<sub>Declared in [packages/sdk/client-services/dist/src/packlets/vault/worker-runtime.d.ts:13]()</sub>
 
 
 Runtime for the shared worker.
@@ -7,38 +7,37 @@ Manages connections from proxies (in tabs).
 Tabs make requests to the  `ClientServicesHost` , and provide a WebRTC gateway.
 
 ## Constructors
-### [`constructor`]()
+### [constructor(_configProvider)]()
 
 
-Returns: [`WorkerRuntime`](/api/@dxos/client/classes/WorkerRuntime)
+Returns: <code>[WorkerRuntime](/api/@dxos/client/classes/WorkerRuntime)</code>
 
 Arguments: 
 
-`_configProvider`: `function`
+`_configProvider`: <code>function</code>
 
 ## Properties
 
-
 ## Methods
-### [`createSession`]()
+### [createSession(options)]()
 
 
 Create a new session.
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: 
 
-`__namedParameters`: `CreateSessionParams`
-### [`start`]()
+`options`: <code>CreateSessionParams</code>
+### [start()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none
-### [`stop`]()
+### [stop()]()
 
 
-Returns: `Promise<void>`
+Returns: <code>Promise&lt;void&gt;</code>
 
 Arguments: none

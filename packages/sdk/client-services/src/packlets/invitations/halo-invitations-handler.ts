@@ -44,14 +44,14 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
    */
   createInvitation(context: void, options?: InvitationsOptions): InvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
-    const { type, timeout = INVITATION_TIMEOUT } = options ?? {};
+    const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
     const identity = this._identityManager.identity ?? failUndefined();
 
     const invitation: Invitation = {
       type,
       invitationId: PublicKey.random().toHex(),
-      swarmKey: PublicKey.random(),
+      swarmKey: swarmKey ?? PublicKey.random(),
       authenticationCode: generatePasscode(AUTHENTICATION_CODE_LENGTH)
     };
 

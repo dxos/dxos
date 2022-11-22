@@ -1,0 +1,9 @@
+formatter:
+  column: 100
+
+depth: 0
+
+filter:
+  - gravity:debug
+  - service:debug
+  - feed-store:debug

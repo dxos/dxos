@@ -4,5 +4,5 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`disabled`]()
-Type: `boolean`
+### [disabled]()
+Type: <code>boolean</code>

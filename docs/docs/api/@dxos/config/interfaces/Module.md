@@ -4,44 +4,44 @@
 Defined in:
    file://./../../dxos/config.proto
 ## Properties
-### [`build`]()
-Type: [`Build`](/api/@dxos/config/interfaces/Build)
+### [build]()
+Type: <code>[Build](/api/@dxos/config/interfaces/Build)</code>
 
 Options:
   - proto3_optional = true
-### [`bundle`]()
-Type: `Uint8Array`
+### [bundle]()
+Type: <code>Uint8Array</code>
 
 Options:
   - proto3_optional = true
-### [`description`]()
-Type: `string`
+### [description]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`displayName`]()
-Type: `string`
+### [displayName]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`name`]()
-Type: `string`
+### [name]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true
-### [`record`]()
-Type: `any`
+### [record]()
+Type: <code>any</code>
 
 The data will be validated based on the type when being published.
 
 Options:
   - proto3_optional = true
-### [`repos`]()
-Type: [`Repo`](/api/@dxos/config/interfaces/Repo)`[]`
-### [`tags`]()
-Type: `string[]`
-### [`type`]()
-Type: `string`
+### [repos]()
+Type: <code>[Repo](/api/@dxos/config/interfaces/Repo)[]</code>
+### [tags]()
+Type: <code>string[]</code>
+### [type]()
+Type: <code>string</code>
 
 Options:
   - proto3_optional = true

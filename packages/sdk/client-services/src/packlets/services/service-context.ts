@@ -92,6 +92,9 @@ export class ServiceContext {
     log('closed');
   }
 
+  // TODO(burdon): Rename.
+  async destroy() {}
+
   async createIdentity() {
     const identity = await this.identityManager.createIdentity();
     this.dataServiceSubscriptions.registerSpace(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());

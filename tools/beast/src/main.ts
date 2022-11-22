@@ -8,8 +8,8 @@ import { hideBin } from 'yargs/helpers';
 
 import { log } from '@dxos/log';
 
-import { PackageDependencyBuilder } from './package-dependency-builder';
-import { WorkspaceProcessor } from './workspace-processor';
+import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
+import { getBaseDir } from './util';
 
 const main = () => {
   log.info('Started');
@@ -24,7 +24,7 @@ const main = () => {
     })
     .option('base-dir', {
       type: 'string',
-      default: process.cwd()
+      default: getBaseDir()
     })
 
     .command({
@@ -54,14 +54,12 @@ const main = () => {
         json,
         verbose,
         baseDir,
-        project: name,
-        filter
+        project: name
       }: {
         json?: boolean;
         verbose?: boolean;
         baseDir: string;
         project?: string;
-        filter?: string;
       }) => {
         if (!name) {
           process.exit(1);
@@ -127,7 +125,7 @@ const main = () => {
       handler: ({
         verbose,
         baseDir,
-        pattern = '*',
+        pattern = 'packages/**',
         baseUrl,
         outDir,
         include,
@@ -141,17 +139,15 @@ const main = () => {
         include: string;
         exclude: string;
       }) => {
-        const processor = new WorkspaceProcessor(baseDir, {
-          verbose,
-          include
-        }).init();
-        const builder = new PackageDependencyBuilder(baseDir, processor, {
+        const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
+        const builder = new PackageDependencyBuilder(processor, {
           verbose,
           exclude: exclude?.split(',')
         });
+
         processor.getProjects(pattern).forEach((project) => {
           if (verbose) {
-            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+            console.log(`Updating: ${project.name.padEnd(32)} ${project.subDir}`);
           }
 
           builder.createDocs(project, outDir, baseUrl);
