@@ -1058,6 +1058,7 @@ importers:
 
   packages/common/random-access-storage:
     specifiers:
+      '@dxos/debug': workspace:*
       '@dxos/log': workspace:*
       '@types/pify': ^3.0.2
       assert: ^2.0.0
@@ -1071,6 +1072,7 @@ importers:
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
     dependencies:
+      '@dxos/debug': link:../debug
       '@dxos/log': link:../log
       assert: 2.0.0
       del: 5.1.0
@@ -3418,6 +3420,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
@@ -3443,6 +3446,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/errors': link:../errors
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
@@ -3471,6 +3475,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
@@ -3505,6 +3510,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/errors': link:../errors
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
@@ -3537,6 +3543,7 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/errors': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -3555,6 +3562,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
+      '@dxos/errors': link:../errors
       '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -3571,6 +3579,9 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
+
+  packages/sdk/errors:
+    specifiers: {}
 
   packages/sdk/react-client:
     specifiers:

@@ -21,6 +21,7 @@
     "check": "true"
   },
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "del": "^5.1.0",

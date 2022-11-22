@@ -7,14 +7,15 @@ import { inspect } from 'node:util';
 import { Event, EventSubscriptions } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
   ClientServicesProvider,
   HaloInvitationsProxy,
-  InvitationObservable,
   InvitationsOptions
 } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { ClientError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -33,7 +34,7 @@ type CreateProfileOptions = {
  */
 export interface Halo {
   get profile(): Profile | undefined;
-  get invitations(): InvitationObservable[];
+  get invitations(): CancellableInvitationObservable[];
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
   subscribeToProfile(callback: (profile: Profile) => void): void;
@@ -41,18 +42,18 @@ export interface Halo {
   queryDevices(): Promise<DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
-  createInvitation(): Promise<InvitationObservable>;
-  acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
+  createInvitation(): Promise<CancellableInvitationObservable>;
+  acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
 }
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
-  private readonly _invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
-  private readonly _invitations: InvitationObservable[] = [];
-
-  public readonly invitationsUpdate = new Event<InvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable>();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
+
+  private readonly _invitations: CancellableInvitationObservable[] = [];
+  private _invitationProxy?: HaloInvitationsProxy;
 
   private _profile?: Profile;
   private _contacts: Contact[] = [];
@@ -84,12 +85,20 @@ export class HaloProxy implements Halo {
     return this._invitations;
   }
 
+  // TODO(burdon): Standardize isOpen, etc.
+  get opened() {
+    return this._invitationProxy !== undefined;
+  }
+
   /**
    * Allocate resources and set-up internal subscriptions.
    */
   async open() {
     const gotProfile = this.profileChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
+
+    // TODO(burdon): ???
+    this._invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
 
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe((data) => {
@@ -115,6 +124,7 @@ export class HaloProxy implements Halo {
    */
   async close() {
     this._subscriptions.clear();
+    this._invitationProxy = undefined;
   }
 
   /**
@@ -171,9 +181,13 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable> {
-    return new Promise<InvitationObservable>((resolve, reject) => {
-      const invitation = this._invitationProxy.createInvitation(undefined, options);
+  createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable> {
+    if (this.opened) {
+      throw new ClientError('Client not open.');
+    }
+
+    return new Promise<CancellableInvitationObservable>((resolve, reject) => {
+      const invitation = this._invitationProxy!.createInvitation(undefined, options);
 
       this._invitations.push(invitation);
       const unsubscribe = invitation.subscribe({
@@ -194,8 +208,12 @@ export class HaloProxy implements Halo {
   }
 
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
+    if (this.opened) {
+      throw new ClientError('Client not open.');
+    }
+
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
+      const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
       const unsubscribe = acceptedInvitation.subscribe({
         onConnecting: () => {
           resolve(acceptedInvitation);

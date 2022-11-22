@@ -6,12 +6,12 @@ import jsondown from 'jsondown'; // TODO(burdon): Uses custom implementation.
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
+import { InvalidConfigError } from '@dxos/errors';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
-import { InvalidConfigurationError } from '../../errors';
 
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
@@ -25,16 +25,16 @@ export const createStorageObjects = (config: Runtime.Client.Storage) => {
   } = config ?? {};
 
   if (persistent && storageType === StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM storage cannot be used in persistent mode.');
+    throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
   }
   if (!persistent && storageType !== undefined && storageType !== StorageDriver.RAM) {
-    throw new InvalidConfigurationError('Cannot use a persistent storage in not persistent mode.');
+    throw new InvalidConfigError('Cannot use a persistent storage in not persistent mode.');
   }
   if (persistent && keyStorage === StorageDriver.RAM) {
-    throw new InvalidConfigurationError('RAM key storage cannot be used in persistent mode.');
+    throw new InvalidConfigError('RAM key storage cannot be used in persistent mode.');
   }
   if (!persistent && keyStorage !== StorageDriver.RAM && keyStorage !== undefined) {
-    throw new InvalidConfigurationError('Cannot use a persistent key storage in not persistent mode.');
+    throw new InvalidConfigError('Cannot use a persistent key storage in not persistent mode.');
   }
 
   return {
@@ -58,7 +58,7 @@ const createKeyStorage = (path: string, type?: KeyStorageType) => {
     case 'ram':
       return memdown();
     default:
-      throw new InvalidConfigurationError(`Invalid key storage type: ${defaultedType}`);
+      throw new InvalidConfigError(`Invalid key storage type: ${defaultedType}`);
   }
 };
 

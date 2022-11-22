@@ -8,7 +8,6 @@ import {
   AsyncEvents,
   CancellableObservable,
   CancellableObservableEvents,
-  Observable,
   CancellableObservableProvider
 } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -43,13 +42,13 @@ export interface InvitationEvents extends AsyncEvents, CancellableObservableEven
  * Base class for all invitation observables and providers.
  * Observable that supports inspection of the current value.
  */
-export interface InvitationObservable extends CancellableObservable<InvitationEvents> {
+export interface CancellableInvitationObservable extends CancellableObservable<InvitationEvents> {
   get invitation(): Invitation | undefined;
 }
 
 export class InvitationObservableProvider
   extends CancellableObservableProvider<InvitationEvents>
-  implements InvitationObservable
+  implements CancellableInvitationObservable
 {
   private _invitation?: Invitation;
 
@@ -61,11 +60,6 @@ export class InvitationObservableProvider
     this._invitation = invitation;
   }
 }
-
-/**
- * Cancelable observer.
- */
-export type CancellableInvitationObservable = InvitationObservable;
 
 /**
  * Cancelable observer that relays authentication requests.
@@ -100,7 +94,7 @@ export class AuthenticatingInvitationProvider
  * @deprecated
  */
 // TODO(burdon): Replace with ObservableInvitationProvider.
-export const invitationObservable = async (observable: Observable<InvitationEvents>): Promise<Invitation> => {
+export const invitationObservable = async (observable: CancellableInvitationObservable): Promise<Invitation> => {
   return new Promise((resolve, reject) => {
     const unsubscribe = observable.subscribe({
       onSuccess: (invitation: Invitation) => {
@@ -108,6 +102,7 @@ export const invitationObservable = async (observable: Observable<InvitationEven
         unsubscribe();
         resolve(invitation);
       },
+
       onError: (err: Error) => {
         unsubscribe();
         reject(err);

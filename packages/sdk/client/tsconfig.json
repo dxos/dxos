@@ -72,6 +72,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

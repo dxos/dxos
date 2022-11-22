@@ -6,9 +6,10 @@ import assert from 'node:assert';
 import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
-import { InvalidConfigurationError, ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
+import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
+import { InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
 
 import { DXOS_VERSION } from '../../version';
@@ -63,9 +64,10 @@ export class Client {
     this._halo = new HaloProxy(this._services);
     this._echo = new EchoProxy(this._services, this._modelFactory, this._halo);
 
+    // TODO(burdon): Reconcile with Config.sanitizer.
     if (Object.keys(this._config.values).length > 0 && this._config.values.version !== EXPECTED_CONFIG_VERSION) {
-      throw new InvalidConfigurationError(
-        `Invalid config version: ${this._config.values.version} !== ${EXPECTED_CONFIG_VERSION}]`
+      throw new InvalidConfigError(
+        'Invalid config version', { current: this._config.values.version, expected: EXPECTED_CONFIG_VERSION }
       );
     }
   }
@@ -141,6 +143,7 @@ export class Client {
 
   /**
    * Cleanup, release resources.
+   * Open/close is re-entrant.
    */
   @synchronized
   async destroy() {
@@ -160,11 +163,13 @@ export class Client {
    * Resets and destroys client storage.
    * Warning: Inconsistent state after reset, do not continue to use this client instance.
    */
-  // TODO(burdon): Should not require reloading the page (make re-entrant). Rename destroy.
-  @synchronized
   async reset() {
-    await this.destroy();
+    if (!this._initialized) {
+      throw new Error('Not open');
+    }
+
     await this._services.services?.SystemService.reset();
+    await this.destroy();
     this._halo.profileChanged.emit();
     this._initialized = false;
   }

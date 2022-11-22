@@ -18,7 +18,7 @@ export interface Storage {
 
   // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory;
-  destroy: () => Promise<void>;
+  reset: () => Promise<void>;
 }
 
 export type StorageConstructor = (params?: { type?: StorageType; root?: string }) => Storage;

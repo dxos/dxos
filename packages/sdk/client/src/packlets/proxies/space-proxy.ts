@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationObservable,
+  CancellableInvitationObservable,
   SpaceInvitationsProxy,
   InvitationsOptions
 } from '@dxos/client-services';
@@ -26,7 +26,7 @@ export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-  get invitations(): InvitationObservable[];
+  get invitations(): CancellableInvitationObservable[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -74,7 +74,7 @@ export interface Space extends ISpace {
 
   queryMembers(): ResultSet<SpaceMember>;
 
-  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable>;
+  createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable>;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -82,9 +82,9 @@ export interface Space extends ISpace {
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
-  private readonly _invitations: InvitationObservable[] = [];
+  private readonly _invitations: CancellableInvitationObservable[] = [];
 
-  public readonly invitationsUpdate = new Event<InvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable>();
   public readonly stateUpdate = new Event();
 
   private _initializing = false;
@@ -268,7 +268,7 @@ export class SpaceProxy implements Space {
    * Creates an interactive invitation.
    */
   async createInvitation(options?: InvitationsOptions) {
-    return new Promise<InvitationObservable>((resolve, reject) => {
+    return new Promise<CancellableInvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
       this._invitations.push(invitation);
 
