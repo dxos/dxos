@@ -13,7 +13,6 @@
     "x": "./bin/x.js"
   },
   "scripts": {
-    "check": "true",
     "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx",
     "info": "tsc --showConfig | jq"
   },

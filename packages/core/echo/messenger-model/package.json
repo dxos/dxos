@@ -11,9 +11,6 @@
     "src/proto/gen",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/model-factory": "workspace:*",

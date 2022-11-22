@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@swc-node/sourcemap-support": "^0.2.0",
     "@swc/core": "~1.2.248",

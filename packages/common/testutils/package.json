@@ -12,9 +12,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "devDependencies": {
     "@types/node": "^18.11.9",
     "typescript": "^4.8.4"

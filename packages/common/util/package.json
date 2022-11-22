@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
