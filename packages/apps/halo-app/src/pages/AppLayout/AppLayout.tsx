@@ -4,10 +4,9 @@
 
 import { AddressBook, DiamondsFour, DeviceMobileCamera, Planet, SignOut } from 'phosphor-react';
 import React from 'react';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-import { useSafeSpaceKey } from '@dxos/react-appkit';
-import { useSpace, useIdentity } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client';
 import { NavMenu, NavMenuSeparatorProps, Presence, useTranslation } from '@dxos/react-uikit';
 
 const iconAttributes = { className: 'h-5 w-5' };
@@ -17,9 +16,6 @@ export const AppLayout = () => {
   const profile = useIdentity();
   const navigate = useNavigate();
   const location = useLocation();
-  const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
-  const space = useSpace(spaceKey);
 
   const pathSegments = location.pathname.split('/').length;
   const isRootPath = pathSegments < 3;
@@ -108,7 +104,6 @@ export const AppLayout = () => {
       <div role='none' className='fixed block-start-5 inline-end-6 plb-[2px] z-[2]'>
         <Presence
           profile={profile!}
-          space={space}
           className='flex-none'
           size={10}
           sideOffset={4}
