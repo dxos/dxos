@@ -150,7 +150,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
     setTimeout(async () => {
       const topic = invitation.swarmKey!;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: topic,
         protocol: createProtocolFactory(topic, peerId, [plugin]),
@@ -248,7 +248,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
       assert(invitation.swarmKey);
       const topic = invitation.swarmKey;
       const peerId = PublicKey.random(); // Use anonymous key.
-      swarmConnection = await this._networkManager.openSwarmConnection({
+      swarmConnection = await this._networkManager.joinSwarm({
         topic,
         peerId: PublicKey.random(),
         protocol: createProtocolFactory(topic, peerId, [plugin]),
