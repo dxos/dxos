@@ -17,6 +17,17 @@ const successColor = 'bg-success-500 dark:bg-success-400';
 const errorColor = 'bg-error-500 dark:bg-error-400';
 const cancelledColor = 'bg-warning-500 dark:bg-warning-400';
 
+const statusValueMap = new Map<Invitation.State, number>([
+  [Invitation.State.ERROR, -3],
+  [Invitation.State.TIMEOUT, -2],
+  [Invitation.State.CANCELLED, -1],
+  [Invitation.State.INIT, 0],
+  [Invitation.State.CONNECTING, 1],
+  [Invitation.State.CONNECTED, 2],
+  [Invitation.State.AUTHENTICATING, 3],
+  [Invitation.State.SUCCESS, 4]
+]);
+
 export const InvitationStatus = ({
   status,
   haltedAt,
@@ -30,18 +41,23 @@ export const InvitationStatus = ({
   const statusLabelMap = useMemo(
     () =>
       new Map<Invitation.State, string>([
-        [Invitation.State.ERROR, t('failed status label')],
+        [Invitation.State.ERROR, t('error status label')],
+        [Invitation.State.TIMEOUT, t('timeout status label')],
         [Invitation.State.CANCELLED, t('cancelled status label')],
         [Invitation.State.INIT, t('init status label')],
-        [Invitation.State.CONNECTING, t('init status connecting')],
-        [Invitation.State.CONNECTED, t('ready status connecting')],
-        [Invitation.State.AUTHENTICATING, t('validating status connecting')],
-        [Invitation.State.SUCCESS, t('done status connecting')]
+        [Invitation.State.CONNECTING, t('connecting status label')],
+        [Invitation.State.CONNECTED, t('connected status label')],
+        [Invitation.State.AUTHENTICATING, t('authenticating status label')],
+        [Invitation.State.SUCCESS, t('success status label')]
       ]),
     [t]
   );
 
-  const cursor = status < 0 ? haltedAt! - 1 : status;
+  const halted =
+    status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT || status === Invitation.State.ERROR;
+
+  const cursor = statusValueMap.get(halted ? haltedAt! : status)!;
+
   const resolvedColor =
     status === Invitation.State.ERROR
       ? errorColor
@@ -57,33 +73,47 @@ export const InvitationStatus = ({
       className={cx('flex gap-2 items-center', rootProps.className)}
     >
       <div role='none' className={cx(pip, 'relative')}>
-        <div role='none' className={cx(pip, 'absolute', cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)} />
         <div
           role='none'
-          className={cx(pip, 'relative', cursor === 0 ? activeColor : cursor > 0 ? resolvedColor : inactiveColor)}
+          className={cx(pip, 'absolute', !halted && cursor === 0 ? 'animate-ping block' : 'hidden', activeColor)}
+        />
+        <div
+          role='none'
+          className={cx(
+            pip,
+            'relative',
+            cursor === 0 ? (halted ? resolvedColor : activeColor) : cursor > 0 ? resolvedColor : inactiveColor
+          )}
         />
       </div>
       <div
         role='none'
         className={cx(
           stripe,
-          cursor === 1 && strongShimmer,
-          cursor === 1 ? activeColor : cursor > 1 ? resolvedColor : inactiveColor
+          !halted && cursor === 1 && strongShimmer,
+          cursor === 1 ? (halted ? resolvedColor : activeColor) : cursor > 1 ? resolvedColor : inactiveColor
         )}
       />
       <div role='none' className={cx(pip, 'relative')}>
-        <div role='none' className={cx(pip, 'absolute', cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)} />
         <div
           role='none'
-          className={cx(pip, 'relative', cursor === 2 ? activeColor : cursor > 2 ? resolvedColor : inactiveColor)}
+          className={cx(pip, 'absolute', !halted && cursor === 2 ? 'animate-ping block' : 'hidden', activeColor)}
+        />
+        <div
+          role='none'
+          className={cx(
+            pip,
+            'relative',
+            cursor === 2 ? (halted ? resolvedColor : activeColor) : cursor > 2 ? resolvedColor : inactiveColor
+          )}
         />
       </div>
       <div
         role='none'
         className={cx(
           stripe,
-          cursor === 3 && strongShimmer,
-          cursor === 3 ? activeColor : cursor > 3 ? resolvedColor : inactiveColor
+          !halted && cursor === 3 && strongShimmer,
+          cursor === 3 ? activeColor : cursor > 3 ? (halted ? resolvedColor : resolvedColor) : inactiveColor
         )}
       />
       <div role='none' className={cx(pip, cursor >= 4 ? resolvedColor : inactiveColor)} />

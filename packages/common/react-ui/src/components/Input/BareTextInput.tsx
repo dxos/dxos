@@ -9,8 +9,8 @@ import { defaultInput } from '../../styles/input';
 import { InputProps, InputSize } from './InputProps';
 
 const sizeMap: Record<InputSize, string> = {
-  md: 'text-sm',
-  lg: 'text-base',
+  md: 'text-base',
+  lg: 'text-lg',
   pin: '',
   textarea: ''
 };
@@ -18,14 +18,27 @@ const sizeMap: Record<InputSize, string> = {
 export type BareTextInputProps = Omit<InputProps, 'label' | 'initialValue' | 'onChange'> &
   Pick<ComponentProps<'input'>, 'onChange'>;
 
-export const BareTextInput = ({ validationValence, validationMessage, size, ...inputProps }: BareTextInputProps) => {
+export const BareTextInput = ({
+  validationValence,
+  validationMessage,
+  size,
+  borders,
+  typography,
+  rounding,
+  ...inputProps
+}: BareTextInputProps) => {
   return (
     <input
       {...inputProps}
       className={cx(
-        defaultInput({ disabled: inputProps.disabled, ...(validationMessage && { validationValence }) }),
-        'block w-full px-2.5 py-2',
-        sizeMap[size ?? 'md']
+        defaultInput({
+          borders,
+          rounding,
+          typography: typography ?? sizeMap[size ?? 'md'],
+          disabled: inputProps.disabled,
+          ...(validationMessage && { validationValence })
+        }),
+        'block w-full px-2.5 py-2'
       )}
     />
   );

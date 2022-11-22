@@ -49,5 +49,13 @@ export const uikit = {
   'space members label': 'Members',
   'go to space label': 'Done',
   'halo logo alt': 'Halo logo',
-  'close label': 'Close'
+  'close label': 'Close',
+  'error status label': 'Error accepting invitation',
+  'cancelled status label': 'Cancelled',
+  'timeout status label': 'Timed out',
+  'init status label': 'Enter an invitation code to start',
+  'connecting status label': 'Connecting…',
+  'connected status label': 'Enter the PIN for this invitation to continue',
+  'authenticating status label': 'Checking PIN…',
+  'success status label': 'Successfully accepted invitation'
 };

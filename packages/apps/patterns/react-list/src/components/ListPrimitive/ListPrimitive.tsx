@@ -3,11 +3,20 @@
 //
 
 import cx from 'classnames';
+import throttle from 'lodash.throttle';
 import { Minus, Plus } from 'phosphor-react';
-import React, { ComponentProps, useCallback, useState } from 'react';
+import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
 
-import { defaultGroup, defaultHover } from '@dxos/react-ui';
-import { defaultFocus, Input, useTranslation, getSize, Button, randomString } from '@dxos/react-uikit';
+import {
+  defaultFocus,
+  Input,
+  useTranslation,
+  getSize,
+  Button,
+  randomString,
+  defaultGroup,
+  defaultHover
+} from '@dxos/react-uikit';
 
 import { usePropStatefully } from '../../hooks';
 
@@ -63,14 +72,17 @@ export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<Co
   items: ListItems;
   onAction?: (action: ListAction) => void;
   createListItemId?: () => Promise<ListItemId>;
+  onChangePeriod?: number;
 }
 
 export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
   updateItem: (item: ListItemProps) => void;
   updateOrder: (id: ListItemId, delta: number) => void;
   deleteItem: (id: ListItemId) => void;
-  isFirst?: boolean;
+  createItem: () => void;
+  orderIndex: number;
   isLast?: boolean;
+  autoFocus?: boolean;
 }
 
 const defaultCreateListItemId = async () => randomString(8);
@@ -82,9 +94,11 @@ const ListItemPrimitive = ({
   annotations: propsAnnotations,
   updateItem,
   deleteItem,
+  createItem,
   updateOrder,
-  isFirst,
-  isLast
+  orderIndex,
+  isLast,
+  autoFocus
 }: ListItemPrimitiveComponentProps) => {
   const checkId = `${id}__checkbox`;
   const labelId = `${id}__title`;
@@ -136,10 +150,23 @@ const ListItemPrimitive = ({
     deleteItem(id);
   }, [deleteItem, id]);
 
+  const onKeyUp = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        if (isLast) {
+          createItem();
+        } else {
+          (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
+        }
+      }
+    },
+    [orderIndex, isLast]
+  );
+
   return (
     <li
       key={id}
-      className='flex items-center gap-2 pli-4'
+      className='flex items-center gap-2 pli-4 mbe-2'
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -152,8 +179,8 @@ const ListItemPrimitive = ({
             'aria-describedby': descriptionId
           }),
           className: cx(
-            getSize(4),
-            'text-primary-600 bg-neutral-50 rounded border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
+            getSize(5),
+            'text-primary-600 bg-neutral-50 rounded-full border-neutral-300 dark:bg-neutral-800 dark:border-neutral-600 cursor-pointer',
             defaultFocus,
             defaultHover({})
           ),
@@ -169,12 +196,18 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
+          spacing=''
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
           data-itemid={id}
+          borders='border-0'
+          rounding='rounded'
+          autoFocus={autoFocus}
+          onKeyUp={onKeyUp}
+          data-orderindex={orderIndex}
         />
         {/* TODO(thure): Re-enable this when descriptions become relevant */}
         {/* <Input */}
@@ -198,8 +231,8 @@ const ListItemPrimitive = ({
       {/*    <span className='sr-only'>{t('move list item down label')}</span> */}
       {/*  </Button> */}
       {/* </ButtonGroup> */}
-      <Button compact onClick={onClickDelete}>
-        <Minus />
+      <Button onClick={onClickDelete} variant='ghost' spacing='p-1' className='self-stretch'>
+        <Minus className={getSize(4)} />
         <span className='sr-only'>{t('delete list item label')}</span>
       </Button>
     </li>
@@ -225,11 +258,13 @@ export const ListPrimitive = ({
   items: propsItems,
   onAction,
   createListItemId = defaultCreateListItemId,
+  onChangePeriod = 0,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
 
   const [creating, setCreating] = useState(false);
+  const [autoFocus, setAutofocus] = useState<string | null>(null);
 
   const rejectTextUpdatesWhenFocused = useCallback(
     (a: string, b: string) => {
@@ -238,43 +273,72 @@ export const ListPrimitive = ({
     [listId]
   );
 
+  // Title
+
   const titleId = `${listId}__title`;
   const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '', rejectTextUpdatesWhenFocused);
+  const propagateTitle = useCallback(
+    (nextValue: string) => {
+      return onAction?.({ listId, next: { title: nextValue } });
+    },
+    [onAction]
+  );
+  const throttledPropagateTitle = useMemo(() => throttle(propagateTitle, onChangePeriod), [propagateTitle]);
   const onChangeTitle = useCallback(
     (nextValue: string) => {
       setTitle(nextValue);
-      onAction?.({ listId, next: { title: nextValue } });
+      throttledPropagateTitle(nextValue);
     },
     [onAction, listId]
   );
+
+  // Description
 
   const descriptionId = `${listId}__description`;
   const [description, setDescription, _descriptionSession] = usePropStatefully(
     propsDescription ?? '',
     rejectTextUpdatesWhenFocused
   );
+  const propagateDescription = useCallback(
+    (nextValue: string) => onAction?.({ listId, next: { description: nextValue } }),
+    [onAction]
+  );
+  const throttledPropagateDescription = useMemo(
+    () => throttle(propagateDescription, onChangePeriod),
+    [propagateDescription]
+  );
   const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
-      onAction?.({ listId, next: { description: nextValue } });
+      throttledPropagateDescription(nextValue);
     },
     [onAction, listId]
   );
 
+  // Items & order
+
   const [items, setItems, itemsSession] = usePropStatefully(propsItems ?? {}, itemsEquivalent);
   const order = Object.keys(items);
 
+  const propagateItem = useCallback(
+    ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
+      return onAction?.({ listId, listItemId: id, next });
+    },
+    [listId, onAction]
+  );
+  const throttledPropagateItem = useMemo(() => throttle(propagateItem, onChangePeriod), [propagateItem]);
   const updateItem = useCallback(
     ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
       setItems(Object.assign(items, { [id]: { ...items[id], ...next } }));
-      onAction?.({ listId, listItemId: id, next });
+      'title' in next && throttledPropagateItem({ id, title: next.title });
+      'description' in next && throttledPropagateItem({ id, description: next.description });
+      'annotations' in next && onAction?.({ listId, listItemId: id, next: { annotations: next.annotations } });
     },
-    [items, onAction]
+    [items, listId, onAction]
   );
 
   const updateOrder = useCallback(
     (id: ListItemId, delta: number) => {
-      const order = Object.keys(items);
       const fromIndex = order.indexOf(id);
       const toIndex = fromIndex + delta;
       const nextOrder = Array.from(order);
@@ -310,16 +374,19 @@ export const ListPrimitive = ({
         };
         const created = { id };
         setItems(next.items);
+        setAutofocus(id);
         onAction?.({ listId, next: {}, created });
       })
       .finally(() => setCreating(false));
   }, [items, createListItemId, onAction]);
 
+  // Render
+
   return (
     <div
       role='group'
       {...divProps}
-      className={cx(defaultGroup({ elevation: 3, spacing: '' }), 'plb-2', divProps.className)}
+      className={cx(defaultGroup({ elevation: 3, spacing: 'pbs-2 pbe-1' }), divProps.className)}
       aria-labelledby={titleId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
@@ -338,8 +405,11 @@ export const ListPrimitive = ({
         labelVisuallyHidden
         initialValue={title}
         onChange={onChangeTitle}
-        className='mli-4'
         data-itemid={listId}
+        spacing='mli-2 mbe-2'
+        borders='border-0'
+        rounding='rounded'
+        typography='text-xl font-display font-semibold'
       />
       {/* TODO(thure): Re-enable this when relevant */}
       {/* <Input */}
@@ -357,17 +427,18 @@ export const ListPrimitive = ({
           return (
             <ListItemPrimitive
               key={`${itemsSession}__${listItemId}`}
-              isFirst={index === 0}
+              orderIndex={index}
               isLast={index === order.length - 1}
-              {...{ id: listItemId, updateItem, updateOrder, deleteItem }}
+              {...{ id: listItemId, updateItem, updateOrder, deleteItem, createItem }}
               {...items[listItemId]}
+              autoFocus={listItemId === autoFocus}
             />
           );
         })}
       </ol>
       <div role='none' className='mli-4 mlb-4'>
         <Button className='is-full' onClick={createItem} disabled={creating}>
-          <Plus />
+          <Plus className={getSize(5)} />
           <span className='sr-only'>{t('add list item label')}</span>
         </Button>
       </div>
