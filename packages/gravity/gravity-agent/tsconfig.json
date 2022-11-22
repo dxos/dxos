@@ -1,0 +1,38 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "@dxos/mocha",
+      "mocha",
+      "node"
+    ]
+  },
+  "exclude": [
+    "**/deprecated"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
+    }
+  ]
+}

@@ -10,19 +10,22 @@ import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_ORIGIN } from '../client';
 
-export type ClientIFrameServiceProxyParams = {
+export type IFrameClientServicesProxyOptions = {
   config: Config;
   channel: string;
   timeout?: number;
 };
 
-/** */
-export class ClientIFrameServiceProxy implements ClientServicesProvider {
+/**
+ * Proxy to host client service via iframe.
+ */
+// TODO(burdon): Move to client-services.
+export class IFrameClientServicesProxy implements ClientServicesProvider {
+  private readonly params;
   private _iframeId?: string;
   private _clientServicesProxy?: ClientServicesProxy;
-  private readonly params;
 
-  constructor({ config, channel, timeout = 1000 }: ClientIFrameServiceProxyParams) {
+  constructor({ config, channel, timeout = 1000 }: IFrameClientServicesProxyOptions) {
     this.params = { config, channel, timeout };
     this._clientServicesProxy = new ClientServicesProxy(this._getIFramePort());
   }
@@ -43,6 +46,7 @@ export class ClientIFrameServiceProxy implements ClientServicesProvider {
     if (!this._clientServicesProxy) {
       this._clientServicesProxy = new ClientServicesProxy(this._getIFramePort());
     }
+
     return this._clientServicesProxy.open();
   }
 

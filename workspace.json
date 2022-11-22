@@ -34,6 +34,7 @@
     "feed-store": "packages/common/feed-store",
     "gem-core": "packages/experimental/gem-core",
     "gem-spore": "packages/experimental/gem-spore",
+    "gravity-agent": "packages/gravity/gravity-agent",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "gravity-orchestrator": "packages/gravity/orchestrator",
     "halo-app": "packages/apps/halo-app",

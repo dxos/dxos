@@ -1,0 +1,58 @@
+{
+  "sourceRoot": "packages/gravity/gravity-agent/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/gravity/gravity-agent/src/index.ts",
+        "outputPath": "packages/gravity/gravity-agent/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/gravity/gravity-agent/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/gravity-agent/**/*.{ts,tsx,js,jsx}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "checkLeaks": false,
+        "coveragePath": "coverage/packages/gravity/gravity-agent",
+        "forceExit": true,
+        "outputPath": "tmp/mocha/packages/gravity/gravity-agent",
+        "resultsPath": "test-results/packages/gravity/gravity-agent",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "testPatterns": [
+          "packages/gravity/gravity-agent/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/gravity-agent/src/**/*"
+        ]
+      },
+      "outputs": [
+        "{options.coveragePath}",
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ]
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

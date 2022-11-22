@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -10,6 +11,8 @@ import { AuthenticatingInvitationObservable, InvitationObservable } from './invi
 export type InvitationsOptions = {
   type?: Invitation.Type;
   timeout?: number;
+  // Used for debugging.
+  swarmKey?: PublicKey;
 };
 
 /**
