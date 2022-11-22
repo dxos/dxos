@@ -15,13 +15,22 @@ export const BareTextareaInput = ({
   validationValence,
   validationMessage,
   size,
+  borders,
+  typography,
+  rounding,
   ...inputProps
 }: BareTextareaInputProps) => {
   return (
     <textarea
       {...inputProps}
       className={cx(
-        defaultInput({ disabled: inputProps.disabled, ...(validationMessage && { validationValence }) }),
+        defaultInput({
+          borders,
+          typography,
+          rounding,
+          disabled: inputProps.disabled,
+          ...(validationMessage && { validationValence })
+        }),
         'block w-full px-2.5 py-2'
       )}
     />
