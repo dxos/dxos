@@ -9,6 +9,7 @@ filter:
   # - service-host:debug
   # - client:debug
   - warn
+  - replicator:debug
   - member:debug
   - deprecated/space:debug
   - space-proxy:debug

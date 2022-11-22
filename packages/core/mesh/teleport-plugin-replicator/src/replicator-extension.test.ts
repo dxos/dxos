@@ -71,7 +71,9 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { replicator1, replicator2 } = createStreamPair();
+    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
+    await Promise.all([peer1.open(), peer2.open()]);
+
     replicator1.setOptions({ upload: true });
     replicator2.setOptions({ upload: true });
     

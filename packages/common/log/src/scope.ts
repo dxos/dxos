@@ -10,8 +10,10 @@ const logInfoProperties = Symbol('logInfoProperties');
  * Example:
  * 
  * ```typescript
- * @logInfo
- * peerId: PublicKey;
+ * class Example {
+ *   @logInfo
+ *   peerId: PublicKey;
+ * }
  * ```
  */
 export const logInfo = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {

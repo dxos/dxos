@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys'
 import { Duplex } from 'stream'
 import { failUndefined } from '@dxos/debug'
 import { assert } from 'console'
-import { log } from '@dxos/log'
+import { log, logInfo } from '@dxos/log'
 
 export type ReplicationOptions = {
   upload: boolean
@@ -24,15 +24,23 @@ type ActiveStream = {
 
 export class ReplicatorExtension implements TeleportExtension {
   private readonly _ctx = new Context()
-
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash)
   private _options: ReplicationOptions = {
     upload: false
   }
-
+  
   private _rpc?: ProtoRpcPeer<ServiceBundle>
   private _extensionContext?: ExtensionContext;
   private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
+
+  @logInfo
+  private get info() {
+    return {
+      initiator: this._extensionContext?.initiator,
+      localPeerId: this._extensionContext?.localPeerId,
+      remotePeerId: this._extensionContext?.remotePeerId,
+    }
+  }
 
   private readonly updateTask = new DeferredTask(this._ctx, async () => {
     if(this._extensionContext!.initiator === false) {
@@ -63,6 +71,7 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   async onOpen(context: ExtensionContext) {
+    log('open')
     this._extensionContext = context;
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
@@ -77,6 +86,7 @@ export class ReplicatorExtension implements TeleportExtension {
           updateFeeds: async ({ feeds }) => {
             log('received feed info', { feeds });
             assert(this._extensionContext!.initiator === true, 'Invalid call');
+            this.updateTask.schedule();
           },
           startReplication: async ({ info }) => {
             log('startReplication', { info })
@@ -106,6 +116,7 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   async onClose(err?: Error | undefined) {
+    log('close')
     await this._rpc?.close();
   }
 
@@ -149,7 +160,7 @@ export class ReplicatorExtension implements TeleportExtension {
       return undefined; // We don't have the feed or we are already replicating it.
     }
 
-    const tag = `feed/${feedInfo.feedKey.toHex()}/${PublicKey.random().toHex().slice(0, 8)}`; // Generate a unique tag for the stream.
+    const tag = `feed-${feedInfo.feedKey.toHex()}-${PublicKey.random().toHex().slice(0, 8)}`; // Generate a unique tag for the stream.
     this._replicateFeed(feedInfo, tag);
     return tag;
   }
@@ -167,7 +178,14 @@ export class ReplicatorExtension implements TeleportExtension {
       info
     });
 
-    const replicationStream = feed.replicate(true, { live: true, upload: info.upload, download: info.download });
+    log('replicate', { info, streamTag});
+    const replicationStream = feed.replicate(true, {
+      live: true,
+      upload: info.upload,
+      download: info.download,
+      noise: false,
+      encrypted: false,
+    });
     stream.pipe(replicationStream).pipe(stream);
   }
 
