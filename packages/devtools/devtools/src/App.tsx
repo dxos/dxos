@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client, fromHost, fromIFrame } from '@dxos/client';
+import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
@@ -49,7 +49,7 @@ export const App = () => {
         await client.destroy();
         await servicesProvider.close();
       }
-      const newServicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
+      const newServicesProvider = config.values.runtime?.client?.remoteSource ? fromIFrame(config) : fromHost(config);
       setServicesProvider(newServicesProvider);
       const newClient = new Client({ config, services: newServicesProvider });
       await newClient.initialize();
