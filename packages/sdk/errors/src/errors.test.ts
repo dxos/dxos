@@ -11,10 +11,10 @@ chai.use(chaiAsPromised);
 
 describe('Errors', function () {
   it('test', async function () {
-    const test = async () => {
+    const runTest = async () => {
       throw new ApiError('Test error');
     };
 
-    await expect(test()).to.be.rejectedWith('Test error');
+    await expect(runTest()).to.be.rejectedWith('Test error');
   });
 });

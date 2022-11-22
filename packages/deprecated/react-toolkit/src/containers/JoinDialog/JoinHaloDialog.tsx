@@ -19,7 +19,7 @@ export const JoinHaloDialog = ({ onJoin, ...props }: JoinHaloDialogProps) => {
   const client = useClient();
 
   const handleJoin: JoinDialogProps['onJoin'] = async ({ invitation, secretProvider }) => {
-    const observable = await client.halo.acceptInvitation(invitation);
+    await client.halo.acceptInvitation(invitation);
     // await wrapObservable(observable);
     // const secret = await secretProvider();
     // await acceptedInvitation.authenticate(secret);
