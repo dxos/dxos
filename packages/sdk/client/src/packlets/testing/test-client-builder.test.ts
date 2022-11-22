@@ -199,8 +199,8 @@ describe('Client services', function () {
 
       await client1.initialize();
       await client2.initialize();
-      await client1.halo.createProfile();
-      await client2.halo.createProfile();
+      await client1.halo.createProfile({ displayName: 'Peer 1' });
+      await client2.halo.createProfile({ displayName: 'Peer 2' });
     }
 
     afterTest(() => Promise.all([client1.destroy(), server1.close(), peer1.close()]));
@@ -241,6 +241,26 @@ describe('Client services', function () {
     });
 
     const space2 = await trigger.wait();
+
+    for (const space of [space1, space2]) {
+      await space.queryMembers().waitFor((members) => members.length === 2);
+      expect(space.queryMembers().value).to.deep.equal([
+        {
+          identityKey: client1.halo.profile!.identityKey,
+          profile: {
+            identityKey: client1.halo.profile!.identityKey,
+            displayName: 'Peer 1'
+          }
+        },
+        {
+          identityKey: client2.halo.profile!.identityKey,
+          profile: {
+            identityKey: client2.halo.profile!.identityKey,
+            displayName: 'Peer 2'
+          }
+        }
+      ]);
+    }
 
     await syncItems(space1, space2);
   });

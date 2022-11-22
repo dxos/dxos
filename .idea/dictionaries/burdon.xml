@@ -2,6 +2,7 @@
   <dictionary name="burdon">
     <words>
       <w>burdon</w>
+      <w>ctors</w>
       <w>demuxer</w>
       <w>deno</w>
       <w>dmaretskyi</w>
@@ -9,6 +10,7 @@
       <w>dxos</w>
       <w>dxos's</w>
       <w>hypercore</w>
+      <w>hypercore's</w>
       <w>hypertrie</w>
       <w>kodama</w>
       <w>mins</w>
@@ -37,6 +39,7 @@
       <w>seedphrase</w>
       <w>statable</w>
       <w>streamx</w>
+      <w>stringified</w>
       <w>testutils</w>
       <w>truncatable</w>
       <w>undownload</w>

@@ -18,6 +18,7 @@ import { MemoryTransport } from './memory-transport';
 //  Cannot log after tests are done. Did you forget to wait for something async in your test?
 //  Attempted to log "Ignoring unsupported ICE candidate.".
 
+// TODO(burdon): Move to TestBuilder.
 const createPair = () => {
   const topic = PublicKey.random();
   const peer1Id = PublicKey.random();
@@ -33,7 +34,7 @@ const createPair = () => {
     initiator: true
   });
 
-  afterTest(() => connection1.close());
+  afterTest(() => connection1.destroy());
   afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
   const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
@@ -46,7 +47,7 @@ const createPair = () => {
     initiator: false
   });
 
-  afterTest(() => connection2.close());
+  afterTest(() => connection2.destroy());
   afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
   return {
