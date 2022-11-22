@@ -5,6 +5,8 @@
 import { relative } from 'path';
 import * as ts from 'typescript';
 
+import { BUGCHECK_STRING } from '../hook/hook';
+
 type PluginOptions = {};
 
 const f = ts.factory;
@@ -98,7 +100,7 @@ const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root
         f.createNumericLiteral(sourceFile.getLineAndCharacterOfPosition(call.getStart(sourceFile)).line + 1)
       ),
       f.createPropertyAssignment('scope', f.createThis()),
-      f.createPropertyAssignment('bugcheck', f.createIdentifier('ID_BUGCHECK_STRING'))
+      f.createPropertyAssignment('bugcheck', f.createStringLiteral(BUGCHECK_STRING))
     ],
     false
   );

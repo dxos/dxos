@@ -83,7 +83,7 @@ export const register = () => {
   patchSourceMaps();
 };
 
-const BUGCHECK_STRING =
+export const BUGCHECK_STRING =
   'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
   ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
