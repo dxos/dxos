@@ -5,7 +5,7 @@
 import path from 'path';
 
 import { LogLevel } from './config';
-import { log, Logger } from './log';
+import { log } from './log';
 
 class LogError extends Error {
   constructor(message: string, private readonly context?: any) {
@@ -17,15 +17,6 @@ class LogError extends Error {
 
   override toString() {
     return `LogError: ${this.message}`;
-  }
-}
-
-class Test {
-  static _count = 0;
-  id = ++Test._count;
-  _log = new Logger(() => ({ id: this.id }));
-  test(value: number) {
-    this._log.info('test', { value });
   }
 }
 
@@ -48,16 +39,6 @@ describe('log', function () {
     } catch (err: any) {
       log.error('failed', err);
     }
-  });
-
-  it('logger instance', function () {
-    const tester1 = new Test();
-    tester1.test(1001);
-
-    log.break();
-
-    const tester2 = new Test();
-    tester2.test(200);
   });
 
   it('catches an error', function () {
