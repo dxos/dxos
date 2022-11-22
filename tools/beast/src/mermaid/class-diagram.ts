@@ -22,16 +22,16 @@ export class ClassDiagram implements Diagram {
         // https://mermaid-js.github.io/mermaid/#/classDiagram?id=annotations-on-classes
         type === 'interface' ? '<interface>' : undefined,
 
-        ...properties
-          .filter(({ classDef }) => !classDef)
-          .map(({ name, type }) => (type ? `  ${type} ${name}` : `  ${name}`)),
+        // https://mermaid-js.github.io/mermaid/#/classDiagram?id=defining-members-of-a-class
+        ...properties.filter(({ classDef }) => !classDef).map(({ name, type }) => (type ? `${type} ${name}` : name)),
 
-        ...methods.map(({ name }) => `  ${name}()`)
+        // TODO(burdon): Async.
+        ...methods.map(({ name }) => `${name}()`)
       ].filter(Boolean);
 
       const lines = [];
       if (members.length) {
-        lines.push(...[`class ${name} {`, ...members, '}']);
+        lines.push(...[`class ${name} {`, ...members.map((line) => '  ' + line), '}']);
       } else {
         lines.push(`class ${name}`);
       }
