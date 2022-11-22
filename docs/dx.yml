@@ -6,7 +6,8 @@ package:
       type: dxos:type/app
       display_name: DXOS Docs
       build:
-        command: pnpm -w nx prerelease docs
+        # TODO(wittjosiah): Prerelease should be automated via release PRs.
+        command: pnpm -w nx prerelease docs && pnpm -w nx bundle docs
         outdir: ./docs/.vuepress/dist
 
 runtime:
