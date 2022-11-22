@@ -57,9 +57,14 @@ message SpaceAdmissionCredentials {
   dxos.keys.PublicKey data_feed_key = 4;
 }
 
+message AdmissionParameters {
+  /// Guest's profile.
+  optional ProfileDocument profile = 1;
+}
+
 service SpaceHostService {
   /// Process admission request.
-  rpc RequestAdmission(google.protobuf.Empty) returns (SpaceAdmissionOffer);
+  rpc RequestAdmission(AdmissionParameters) returns (SpaceAdmissionOffer);
 
   /// Authenticate request.
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);

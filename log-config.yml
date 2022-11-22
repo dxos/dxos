@@ -1,8 +1,14 @@
 formatter:
   column: 100
 
+# processor: debug
+
 filter:
+  # - warn
   # - feed-wrapper:debug
-  - service-host:debug
-  - client:debug
+  # - service-host:debug
+  # - client:debug
   - warn
+  - member:debug
+  - deprecated/space:debug
+  - space-proxy:debug

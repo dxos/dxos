@@ -134,6 +134,7 @@
       ],
       "dependsOn": [
         "^build",
+        "^bundle",
         "proto"
       ]
     }

@@ -16,6 +16,8 @@ import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 import { InvitationStatus } from '../InvitationStatus';
 import { SingleInputStep } from '../SingleInputStep';
 
+const pinLength = 6;
+
 export interface JoinPanelProps {
   // TODO(burdon): Use InvitationEncoder to parse/decode?
   parseInvitation?: (invitationCode: string) => string;
@@ -95,6 +97,14 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
     authenticate(invitationSecret).finally(() => setPending(false));
   }, [invitationSecret]);
 
+  const onChange = useCallback(
+    (value: string) => {
+      setInvitationSecret(value);
+      value.length === pinLength && onAuthenticateNext();
+    },
+    [onAuthenticateNext]
+  );
+
   return (
     <SingleInputStep
       {...{
@@ -102,7 +112,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
         inputLabel: t('invitation secret label', { ns: 'uikit' }),
         inputProps: {
           size: 'pin',
-          length: 6,
+          length: pinLength,
           initialValue: '',
           autoFocus: true,
           className: 'text-center',
@@ -111,7 +121,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
             validationValence: 'error' as const
           })
         },
-        onChange: setInvitationSecret,
+        onChange,
         onNext: onAuthenticateNext,
         onCancelPending: cancel
       }}

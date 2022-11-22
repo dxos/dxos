@@ -9,11 +9,23 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import { dxosPlugin } from '@dxos/vite-plugin';
 
+import packageJson from './package.json';
+
+const env = (value?: string) => (value ? `"${value}"` : undefined);
+const DX_RELEASE = process.env.NODE_ENV === 'production' ? `@dxos/devtools@${packageJson.version}` : undefined;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
     host: true
+  },
+  define: {
+    'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
+    'process.env.DX_RELEASE': env(DX_RELEASE),
+    'process.env.SENTRY_DESTINATION': env(process.env.SENTRY_DESTINATION),
+    'process.env.TELEMETRY_API_KEY': env(process.env.TELEMETRY_API_KEY),
+    'process.env.IPDATA_API_KEY': env(process.env.IPDATA_API_KEY)
   },
   optimizeDeps: {
     force: true,
@@ -21,9 +33,7 @@ export default defineConfig({
       '@dxos/async',
       '@dxos/client',
       '@dxos/client-services',
-      '@dxos/codec-protobuf',
       '@dxos/config',
-      '@dxos/credentials',
       '@dxos/debug',
       '@dxos/devtools-mesh',
       '@dxos/feed-store',
@@ -34,22 +44,20 @@ export default defineConfig({
       '@dxos/network-manager',
       '@dxos/object-model',
       '@dxos/protocols',
+      '@dxos/react-appkit',
       '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-components',
       '@dxos/react-registry-client',
       '@dxos/react-toolkit',
       '@dxos/registry-client',
-      '@dxos/rpc',
-      '@dxos/text-model'
+      '@dxos/text-model',
+      '@dxos/timeframe'
     ]
   },
   build: {
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     }
   },
   plugins: [
