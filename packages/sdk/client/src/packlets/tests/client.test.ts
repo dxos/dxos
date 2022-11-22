@@ -4,10 +4,10 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import fs from 'fs/promises';
 
 import { Config } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
@@ -64,6 +64,10 @@ describe('Client', function () {
 
   // TODO(burdon): Node only.
   it('creates identity then resets the node storage', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     const config = await getNodeConfig(true);
     const testBuilder = new TestClientBuilder(config);
     await runTest(testBuilder);
@@ -71,12 +75,12 @@ describe('Client', function () {
 });
 
 // TODO(burdon): Factor out.
-
 const getNodeConfig = async (reset = false) => {
-  // TODO(burdon): Standard for tests.
   const path = '/tmp/dxos/client/test/packlets/test';
   if (reset) {
-    await fs.rm(path, { recursive: true, force: true });
+    // TODO(burdon): Reconcile StorageType and ConfigProto types.
+    const storage = createStorage({ type: StorageType.NODE, root: path });
+    await storage.reset();
   }
 
   // TODO(burdon): Update API.
@@ -88,7 +92,7 @@ const getNodeConfig = async (reset = false) => {
         storage: {
           persistent: true,
           storageType: Runtime.Client.Storage.StorageDriver.NODE,
-          path
+          path // TODO(burdon): Change to root.
         }
       }
     }

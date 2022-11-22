@@ -4,6 +4,7 @@
 
 import { Directory } from './directory';
 
+// TODO(burdon): Reconcile with ConfigProto.
 export enum StorageType {
   RAM = 'ram',
   IDB = 'idb',

@@ -3417,6 +3417,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
@@ -3451,6 +3452,7 @@ importers:
       debug: 4.3.4
       util: 0.12.5
     devDependencies:
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/testutils': link:../../common/testutils
       '@types/node': 18.11.9
       source-map-support: 0.5.21
