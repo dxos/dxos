@@ -5,7 +5,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, InvitationObservable, Invitation, AuthenticatingInvitationObservable } from '@dxos/client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitation,
+  InvitationEncoder
+} from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
 import { InvitationStatus } from '../InvitationStatus';
@@ -20,7 +25,7 @@ export interface JoinPanelProps {
 }
 
 interface JoinStep1Props extends JoinPanelProps {
-  connect: (wrapper: InvitationObservable) => void;
+  connect: (wrapper: CancellableInvitationObservable) => void;
   status: Invitation.State;
   cancel: () => void;
   error?: number;
