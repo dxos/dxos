@@ -41,3 +41,5 @@ Default.args = { children: 'Hello', disabled: false, variant: 'default' };
 export const Primary = () => <Template {...{ variant: 'primary', children: 'Hello' }} />;
 
 export const Outline = () => <Template {...{ variant: 'outline', children: 'Hello' }} />;
+
+export const Ghost = () => <Template {...{ variant: 'ghost', children: 'Hello' }} />;
