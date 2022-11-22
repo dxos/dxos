@@ -1,6 +1,9 @@
 formatter:
   column: 60
 
+# processor: debug
+
 filter:
   - warn
+  - debug
   - log:info

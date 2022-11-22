@@ -16,9 +16,6 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
-  typedoc@0.23.15:
-    hash: k4qfemgm4ttpeeuk35ye3qqa2i
-    path: patches/typedoc@0.23.15.patch
 
 importers:
 
@@ -235,7 +232,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       ts-node: 10.9.1
-      typedoc: 0.23.15
+      typedoc: ^0.23.21
       typescript: ^4.8.4
       vue: ^3.2.45
       vue-router: ^4.1.6
@@ -266,7 +263,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
-      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
+      typedoc: 0.23.21_typescript@4.8.4
       typescript: 4.8.4
       vue: 3.2.45
       vue-router: 4.1.6_vue@3.2.45
@@ -512,9 +509,11 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/vite-plugin': workspace:*
+      '@types/lodash.throttle': ^4.1.1
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       classnames: ^2.3.2
+      lodash.throttle: ^4.1.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -528,12 +527,14 @@ importers:
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       classnames: 2.3.2
+      lodash.throttle: 4.1.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
+      '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       phosphor-react: 1.4.1_react@18.2.0
@@ -2381,6 +2382,7 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/react-appkit': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -2431,6 +2433,7 @@ importers:
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-appkit': link:../../apps/patterns/react-appkit
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../deprecated/react-components
@@ -3793,7 +3796,7 @@ importers:
       remark-parse: ^10.0.1
       remark-prettier: ^2.0.0
       remark-stringify: ^10.0.2
-      typedoc: 0.23.15
+      typedoc: ^0.23.21
       typescript: ^4.8.4
       unified: ^10.1.2
       unist-util-visit: ^4.1.0
@@ -3816,7 +3819,7 @@ importers:
       remark-parse: 10.0.1
       remark-prettier: 2.0.0_prettier@2.7.1
       remark-stringify: 10.0.2
-      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4
+      typedoc: 0.23.21_typescript@4.8.4
       typescript: 4.8.4
       unified: 10.1.2
       unist-util-visit: 4.1.1
@@ -12803,6 +12806,12 @@ packages:
 
   /@types/lodash.sortby/4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
+    dependencies:
+      '@types/lodash': 4.14.186
+    dev: true
+
+  /@types/lodash.throttle/4.1.7:
+    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.186
     dev: true
@@ -25376,6 +25385,10 @@ packages:
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
+  /lodash.throttle/4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+    dev: false
+
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
     dev: true
@@ -25700,12 +25713,6 @@ packages:
   /markdown-table/3.0.2:
     resolution: {integrity: sha512-y8j3a5/DkJCmS5x4dMCQL+OR0+2EAq3DOtio1COSHsmW2BGXnNCK3v12hJt1LrUz5iZH5g0LmuYOjDdI+czghA==}
     dev: false
-
-  /marked/4.1.1:
-    resolution: {integrity: sha512-0cNMnTcUJPxbA6uWmCmjWz4NJRe/0Xfk2NhXCUHjew9qJzFN20krFnsUe7QynwqOwa5m1fZ4UDg0ycKFVC0ccw==}
-    engines: {node: '>= 12'}
-    hasBin: true
-    dev: true
 
   /marked/4.2.2:
     resolution: {integrity: sha512-JjBTFTAvuTgANXx82a5vzK9JLSMoV6V3LBVn4Uhdso6t7vXrGx7g1Cd2r6NYSsxrYbQGFCMqBDhFHyK5q2UvcQ==}
@@ -33039,20 +33046,19 @@ packages:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
     dev: true
 
-  /typedoc/0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.8.4:
-    resolution: {integrity: sha512-x9Zu+tTnwxb9YdVr+zvX7LYzyBl1nieOr6lrSHbHsA22/RJK2m4Y525WIg5Mj4jWCmfL47v6f4hUzY7EIuwS5w==}
+  /typedoc/0.23.21_typescript@4.8.4:
+    resolution: {integrity: sha512-VNE9Jv7BgclvyH9moi2mluneSviD43dCE9pY8RWkO88/DrEgJZk9KpUk7WO468c9WWs/+aG6dOnoH7ccjnErhg==}
     engines: {node: '>= 14.14'}
     hasBin: true
     peerDependencies:
-      typescript: 4.6.x || 4.7.x || 4.8.x
+      typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x
     dependencies:
       lunr: 2.3.9
-      marked: 4.1.1
+      marked: 4.2.2
       minimatch: 5.1.0
       shiki: 0.11.1
       typescript: 4.8.4
     dev: true
-    patched: true
 
   /typescript/4.8.4:
     resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
