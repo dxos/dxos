@@ -4,7 +4,7 @@ formatter:
 depth: 1
 
 filter:
-  - warn
+  - client:debug
   - test-suite:debug
   - memory-transport:debug
 #  - swarm:debug

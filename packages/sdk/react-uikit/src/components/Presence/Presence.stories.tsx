@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useEffect, useState } from 'react';
 
-import { invitationObservable, InvitationEncoder, Space } from '@dxos/client';
+import { InvitationEncoder, Space } from '@dxos/client';
 import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { Group, Loading } from '@dxos/react-ui';
 import { humanize } from '@dxos/util';
@@ -75,8 +75,7 @@ const JoinPanel = () => {
   const handleInvite = async () => {
     setShowPin(true);
     // TODO(burdon): Authenticate.
-    const observable = await client.halo.acceptInvitation(InvitationEncoder.decode(invitationCode));
-    await invitationObservable(observable);
+    await client.halo.acceptInvitation(InvitationEncoder.decode(invitationCode));
     // const secret = await secretProvider();
     // await acceptedInvitation.authenticate(secret);
   };

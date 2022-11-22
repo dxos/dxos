@@ -12,9 +12,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "**/deprecated"
-  ],
   "include": [
     "src"
   ],
@@ -33,6 +30,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/testutils"
@@ -75,6 +75,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../errors"
     }
   ]
 }

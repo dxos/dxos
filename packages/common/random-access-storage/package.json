@@ -10,6 +10,7 @@
   "browser": {
     "node:assert": "assert",
     "node:path": "path-browserify",
+    "node:util": "util",
     "./dist/src/index.js": "./dist/src/browser/index.js"
   },
   "types": "./dist/src/index.d.ts",
@@ -18,6 +19,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "del": "^5.1.0",
@@ -27,7 +29,8 @@
     "random-access-idb": "^1.2.2",
     "random-access-memory": "^4.1.0",
     "random-access-storage": "^3.0.0",
-    "random-access-web": "^2.0.3"
+    "random-access-web": "^2.0.3",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@types/pify": "^3.0.2",

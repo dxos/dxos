@@ -6,11 +6,11 @@ import { useReducer, Reducer, useMemo, useCallback, useEffect } from 'react';
 
 import { TimeoutError } from '@dxos/async';
 import {
-  PublicKey,
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
   Invitation,
   InvitationEncoder,
-  InvitationObservable,
-  AuthenticatingInvitationObservable
+  PublicKey
 } from '@dxos/client';
 import { log } from '@dxos/log';
 
@@ -25,7 +25,7 @@ interface InvitationReducerState {
   haltedAt?: Invitation.State;
   result: InvitationResult;
   error?: number;
-  observable?: InvitationObservable | AuthenticatingInvitationObservable;
+  observable?: CancellableInvitationObservable | AuthenticatingInvitationObservable;
   id?: string;
   invitationCode?: string;
   authenticationCode?: string;
@@ -37,7 +37,7 @@ export type InvitationAction =
     }
   | {
       status: Invitation.State.CONNECTING;
-      observable: InvitationObservable;
+      observable: CancellableInvitationObservable;
     }
   | {
       status: Invitation.State.CONNECTED;
@@ -59,7 +59,7 @@ export type InvitationAction =
       haltedAt: Invitation.State;
     };
 
-export const useInvitationStatus = (initialObservable?: InvitationObservable) => {
+export const useInvitationStatus = (initialObservable?: CancellableInvitationObservable) => {
   const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
     (prev, action) => {
       log('useInvitationStatus', { action });
@@ -147,7 +147,7 @@ export const useInvitationStatus = (initialObservable?: InvitationObservable) =>
 
   // Return memoized callbacks & values
 
-  const connect = useCallback((observable: InvitationObservable) => {
+  const connect = useCallback((observable: CancellableInvitationObservable) => {
     dispatch({ status: Invitation.State.CONNECTING, observable });
   }, []);
 

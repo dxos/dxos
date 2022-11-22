@@ -5,14 +5,15 @@
 import { CliUx, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, invitationObservable, InvitationEncoder } from '@dxos/client';
+import { Client, InvitationEncoder } from '@dxos/client';
+import { wrapObservable } from '@dxos/client-services';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;
-  static override description = 'Join space invitation.';
+  static override description = 'Join space invitation';
   static override flags = {
     ...BaseCommand.flags,
     invitation: Flags.string({
@@ -36,7 +37,8 @@ export default class Join extends BaseCommand {
     return await this.execWithClient(async (client: Client) => {
       CliUx.ux.action.start('Waiting for peer to connect');
       const observable = await client.echo.acceptInvitation(InvitationEncoder.decode(encoded!));
-      const invitation = await invitationObservable(observable);
+      // TODO(burdon): Don't use wrapper since doesn't handle auth.
+      const invitation = await wrapObservable(observable);
       const space = client.echo.getSpace(invitation.spaceKey!)!;
       CliUx.ux.action.stop();
 
