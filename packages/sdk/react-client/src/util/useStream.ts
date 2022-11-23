@@ -3,6 +3,7 @@
 //
 
 import { DependencyList, useState, useEffect } from 'react';
+import { log } from '@dxos/log';
 
 import { Stream } from '@dxos/codec-protobuf';
 
@@ -13,7 +14,12 @@ export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, de
   const [value, setValue] = useState<T | undefined>(defaultValue);
   useEffect(() => {
     const stream = streamFactory();
-    stream.subscribe((response: T) => setValue(response));
+    stream.subscribe(
+      (response: T) => setValue(response),
+      (err) => {
+        log.catch(err);
+      }
+    );
     return () => stream.close();
   }, deps);
 
