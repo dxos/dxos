@@ -6,7 +6,8 @@ import '@dxosTheme';
 import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, PublicKey, TestClientBuilder } from '@dxos/client';
+import { Client, Invitation, PublicKey } from '@dxos/client';
+import { TestClientBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';

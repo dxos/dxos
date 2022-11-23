@@ -5,7 +5,7 @@
 /**
  * Enable testing imports:
  * ```tsc
- * import { ... } from '@dxos/feed-store/testing';
+ * import { ... } from '@dxos/network-manager/testing';
  * ```
  */
 export * from './dist/src/testing';
