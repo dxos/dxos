@@ -58,11 +58,12 @@ export class ReplicatorExtension implements TeleportExtension {
     }
   })
 
-  setOptions(options: ReplicationOptions) {
+  setOptions(options: ReplicationOptions): this {
     this._options = options;
     if(this._extensionContext && this._extensionContext.initiator === false) {
       this.updateTask.schedule();
     }
+    return this
   }
 
   addFeed(feed: FeedWrapper<any>) {
