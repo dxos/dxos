@@ -3,7 +3,7 @@
 //
 
 import cx from 'classnames';
-import throttle from 'lodash.throttle';
+import debounce from 'lodash.debounce';
 import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
 
@@ -295,11 +295,11 @@ export const ListPrimitive = ({
     },
     [onAction]
   );
-  const throttledPropagateTitle = useMemo(() => throttle(propagateTitle, onChangePeriod), [propagateTitle]);
+  const debouncedPropagateTitle = useMemo(() => debounce(propagateTitle, onChangePeriod), [propagateTitle]);
   const onChangeTitle = useCallback(
     (nextValue: string) => {
       setTitle(nextValue);
-      throttledPropagateTitle(nextValue);
+      debouncedPropagateTitle(nextValue);
     },
     [onAction, listId]
   );
@@ -315,14 +315,14 @@ export const ListPrimitive = ({
     (nextValue: string) => onAction?.({ listId, next: { description: nextValue } }),
     [onAction]
   );
-  const throttledPropagateDescription = useMemo(
-    () => throttle(propagateDescription, onChangePeriod),
+  const debouncedPropagateDescription = useMemo(
+    () => debounce(propagateDescription, onChangePeriod),
     [propagateDescription]
   );
   const _onChangeDescription = useCallback(
     (nextValue: string) => {
       setDescription(nextValue);
-      throttledPropagateDescription(nextValue);
+      debouncedPropagateDescription(nextValue);
     },
     [onAction, listId]
   );
@@ -338,12 +338,12 @@ export const ListPrimitive = ({
     },
     [listId, onAction]
   );
-  const throttledPropagateItem = useMemo(() => throttle(propagateItem, onChangePeriod), [propagateItem]);
+  const debouncedPropagateItem = useMemo(() => debounce(propagateItem, onChangePeriod), [propagateItem]);
   const updateItem = useCallback(
     ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
       setItems(Object.assign(items, { [id]: { ...items[id], ...next } }));
-      'title' in next && throttledPropagateItem({ id, title: next.title });
-      'description' in next && throttledPropagateItem({ id, description: next.description });
+      'title' in next && debouncedPropagateItem({ id, title: next.title });
+      'description' in next && debouncedPropagateItem({ id, description: next.description });
       'annotations' in next && onAction?.({ listId, listItemId: id, next: { annotations: next.annotations } });
     },
     [items, listId, onAction]
