@@ -17,10 +17,14 @@ export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, de
     stream.subscribe(
       (response: T) => setValue(response),
       (err) => {
-        log.catch(err);
+        if (err) {
+          log.catch(err);
+        }
       }
     );
-    return () => stream.close();
+    return () => {
+      stream.close();
+    };
   }, deps);
 
   return value ?? defaultValue;
