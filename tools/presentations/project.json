@@ -1,0 +1,20 @@
+{
+  "sourceRoot": "tools/presentations/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/presentations/src/index.ts",
+        "outputPath": "tools/presentations/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/presentations/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    }
+  }
+}

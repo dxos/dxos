@@ -101,16 +101,14 @@ class Toolbox {
 
     // Load and sort projects.
     const projects: Project[] = JSON.parse(execSync('pnpm ls -r --depth -1 --json').toString());
+    this.projects = projects.filter(
+      (project: Project) =>
+        project.name.startsWith('@dxos') &&
+        (!this.config.project?.ignored || this.config.project?.ignored.indexOf(project.name) === -1)
+    );
 
-    const sort = (a: Project, b: Project) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-
-    this.projects = projects
-      .filter(
-        (project: Project) =>
-          project.name.startsWith('@dxos') &&
-          (!this.config.project?.ignored || this.config.project?.ignored.indexOf(project.name) === -1)
-      )
-      .sort(sort);
+    this.projects.sort((a: Project, b: Project) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    // console.log('==', this.projects.length);
   }
 
   info() {
