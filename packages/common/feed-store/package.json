@@ -13,8 +13,10 @@
   },
   "types": "dist/src/index.d.ts",
   "files": [
-    "src",
-    "dist"
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
   ],
   "scripts": {
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
