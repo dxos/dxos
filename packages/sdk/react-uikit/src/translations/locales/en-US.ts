@@ -26,6 +26,7 @@ export const uikit = {
   'next label': 'Next',
   'redeem invitation label': 'Redeem invitation',
   'cancel label': 'Cancel',
+  'remove label': 'Remove',
   'confirm label': 'Okay',
   'validate seed phrase label': 'Validate seed phrase',
   'fatal error label': 'Runtime error',

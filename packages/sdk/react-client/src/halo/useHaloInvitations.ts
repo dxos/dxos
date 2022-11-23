@@ -15,7 +15,7 @@ export const useHaloInvitations = (): CancellableInvitationObservable[] => {
 
   useEffect(() => {
     return client.halo.invitationsUpdate.on(() => {
-      setInvitations(client.halo.invitations);
+      setInvitations([...client.halo.invitations]);
     });
   }, [client.halo]);
 
