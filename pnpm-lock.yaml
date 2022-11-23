@@ -462,6 +462,7 @@ importers:
       '@dxos/vite-plugin': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
+      '@tiptap/extension-placeholder': 2.0.0-beta.202
       '@tiptap/react': 2.0.0-beta.199
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
@@ -485,6 +486,7 @@ importers:
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_r57qwdtrhdo7xifd3ekygstnta
+      '@tiptap/extension-placeholder': 2.0.0-beta.202_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
       classnames: 2.3.2
@@ -11947,6 +11949,17 @@ packages:
       '@tiptap/core': ^2.0.0-beta.193
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
+    dev: false
+
+  /@tiptap/extension-placeholder/2.0.0-beta.202_4focsuckzeocqotdxlryrtksam:
+    resolution: {integrity: sha512-HIJwyhLs7Aq3jH4JRpNlpjFtF7PyoOO6YgqLu2GYhUCVQeVEuqD8zKe8Xphja92cHB5jVLteOspa7FFfWr+9NA==}
+    peerDependencies:
+      '@tiptap/core': ^2.0.0-beta.193
+    dependencies:
+      '@tiptap/core': 2.0.0-beta.199
+      prosemirror-model: 1.18.3
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.1
     dev: false
 
   /@tiptap/extension-strike/2.0.0-beta.202_4focsuckzeocqotdxlryrtksam:

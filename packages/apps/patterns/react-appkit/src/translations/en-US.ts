@@ -26,5 +26,6 @@ export const appkit = {
   'invitations label': 'Invitations',
   'create invitation label': 'Invite',
   'current identity label': 'You',
-  'empty members message': 'No members in this space'
+  'empty members message': 'No members in this space',
+  'composer placeholder': 'Write something…'
 };
