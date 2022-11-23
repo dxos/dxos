@@ -75,7 +75,7 @@ declare module 'streamx' {
     resume();
     pause();
     write: (data: any) => void;
-    end();
+    end(cb: () => void);
   }
 
   /**

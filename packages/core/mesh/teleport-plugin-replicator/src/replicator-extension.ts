@@ -11,6 +11,7 @@ import { Duplex } from 'stream'
 import { failUndefined } from '@dxos/debug'
 import { assert } from 'console'
 import { log, logInfo } from '@dxos/log'
+import type { ProtocolStream } from 'hypercore-protocol'
 
 export type ReplicationOptions = {
   upload: boolean
@@ -18,7 +19,8 @@ export type ReplicationOptions = {
 
 type ActiveStream = {
   streamTag: string
-  stream: Duplex
+  networkStream: Duplex
+  replicationStream: ProtocolStream
   info: FeedInfo
 }
 
@@ -102,7 +104,7 @@ export class ReplicatorExtension implements TeleportExtension {
             // TODO(dmaretskyi): Make sure any peer can stop replication.
             assert(this._extensionContext!.initiator === false, 'Invalid call');
 
-            this._stopReplication(info.feedKey);
+            await this._stopReplication(info.feedKey);
           },
         }
       },
@@ -118,6 +120,9 @@ export class ReplicatorExtension implements TeleportExtension {
   async onClose(err?: Error | undefined) {
     log('close')
     await this._rpc?.close();
+    for(const feedKey of this._streams.keys()) {
+      await this._stopReplication(feedKey);
+    }
   }
 
   @synchronized
@@ -166,19 +171,13 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   private _replicateFeed(info: FeedInfo, streamTag: string) {
-    const feed = this._feeds.get(info.feedKey) ?? failUndefined();
-
+    log('replicate', { info, streamTag});
     assert(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
-    const stream = this._extensionContext!.createStream(streamTag, {
+    
+    const feed = this._feeds.get(info.feedKey) ?? failUndefined();
+    const networkStream = this._extensionContext!.createStream(streamTag, {
       contentType: 'application/x-hypercore'
     })
-    this._streams.set(info.feedKey, {
-      streamTag,
-      stream,
-      info
-    });
-
-    log('replicate', { info, streamTag});
     const replicationStream = feed.replicate(true, {
       live: true,
       upload: info.upload,
@@ -186,16 +185,31 @@ export class ReplicatorExtension implements TeleportExtension {
       noise: false,
       encrypted: false,
     });
-    stream.pipe(replicationStream).pipe(stream);
+    replicationStream.on('error', (err) => {
+      if(err?.message === 'Writable stream closed prematurely') {
+        return
+      }
+
+      log.warn('replication stream error', { err, info });
+    })
+
+    this._streams.set(info.feedKey, {
+      streamTag,
+      networkStream,
+      replicationStream,
+      info
+    });
+
+    networkStream.pipe(replicationStream as any).pipe(networkStream);
   }
 
-  private _stopReplication(feedKey: PublicKey) {
+  private async _stopReplication(feedKey: PublicKey) {
     const stream = this._streams.get(feedKey);
     if(!stream) {
       return;
     }
 
-    stream.stream.destroy();
+    stream.networkStream.destroy();
     this._streams.delete(feedKey);
   }
 }
