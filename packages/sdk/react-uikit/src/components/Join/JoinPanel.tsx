@@ -92,15 +92,15 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   const [invitationSecret, setInvitationSecret] = useState('');
   const [pending, setPending] = useState(false);
 
-  const onAuthenticateNext = useCallback(() => {
+  const onAuthenticateNext = useCallback((secret: string) => {
     setPending(true);
-    authenticate(invitationSecret).finally(() => setPending(false));
-  }, [invitationSecret]);
+    authenticate(secret).finally(() => setPending(false));
+  }, []);
 
   const onChange = useCallback(
     (value: string) => {
       setInvitationSecret(value);
-      value.length === pinLength && onAuthenticateNext();
+      value.length === pinLength && onAuthenticateNext(value);
     },
     [onAuthenticateNext]
   );
@@ -122,7 +122,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           })
         },
         onChange,
-        onNext: onAuthenticateNext,
+        onNext: () => onAuthenticateNext(invitationSecret),
         onCancelPending: cancel
       }}
     />
