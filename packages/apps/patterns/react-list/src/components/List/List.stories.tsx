@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
 import { Client, Invitation, PublicKey } from '@dxos/client';
-import { TestClientBuilder } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -54,9 +54,10 @@ Default.decorators = [
   (Story) => {
     const n = 2;
     const clients = useMemo(() => {
-      const testBuilder = new TestClientBuilder();
+      const testBuilder = new TestBuilder();
       return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
     }, []);
+
     const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
     useAsyncEffect(async () => {
