@@ -52,16 +52,16 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     [LogLevel.WARN]: console.warn,
     [LogLevel.DEBUG]: console.log
   };
-  
+
   if (LOG_BROWSER_CSS?.length) {
     args = [`%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS];
   } else {
     args = [link + '\n', ...args];
   }
-  
+
   const level = levels[entry.level] ?? console.log;
-  if(typeof entry.meta?.callSite === 'function') {
-    entry.meta.callSite(level, args)
+  if (typeof entry.meta?.callSite === 'function') {
+    entry.meta.callSite(level, args);
   } else {
     level(...args);
   }

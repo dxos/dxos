@@ -234,7 +234,7 @@ abstract class DevtoolsFormatter<T> {
 
 class PublicKeyFormatter extends DevtoolsFormatter<PublicKey> {
   header(value: PublicKey): JsonML | null {
-    if(!PublicKey.isPublicKey(value)) {
+    if (!PublicKey.isPublicKey(value)) {
       return null;
     }
 
@@ -256,17 +256,21 @@ class PublicKeyFormatter extends DevtoolsFormatter<PublicKey> {
     ];
     const color = colors[value.getInsecureHash(colors.length)];
 
-    return ['span', {}, 
+    return [
+      'span',
+      {},
       ['span', {}, 'PublicKey('],
       ['span', { style: `color: ${color};` }, value.truncate()],
-      ['span', {}, ')'],
+      ['span', {}, ')']
     ];
   }
+
   hasBody(value: PublicKey): boolean {
-    return false
+    return false;
   }
+
   body(value: PublicKey): JsonML | null {
-    return null
+    return null;
   }
 }
 new PublicKeyFormatter().register();
