@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
 import "dxos/keys.proto";
 
 package dxos.mesh.swarm;
@@ -37,5 +38,5 @@ message Answer {
 }
 
 message Signal {
-  string json = 1;
+  google.protobuf.Struct json = 1;
 }
