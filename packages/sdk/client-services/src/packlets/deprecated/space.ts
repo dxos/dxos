@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
+import { log } from '@dxos/log';
 import {
   AuthenticateInvitationRequest,
   CreateSnapshotRequest,
@@ -96,22 +97,22 @@ export class SpaceServiceImpl implements SpaceService {
       const subscriptions = new EventSubscriptions();
 
       const onUpdate = () => {
-        next({
-          spaces: Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
-            (space): Space => ({
-              publicKey: space.key,
-              isOpen: true,
-              isActive: true,
-              members: Array.from(space.spaceState.members.values()).map((member) => ({
+        const spaces = Array.from(this.serviceContext.spaceManager!.spaces.values()).map(
+          (space): Space => ({
+            publicKey: space.key,
+            isOpen: true,
+            isActive: true,
+            members: Array.from(space.spaceState.members.values()).map((member) => ({
+              identityKey: member.key,
+              profile: {
                 identityKey: member.key,
-                profile: {
-                  identityKey: member.key,
-                  displayName: member.assertion.profile?.displayName ?? humanize(member.key)
-                }
-              }))
-            })
-          )
-        });
+                displayName: member.assertion.profile?.displayName ?? humanize(member.key)
+              }
+            }))
+          })
+        );
+        log('update', { spaces });
+        next({ spaces });
       };
 
       setTimeout(async () => {
@@ -129,6 +130,10 @@ export class SpaceServiceImpl implements SpaceService {
             onUpdate();
           })
         );
+
+        this.serviceContext.spaceManager!.spaces.forEach((space) => {
+          subscriptions.add(space.stateUpdate.on(onUpdate));
+        });
 
         onUpdate();
       });
@@ -208,11 +213,7 @@ export class SpaceServiceImpl implements SpaceService {
   }
 
   subscribeMembers(request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
-    return new Stream(({ next }) => {
-      next({
-        members: []
-      });
-    });
+    return todo();
     // const space = this.echo.getSpace(request.space_key);
     // if (space) {
     //   return resultSetToStream(space.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
