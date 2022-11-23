@@ -3,9 +3,9 @@
 //
 
 import { DependencyList, useState, useEffect } from 'react';
-import { log } from '@dxos/log';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 
 /**
  * Subscribe to service API streams.
