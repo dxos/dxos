@@ -15,13 +15,14 @@ export type ConfigSourceProps = {
 
 export const ConfigSource = ({ onConfigChange }: ConfigSourceProps) => {
   const client = useClient();
-  const [remoteSource, setRemoteSource] = useState<string>(DEFAULT_CLIENT_ORIGIN);
+  const oldRemoteSource = client.config.get('runtime.client.remoteSource');
+  const [remoteSource, setRemoteSource] = useState<string>(oldRemoteSource ? oldRemoteSource! : DEFAULT_CLIENT_ORIGIN);
 
-  const [remote, setRemote] = useState(Boolean(client.config.get('runtime.client.remoteSource')));
+  const [remote, setRemote] = useState(Boolean(oldRemoteSource));
 
   const onChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newRemote = event.target.checked;
-    onConfigChange({ remoteSource: event.target.checked ? remoteSource : undefined });
+    onConfigChange({ remoteSource: newRemote ? remoteSource : undefined });
     setRemote(newRemote);
   };
 

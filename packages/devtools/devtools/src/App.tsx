@@ -28,7 +28,7 @@ export const App = () => {
   const [client, setClient] = useState<Client>();
   const [servicesProvider, setServicesProvider] = useState<ClientServicesProvider>();
 
-  const onConfigChange = async ({ remoteSource = '' }: { remoteSource?: string } = {}) => {
+  const onConfigChange = async ({ remoteSource }: { remoteSource?: string }) => {
     if (client && client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
@@ -43,18 +43,18 @@ export const App = () => {
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
 
-    {
-      if (client && servicesProvider) {
-        setClient(undefined);
-        await client.destroy();
-        await servicesProvider.close();
-      }
-      const newServicesProvider = config.values.runtime?.client?.remoteSource ? fromIFrame(config) : fromHost(config);
-      setServicesProvider(newServicesProvider);
-      const newClient = new Client({ config, services: newServicesProvider });
-      await newClient.initialize();
-      setClient(newClient);
+    if (client && servicesProvider) {
+      setClient(undefined);
+      await client.destroy();
+      await servicesProvider.close();
     }
+
+    const newServicesProvider = config.values.runtime?.client?.remoteSource ? fromIFrame(config) : fromHost(config);
+    const newClient = new Client({ config, services: newServicesProvider });
+    await newClient.initialize();
+
+    setServicesProvider(newServicesProvider);
+    setClient(newClient);
   };
 
   useAsyncEffect(async () => {
