@@ -113,29 +113,22 @@ const getLogMetadata = (sourceFile: ts.SourceFile, call: ts.CallExpression, root
       ),
       f.createPropertyAssignment('scope', f.createThis()),
       f.createPropertyAssignment('bugcheck', f.createStringLiteral(BUGCHECK_STRING)),
-      f.createPropertyAssignment('callSite', f.createArrowFunction(
-        undefined,
-        undefined,
-        [
-          f.createParameterDeclaration(
-            undefined,
-            undefined,
-            'fn',
-          ),
-          f.createParameterDeclaration(
-            undefined,
-            undefined,
-            'args',
-          ),
-        ],
-        undefined,
-        undefined,
-        f.createCallExpression(
-          f.createIdentifier('fn'),
+      f.createPropertyAssignment(
+        'callSite',
+        f.createArrowFunction(
           undefined,
-          [f.createSpreadElement(f.createIdentifier('args'))]
+          undefined,
+          [
+            f.createParameterDeclaration(undefined, undefined, 'fn'),
+            f.createParameterDeclaration(undefined, undefined, 'args')
+          ],
+          undefined,
+          undefined,
+          f.createCallExpression(f.createIdentifier('fn'), undefined, [
+            f.createSpreadElement(f.createIdentifier('args'))
+          ])
         )
-      ))
+      )
     ],
     false
   );
