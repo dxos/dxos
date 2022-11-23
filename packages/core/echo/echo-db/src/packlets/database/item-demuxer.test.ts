@@ -8,7 +8,7 @@ import expect from 'expect';
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
