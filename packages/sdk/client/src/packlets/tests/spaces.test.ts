@@ -10,11 +10,11 @@ import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Spaces', function () {
   it('creates a space', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
@@ -35,7 +35,7 @@ describe('Spaces', function () {
   });
 
   it('creates a space re-opens the client', async function () {
-    const testBuilder = new TestClientBuilder(new Config({ version: 1 }));
+    const testBuilder = new TestBuilder(new Config({ version: 1 }));
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();

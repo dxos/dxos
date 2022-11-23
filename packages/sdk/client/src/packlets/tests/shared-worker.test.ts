@@ -12,7 +12,7 @@ import { createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);
 
@@ -77,7 +77,7 @@ describe('Shared worker', function () {
 
   // TODO(burdon): Browser-only.
   it.skip('creates client with remote iframe', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({
       services: fromIFrame(testBuilder.config)
