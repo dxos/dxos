@@ -6,7 +6,8 @@ import '@dxosTheme';
 import React, { useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/async';
-import { Client, Invitation, PublicKey, TestClientBuilder } from '@dxos/client';
+import { Client, Invitation, PublicKey } from '@dxos/client';
+import { TestBuilder } from '@dxos/client/testing';
 import { raise } from '@dxos/debug';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -53,9 +54,10 @@ Default.decorators = [
   (Story) => {
     const n = 2;
     const clients = useMemo(() => {
-      const testBuilder = new TestClientBuilder();
+      const testBuilder = new TestBuilder();
       return [...Array(n)].map(() => new Client({ services: testBuilder.createClientServicesHost() }));
     }, []);
+
     const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
     useAsyncEffect(async () => {
@@ -66,19 +68,17 @@ Default.decorators = [
       log('identity created');
 
       const space = await clients[0].echo.createSpace();
-      log('space created');
+      log('space created', { space: space.key });
 
       await Promise.all(
         clients.slice(1).map(async (client) => {
-          const success1 = new Trigger<Invitation>();
-          const success2 = new Trigger<Invitation>();
-
           const observable1 = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
           log('invitation created');
 
           const observable2 = await client.echo.acceptInvitation(observable1.invitation!);
           log('invitation accepted');
 
+          const success1 = new Trigger<Invitation>();
           observable1.subscribe({
             onSuccess: (invitation) => {
               success1.wake(invitation);
@@ -87,6 +87,7 @@ Default.decorators = [
             onError: (err) => raise(err)
           });
 
+          const success2 = new Trigger<Invitation>();
           observable2.subscribe({
             onSuccess: (invitation: Invitation) => {
               success2.wake(invitation);

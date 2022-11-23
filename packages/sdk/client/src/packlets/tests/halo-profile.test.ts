@@ -8,11 +8,11 @@ import { Trigger } from '@dxos/async';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Halo', function () {
   it('creates a profile', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
@@ -26,7 +26,7 @@ describe('Halo', function () {
   });
 
   it.skip('device invitations', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client1.destroy());
