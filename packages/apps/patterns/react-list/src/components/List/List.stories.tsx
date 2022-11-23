@@ -68,19 +68,17 @@ Default.decorators = [
       log('identity created');
 
       const space = await clients[0].echo.createSpace();
-      log('space created');
+      log('space created', { space: space.key });
 
       await Promise.all(
         clients.slice(1).map(async (client) => {
-          const success1 = new Trigger<Invitation>();
-          const success2 = new Trigger<Invitation>();
-
           const observable1 = await space.createInvitation({ type: Invitation.Type.INTERACTIVE_TESTING });
           log('invitation created');
 
           const observable2 = await client.echo.acceptInvitation(observable1.invitation!);
           log('invitation accepted');
 
+          const success1 = new Trigger<Invitation>();
           observable1.subscribe({
             onSuccess: (invitation) => {
               success1.wake(invitation);
@@ -89,6 +87,7 @@ Default.decorators = [
             onError: (err) => raise(err)
           });
 
+          const success2 = new Trigger<Invitation>();
           observable2.subscribe({
             onSuccess: (invitation: Invitation) => {
               success2.wake(invitation);
