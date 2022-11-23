@@ -61,7 +61,7 @@ export const subscribeToFeedBlocks = (
     }
     const subscriptions = new EventSubscriptions();
 
-    setImmediate(async () => {
+    setTimeout(async () => {
       const feed = feedStore.getFeed(feedKey);
       if (!feed) {
         return;
