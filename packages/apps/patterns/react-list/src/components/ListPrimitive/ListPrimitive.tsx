@@ -152,12 +152,24 @@ const ListItemPrimitive = ({
 
   const onKeyUp = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        if (isLast) {
-          createItem();
-        } else {
+      switch (e.key) {
+        case 'Enter':
+          if (!e.shiftKey) {
+            if (isLast) {
+              createItem();
+            } else {
+              (
+                document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
+              )?.focus();
+            }
+          }
+          break;
+        case 'PageDown':
           (document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined)?.focus();
-        }
+          break;
+        case 'PageUp':
+          (document.querySelector(`input[data-orderindex="${orderIndex - 1}"]`) as HTMLElement | undefined)?.focus();
+          break;
       }
     },
     [orderIndex, isLast]
