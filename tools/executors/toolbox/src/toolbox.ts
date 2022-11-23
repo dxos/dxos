@@ -167,7 +167,7 @@ class Toolbox {
     for (const project of this.projects) {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
-      if (projectJson) {
+      if (projectJson?.targets) {
         if (projectJson.targets.build) {
           projectJson.targets.build.options.transformers = ['@dxos/log-hook/transformer'];
         }
