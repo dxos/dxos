@@ -36,7 +36,7 @@ export class ReplicatorExtension implements TeleportExtension {
   private readonly _streams = new ComplexMap<PublicKey, ActiveStream>(PublicKey.hash);
 
   @logInfo
-  private get info() {
+  private get extensionInfo() {
     return {
       initiator: this._extensionContext?.initiator,
       localPeerId: this._extensionContext?.localPeerId,
