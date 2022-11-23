@@ -13,10 +13,11 @@ import { PendingInvitation, PendingInvitationProps } from './PendingInvitation';
 
 export interface InvitationListProps {
   createInvitationUrl: PendingInvitationProps['createInvitationUrl'];
+  onClickRemove: PendingInvitationProps['onClickRemove'];
   invitations?: CancellableInvitationObservable[];
 }
 
-export const InvitationList = ({ createInvitationUrl, invitations }: InvitationListProps) => {
+export const InvitationList = ({ createInvitationUrl, invitations, onClickRemove }: InvitationListProps) => {
   const { t } = useTranslation('appkit');
   const empty = !invitations || invitations.length < 1;
   return (
@@ -35,6 +36,7 @@ export const InvitationList = ({ createInvitationUrl, invitations }: InvitationL
             key={wrapper.invitation?.invitationId ?? index}
             wrapper={wrapper}
             createInvitationUrl={createInvitationUrl}
+            onClickRemove={onClickRemove}
           />
         ))}
     </Group>
