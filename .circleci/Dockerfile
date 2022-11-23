@@ -14,6 +14,6 @@ RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NOD
 RUN sudo apt-get update \
   && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 \
   && npx playwright@1.27.1 install-deps \ 
-  && npm install -g pnpm
+  && npm install -g pnpm@7.17.0
 
 # TODO(wittjosiah): Add CI job to publish this automatically.
