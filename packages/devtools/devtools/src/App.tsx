@@ -45,6 +45,7 @@ export const App = () => {
 
     if (client && servicesProvider) {
       setClient(undefined);
+      setServicesProvider(undefined);
       await client.destroy();
       await servicesProvider.close();
     }
@@ -71,7 +72,7 @@ export const App = () => {
         <CssBaseline />
         <FullScreen sx={{ flexDirection: 'row' }}>
           <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
-            <Telemetry />
+            {/* <Telemetry /> */}
 
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
