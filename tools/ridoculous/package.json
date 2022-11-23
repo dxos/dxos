@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ridoculous",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Markdown processing CLI and library.",
   "homepage": "https://dxos.org",
@@ -15,7 +15,6 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "check": "true",
     "info": "tsc --showConfig | jq",
     "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",

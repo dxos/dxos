@@ -4,6 +4,7 @@
 
 import { ClientServicesHost, ClientServicesProvider } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
+import { ApiError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -31,7 +32,7 @@ export const fromConfig = (config?: Config | ConfigProto) => {
 export const fromIFrame = (config: Config | ConfigProto, channel = DEFAULT_CONFIG_CHANNEL): ClientServicesProvider => {
   if (typeof window === 'undefined') {
     // TODO(burdon): Client-specific error class.
-    throw new Error('Cannot configure IFrame bridge outside of browser environment.');
+    throw new ApiError('Cannot configure IFrame bridge outside of browser environment.');
   }
 
   return new IFrameClientServicesProxy({ config: fromConfig(config), channel });

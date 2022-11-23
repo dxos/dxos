@@ -82,7 +82,7 @@ describe('testing node storage types', function () {
     await write(file);
 
     // Check storage destroy.
-    await storage.destroy();
+    await storage.reset();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
@@ -99,7 +99,7 @@ describe('testing node storage types', function () {
     await write(file);
     await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
 
-    await storage.destroy();
+    await storage.reset();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 

@@ -7,7 +7,7 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-log.config({ filter: 'info' });
+log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,info', prefix: process.env.LOG_BROWSER_PREFIX });
 
 const workerRuntime = new WorkerRuntime(async () => new Config(await Dynamics(), Defaults()));
 

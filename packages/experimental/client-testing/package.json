@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-testing",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,7 +16,6 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
     "console": "ts-node ./src/console.ts"
   },
   "dependencies": {

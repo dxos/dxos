@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,9 +16,6 @@
     "dist",
     "index.js"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

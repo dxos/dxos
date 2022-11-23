@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messenger-model",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -11,9 +11,6 @@
     "src/proto/gen",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/model-factory": "workspace:*",

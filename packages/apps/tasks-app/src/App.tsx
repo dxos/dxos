@@ -3,12 +3,13 @@
 //
 
 import { ErrorBoundary } from '@sentry/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, useRoutes } from 'react-router-dom';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame, ObjectModel, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { log } from '@dxos/log';
 import {
   AppLayout,
   ErrorProvider,
@@ -22,7 +23,7 @@ import {
   useTelemetry,
   translations
 } from '@dxos/react-appkit';
-import { ClientProvider, useConfig } from '@dxos/react-client';
+import { ClientProvider, useClient, useIdentity } from '@dxos/react-client';
 import { LIST_TYPE } from '@dxos/react-list';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
@@ -30,15 +31,27 @@ import { captureException } from '@dxos/sentry';
 import { SpacePage } from './pages';
 import tasksTranslations from './translations';
 
+log.config({
+  filter: process.env.LOG_FILTER ?? 'sdk:debug,warn',
+  prefix: process.env.LOG_BROWSER_PREFIX
+});
+
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => {
   // TODO(wittjosiah): Settings to disable telemetry, sync from HALO?
   useTelemetry({ namespace: 'tasks-app' });
-  const config = useConfig();
+  const client = useClient();
+  const identity = useIdentity();
   // TODO(wittjosiah): Separate config for HALO UI & vault so origin doesn't need to parsed out.
   // TODO(wittjosiah): Config defaults should be available from the config.
-  const remoteSource = new URL(config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+  const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+
+  useEffect(() => {
+    if (process.env.DX_VAULT === 'false' && !identity) {
+      void client.halo.createProfile();
+    }
+  }, []);
 
   const handleSpaceCreate = async (space: Space) => {
     await space.database.createItem({
@@ -46,6 +59,10 @@ const Routes = () => {
       type: LIST_TYPE
     });
   };
+
+  if (process.env.DX_VAULT === 'false' && !identity) {
+    return null;
+  }
 
   return useRoutes([
     {

@@ -37,7 +37,7 @@ Install `n` and `pnpm`:
 
 ```bash
 npm i -g n
-npm i -g pnpm@7.9.0
+npm i -g pnpm@7.17.0
 ```
 
 On Ubuntu or other linux systems, the following dependencies may be needed for pnpm install to succeed:

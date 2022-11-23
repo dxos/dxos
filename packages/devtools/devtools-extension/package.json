@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,7 +8,6 @@
   "author": "DXOS.org",
   "scripts": {
     "build": "node scripts/build.js",
-    "check": "true",
     "pack:crx": "crx pack dist -o dxos-devtools.crx",
     "pack:webext": "web-ext build --source-dir ./dist",
     "start:firefox": "web-ext run --source-dir ./dist"
