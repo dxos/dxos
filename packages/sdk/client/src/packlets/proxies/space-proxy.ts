@@ -169,6 +169,7 @@ export class SpaceProxy implements Space {
     if (this._initializing) {
       return;
     }
+    log('initializing...');
     this._initializing = true;
 
     await this._database!.initialize();
@@ -189,6 +190,7 @@ export class SpaceProxy implements Space {
     if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
+    log('destroyed');
   }
 
   async open() {

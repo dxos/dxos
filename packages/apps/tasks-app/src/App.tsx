@@ -9,6 +9,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { fromHost, fromIFrame, ObjectModel, Space } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
+import { log } from '@dxos/log';
 import {
   AppLayout,
   ErrorProvider,
@@ -29,6 +30,8 @@ import { captureException } from '@dxos/sentry';
 
 import { SpacePage } from './pages';
 import tasksTranslations from './translations';
+
+log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,warn', prefix: process.env.LOG_BROWSER_PREFIX });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
