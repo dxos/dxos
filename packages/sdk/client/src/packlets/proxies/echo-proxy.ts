@@ -17,6 +17,7 @@ import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { ApiError, SystemError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -217,6 +218,8 @@ export class EchoProxy implements Echo {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
+
+    log('accept invitation', options);
 
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
       const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);

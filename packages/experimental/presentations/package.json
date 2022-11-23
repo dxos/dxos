@@ -16,8 +16,6 @@
   "dependencies": {
     "@mdx-js/react": "^2.1.3",
     "@mdx-js/rollup": "^2.1.5",
-    "@mdxp/components": "^0.2.1",
-    "@mdxp/core": "^0.2.5",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

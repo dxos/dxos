@@ -57,7 +57,7 @@
     "object-model": "packages/core/echo/object-model",
     "plate": "packages/devtools/plate",
     "playwright": "tools/executors/playwright",
-    "presentations": "tools/presentations",
+    "presentations": "packages/experimental/presentations",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
     "protocol-network-generator": "packages/core/mesh/protocol-network-generator",
