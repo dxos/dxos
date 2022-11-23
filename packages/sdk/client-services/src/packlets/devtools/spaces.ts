@@ -37,7 +37,7 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
       });
     };
 
-    setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       await context.initialized.wait();
       unsubscribe = context.spaceManager!.updated.on(() => update());
 
@@ -47,5 +47,6 @@ export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: S
 
     return () => {
       unsubscribe?.();
+      clearTimeout(timeout);
     };
   });

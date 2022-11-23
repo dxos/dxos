@@ -61,7 +61,7 @@ export const subscribeToFeedBlocks = (
     }
     const subscriptions = new EventSubscriptions();
 
-    setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       const feed = feedStore.getFeed(feedKey);
       if (!feed) {
         return;
@@ -93,5 +93,6 @@ export const subscribeToFeedBlocks = (
 
     return () => {
       subscriptions.clear();
+      clearTimeout(timeout);
     };
   });
