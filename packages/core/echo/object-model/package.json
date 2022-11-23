@@ -1,6 +1,6 @@
 {
   "name": "@dxos/object-model",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": false,
   "description": "ECHO object model.",
   "homepage": "https://dxos.org",
@@ -16,9 +16,6 @@
     "src",
     "dist"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

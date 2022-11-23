@@ -18,7 +18,7 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 import { IdentityManager } from '../identity';
 import {
   AuthenticatingInvitationProvider,
-  InvitationObservable,
+  CancellableInvitationObservable,
   InvitationObservableProvider,
   AUTHENTICATION_CODE_LENGTH,
   INVITATION_TIMEOUT,
@@ -42,7 +42,7 @@ export class HaloInvitationsHandler extends AbstractInvitationsHandler {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(context: void, options?: InvitationsOptions): InvitationObservable {
+  createInvitation(context: void, options?: InvitationsOptions): CancellableInvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);

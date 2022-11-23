@@ -1,6 +1,6 @@
 {
   "name": "@dxos/x",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -13,7 +13,6 @@
     "x": "./bin/x.js"
   },
   "scripts": {
-    "check": "true",
     "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx",
     "info": "tsc --showConfig | jq"
   },

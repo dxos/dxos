@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kitchen-sink",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Comprehensive set of demos.",
   "homepage": "https://dxos.org",
@@ -9,7 +9,6 @@
   "author": "DXOS.org",
   "scripts": {
     "book": "esbuild-server book",
-    "check": "true",
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha --require ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",

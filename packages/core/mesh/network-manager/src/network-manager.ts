@@ -140,13 +140,13 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
     if (this._swarms.has(topic)) {
-      throw new Error(`Already connected to swarm: ${topic.truncate()}`);
+      throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }
 
-    log('joining', { topic, peerId, topology: topology.toString() }); // TODO(burdon): Log peerId.
+    log('joining', { topic: PublicKey.from(topic), peerId, topology: topology.toString() }); // TODO(burdon): Log peerId.
     const swarm = new Swarm(topic, peerId, topology, protocol, this._messenger, this._transportFactory, label);
     swarm.errors.handle((error) => {
-      log(`Swarm error: ${error}`);
+      log('swarm error', { error });
     });
 
     this._swarms.set(topic, swarm);
@@ -155,7 +155,7 @@ export class NetworkManager {
 
     this.topicsUpdated.emit();
     this._connectionLog?.swarmJoined(swarm);
-    log('joined', { topic, count: this._swarms.size });
+    log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
       close: () => this.leaveSwarm(topic)
@@ -167,11 +167,11 @@ export class NetworkManager {
    */
   async leaveSwarm(topic: PublicKey) {
     if (!this._swarms.has(topic)) {
-      log.warn('swarm not open', { topic });
+      log.warn('swarm not open', { topic: PublicKey.from(topic) });
       return;
     }
 
-    log('leaving', { topic });
+    log('leaving', { topic: PublicKey.from(topic) });
     const swarm = this._swarms.get(topic)!;
     await this._signalConnection.leave({ topic, peerId: swarm.ownPeerId });
 
@@ -185,6 +185,6 @@ export class NetworkManager {
     this._swarms.delete(topic);
 
     await this.topicsUpdated.emit();
-    log('left', { topic, count: this._swarms.size });
+    log('left', { topic: PublicKey.from(topic), count: this._swarms.size });
   }
 }

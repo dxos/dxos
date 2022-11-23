@@ -7,15 +7,17 @@ import { inspect } from 'node:util';
 import { Event, EventSubscriptions } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
   ClientServicesProvider,
   HaloInvitationsProxy,
-  InvitationObservable,
   InvitationsOptions
 } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
@@ -33,7 +35,7 @@ type CreateProfileOptions = {
  */
 export interface Halo {
   get profile(): Profile | undefined;
-  get invitations(): InvitationObservable[];
+  get invitations(): CancellableInvitationObservable[];
   createProfile(options?: CreateProfileOptions): Promise<Profile>;
   recoverProfile(seedPhrase: string): Promise<Profile>;
   subscribeToProfile(callback: (profile: Profile) => void): void;
@@ -41,18 +43,19 @@ export interface Halo {
   queryDevices(): Promise<DeviceInfo[]>;
   queryContacts(): ResultSet<Contact>;
 
-  createInvitation(): Promise<InvitationObservable>;
-  acceptInvitation(invitation: Invitation): Promise<InvitationObservable>;
+  createInvitation(): Promise<CancellableInvitationObservable>;
+  removeInvitation(id: string): void;
+  acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
 }
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
-  private readonly _invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
-  private readonly _invitations: InvitationObservable[] = [];
-
-  public readonly invitationsUpdate = new Event<InvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
+
+  private readonly _invitations: CancellableInvitationObservable[] = [];
+  private _invitationProxy?: HaloInvitationsProxy;
 
   private _profile?: Profile;
   private _contacts: Contact[] = [];
@@ -84,12 +87,20 @@ export class HaloProxy implements Halo {
     return this._invitations;
   }
 
+  // TODO(burdon): Standardize isOpen, etc.
+  get opened() {
+    return this._invitationProxy !== undefined;
+  }
+
   /**
    * Allocate resources and set-up internal subscriptions.
    */
   async open() {
     const gotProfile = this.profileChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
+
+    // TODO(burdon): ???
+    this._invitationProxy = new HaloInvitationsProxy(this._serviceProvider.services.HaloInvitationsService);
 
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe((data) => {
@@ -115,12 +126,12 @@ export class HaloProxy implements Halo {
    */
   async close() {
     this._subscriptions.clear();
+    this._invitationProxy = undefined;
   }
 
   /**
    * @deprecated
    */
-  // TODO(burdon): Replaced with query/stream.
   subscribeToProfile(callback: (profile: Profile) => void): () => void {
     return this.profileChanged.on(() => callback(this._profile!));
   }
@@ -135,7 +146,7 @@ export class HaloProxy implements Halo {
    */
   async createProfile({ publicKey, secretKey, displayName, seedphrase }: CreateProfileOptions = {}): Promise<Profile> {
     if (seedphrase && (publicKey || secretKey)) {
-      throw new Error('Seedphrase must not be specified with existing keys');
+      throw new ApiError('Seedphrase must not be specified with existing keys');
     }
 
     if (seedphrase) {
@@ -171,47 +182,10 @@ export class HaloProxy implements Halo {
     return new ResultSet(this._contactsChanged, () => this._contacts);
   }
 
-  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable> {
-    return new Promise<InvitationObservable>((resolve, reject) => {
-      const invitation = this._invitationProxy.createInvitation(undefined, options);
-
-      this._invitations.push(invitation);
-      const unsubscribe = invitation.subscribe({
-        onConnecting: () => {
-          this.invitationsUpdate.emit(invitation);
-          resolve(invitation);
-          unsubscribe();
-        },
-        onSuccess: () => {
-          unsubscribe();
-        },
-        onError: function (err: any): void {
-          unsubscribe();
-          reject(err);
-        }
-      });
-    });
-  }
-
-  acceptInvitation(invitation: Invitation, options?: InvitationsOptions): Promise<AuthenticatingInvitationObservable> {
-    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
-      const acceptedInvitation = this._invitationProxy.acceptInvitation(invitation, options);
-      const unsubscribe = acceptedInvitation.subscribe({
-        onConnecting: () => {
-          resolve(acceptedInvitation);
-          unsubscribe();
-        },
-        onSuccess: () => {
-          unsubscribe();
-        },
-        onError: function (err: any): void {
-          unsubscribe();
-          reject(err);
-        }
-      });
-    });
-  }
-
+  /**
+   * Get set of authenticated devices.
+   */
+  // TODO(burdon): Standardize Promise vs. stream.
   async queryDevices(): Promise<DeviceInfo[]> {
     return new Promise((resolve, reject) => {
       const stream = this._serviceProvider.services.DevicesService.queryDevices();
@@ -230,6 +204,82 @@ export class HaloProxy implements Halo {
           stream.close();
         }
       );
+    });
+  }
+
+  /**
+   * Initiates device invitation.
+   */
+  async createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable> {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
+    }
+
+    log('create invitation', options);
+
+    return new Promise<CancellableInvitationObservable>((resolve, reject) => {
+      const invitation = this._invitationProxy!.createInvitation(undefined, options);
+
+      this._invitations.push(invitation);
+      const unsubscribe = invitation.subscribe({
+        onConnecting: () => {
+          this.invitationsUpdate.emit(invitation);
+          resolve(invitation);
+          unsubscribe();
+        },
+        onCancelled: () => {
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
+    });
+  }
+
+  /**
+   * Removes device invitation.
+   */
+  removeInvitation(id: string) {
+    log('remove invitation', { id });
+    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void this._invitations[index]?.cancel();
+    this._invitations.splice(index, 1);
+    this.invitationsUpdate.emit();
+  }
+
+  /**
+   * Initiates accepting invitation.
+   */
+  async acceptInvitation(
+    invitation: Invitation,
+    options?: InvitationsOptions
+  ): Promise<AuthenticatingInvitationObservable> {
+    if (!this.opened) {
+      throw new ApiError('Client not open.');
+    }
+
+    log('accept invitation', options);
+
+    return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
+      const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
+      const unsubscribe = acceptedInvitation.subscribe({
+        onConnecting: () => {
+          resolve(acceptedInvitation);
+          unsubscribe();
+        },
+        onSuccess: () => {
+          unsubscribe();
+        },
+        onError: function (err: any): void {
+          unsubscribe();
+          reject(err);
+        }
+      });
     });
   }
 }

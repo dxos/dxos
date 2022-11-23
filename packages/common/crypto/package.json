@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "browserslist": [
     "> 5%"
   ],

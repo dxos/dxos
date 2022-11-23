@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bot-factory-client",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Bot",
   "homepage": "https://dxos.org",
@@ -13,9 +13,6 @@
     "./dist/src/index.js": "./dist/browser.js"
   },
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",

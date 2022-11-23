@@ -5,7 +5,7 @@
 import { Plus } from 'phosphor-react';
 import React, { useCallback, useState } from 'react';
 
-import { InvitationObservable } from '@dxos/client';
+import { CancellableInvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
 import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
 import { Heading } from '@dxos/react-ui';
@@ -21,9 +21,13 @@ export const DevicesPage = () => {
   const invitations = useHaloInvitations();
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
-  const onCreateInvitation = useCallback(() => {
+  const handleCreateInvitation = useCallback(() => {
     setCreatingInvitation(true);
     void client.halo.createInvitation().finally(() => setCreatingInvitation(false));
+  }, []);
+
+  const handleRemove = useCallback((id: string) => {
+    void client.halo.removeInvitation(id);
   }, []);
 
   return (
@@ -35,7 +39,7 @@ export const DevicesPage = () => {
           <Button
             variant='primary'
             className='grow flex gap-1'
-            onClick={onCreateInvitation}
+            onClick={handleCreateInvitation}
             disabled={creatingInvitation}
           >
             <Plus className={getSize(5)} />
@@ -48,8 +52,9 @@ export const DevicesPage = () => {
         {t('device invitations label')}
       </Heading>
       <InvitationList
-        invitations={invitations as unknown as InvitationObservable[] | undefined}
+        invitations={invitations as unknown as CancellableInvitationObservable[] | undefined}
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
+        onClickRemove={handleRemove}
       />
     </main>
   );

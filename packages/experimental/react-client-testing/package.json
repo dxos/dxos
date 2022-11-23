@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client-testing",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Tools for react testing.",
   "homepage": "https://dxos.org",
@@ -14,8 +14,7 @@
     "src"
   ],
   "scripts": {
-    "book": "esbuild-server book",
-    "check": "true"
+    "book": "esbuild-server book"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

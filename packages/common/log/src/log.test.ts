@@ -7,18 +7,43 @@ import path from 'path';
 import { LogLevel } from './config';
 import { log } from './log';
 
+class LogError extends Error {
+  constructor(message: string, private readonly context?: any) {
+    super(message);
+    // Restore prototype chain.
+    // https://stackoverflow.com/a/48342359
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  override toString() {
+    return `LogError: ${this.message}`;
+  }
+}
+
+log.config({
+  filter: LogLevel.DEBUG
+});
+
 describe('log', function () {
   it('throws an error', function () {
     try {
-      throw new Error('Test failed');
+      throw new LogError('Test failed', { value: 1 });
     } catch (err: any) {
       log.warn('failed', err);
     }
   });
 
+  it('throws an error showing stacktrace', function () {
+    try {
+      throw new LogError('Test failed', { value: 2 });
+    } catch (err: any) {
+      log.error('failed', err);
+    }
+  });
+
   it('catches an error', function () {
     try {
-      throw new Error('ERROR ON LINE 21');
+      throw new LogError('ERROR ON LINE 21', { value: 3 });
     } catch (err: any) {
       log.catch(err);
     }

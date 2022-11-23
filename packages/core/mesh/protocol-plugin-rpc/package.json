@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-rpc",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Protocol plugin to be used with @dxos/rpc",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,9 +11,6 @@
     "node:assert": "assert"
   },
   "types": "dist/src/index.d.ts",
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
