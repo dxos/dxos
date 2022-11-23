@@ -216,6 +216,7 @@ type JsonML = [string, { [key: string]: any }?, ...(JsonML | string)[]];
  * https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
  * NOTE: Must be enabled in chrome devtools preferences.
  */
+// TODO(dmaretskyi): Change into prototype attribute on symbol like `custom.inspect`.
 abstract class DevtoolsFormatter<T> {
   /**
    * NOTE: Make sure to do an instance check and return null if the object is not of the correct type.
