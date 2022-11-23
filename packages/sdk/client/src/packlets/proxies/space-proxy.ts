@@ -76,6 +76,7 @@ export interface Space extends ISpace {
   queryMembers(): ResultSet<SpaceMember>;
 
   createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable>;
+  removeInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -85,7 +86,7 @@ export class SpaceProxy implements Space {
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
   private readonly _invitations: CancellableInvitationObservable[] = [];
 
-  public readonly invitationsUpdate = new Event<CancellableInvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
   private _initializing = false;
@@ -271,6 +272,7 @@ export class SpaceProxy implements Space {
    * Creates an interactive invitation.
    */
   async createInvitation(options?: InvitationsOptions) {
+    log('create invitation', options);
     return new Promise<CancellableInvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
       this._invitations.push(invitation);
@@ -279,6 +281,9 @@ export class SpaceProxy implements Space {
         onConnecting: () => {
           this.invitationsUpdate.emit(invitation);
           resolve(invitation);
+          unsubscribe();
+        },
+        onCancelled: () => {
           unsubscribe();
         },
         onSuccess: () => {
@@ -290,6 +295,17 @@ export class SpaceProxy implements Space {
         }
       });
     });
+  }
+
+  /**
+   * Remove invitation from space.
+   */
+  removeInvitation(id: string) {
+    log('remove invitation', { id });
+    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void this._invitations[index]?.cancel();
+    this._invitations.splice(index, 1);
+    this.invitationsUpdate.emit();
   }
 
   /**
