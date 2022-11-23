@@ -12,7 +12,6 @@ let totalTime = 0;
 
 export const setupTelemetryListeners = (namespace: string, client: Client) => {
   const clickCallback = (event: any) => {
-    console.log('click');
     if (DX_GROUP === 'dxos' && event.target && !event.target.id) {
       // TODO(wittjosiah): Use @dxos/log so these can be filtered.
       console.warn('Click event on element without id:', event.target);
@@ -35,8 +34,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   };
 
   const focusCallback = () => {
-    console.log('focus');
-
     const now = new Date();
     Telemetry.event({
       identityId: getTelemetryIdentifier(client),
@@ -51,8 +48,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   };
 
   const blurCallback = () => {
-    console.log('blur');
-
     const now = new Date();
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     Telemetry.event({
@@ -69,8 +64,6 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   };
 
   const unloadCallback = () => {
-    console.log('unload');
-
     Telemetry.event({
       identityId: getTelemetryIdentifier(client),
       name: `${namespace}.page.unload`,
