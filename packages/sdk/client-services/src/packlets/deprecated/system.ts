@@ -22,6 +22,13 @@ export class SystemServiceImpl implements SystemService {
     return this._config.values;
   }
 
+  // TODO(burdon): Connect to iframe RPC heartbeat for network status?
+  async getStatus(request: void) {
+    return {
+      message: `ok: ${Date.now()}`
+    };
+  }
+
   async reset(request: any) {
     await this._serviceContext.reset();
   }
