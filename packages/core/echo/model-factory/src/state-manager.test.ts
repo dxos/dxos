@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { asyncTimeout } from '@dxos/async';
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { MutationMetaWithTimeframe } from '@dxos/protocols';
 import { Timeframe } from '@dxos/timeframe';
