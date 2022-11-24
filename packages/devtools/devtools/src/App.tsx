@@ -63,7 +63,12 @@ export const App = () => {
   useAsyncEffect(async () => {
     const targetResolvers: Record<string, (remoteSource?: string) => Promise<void>> = {
       local: () => onConfigChange(),
-      vault: (remoteSource) => onConfigChange({ remoteSource })
+      vault: (remoteSource) => {
+        if (!remoteSource) {
+          throw new Error('Vault URL is required target=vault:<vault URL>');
+        }
+        return onConfigChange({ remoteSource });
+      }
     };
 
     const searchParams = new URLSearchParams(window.location.search);
