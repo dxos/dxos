@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @dxos/mocha platform=nodejs
+
 import { expect } from 'chai';
 
 import { Config } from '@dxos/config';
