@@ -2,6 +2,7 @@
   "version": 2,
   "projects": {
     "apidoc": "tools/apidoc",
+    "assets": "packages/sdk/assets",
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",

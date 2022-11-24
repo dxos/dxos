@@ -12,9 +12,10 @@
   },
   "types": "dist/src/index.d.ts",
   "files": [
+    "testing.d.ts",
+    "testing.js",
     "dist",
-    "src",
-    "README.md"
+    "src"
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",

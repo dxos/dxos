@@ -8,11 +8,11 @@ import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Spaces/invitations', function () {
   it('creates a space and invites a peer', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     afterTest(() => client.destroy());
