@@ -39,15 +39,17 @@ export const useModules = (tags: string[], pollingMs = -1): Module[] => {
     let unsubscribe: () => void | undefined;
     setTimeout(async () => {
       const observable = await metagraph.modules.query({ tags });
+      setModules(observable.results);
       unsubscribe = observable.subscribe({
         onUpdate: (modules) => {
+          // TODO(burdon): Check still mounted.
           log('modules query', { modules });
           setModules(modules);
         }
       });
 
-      observable.fetch();
-      if (pollingMs > 1_000) {
+      const minPollingInterval = 1_000;
+      if (pollingMs > minPollingInterval) {
         interval = setInterval(() => observable.fetch());
       }
     });
