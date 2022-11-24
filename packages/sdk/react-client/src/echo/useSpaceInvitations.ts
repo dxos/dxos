@@ -20,7 +20,7 @@ export const useSpaceInvitations = (spaceKey?: PublicKey): CancellableInvitation
     }
 
     return space.invitationsUpdate.on(() => {
-      setInvitations(space.invitations);
+      setInvitations([...space.invitations]);
     });
   }, [space]);
 

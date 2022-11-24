@@ -1,6 +1,6 @@
 {
   "name": "@dxos/feed-store",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "A consistent store for hypercore feeds.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,8 +13,10 @@
   },
   "types": "dist/src/index.d.ts",
   "files": [
-    "src",
-    "dist"
+    "testing.d.ts",
+    "testing.js",
+    "dist",
+    "src"
   ],
   "scripts": {
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",

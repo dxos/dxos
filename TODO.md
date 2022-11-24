@@ -17,24 +17,24 @@ Staging area for internal work-in-progress (written-up into GH issues).
 ## Client API
 
 - [ ] Testing framework (factor out sync tests).
-- [x] Move InvitationWrapper to client.
-- [ ] Remove re-exports from `@dxos/client`.
-- [ ] Remove `spaceKey` vars, etc.
+- [ ] Review/remove re-exports from `@dxos/client`.
 - [ ] Halo key management (factor out usage by `@dxos/registry-client`.
 - [ ] Move DXOS errors from `@dxos/debug`. Reconcile debug/mesh-protocol (nanoerror).
+- [x] Move InvitationWrapper to client.
+- [x] Remove `spaceKey` vars, etc.
 
 ## Invitations (https://github.com/dxos/dxos/issues/1745)
 
-- [ ] Manage invitations in client.
+- [x] Manage invitations in client.
 - [x] Observer pattern (pending, connected, verified, done, error, fatal, timed-out, etc.)
   - [x] Remove callbacks (see profile.createInvitation).
-- [ ] Reconcile Signer/CredentialsSigner (delete obsolete Signer).
+- [x] Reconcile Signer/CredentialsSigner (delete obsolete Signer).
 - [x] Remove `invitation` field from proto and wrappers.
 - [x] Clean-up protobuf defs (incl. service defs).
 
 ## Protocols
 
-- [ ] Clean-up defs; remove "space".
+- [x] Clean-up defs; remove "space".
 - [ ] ProtoRpcPeerOptions (rename requested/exposed options).
 
 ## Tools

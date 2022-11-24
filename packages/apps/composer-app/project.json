@@ -69,6 +69,24 @@
         "configFile": "packages/apps/composer-app/vite.config.ts",
         "outputPath": "packages/apps/composer-app/out/composer"
       }
+    },
+    "serve-with-halo": {
+      "dependsOn": [
+        "^build",
+        "^bundle"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx serve halo-app"
+          },
+          {
+            "command": "nx serve tasks-app"
+          }
+        ],
+        "parallel": true
+      }
     }
   }
 }

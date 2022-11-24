@@ -52,6 +52,9 @@ export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
-export * from './packlets/devtools';
+
+// TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';
-export * from './packlets/testing';
+
+// TODO(burdon): Create separate export like testing?
+export * from './packlets/devtools';

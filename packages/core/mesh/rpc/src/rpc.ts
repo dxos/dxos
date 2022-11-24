@@ -163,6 +163,7 @@ export class RpcPeer {
             error: response.error,
             close: response.close
           });
+
           void this._sendMessage({ response }).catch((err) => {
             log.warn('failed during close', err);
           });
@@ -185,7 +186,6 @@ export class RpcPeer {
       }
 
       const responseId = decoded.response.id;
-
       assert(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
         log('received response with invalid id', { responseId });
@@ -198,7 +198,7 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      log(`Response: ${decoded.response.payload?.type_url}`);
+      log('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message');
@@ -219,8 +219,8 @@ export class RpcPeer {
         log('received stream close while closed');
         return; // Ignore when not open.
       }
-      log('received stream close', { id: decoded.streamClose.id });
 
+      log('received stream close', { id: decoded.streamClose.id });
       assert(typeof decoded.streamClose.id === 'number');
       const stream = this._localStreams.get(decoded.streamClose.id);
       if (!stream) {

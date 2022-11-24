@@ -161,6 +161,7 @@ class TraceInjector extends Visitor {
         optional: false,
         span: ZERO_SPAN
       }
+      // TODO(dmaretskyi): callSite.
     });
   }
 }
