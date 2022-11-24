@@ -75,7 +75,7 @@ export class Metagraph {
           });
         };
 
-        // TODO(burdon): Cache.
+        // TODO(burdon): Cache observables?
         const observable = new QueryObservableProvider<Module>(exec);
         await exec();
         return observable;
