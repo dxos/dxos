@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { Client, fromHost, fromIFrame } from '@dxos/client';
+import { Client, DEFAULT_CLIENT_ORIGIN, fromHost, fromIFrame } from '@dxos/client';
 import { ClientServicesProvider } from '@dxos/client-services';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { useTelemetry } from '@dxos/react-appkit';
@@ -28,7 +28,7 @@ export const App = () => {
   const [client, setClient] = useState<Client>();
   const [servicesProvider, setServicesProvider] = useState<ClientServicesProvider>();
 
-  const onConfigChange = async (remoteSource?: string) => {
+  const onConfigChange = async ({ remoteSource = '' }: { remoteSource?: string } = {}) => {
     if (client && client?.config.values.runtime?.client?.remoteSource === remoteSource) {
       return;
     }
@@ -43,22 +43,23 @@ export const App = () => {
 
     const config = new Config(remoteSourceConfig, await Dynamics(), Defaults());
 
-    {
-      if (client && servicesProvider) {
-        setClient(undefined);
-        await client.destroy();
-        await servicesProvider.close();
-      }
-      const newServicesProvider = remoteSource ? fromIFrame(config) : fromHost(config);
-      setServicesProvider(newServicesProvider);
-      const newClient = new Client({ config, services: newServicesProvider });
-      await newClient.initialize();
-      setClient(newClient);
+    if (client && servicesProvider) {
+      setClient(undefined);
+      setServicesProvider(undefined);
+      await client.destroy();
+      await servicesProvider.close();
     }
+
+    const newServicesProvider = config.values.runtime?.client?.remoteSource ? fromIFrame(config) : fromHost(config);
+    const newClient = new Client({ config, services: newServicesProvider });
+    await newClient.initialize();
+
+    setServicesProvider(newServicesProvider);
+    setClient(newClient);
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange();
+    await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
   }, []);
 
   if (!client) {
