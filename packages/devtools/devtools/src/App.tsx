@@ -66,7 +66,7 @@ export const App = () => {
       vault: (remoteSource) => onConfigChange({ remoteSource })
     };
 
-    const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
+    const searchParams = new URLSearchParams(window.location.search);
     const target = searchParams.get('target') ?? DEFAULT_TARGET;
     const [protocol, ...rest] = target.split(':');
     const remoteSource = rest.join(':');
