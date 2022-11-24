@@ -19,6 +19,8 @@ import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
+const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
+
 export const Telemetry = () => {
   useTelemetry({ namespace: 'devtools', router: false });
   return null;
@@ -61,16 +63,19 @@ export const App = () => {
   useAsyncEffect(async () => {
     const targetResolvers: Record<string, (remoteSource?: string) => Promise<void>> = {
       local: () => onConfigChange(),
-      iframe: (remoteSource) => onConfigChange({ remoteSource }),
-      default: () => onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN })
+      vault: (remoteSource) => onConfigChange({ remoteSource })
     };
 
     const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
-    const [type, target] = searchParams.get('target')?.split('|') ?? ['default'];
-    if (type in targetResolvers) {
-      await targetResolvers[type](target);
+    const target = searchParams.get('target') ?? DEFAULT_TARGET;
+
+    if (target.split(':')[0] in targetResolvers) {
+      const splitTarget = target.split(/:/);
+      const key = splitTarget.shift()!;
+      const remoteSource = splitTarget.join(':');
+      await targetResolvers[key](remoteSource);
     } else {
-      await targetResolvers.default();
+      await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
     }
   }, []);
 
