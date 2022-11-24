@@ -10,6 +10,7 @@ import { execTool, getBin, mochaComment, resolveFiles } from './util';
 
 export type NodeOptions = {
   testPatterns: string[];
+  tags: string[];
   coverage: boolean;
   coveragePath: string;
   watch: boolean;
@@ -59,7 +60,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
-      FORCE_COLOR: '2'
+      FORCE_COLOR: '2',
+      MOCHA_TAGS: options.tags.join(',')
     }
   });
 

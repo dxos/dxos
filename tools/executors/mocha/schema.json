@@ -7,6 +7,12 @@
       "type": "array",
       "description": "Globs of tests"
     },
+    "tags": {
+      "type": "array",
+      "description": "A set of tag patterns to run",
+      "examples": ["unit", "integration", "e2e", "!unit"],
+      "default": ["!e2e"]
+    },
     "environments": {
       "type": "array",
       "description": "Override which environments to run tests in"

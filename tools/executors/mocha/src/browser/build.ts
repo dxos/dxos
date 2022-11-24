@@ -18,6 +18,7 @@ export interface BuildTestsOpts {
   debug: boolean;
   timeout: number;
   checkLeaks: boolean;
+  tags: string[];
 }
 
 export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
@@ -36,7 +37,10 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     async function run() {
       const context = await window.browserMocha__getEnv();
 
-      window.mochaExecutor = { environment: context.browserType };
+      window.mochaExecutor = {
+        environment: context.browserType,
+        tags: ${JSON.stringify(opts.tags)}
+      };
 
       mocha.reporter(BrowserReporter);
       mocha.setup('bdd');

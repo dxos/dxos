@@ -11,6 +11,7 @@ import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {
   testPatterns: string[];
+  tags: string[];
   outputPath: string;
   resultsPath: string;
   xmlReport: boolean;
@@ -75,7 +76,8 @@ export const runBrowserBuild = async (options: BrowserOptions) => {
     debug: !!options.debug,
     outDir,
     timeout: options.timeout,
-    checkLeaks: options.checkLeaks
+    checkLeaks: options.checkLeaks,
+    tags: options.tags
   });
 
   return false;

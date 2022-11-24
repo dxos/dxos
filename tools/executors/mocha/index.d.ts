@@ -5,6 +5,7 @@
 declare global {
   const mochaExecutor: {
     environment: import('@dxos/mocha').TestEnvironment;
+    tags: string[];
   };
 }
 
