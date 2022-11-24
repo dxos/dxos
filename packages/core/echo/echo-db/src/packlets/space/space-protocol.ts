@@ -4,13 +4,16 @@
 
 import { Event } from '@dxos/async';
 import { discoveryKey, sha256 } from '@dxos/crypto';
+import { todo } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection } from '@dxos/network-manager';
+import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection, WireProtocolProvider } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Teleport } from '@dxos/teleport';
+import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-plugin-replicator'
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
@@ -29,24 +32,30 @@ export type SpaceProtocolOptions = {
   plugins?: Plugin[];
 };
 
+const USE_TELEPORT = true;
+
 /**
  * Manages hypercore protocol stream creation and joining swarms.
  */
 export class SpaceProtocol {
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _customPlugins: Plugin[];
-
+  
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-
+  
   private readonly _presencePlugin: PresencePlugin;
   private readonly _authPlugin: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
-
+  
   readonly authenticationFailed: Event;
-
+  
   private _connection?: SwarmConnection;
+
+  // Experimental teleport-specific plugins.
+  // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
+  private readonly _teleportReplicator = new TeleportReplicatorExtension().setOptions({ upload: true });
 
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
@@ -65,7 +74,11 @@ export class SpaceProtocol {
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
   addFeed(feed: FeedWrapper<FeedMessage>) {
-    this._replicator.addFeed(feed);
+    if(USE_TELEPORT) {
+      this._teleportReplicator.addFeed(feed);
+    } else {
+      this._replicator.addFeed(feed);
+    }
   }
 
   async start() {
@@ -85,9 +98,7 @@ export class SpaceProtocol {
 
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
-      protocol: adaptProtocolProvider(({ channel, initiator }) =>
-        this._createProtocol(credentials, { channel, initiator })
-      ),
+      protocol: this._createProtocolProvider(credentials),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presencePlugin,
@@ -106,42 +117,56 @@ export class SpaceProtocol {
     }
   }
 
-  private _createProtocol(
-    credentials: Uint8Array | undefined,
-    { initiator, channel }: { initiator: boolean; channel: Buffer }
-  ) {
-    const protocol = new Protocol({
-      streamOptions: {
-        live: true
-      },
+  private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
+    if(USE_TELEPORT) {
+      return ({ initiator, localPeerId, remotePeerId }) => {
+        const teleport = new Teleport({ initiator, localPeerId, remotePeerId });
 
-      discoveryKey: channel,
-      discoveryToPublicKey: (discoveryKey: any) => {
-        if (!PublicKey.from(discoveryKey).equals(this._discoveryKey)) {
-          return undefined;
+        teleport.addExtension('dxos.mesh.teleport.replicator', this._teleportReplicator);
+
+        return {
+          initialize: () => teleport.open(),
+          // TODO(dmaretskyi): Disambiguate between close and destroy.
+          destroy: () => teleport.close(),
+          stream: teleport.stream,
         }
-
-        // TODO(dmaretskyi): Why does this do side effects?
-        // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
-        protocol.setContext({ topic: this._discoveryKey.toHex() });
-        // TODO(burdon): Inconsistent use of toHex vs asBuffer?
-        return this._discoveryKey.asBuffer();
-      },
-
-      userSession: {
-        // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: this._peerId.toHex(),
-        // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
-      },
-
-      initiator
-    });
-
-    const plugins: Plugin[] = [this._presencePlugin, this._authPlugin, this._replicator, ...this._customPlugins];
-    protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
-
-    return protocol;
+      }
+    } else {
+      return adaptProtocolProvider(({ channel, initiator }) => {
+        const protocol = new Protocol({
+          streamOptions: {
+            live: true
+          },
+    
+          discoveryKey: channel,
+          discoveryToPublicKey: (discoveryKey: any) => {
+            if (!PublicKey.from(discoveryKey).equals(this._discoveryKey)) {
+              return undefined;
+            }
+    
+            // TODO(dmaretskyi): Why does this do side effects?
+            // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
+            protocol.setContext({ topic: this._discoveryKey.toHex() });
+            // TODO(burdon): Inconsistent use of toHex vs asBuffer?
+            return this._discoveryKey.asBuffer();
+          },
+    
+          userSession: {
+            // TODO(burdon): See deprecated `protocolFactory` in HALO.
+            peerId: this._peerId.toHex(),
+            // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
+            credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
+          },
+    
+          initiator
+        });
+    
+        const plugins: Plugin[] = [this._presencePlugin, this._authPlugin, this._replicator, ...this._customPlugins];
+        protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
+    
+        return protocol;
+      });
+    }
   }
 
   get peers() {

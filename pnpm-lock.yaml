@@ -1272,6 +1272,8 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/teleport': workspace:*
+      '@dxos/teleport-plugin-replicator': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
@@ -1303,6 +1305,8 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/rpc': link:../../mesh/rpc
+      '@dxos/teleport': link:../../mesh/teleport
+      '@dxos/teleport-plugin-replicator': link:../../mesh/teleport-plugin-replicator
       '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
@@ -1702,7 +1706,6 @@ importers:
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
-      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../protocols
@@ -1716,6 +1719,7 @@ importers:
       ws: 7.5.9
       xor-distance: 2.0.0
     devDependencies:
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../../common/testutils
       '@swc-node/register': 1.5.4_6yqwcne7hyxkofmgunm52xhmgy
@@ -3475,6 +3479,9 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@types/debug': 4.1.7
+
+  packages/sdk/assets:
+    specifiers: {}
 
   packages/sdk/client:
     specifiers:

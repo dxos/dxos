@@ -67,7 +67,7 @@ export class Teleport {
     });
   }
 
-  get stream(): NodeJS.ReadWriteStream {
+  get stream(): Duplex {
     return this._muxer.stream;
   }
 

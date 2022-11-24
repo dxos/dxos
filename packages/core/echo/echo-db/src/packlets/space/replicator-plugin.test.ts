@@ -45,8 +45,8 @@ describe('space/replicator-plugin', function () {
     const feed1 = await feedStore1.openFeed(await builder1.keyring.createKey(), { writable: true });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
-    await replicator1.addFeed(feed1);
-    await replicator2.addFeed(feed2);
+    await protocol1.addFeed(feed1);
+    await protocol2.addFeed(feed2);
 
     //
     // Append message.

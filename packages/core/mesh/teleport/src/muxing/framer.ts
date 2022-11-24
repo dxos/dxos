@@ -60,7 +60,7 @@ export class Framer {
     }
   };
 
-  get stream(): NodeJS.ReadWriteStream {
+  get stream(): Duplex {
     return this._stream;
   }
 

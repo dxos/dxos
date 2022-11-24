@@ -14,7 +14,8 @@ import { SpaceProtocol } from './space-protocol';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './testing';
 
 describe('space/space-protocol', function () {
-  it('two peers discover each other', async function () {
+  // No presence
+  it.skip('two peers discover each other', async function () {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
