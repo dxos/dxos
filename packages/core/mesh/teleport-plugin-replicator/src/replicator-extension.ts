@@ -128,6 +128,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
   async onClose(err?: Error | undefined) {
     log('close');
+    await this._ctx.dispose();
     await this._rpc?.close();
     for (const feedKey of this._streams.keys()) {
       await this._stopReplication(feedKey);
