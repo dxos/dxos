@@ -13,7 +13,7 @@ html[data-theme=dark] {
     border-color: $zinc-700;
   }
 }
-  
+
 // TODO(wittjosiah): Can the plugin add this?
 .showcase-preview {
   border: 1px solid var(--c-border);
@@ -48,6 +48,10 @@ div[class^="language-"] {
   justify-content: center;
   text-align: center;
   margin-top: 2rem;
+}
+
+.home.project .hero img {
+  opacity: 0.8 !important;
 }
 
 .home.project .hero .description {
@@ -113,11 +117,11 @@ html[data-theme=light] .home.project .hero {
 
 
 /// DEFAULT THEME CUSTOMIZATION FOLLOWS
-/// 
+///
 // :root {
 //   --c-dxos: hsl(305, 80%, 35%);
 //   --c-dxos-light: hsl(305, 80%, 45%);
-  
+
 //   --c-brand: var(--c-dxos);
 //   --c-brand-light: var(--c-dxos-light);
 // }
@@ -125,7 +129,7 @@ html[data-theme=light] .home.project .hero {
 // :root.dark {
 //   --c-dxos: hsl(305, 50%, 60%);
 //   --c-dxos-light: hsl(305, 50%, 75%);
-  
+
 //   --c-brand: var(--c-dxos);
 //   --c-brand-light: var(--c-dxos-light);
 // }
