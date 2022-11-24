@@ -6,10 +6,11 @@ import { expect } from 'chai';
 
 import { createKeyPair, createId } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import { test } from '@dxos/mocha';
 
 import { humanize } from './human-hash';
 
-it('Hashing', function () {
+test('Hashing', function () {
   const { publicKey, secretKey } = createKeyPair();
 
   expect(humanize(publicKey)).not.to.equal(humanize(secretKey));

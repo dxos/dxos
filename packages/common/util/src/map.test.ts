@@ -4,10 +4,12 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/mocha';
+
 import { LazyMap } from '../src/map';
 
 describe('map', function () {
-  it('set', function () {
+  test('set', function () {
     const map = new LazyMap<string, Set<string>>(() => new Set<string>());
     map.getOrInit('test').add('foo');
     expect(map.getOrInit('test').size).to.equal(1);

@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { PublicKey } from '@dxos/keys';
+import { test } from '@dxos/mocha';
 
 import { makeSet, makeMap } from './complex';
 
 const PulicKeySet = makeSet<PublicKey>(PublicKey.hash);
 
-it('ComplexSet', function () {
+test('ComplexSet', function () {
   const key1 = PublicKey.random();
   const key2 = PublicKey.random();
   const key3 = PublicKey.random();
@@ -41,7 +42,7 @@ it('ComplexSet', function () {
 
 const PulicKeyMap = makeMap<PublicKey>(PublicKey.hash);
 
-it('ComplexMap', function () {
+test('ComplexMap', function () {
   const key1 = PublicKey.random();
   const key2 = PublicKey.random();
   const key3 = PublicKey.random();

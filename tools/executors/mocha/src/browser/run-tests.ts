@@ -10,8 +10,8 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { Page } from 'playwright';
 
+import { BrowserType } from '../types';
 import { Lock, trigger } from '../util';
-import { BrowserType } from './browser';
 import { TestResult } from './reporter';
 
 export type RunTestsOptions = {

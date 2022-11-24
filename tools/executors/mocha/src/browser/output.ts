@@ -7,7 +7,7 @@ import { Stats } from 'mocha';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { BrowserType } from './browser';
+import { BrowserType } from '../types';
 import { TestResult, TestStatus } from './reporter';
 import { RunTestsResults, Suites, TestError } from './run-tests';
 

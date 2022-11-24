@@ -8,5 +8,8 @@
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
   "types": "index.d.ts",
-  "executors": "./executor.json"
+  "executors": "./executor.json",
+  "scripts": {
+    "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
+  }
 }

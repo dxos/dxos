@@ -6,7 +6,8 @@ import chalk from 'chalk';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { BrowserType, buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
+import { buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
+import { BrowserType } from './types';
 import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {

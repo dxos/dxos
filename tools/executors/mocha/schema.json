@@ -10,8 +10,8 @@
     "tags": {
       "type": "array",
       "description": "A set of tag patterns to run",
-      "examples": ["unit", "integration", "e2e", "!unit"],
-      "default": ["!e2e"]
+      "examples": ["unit", "integration", "e2e"],
+      "default": ["unit", "integration"]
     },
     "environments": {
       "type": "array",

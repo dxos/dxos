@@ -4,6 +4,8 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/mocha';
+
 import { createArrayDispatch } from './callback';
 
 type Callback = {
@@ -12,7 +14,7 @@ type Callback = {
 };
 
 describe('callbacks', function () {
-  it('calls array of callbacks', function () {
+  test('calls array of callbacks', function () {
     const counters = {
       foo: 0,
       bar: 0

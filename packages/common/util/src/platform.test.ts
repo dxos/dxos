@@ -4,9 +4,11 @@
 
 import { expect } from 'chai';
 
+import { test } from '@dxos/mocha';
+
 import { isNode } from './platform';
 
-it('knows when running in node', function () {
+test('knows when running in node', function () {
   if (mochaExecutor.environment === 'nodejs') {
     expect(isNode()).to.be.true;
   } else {

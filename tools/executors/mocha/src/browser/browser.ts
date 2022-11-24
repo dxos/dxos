@@ -6,13 +6,10 @@ import { mkdir } from 'node:fs/promises';
 import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
-export const BrowserTypes = ['chromium', 'firefox', 'webkit'] as const;
-
-export type BrowserType = typeof BrowserTypes[number];
+import { BrowserType } from '../types';
 
 export type BrowserOptions = {
   headless: boolean;
-  debug: boolean;
   browserArgs?: string[];
 };
 
@@ -36,7 +33,7 @@ export const getNewBrowserContext = async (browserType: BrowserType, options: Br
   const browserRunner = getBrowser(browserType);
   const context = await browserRunner.launchPersistentContext(userDataDir, {
     headless: options.headless,
-    args: [...(options.debug ? ['--auto-open-devtools-for-tabs'] : []), ...(options.browserArgs ?? [])]
+    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])]
   });
   const page = await context.newPage();
 

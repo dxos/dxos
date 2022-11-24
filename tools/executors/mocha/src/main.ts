@@ -5,14 +5,10 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'node:path';
 
-import { BrowserTypes } from './browser';
 import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
+import { BrowserTypes, TestEnvironment, TestEnvironments } from './types';
 import { runSetup } from './util';
-
-export const TestEnvironments = ['nodejs', ...BrowserTypes] as const;
-
-export type TestEnvironment = typeof TestEnvironments[number];
 
 export type MochaExecutorOptions = NodeOptions &
   BrowserOptions & {
