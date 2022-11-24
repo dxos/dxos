@@ -19,12 +19,10 @@ describe('space/replicator-plugin', function () {
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
-    const replicator1 = new ReplicatorPlugin();
-    const protocol1 = peer1.createSpaceProtocol(topic, [replicator1]);
+    const protocol1 = peer1.createSpaceProtocol(topic, []);
 
     const peer2 = await builder.createPeer();
-    const replicator2 = new ReplicatorPlugin();
-    const protocol2 = peer2.createSpaceProtocol(topic, [replicator2]);
+    const protocol2 = peer2.createSpaceProtocol(topic, []);
 
     await protocol1.start();
     await protocol2.start();

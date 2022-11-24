@@ -10,12 +10,14 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { afterTest } from '@dxos/testutils';
 
-import { SpaceProtocol } from './space-protocol';
+import { SpaceProtocol, USE_TELEPORT } from './space-protocol';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './testing';
 
 describe('space/space-protocol', function () {
-  // No presence
-  it.skip('two peers discover each other', async function () {
+  it('two peers discover each other', async function () {
+    if(USE_TELEPORT) {
+      this.skip();
+    }
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -38,6 +40,9 @@ describe('space/space-protocol', function () {
   });
 
   it('failing authentication', async function () {
+    if(USE_TELEPORT) {
+      this.skip();
+    }
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 
