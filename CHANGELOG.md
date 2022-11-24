@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.11](https://github.com/dxos/dxos/compare/v0.1.10...v0.1.11) (2022-11-24)
+
+
+### Features
+
+* Add query param for remouteSource in Devtools ([#1977](https://github.com/dxos/dxos/issues/1977)) ([9700cf5](https://github.com/dxos/dxos/commit/9700cf5f35f94b083cd334364e72f0abbf306152))
+* Icon assets. ([#1969](https://github.com/dxos/dxos/issues/1969)) ([eb3e2c7](https://github.com/dxos/dxos/commit/eb3e2c7c3402f20560085f356cc2c8ef92e41faf))
+* Log at the right callsite in browser & add custom PublicKey formatter ([#1963](https://github.com/dxos/dxos/issues/1963)) ([ae67027](https://github.com/dxos/dxos/commit/ae67027f4ca3824dfa36d6771495ac3d4d3f89d1))
+* logging features ([#1931](https://github.com/dxos/dxos/issues/1931)) ([bf17bdd](https://github.com/dxos/dxos/commit/bf17bdd4c560ec8bd4aa0b3449fc992a332164fa))
+* Remove terminated invitations ([#1959](https://github.com/dxos/dxos/issues/1959)) ([6f42273](https://github.com/dxos/dxos/commit/6f42273ebaf98c16b1df8a419977367180ea5592))
+* Reset client ([#1954](https://github.com/dxos/dxos/issues/1954)) ([2c27812](https://github.com/dxos/dxos/commit/2c278124f67305d2ef38115dbf85290dad3091d5))
+
+
+### Bug Fixes
+
+* **client-services:** Ensure always subscribed to spaces ([#1961](https://github.com/dxos/dxos/issues/1961)) ([8ef94f4](https://github.com/dxos/dxos/commit/8ef94f4373107e86255a60746892472694aad8c4))
+* Devtools production behavior ([#1950](https://github.com/dxos/dxos/issues/1950)) ([dfe6316](https://github.com/dxos/dxos/commit/dfe6316b5fb4ab521cd48b1e4696079e968b08f4))
+* plate index ignore ([#1979](https://github.com/dxos/dxos/issues/1979)) ([a687752](https://github.com/dxos/dxos/commit/a687752dd1161c6f4775913d0d4dbf1a690ce31d))
+* **react-uikit:** Auto-auth with actual code ([#1958](https://github.com/dxos/dxos/issues/1958)) ([19109e7](https://github.com/dxos/dxos/commit/19109e7ad177e52cccac0e9c9dd05ffc81d4330f))
+
 ## [0.1.10](https://github.com/dxos/dxos/compare/v0.1.9...v0.1.10) (2022-11-22)
 
 
