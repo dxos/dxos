@@ -16,10 +16,32 @@ import { TestServer } from './testing';
 const SERVER_URL = 'http://localhost:8080/modules';
 // const SERVER_URL = 'https://dev.kube.dxos.org/.well-known/dx/registry';
 
-const modules: Module[] = Array.from(Array(6)).map((_, i) => ({
-  name: `test-${i + 1}`,
-  displayName: `App ${i + 1}`
-}));
+const modules: Module[] = [
+  {
+    name: 'test-1',
+    displayName: 'App 1'
+  },
+  {
+    name: 'test-2',
+    displayName: 'App 2',
+    tags: ['prod']
+  },
+  {
+    name: 'test-3',
+    displayName: 'App 3',
+    tags: ['test']
+  },
+  {
+    name: 'test-4',
+    displayName: 'App 4',
+    tags: ['prod']
+  },
+  {
+    name: 'test-5',
+    displayName: 'App 5',
+    tags: ['prod', 'demo']
+  }
+];
 
 describe('Metagraph queries', function () {
   const testServer = new TestServer({ modules });
@@ -45,15 +67,15 @@ describe('Metagraph queries', function () {
       })
     );
 
-    const observable = await metagraph.modules.query();
+    const observable = await metagraph.modules.query({ tags: ['prod'] });
     observable.subscribe({
       onUpdate(results: Module[]) {
         log('onUpdate', { results });
-        expect(results).to.have.length(modules.length);
+        expect(results).to.have.length(3);
       }
     });
 
     const results = observable.results;
-    expect(results).to.have.length(modules.length);
+    expect(results).to.have.length(3);
   });
 });

@@ -31,8 +31,12 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
   }
 }
 
+export type Query = {
+  tags?: string[];
+};
+
 export interface ServiceApi<T> {
-  query(): Promise<QueryObservable<T>>;
+  query(query?: Query): Promise<QueryObservable<T>>;
 }
 
 /**
@@ -48,12 +52,20 @@ export class Metagraph {
 
   get modules(): ServiceApi<Module> {
     return {
-      query: async () => {
+      // TODO(burdon): URL.
+      query: async (query?: Query) => {
         const response = await fetch(this._serverUrl);
-        const { modules } = await response.json();
+        const { modules } = (await response.json()) as { modules: Module[] };
 
         const observable = new QueryObservableProvider<Module>();
-        observable.results = modules;
+        observable.results = modules.filter(({ tags }) => {
+          if (!query?.tags?.length) {
+            return true;
+          }
+
+          return query?.tags?.filter((tag) => tags?.includes(tag)).length > 0;
+        });
+
         return observable;
       }
     };
