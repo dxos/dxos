@@ -5,6 +5,7 @@
 import { DependencyList, useState, useEffect } from 'react';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 
 /**
  * Subscribe to service API streams.
@@ -13,8 +14,17 @@ export const useStream = <T>(streamFactory: () => Stream<T>, defaultValue: T, de
   const [value, setValue] = useState<T | undefined>(defaultValue);
   useEffect(() => {
     const stream = streamFactory();
-    stream.subscribe((response: T) => setValue(response));
-    return () => stream.close();
+    stream.subscribe(
+      (response: T) => setValue(response),
+      (err) => {
+        if (err) {
+          log.catch(err);
+        }
+      }
+    );
+    return () => {
+      stream.close();
+    };
   }, deps);
 
   return value ?? defaultValue;
