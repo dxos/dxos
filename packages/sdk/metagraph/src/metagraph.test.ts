@@ -6,6 +6,7 @@
 
 import { expect } from 'chai';
 
+import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { Module } from '@dxos/protocols/proto/dxos/config';
@@ -67,15 +68,28 @@ describe('Metagraph queries', function () {
       })
     );
 
-    const observable = await metagraph.modules.query({ tags: ['prod'] });
-    observable.subscribe({
-      onUpdate(results: Module[]) {
-        log('onUpdate', { results });
-        expect(results).to.have.length(3);
-      }
-    });
+    {
+      const observable = await metagraph.modules.query();
+      const results = observable.results;
+      expect(results).to.have.length(5);
+    }
 
-    const results = observable.results;
-    expect(results).to.have.length(3);
+    {
+      const trigger = new Trigger<number>();
+      const observable = await metagraph.modules.query({ tags: ['prod'] });
+      observable.subscribe({
+        onUpdate(results: Module[]) {
+          log('onUpdate', { results });
+          trigger.wake(results.length);
+        }
+      });
+
+      const results = observable.results;
+      expect(results).to.have.length(3);
+
+      observable.fetch();
+      const count = await trigger.wait();
+      expect(count).to.eq(3);
+    }
   });
 });

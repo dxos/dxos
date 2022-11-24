@@ -16,10 +16,15 @@ export interface QueryEvents<T> {
 
 export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
   get results(): T[];
+  fetch(): void;
 }
 
 export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T>> implements QueryObservable<T> {
   private _results: T[] = [];
+
+  constructor(private readonly _callback: () => void) {
+    super();
+  }
 
   get results(): T[] {
     return this._results;
@@ -28,6 +33,10 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
   set results(results: T[]) {
     this._results = results ?? [];
     this.callback.onUpdate(this._results);
+  }
+
+  fetch() {
+    this._callback();
   }
 }
 
@@ -54,18 +63,21 @@ export class Metagraph {
   get modules(): ServiceApi<Module> {
     return {
       query: async (query?: Query) => {
-        const response = await fetch(this._serverUrl);
-        const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
+        const exec = async () => {
+          const response = await fetch(this._serverUrl);
+          const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
+          observable.results = modules.filter(({ tags }) => {
+            if (!query?.tags?.length) {
+              return true;
+            }
 
-        const observable = new QueryObservableProvider<Module>();
-        observable.results = modules.filter(({ tags }) => {
-          if (!query?.tags?.length) {
-            return true;
-          }
+            return query?.tags?.filter((tag) => tags?.includes(tag)).length > 0;
+          });
+        };
 
-          return query?.tags?.filter((tag) => tags?.includes(tag)).length > 0;
-        });
-
+        // TODO(burdon): Cache.
+        const observable = new QueryObservableProvider<Module>(exec);
+        await exec();
         return observable;
       }
     };
