@@ -85,7 +85,9 @@ export class SpaceProtocol {
 
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
-      protocol: adaptProtocolProvider(({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator })),
+      protocol: adaptProtocolProvider(({ channel, initiator }) =>
+        this._createProtocol(credentials, { channel, initiator })
+      ),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presencePlugin,

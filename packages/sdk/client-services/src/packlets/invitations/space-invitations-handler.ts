@@ -10,7 +10,13 @@ import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { adaptProtocolProvider, createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import {
+  adaptProtocolProvider,
+  createProtocolFactory,
+  NetworkManager,
+  StarTopology,
+  SwarmConnection
+} from '@dxos/network-manager';
 import { createRpcPlugin, RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

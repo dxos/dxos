@@ -9,7 +9,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 
-
 interface ProtocolFactoryOptions {
   plugins: any[];
   getTopics: () => Buffer[];
@@ -19,7 +18,7 @@ interface ProtocolFactoryOptions {
 /**
  * @deprecated Replaced by WireProtocolProvider.
  */
-export type MeshProtocolProvider =  (params: ({ channel: Buffer, initiator: boolean })) => Protocol
+export type MeshProtocolProvider = (params: { channel: Buffer; initiator: boolean }) => Protocol;
 
 /**
  * Returns a function that takes a channel parameter, returns a Protocol object

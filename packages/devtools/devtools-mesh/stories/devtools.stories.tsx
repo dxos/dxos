@@ -49,7 +49,9 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
     topic: controlTopic,
     peerId,
     topology: topologyFactory(),
-    protocol: adaptProtocolProvider(transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin)),
+    protocol: adaptProtocolProvider(
+      transportProtocolProvider(controlTopic.asBuffer(), peerId.asBuffer(), presencePlugin)
+    ),
     presence: presencePlugin
   });
 

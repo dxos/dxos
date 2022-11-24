@@ -16,8 +16,8 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
-import { Swarm } from './swarm';
 import { adaptProtocolProvider } from '../wire-protocol';
+import { Swarm } from './swarm';
 
 describe('Swarm', function () {
   const context = new MemorySignalManagerContext();

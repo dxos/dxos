@@ -3,11 +3,11 @@
 //
 
 import assert from 'assert';
+import { Duplex } from 'stream';
 
-import { asyncTimeout, EventSubscriptions, repeatTask, runInContextAsync, synchronized } from '@dxos/async';
-import { scheduleTask } from '@dxos/async';
-import { Context } from '@dxos/context'
-import { failUndefined, todo } from '@dxos/debug';
+import { asyncTimeout, repeatTask, runInContextAsync, synchronized, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
@@ -16,7 +16,6 @@ import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
-import { Duplex } from 'stream';
 
 export type TeleportParams = {
   initiator: boolean;
@@ -25,15 +24,15 @@ export type TeleportParams = {
 };
 
 export class Teleport {
-  public readonly initiator: boolean
+  public readonly initiator: boolean;
   public readonly localPeerId: PublicKey;
   public readonly remotePeerId: PublicKey;
 
   private readonly _ctx = new Context({
-    onError: err => {
+    onError: (err) => {
       this.destroy(err);
     }
-  })
+  });
 
   private readonly _muxer = new Muxer();
   private readonly _control = new ControlExtension({
@@ -88,12 +87,12 @@ export class Teleport {
 
   @synchronized
   async destroy(err?: Error) {
-    if(this._ctx.disposed) {
+    if (this._ctx.disposed) {
       return;
     }
 
     await this._ctx.dispose();
-    
+
     for (const extension of this._extensions.values()) {
       try {
         await extension.onClose(err);
@@ -144,10 +143,10 @@ export class Teleport {
         assert(!channelName.includes('/'), 'Invalid channel name');
         return this._muxer.createStream(`${extensionName}/${channelName}`, opts);
       },
-      close: err => {
+      close: (err) => {
         runInContextAsync(this._ctx, async () => {
           await this.close(err);
-        })
+        });
       }
     };
 
@@ -179,10 +178,11 @@ type ControlExtensionOpts = {
 
 class ControlExtension implements TeleportExtension {
   private readonly _ctx = new Context({
-    onError: err => {
+    onError: (err) => {
       this._extensionContext.close(err);
     }
   });
+
   private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
 
@@ -220,13 +220,17 @@ class ControlExtension implements TeleportExtension {
 
     await this._rpc.open();
 
-    repeatTask(this._ctx, async () => {
-      try {
-        await asyncTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
-      } catch (err: any) {
-        this.onTimeout.call();
-      }
-    }, this.opts.heartbeatInterval)
+    repeatTask(
+      this._ctx,
+      async () => {
+        try {
+          await asyncTimeout(this._rpc.rpc.Control.heartbeat(), this.opts.heartbeatTimeout);
+        } catch (err: any) {
+          this.onTimeout.call();
+        }
+      },
+      this.opts.heartbeatInterval
+    );
   }
 
   async onClose(err?: Error): Promise<void> {

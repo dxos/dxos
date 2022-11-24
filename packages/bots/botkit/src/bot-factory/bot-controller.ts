@@ -6,7 +6,13 @@ import debug from 'debug';
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { adaptProtocolProvider, createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import {
+  adaptProtocolProvider,
+  createProtocolFactory,
+  NetworkManager,
+  StarTopology,
+  SwarmConnection
+} from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';

@@ -65,7 +65,7 @@ export class FeedWrapper<T extends {}> {
       write: async (data: T) => {
         log('write', { feed: this._key, seq: this._hypercore.length, data });
         const stackTrace = new StackTrace();
-        
+
         try {
           this._pendingWrites.add(stackTrace);
           const seq = await this.append(data);
@@ -99,11 +99,15 @@ export class FeedWrapper<T extends {}> {
   open = this._binder.async(this._hypercore.open);
   private _close = this._binder.async(this._hypercore.close);
   close = async () => {
-    if(this._pendingWrites.size) {
-      log.warn('Closing feed with pending writes', { feed: this._key, count: this._pendingWrites.size, pendingWrites: Array.from(this._pendingWrites.values()).map(stack => stack.getStack()) });
+    if (this._pendingWrites.size) {
+      log.warn('Closing feed with pending writes', {
+        feed: this._key,
+        count: this._pendingWrites.size,
+        pendingWrites: Array.from(this._pendingWrites.values()).map((stack) => stack.getStack())
+      });
     }
     await this._close();
-  }
+  };
 
   get = this._binder.async(this._hypercore.get);
   append = this._binder.async(this._hypercore.append);

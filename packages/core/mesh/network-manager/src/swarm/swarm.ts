@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event, sleep } from '@dxos/async';
-import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -18,9 +17,9 @@ import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
+import { WireProtocolProvider } from '../wire-protocol';
 import { Connection } from './connection';
 import { Peer } from './peer';
-import { WireProtocolProvider } from '../wire-protocol';
 
 const INITIATION_DELAY = 100;
 

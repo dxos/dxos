@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { expect } from 'chai';
 import { pipeline } from 'stream';
 
 import { PublicKey } from '@dxos/keys';
@@ -11,7 +12,6 @@ import { afterTest } from '@dxos/testutils';
 
 import { ExtensionContext, Teleport, TeleportExtension } from './teleport';
 import { TestExtension } from './test-extension';
-import { expect } from 'chai';
 
 const setup = () => {
   const peerId1 = PublicKey.random();

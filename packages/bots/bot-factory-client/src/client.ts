@@ -65,12 +65,14 @@ export class BotFactoryClient {
           topic,
           peerId,
           topology: new StarTopology(topic),
-          protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [
-            new RpcPlugin(async (port) => {
-              log('Connected.');
-              resolve(port);
-            })
-          ]))
+          protocol: adaptProtocolProvider(
+            createProtocolFactory(topic, peerId, [
+              new RpcPlugin(async (port) => {
+                log('Connected.');
+                resolve(port);
+              })
+            ])
+          )
         });
       }),
       30_000,

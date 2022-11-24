@@ -8,7 +8,6 @@ import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessenger } from '../signal';
@@ -133,9 +132,9 @@ export class Connection {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
-    this._protocol.initialize().catch(err => {
+    this._protocol.initialize().catch((err) => {
       this.errors.raise(err);
-    })
+    });
 
     assert(!this._transport);
     this._transport = this._transportFactory.createTransport({

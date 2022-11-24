@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { TransportFactory } from '../transport';
-import { Connection, ConnectionState } from './connection';
 import { WireProtocol } from '../wire-protocol';
+import { Connection, ConnectionState } from './connection';
 
 interface PeerCallbacks {
   /**

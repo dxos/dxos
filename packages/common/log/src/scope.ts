@@ -6,9 +6,9 @@ const logInfoProperties = Symbol('logInfoProperties');
 
 /**
  * Decorate fields, properties, or methods to automatically include their values in log messages.
- * 
+ *
  * Example:
- * 
+ *
  * ```typescript
  * class Example {
  *   @logInfo

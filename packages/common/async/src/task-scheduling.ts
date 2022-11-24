@@ -1,8 +1,11 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { Context } from '@dxos/context';
 import { MaybePromise } from '@dxos/util';
 
-export type ClearCallback = () => void
-
+export type ClearCallback = () => void;
 
 /**
  * A task that can be scheduled to run in the next event loop iteration.
@@ -13,10 +16,7 @@ export class DeferredTask {
   private _scheduled = false;
   private _promise: Promise<void> | null = null;
 
-  constructor(
-    private readonly _ctx: Context,
-    private readonly _callback: () => Promise<void>
-  ) { }
+  constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
 
   schedule() {
     if (this._scheduled) {
@@ -76,4 +76,4 @@ export const repeatTask = (ctx: Context, task: () => Promise<void>, interval: nu
   };
 
   scheduleTask(ctx, run, interval);
-}
+};
