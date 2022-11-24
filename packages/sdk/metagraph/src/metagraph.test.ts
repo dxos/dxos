@@ -8,14 +8,10 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { log } from '@dxos/log';
 import { Module } from '@dxos/protocols/proto/dxos/config';
 
 import { Metagraph } from './metagraph';
 import { TestServer } from './testing';
-
-const SERVER_URL = 'http://localhost:8080/modules';
-// const SERVER_URL = 'https://dev.kube.dxos.org/.well-known/dx/registry';
 
 const modules: Module[] = [
   {
@@ -61,7 +57,8 @@ describe('Metagraph queries', function () {
         runtime: {
           services: {
             dxns: {
-              server: SERVER_URL
+              // Test with 'https://dev.kube.dxos.org/.well-known/dx/registry'
+              server: 'http://localhost:8080/modules'
             }
           }
         }
@@ -77,9 +74,8 @@ describe('Metagraph queries', function () {
     {
       const trigger = new Trigger<number>();
       const observable = await metagraph.modules.query({ tags: ['prod'] });
-      observable.subscribe({
+      const unsubscribe = observable.subscribe({
         onUpdate(results: Module[]) {
-          log('onUpdate', { results });
           trigger.wake(results.length);
         }
       });
@@ -87,9 +83,10 @@ describe('Metagraph queries', function () {
       const results = observable.results;
       expect(results).to.have.length(3);
 
-      observable.fetch();
+      void observable.fetch();
       const count = await trigger.wait();
       expect(count).to.eq(3);
+      unsubscribe();
     }
   });
 });

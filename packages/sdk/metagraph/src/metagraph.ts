@@ -22,7 +22,7 @@ export interface QueryObservable<T> extends Observable<QueryEvents<T>> {
 export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T>> implements QueryObservable<T> {
   private _results: T[] = [];
 
-  constructor(private readonly _callback: () => void) {
+  constructor(private readonly _callback: () => Promise<void>) {
     super();
   }
 
@@ -35,8 +35,8 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
     this.callback.onUpdate(this._results);
   }
 
-  fetch() {
-    this._callback();
+  async fetch() {
+    await this._callback();
   }
 }
 
@@ -55,7 +55,7 @@ export class Metagraph {
   private readonly _serverUrl!: string;
 
   constructor(private readonly _config: Config) {
-    // TODO(burdon): URL field.
+    // TODO(burdon): Add URL field.
     // TODO(burdon): Rename dxns config field.
     this._serverUrl = this._config.get('runtime.services.dxns.server') ?? raise(new ApiError('Invalid DXNS server.'));
   }
@@ -63,7 +63,8 @@ export class Metagraph {
   get modules(): ServiceApi<Module> {
     return {
       query: async (query?: Query) => {
-        const exec = async () => {
+        // TODO(burdon): Cache observables?
+        const observable = new QueryObservableProvider<Module>(async () => {
           const response = await fetch(this._serverUrl);
           const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
           observable.results = modules.filter(({ tags }) => {
@@ -73,11 +74,9 @@ export class Metagraph {
 
             return query?.tags?.filter((tag) => tags?.includes(tag)).length > 0;
           });
-        };
+        });
 
-        // TODO(burdon): Cache observables?
-        const observable = new QueryObservableProvider<Module>(exec);
-        await exec();
+        await observable.fetch();
         return observable;
       }
     };

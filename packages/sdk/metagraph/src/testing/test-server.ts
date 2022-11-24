@@ -34,9 +34,9 @@ export class TestServer {
 
   constructor(private readonly _data: any) {}
 
-  start() {
+  start(port = 8080) {
     log('starting...');
-    this._server.listen(8080);
+    this._server.listen(port);
   }
 
   stop() {
