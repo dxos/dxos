@@ -74,7 +74,7 @@ export const App = () => {
     if (protocol in targetResolvers) {
       await targetResolvers[protocol](remoteSource);
     } else {
-      await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
+      throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
     }
   }, []);
 
