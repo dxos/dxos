@@ -138,6 +138,7 @@ export class ReplicatorExtension implements TeleportExtension {
   @synchronized
   private async _reevaluateFeeds() {
     for (const feedKey of this._feeds.keys()) {
+      if(this._ctx.disposed) return;
       if (this._streams.has(feedKey) && this._options.upload !== this._streams.get(feedKey)?.info.upload) {
         try {
           await asyncTimeout(this._stopReplication(feedKey), 1000);
@@ -146,6 +147,7 @@ export class ReplicatorExtension implements TeleportExtension {
         }
       }
 
+      if(this._ctx.disposed) return;
       if (!this._streams.has(feedKey)) {
         await this._initiateReplication({
           feedKey,

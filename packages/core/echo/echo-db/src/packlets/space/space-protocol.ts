@@ -9,11 +9,13 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection, WireProtocolProvider } from '@dxos/network-manager';
+import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection, WireProtocol, WireProtocolParams, WireProtocolProvider } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
 import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-plugin-replicator'
+import { ComplexMap } from '@dxos/util';
+import { Duplex } from 'stream';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
@@ -53,9 +55,9 @@ export class SpaceProtocol {
   
   private _connection?: SwarmConnection;
 
-  // Experimental teleport-specific plugins.
-  // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
-  private readonly _teleportReplicator = new TeleportReplicatorExtension().setOptions({ upload: true });
+  // Teleport-specific
+  private _feeds = new Set<FeedWrapper<FeedMessage>>();
+  private _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
 
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
@@ -75,7 +77,10 @@ export class SpaceProtocol {
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
   addFeed(feed: FeedWrapper<FeedMessage>) {
     if(USE_TELEPORT) {
-      this._teleportReplicator.addFeed(feed);
+      this._feeds.add(feed);
+      for(const session of this._sessions.values()) {
+        session.replicator.addFeed(feed);
+      }
     } else {
       this._replicator.addFeed(feed);
     }
@@ -119,17 +124,15 @@ export class SpaceProtocol {
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
     if(USE_TELEPORT) {
-      return ({ initiator, localPeerId, remotePeerId }) => {
-        const teleport = new Teleport({ initiator, localPeerId, remotePeerId });
+      return (params) => {
+        const session = new SpaceProtocolSession(params);
+        this._sessions.set(params.remotePeerId, session);
 
-        teleport.addExtension('dxos.mesh.teleport.replicator', this._teleportReplicator);
-
-        return {
-          initialize: () => teleport.open(),
-          // TODO(dmaretskyi): Disambiguate between close and destroy.
-          destroy: () => teleport.close(),
-          stream: teleport.stream,
+        for(const feed of this._feeds) {
+          session.replicator.addFeed(feed);
         }
+
+        return session
       }
     } else {
       return adaptProtocolProvider(({ channel, initiator }) => {
@@ -171,5 +174,27 @@ export class SpaceProtocol {
 
   get peers() {
     return this._presencePlugin.peers.map((peer) => PublicKey.from(peer));
+  }
+}
+
+export class SpaceProtocolSession implements WireProtocol {
+  private readonly _teleport: Teleport;
+
+  // TODO(dmaretskyi): Start with upload=false when switching it on the fly works.
+  public readonly replicator = new TeleportReplicatorExtension().setOptions({ upload: true });
+
+  constructor({ initiator, localPeerId, remotePeerId }: WireProtocolParams) {
+    this._teleport = new Teleport({ initiator, localPeerId, remotePeerId });
+  }
+
+  async initialize(): Promise<void> {
+    await this._teleport.open();
+    this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
+  }
+  async destroy(): Promise<void> {
+    await this._teleport.close();
+  }
+  get stream() {
+    return this._teleport.stream;
   }
 }

@@ -43,6 +43,8 @@ export class Teleport {
   private readonly _extensions = new Map<string, TeleportExtension>();
   private readonly _remoteExtensions = new Set<string>();
 
+  private _open = false;
+
   constructor({ initiator, localPeerId, remotePeerId }: TeleportParams) {
     assert(typeof initiator === 'boolean');
     assert(PublicKey.isPublicKey(localPeerId));
@@ -77,6 +79,7 @@ export class Teleport {
   async open() {
     this._setExtension('dxos.mesh.teleport.control', this._control);
     await this._openExtension('dxos.mesh.teleport.control');
+    this._open = true;
   }
 
   async close(err?: Error) {
@@ -105,6 +108,10 @@ export class Teleport {
   }
 
   addExtension(name: string, extension: TeleportExtension) {
+    if(!this._open) {
+      throw new Error('Not open');
+    }
+
     log('addExtension', { name });
     this._setExtension(name, extension);
 

@@ -45,12 +45,14 @@ class TestAgent {
   }
 }
 
-const createStreamPair = () => {
+const createStreamPair = async () => {
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
 
   const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
   const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
+
+  await Promise.all([peer1.open(), peer2.open()]);
 
   const replicator1 = new ReplicatorExtension();
   peer1.addExtension('dxos.mesh.teleport.replicator', replicator1);
@@ -80,8 +82,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
-    await Promise.all([peer1.open(), peer2.open()]);
+    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: true });
     replicator2.setOptions({ upload: true });
@@ -100,8 +101,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
-    await Promise.all([peer1.open(), peer2.open()]);
+    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });
@@ -123,8 +123,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
-    await Promise.all([peer1.open(), peer2.open()]);
+    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });
@@ -151,8 +150,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
-    await Promise.all([peer1.open(), peer2.open()]);
+    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: true });
     replicator2.setOptions({ upload: true });
@@ -178,8 +176,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
-    await Promise.all([peer1.open(), peer2.open()]);
+    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });
