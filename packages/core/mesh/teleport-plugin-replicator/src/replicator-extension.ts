@@ -1,6 +1,6 @@
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport'
 import { FeedWrapper } from '@dxos/feed-store'
-import { DeferredTask, synchronized } from '@dxos/async'
+import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async'
 import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator'
 import { Context } from '@dxos/context'
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc'
@@ -45,6 +45,7 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   private readonly updateTask = new DeferredTask(this._ctx, async () => {
+    log('process update');
     if(this._extensionContext!.initiator === false) {
       await this._rpc!.rpc.ReplicatorService.updateFeeds({
         feeds: Array.from(this._feeds.values()).map(feed => ({
@@ -60,7 +61,8 @@ export class ReplicatorExtension implements TeleportExtension {
 
   setOptions(options: ReplicationOptions): this {
     this._options = options;
-    if(this._extensionContext && this._extensionContext.initiator === false) {
+    log('setOptions', { options });
+    if(this._extensionContext) {
       this.updateTask.schedule();
     }
     return this
@@ -68,14 +70,15 @@ export class ReplicatorExtension implements TeleportExtension {
 
   addFeed(feed: FeedWrapper<any>) {
     this._feeds.set(feed.key, feed);
-    if(this._extensionContext && this._extensionContext.initiator === false) {
+    log('addFeed', { feedKey: feed.key });
+    if(this._extensionContext) {
       this.updateTask.schedule();
     }
   }
 
   async onOpen(context: ExtensionContext) {
-    log('open')
     this._extensionContext = context;
+    log('open')
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
@@ -129,6 +132,14 @@ export class ReplicatorExtension implements TeleportExtension {
   @synchronized
   private async _reevaluateFeeds() {
     for(const feedKey of this._feeds.keys()) {
+      if(this._streams.has(feedKey) && this._options.upload !== this._streams.get(feedKey)?.info.upload) {
+        try {
+          await asyncTimeout(this._stopReplication(feedKey), 1000);
+        } catch(err) {
+          log.catch(err);
+        }
+      }
+
       if(!this._streams.has(feedKey)) {
         await this._initiateReplication({
           feedKey,

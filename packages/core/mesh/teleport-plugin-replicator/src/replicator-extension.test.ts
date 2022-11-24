@@ -140,5 +140,39 @@ describe('ReplicatorExtension', function () {
     expect(feed2A.length).toEqual(0);
   })
 
+  // TODO: not working yet.
+  it.skip('enabling upload mid replication', async () => {
+    const builder = new TestBuilder();
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
 
+    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
+    await Promise.all([peer1.open(), peer2.open()]);
+
+    replicator1.setOptions({ upload: false });
+    replicator2.setOptions({ upload: true });
+    
+    const feed1A = await agent1.createWriteFeed(10);
+    replicator1.addFeed(feed1A);
+    const feed2A = await agent2.createReadFeed(feed1A.key);
+    replicator2.addFeed(feed2A);
+
+    const feed2B = await agent2.createWriteFeed(10);
+    replicator2.addFeed(feed2B);
+    const feed1B = await agent2.createReadFeed(feed2B.key);
+    replicator1.addFeed(feed2B);
+
+
+    // Wait for events to be processed.
+    await Event.wrap(feed1B, 'download').waitForCondition(() => feed1B.length === 10);
+    await sleep(5);
+
+    expect(feed2A.length).toEqual(0);
+
+
+    replicator1.setOptions({ upload: true });
+
+    // Wait for events to be processed.
+    await Event.wrap(feed2A, 'download').waitForCondition(() => feed2A.length === 10);
+  })
 })
