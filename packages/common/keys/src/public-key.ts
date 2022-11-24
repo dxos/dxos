@@ -153,6 +153,10 @@ export class PublicKey {
     return this._value;
   }
 
+  getInsecureHash(modulo: number) {
+    return Math.abs(this._value.reduce((acc, val) => (acc ^ val) | 0, 0)) % modulo;
+  }
+
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
@@ -165,6 +169,7 @@ export class PublicKey {
       return `\x1b[${code}m`;
     };
 
+    // NOTE: Keep in sync with formatter colors.
     const colors = [
       'red',
       'green',
@@ -180,10 +185,7 @@ export class PublicKey {
       'cyanBright',
       'whiteBright'
     ];
-
-    // Compute simple hash of the key.
-    const hash = Math.abs(this._value.reduce((acc, val) => (acc ^ val) | 0, 0));
-    const color = colors[hash % colors.length];
+    const color = colors[this.getInsecureHash(colors.length)];
 
     return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(
       inspect.colors.reset![0]
@@ -207,3 +209,68 @@ export class PublicKey {
     return equal;
   }
 }
+
+type JsonML = [string, { [key: string]: any }?, ...(JsonML | string)[]];
+
+/**
+ * https://www.mattzeunert.com/2016/02/19/custom-chrome-devtools-object-formatters.html
+ * NOTE: Must be enabled in chrome devtools preferences.
+ */
+// TODO(dmaretskyi): Change into prototype attribute on symbol like `custom.inspect`.
+abstract class DevtoolsFormatter<T> {
+  /**
+   * NOTE: Make sure to do an instance check and return null if the object is not of the correct type.
+   */
+  abstract header(value: T): JsonML | null;
+  abstract hasBody(value: T): boolean;
+  abstract body(value: T): JsonML | null;
+
+  register() {
+    if (typeof window !== 'undefined') {
+      ((window as any).devtoolsFormatters ??= []).push(this);
+    }
+  }
+}
+
+class PublicKeyFormatter extends DevtoolsFormatter<PublicKey> {
+  header(value: PublicKey): JsonML | null {
+    if (!PublicKey.isPublicKey(value)) {
+      return null;
+    }
+
+    // NOTE: Keep in sync with inspect colors.
+    const colors = [
+      'darkred',
+      'green',
+      'orange',
+      'blue',
+      'darkmagenta',
+      'darkcyan',
+      'red',
+      'green',
+      'orange',
+      'blue',
+      'magenta',
+      'darkcyan',
+      'black'
+    ];
+    const color = colors[value.getInsecureHash(colors.length)];
+
+    return [
+      'span',
+      {},
+      ['span', {}, 'PublicKey('],
+      ['span', { style: `color: ${color};` }, value.truncate()],
+      ['span', {}, ')']
+    ];
+  }
+
+  hasBody(value: PublicKey): boolean {
+    return false;
+  }
+
+  body(value: PublicKey): JsonML | null {
+    return null;
+  }
+}
+new PublicKeyFormatter().register();

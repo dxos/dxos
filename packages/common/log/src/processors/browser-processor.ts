@@ -41,7 +41,7 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     link = `${filepath}#L${entry.meta.line}`;
   }
 
-  const args = [];
+  let args = [];
   args.push(entry.message);
   if (entry.context && Object.keys(entry.context).length > 0) {
     args.push(entry.context);
@@ -53,10 +53,16 @@ export const BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     [LogLevel.DEBUG]: console.log
   };
 
-  const level = levels[entry.level] ?? console.log;
   if (LOG_BROWSER_CSS?.length) {
-    level.call(level, `%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS);
+    args = [`%c${link}\n%c${args.join(' ')}`, ...LOG_BROWSER_CSS];
   } else {
-    level.call(level, link + '\n', ...args);
+    args = [link + '\n', ...args];
+  }
+
+  const level = levels[entry.level] ?? console.log;
+  if (typeof entry.meta?.callSite === 'function') {
+    entry.meta.callSite(level, args);
+  } else {
+    level(...args);
   }
 };
