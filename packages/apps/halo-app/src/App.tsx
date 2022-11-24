@@ -35,7 +35,7 @@ import {
   RecoverIdentityPage,
   RequireIdentity,
   SpacePage,
-  SpacesPage
+SpacesPage
 } from './pages';
 import haloTranslations from './translations';
 
