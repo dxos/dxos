@@ -24,7 +24,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -39,6 +38,7 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/mesh-protocol": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@swc-node/register": "^1.5.4",

@@ -13,6 +13,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessenger } from '../signal';
 import { Transport, TransportFactory } from '../transport';
+import { WireProtocol } from '../wire-protocol';
 
 /**
  * State machine for each connection.
@@ -73,7 +74,7 @@ export class Connection {
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
-    private readonly _protocol: Protocol,
+    private readonly _protocol: WireProtocol,
     private readonly _transportFactory: TransportFactory
   ) {}
 
@@ -132,6 +133,10 @@ export class Connection {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.CONNECTING);
 
+    this._protocol.initialize().catch(err => {
+      this.errors.raise(err);
+    })
+
     assert(!this._transport);
     this._transport = this._transportFactory.createTransport({
       initiator: this.initiator,
@@ -176,7 +181,7 @@ export class Connection {
 
     try {
       // Gracefully close the stream flushing any unsent data packets.
-      await this._protocol.close();
+      await this._protocol.destroy();
     } catch (err: any) {
       log.catch(err);
     }

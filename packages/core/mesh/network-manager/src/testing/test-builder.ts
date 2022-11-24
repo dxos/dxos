@@ -17,6 +17,7 @@ import {
   WebRTCTransportProxyFactory,
   WebRTCTransportService
 } from '../transport';
+import { adaptProtocolProvider } from '../wire-protocol';
 import { TestProtocolPlugin, testProtocolProvider } from './test-protocol';
 
 // Signal server will be started by the setup script.
@@ -165,7 +166,7 @@ export class TestSwarmConnection {
     await this.peer._networkManager.joinSwarm({
       topic: this.topic,
       peerId: this.peer.peerId,
-      protocol: testProtocolProvider(this.topic.asBuffer(), this.peer.peerId, this.plugin),
+      protocol: adaptProtocolProvider(testProtocolProvider(this.topic.asBuffer(), this.peer.peerId, this.plugin)),
       topology
     });
 

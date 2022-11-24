@@ -14,13 +14,13 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
-import { ProtocolProvider } from '../network-manager';
 import { MessageRouter, OfferMessage, SignalMessage } from '../signal';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection } from './connection';
 import { Peer } from './peer';
+import { WireProtocolProvider } from '../wire-protocol';
 
 const INITIATION_DELAY = 100;
 
@@ -71,7 +71,7 @@ export class Swarm {
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
-    private readonly _protocolProvider: ProtocolProvider,
+    private readonly _protocolProvider: WireProtocolProvider,
     private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
@@ -340,7 +340,8 @@ export class Swarm {
       this._swarmMessenger,
       initiator,
       sessionId,
-      this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
+      // TODO(dmaretskyi): Init only when connection is established.
+      this._protocolProvider({ initiator, localPeerId: this._ownPeerId, remotePeerId: remoteId, topic: this._topic }),
       this._transportFactory
     );
 

@@ -17,6 +17,7 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory } from '../transport';
 import { Swarm } from './swarm';
+import { adaptProtocolProvider } from '../wire-protocol';
 
 describe('Swarm', function () {
   const context = new MemorySignalManagerContext();
@@ -33,7 +34,7 @@ describe('Swarm', function () {
       topic,
       peerId,
       new FullyConnectedTopology(),
-      testProtocolProvider(topic.asBuffer(), peerId, plugin),
+      adaptProtocolProvider(testProtocolProvider(topic.asBuffer(), peerId, plugin)),
       new Messenger({ signalManager }),
       createWebRTCTransportFactory(),
       undefined

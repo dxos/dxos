@@ -14,6 +14,7 @@ import { range, ComplexMap, ComplexSet } from '@dxos/util';
 import { NetworkManager } from '../network-manager';
 import { createProtocolFactory } from '../protocol-factory';
 import { FullyConnectedTopology } from '../topology';
+import { adaptProtocolProvider } from '../wire-protocol';
 
 /**
  * Performs random actions in the real system and compares its state with a simplified model.
@@ -124,7 +125,7 @@ export const propertyTestSuite = () => {
         await peer.networkManager.joinSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
-          protocol,
+          protocol: adaptProtocolProvider(protocol),
           topology: new FullyConnectedTopology(),
           presence
         });
