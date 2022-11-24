@@ -1,3 +1,7 @@
-# DXOS Wallet
+# DXOS Halo
 
-NOTE: Most app code was copied from @dxos/react-appkit in the Braneframe repo.
+## Development
+
+```bash
+pnpm -w nx run halo-app:serve
+```
