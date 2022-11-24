@@ -81,7 +81,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client) => {
   window.addEventListener('beforeunload', unloadCallback);
 
   return () => {
-    window.removeEventListener('click', clickCallback);
+    window.removeEventListener('click', clickCallback, true);
     window.removeEventListener('focus', focusCallback);
     window.removeEventListener('blur', blurCallback);
     window.removeEventListener('beforeunload', unloadCallback);
