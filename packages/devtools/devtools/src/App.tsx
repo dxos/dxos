@@ -68,12 +68,11 @@ export const App = () => {
 
     const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
     const target = searchParams.get('target') ?? DEFAULT_TARGET;
+    const [protocol, ...rest] = target.split(':');
+    const remoteSource = rest.join(':');
 
-    if (target.split(':')[0] in targetResolvers) {
-      const splitTarget = target.split(/:/);
-      const key = splitTarget.shift()!;
-      const remoteSource = splitTarget.join(':');
-      await targetResolvers[key](remoteSource);
+    if (protocol in targetResolvers) {
+      await targetResolvers[protocol](remoteSource);
     } else {
       await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
     }
