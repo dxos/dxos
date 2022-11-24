@@ -70,12 +70,10 @@ export const App = () => {
     const target = searchParams.get('target') ?? DEFAULT_TARGET;
     const [protocol, ...rest] = target.split(':');
     const remoteSource = rest.join(':');
-
-    if (protocol in targetResolvers) {
-      await targetResolvers[protocol](remoteSource);
-    } else {
+    if (!(protocol in targetResolvers)) {
       throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
     }
+    await targetResolvers[protocol](remoteSource);
   }, []);
 
   if (!client) {
