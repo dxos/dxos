@@ -8,7 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { TypedMessage } from '@dxos/protocols';
 import type { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -117,6 +117,7 @@ export class Space implements ISpace {
 
     this._controlPipeline.onCredentialProcessed.set(async (credential) => {
       await this.onCredentialProcessed.callIfSet(credential);
+      log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
     });
 
@@ -125,6 +126,7 @@ export class Space implements ISpace {
     this._protocol.addFeed(genesisFeed);
   }
 
+  @logInfo
   get key() {
     return this._key;
   }

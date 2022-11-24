@@ -13,7 +13,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
 import { Space } from '../proxies';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 // TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
 const syncItems = async (space1: ISpace, space2: ISpace) => {
@@ -37,7 +37,7 @@ const syncItems = async (space1: ISpace, space2: ISpace) => {
 
 describe('Client services', function () {
   it('creates client with remote server', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open();
@@ -53,7 +53,7 @@ describe('Client services', function () {
   });
 
   it('creates clients with multiple peers connected via memory transport', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     {
       const peer1 = testBuilder.createClientServicesHost();
@@ -98,7 +98,7 @@ describe('Client services', function () {
   });
 
   it('creates identity and invites peer', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
@@ -171,7 +171,7 @@ describe('Client services', function () {
   });
 
   it('synchronizes data between two spaces after competing invitation', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();

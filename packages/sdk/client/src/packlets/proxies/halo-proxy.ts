@@ -17,6 +17,7 @@ import { inspectObject } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Contact, Profile } from '@dxos/protocols/proto/dxos/client';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
@@ -43,13 +44,14 @@ export interface Halo {
   queryContacts(): ResultSet<Contact>;
 
   createInvitation(): Promise<CancellableInvitationObservable>;
+  removeInvitation(id: string): void;
   acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
 }
 
 export class HaloProxy implements Halo {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _contactsChanged = new Event(); // TODO(burdon): Remove (use subscription).
-  public readonly invitationsUpdate = new Event<CancellableInvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly profileChanged = new Event(); // TODO(burdon): Move into Profile object.
 
   private readonly _invitations: CancellableInvitationObservable[] = [];
@@ -213,6 +215,8 @@ export class HaloProxy implements Halo {
       throw new ApiError('Client not open.');
     }
 
+    log('create invitation', options);
+
     return new Promise<CancellableInvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy!.createInvitation(undefined, options);
 
@@ -221,6 +225,9 @@ export class HaloProxy implements Halo {
         onConnecting: () => {
           this.invitationsUpdate.emit(invitation);
           resolve(invitation);
+          unsubscribe();
+        },
+        onCancelled: () => {
           unsubscribe();
         },
         onSuccess: () => {
@@ -235,6 +242,17 @@ export class HaloProxy implements Halo {
   }
 
   /**
+   * Removes device invitation.
+   */
+  removeInvitation(id: string) {
+    log('remove invitation', { id });
+    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void this._invitations[index]?.cancel();
+    this._invitations.splice(index, 1);
+    this.invitationsUpdate.emit();
+  }
+
+  /**
    * Initiates accepting invitation.
    */
   async acceptInvitation(
@@ -244,6 +262,8 @@ export class HaloProxy implements Halo {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
+
+    log('accept invitation', options);
 
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
       const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
