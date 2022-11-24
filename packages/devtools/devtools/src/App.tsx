@@ -59,7 +59,19 @@ export const App = () => {
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
+    const resolvers: Record<string, (remoteSource?: string) => Promise<void>> = {
+      local: () => onConfigChange(),
+      iframe: (remoteSource = DEFAULT_CLIENT_ORIGIN) => onConfigChange({ remoteSource }),
+      default: () => onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN })
+    };
+
+    const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
+    const [type, target] = searchParams.get('target')?.split('|') ?? ['default'];
+    if (type in resolvers) {
+      await resolvers[type](target);
+    } else {
+      await resolvers.default();
+    }
   }, []);
 
   if (!client) {
