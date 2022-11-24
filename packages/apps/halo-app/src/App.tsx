@@ -35,11 +35,11 @@ import {
   RecoverIdentityPage,
   RequireIdentity,
   SpacePage,
-  SpacesPage
+SpacesPage
 } from './pages';
 import haloTranslations from './translations';
 
-log.config({ filter: process.env.LOG_FILTER, prefix: process.env.LOG_BROWSER_PREFIX });
+log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,warn', prefix: process.env.LOG_BROWSER_PREFIX });
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 

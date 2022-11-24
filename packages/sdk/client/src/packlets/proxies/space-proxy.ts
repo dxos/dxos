@@ -6,12 +6,13 @@ import { Event, synchronized } from '@dxos/async';
 import {
   ClientServicesProvider,
   ClientServicesProxy,
-  InvitationObservable,
+  CancellableInvitationObservable,
   SpaceInvitationsProxy,
   InvitationsOptions
 } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
 import { Database, Item, ISpace, DatabaseBackendProxy, ResultSet } from '@dxos/echo-db';
+import { ApiError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
@@ -26,7 +27,7 @@ export interface Space extends ISpace {
   get key(): PublicKey;
   get isOpen(): boolean;
   get isActive(): boolean;
-  get invitations(): InvitationObservable[];
+  get invitations(): CancellableInvitationObservable[];
 
   // TODO(burdon): Verbs should be on same interface.
   get database(): Database;
@@ -74,7 +75,8 @@ export interface Space extends ISpace {
 
   queryMembers(): ResultSet<SpaceMember>;
 
-  createInvitation(options?: InvitationsOptions): Promise<InvitationObservable>;
+  createInvitation(options?: InvitationsOptions): Promise<CancellableInvitationObservable>;
+  removeInvitation(id: string): void;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }
@@ -82,9 +84,9 @@ export interface Space extends ISpace {
 export class SpaceProxy implements Space {
   private readonly _database?: Database;
   private readonly _invitationProxy = new SpaceInvitationsProxy(this._clientServices.services.SpaceInvitationsService);
-  private readonly _invitations: InvitationObservable[] = [];
+  private readonly _invitations: CancellableInvitationObservable[] = [];
 
-  public readonly invitationsUpdate = new Event<InvitationObservable>();
+  public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
   private _initializing = false;
@@ -138,7 +140,7 @@ export class SpaceProxy implements Space {
 
   get database(): Database {
     if (!this._database) {
-      throw new Error('Space not open.');
+      throw new ApiError('Space not open.');
     }
 
     return this._database;
@@ -168,6 +170,7 @@ export class SpaceProxy implements Space {
     if (this._initializing) {
       return;
     }
+    log('initializing...');
     this._initializing = true;
 
     await this._database!.initialize();
@@ -188,6 +191,7 @@ export class SpaceProxy implements Space {
     if (this._database && this._clientServices instanceof ClientServicesProxy) {
       await this._database.destroy();
     }
+    log('destroyed');
   }
 
   async open() {
@@ -268,7 +272,8 @@ export class SpaceProxy implements Space {
    * Creates an interactive invitation.
    */
   async createInvitation(options?: InvitationsOptions) {
-    return new Promise<InvitationObservable>((resolve, reject) => {
+    log('create invitation', options);
+    return new Promise<CancellableInvitationObservable>((resolve, reject) => {
       const invitation = this._invitationProxy.createInvitation(this.key, options);
       this._invitations.push(invitation);
 
@@ -276,6 +281,9 @@ export class SpaceProxy implements Space {
         onConnecting: () => {
           this.invitationsUpdate.emit(invitation);
           resolve(invitation);
+          unsubscribe();
+        },
+        onCancelled: () => {
           unsubscribe();
         },
         onSuccess: () => {
@@ -287,6 +295,17 @@ export class SpaceProxy implements Space {
         }
       });
     });
+  }
+
+  /**
+   * Remove invitation from space.
+   */
+  removeInvitation(id: string) {
+    log('remove invitation', { id });
+    const index = this._invitations.findIndex((invitation) => invitation.invitation?.invitationId === id);
+    void this._invitations[index]?.cancel();
+    this._invitations.splice(index, 1);
+    this.invitationsUpdate.emit();
   }
 
   /**

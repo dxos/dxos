@@ -6,7 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { AuthenticatingInvitationObservable, InvitationObservable } from './invitations';
+import { AuthenticatingInvitationObservable, CancellableInvitationObservable } from './invitations';
 
 export type InvitationsOptions = {
   type?: Invitation.Type;
@@ -43,7 +43,7 @@ export type InvitationsOptions = {
  *  ```
  */
 export interface InvitationsHandler<T = void> {
-  createInvitation(context: T, options?: InvitationsOptions): InvitationObservable;
+  createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable;
   acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
 }
 
@@ -57,6 +57,6 @@ export abstract class AbstractInvitationsHandler<T = void> implements Invitation
     protected readonly _networkManager: NetworkManager
   ) {}
 
-  abstract createInvitation(context: T, options?: InvitationsOptions): InvitationObservable;
+  abstract createInvitation(context: T, options?: InvitationsOptions): CancellableInvitationObservable;
   abstract acceptInvitation(invitation: Invitation, options?: InvitationsOptions): AuthenticatingInvitationObservable;
 }

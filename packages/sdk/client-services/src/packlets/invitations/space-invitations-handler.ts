@@ -19,7 +19,7 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import {
   AuthenticatingInvitationProvider,
-  InvitationObservable,
+  CancellableInvitationObservable,
   InvitationObservableProvider,
   AUTHENTICATION_CODE_LENGTH,
   INVITATION_TIMEOUT,
@@ -43,7 +43,7 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
   /**
    * Creates an invitation and listens for a join request from the invited (guest) peer.
    */
-  createInvitation(space: Space, options?: InvitationsOptions): InvitationObservable {
+  createInvitation(space: Space, options?: InvitationsOptions): CancellableInvitationObservable {
     let swarmConnection: SwarmConnection | undefined;
     const { type, timeout = INVITATION_TIMEOUT, swarmKey } = options ?? {};
     assert(type !== Invitation.Type.OFFLINE);
@@ -104,6 +104,8 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
                     invitation.authenticationCode === undefined ||
                     authenticationCode !== invitation.authenticationCode
                   ) {
+                    invitation.authenticationCode &&
+                      log.error('bad auth code', { code: authenticationCode, expected: invitation.authenticationCode });
                     throw new Error('authentication code not set');
                   }
                 }

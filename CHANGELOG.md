@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.10](https://github.com/dxos/dxos/compare/v0.1.9...v0.1.10) (2022-11-22)
+
+
+### Features
+
+* Add Telemetry to devtools ([#1877](https://github.com/dxos/dxos/issues/1877)) ([3211eeb](https://github.com/dxos/dxos/commit/3211eebfdd331f5b5c29660e5ac26d06b19022c5))
+* Automatic scope capture during log ([#1946](https://github.com/dxos/dxos/issues/1946)) ([04acc9d](https://github.com/dxos/dxos/commit/04acc9d0e77bd74a6c23d5d718ed2676fdf1f1c1))
+* Basic TS analyzer. ([#1937](https://github.com/dxos/dxos/issues/1937)) ([95a7120](https://github.com/dxos/dxos/commit/95a712030ab68c0953acd5c7243883eac1f60ee9))
+* fix flaky network-manager tests ([#1870](https://github.com/dxos/dxos/issues/1870)) ([0ae7349](https://github.com/dxos/dxos/commit/0ae73492dadb160f5c740d82b22c316b1e158ab6))
+* Gravity test agent. ([#1933](https://github.com/dxos/dxos/issues/1933)) ([250ac4b](https://github.com/dxos/dxos/commit/250ac4b44fae6c28937edd0a68cbe43781b1912c))
+* Identity display name ([#1945](https://github.com/dxos/dxos/issues/1945)) ([841c560](https://github.com/dxos/dxos/commit/841c5607efb2b9f324dc5c9b023d4fa66dcbc699))
+* markdown directives for inserting api docs ([#1940](https://github.com/dxos/dxos/issues/1940)) ([b8499e8](https://github.com/dxos/dxos/commit/b8499e80a6c21c005f8ef553a09e3f94a4d8fffd))
+
+
+### Bug Fixes
+
+* Demo feedback responses 2 ([#1947](https://github.com/dxos/dxos/issues/1947)) ([be547fc](https://github.com/dxos/dxos/commit/be547fcc51a4ec201c99ea12c9361b297fee3e97))
+* Devtools bundle "Reached heap limit Allocation failed" error fix ([#1948](https://github.com/dxos/dxos/issues/1948)) ([bd1e335](https://github.com/dxos/dxos/commit/bd1e3354e5fc464a5e4af61f3e4c26b022addbfa))
+* docs deploy ([#1953](https://github.com/dxos/dxos/issues/1953)) ([ef8f94c](https://github.com/dxos/dxos/commit/ef8f94c81f8b393fa4a6f86be929850481609f62))
+* **halo-app:** Remove old space management button in nav ([#1943](https://github.com/dxos/dxos/issues/1943)) ([d66c33c](https://github.com/dxos/dxos/commit/d66c33cc908e168095e0f6c7dbf69df7aea9d1cf))
+
 ## [0.1.9](https://github.com/dxos/dxos/compare/v0.1.8...v0.1.9) (2022-11-18)
 
 

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 describe('Halo', function () {
   it('reopens with persistent storage', async function () {
@@ -28,7 +28,7 @@ describe('Halo', function () {
       }
     });
 
-    const testBuilder = new TestClientBuilder(config);
+    const testBuilder = new TestBuilder(config);
 
     {
       const client = new Client({ config, services: testBuilder.createClientServicesHost() });

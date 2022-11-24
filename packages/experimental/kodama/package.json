@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kodama",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Interactive DXOS shell.",
   "homepage": "https://dxos.org",
@@ -19,7 +19,6 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
     "debug": "npm run build && ./bin/kodama.js",
     "prepublishOnly": "npm run test && npm run build",
     "test:app": "npm run build && ./bin/test.js",

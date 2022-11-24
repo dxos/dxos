@@ -1,13 +1,12 @@
 {
   "name": "@dxos/gravity-orchestrator",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
-    "check": "true",
     "multi-item-stress": "NODE_ENV=production node -r @swc-node/register src/multi-item-stress.ts",
     "multi-item-stress-profile": "NODE_ENV=production node --inspect-brk -r @swc-node/register src/multi-item-stress.ts",
     "single-item-stress": "NODE_ENV=production node -r @swc-node/register src/single-item-stress.ts",

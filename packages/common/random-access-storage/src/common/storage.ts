@@ -4,6 +4,7 @@
 
 import { Directory } from './directory';
 
+// TODO(burdon): Reconcile with ConfigProto.
 export enum StorageType {
   RAM = 'ram',
   IDB = 'idb',
@@ -18,7 +19,7 @@ export interface Storage {
 
   // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory;
-  destroy: () => Promise<void>;
+  reset: () => Promise<void>;
 }
 
 export type StorageConstructor = (params?: { type?: StorageType; root?: string }) => Storage;

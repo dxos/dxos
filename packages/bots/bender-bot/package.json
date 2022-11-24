@@ -1,6 +1,6 @@
 {
   "name": "@dxos/bender-bot",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "The bender bot.",
   "homepage": "https://dxos.org",
@@ -17,8 +17,7 @@
     "src"
   ],
   "scripts": {
-    "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'",
-    "check": "true"
+    "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

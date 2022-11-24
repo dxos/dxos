@@ -12,9 +12,8 @@ import { ISpace } from '@dxos/echo-db';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest } from '@dxos/testutils';
 
-import { Client, fromIFrame } from '../client';
 import { Space } from '../proxies';
-import { TestClientBuilder } from './test-client-builder';
+import { TestBuilder } from '../testing';
 
 // TODO(wittjosiah): Copied from @dxos/client-services. Factor out.
 const syncItems = async (space1: ISpace, space2: ISpace) => {
@@ -37,17 +36,8 @@ const syncItems = async (space1: ISpace, space2: ISpace) => {
 // TODO(burdon): Timeouts and progress callback/events.
 
 describe('Client services', function () {
-  it('creates client with embedded services', async function () {
-    const testBuilder = new TestClientBuilder();
-
-    const client = new Client({ services: testBuilder.createClientServicesHost() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-    expect(client.initialized).to.be.true;
-  });
-
   it('creates client with remote server', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open();
@@ -63,7 +53,7 @@ describe('Client services', function () {
   });
 
   it('creates clients with multiple peers connected via memory transport', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     {
       const peer1 = testBuilder.createClientServicesHost();
@@ -108,7 +98,7 @@ describe('Client services', function () {
   });
 
   it('creates identity and invites peer', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
@@ -181,7 +171,7 @@ describe('Client services', function () {
   });
 
   it('synchronizes data between two spaces after competing invitation', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const peer1 = testBuilder.createClientServicesHost();
     const peer2 = testBuilder.createClientServicesHost();
@@ -263,18 +253,5 @@ describe('Client services', function () {
     }
 
     await syncItems(space1, space2);
-  });
-
-  // TODO(burdon): Browser-only.
-  it.skip('creates client with remote iframe', async function () {
-    const testBuilder = new TestClientBuilder();
-
-    const client = new Client({
-      services: fromIFrame(testBuilder.config)
-    });
-
-    await client.initialize();
-    afterTest(() => client.destroy());
-    expect(client.initialized).to.be.true;
   });
 });

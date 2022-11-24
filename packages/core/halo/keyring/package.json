@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keyring",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Halo Keyring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,9 +15,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "browserslist": [
     "> 5%"
   ],

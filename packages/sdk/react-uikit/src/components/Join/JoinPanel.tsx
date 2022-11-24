@@ -5,7 +5,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { InvitationEncoder, InvitationObservable, Invitation, AuthenticatingInvitationObservable } from '@dxos/client';
+import {
+  AuthenticatingInvitationObservable,
+  CancellableInvitationObservable,
+  Invitation,
+  InvitationEncoder
+} from '@dxos/client';
 import { InvitationResult, useInvitationStatus } from '@dxos/react-client';
 
 import { InvitationStatus } from '../InvitationStatus';
@@ -22,7 +27,7 @@ export interface JoinPanelProps {
 }
 
 interface JoinStep1Props extends JoinPanelProps {
-  connect: (wrapper: InvitationObservable) => void;
+  connect: (wrapper: CancellableInvitationObservable) => void;
   status: Invitation.State;
   cancel: () => void;
   error?: number;
@@ -87,15 +92,15 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
   const [invitationSecret, setInvitationSecret] = useState('');
   const [pending, setPending] = useState(false);
 
-  const onAuthenticateNext = useCallback(() => {
+  const onAuthenticateNext = useCallback((secret: string) => {
     setPending(true);
-    authenticate(invitationSecret).finally(() => setPending(false));
-  }, [invitationSecret]);
+    authenticate(secret).finally(() => setPending(false));
+  }, []);
 
   const onChange = useCallback(
     (value: string) => {
       setInvitationSecret(value);
-      value.length === pinLength && onAuthenticateNext();
+      value.length === pinLength && onAuthenticateNext(value);
     },
     [onAuthenticateNext]
   );
@@ -117,7 +122,7 @@ const JoinStep2 = ({ status, error, cancel, authenticate }: JoinStep2Props) => {
           })
         },
         onChange,
-        onNext: onAuthenticateNext,
+        onNext: () => onAuthenticateNext(invitationSecret),
         onCancelPending: cancel
       }}
     />

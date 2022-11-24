@@ -8,21 +8,24 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { Client } from '../client';
+import { Client, fromConfig } from '../client';
 
 export const testConfigWithLocalSignal: ConfigProto = {
   version: 1,
   runtime: {
     services: {
       signal: {
+        // TODO(burdon): Port numbers and global consts?
         server: 'ws://localhost:4000/.well-known/dx/signal'
       }
     }
   }
 };
 
-// TODO(burdon): See feed-store builder pattern (for overrides).
-export class TestClientBuilder {
+/**
+ * Client builder supports different configurations, incl. signaling, transports, storage.
+ */
+export class TestBuilder {
   private readonly _config: Config;
 
   // prettier-ignore
@@ -31,7 +34,7 @@ export class TestClientBuilder {
     private readonly _modelFactory = createDefaultModelFactory(),
     private readonly _signalManagerContext = new MemorySignalManagerContext()
   ) {
-    this._config = config ?? new Config();
+    this._config = fromConfig(config);
   }
 
   get config(): Config {

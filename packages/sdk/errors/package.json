@@ -1,0 +1,28 @@
+{
+  "name": "@dxos/errors",
+  "version": "0.1.9",
+  "description": "Error definitions and utilities",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "esbuild-plugin.js",
+    "rollup-plugin.js",
+    "webpack-plugin.js"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

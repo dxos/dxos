@@ -115,7 +115,7 @@ class TraceInjector extends Visitor {
 
   override visitCallExpression(n: CallExpression): Expression {
     if (isLoggerInvocation(n)) {
-      if (n.arguments.length === 1) {
+      if (n.arguments.length <= 1) {
         // Add empty context.
         n.arguments.push({
           expression: {
@@ -161,6 +161,7 @@ class TraceInjector extends Visitor {
         optional: false,
         span: ZERO_SPAN
       }
+      // TODO(dmaretskyi): callSite.
     });
   }
 }

@@ -32,7 +32,9 @@
       "executor": "@dxos/mocha:mocha",
       "options": {
         "coveragePath": "coverage/packages/gravity/gravity-agent",
-        "environments": ["nodejs"],
+        "environments": [
+          "nodejs"
+        ],
         "outputPath": "tmp/mocha/packages/gravity/gravity-agent",
         "resultsPath": "test-results/packages/gravity/gravity-agent",
         "setup": "packages/core/mesh/signal/testing/setup.js",

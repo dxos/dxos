@@ -29,10 +29,9 @@ export { PublicKey } from '@dxos/keys';
 export { ItemID, ObjectModel, OrderedList } from '@dxos/object-model';
 
 export {
-  invitationObservable,
   InvitationEvents,
   InvitationEncoder,
-  InvitationObservable,
+  CancellableInvitationObservable,
   AuthenticatingInvitationObservable,
   // TODO(wittjosiah): Remove.
   ClientServicesHost,
@@ -41,6 +40,8 @@ export {
   WorkerRuntime,
   WorkerSession
 } from '@dxos/client-services';
+
+export { ApiError } from '@dxos/errors';
 
 export { Contact, SpaceMember, Profile } from '@dxos/protocols/proto/dxos/client';
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -51,6 +52,9 @@ export { SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 
 // TODO(burdon): Cherry-pick developer-facings APIs.
 export * from './packlets/client';
-export * from './packlets/devtools';
+
+// TODO(burdon): Remove (currently required for @dxos/client-testing).
 export * from './packlets/proxies';
-export * from './packlets/testing';
+
+// TODO(burdon): Create separate export like testing?
+export * from './packlets/devtools';

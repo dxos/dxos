@@ -1,6 +1,6 @@
 {
   "name": "@dxos/log",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Logger",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,9 +17,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true"
-  },
   "dependencies": {
     "chalk": "^4.1.0",
     "js-yaml": "^4.1.0",
