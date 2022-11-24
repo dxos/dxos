@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { adaptProtocolProvider, createProtocolFactory, MemoryTransportFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPort, ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
@@ -38,7 +38,7 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
   await networkManager.joinSwarm({
     topic,
     peerId,
-    protocol: createProtocolFactory(topic, peerId, [plugin]),
+    protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [plugin])),
     topology: new StarTopology(topic)
   });
 

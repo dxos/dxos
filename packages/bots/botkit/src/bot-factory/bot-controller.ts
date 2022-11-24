@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
+import { adaptProtocolProvider, createProtocolFactory, NetworkManager, StarTopology, SwarmConnection } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
@@ -34,7 +34,7 @@ export class BotController {
     this._connection = await this._networkManager.joinSwarm({
       topic,
       peerId: topic,
-      protocol: createProtocolFactory(topic, topic, [plugin]),
+      protocol: adaptProtocolProvider(createProtocolFactory(topic, topic, [plugin])),
       topology: new StarTopology(topic)
     });
 

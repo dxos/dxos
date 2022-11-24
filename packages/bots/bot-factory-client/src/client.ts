@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { asyncTimeout } from '@dxos/async';
 import type { Space } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
-import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { adaptProtocolProvider, createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
@@ -65,12 +65,12 @@ export class BotFactoryClient {
           topic,
           peerId,
           topology: new StarTopology(topic),
-          protocol: createProtocolFactory(topic, peerId, [
+          protocol: adaptProtocolProvider(createProtocolFactory(topic, peerId, [
             new RpcPlugin(async (port) => {
               log('Connected.');
               resolve(port);
             })
-          ])
+          ]))
         });
       }),
       30_000,

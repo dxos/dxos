@@ -8,7 +8,7 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MMSTTopology, NetworkManager, Plugin, SwarmConnection } from '@dxos/network-manager';
+import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
@@ -50,9 +50,9 @@ export class SpaceProtocol {
 
   constructor({ topic, identity, networkManager, plugins = [] }: SpaceProtocolOptions) {
     this._networkManager = networkManager;
+    this._swarmIdentity = identity;
 
     // Plugins
-    this._swarmIdentity = identity;
     this._presencePlugin = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authPlugin = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this._customPlugins = plugins;
@@ -85,7 +85,7 @@ export class SpaceProtocol {
 
     log('starting...');
     this._connection = await this._networkManager.joinSwarm({
-      protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
+      protocol: adaptProtocolProvider(({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator })),
       peerId: this._peerId,
       topic: this._discoveryKey,
       presence: this._presencePlugin,
