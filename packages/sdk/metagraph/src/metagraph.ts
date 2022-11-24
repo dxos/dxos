@@ -46,16 +46,16 @@ export class Metagraph {
   private readonly _serverUrl!: string;
 
   constructor(private readonly _config: Config) {
+    // TODO(burdon): URL field.
     // TODO(burdon): Rename dxns config field.
     this._serverUrl = this._config.get('runtime.services.dxns.server') ?? raise(new ApiError('Invalid DXNS server.'));
   }
 
   get modules(): ServiceApi<Module> {
     return {
-      // TODO(burdon): URL.
       query: async (query?: Query) => {
         const response = await fetch(this._serverUrl);
-        const { modules } = (await response.json()) as { modules: Module[] };
+        const { modules = [] } = ((await response.json()) as { modules: Module[] }) ?? {};
 
         const observable = new QueryObservableProvider<Module>();
         observable.results = modules.filter(({ tags }) => {
