@@ -1,4 +1,5 @@
-import { Event } from "@dxos/async";
+import { Event, sleep } from "@dxos/async";
+import { expectToThrow } from "@dxos/debug";
 import { FeedFactory, FeedStore } from "@dxos/feed-store";
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from "@dxos/keys";
@@ -9,6 +10,7 @@ import { afterTest } from "@dxos/testutils";
 import { range } from "@dxos/util";
 import { pipeline } from "stream";
 import { ReplicatorExtension } from "./replicator-extension";
+import expect from 'expect'
 
 class TestBuilder {
   createAgent(): TestAgent {
@@ -80,14 +82,63 @@ describe('ReplicatorExtension', function () {
     const feed1 = await agent1.createWriteFeed(10);
     const feed2 = await agent2.createReadFeed(feed1.key);
 
-    console.log({
-      feed1: feed1.length,
-      feed2: feed2.length,
-    })
-
     replicator1.addFeed(feed1);
     replicator2.addFeed(feed2);
 
     await Event.wrap(feed2, 'download').waitForCondition(() => feed2.length === 10);
   })
+
+  it('does not upload data when upload is off', async () => {
+    const builder = new TestBuilder();
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+
+    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
+    await Promise.all([peer1.open(), peer2.open()]);
+
+    replicator1.setOptions({ upload: false });
+    replicator2.setOptions({ upload: true });
+    
+    const feed1 = await agent1.createWriteFeed(10);
+    const feed2 = await agent2.createReadFeed(feed1.key);
+
+    replicator1.addFeed(feed1);
+    replicator2.addFeed(feed2);
+
+    // Wait for events to be processed.
+    await sleep(5);
+
+    expect(feed2.length).toEqual(0);
+  })
+
+  it('selectively replicates 2 feeds in both directions', async () => {
+    const builder = new TestBuilder();
+    const agent1 = builder.createAgent();
+    const agent2 = builder.createAgent();
+
+    const { peer1, replicator1, peer2, replicator2 } = createStreamPair();
+    await Promise.all([peer1.open(), peer2.open()]);
+
+    replicator1.setOptions({ upload: false });
+    replicator2.setOptions({ upload: true });
+    
+    const feed1A = await agent1.createWriteFeed(10);
+    replicator1.addFeed(feed1A);
+    const feed2A = await agent2.createReadFeed(feed1A.key);
+    replicator2.addFeed(feed2A);
+
+    const feed2B = await agent2.createWriteFeed(10);
+    replicator2.addFeed(feed2B);
+    const feed1B = await agent2.createReadFeed(feed2B.key);
+    replicator1.addFeed(feed2B);
+
+
+    // Wait for events to be processed.
+    await Event.wrap(feed1B, 'download').waitForCondition(() => feed1B.length === 10);
+    await sleep(5);
+
+    expect(feed2A.length).toEqual(0);
+  })
+
+
 })
