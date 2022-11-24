@@ -31,7 +31,7 @@ export class QueryObservableProvider<T> extends ObservableProvider<QueryEvents<T
   }
 }
 
-export interface Api<T> {
+export interface ServiceApi<T> {
   query(): Promise<QueryObservable<T>>;
 }
 
@@ -46,7 +46,7 @@ export class Metagraph {
     this._serverUrl = this._config.get('runtime.services.dxns.server') ?? raise(new ApiError('Invalid DXNS server.'));
   }
 
-  get modules(): Api<Module> {
+  get modules(): ServiceApi<Module> {
     return {
       query: async () => {
         const response = await fetch(this._serverUrl);
