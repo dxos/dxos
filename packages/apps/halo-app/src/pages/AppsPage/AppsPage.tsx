@@ -2,35 +2,51 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
-import { DiamondsFour } from 'phosphor-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { HeadingWithActions } from '@dxos/react-appkit';
-import { useTranslation, Button, getSize, defaultDisabled, Group } from '@dxos/react-uikit';
+import { useMetagraph } from '@dxos/react-client';
+import { useTranslation } from '@dxos/react-uikit';
+
+import { AppList, AppProps } from '../../components';
 
 export const AppsPage = () => {
   const { t } = useTranslation('halo');
+
+  // TODO(burdon): Factor out separate hook?
+  const metagraph = useMetagraph();
+  const [apps, setApps] = useState<AppProps[]>([]);
+  useEffect(() => {
+    if (!metagraph) {
+      return;
+    }
+
+    let unsubscribe: () => void | undefined;
+    setTimeout(async () => {
+      // TODO(burdon): Change tags to 'showcase' once apps re redeployed.
+      const tags: string[] = [];
+      const observable = await metagraph.modules.query({ tags });
+      unsubscribe = observable.subscribe({
+        onUpdate: (modules) => {
+          setApps(
+            modules.map((module) => ({
+              module,
+              launchUrl: `https://${module.name}.dxos.org` // TODO(burdon): Compute URL or get from dx.yml (hack).
+            }))
+          );
+        }
+      });
+
+      observable.fetch();
+    });
+
+    return () => unsubscribe?.();
+  }, [metagraph]);
+
   return (
     <main className='max-is-5xl mli-auto pli-7'>
-      <HeadingWithActions
-        heading={{ children: t('apps label') }}
-        actions={
-          <Button variant='primary' className='grow flex gap-1'>
-            <DiamondsFour className={getSize(5)} />
-            {t('open apps directory label', { ns: 'uikit' })}
-          </Button>
-        }
-      />
-      <Group
-        className='mlb-4'
-        label={{
-          level: 2,
-          children: t('empty apps message'),
-          className: cx('text-xl', defaultDisabled)
-        }}
-        elevation={0}
-      />
+      <HeadingWithActions heading={{ children: t('apps label') }} />
+      <AppList apps={apps} />
     </main>
   );
 };

@@ -57,7 +57,7 @@ describe('Metagraph queries', function () {
         runtime: {
           services: {
             dxns: {
-              // Test with 'https://dev.kube.dxos.org/.well-known/dx/registry'
+              // Test with https://dev.kube.dxos.org/.well-known/dx/registry
               server: 'http://localhost:8080/modules'
             }
           }

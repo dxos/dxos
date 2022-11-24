@@ -63,6 +63,7 @@ export class Metagraph {
   get modules(): ServiceApi<Module> {
     return {
       query: async (query?: Query) => {
+        // TODO(burdon): Replace fetch with dxRPC?
         // TODO(burdon): Cache observables?
         const observable = new QueryObservableProvider<Module>(async () => {
           const response = await fetch(this._serverUrl);
