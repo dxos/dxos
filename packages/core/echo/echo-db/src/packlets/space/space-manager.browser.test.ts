@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+//# @dxos/mocha platform=browser
 
 import { expect } from 'chai';
 

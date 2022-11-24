@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+//# @dxos/mocha platform=nodejs
 
 import expect from 'expect';
 import { Duplex } from 'stream';

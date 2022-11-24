@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+//# @dxos/mocha platform=nodejs
 
 import type { Stacktrace } from '@sentry/types';
 import { expect } from 'chai';
