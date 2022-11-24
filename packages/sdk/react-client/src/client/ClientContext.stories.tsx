@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { Component, PropsWithChildren } from 'react';
+
+import { Config } from '@dxos/config';
 
 import { ClientProvider, useClient } from './ClientContext';
 
@@ -27,12 +29,6 @@ const JsonPanel = ({ value }: { value: any }) => (
 const TestApp = () => {
   const client = useClient();
 
-  useEffect(() => {
-    setTimeout(async () => {
-      await client.halo.createProfile({ displayName: 'test-user' });
-    });
-  }, []);
-
   return (
     <div>
       <div style={{ padding: 1 }}>
@@ -52,4 +48,33 @@ export const Primary = () => (
   <ClientProvider>
     <TestApp />
   </ClientProvider>
+);
+
+class ErrorBoundary extends Component<PropsWithChildren<{}>, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true };
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      return <h1>Something went wrong.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+
+export const Failure = () => (
+  <ErrorBoundary>
+    <ClientProvider config={new Config({ runtime: { client: { remoteSource: 'bad-value' } } })}>
+      <TestApp />
+    </ClientProvider>
+  </ErrorBoundary>
 );
