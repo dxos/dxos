@@ -3613,6 +3613,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-ui': workspace:*
@@ -3644,6 +3645,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/metagraph': link:../metagraph
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -25417,7 +25419,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
