@@ -100,7 +100,7 @@ export const App = () => {
   } = useRegisterSW({
     onRegisterError: (err) => {
       captureException(err);
-      console.error(err);
+      log.error(err);
     }
   });
 
