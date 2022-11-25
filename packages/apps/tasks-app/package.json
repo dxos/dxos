@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-app",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "private": true,
   "description": "DXOS tasks application.",
   "homepage": "https://dxos.org",
