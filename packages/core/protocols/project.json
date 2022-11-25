@@ -40,6 +40,11 @@
       ]
     },
     "test": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "prebuild"
+      ],
       "executor": "@dxos/mocha:mocha",
       "options": {
         "coveragePath": "coverage/packages/core/protocols",

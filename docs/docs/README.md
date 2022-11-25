@@ -12,16 +12,16 @@ actions:
     type: secondary
 features:
   - title: ECHO Database
-    details: Peer to peer state synchronization for real time collaborative and offline first applications.
+    details: Peer-to-peer state synchronization for real time collaborative and offline first applications.
   - title: 'HALO Identity'
-    details: Decentralized, private, secure, convenient identity API.
-  - title: 'MESH Peer Networking'
-    details: Peer discovery, NAT traversal.
-  - title: 'KUBE Infrastructure'
-    details: Host your decentralized applications.
-  - title: 'Command Line Tool'
-    details: Generate crisp PWA project templates with ECHO, HALO, and single-line deployment to KUBE.
-  - title: 'Components'
-    details: React UI components for real-time collaborative data surfaces.
-footer: MIT Licensed | Copyright © DXOS.org
+    details: Private, secure, and simple decentralized identity and verifiable credentials.
+  - title: 'MESH Networking'
+    details: Resilient snd secure peer-to-peer networks, peer discovery, NAT traversal.
+  - title: 'KUBE Network'
+    details: Peer-to-peer infrastructure that supports the operation of the DXOS network.
+  - title: 'Devtools'
+    details: Command line and browser tools to create and publish applications, and manage KUBE infrastructure.
+  - title: 'Apps and Components'
+    details: UI components to create real-time data-driven PWA applications.
+  - footer: MIT Licensed | Copyright © DXOS.org
 ---

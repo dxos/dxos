@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client-testing",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "description": "Tools for react testing.",
   "homepage": "https://dxos.org",

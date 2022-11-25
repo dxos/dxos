@@ -324,6 +324,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -362,6 +363,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../../experimental/metagraph
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../patterns/react-appkit
@@ -395,6 +397,9 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
+
+  packages/apps/patterns/assets:
+    specifiers: {}
 
   packages/apps/patterns/react-appkit:
     specifiers:
@@ -462,6 +467,7 @@ importers:
       '@dxos/vite-plugin': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
+      '@tiptap/extension-placeholder': 2.0.0-beta.199
       '@tiptap/react': 2.0.0-beta.199
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
@@ -485,6 +491,7 @@ importers:
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_r57qwdtrhdo7xifd3ekygstnta
+      '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
       classnames: 2.3.2
@@ -511,11 +518,11 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@types/lodash.throttle': ^4.1.1
+      '@types/lodash.debounce': ^4.0.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       classnames: ^2.3.2
-      lodash.throttle: ^4.1.1
+      lodash.debounce: ^4.0.8
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -529,14 +536,14 @@ importers:
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       classnames: 2.3.2
-      lodash.throttle: 4.1.1
+      lodash.debounce: 4.0.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
-      '@types/lodash.throttle': 4.1.7
+      '@types/lodash.debounce': 4.0.7
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
       phosphor-react: 1.4.1_react@18.2.0
@@ -612,6 +619,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
+      '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/text-model': workspace:*
@@ -648,6 +656,7 @@ importers:
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-composer': link:../../patterns/react-composer
+      '@dxos/react-list': link:../../patterns/react-list
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       '@dxos/text-model': link:../../../core/echo/text-model
@@ -1125,7 +1134,6 @@ importers:
       '@radix-ui/react-navigation-menu': ^1.1.1
       '@radix-ui/react-popover': ^1.0.2
       '@radix-ui/react-toast': ^1.1.1
-      '@radix-ui/react-toolbar': ^1.0.1
       '@radix-ui/react-tooltip': ^1.0.2
       '@tailwindcss/forms': ^0.5.3
       '@types/react': ^18.0.21
@@ -1157,7 +1165,6 @@ importers:
       '@radix-ui/react-navigation-menu': 1.1.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-popover': 1.0.2_2zx2umvpluuhvlq44va5bta2da
       '@radix-ui/react-toast': 1.1.2_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-tooltip': 1.0.2_2zx2umvpluuhvlq44va5bta2da
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.4
       alea: 1.0.1
@@ -1167,7 +1174,7 @@ importers:
       postcss: 8.4.19
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
-      tailwindcss: 3.2.4
+      tailwindcss: 3.2.4_postcss@8.4.19
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
     devDependencies:
@@ -3014,6 +3021,27 @@ importers:
       ts-node: 10.9.1_wup25etrarvlqkprac7h35hj7u
       typescript: 4.9.3
 
+  packages/experimental/metagraph:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/node-fetch': ^2.5.10
+      node-fetch: ^2.6.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/errors': link:../../sdk/errors
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      node-fetch: 2.6.7
+    devDependencies:
+      '@types/node-fetch': 2.6.2
+
   packages/experimental/react-client-testing:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3655,7 +3683,6 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@radix-ui/react-toolbar': ^1.0.1
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.21
@@ -3679,7 +3706,6 @@ importers:
       '@dxos/react-client': link:../react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/util': link:../../common/util
-      '@radix-ui/react-toolbar': 1.0.1_biqbaboplfbrettd7655fr4n2y
       '@react-hook/async': 3.1.1_react@18.2.0
       classnames: 2.3.2
       debug: 4.3.4
@@ -8164,7 +8190,7 @@ packages:
       '@polkadot/types': 4.17.1
       '@polkadot/types-known': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
     dev: true
 
   /@polkadot/networks/6.11.1:
@@ -8244,30 +8270,8 @@ packages:
       '@babel/runtime': 7.20.1
       '@polkadot/metadata': 4.17.1
       '@polkadot/util': 6.11.1
-      '@polkadot/util-crypto': 6.11.1
+      '@polkadot/util-crypto': 6.11.1_@polkadot+util@6.11.1
       '@polkadot/x-rxjs': 6.11.1
-    dev: true
-
-  /@polkadot/util-crypto/6.11.1:
-    resolution: {integrity: sha512-fWA1Nz17FxWJslweZS4l0Uo30WXb5mYV1KEACVzM+BSZAvG5eoiOAYX6VYZjyw6/7u53XKrWQlD83iPsg3KvZw==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@polkadot/networks': 6.11.1
-      '@polkadot/util': 6.11.1
-      '@polkadot/wasm-crypto': 4.6.1_7agzzbeuhezrwkh2zmxh2lt2xi
-      '@polkadot/x-randomvalues': 6.11.1
-      base-x: 3.0.9
-      base64-js: 1.5.1
-      blakejs: 1.2.1
-      bn.js: 4.12.0
-      create-hash: 1.2.0
-      elliptic: 6.5.4
-      hash.js: 1.1.7
-      js-sha3: 0.8.0
-      scryptsy: 2.1.0
-      tweetnacl: 1.0.3
-      xxhashjs: 0.2.2
     dev: true
 
   /@polkadot/util-crypto/6.11.1_@polkadot+util@6.11.1:
@@ -8722,38 +8726,6 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /@radix-ui/react-roving-focus/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-TB76u5TIxKpqMpUAuYH2VqMhHYKa+4Vs1NHygo/llLvlffN6mLVsFhz0AnSFlSBAvTBYVHYAkHAyEt7x1gPJOA==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-collection': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-compose-refs': 1.0.0_react@18.2.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-direction': 1.0.0_react@18.2.0
-      '@radix-ui/react-id': 1.0.0_react@18.2.0
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-use-callback-ref': 1.0.0_react@18.2.0
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@radix-ui/react-separator/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-uc6Izot0D8uVz6T2nSb/HI7OaxkeaD50GgKr3W6HORnbfGVrG7LWuy+g6Fd58n8wHbrRblSYJZEfcjgymMlJjw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
   /@radix-ui/react-slot/1.0.1_react@18.2.0:
     resolution: {integrity: sha512-avutXAFL1ehGvAXtPquu0YK5oz6ctS474iM3vNGQIkswrVhdrS52e3uoMQBzZhNRAIE0jBnUyXWNmSjGHhCFcw==}
     peerDependencies:
@@ -8783,56 +8755,6 @@ packages:
       '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
       '@radix-ui/react-use-layout-effect': 1.0.0_react@18.2.0
       '@radix-ui/react-visually-hidden': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@radix-ui/react-toggle-group/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-eye/gYvzy82xtoSSeu5Pwlzrh6N2rOcDIwAI7xMatu622Qjlg64LtwB0PSh3iWdmn6Wqy1Fjo5twNPQsp0guiw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-direction': 1.0.0_react@18.2.0
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-roving-focus': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-toggle': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@radix-ui/react-toggle/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-hZIp9ZKnw4NwVqeB4evWBLa91ryaSJhAO0Ed82wkzRPgg/I29ypcY6SuBb3AMZW+GsuBZpIVujpCq+33TdEcyg==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-use-controllable-state': 1.0.0_react@18.2.0
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    dev: false
-
-  /@radix-ui/react-toolbar/1.0.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-GK7dHP1otPYMgdZCpB2I1gfu4ttRB5OV37x5DzPgeKIDRjQ4u6pTuVTiRXfOtAnWuANo3Vq20ISI84iOGAfkYw==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-    dependencies:
-      '@babel/runtime': 7.20.1
-      '@radix-ui/primitive': 1.0.0
-      '@radix-ui/react-context': 1.0.0_react@18.2.0
-      '@radix-ui/react-direction': 1.0.0_react@18.2.0
-      '@radix-ui/react-primitive': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-roving-focus': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-separator': 1.0.1_biqbaboplfbrettd7655fr4n2y
-      '@radix-ui/react-toggle-group': 1.0.1_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: false
@@ -11695,7 +11617,7 @@ packages:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.2.4
+      tailwindcss: 3.2.4_postcss@8.4.19
     dev: false
 
   /@tanstack/react-table/8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y:
@@ -12033,6 +11955,17 @@ packages:
       '@tiptap/core': ^2.0.0-beta.193
     dependencies:
       '@tiptap/core': 2.0.0-beta.199
+    dev: false
+
+  /@tiptap/extension-placeholder/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
+    resolution: {integrity: sha512-Tdq0r9XQ6hcu4ASvw2Xko6h8uS/xONmMmOFiTkK/54REB3RRQpkdCtXrhFn/T4DunJVBf6FUOLTjYN3SONhuew==}
+    peerDependencies:
+      '@tiptap/core': ^2.0.0-beta.193
+    dependencies:
+      '@tiptap/core': 2.0.0-beta.199
+      prosemirror-model: 1.18.3
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.1
     dev: false
 
   /@tiptap/extension-strike/2.0.0-beta.202_4focsuckzeocqotdxlryrtksam:
@@ -12644,6 +12577,12 @@ packages:
       '@types/lodash': 4.14.189
     dev: true
 
+  /@types/lodash.debounce/4.0.7:
+    resolution: {integrity: sha512-X1T4wMZ+gT000M2/91SYj0d/7JfeNZ9PeeOldSNoE/lunLeQXKvkmIumI29IaKMotU/ln/McOIvgzZcQ/3TrSA==}
+    dependencies:
+      '@types/lodash': 4.14.189
+    dev: true
+
   /@types/lodash.defaultsdeep/4.6.7:
     resolution: {integrity: sha512-D+AUxs64qehDMkbfFoskG0XsIOh2CHBGqYfcQcubLbZSFCGKJKS885su3a97huqBNHj+p9of9UZ/uUIP46wUGQ==}
     dependencies:
@@ -12706,12 +12645,6 @@ packages:
 
   /@types/lodash.sortby/4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
-    dependencies:
-      '@types/lodash': 4.14.189
-    dev: true
-
-  /@types/lodash.throttle/4.1.7:
-    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.189
     dev: true
@@ -15239,6 +15172,7 @@ packages:
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    requiresBuild: true
     dependencies:
       file-uri-to-path: 1.0.0
     dev: true
@@ -20346,6 +20280,7 @@ packages:
 
   /file-uri-to-path/1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -24842,10 +24777,6 @@ packages:
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
-
-  /lodash.throttle/4.1.1:
-    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
-    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -31655,10 +31586,12 @@ packages:
       - ts-node
     dev: false
 
-  /tailwindcss/3.2.4:
+  /tailwindcss/3.2.4_postcss@8.4.19:
     resolution: {integrity: sha512-AhwtHCKMtR71JgeYDaswmZXhPcW9iuI9Sp2LvZPo9upDZ7231ZJ7eA9RaURbhpXGVlrjX4cFNlB4ieTetEb7hQ==}
     engines: {node: '>=12.13.0'}
     hasBin: true
+    peerDependencies:
+      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3

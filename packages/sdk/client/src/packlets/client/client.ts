@@ -7,16 +7,17 @@ import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config, ConfigProto } from '@dxos/config';
+import { Config } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
+import { Status } from '@dxos/protocols/proto/dxos/client';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
-import { fromConfig, fromIFrame } from './utils';
+import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -25,7 +26,7 @@ import { fromConfig, fromIFrame } from './utils';
  */
 export type ClientOptions = {
   /** client configuration object */
-  config?: Config | ConfigProto; // TODO(burdon): Rename ConfigProto to ConfigType.
+  config?: Config;
   /** custom services provider */
   services?: ClientServicesProvider;
   /** custom model factory */
@@ -55,7 +56,7 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
-    this._config = fromConfig(config);
+    this._config = config ?? new Config();
     this._services = services ?? fromIFrame(this._config);
 
     // NOTE: Must currently match the host.
@@ -156,6 +157,13 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
+  }
+
+  /**
+   * Get system status.
+   */
+  async getStatus(): Promise<Status> {
+    return this._services.services?.SystemService.getStatus();
   }
 
   /**

@@ -17,7 +17,7 @@ import { File } from './file';
 import { logger } from './logger';
 import { runPromises } from './runPromises';
 
-export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /index(\.d)?\.[tj]s/];
+export const TEMPLATE_DIRECTORY_IGNORE = [...TEMPLATE_FILE_IGNORE, /\.t\//, /^index(\.d)?\.[tj]s/];
 
 export type ExecuteDirectoryTemplateOptions<TInput> = LoadTemplateOptions & {
   templateDirectory: string;

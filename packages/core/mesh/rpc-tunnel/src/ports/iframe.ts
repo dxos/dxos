@@ -9,7 +9,7 @@ import { MessageData } from '../message';
 
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
-    log.debug('IFrame content window missing', { origin });
+    log('IFrame content window missing', { origin });
     return;
   }
 
@@ -40,10 +40,11 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
   return {
     send: async (data) => {
       if (!origin) {
-        log.warn('No origin set yet', { channel });
+        log.warn('no origin set', { channel });
         return;
       }
 
+      log('sending', { channel, data: data.length });
       const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       const message = { channel, payload };
       if (iframe) {
@@ -75,7 +76,7 @@ export const createIFramePort = ({ channel, iframe, origin, onOrigin }: IFramePo
           onOrigin?.(origin);
         }
 
-        log.debug('Received message', message);
+        log('received', message);
         callback(new Uint8Array(message.payload));
       };
 
