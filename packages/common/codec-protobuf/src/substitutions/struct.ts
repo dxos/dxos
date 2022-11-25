@@ -6,28 +6,30 @@ export type BasicType = null | undefined | number | string | boolean;
 export type StructValue = BasicType | Object | (BasicType | Object)[];
 export type Struct = Record<string, StructValue>;
 
-const encodeStructValue = (value: StructValue): any => {
+const encodeStructValue = (structValue: StructValue): any => {
   const encoders: Record<string, (v: any) => any> = {
     '[object Null]': () => ({ nullValue: 0 }),
     '[object Undefined]': () => ({ nullValue: 0 }),
-    '[object Number]': (value: number) => ({ numberValue: value }),
+    '[object Number]': (v: number) => ({ numberValue: v }),
     '[object String]': (v: string) => ({ stringValue: v }),
     '[object Boolean]': (v: boolean) => ({ boolValue: v }),
     '[object Object]': (v: Struct) => ({ structValue: encodeStruct(v) }),
     '[object List]': (v: StructValue[]) => ({ listValue: { values: v.map(encodeStructValue) } })
   };
-  const valueType = Object.prototype.toString.call(value);
+  const valueType = Object.prototype.toString.call(structValue);
   if (valueType in encoders) {
-    return encoders[valueType](value);
+    return encoders[valueType](structValue);
   } else {
     throw new Error(`Unsupported type: ${valueType}`);
   }
 };
 
-const encodeStruct = (value: Struct): any => {
-  const fields = Object.entries(value).map(([key, value]) => ({ [key]: encodeStructValue(value) }));
-  return { fields };
-};
+const encodeStruct = (struct: Struct): any => ({
+  fields: Object.entries(struct).reduce((acc, [key, value]) => {
+    acc[key] = encodeStructValue(value);
+    return acc;
+  }, {} as Record<string, any>)
+});
 
 const decodeStructValue = (value: any): StructValue => {
   const decoders: Record<string, (v: any) => any> = {
@@ -46,13 +48,11 @@ const decodeStructValue = (value: any): StructValue => {
   }
 };
 
-const decodeStruct = (value: any): Struct => {
-  const fields = value.fields || {};
-  return Object.entries(fields).reduce((acc, [key, value]) => {
+const decodeStruct = (value: any): Struct =>
+  Object.entries(value.fields || {}).reduce((acc, [key, value]) => {
     acc[key] = decodeStructValue(value);
     return acc;
   }, {} as Struct);
-};
 
 export const structSubstitutions = {
   'google.protobuf.Struct': {
