@@ -8,7 +8,7 @@ import throttle from 'lodash.throttle';
 import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ProfileMenu, ProfileMenuProps } from './ProfileMenu';
-import { SpaceLinkProps } from './SpaceLink';
+import { SpaceLink, SpaceLinkProps } from './SpaceLink';
 import { SpaceMenu, SpaceMenuProps } from './SpaceMenu';
 import { SpacesLink, SpacesLinkProps } from './SpacesLink';
 
@@ -22,6 +22,7 @@ export const Menubar = ({
   space,
   onClickManageProfile,
   onClickGoToSpaces,
+  onClickGoToSpace,
   onClickManageSpace
 }: MenubarProps) => {
   const [atTop, setAtTop] = useState(true);
@@ -50,7 +51,12 @@ export const Menubar = ({
       >
         {onClickGoToSpaces && <SpacesLink {...{ onClickGoToSpaces }} />}
         <ToolbarPrimitive.Separator className='grow' />
-        {space && <SpaceMenu {...{ space, onClickManageSpace }} />}
+        {space &&
+          (onClickGoToSpace ? (
+            <SpaceLink {...{ onClickGoToSpace }} />
+          ) : (
+            <SpaceMenu {...{ space, onClickManageSpace }} />
+          ))}
         <ToolbarPrimitive.Button asChild>
           <ProfileMenu {...{ profile, onClickManageProfile }} />
         </ToolbarPrimitive.Button>
