@@ -87,7 +87,7 @@ const ProfileMenu = (props: PresenceProps) => {
       }
       collisionPadding={collisionPadding ?? 8}
       sideOffset={sideOffset ?? 0}
-      className='flex flex-col gap-4 items-center'
+      className='flex flex-col gap-4 items-center z-[2]'
     >
       <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
       {onClickManageProfile && (
