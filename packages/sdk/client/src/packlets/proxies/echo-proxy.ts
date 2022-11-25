@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, EventSubscriptions, latch } from '@dxos/async';
+import { Event, EventSubscriptions, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   CancellableInvitationObservable,
@@ -24,7 +24,7 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
-import { Space, SPACE_ITEM_TYPE, SpaceProxy } from './space-proxy';
+import { Space, SpaceProxy } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
@@ -41,6 +41,7 @@ export class EchoProxy implements Echo {
   private readonly _spaces = new ComplexMap<PublicKey, SpaceProxy>(PublicKey.hash);
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _spacesChanged = new Event();
+  private readonly _spacesInitialized = new Event<PublicKey>();
 
   private _invitationProxy?: SpaceInvitationsProxy;
   private _destroying = false; // TODO(burdon): Standardize enum.
@@ -107,9 +108,10 @@ export class EchoProxy implements Echo {
             this._haloProxy.profile!.identityKey
           );
 
-          // NOTE: Must reference space in a map before initializing.
+          // NOTE: Must set in a map before initializing.
           this._spaces.set(spaceProxy.key, spaceProxy);
           await spaceProxy.initialize();
+          this._spacesInitialized.emit(spaceProxy.key);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
           // spaceProxy.database.entityUpdate.on((entity) => {
@@ -159,24 +161,20 @@ export class EchoProxy implements Echo {
    * Creates a new space.
    */
   async createSpace(): Promise<Space> {
-    const [done, spaceReceived] = latch();
     const space = await this._serviceProvider.services.SpaceService.createSpace();
-    const handler = () => {
-      if (this._spaces.has(space.publicKey)) {
-        setTimeout(async () => {
-          const spaceProxy = this._spaces.get(space.publicKey)!;
-          const item = await spaceProxy.database.createItem({ type: SPACE_ITEM_TYPE });
-          console.log('## CREATED', item);
-          spaceReceived();
-        });
+
+    // TODO(burdon): Extract pattern (similar to waitForCondition).
+    const proxy = new Trigger<SpaceProxy>();
+    const unsubscribe = this._spacesInitialized.on((spaceKey) => {
+      if (spaceKey.equals(space.publicKey)) {
+        const spaceProxy = this._spaces.get(space.publicKey)!;
+        proxy.wake(spaceProxy);
       }
-    };
+    });
 
-    this._spacesChanged.once(handler);
-    handler();
-    await done();
-
-    return this._spaces.get(space.publicKey)!;
+    const spaceProxy = await proxy.wait();
+    unsubscribe();
+    return spaceProxy;
   }
 
   /**
@@ -184,20 +182,19 @@ export class EchoProxy implements Echo {
    * @internal
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
-    const [done, spaceReceived] = latch();
     const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
-    const handler = () => {
-      if (this._spaces.has(space.publicKey)) {
-        spaceReceived();
+
+    const proxy = new Trigger<SpaceProxy>();
+    const unsubscribe = this._spacesInitialized.on((spaceKey) => {
+      if (spaceKey.equals(space.publicKey)) {
+        const spaceProxy = this._spaces.get(space.publicKey)!;
+        proxy.wake(spaceProxy);
       }
-    };
+    });
 
-    this._spacesChanged.on(handler);
-    handler();
-    await done();
-
-    this._spacesChanged.off(handler);
-    return this._spaces.get(space.publicKey)!;
+    const spaceProxy = await proxy.wait();
+    unsubscribe();
+    return spaceProxy;
   }
 
   /**

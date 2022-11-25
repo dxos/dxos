@@ -29,15 +29,11 @@ export interface Space extends ISpace {
   get isActive(): boolean;
   get invitations(): CancellableInvitationObservable[];
 
-  // TODO(burdon): Verbs should be on same interface.
+  // TODO(burdon): Remove and move accessors to proxy.
   get database(): Database;
-  // TODO(burdon): Move to Database.
+
   get select(): Database['select'];
   get reduce(): Database['reduce'];
-
-  // TODO(burdon): Reconcile with open/close.
-  initialize(): Promise<void>;
-  destroy(): Promise<void>;
 
   open(): Promise<void>;
   close(): Promise<void>;
@@ -89,7 +85,7 @@ export class SpaceProxy implements Space {
   public readonly invitationsUpdate = new Event<CancellableInvitationObservable | void>();
   public readonly stateUpdate = new Event();
 
-  private _initializing = false;
+  private _initialized = false;
   private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
@@ -167,16 +163,23 @@ export class SpaceProxy implements Space {
    */
   @synchronized
   async initialize() {
-    if (this._initializing) {
+    if (this._initialized) {
       return;
     }
     log('initializing...');
-    this._initializing = true;
+
+    // TODO(burdon): Does this need to be set before method completes?
+    this._initialized = true;
 
     await this.database.initialize();
 
-    // Root item for properties.
-    this._item = await this.database.waitForItem({ type: SPACE_ITEM_TYPE });
+    // Get or create properties item.
+    const result = this.database.select({ type: SPACE_ITEM_TYPE }).exec();
+    if (result.entities.length) {
+      this._item = result.entities[0] as Item<ObjectModel>;
+    } else {
+      this._item = await this.database.createItem<ObjectModel>({ type: SPACE_ITEM_TYPE });
+    }
 
     this.stateUpdate.emit();
     log('initialized');
