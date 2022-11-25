@@ -3,7 +3,7 @@ position: 1
 label: Overview
 dir:
   text: HALO Identity
-  order: 15
+  order: 13
 ---
 
 # HALO

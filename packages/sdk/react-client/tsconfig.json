@@ -59,6 +59,9 @@
       "path": "../config"
     },
     {
+      "path": "../metagraph"
+    },
+    {
       "path": "../vite-plugin"
     }
   ]

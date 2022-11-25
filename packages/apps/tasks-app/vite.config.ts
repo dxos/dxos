@@ -34,6 +34,7 @@ export default defineConfig({
     include: [
       '@dxos/client',
       '@dxos/config',
+      '@dxos/log',
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-list',

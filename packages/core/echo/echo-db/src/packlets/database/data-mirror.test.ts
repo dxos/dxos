@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { asyncTimeout } from '@dxos/async';
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';

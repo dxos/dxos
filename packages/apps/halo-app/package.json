@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -14,6 +14,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/metagraph": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-appkit": "workspace:*",
