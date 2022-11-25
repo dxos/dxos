@@ -8,12 +8,13 @@ import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Space, Invitation } from '@dxos/client';
-import { useClient, useIdentity, useSpace } from '@dxos/react-client';
+import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
 import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
 import { HeadingWithActions } from '../HeadingWithActions';
+import { StatusIndicator } from '../StatusIndicator';
 
 const invitationCodeFromUrl = (text: string) => {
   try {
@@ -24,6 +25,11 @@ const invitationCodeFromUrl = (text: string) => {
     console.error(err);
     return text;
   }
+};
+
+const StatusContainer = () => {
+  const status = useStatus();
+  return <StatusIndicator status={status} />;
 };
 
 export interface AppLayoutProps {
@@ -67,6 +73,7 @@ export const AppLayout = ({
 
   return (
     <main className='max-is-5xl mli-auto pli-7'>
+      <StatusContainer />
       <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
         {space ? (
           <>
