@@ -173,10 +173,10 @@ export class SpaceProxy implements Space {
     log('initializing...');
     this._initializing = true;
 
-    await this._database!.initialize();
+    await this.database.initialize();
 
     // Root item for properties.
-    this._item = await this._database?.createItem({ type: SPACE_ITEM_TYPE });
+    this._item = await this.database.waitForItem({ type: SPACE_ITEM_TYPE });
 
     this.stateUpdate.emit();
     log('initialized');
@@ -189,8 +189,9 @@ export class SpaceProxy implements Space {
   async destroy() {
     log('destroying...');
     if (this._database && this._clientServices instanceof ClientServicesProxy) {
-      await this._database.destroy();
+      await this.database.destroy();
     }
+
     log('destroyed');
   }
 

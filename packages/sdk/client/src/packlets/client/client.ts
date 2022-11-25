@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 
 import { synchronized } from '@dxos/async';
 import { ClientServicesProvider, createDefaultModelFactory } from '@dxos/client-services';
-import { Config } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
@@ -17,7 +17,8 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
-import { fromIFrame } from './utils';
+import { SpaceSerializer } from './serializer';
+import { fromConfig, fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
 
@@ -26,7 +27,7 @@ import { fromIFrame } from './utils';
  */
 export type ClientOptions = {
   /** client configuration object */
-  config?: Config;
+  config?: Config | ConfigProto; // TODO(burdon): Rename ConfigProto to ConfigType.
   /** custom services provider */
   services?: ClientServicesProvider;
   /** custom model factory */
@@ -56,7 +57,7 @@ export class Client {
     modelFactory,
     services
   }: ClientOptions = {}) {
-    this._config = config ?? new Config();
+    this._config = fromConfig(config);
     this._services = services ?? fromIFrame(this._config);
 
     // NOTE: Must currently match the host.
@@ -179,5 +180,9 @@ export class Client {
     await this.destroy();
     this._halo.profileChanged.emit();
     this._initialized = false;
+  }
+
+  createSerializer() {
+    return new SpaceSerializer(this._echo);
   }
 }

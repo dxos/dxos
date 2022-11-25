@@ -3,14 +3,14 @@
 //
 
 import { ClientServicesHost, ClientServicesProxy, createDefaultModelFactory } from '@dxos/client-services';
-import { Config } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { Client } from '../client';
+import { Client, fromConfig } from '../client';
 
-export const testConfigWithLocalSignal = new Config({
+export const testConfigWithLocalSignal: ConfigProto = {
   version: 1,
   runtime: {
     services: {
@@ -20,7 +20,7 @@ export const testConfigWithLocalSignal = new Config({
       }
     }
   }
-});
+};
 
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
@@ -34,7 +34,7 @@ export class TestBuilder {
     private readonly _modelFactory = createDefaultModelFactory(),
     private readonly _signalManagerContext = new MemorySignalManagerContext()
   ) {
-    this._config = config ?? new Config();
+    this._config = fromConfig(config);
   }
 
   get config(): Config {

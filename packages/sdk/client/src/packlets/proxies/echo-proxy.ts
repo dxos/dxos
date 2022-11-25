@@ -24,14 +24,14 @@ import { SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap } from '@dxos/util';
 
 import { HaloProxy } from './halo-proxy';
-import { Space, SpaceProxy } from './space-proxy';
+import { Space, SPACE_ITEM_TYPE, SpaceProxy } from './space-proxy';
 
 /**
  * TODO(burdon): Public API (move comments here).
  */
 export interface Echo {
   createSpace(): Promise<Space>;
-  cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
+  // cloneSpace(snapshot: SpaceSnapshot): Promise<Space>;
   getSpace(spaceKey: PublicKey): Space | undefined;
   querySpaces(): ResultSet<Space>;
   acceptInvitation(invitation: Invitation): Promise<CancellableInvitationObservable>;
@@ -112,7 +112,7 @@ export class EchoProxy implements Echo {
           await spaceProxy.initialize();
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
-          // spaceProxy.database.entityUpdate.on(entity => {
+          // spaceProxy.database.entityUpdate.on((entity) => {
           //   if (entity.type === SPACE_ITEM_TYPE) {
           //     this._spacesChanged.emit(); // Trigger for `querySpaces()` when a space is updated.
           //   }
@@ -160,28 +160,31 @@ export class EchoProxy implements Echo {
    */
   async createSpace(): Promise<Space> {
     const [done, spaceReceived] = latch();
-
     const space = await this._serviceProvider.services.SpaceService.createSpace();
     const handler = () => {
       if (this._spaces.has(space.publicKey)) {
-        spaceReceived();
+        setTimeout(async () => {
+          const spaceProxy = this._spaces.get(space.publicKey)!;
+          const item = await spaceProxy.database.createItem({ type: SPACE_ITEM_TYPE });
+          console.log('## CREATED', item);
+          spaceReceived();
+        });
       }
     };
 
-    this._spacesChanged.on(handler);
+    this._spacesChanged.once(handler);
     handler();
     await done();
 
-    this._spacesChanged.off(handler);
     return this._spaces.get(space.publicKey)!;
   }
 
   /**
    * Clones the space from a snapshot.
+   * @internal
    */
   async cloneSpace(snapshot: SpaceSnapshot): Promise<Space> {
     const [done, spaceReceived] = latch();
-
     const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
     const handler = () => {
       if (this._spaces.has(space.publicKey)) {
@@ -220,7 +223,6 @@ export class EchoProxy implements Echo {
     }
 
     log('accept invitation', options);
-
     return new Promise<AuthenticatingInvitationObservable>((resolve, reject) => {
       const acceptedInvitation = this._invitationProxy!.acceptInvitation(invitation, options);
       const unsubscribe = acceptedInvitation.subscribe({
