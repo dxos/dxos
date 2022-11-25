@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import type { ProtocolStream } from 'hypercore-protocol';
 import { Duplex } from 'stream';
 
@@ -9,14 +10,13 @@ import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
-import { schema } from '@dxos/protocols';
-import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
-import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
-import { ComplexMap } from '@dxos/util';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import assert from 'assert';
+import { schema } from '@dxos/protocols';
+import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
+import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
+import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
+import { ComplexMap } from '@dxos/util';
 
 export type ReplicationOptions = {
   upload: boolean;
@@ -36,6 +36,7 @@ export class ReplicatorExtension implements TeleportExtension {
       this._extensionContext?.close(err);
     }
   });
+
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
   private _options: ReplicationOptions = {
     upload: false
@@ -67,12 +68,12 @@ export class ReplicatorExtension implements TeleportExtension {
       } else if (this._extensionContext!.initiator === true) {
         await this._reevaluateFeeds();
       }
-    } catch(err) {
-      if(err instanceof RpcClosedError) {
+    } catch (err) {
+      if (err instanceof RpcClosedError) {
         return; // Some RPC requests might be pending while closing.
       }
       throw err;
-    } 
+    }
   });
 
   setOptions(options: ReplicationOptions): this {
@@ -138,7 +139,7 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   async onClose(err?: Error | undefined) {
-    log('close');
+    log('close', { err });
     await this._ctx.dispose();
     await this._rpc?.close();
     for (const feedKey of this._streams.keys()) {
@@ -149,7 +150,9 @@ export class ReplicatorExtension implements TeleportExtension {
   @synchronized
   private async _reevaluateFeeds() {
     for (const feedKey of this._feeds.keys()) {
-      if(this._ctx.disposed) return;
+      if (this._ctx.disposed) {
+        return;
+      }
       if (this._streams.has(feedKey) && this._options.upload !== this._streams.get(feedKey)?.info.upload) {
         try {
           await asyncTimeout(this._stopReplication(feedKey), 1000);
@@ -158,7 +161,9 @@ export class ReplicatorExtension implements TeleportExtension {
         }
       }
 
-      if(this._ctx.disposed) return;
+      if (this._ctx.disposed) {
+        return;
+      }
       if (!this._streams.has(feedKey)) {
         await this._initiateReplication({
           feedKey,

@@ -30,7 +30,9 @@ export class Teleport {
 
   private readonly _ctx = new Context({
     onError: (err) => {
-      this.destroy(err);
+      void this.destroy(err).catch(() => {
+        log.error('Error during destroy', err);
+      });
     }
   });
 
@@ -108,7 +110,7 @@ export class Teleport {
   }
 
   addExtension(name: string, extension: TeleportExtension) {
-    if(!this._open) {
+    if (!this._open) {
       throw new Error('Not open');
     }
 
@@ -151,7 +153,7 @@ export class Teleport {
         return this._muxer.createStream(`${extensionName}/${channelName}`, opts);
       },
       close: (err) => {
-        runInContextAsync(this._ctx, async () => {
+        void runInContextAsync(this._ctx, async () => {
           await this.close(err);
         });
       }
@@ -194,7 +196,7 @@ class ControlExtension implements TeleportExtension {
   private _extensionContext!: ExtensionContext;
   private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
 
-  public readonly onExtensionRegistered = new Callback<(extensionName: string) => Promise<void>>();
+  public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
   public readonly onTimeout = new Callback<() => void>();
 
   constructor(private readonly opts: ControlExtensionOpts) {}

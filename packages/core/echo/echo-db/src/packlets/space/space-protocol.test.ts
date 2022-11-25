@@ -15,7 +15,7 @@ import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './test
 
 describe('space/space-protocol', function () {
   it('two peers discover each other', async function () {
-    if(USE_TELEPORT) {
+    if (USE_TELEPORT) {
       this.skip();
     }
     const builder = new TestAgentBuilder();
@@ -40,7 +40,7 @@ describe('space/space-protocol', function () {
   });
 
   it('failing authentication', async function () {
-    if(USE_TELEPORT) {
+    if (USE_TELEPORT) {
       this.skip();
     }
     const signalContext = new MemorySignalManagerContext();

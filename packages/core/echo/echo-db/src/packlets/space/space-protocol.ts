@@ -4,18 +4,25 @@
 
 import { Event } from '@dxos/async';
 import { discoveryKey, sha256 } from '@dxos/crypto';
-import { todo } from '@dxos/debug';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { adaptProtocolProvider, MMSTTopology, NetworkManager, Plugin, SwarmConnection, WireProtocol, WireProtocolParams, WireProtocolProvider } from '@dxos/network-manager';
+import {
+  adaptProtocolProvider,
+  MMSTTopology,
+  NetworkManager,
+  Plugin,
+  SwarmConnection,
+  WireProtocol,
+  WireProtocolParams,
+  WireProtocolProvider
+} from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Teleport } from '@dxos/teleport';
-import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-plugin-replicator'
+import { ReplicatorExtension as TeleportReplicatorExtension } from '@dxos/teleport-plugin-replicator';
 import { ComplexMap } from '@dxos/util';
-import { Duplex } from 'stream';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
@@ -42,17 +49,17 @@ export const USE_TELEPORT = true;
 export class SpaceProtocol {
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _customPlugins: Plugin[];
-  
+
   private readonly _networkManager: NetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
-  
+
   private readonly _presencePlugin: PresencePlugin;
   private readonly _authPlugin: AuthPlugin;
   private readonly _discoveryKey: PublicKey;
   private readonly _peerId: PublicKey;
-  
+
   readonly authenticationFailed: Event;
-  
+
   private _connection?: SwarmConnection;
 
   // Teleport-specific
@@ -76,9 +83,9 @@ export class SpaceProtocol {
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
   addFeed(feed: FeedWrapper<FeedMessage>) {
-    if(USE_TELEPORT) {
+    if (USE_TELEPORT) {
       this._feeds.add(feed);
-      for(const session of this._sessions.values()) {
+      for (const session of this._sessions.values()) {
         session.replicator.addFeed(feed);
       }
     } else {
@@ -123,50 +130,50 @@ export class SpaceProtocol {
   }
 
   private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
-    if(USE_TELEPORT) {
+    if (USE_TELEPORT) {
       return (params) => {
         const session = new SpaceProtocolSession(params);
         this._sessions.set(params.remotePeerId, session);
 
-        for(const feed of this._feeds) {
+        for (const feed of this._feeds) {
           session.replicator.addFeed(feed);
         }
 
-        return session
-      }
+        return session;
+      };
     } else {
       return adaptProtocolProvider(({ channel, initiator }) => {
         const protocol = new Protocol({
           streamOptions: {
             live: true
           },
-    
+
           discoveryKey: channel,
           discoveryToPublicKey: (discoveryKey: any) => {
             if (!PublicKey.from(discoveryKey).equals(this._discoveryKey)) {
               return undefined;
             }
-    
+
             // TODO(dmaretskyi): Why does this do side effects?
             // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
             protocol.setContext({ topic: this._discoveryKey.toHex() });
             // TODO(burdon): Inconsistent use of toHex vs asBuffer?
             return this._discoveryKey.asBuffer();
           },
-    
+
           userSession: {
             // TODO(burdon): See deprecated `protocolFactory` in HALO.
             peerId: this._peerId.toHex(),
             // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
             credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
           },
-    
+
           initiator
         });
-    
+
         const plugins: Plugin[] = [this._presencePlugin, this._authPlugin, this._replicator, ...this._customPlugins];
         protocol.setExtensions(plugins.map((plugin) => plugin.createExtension())).init();
-    
+
         return protocol;
       });
     }
@@ -191,9 +198,11 @@ export class SpaceProtocolSession implements WireProtocol {
     await this._teleport.open();
     this._teleport.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
+
   async destroy(): Promise<void> {
     await this._teleport.close();
   }
+
   get stream() {
     return this._teleport.stream;
   }

@@ -14,7 +14,7 @@ export type ClearCallback = () => void;
  */
 export class DeferredTask {
   private _scheduled = false;
-  private _promise: Promise<void> | null = null;
+  private _promise: Promise<void> | null = null; // Can't be rejected.
 
   constructor(private readonly _ctx: Context, private readonly _callback: () => Promise<void>) {}
 
@@ -24,17 +24,13 @@ export class DeferredTask {
     }
     scheduleTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
-      try {
-        await this._promise;
-      } catch (err) {
-        Promise.reject(err); // Unhandled promise rejection.
-      }
+      await this._promise; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
       this._scheduled = false;
 
       // Store the promise so that new tasks could wait for this one to finish.
-      this._promise = this._callback();
+      this._promise = runInContextAsync(this._ctx, () => this._callback());
     });
     this._scheduled = true;
   }

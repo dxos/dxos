@@ -73,7 +73,7 @@ const createStreamPair = async () => {
   const replicator2 = new ReplicatorExtension();
   peer2.addExtension('dxos.mesh.teleport.replicator', replicator2);
 
-  return { peer1, replicator1, peer2, replicator2 };
+  return { replicator1, replicator2 };
 };
 
 describe('ReplicatorExtension', function () {
@@ -82,7 +82,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
+    const { replicator1, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: true });
     replicator2.setOptions({ upload: true });
@@ -101,7 +101,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
+    const { replicator1, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });
@@ -123,7 +123,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
+    const { replicator1, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });
@@ -150,7 +150,7 @@ describe('ReplicatorExtension', function () {
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
+    const { replicator1, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: true });
     replicator2.setOptions({ upload: true });
@@ -171,12 +171,13 @@ describe('ReplicatorExtension', function () {
   });
 
   // TODO: not working yet.
+  // eslint-disable-next-line mocha/no-skipped-tests
   it.skip('enabling upload mid replication', async function () {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();
     const agent2 = builder.createAgent();
 
-    const { peer1, replicator1, peer2, replicator2 } = await createStreamPair();
+    const { replicator1, replicator2 } = await createStreamPair();
 
     replicator1.setOptions({ upload: false });
     replicator2.setOptions({ upload: true });

@@ -7,10 +7,9 @@ import { pipeline } from 'stream';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { ExtensionContext, Teleport, TeleportExtension } from './teleport';
+import { Teleport } from './teleport';
 import { TestExtension } from './test-extension';
 
 const setup = () => {
@@ -37,7 +36,7 @@ const setup = () => {
 };
 
 describe('Teleport', function () {
-  it('test', async function () {
+  it('sends rpc via TestExtension', async function () {
     const { peer1, peer2 } = setup();
 
     await Promise.all([peer1.open(), peer2.open()]);
@@ -56,29 +55,3 @@ describe('Teleport', function () {
     expect(extension2.extensionContext?.initiator).to.equal(false);
   });
 });
-
-class AuthExtension implements TeleportExtension {
-  constructor({ onAuthenticated }: { onAuthenticated: () => void }) {}
-
-  async onOpen(context: ExtensionContext): Promise<void> {}
-
-  async onClose(err?: Error): Promise<void> {}
-}
-
-class PresenceExtension implements TeleportExtension {
-  constructor() {}
-
-  rpc!: ProtoRpcPeer<{}>;
-
-  async onOpen(context: ExtensionContext): Promise<void> {
-    this.rpc = createProtoRpcPeer({
-      port: context.createPort('rpc')
-    } as any);
-
-    await this.rpc.open();
-  }
-
-  async onClose(err?: Error): Promise<void> {
-    await this.rpc.close();
-  }
-}
