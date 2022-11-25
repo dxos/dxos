@@ -153,7 +153,7 @@ const SpaceMenu = (props: Omit<PresenceProps, 'space'> & { space: Space }) => {
       }
       collisionPadding={collisionPadding ?? 8}
       sideOffset={sideOffset ?? 0}
-      className='flex flex-col gap-4 items-center'
+      className='flex flex-col gap-4 items-center z-[2]'
     >
       {createInvitationUrl && <SpaceInviteSingleton createInvitationUrl={createInvitationUrl} space={space} />}
       {onClickManageSpace && (
