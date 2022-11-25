@@ -4,8 +4,7 @@
 
 import { schema } from '@dxos/protocols';
 
-import { Space } from '../proxies';
-import { Client } from './client';
+import { EchoProxy, Space } from '../proxies';
 
 const spaceCodec = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 
@@ -16,7 +15,7 @@ const spaceCodec = schema.getCodecForType('dxos.echo.snapshot.SpaceSnapshot');
 export class SpaceSerializer {
   // prettier-ignore
   constructor(
-    private readonly _client: Client
+    private readonly _echo: EchoProxy
   ) {}
 
   async serializeSpace(space: Space) {
@@ -25,6 +24,6 @@ export class SpaceSerializer {
   }
 
   async deserializeSpace(data: Uint8Array) {
-    return await this._client.echo.cloneSpace(spaceCodec.decode(data));
+    return await this._echo.cloneSpace(spaceCodec.decode(data));
   }
 }
