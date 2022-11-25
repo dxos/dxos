@@ -41,7 +41,7 @@ export type SpaceProtocolOptions = {
   plugins?: Plugin[];
 };
 
-export const USE_TELEPORT = true;
+export const USE_TELEPORT = false;
 
 /**
  * Manages hypercore protocol stream creation and joining swarms.
