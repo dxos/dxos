@@ -50,6 +50,9 @@
     },
     {
       "path": "../../patterns/react-composer"
+    },
+    {
+      "path": "../../patterns/react-list"
     }
   ]
 }
