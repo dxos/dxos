@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 <<<<<<< Updated upstream
 # DXOS Wallet
@@ -15,10 +16,14 @@ pnpm -w nx run halo-app:serve
 >>>>>>> Stashed changes
 =======
 # DXOS Halo
+=======
+# HALO App
+>>>>>>> Stashed changes
 
 ## Development
 
 ```bash
+pnpm -w nx run-many --target=build
 pnpm -w nx run halo-app:serve
 ```
 >>>>>>> main
