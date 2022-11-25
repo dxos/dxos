@@ -158,6 +158,7 @@ export class Teleport {
     };
 
     await extension.onOpen(context);
+    log('extension opened', { extensionName });
   }
 }
 

@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { assert } from 'console';
 import type { ProtocolStream } from 'hypercore-protocol';
 import { Duplex } from 'stream';
 
@@ -13,10 +12,11 @@ import { FeedWrapper } from '@dxos/feed-store';
 import { schema } from '@dxos/protocols';
 import { FeedInfo, ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
 import { ExtensionContext, TeleportExtension } from '@dxos/teleport';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
+import assert from 'assert';
 
 export type ReplicationOptions = {
   upload: boolean;
@@ -30,7 +30,12 @@ type ActiveStream = {
 };
 
 export class ReplicatorExtension implements TeleportExtension {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+      this._extensionContext?.close(err);
+    }
+  });
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<any>>(PublicKey.hash);
   private _options: ReplicationOptions = {
     upload: false
@@ -50,18 +55,24 @@ export class ReplicatorExtension implements TeleportExtension {
   }
 
   private readonly updateTask = new DeferredTask(this._ctx, async () => {
-    log('process update');
-    if (this._extensionContext!.initiator === false) {
-      await this._rpc!.rpc.ReplicatorService.updateFeeds({
-        feeds: Array.from(this._feeds.values()).map((feed) => ({
-          feedKey: feed.key,
-          download: true,
-          upload: this._options.upload
-        }))
-      });
-    } else if (this._extensionContext!.initiator === true) {
-      await this._reevaluateFeeds();
-    }
+    try {
+      if (this._extensionContext!.initiator === false) {
+        await this._rpc!.rpc.ReplicatorService.updateFeeds({
+          feeds: Array.from(this._feeds.values()).map((feed) => ({
+            feedKey: feed.key,
+            download: true,
+            upload: this._options.upload
+          }))
+        });
+      } else if (this._extensionContext!.initiator === true) {
+        await this._reevaluateFeeds();
+      }
+    } catch(err) {
+      if(err instanceof RpcClosedError) {
+        return; // Some RPC requests might be pending while closing.
+      }
+      throw err;
+    } 
   });
 
   setOptions(options: ReplicationOptions): this {

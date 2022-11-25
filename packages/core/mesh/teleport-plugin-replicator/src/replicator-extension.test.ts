@@ -52,14 +52,6 @@ const createStreamPair = async () => {
   const peer1 = new Teleport({ initiator: true, localPeerId: peerId1, remotePeerId: peerId2 });
   const peer2 = new Teleport({ initiator: false, localPeerId: peerId2, remotePeerId: peerId1 });
 
-  await Promise.all([peer1.open(), peer2.open()]);
-
-  const replicator1 = new ReplicatorExtension();
-  peer1.addExtension('dxos.mesh.teleport.replicator', replicator1);
-
-  const replicator2 = new ReplicatorExtension();
-  peer2.addExtension('dxos.mesh.teleport.replicator', replicator2);
-
   pipeline(peer1.stream, peer2.stream, (err) => {
     if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
       log.catch(err);
@@ -72,6 +64,14 @@ const createStreamPair = async () => {
   });
   afterTest(() => peer1.close());
   afterTest(() => peer2.close());
+
+  await Promise.all([peer1.open(), peer2.open()]);
+
+  const replicator1 = new ReplicatorExtension();
+  peer1.addExtension('dxos.mesh.teleport.replicator', replicator1);
+
+  const replicator2 = new ReplicatorExtension();
+  peer2.addExtension('dxos.mesh.teleport.replicator', replicator2);
 
   return { peer1, replicator1, peer2, replicator2 };
 };
