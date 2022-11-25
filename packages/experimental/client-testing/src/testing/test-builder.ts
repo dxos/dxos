@@ -19,7 +19,7 @@ export class TestBuilder {
   }
 
   async initialize() {
-    const client = new Client({ services: fromHost({}) });
+    const client = new Client({ services: fromHost() });
     await client.initialize();
     expect(client.initialized).toBeTruthy();
 
