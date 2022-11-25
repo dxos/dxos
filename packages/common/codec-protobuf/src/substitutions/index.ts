@@ -3,5 +3,5 @@
 //
 
 export * from './any';
-export * from './struct';
+export { Struct, structSubstitutions } from './struct';
 export * from './timestamp';

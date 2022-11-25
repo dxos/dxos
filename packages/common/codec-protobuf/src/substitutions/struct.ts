@@ -4,7 +4,7 @@
 
 export type Struct = Record<string, any>;
 
-const encodeStructValue = (structValue: any): any => {
+export const encodeStructValue = (structValue: any): any => {
   const encoders: Record<string, (v: any) => any> = {
     undefined: () => ({ nullValue: 0 }),
     number: (v: number) => ({ numberValue: v }),
@@ -29,14 +29,14 @@ const encodeStructValue = (structValue: any): any => {
   }
 };
 
-const encodeStruct = (struct: Struct): any => ({
+export const encodeStruct = (struct: Struct): any => ({
   fields: Object.entries(struct).reduce((acc, [key, value]) => {
     acc[key] = encodeStructValue(value);
     return acc;
   }, {} as Record<string, any>)
 });
 
-const decodeStructValue = (value: any): any => {
+export const decodeStructValue = (value: any): any => {
   const decoders: Record<string, (v: any) => any> = {
     nullValue: () => null,
     numberValue: (v: number) => v,
@@ -53,7 +53,7 @@ const decodeStructValue = (value: any): any => {
   }
 };
 
-const decodeStruct = (value: any): Struct =>
+export const decodeStruct = (value: any): Struct =>
   Object.entries(value.fields || {}).reduce((acc, [key, value]) => {
     acc[key] = decodeStructValue(value);
     return acc;
