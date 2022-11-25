@@ -22,6 +22,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-composer": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",
