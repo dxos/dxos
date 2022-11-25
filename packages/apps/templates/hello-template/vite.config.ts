@@ -24,6 +24,7 @@ export default defineConfig({
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-composer',
+      '@dxos/react-list',
       '@dxos/react-ui',
       '@dxos/react-uikit',
       '@dxos/text-model',
@@ -56,6 +57,8 @@ export default defineConfig({
         resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
         resolve(__dirname, './node_modules/@dxos/react-appkit/dist/**/*.js'),
+        resolve(__dirname, './node_modules/@dxos/react-composer/dist/**/*.js'),
+        resolve(__dirname, './node_modules/@dxos/react-list/dist/**/*.js'),
         resolve(__dirname, './node_modules/@dxos/react-uikit/dist/**/*.js')
       ]
     }),
