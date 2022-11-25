@@ -5,7 +5,7 @@
 import expect from 'expect';
 import faker from 'faker';
 
-import { MockFeedWriter } from '@dxos/feed-store';
+import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestBuilder } from '@dxos/model-factory';
 

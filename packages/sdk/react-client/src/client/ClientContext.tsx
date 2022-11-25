@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import React, { ReactNode, useState, Context, createContext, useContext } from 'react';
 
 import { Client } from '@dxos/client';
@@ -85,6 +84,11 @@ export const ClientProvider = ({
   const [client, setClient] = useState<Client | undefined>(
     clientProvider instanceof Client ? clientProvider : undefined
   );
+  const [error, setError] = useState();
+
+  if (error) {
+    throw error;
+  }
 
   useAsyncEffect(async () => {
     const done = async (client: Client) => {
@@ -101,13 +105,12 @@ export const ClientProvider = ({
     } else {
       // Asynchronously construct client (config may be undefined).
       const config = await getAsyncValue(configProvider);
-      assert(config);
       log('resolved config', { config });
-      const services = createServices?.(config);
+      const services = config && createServices?.(config);
       log('created services', { services });
       const client = new Client({ config, services });
       log('created client', { client });
-      await client.initialize();
+      await client.initialize().catch((err) => setError(err));
       await done(client);
     }
   }, [clientProvider, configProvider, createServices]);

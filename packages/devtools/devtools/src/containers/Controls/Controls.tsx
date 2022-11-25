@@ -17,7 +17,7 @@ import { ConfigSource } from './ConfigSource';
 import { SpaceCard } from './SpaceCard';
 
 export type ControlsProps = {
-  onConfigChange: (remoteSource?: string) => void;
+  onConfigChange: (params: { remoteSource?: string }) => void;
 };
 
 /**

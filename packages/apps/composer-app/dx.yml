@@ -4,7 +4,10 @@ package:
   modules:
     - name: composer
       type: dxos:type/app
-      display_name: Composer
+      displayName: Composer
+      description: Self-sovereign text documents.
+      tags:
+        - showcase
       build:
         command: pnpm -w nx bundle composer-app
 

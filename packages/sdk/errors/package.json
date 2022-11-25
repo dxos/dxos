@@ -1,7 +1,7 @@
 {
   "name": "@dxos/errors",
   "version": "0.1.9",
-  "description": "Error definitions and utilities",
+  "description": "Error definitions and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -12,10 +12,7 @@
   },
   "types": "dist/src/index.d.ts",
   "files": [
-    "dist",
-    "esbuild-plugin.js",
-    "rollup-plugin.js",
-    "webpack-plugin.js"
+    "dist"
   ],
   "scripts": {
     "check": "true"
