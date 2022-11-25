@@ -5,12 +5,13 @@
 import expect from 'expect';
 
 import { ModelFactory, TestBuilder } from '@dxos/model-factory';
+import { describe, test } from '@dxos/test';
 
 import { ObjectModel } from './object-model';
 import { validateKey } from './util';
 
 describe('ObjectModel', function () {
-  it('checks valid keys', function () {
+  test('checks valid keys', function () {
     const valid = ['x', 'foo', 'foo_bar', 'foo.bar'];
     for (const key of valid) {
       expect(validateKey(key)).toEqual(key);
@@ -22,7 +23,7 @@ describe('ObjectModel', function () {
     }
   });
 
-  it('can set a property', async function () {
+  test('can set a property', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -33,7 +34,7 @@ describe('ObjectModel', function () {
     expect(model.get('baz')).toEqual(2 ** 33);
   });
 
-  it('can set a dot property', async function () {
+  test('can set a dot property', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -41,7 +42,7 @@ describe('ObjectModel', function () {
     expect(model.get('foo')).toEqual({ bar: 100 });
   });
 
-  it('can remove a property', async function () {
+  test('can remove a property', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -52,7 +53,7 @@ describe('ObjectModel', function () {
     expect(model.get('foo')).toEqual(undefined);
   });
 
-  it('can set multiple properties using the builder pattern', async function () {
+  test('can set multiple properties using the builder pattern', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -62,7 +63,7 @@ describe('ObjectModel', function () {
     expect(model.get('bar')).toEqual(true);
   });
 
-  it('property updates are optimistically applied', async function () {
+  test('property updates are optimistically applied', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -72,7 +73,7 @@ describe('ObjectModel', function () {
     await promise;
   });
 
-  it('timeframe is updated after a mutation', async function () {
+  test('timeframe is updated after a mutation', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer = rig.createPeer();
 
@@ -82,7 +83,7 @@ describe('ObjectModel', function () {
     expect(peer.timeframe.get(peer.key)).toEqual(0);
   });
 
-  it('two peers', async function () {
+  test('two peers', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -92,7 +93,7 @@ describe('ObjectModel', function () {
     expect(peer2.model.get('foo')).toEqual('bar');
   });
 
-  it('consistency', async function () {
+  test('consistency', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

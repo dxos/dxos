@@ -8,6 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { Config } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
@@ -16,7 +17,7 @@ import { TestBuilder } from '../testing';
 chai.use(chaiAsPromised);
 
 describe('Client', function () {
-  it('creates client with embedded services', async function () {
+  test('creates client with embedded services', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -25,7 +26,7 @@ describe('Client', function () {
     expect(client.initialized).to.be.true;
   });
 
-  it('initialize and destroy multiple times', async function () {
+  test('initialize and destroy multiple times', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -38,7 +39,7 @@ describe('Client', function () {
     expect(client.initialized).to.be.false;
   });
 
-  it('closes and reopens', async function () {
+  test('closes and reopens', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -56,22 +57,17 @@ describe('Client', function () {
   });
 
   // TODO(burdon): Memory store is reset on close (feed store is closed).
-  it.skip('creates identity then resets the memory storage', async function () {
+  test.skip('creates identity then resets the memory storage', async function () {
     const config = new Config();
     const testBuilder = new TestBuilder(config);
     await runTest(testBuilder);
   });
 
-  // TODO(burdon): Node only.
-  it('creates identity then resets the node storage', async function () {
-    if (mochaExecutor.environment !== 'nodejs') {
-      this.skip();
-    }
-
+  test('creates identity then resets the node storage', async function () {
     const config = await getNodeConfig(true);
     const testBuilder = new TestBuilder(config);
     await runTest(testBuilder);
-  });
+  }).onlyEnvironments('nodejs');
 });
 
 // TODO(burdon): Factor out.

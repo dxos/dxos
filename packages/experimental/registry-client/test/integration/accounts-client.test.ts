@@ -7,6 +7,8 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
+
 import { AccountsClient } from '../../src';
 import { setupRegistryClient } from './utils';
 
@@ -31,7 +33,7 @@ describe('Accounts Client', function () {
   });
 
   describe('Creating accounts', function () {
-    it('Can create a DXNS account', async function () {
+    test('Can create a DXNS account', async function () {
       const account = await accountsApi.createAccount();
 
       const accountRecord = await accountsApi.getAccount(account);
@@ -42,7 +44,7 @@ describe('Accounts Client', function () {
   });
 
   describe('Adding devices', function () {
-    it('Can add a second device', async function () {
+    test('Can add a second device', async function () {
       const account = await accountsApi.createAccount();
       expect(await accountsApi.belongsToAccount(account, alice.address)).to.be.true;
       expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.false;

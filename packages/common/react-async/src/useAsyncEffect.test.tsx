@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
+
 import { useAsyncEffect } from './useAsyncEffect';
 
 const doAsync = async <T,>(value: T) =>
@@ -42,7 +44,7 @@ describe('useAsyncEffect', function () {
     document.body.removeChild(rootContainer!);
   });
 
-  it('gets async value.', async function () {
+  test('gets async value.', async function () {
     void act(() => {
       createRoot(rootContainer).render(<Test />);
     });

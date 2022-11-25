@@ -4,10 +4,12 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 import { Stream } from './stream';
 
 describe('Stream', function () {
-  it('can consume a stream that immediately closes', async function () {
+  test('can consume a stream that immediately closes', async function () {
     const stream = new Stream(({ next, close }) => {
       next('foo');
       next('bar');
@@ -24,7 +26,7 @@ describe('Stream', function () {
     ]);
   });
 
-  it('can consume a stream that produces items over time', async function () {
+  test('can consume a stream that produces items over time', async function () {
     const stream = new Stream(({ next, close }) => {
       void (async () => {
         await sleep(5);
@@ -47,7 +49,7 @@ describe('Stream', function () {
     ]);
   });
 
-  it('close error is buffered', async function () {
+  test('close error is buffered', async function () {
     const error = new Error('test');
     const stream = new Stream(({ close }) => {
       close(error);
@@ -56,7 +58,7 @@ describe('Stream', function () {
     expect(await Stream.consume(stream)).to.deep.equal([{ closed: true, error }]);
   });
 
-  it('subscribe gets all updates', async function () {
+  test('subscribe gets all updates', async function () {
     let nextCb: (value: string) => void = () => {};
     const stream = new Stream<string>(({ next }) => {
       nextCb = next;
@@ -71,7 +73,7 @@ describe('Stream', function () {
     expect(received).to.deep.equal(['first', 'second']);
   });
 
-  it('closing stream disposes the context', function () {
+  test('closing stream disposes the context', function () {
     let disposed = false;
     const stream = new Stream<string>(({ ctx }) => {
       ctx.onDispose(() => {
@@ -83,7 +85,7 @@ describe('Stream', function () {
     expect(disposed).to.be.true;
   });
 
-  it('thrown errors are caught be context', function () {
+  test('thrown errors are caught be context', function () {
     const stream = new Stream<string>(({ ctx }) => {
       throw new Error('test');
     });

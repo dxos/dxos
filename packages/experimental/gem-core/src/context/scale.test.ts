@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { Vector } from '../util';
 import { Scale } from './scale';
 
-it('toVertex', function () {
+test('toVertex', function () {
   const scale = new Scale(16);
   const v1 = Vector.toVertex({ x: 4, y: 8 });
   const p1 = scale.model.toPoint(v1);
@@ -16,7 +16,7 @@ it('toVertex', function () {
   expect(v1).to.deep.equal(v2);
 });
 
-it('toBounds', function () {
+test('toBounds', function () {
   const scale = new Scale(16);
   const b1 = Vector.toBounds({ x: 0, y: 0, width: 4, height: 4 });
   const b2 = scale.model.toBounds(b1);
@@ -25,7 +25,7 @@ it('toBounds', function () {
   expect(b1).to.deep.equal(b3);
 });
 
-it('snapValues', function () {
+test('snapValues', function () {
   const scale = new Scale(16);
   expect(scale.screen.snapValues([3, 9])).to.deep.equal([0, 16]);
 });

@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
+import { describe, test } from '@dxos/test';
 
 import { Matcher } from './matcher';
 import { TextIndex } from './text-index';
@@ -53,7 +54,7 @@ const items = [
 ];
 
 describe('TextIndex', function () {
-  it('indexer query', async function () {
+  test('indexer query', async function () {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -62,7 +63,7 @@ describe('TextIndex', function () {
     expect(results.filter((item) => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  it('indexer query with update cache', async function () {
+  test('indexer query with update cache', async function () {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -81,7 +82,7 @@ describe('TextIndex', function () {
     }
   });
 
-  it('simple text query', function () {
+  test('simple text query', function () {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],
@@ -103,7 +104,7 @@ describe('TextIndex', function () {
     expect(results.filter((item) => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  it('complex text query', function () {
+  test('complex text query', function () {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],

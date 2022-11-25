@@ -19,6 +19,7 @@ import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { beforeAll, describe, test } from '@dxos/test';
 import { boolGuard } from '@dxos/util';
 
 import { ReplicatorPlugin, ReplicatorMiddleware } from './replicator-plugin';
@@ -148,14 +149,14 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
   const topic = crypto.randomBytes(32);
   let network: any;
 
-  before(async function () {
+  beforeAll(async function () {
     network = await generator.balancedBinTree({
       topic,
       parameters: [3]
     });
   });
 
-  it('feed synchronization', async function () {
+  test('feed synchronization', async function () {
     expect(network.peers.length).to.equal(15);
     await waitForExpect(
       () => {
@@ -170,7 +171,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
     );
   });
 
-  it('message synchronization', async function () {
+  test('message synchronization', async function () {
     const wait: any[] = [];
     const messages: any[] = [];
     network.peers.forEach((peer: any) => {

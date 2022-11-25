@@ -5,12 +5,14 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
+import { describe, test } from '@dxos/test';
+
 import { ApiError } from './errors';
 
 chai.use(chaiAsPromised);
 
 describe('Errors', function () {
-  it('test', async function () {
+  test('test', async function () {
     const runTest = async () => {
       throw new ApiError('Test error');
     };

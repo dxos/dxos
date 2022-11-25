@@ -4,10 +4,12 @@
 
 import expect from 'expect';
 
+import { describe, test } from '@dxos/test';
+
 import { Context } from './context';
 
 describe('Context', function () {
-  it('dispose calls dispose hooks', function () {
+  test('dispose calls dispose hooks', function () {
     const ctx = new Context();
 
     let called = false;
@@ -19,11 +21,11 @@ describe('Context', function () {
     expect(called).toBeTruthy();
   });
 
-  it('dispose waits for async callbacks');
+  test('dispose waits for async callbacks', () => {});
 
-  it('error in dispose callbacks are not propagated');
+  test('error in dispose callbacks are not propagated', () => {});
 
-  it('raised errors are propagated to the error handler', function () {
+  test('raised errors are propagated to the error handler', function () {
     let error!: Error;
     const ctx = new Context({
       onError: (err) => {
@@ -35,7 +37,7 @@ describe('Context', function () {
     expect(error.message).toEqual('test');
   });
 
-  it('instanceof', function () {
+  test('instanceof', function () {
     const ctx = new Context();
     expect(ctx instanceof Context).toBeTruthy();
 

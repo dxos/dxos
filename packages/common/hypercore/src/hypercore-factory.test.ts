@@ -6,12 +6,13 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { createKeyPair } from '@dxos/crypto';
+import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem, py } from './testing';
 
 describe('HypercoreFactory', function () {
-  it('appends to, and read from, multiple feeds', async function () {
+  test('appends to, and read from, multiple feeds', async function () {
     const factory = new HypercoreFactory();
 
     const numFeeds = 10;

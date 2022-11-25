@@ -1,4 +1,4 @@
-# @dxos/mocha
+# @dxos/test
 
 
 
@@ -17,8 +17,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 subgraph executors [executors]
   style executors fill:#faebec,stroke:#333
-  dxos/mocha("@dxos/mocha"):::root
-  click dxos/mocha "dxos/dxos/tree/main/tools/executors/mocha/docs"
+  dxos/test("@dxos/test"):::root
+  click dxos/test "dxos/dxos/tree/main/tools/executors/test/docs"
 end
 
 %% Links

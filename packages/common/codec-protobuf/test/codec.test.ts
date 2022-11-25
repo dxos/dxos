@@ -6,10 +6,12 @@ import { expect } from 'chai';
 import { join } from 'node:path';
 import * as pb from 'protobufjs';
 
+import { describe, test } from '@dxos/test';
+
 import { Schema, anySubstitutions } from '../src';
 
 describe('extending protobuf', function () {
-  it('extends proto with another file', async function () {
+  test('extends proto with another file', async function () {
     const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
     const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another.proto'));
 
@@ -29,7 +31,7 @@ describe('extending protobuf', function () {
     expect(decoded).to.deep.equal(data);
   });
 
-  it('Extends proto with duplicate keys', async function () {
+  test('Extends proto with duplicate keys', async function () {
     const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
     const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another-with-any.proto'));
 

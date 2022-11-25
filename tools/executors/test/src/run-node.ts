@@ -115,7 +115,7 @@ const getSetupArgs = (root: string, domRequired: boolean) => {
   const scripts = ['colors', 'mocha-env', 'catch-unhandled-rejections', ...(domRequired ? ['react-setup'] : [])];
 
   return scripts
-    .map((script) => join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`))
+    .map((script) => join(root, 'tools/executors/test/dist/src/setup', `${script}.js`))
     .map((script) => ['-r', script])
     .flat();
 };

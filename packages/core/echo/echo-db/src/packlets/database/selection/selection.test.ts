@@ -9,6 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemID, ItemType } from '@dxos/protocols';
+import { describe, test } from '@dxos/test';
 
 import { Entity } from '../entity';
 import { Item } from '../item';
@@ -90,35 +91,35 @@ const links: Link<any>[] = [
 
 describe('Selection', function () {
   describe('root', function () {
-    it('all', function () {
+    test('all', function () {
       expect(createRootSelection().exec().entities).toHaveLength(items.length);
     });
 
-    it('by id', function () {
+    test('by id', function () {
       expect(createRootSelection({ id: org1.id }).exec().entities).toEqual([org1]);
 
       expect(createRootSelection({ id: org2.id }).exec().entities).toEqual([org2]);
     });
 
-    it('single type', function () {
+    test('single type', function () {
       expect(createRootSelection({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
-    it('multiple types', function () {
+    test('multiple types', function () {
       expect(createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] }).exec().entities).toHaveLength(5);
     });
   });
 
   describe('filter', function () {
-    it('invalid', function () {
+    test('invalid', function () {
       expect(createRootSelection().filter({ type: 'dxos:type/invalid' }).exec().entities).toHaveLength(0);
     });
 
-    it('single type', function () {
+    test('single type', function () {
       expect(createRootSelection().filter({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
-    it('multiple types', function () {
+    test('multiple types', function () {
       expect(
         createRootSelection()
           .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
@@ -126,7 +127,7 @@ describe('Selection', function () {
       ).toHaveLength(5);
     });
 
-    it('by function', function () {
+    test('by function', function () {
       expect(
         createRootSelection()
           .filter((item) => item.type === ITEM_ORG)
@@ -136,13 +137,13 @@ describe('Selection', function () {
   });
 
   describe('children', function () {
-    it('from multiple items', function () {
+    test('from multiple items', function () {
       expect(
         ids(createRootSelection().filter({ type: ITEM_ORG }).children({ type: ITEM_PROJECT }).exec().entities)
       ).toStrictEqual(ids([project1, project2, project3]));
     });
 
-    it('from single item', function () {
+    test('from single item', function () {
       expect(ids(createRootSelection({ id: org1.id }).children().exec().entities)).toStrictEqual(
         ids([project1, project2, person1, person2])
       );
@@ -150,33 +151,33 @@ describe('Selection', function () {
   });
 
   describe('parent', function () {
-    it('from multiple items', function () {
+    test('from multiple items', function () {
       expect(ids(createRootSelection().filter({ type: ITEM_PROJECT }).parent().exec().entities)).toStrictEqual(
         ids([org1, org2])
       );
     });
 
-    it('from single item', function () {
+    test('from single item', function () {
       expect(ids(createRootSelection({ id: project1.id }).parent().exec().entities)).toStrictEqual(ids([org1]));
     });
 
-    it('is empty', function () {
+    test('is empty', function () {
       expect(createRootSelection({ id: org1.id }).parent().exec().entities).toEqual([]);
     });
   });
 
   describe('links', function () {
-    it('links from single item', function () {
+    test('links from single item', function () {
       expect(ids(createRootSelection({ id: project1.id }).links().target().exec().entities)).toStrictEqual(
         ids([person1, person2])
       );
     });
 
-    it('links from multiple items', function () {
+    test('links from multiple items', function () {
       expect(createRootSelection({ type: ITEM_PROJECT }).links().exec().entities).toHaveLength(links.length);
     });
 
-    it('sources', function () {
+    test('sources', function () {
       expect(ids(createRootSelection({ type: ITEM_PERSON }).refs().source().exec().entities)).toStrictEqual(
         ids([project1, project2])
       );
@@ -184,7 +185,7 @@ describe('Selection', function () {
   });
 
   describe('reducer', function () {
-    it('simple reducer', function () {
+    test('simple reducer', function () {
       const query = createReducer(0)
         .call((items, count) => count + items.length)
         .exec();
@@ -192,7 +193,7 @@ describe('Selection', function () {
     });
 
     // TODO(burdon): Support nested traverals (context as third arg?)
-    it('complex reducer', function () {
+    test('complex reducer', function () {
       const query = createReducer({ numItems: 0, numLinks: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => ({
@@ -220,7 +221,7 @@ describe('Selection', function () {
   });
 
   describe('events', function () {
-    it('events get filtered correctly', async function () {
+    test('events get filtered correctly', async function () {
       const update = new Event<Entity[]>();
 
       const query = createSelection<void>(

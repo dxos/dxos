@@ -5,6 +5,8 @@
 import { BrowserContext, chromium, Page } from 'playwright';
 import { v4 } from 'uuid';
 
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
+
 import { getExtensionId } from '../utils/extensionId';
 
 const EXTENSION_PATH = `${process.cwd()}/dist`;
@@ -15,7 +17,7 @@ describe('Playwright tests for Wallet Extension', function () {
   let context: BrowserContext;
   let page: Page;
 
-  before(async function () {
+  beforeAll(async function () {
     const userDataDir = `/tmp/browser-mocha/${v4()}`;
     context = await chromium.launchPersistentContext(userDataDir, {
       headless: false, // Extensions do not work in headless mode.
@@ -24,12 +26,12 @@ describe('Playwright tests for Wallet Extension', function () {
     page = await context.newPage();
   });
 
-  it('Installs properly', async function () {
+  test('Installs properly', async function () {
     await page.goto(`chrome-extension://${await getExtensionId()}/popup/fullscreen.html`);
     await page.waitForSelector("//*[contains(text(),'Welcome to DXOS')]");
   });
 
-  after(async function () {
+  afterAll(async function () {
     await page.close();
     await context.close();
   });

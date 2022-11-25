@@ -6,6 +6,8 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 // TODO(burdon): Disable tests from CI?
 
 // Pipelines (for project (e.g., dxos))
@@ -28,7 +30,7 @@ describe('CI tests', function () {
   // TODO(burdon): Don't run tests in CI.
   // TODO(burdon): Find broken test and chain together.
 
-  it('gets pipelines', async function () {
+  test('gets pipelines', async function () {
     // https://circleci.com/docs/api/v2/index.html#tag/Pipeline
     const endpoint = 'https://circleci.com/api/v2/pipeline';
     const params = new URLSearchParams({ 'org-slug': 'gh/dxos' });
@@ -41,7 +43,7 @@ describe('CI tests', function () {
     // TODO(burdon): Detect if new pipeline.
   });
 
-  it('gets workflows', async function () {
+  test('gets workflows', async function () {
     // https://circleci.com/docs/api/v2/index.html#operation/listWorkflowsByPipelineId
     const endpoint = 'https://circleci.com/api/v2/pipeline';
     const pipelineId = 'ae27ce0c-75a9-4e26-a310-d903b3cea61d';
@@ -55,7 +57,7 @@ describe('CI tests', function () {
     expect(status).to.eq('failed');
   });
 
-  it('gets jobs', async function () {
+  test('gets jobs', async function () {
     // https://circleci.com/docs/api/v2/index.html#operation/listWorkflowJobs
     const endpoint = 'https://circleci.com/api/v2/workflow';
     const workflowId = '656b5af0-d453-4b5f-8650-4c37b404e194';
@@ -70,7 +72,7 @@ describe('CI tests', function () {
   });
 
   // NOTE: Community question: https://discuss.circleci.com/t/downloading-build-logs-with-v2-api/44780
-  it('gets log', async function () {
+  test('gets log', async function () {
     // https://circleci.com/docs/api/v1/index.html#single-job
     const endpoint = 'https://circleci.com/api/v1.1/project';
     const jobNumber = 3378; // NOTE: The terms `job` and `build` are used interchangeably.

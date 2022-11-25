@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
+import { afterEach, beforeEach, describe } from '@dxos/test';
+
 import { useStateUpdater } from './useStateUpdater';
 
 // Expensive object to copy.

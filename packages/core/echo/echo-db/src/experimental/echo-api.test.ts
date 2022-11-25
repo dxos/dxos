@@ -4,6 +4,8 @@
 
 import expect from 'expect';
 
+import { describe, test } from '@dxos/test';
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 // https://javascript.info/proxy
 // https://www.javascripttutorial.net/es6/javascript-proxy
@@ -135,7 +137,7 @@ class Database {
 }
 
 describe('API', () => {
-  it('Pseudo-code', () => {
+  test('Pseudo-code', () => {
     const db = new Database();
     db.addType(ContactType, value => new Proxy<Contact>(value, new ContactHandler()));
 

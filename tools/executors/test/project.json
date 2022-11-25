@@ -1,16 +1,16 @@
 {
-  "sourceRoot": "tools/executors/mocha/src",
+  "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "tools/executors/mocha/src/main.ts",
-        "outputPath": "tools/executors/mocha/dist",
+        "main": "tools/executors/test/src/main.ts",
+        "outputPath": "tools/executors/test/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "tools/executors/mocha/tsconfig.json"
+        "tsConfig": "tools/executors/test/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -21,7 +21,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "tools/executors/mocha/**/*.{ts,js}"
+          "tools/executors/test/**/*.{ts,js}"
         ]
       },
       "outputs": [

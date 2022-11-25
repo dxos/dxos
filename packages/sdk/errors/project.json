@@ -29,7 +29,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "coveragePath": "coverage/packages/sdk/errors",
         "outputPath": "tmp/mocha/packages/sdk/errors",
@@ -49,6 +49,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

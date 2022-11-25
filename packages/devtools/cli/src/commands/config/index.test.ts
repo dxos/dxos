@@ -7,6 +7,8 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import path from 'path';
 
+import { describe } from '@dxos/test';
+
 // TODO(burdon): Import (configure esbuild).
 // TODO(burdon): Lint issue.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

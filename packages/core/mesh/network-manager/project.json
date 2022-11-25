@@ -29,7 +29,7 @@
       ]
     },
     "test": {
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "ciEnvironments": [
           "chromium",
@@ -56,6 +56,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "test"
   ]
 }

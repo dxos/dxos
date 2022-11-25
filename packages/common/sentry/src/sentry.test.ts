@@ -5,6 +5,8 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { beforeAll, beforeEach, describe, test } from '@dxos/test';
+
 import { sentryTestkit, TransportFunction } from '../testing';
 import * as Sentry from './node';
 
@@ -13,7 +15,7 @@ const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
 const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
 describe('Error reporting', function () {
-  before(function () {
+  beforeAll(function () {
     Sentry.init({
       destination: MOCK_DESTINATION,
       release: 'test',
@@ -25,7 +27,7 @@ describe('Error reporting', function () {
     testkit.reset();
   });
 
-  it('should capture errors', async function () {
+  test('should capture errors', async function () {
     const err = new Error('error to look for');
     Sentry.captureException(err);
     await waitForExpect(() => {

@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { describe, test } from '@dxos/mocha';
+import { describe, test } from '@dxos/test';
 
 import { safeInstanceof } from './safe-instanceof';
 

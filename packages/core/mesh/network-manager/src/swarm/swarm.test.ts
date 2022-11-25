@@ -11,6 +11,7 @@ import { sleep, asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
+import { beforeEach, describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
@@ -47,7 +48,7 @@ describe('Swarm', function () {
     return { swarm, plugin };
   };
 
-  it('connects two peers in a swarm', async function () {
+  test('connects two peers in a swarm', async function () {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -96,7 +97,7 @@ describe('Swarm', function () {
     });
   }).timeout(5_000);
 
-  it('two peers try to originate connections to each other simultaneously', async function () {
+  test('two peers try to originate connections to each other simultaneously', async function () {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -126,7 +127,7 @@ describe('Swarm', function () {
     await connectPromises;
   }).timeout(5_000);
 
-  it('second peer discovered after delay', async function () {
+  test('second peer discovered after delay', async function () {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();

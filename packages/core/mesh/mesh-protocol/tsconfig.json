@@ -4,7 +4,6 @@
     "outDir": "dist",
     "types": [
       "@dxos/typings",
-      "mocha",
       "node"
     ]
   },

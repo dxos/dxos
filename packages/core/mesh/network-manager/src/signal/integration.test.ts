@@ -10,6 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
@@ -17,11 +18,11 @@ import { SignalMessage } from './signal-messenger';
 describe('Signal Integration Test', function () {
   let broker: TestBroker;
 
-  before(async function () {
+  beforeAll(async function () {
     broker = await createTestBroker();
   });
 
-  after(function () {
+  afterAll(function () {
     broker.stop();
   });
 
@@ -47,7 +48,7 @@ describe('Signal Integration Test', function () {
     };
   };
 
-  it('two peers connecting', async function () {
+  test('two peers connecting', async function () {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();

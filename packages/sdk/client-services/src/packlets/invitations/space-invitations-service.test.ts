@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../services';
@@ -21,7 +22,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/space-invitation-service', function () {
-  it('creates space and invites peer', async function () {
+  test('creates space and invites peer', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(host.spaceManager);
@@ -82,7 +83,7 @@ describe('services/space-invitation-service', function () {
     expect(invitation1.state).to.eq(Invitation.State.SUCCESS);
   });
 
-  it('creates space and cancels invitation', async function () {
+  test('creates space and cancels invitation', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     assert(host.spaceManager);

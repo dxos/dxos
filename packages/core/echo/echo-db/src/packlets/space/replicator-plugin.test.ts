@@ -6,6 +6,7 @@ import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -13,7 +14,7 @@ import { TestFeedBuilder } from '../common';
 import { TestAgentBuilder } from './testing';
 
 describe('space/replicator-plugin', function () {
-  it('replicates a feed', async function () {
+  test('replicates a feed', async function () {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 

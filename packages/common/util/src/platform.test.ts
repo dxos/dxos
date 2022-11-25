@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { test } from '@dxos/mocha';
+import { test } from '@dxos/test';
 
 import { isNode } from './platform';
 

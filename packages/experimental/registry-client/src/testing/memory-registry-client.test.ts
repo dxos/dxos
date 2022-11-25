@@ -5,6 +5,8 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
+import { beforeAll, describe, test } from '@dxos/test';
+
 import { AccountKey, CID, DXN, RegistryClient } from '../api';
 import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator';
 import { MemoryRegistryClientBackend } from './memory-registry-client';
@@ -14,7 +16,7 @@ describe('Registry API mock', function () {
   let records: CID[];
   let names: DXN[];
 
-  before(async function () {
+  beforeAll(async function () {
     mock = new MemoryRegistryClientBackend();
     const registry = new RegistryClient(mock);
     const owner = AccountKey.random();
@@ -42,20 +44,20 @@ describe('Registry API mock', function () {
     );
   });
 
-  it('Returns a specific resource', async function () {
+  test('Returns a specific resource', async function () {
     const name = names[0];
     const resource = await mock.getResource(name);
 
     expect(resource!.toString()).to.equal(records[0]!.toString());
   });
 
-  it('Returns resources', async function () {
+  test('Returns resources', async function () {
     const resources = await mock.listResources();
 
     expect(resources.length).to.be.equal(30);
   });
 
-  it('Returns records', async function () {
+  test('Returns records', async function () {
     const records = await mock.listRecords();
 
     expect(records.length).to.be.equal(36);

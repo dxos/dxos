@@ -5,12 +5,13 @@
 import expect from 'expect';
 
 import { ModelFactory, TestBuilder } from '@dxos/model-factory';
+import { describe, test } from '@dxos/test';
 
 import { ObjectModel } from './object-model';
 import { OrderedList } from './ordered-list';
 
 describe('OrderedList', function () {
-  it('refresh', async function () {
+  test('refresh', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -42,7 +43,7 @@ describe('OrderedList', function () {
     }
   });
 
-  it('clear', async function () {
+  test('clear', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -62,7 +63,7 @@ describe('OrderedList', function () {
     expect(list.values).toEqual(['a', 'b', 'c']);
   });
 
-  it('set and remove', async function () {
+  test('set and remove', async function () {
     const rig = new TestBuilder(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 

@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import robot from 'robotjs';
 
 import { TestType } from '@dxos/client-testing';
+import { describe, test } from '@dxos/test';
 
 import { Launcher } from '../util';
 
@@ -93,7 +94,7 @@ describe('Grid demo', function () {
     }
   }
 
-  it('Opens grid', async function () {
+  test('Opens grid', async function () {
     const grid = createGrid('/Secondary', [rows, columns]);
 
     let page = 0;

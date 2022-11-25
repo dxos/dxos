@@ -9,6 +9,7 @@ import fs from 'fs';
 import yaml from 'js-yaml';
 
 import { truncate, truncateKey } from '@dxos/debug';
+import { describe, test } from '@dxos/test';
 
 import { buildTestSpace, SpaceBuilder, TestType } from './builders';
 import { treeLogger, TreeRoot } from './logging';
@@ -36,14 +37,14 @@ const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
 
 describe.skip('Builders', function () {
-  it.only('sanity', async function () {
+  test('sanity', async function () {
     const builder = new TestBuilder();
     await builder.initialize();
     const space = await builder.createSpace();
     await builder.destroySpace(space);
   });
 
-  it('tree logger', function () {
+  test('tree logger', function () {
     return testCallback(async (client, space) => {
       await buildTestSpace(new SpaceBuilder(space));
 
@@ -66,7 +67,7 @@ describe.skip('Builders', function () {
     });
   });
 
-  it('import/export', async function () {
+  test('import/export', async function () {
     const dir = `/tmp/dxos/testing/${Date.now()}`;
     fs.mkdirSync(dir, { recursive: true });
     const filename = `${dir}/data.yml`;

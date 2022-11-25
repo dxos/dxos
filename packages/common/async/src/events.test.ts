@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { Context } from '@dxos/context';
+import { describe, test } from '@dxos/test';
 
 import { Event } from './events';
 import { sleep } from './timeout';
 
 describe('Event', function () {
-  it('#debounce', async function () {
+  test('#debounce', async function () {
     const event = new Event<boolean>();
 
     let pureCount = 0;
@@ -47,7 +48,7 @@ describe('Event', function () {
     expect(debounceCount).to.equal(1);
   });
 
-  it('subscribe context', async function () {
+  test('subscribe context', async function () {
     const event = new Event<number>();
     const ctx = new Context();
 
@@ -67,7 +68,7 @@ describe('Event', function () {
     expect(received).to.deep.equal([1, 2]);
   });
 
-  it('errors are propagated to context', async function () {
+  test('errors are propagated to context', async function () {
     const event = new Event<number>();
     let error!: Error;
     const ctx = new Context({

@@ -69,7 +69,7 @@
       "dependsOn": [
         "build"
       ],
-      "executor": "@dxos/mocha:mocha",
+      "executor": "@dxos/test:run",
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [

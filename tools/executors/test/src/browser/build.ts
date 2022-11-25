@@ -32,7 +32,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
     import { mocha } from 'mocha';
 
-    import { BrowserReporter } from '@dxos/mocha/reporter';
+    import { BrowserReporter } from '@dxos/test/reporter';
 
     async function run() {
       const context = await window.browserMocha__getEnv();

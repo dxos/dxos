@@ -5,10 +5,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist",
-    "types": [
-      "mocha"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src"

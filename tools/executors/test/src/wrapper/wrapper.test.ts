@@ -17,9 +17,11 @@ describe('wrapper', function () {
     expect(test.tag()).to.eq(test);
   });
 
-  it('exposes enviroment method', function () {
+  it('exposes enviroment methods', function () {
     const test = testWrapper('test', () => {});
-    expect(test.environment).to.not.be.undefined;
-    expect(test.environment()).to.eq(test);
+    expect(test.onlyEnvironments).to.not.be.undefined;
+    expect(test.skipEnvironments).to.not.be.undefined;
+    expect(test.onlyEnvironments()).to.eq(test);
+    expect(test.skipEnvironments()).to.eq(test);
   });
 });

@@ -8,6 +8,7 @@ import expect from 'expect';
 
 import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
 import { log, SchemaBuilder, TestType } from './builders';
 
@@ -28,13 +29,13 @@ describe('Schemas', function () {
     await client.destroy();
   });
 
-  it('creation of Schema', async function () {
+  test('creation of Schema', async function () {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  it('add Schema field', async function () {
+  test('add Schema field', async function () {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -46,7 +47,7 @@ describe('Schemas', function () {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  it('add Schema linked field', async function () {
+  test('add Schema linked field', async function () {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -76,7 +77,7 @@ describe('Schemas', function () {
     });
   });
 
-  it('Use schema to validate the fields of an item', async function () {
+  test('Use schema to validate the fields of an item', async function () {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,

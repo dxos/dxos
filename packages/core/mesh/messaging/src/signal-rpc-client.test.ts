@@ -9,17 +9,18 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', function () {
   let broker: TestBroker;
 
-  before(async function () {
+  beforeAll(async function () {
     broker = await createTestBroker();
   });
 
-  after(function () {
+  afterAll(function () {
     broker.stop();
   });
 
@@ -28,7 +29,7 @@ describe('SignalRPCClient', function () {
     return client;
   };
 
-  it('signal between 2 peers', async function () {
+  test('signal between 2 peers', async function () {
     const client1 = await setupClient();
     const client2 = await setupClient();
 
@@ -64,7 +65,7 @@ describe('SignalRPCClient', function () {
     stream1.close();
   }).timeout(10000);
 
-  it('join', async function () {
+  test('join', async function () {
     const client1 = await setupClient();
     const client2 = await setupClient();
 

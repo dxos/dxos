@@ -10,6 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -22,7 +23,7 @@ import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 describe('space/space-protocol', function () {
-  it('two peers discover each other', async function () {
+  test('two peers discover each other', async function () {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -44,7 +45,7 @@ describe('space/space-protocol', function () {
     });
   });
 
-  it('replicates a feed', async function () {
+  test('replicates a feed', async function () {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -88,12 +89,7 @@ describe('space/space-protocol', function () {
     await builder.close();
   });
 
-  it('replicates a feed through a webrtc connection', async function () {
-    // Some storage drivers may break when there are multiple storage instances.
-    if (mochaExecutor.environment === 'webkit') {
-      this.skip();
-    }
-
+  test('replicates a feed through a webrtc connection', async function () {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)
@@ -135,5 +131,5 @@ describe('space/space-protocol', function () {
     });
 
     await builder.close();
-  });
+  }).skipEnvironments('webkit'); // Some storage drivers may break when there are multiple storage instances.
 });

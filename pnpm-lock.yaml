@@ -29,11 +29,11 @@ importers:
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
       '@dxos/log-hook': workspace:*
-      '@dxos/mocha': workspace:*
       '@dxos/plate': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/test': workspace:*
       '@dxos/toolbox': workspace:*
       '@dxos/typings': workspace:*
       '@mdx-js/react': ^2.1.3
@@ -124,11 +124,11 @@ importers:
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
-      '@dxos/mocha': link:tools/executors/mocha
       '@dxos/plate': link:packages/devtools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
+      '@dxos/test': link:tools/executors/test
       '@dxos/toolbox': link:tools/executors/toolbox
       '@dxos/typings': link:packages/common/typings
       '@mdx-js/react': 2.1.5_react@18.2.0
@@ -4012,9 +4012,6 @@ importers:
   tools/executors/esbuild:
     specifiers: {}
 
-  tools/executors/mocha:
-    specifiers: {}
-
   tools/executors/playwright:
     specifiers: {}
 
@@ -4056,6 +4053,9 @@ importers:
       mocha: 8.4.0
       ts-node: 10.9.1_avwejrfg7abipkjwvznwy27qia
       typescript: 4.8.4
+
+  tools/executors/test:
+    specifiers: {}
 
   tools/executors/toolbox:
     specifiers:

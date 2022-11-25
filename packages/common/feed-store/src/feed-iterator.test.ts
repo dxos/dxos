@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
+import { describe, test } from '@dxos/test';
 
 import { FeedIterator } from './feed-iterator';
 import { TestItemBuilder } from './testing';
 
 describe('FeedIterator', function () {
-  it('reads blocks in order', async function () {
+  test('reads blocks in order', async function () {
     const builder = new TestItemBuilder();
 
     const numBlocks = 20;

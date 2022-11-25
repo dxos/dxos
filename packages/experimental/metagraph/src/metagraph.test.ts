@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Module } from '@dxos/protocols/proto/dxos/config';
+import { describe, test } from '@dxos/test';
 
 import { Metagraph } from './metagraph';
 import { TestServer } from './testing';
@@ -51,7 +52,7 @@ describe('Metagraph queries', function () {
     testServer.stop();
   });
 
-  it('basic module queries', async function () {
+  test('basic module queries', async function () {
     const metagraph = new Metagraph(
       new Config({
         runtime: {

@@ -7,6 +7,7 @@ import faker from 'faker';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { TestItemBuilder } from './testing';
@@ -21,7 +22,7 @@ const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[
 describe('FeedSetIterator', function () {
   // TODO(burdon): Test when feed is added on-the-fly.
 
-  it('opens and closes multiple times', async function () {
+  test('opens and closes multiple times', async function () {
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
     await iterator.open();
     await iterator.open();
@@ -49,7 +50,7 @@ describe('FeedSetIterator', function () {
     expect(iterator.isRunning).to.be.false;
   });
 
-  it('responds immediately when a feed is appended', async function () {
+  test('responds immediately when a feed is appended', async function () {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const iterator = new FeedSetIterator(randomFeedBlockSelector);
@@ -91,7 +92,7 @@ describe('FeedSetIterator', function () {
     await iterator.close();
   });
 
-  it('reads blocks in order', async function () {
+  test('reads blocks in order', async function () {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 

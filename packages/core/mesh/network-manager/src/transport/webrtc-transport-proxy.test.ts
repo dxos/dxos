@@ -16,6 +16,7 @@ import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
@@ -79,7 +80,7 @@ describe('WebRTCTransportProxy', function () {
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  it('open and close', async function () {
+  test('open and close', async function () {
     const { webRTCTransportProxy: connection } = await setupProxy();
 
     let callsCounter = 0;
@@ -98,11 +99,7 @@ describe('WebRTCTransportProxy', function () {
     .timeout(1_000)
     .retries(3);
 
-  it('establish connection and send data through with protocol', async function () {
-    if (mochaExecutor.environment !== 'nodejs') {
-      this.skip();
-    }
-
+  test('establish connection and send data through with protocol', async function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -195,7 +192,7 @@ describe('WebRTCTransportProxy', function () {
       await rpcClient?.close();
     });
 
-    it('establish connection and send data through with protocol', async function () {
+    test('establish connection and send data through with protocol', async function () {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();

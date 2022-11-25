@@ -8,11 +8,12 @@ import { Writable } from 'streamx';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 
 describe('Streams', function () {
-  it('reads from stream', async function () {
+  test('reads from stream', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
@@ -52,7 +53,7 @@ describe('Streams', function () {
     }
   });
 
-  it('feed closed while stream is open', async function () {
+  test('feed closed while stream is open', async function () {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });

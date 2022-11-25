@@ -10,6 +10,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from '../services';
@@ -21,7 +22,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 };
 
 describe('services/space-invitations-handler', function () {
-  it('genesis', async function () {
+  test('genesis', async function () {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.spaceManager!.createSpace();
@@ -30,7 +31,7 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  it('genesis with database mutations', async function () {
+  test('genesis with database mutations', async function () {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
     const space = await peer.spaceManager!.createSpace();
 
@@ -47,7 +48,7 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  it('creates and accepts invitation', async function () {
+  test('creates and accepts invitation', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
@@ -104,7 +105,7 @@ describe('services/space-invitations-handler', function () {
     }
   });
 
-  it('cancels invitation', async function () {
+  test('cancels invitation', async function () {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();

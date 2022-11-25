@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { Invitation, SpaceInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
+import { describe, test } from '@dxos/test';
 
 import { SpaceInvitationsProxy, SpaceInvitationsServiceImpl } from '../invitations';
 import { createServiceContext } from '../testing';
@@ -25,7 +26,7 @@ const serviceBundle = createServiceBundle<TestServices>({
 });
 
 describe('service registry', function () {
-  it('builds a service registry', async function () {
+  test('builds a service registry', async function () {
     const serviceContext = createServiceContext();
     await serviceContext.open();
     await serviceContext.createIdentity();

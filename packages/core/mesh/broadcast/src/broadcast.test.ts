@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import { EventEmitter } from 'node:events';
 
 import { NetworkGenerator } from '@dxos/network-generator';
+import { test } from '@dxos/test';
 
 import { Broadcast, Middleware } from './broadcast';
 
@@ -95,7 +96,7 @@ const publishAndSync = async (peers: any, message: any, opts?: any) => {
   return packet;
 };
 
-it('balancedBinTree: broadcast a message.', async function () {
+test('balancedBinTree: broadcast a message.', async function () {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id),
     createConnection: (peerFrom: any, peerTo: any) => {
@@ -118,7 +119,7 @@ it('balancedBinTree: broadcast a message.', async function () {
   network.peers.forEach((peer: any) => peer.close());
 });
 
-it('complete: broadcast a message.', async function () {
+test('complete: broadcast a message.', async function () {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id, { maxAge: 1000, maxSize: 2 }),
     createConnection: (peerFrom: any, peerTo: any) => {

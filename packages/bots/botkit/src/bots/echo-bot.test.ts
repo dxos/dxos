@@ -6,12 +6,13 @@ import expect from 'expect';
 
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
+import { describe, test } from '@dxos/test';
 
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
 describe('Echo Bot', function () {
-  it('Starts a bot', async function () {
+  test('Starts a bot', async function () {
     const { client, space, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 

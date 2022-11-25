@@ -9,6 +9,7 @@ import { sleep } from '@dxos/async';
 import { ClientServicesProxy, IFrameRuntime, WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { Client, fromIFrame } from '../client';
@@ -17,7 +18,7 @@ import { TestBuilder } from '../testing';
 chai.use(chaiAsPromised);
 
 describe('Shared worker', function () {
-  it('client connects to the worker', async function () {
+  test('client connects to the worker', async function () {
     const workerRuntime = new WorkerRuntime(() => new Config({}));
 
     const systemPorts = createLinkedPorts();
@@ -41,7 +42,7 @@ describe('Shared worker', function () {
     await client.halo.createProfile();
   });
 
-  it('initialization errors get propagated to the client', async function () {
+  test('initialization errors get propagated to the client', async function () {
     const workerRuntime = new WorkerRuntime(async () => {
       await sleep(1);
       throw new Error('Test error');
@@ -76,7 +77,7 @@ describe('Shared worker', function () {
   });
 
   // TODO(burdon): Browser-only.
-  it.skip('creates client with remote iframe', async function () {
+  test.skip('creates client with remote iframe', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({

@@ -7,13 +7,14 @@ import { expect } from 'chai';
 import { asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { ObjectModel } from '@dxos/object-model';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Spaces', function () {
-  it('creates a space', async function () {
+  test('creates a space', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -34,7 +35,7 @@ describe('Spaces', function () {
     );
   });
 
-  it('creates a space re-opens the client', async function () {
+  test('creates a space re-opens the client', async function () {
     const testBuilder = new TestBuilder(new Config({ version: 1 }));
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });

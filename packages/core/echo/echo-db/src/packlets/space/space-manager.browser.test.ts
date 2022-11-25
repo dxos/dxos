@@ -7,6 +7,7 @@
 import { expect } from 'chai';
 
 import { createStorage } from '@dxos/random-access-storage';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
@@ -16,7 +17,7 @@ import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 describe('space-manager', function () {
-  it('invitations', async function () {
+  test('invitations', async function () {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL)

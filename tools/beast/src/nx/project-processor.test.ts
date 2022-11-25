@@ -7,6 +7,8 @@ import pick from 'lodash.pick';
 import { join } from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
+import { describe, test } from '@dxos/test';
+
 import { Flowchart } from '../mermaid';
 import { ProjectProcessor } from './project-processor';
 import { WorkspaceProcessor } from './workspace-processor';
@@ -22,7 +24,7 @@ import { WorkspaceProcessor } from './workspace-processor';
 const baseDir = join(process.cwd());
 
 describe('Code analysis', function () {
-  it('Sanity', function () {
+  test('Sanity', function () {
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 
@@ -31,7 +33,7 @@ describe('Code analysis', function () {
     expect(root?.getName()).toBeTruthy();
   });
 
-  it('Create graph', function () {
+  test('Create graph', function () {
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 

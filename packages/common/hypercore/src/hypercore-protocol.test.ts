@@ -10,6 +10,7 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 
@@ -17,7 +18,7 @@ import { HypercoreFactory } from './hypercore-factory';
 // TODO(burdon): Simulate multiple peers and broadcast.
 
 describe('ProtocolStream', function () {
-  it('protocol stream handshake completes', async function () {
+  test('protocol stream handshake completes', async function () {
     const [handshake, setHandshake] = latch({ count: 2 });
 
     const stream1 = new ProtocolStream(true, {
@@ -42,7 +43,7 @@ describe('ProtocolStream', function () {
     await closed();
   });
 
-  it('protocol stream handshake completes with feeds', async function () {
+  test('protocol stream handshake completes with feeds', async function () {
     //
     // Pipeline and handshake.
     //
@@ -157,7 +158,7 @@ describe('ProtocolStream', function () {
     expect(core2.closed).to.be.true;
   });
 
-  it('multi-feed multiplexing', async function () {
+  test('multi-feed multiplexing', async function () {
     //
     // Handshake.
     //

@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/mocha';
+import { test } from '@dxos/test';
 
 import { makeSet, makeMap } from './complex';
 

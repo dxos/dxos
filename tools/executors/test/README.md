@@ -1,9 +1,26 @@
-# @dxos/mocha
+# @dxos/test
 
 ## Installation
 
 ```bash
-pnpm i @dxos/mocha
+pnpm i @dxos/test
+```
+
+## Usage
+
+```ts
+import { describe, test } from '@dxos/test';
+
+describe('Class', () => {
+  test('example', () => {
+    // test
+  })
+    .timeout(10_000) // Set test-specific timeout.
+    .retries(3) // Set test-specific retry count.
+    .tag('e2e', 'fuzz') // Tag test to differentiate test streams.
+    .onlyEnvironments('nodejs') // Only run test in these environments.
+    .skipEnvironments('webkit', 'firefox') // Skip running test in these environments.
+});
 ```
 
 ## DXOS Resources

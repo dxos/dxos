@@ -6,6 +6,7 @@ import expect from 'expect';
 
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { createInMemoryDatabase, Database } from '../database';
@@ -31,14 +32,14 @@ describe('Schema', function () {
     return backend;
   };
 
-  it('class creation', async function () {
+  test('class creation', async function () {
     const database = await setupDatabase();
     const schema = await createTestSchema(database);
     expect(schema).toBeTruthy();
     expect(schema.name).toBeTruthy();
   });
 
-  it('add and delete field', async function () {
+  test('add and delete field', async function () {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
@@ -53,7 +54,7 @@ describe('Schema', function () {
     expect(schema.fields.length).toBe(0);
   });
 
-  it('edit field', async function () {
+  test('edit field', async function () {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
@@ -67,7 +68,7 @@ describe('Schema', function () {
     expect(schema.getField(key)?.required).toBeFalsy();
   });
 
-  it('validate data item', async function () {
+  test('validate data item', async function () {
     const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);

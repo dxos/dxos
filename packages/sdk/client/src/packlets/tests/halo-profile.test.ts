@@ -5,13 +5,14 @@
 import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
 describe('Halo', function () {
-  it('creates a profile', async function () {
+  test('creates a profile', async function () {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
@@ -25,7 +26,7 @@ describe('Halo', function () {
     expect(client.halo.profile?.displayName).to.equal('test-user');
   });
 
-  it.skip('device invitations', async function () {
+  test.skip('device invitations', async function () {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createClientServicesHost() });

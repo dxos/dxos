@@ -4,6 +4,8 @@
 
 import path from 'path';
 
+import { describe, test } from '@dxos/test';
+
 import { LogLevel } from './config';
 import { log } from './log';
 
@@ -25,7 +27,7 @@ log.config({
 });
 
 describe('log', function () {
-  it('throws an error', function () {
+  test('throws an error', function () {
     try {
       throw new LogError('Test failed', { value: 1 });
     } catch (err: any) {
@@ -33,7 +35,7 @@ describe('log', function () {
     }
   });
 
-  it('throws an error showing stacktrace', function () {
+  test('throws an error showing stacktrace', function () {
     try {
       throw new LogError('Test failed', { value: 2 });
     } catch (err: any) {
@@ -41,7 +43,7 @@ describe('log', function () {
     }
   });
 
-  it('catches an error', function () {
+  test('catches an error', function () {
     try {
       throw new LogError('ERROR ON LINE 21', { value: 3 });
     } catch (err: any) {
@@ -49,7 +51,7 @@ describe('log', function () {
     }
   });
 
-  it('config', function () {
+  test('config', function () {
     log.config({
       filter: LogLevel.INFO
     });
@@ -59,7 +61,7 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  it('config file', function () {
+  test('config file', function () {
     log.config({
       file: path.join('packages/common/log/test-config.yml')
     });
@@ -69,7 +71,7 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  it('levels', function () {
+  test('levels', function () {
     log('Default level log message');
     log.debug('Debug level log message');
     log.info('Info level log message');
@@ -77,7 +79,7 @@ describe('log', function () {
     log.error('Error level log message');
   });
 
-  it('context', function () {
+  test('context', function () {
     log.info('Message with context', {
       title: 'test',
       context: 123

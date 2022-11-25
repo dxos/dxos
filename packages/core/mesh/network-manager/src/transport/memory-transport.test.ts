@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
@@ -62,7 +63,7 @@ const createPair = () => {
 };
 
 describe('MemoryTransport', function () {
-  it('establish connection and send data through with protocol', async function () {
+  test('establish connection and send data through with protocol', async function () {
     const { plugin1, plugin2, peer1Id } = createPair();
 
     const received: any[] = [];
@@ -83,7 +84,7 @@ describe('MemoryTransport', function () {
     });
   });
 
-  it.skip('10 pairs of peers connecting at the same time', async function () {
+  test.skip('10 pairs of peers connecting at the same time', async function () {
     await Promise.all(
       range(10).map(async () => {
         const { plugin1, plugin2, peer1Id } = createPair();

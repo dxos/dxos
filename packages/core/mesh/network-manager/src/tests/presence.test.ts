@@ -8,6 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { NetworkManager } from '../network-manager';
@@ -42,7 +43,7 @@ const createPeer = async (topic: PublicKey) => {
 };
 
 describe('Presence', function () {
-  it('detects connected peers', async function () {
+  test('detects connected peers', async function () {
     // TODO(burdon): Configure plugins.
     // const testBuilder = new TestBuilder();
     // const peer1 = testBuilder.createPeer();

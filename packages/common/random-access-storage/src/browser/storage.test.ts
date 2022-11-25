@@ -7,6 +7,8 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
+import { describe, test } from '@dxos/test';
+
 import { StorageType } from '../common';
 import { storageTests } from '../testing';
 import { createStorage } from './storage';
@@ -18,7 +20,7 @@ describe('Tests for different storage types in different browsers', function () 
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
-  it(`Used ${StorageType.IDB} by default`, async function () {
+  test(`Used ${StorageType.IDB} by default`, async function () {
     const storage = createStorage({ root: ROOT_DIRECTORY });
     expect(storage.type).toBe(StorageType.IDB);
   });

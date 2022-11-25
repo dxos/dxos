@@ -9,6 +9,7 @@ import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 import { afterTest } from '@dxos/testutils';
 
 import { Messenger } from './messenger';
@@ -36,11 +37,11 @@ const PAYLOAD_3: TaggedType<TYPES, 'google.protobuf.Any'> = {
 describe('Messenger', function () {
   let broker: TestBroker;
 
-  before(async function () {
+  beforeAll(async function () {
     broker = await createTestBroker();
   });
 
-  after(function () {
+  afterAll(function () {
     broker.stop();
   });
 
@@ -68,7 +69,7 @@ describe('Messenger', function () {
     };
   };
 
-  it('Message between peers', async function () {
+  test('Message between peers', async function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
     const { peerId: peerId2, received: received2 } = await setupPeer();
 
@@ -85,7 +86,7 @@ describe('Messenger', function () {
     }, 5_000);
   });
 
-  it('Message 3 peers', async function () {
+  test('Message 3 peers', async function () {
     const { messenger: messenger1, received: received1, peerId: peerId1 } = await setupPeer();
     const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
     const { received: received3, peerId: peerId3 } = await setupPeer();
@@ -127,7 +128,7 @@ describe('Messenger', function () {
     }
   });
 
-  it('Message routing', async function () {
+  test('Message routing', async function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
     const { messenger: messenger2, received: received2, peerId: peerId2 } = await setupPeer();
 
@@ -173,7 +174,7 @@ describe('Messenger', function () {
     }
   });
 
-  it('Unsubscribe listener', async function () {
+  test('Unsubscribe listener', async function () {
     const { messenger: messenger1, peerId: peerId1 } = await setupPeer();
     const { messenger: messenger2, peerId: peerId2 } = await setupPeer();
 
@@ -274,7 +275,7 @@ describe('Messenger', function () {
       };
     };
 
-    it('message with non reliable connection', async function () {
+    test('message with non reliable connection', async function () {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
@@ -309,7 +310,7 @@ describe('Messenger', function () {
       }, 4_000);
     }).timeout(5_000);
 
-    it('ignoring doubled messages', async function () {
+    test('ignoring doubled messages', async function () {
       // Message got doubled going through signal network.
       const doublingMessage = (data: SendMessageArgs) => [data, data];
 

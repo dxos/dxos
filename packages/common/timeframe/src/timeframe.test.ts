@@ -6,11 +6,12 @@ import { expect } from 'chai';
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { describe, test } from '@dxos/test';
 
 import { Timeframe } from './timeframe';
 
 describe('spacetime', function () {
-  it('constructors', function () {
+  test('constructors', function () {
     const feedKey = PublicKey.random();
 
     const tf1 = new Timeframe([[feedKey, 1]]);
@@ -18,7 +19,7 @@ describe('spacetime', function () {
     expect(tf1).to.exist;
   });
 
-  it('merge/subtract', function () {
+  test('merge/subtract', function () {
     const feedKey1 = PublicKey.random();
     const feedKey2 = PublicKey.random();
     const feedKey3 = PublicKey.random();
@@ -70,7 +71,7 @@ describe('spacetime', function () {
     }
   });
 
-  it('dependencies', function () {
+  test('dependencies', function () {
     const feedKey1 = PublicKey.random();
     const feedKey2 = PublicKey.random();
     const feedKey3 = PublicKey.random();

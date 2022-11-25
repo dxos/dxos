@@ -4,18 +4,20 @@
 
 import expect from 'expect';
 
+import { test } from '@dxos/test';
+
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import defaults from './testing/defaults.json';
 import envmap from './testing/envs-map.json';
 
-it('Empty config', function () {
+test('Empty config', function () {
   const config = new Config({});
 
   expect(config.values).toBeTruthy();
   expect(config.get('runtime.props.title')).toBeUndefined();
 });
 
-it('Basic config', function () {
+test('Basic config', function () {
   const config = new Config(
     {
       runtime: {
@@ -46,7 +48,7 @@ it('Basic config', function () {
   });
 });
 
-it('Runtime and module config', function () {
+test('Runtime and module config', function () {
   const config = new Config(
     {
       package: {
@@ -97,7 +99,7 @@ it('Runtime and module config', function () {
   });
 });
 
-it.skip('Mapping', function () {
+test.skip('Mapping', function () {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
@@ -133,7 +135,7 @@ it.skip('Mapping', function () {
   });
 });
 
-it.skip('mapToKeyValuesping', function () {
+test.skip('mapToKeyValuesping', function () {
   const config = new Config(
     {
       client: {

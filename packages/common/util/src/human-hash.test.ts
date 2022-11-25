@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { createKeyPair, createId } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/mocha';
+import { test } from '@dxos/test';
 
 import { humanize } from './human-hash';
 
