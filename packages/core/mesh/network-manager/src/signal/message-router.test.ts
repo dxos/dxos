@@ -218,7 +218,7 @@ describe('MessageRouter', function () {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: '3to1' } }
+      data: { signal: { json: { msg: '3to1' } } }
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
