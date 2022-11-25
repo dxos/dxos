@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { CancellableInvitationObservable } from '@dxos/client';
 import { HeadingWithActions, InvitationList } from '@dxos/react-appkit';
-import { useClient, useDevices, useHaloInvitations } from '@dxos/react-client';
+import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client';
 import { Heading } from '@dxos/react-ui';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
@@ -17,6 +17,7 @@ import { createInvitationUrl } from '../../util';
 export const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
+  const identity = useIdentity();
   const devices = useDevices();
   const invitations = useHaloInvitations();
   const [creatingInvitation, setCreatingInvitation] = useState(false);
@@ -47,7 +48,7 @@ export const DevicesPage = () => {
           </Button>
         }
       />
-      <DeviceList devices={devices} />
+      <DeviceList devices={devices} currentDevice={identity?.deviceKey} />
       <Heading level={2} className='text-xl mbs-4'>
         {t('device invitations label')}
       </Heading>
