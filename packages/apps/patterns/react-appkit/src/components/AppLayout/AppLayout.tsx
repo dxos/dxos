@@ -20,6 +20,7 @@ export interface AppLayoutProps {
   spacesPath?: string;
   spacePath?: string;
   manageSpacePath?: string;
+  manageProfilePath?: string;
   menubarContent?: ReactNode;
   suppressSpaceMenu?: boolean;
 }
@@ -28,6 +29,7 @@ export const AppLayout = ({
   spacesPath = '/spaces',
   spacePath = '/spaces/:space',
   manageSpacePath = '/spaces/:space/settings',
+  manageProfilePath,
   suppressSpaceMenu,
   menubarContent
 }: AppLayoutProps) => {
@@ -43,10 +45,14 @@ export const AppLayout = ({
   const isManagingSpace = !!spaceHex && pathSegments > 3;
 
   const handleManageProfile = useCallback(() => {
-    const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
-    const tab = window.open(remoteSource.origin, '_blank');
-    tab?.focus();
-  }, [client]);
+    if (manageProfilePath) {
+      navigate(manageProfilePath);
+    } else {
+      const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
+      const tab = window.open(remoteSource.origin, '_blank');
+      tab?.focus();
+    }
+  }, [client, navigate, manageProfilePath]);
 
   const handleGoToSpace = useCallback(
     () => navigate(generatePath(spacePath, { space: spaceHex })),

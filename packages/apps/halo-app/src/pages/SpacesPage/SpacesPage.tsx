@@ -13,9 +13,9 @@ export const SpacesPage = () => {
   const { t } = useTranslation('halo');
 
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
-      <Heading className='mbe-6'>{t('spaces label')}</Heading>
+    <>
+      <Heading className='mlb-4'>{t('spaces label')}</Heading>
       <SpaceList spaces={spaces} />
-    </main>
+    </>
   );
 };
