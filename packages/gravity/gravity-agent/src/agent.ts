@@ -5,19 +5,22 @@
 import assert from 'assert';
 
 import { Client, fromHost } from '@dxos/client';
-import { ConfigProto } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 
 /**
  * Test agent.
  */
 export class Agent {
+  private readonly _config: Config;
   private _client?: Client;
   private _running?: boolean = false;
 
   // prettier-ignore
   constructor (
-    private readonly _config: ConfigProto
-  ) {}
+    config: ConfigProto
+  ) {
+    this._config = new Config(config);
+  }
 
   get started() {
     return this._running;

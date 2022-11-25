@@ -7,8 +7,7 @@ import { useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { Metagraph } from '@dxos/metagraph';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-
-import { useConfig } from '../client';
+import { useConfig } from '@dxos/react-client';
 
 /**
  * Retrieve a configured metagraph object.

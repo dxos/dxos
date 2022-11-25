@@ -38,6 +38,7 @@ export default defineConfig({
       '@dxos/keys',
       '@dxos/log',
       '@dxos/config',
+      '@dxos/metagraph',
       '@dxos/protocols',
       '@dxos/react-appkit',
       '@dxos/react-async',
