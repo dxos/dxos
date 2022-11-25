@@ -32,6 +32,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/patterns/assets/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/patterns/react-appkit/package.json",
           "jsonpath": "$.version"
         },
@@ -332,6 +337,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/metagraph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/react-client-testing/package.json",
           "jsonpath": "$.version"
         },
@@ -393,6 +403,11 @@
         {
           "type": "json",
           "path": "packages/sdk/config/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/errors/package.json",
           "jsonpath": "$.version"
         },
         {

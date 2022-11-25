@@ -4,9 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { useModules } from '@dxos/react-client';
-
 import { AppList, AppProps } from '../../components';
+import { useModules } from '../../experimental';
 
 export const AppsPage = () => {
   // TODO(burdon): Change tags to 'showcase' once apps re redeployed.
