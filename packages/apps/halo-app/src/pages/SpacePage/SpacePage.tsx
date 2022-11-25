@@ -3,9 +3,10 @@
 //
 
 import { CaretLeft, Planet } from 'phosphor-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { Profile } from '@dxos/client';
 import { useSafeSpaceKey, ProfileList } from '@dxos/react-appkit';
 import { useMembers, useSpace } from '@dxos/react-client';
 import { Button, getSize, Heading, useTranslation, Tooltip } from '@dxos/react-uikit';
@@ -18,6 +19,10 @@ export const SpacePage = () => {
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate('/'));
   const space = useSpace(spaceKey);
   const members = useMembers(spaceKey);
+  const memberProfiles = useMemo(
+    () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
+    [members]
+  );
 
   return (
     <>
@@ -34,7 +39,7 @@ export const SpacePage = () => {
       </div>
       <main className='max-is-5xl mli-auto pli-7'>
         <Heading level={2}>{t('space members label', { ns: 'uikit' })}</Heading>
-        <ProfileList profiles={members} />
+        <ProfileList profiles={memberProfiles} />
       </main>
     </>
   );
