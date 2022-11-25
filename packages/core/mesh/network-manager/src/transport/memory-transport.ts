@@ -146,7 +146,7 @@ export class MemoryTransport implements Transport {
     const { json } = signal;
     if (json && json.transportId) {
       // TODO(burdon): Check open?
-      const { transportId } = json;
+      const transportId = json.transportId as string;
       if (transportId) {
         const remoteId = PublicKey.fromHex(transportId);
         log('received signal', { id: this._id, remoteId });
