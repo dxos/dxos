@@ -4,12 +4,14 @@
 
 import React, { useMemo } from 'react';
 
+import { Heading, Loading, useTranslation } from '@dxos/react-uikit';
+
 import { AppList, AppProps } from '../../components';
 import { useModules } from '../../experimental';
 
 export const AppsPage = () => {
-  // TODO(burdon): Change tags to 'showcase' once apps re redeployed.
-  const modules = useModules([], 1_000);
+  const { t } = useTranslation('halo');
+  const { modules, isLoading } = useModules(['showcase'], 1_000);
   const apps = useMemo<AppProps[]>(
     () =>
       modules.map((module) => ({
@@ -22,7 +24,8 @@ export const AppsPage = () => {
 
   return (
     <main className='max-is-5xl mli-auto pli-7'>
-      <AppList apps={apps} />
+      <Heading className='mbe-6'>{t('apps label')}</Heading>
+      {isLoading ? <Loading label={t('generic loading label')} size='md' /> : <AppList apps={apps} />}
     </main>
   );
 };
