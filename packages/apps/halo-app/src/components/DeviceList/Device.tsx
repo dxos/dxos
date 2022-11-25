@@ -19,7 +19,7 @@ export const Device = (props: DeviceProps) => {
     <Group
       label={{
         level: 2,
-        className: 'text-lg font-body flex gap-2 items-center',
+        className: 'mb-0 text-lg font-body flex gap-2 items-center',
         children: (
           <Avatar
             size={10}
@@ -38,8 +38,6 @@ export const Device = (props: DeviceProps) => {
         )
       }}
       className='mbe-2'
-    >
-      <p className='font-mono break-words'>{props.publicKey.toHex()}</p>
-    </Group>
+    />
   );
 };
