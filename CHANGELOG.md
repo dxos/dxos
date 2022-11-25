@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.13](https://github.com/dxos/dxos/compare/v0.1.12...v0.1.13) (2022-11-25)
+
+
+### Bug Fixes
+
+* **client-services:** Lengthen proxy timeout ([#1997](https://github.com/dxos/dxos/issues/1997)) ([bd282df](https://github.com/dxos/dxos/commit/bd282dfc1e7ef8ebb421f7be9f563bff9e115b43))
+* party properties item being created multiple times. ([#1991](https://github.com/dxos/dxos/issues/1991)) ([717b927](https://github.com/dxos/dxos/commit/717b927f3f527a2a889f90ca4b737144048a2000))
+
 ## [0.1.12](https://github.com/dxos/dxos/compare/v0.1.11...v0.1.12) (2022-11-25)
 
 
