@@ -32,6 +32,7 @@ export const uikit = {
   'fatal error label': 'Runtime error',
   'fatal error message': 'Something went wrong that requires the app to be reloaded.',
   'caught error message': 'Something went wrong; check the console for details.',
+  'heartbeat stalled': 'Heartbeat stalled',
   'copy error label': 'Copy this error',
   'reload page label': 'Reload',
   'generic copy label': 'Copy',

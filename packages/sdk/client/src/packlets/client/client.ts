@@ -11,6 +11,7 @@ import { Config, ConfigProto } from '@dxos/config';
 import { inspectObject } from '@dxos/debug';
 import { ApiError, InvalidConfigError } from '@dxos/errors';
 import { ModelFactory } from '@dxos/model-factory';
+import { Status } from '@dxos/protocols/proto/dxos/client';
 
 import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
@@ -156,6 +157,13 @@ export class Client {
     await this._services.close();
 
     this._initialized = false;
+  }
+
+  /**
+   * Get system status.
+   */
+  async getStatus(): Promise<Status> {
+    return this._services.services?.SystemService.getStatus();
   }
 
   /**

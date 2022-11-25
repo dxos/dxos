@@ -17,9 +17,10 @@ import {
   GenericFallback,
   ServiceWorkerToast,
   useTelemetry,
-  translations
+  translations,
+  StatusIndicator
 } from '@dxos/react-appkit';
-import { ClientProvider } from '@dxos/react-client';
+import { ClientProvider, useStatus } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
@@ -39,9 +40,18 @@ import {
 } from './pages';
 import haloTranslations from './translations';
 
-log.config({ filter: process.env.LOG_FILTER ?? 'client:debug,warn', prefix: process.env.LOG_BROWSER_PREFIX });
+// prettier-ignore
+log.config({
+  filter: process.env.LOG_FILTER ?? 'halo-app:debug,client:debug,warn',
+  prefix: process.env.LOG_BROWSER_PREFIX
+});
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
+
+const StatusContainer = () => {
+  const status = useStatus();
+  return <StatusIndicator status={status} />;
+};
 
 const Routes = () => {
   useTelemetry({ namespace: 'halo-app' });
@@ -107,6 +117,7 @@ export const App = () => {
             fallback={<GenericFallback />}
           >
             <HashRouter>
+              <StatusContainer />
               <Routes />
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-list",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "A list editing experience component for DXOS.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
