@@ -32,7 +32,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
       }
       collisionPadding={8}
       sideOffset={4}
-      className='flex flex-col gap-4 items-center'
+      className='flex flex-col gap-4 items-center z-[2]'
     >
       {onClickManageSpace && (
         <Button className='flex w-full gap-2' onClick={onClickManageSpace}>

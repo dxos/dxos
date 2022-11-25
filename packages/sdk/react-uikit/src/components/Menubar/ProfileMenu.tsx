@@ -39,7 +39,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
       triggerIsInToolbar
       collisionPadding={8}
       sideOffset={4}
-      className='flex flex-col gap-4 items-center'
+      className='flex flex-col gap-4 items-center z-[2]'
     >
       <p>{profile.displayName ?? humanize(profile.identityKey.toHex())}</p>
       {onClickManageProfile && (
