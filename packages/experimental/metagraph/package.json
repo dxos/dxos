@@ -1,6 +1,7 @@
 {
   "name": "@dxos/metagraph",
   "version": "0.1.9",
+  "private": true,
   "description": "Decentralized metagraph (DMG).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,8 +31,5 @@
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.10"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
