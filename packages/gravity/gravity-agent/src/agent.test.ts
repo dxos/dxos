@@ -31,6 +31,7 @@ describe('Agent', function () {
     await agent.initialize();
     const space = await agent.client!.echo.createSpace();
     expect(space.key).to.exist;
+    expect(space.properties).to.exist;
     await agent.destroy();
   });
 

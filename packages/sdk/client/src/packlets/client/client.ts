@@ -17,6 +17,7 @@ import { DXOS_VERSION } from '../../version';
 import { createDevtoolsRpcServer } from '../devtools';
 import { EchoProxy, HaloProxy } from '../proxies';
 import { EXPECTED_CONFIG_VERSION } from './config';
+import { SpaceSerializer } from './serializer';
 import { fromIFrame } from './utils';
 
 // TODO(burdon): Define package-specific errors.
@@ -179,5 +180,9 @@ export class Client {
     await this.destroy();
     this._halo.profileChanged.emit();
     this._initialized = false;
+  }
+
+  createSerializer() {
+    return new SpaceSerializer(this._echo);
   }
 }
