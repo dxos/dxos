@@ -16,7 +16,7 @@ export const SpacesLink = ({ onClickGoToSpaces }: SpacesLinkProps) => {
   const { t } = useTranslation('uikit');
   return (
     <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger triggerIsInToolbar>
-      <Button compact onClick={onClickGoToSpaces} className='flex gap-1'>
+      <Button compact onClick={onClickGoToSpaces} className='pointer-events-auto flex gap-1'>
         <CaretLeft className={getSize(4)} />
         <Planet className={getSize(4)} />
       </Button>

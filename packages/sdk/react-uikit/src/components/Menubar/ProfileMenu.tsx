@@ -29,7 +29,7 @@ export const ProfileMenu = (props: ProfileMenuProps) => {
           fallbackValue={profile.identityKey.toHex()}
           label={<span className='sr-only'>{profile.displayName ?? humanize(profile.identityKey.toHex())}</span>}
           className={cx(
-            'bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer mis-2',
+            'justify-self-end pointer-events-auto bg-white dark:bg-neutral-700 p-0.5 button-elevation rounded-full cursor-pointer',
             defaultHover({}),
             defaultFocus,
             defaultActive

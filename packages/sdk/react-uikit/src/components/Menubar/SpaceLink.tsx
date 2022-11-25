@@ -15,7 +15,7 @@ export interface SpaceLinkProps {
 export const SpaceLink = ({ onClickGoToSpace }: SpaceLinkProps) => {
   const { t } = useTranslation('uikit');
   return (
-    <Button compact className='flex gap-1 pli-2' onClick={onClickGoToSpace}>
+    <Button compact className='pointer-events-auto flex gap-1 pli-2' onClick={onClickGoToSpace}>
       <span className='text-xs'>{t('go to space label')}</span>
       <Check className={getSize(4)} />
     </Button>

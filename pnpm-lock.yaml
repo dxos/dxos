@@ -1151,6 +1151,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       storybook-dark-mode: ^1.1.2
+      tailwind-merge: ^1.8.0
       tailwindcss: ^3.1.8
       tailwindcss-logical: ^3.0.0
       tailwindcss-radix: ^2.6.0
@@ -1176,6 +1177,7 @@ importers:
       postcss: 8.4.19
       qrcode.react: 3.1.0_react@18.2.0
       rci: 0.0.3_biqbaboplfbrettd7655fr4n2y
+      tailwind-merge: 1.8.0
       tailwindcss: 3.2.4
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
@@ -3688,12 +3690,14 @@ importers:
       '@radix-ui/react-toolbar': ^1.0.1
       '@react-hook/async': ^3.1.1
       '@types/debug': ^4.1.7
+      '@types/lodash.throttle': ^4.1.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
       debug: ^4.3.3
       i18next: ^21.10.0
+      lodash.throttle: ^4.1.1
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -3714,11 +3718,13 @@ importers:
       classnames: 2.3.2
       debug: 4.3.4
       i18next: 21.10.0
+      lodash.throttle: 4.1.1
       react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
       url-join: 5.0.0
     devDependencies:
       '@dxos/vite-plugin': link:../vite-plugin
       '@types/debug': 4.1.7
+      '@types/lodash.throttle': 4.1.7
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
       '@vitejs/plugin-react': 2.2.0_vite@3.0.9
@@ -12726,6 +12732,12 @@ packages:
 
   /@types/lodash.sortby/4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
+    dependencies:
+      '@types/lodash': 4.14.189
+    dev: true
+
+  /@types/lodash.throttle/4.1.7:
+    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.189
     dev: true
@@ -24857,6 +24869,10 @@ packages:
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
+  /lodash.throttle/4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
+    dev: false
+
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
     dev: true
@@ -31614,6 +31630,10 @@ packages:
   /tail/2.2.4:
     resolution: {integrity: sha512-PX8klSxW1u3SdgDrDeewh5GNE+hkJ4h02JvHfV6YrHqWOVJ88nUdSQqtsUf/gWhgZlPAws3fiZ+F1f8euspcuQ==}
     engines: {node: '>= 6.0.0'}
+    dev: false
+
+  /tailwind-merge/1.8.0:
+    resolution: {integrity: sha512-tER/2SbYRdfPYg6m4pDWZSlbymLTmDi+dx4iCsJmgmz4UDGzgnVelOvBe3GNtGCw9Bmc4MiObfJJbKeVL+KnMQ==}
     dev: false
 
   /tailwindcss-logical/3.0.0_2lwn2upnx27dqeg6hqdu7sq75m:

@@ -23,7 +23,7 @@ export const SpaceMenu = ({ space, onClickManageSpace }: SpaceMenuProps) => {
   return (
     <Popover
       openTrigger={
-        <Button compact className='flex items-center gap-1'>
+        <Button compact className='pointer-events-auto flex items-center gap-1'>
           <UsersThree className={getSize(4)} />
           <span className='leading-none'>{members.length}</span>
           <span role='none' className={cx(defaultInlineSeparator, 'bs-3')} />

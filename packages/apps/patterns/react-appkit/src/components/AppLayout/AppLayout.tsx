@@ -3,13 +3,13 @@
 //
 
 import cx from 'classnames';
-import { CaretLeft, Planet, Plus, Rocket } from 'phosphor-react';
+import { Plus, Rocket } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Space, Invitation } from '@dxos/client';
 import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
-import { Button, getSize, Heading, JoinDialog, Presence, Tooltip, useTranslation } from '@dxos/react-uikit';
+import { Button, getSize, Heading, JoinDialog, Menubar, useTranslation } from '@dxos/react-uikit';
 import { humanize, MaybePromise } from '@dxos/util';
 
 import { useSafeSpaceKey } from '../../hooks';
@@ -60,48 +60,47 @@ export const AppLayout = ({
   const isManagingSpace = !!spaceHex && pathSegments > 3;
   const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
 
-  const handleCreateSpace = async () => {
+  const handleCreateSpace = useCallback(async () => {
     const space = await client.echo.createSpace();
     await onSpaceCreate?.(space);
-  };
+  }, [client, space]);
 
-  const handleManageProfile = () => {
+  const handleManageProfile = useCallback(() => {
     const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
     const tab = window.open(remoteSource.origin, '_blank');
     tab?.focus();
-  };
+  }, [client]);
+
+  const handleGoToSpace = useCallback(
+    () => navigate(generatePath(spacePath, { space: spaceHex })),
+    [navigate, spaceHex]
+  );
+
+  const handleManageSpace = useCallback(
+    () => navigate(generatePath(manageSpacePath, { space: spaceHex })),
+    [navigate, spaceHex]
+  );
+
+  const handleGoToSpaces = useCallback(() => navigate(homePath), [navigate]);
 
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
+    <>
+      <Menubar
+        profile={identity!}
+        space={space}
+        {...(isManagingSpace && { onClickGoToSpace: handleGoToSpace })}
+        onClickManageSpace={handleManageSpace}
+        onClickManageProfile={handleManageProfile}
+        onClickGoToSpaces={handleGoToSpaces}
+      >
+        {space && (
+          <Heading className='w-min truncate font-normal text-base pointer-events-auto'>{humanize(space.key)}</Heading>
+        )}
+      </Menubar>
       <StatusContainer />
-      <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
-        {space ? (
-          <>
-            <Tooltip content={t('back to spaces label')} side='right' tooltipLabelsTrigger>
-              <Button compact onClick={() => navigate(homePath)} className='flex gap-1'>
-                <CaretLeft className={getSize(4)} />
-                <Planet className={getSize(4)} />
-              </Button>
-            </Tooltip>
-            <Heading className='flex-auto text-center truncate pbe-1'>{humanize(space.key)}</Heading>
-            <div role='none' className='flex gap-2'>
-              {/* TODO(wittjosiah): There probably shouldn't be a popover here, or "manage identity" should link out to HALO. */}
-              {/* TODO(wittjosiah): We probably don't want to rely on invitation singleton, dialog version prepping for HALO provide? */}
-              <Presence
-                profile={identity!}
-                space={space}
-                className='flex-none'
-                size={10}
-                sideOffset={4}
-                managingSpace={isManagingSpace}
-                onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
-                onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
-                onClickManageProfile={handleManageProfile}
-              />
-            </div>
-          </>
-        ) : (
-          <>
+      <main className='max-is-5xl mli-auto pli-7 pbs-20'>
+        {!space && (
+          <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
             <HeadingWithActions
               className='flex-auto text-center'
               actions={
@@ -125,28 +124,16 @@ export const AppLayout = ({
                     <Plus className={getSize(5)} />
                     {t('create space label', { ns: 'uikit' })}
                   </Button>
-                  <Presence
-                    profile={identity!}
-                    space={space}
-                    className='flex-none'
-                    size={10}
-                    sideOffset={4}
-                    managingSpace={isManagingSpace}
-                    onClickGoToSpace={() => navigate(generatePath(spacePath, { space: spaceHex }))}
-                    onClickManageSpace={() => navigate(generatePath(manageSpacePath, { space: spaceHex }))}
-                    onClickManageProfile={handleManageProfile}
-                  />
                 </>
               }
               heading={{
                 children: t('spaces label')
               }}
             />
-          </>
+          </div>
         )}
-      </div>
-
-      <Outlet context={{ space }} />
-    </main>
+        <Outlet context={{ space }} />
+      </main>
+    </>
   );
 };
