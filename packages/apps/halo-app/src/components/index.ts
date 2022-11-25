@@ -4,4 +4,4 @@
 
 export * from './AppList';
 export * from './DeviceList';
-export * from './SpaceList';
+export * from './NavMenu';

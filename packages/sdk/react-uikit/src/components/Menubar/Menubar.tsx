@@ -55,7 +55,7 @@ export const Menubar = ({
           (onClickGoToSpace ? (
             <SpaceLink {...{ onClickGoToSpace }} />
           ) : (
-            <SpaceMenu {...{ space, onClickManageSpace }} />
+            onClickManageSpace && <SpaceMenu {...{ space, onClickManageSpace }} />
           ))}
         <ToolbarPrimitive.Button asChild>
           <ProfileMenu {...{ profile, onClickManageProfile }} />

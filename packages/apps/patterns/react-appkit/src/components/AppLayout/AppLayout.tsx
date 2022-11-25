@@ -2,29 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Plus, Rocket } from 'phosphor-react';
-import React, { useCallback } from 'react';
-import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import React, { ReactNode, useCallback } from 'react';
+import { generatePath, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Space, Invitation } from '@dxos/client';
 import { useClient, useIdentity, useSpace, useStatus } from '@dxos/react-client';
-import { Button, getSize, Heading, JoinDialog, Menubar, useTranslation } from '@dxos/react-uikit';
-import { humanize, MaybePromise } from '@dxos/util';
+import { Menubar } from '@dxos/react-uikit';
 
 import { useSafeSpaceKey } from '../../hooks';
-import { HeadingWithActions } from '../HeadingWithActions';
 import { StatusIndicator } from '../StatusIndicator';
-
-const invitationCodeFromUrl = (text: string) => {
-  try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('invitation');
-    return invitation ?? text;
-  } catch (err) {
-    console.error(err);
-    return text;
-  }
-};
 
 const StatusContainer = () => {
   const status = useStatus();
@@ -32,37 +17,30 @@ const StatusContainer = () => {
 };
 
 export interface AppLayoutProps {
-  homePath?: string;
+  spacesPath?: string;
   spacePath?: string;
   manageSpacePath?: string;
-  onSpaceCreate?: (space: Space) => MaybePromise<void>;
+  menubarContent?: ReactNode;
+  suppressSpaceMenu?: boolean;
 }
 
 export const AppLayout = ({
-  homePath = '/',
+  spacesPath = '/spaces',
   spacePath = '/spaces/:space',
   manageSpacePath = '/spaces/:space/settings',
-  onSpaceCreate
+  suppressSpaceMenu,
+  menubarContent
 }: AppLayoutProps) => {
-  const { t } = useTranslation('appkit');
   const client = useClient();
   const identity = useIdentity();
   const { space: spaceHex } = useParams();
-  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(homePath));
+  const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
   const space = useSpace(spaceKey);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const invitationParam = searchParams.get('invitation');
   const pathSegments = location.pathname.split('/').length;
   const isManagingSpace = !!spaceHex && pathSegments > 3;
-  const acceptInvitation = useCallback((invitation: Invitation) => client.echo.acceptInvitation(invitation), [client]);
-
-  const handleCreateSpace = useCallback(async () => {
-    const space = await client.echo.createSpace();
-    await onSpaceCreate?.(space);
-  }, [client, space]);
 
   const handleManageProfile = useCallback(() => {
     const remoteSource = new URL(client.config.get('runtime.client.remoteSource') || 'https://halo.dxos.org');
@@ -80,7 +58,7 @@ export const AppLayout = ({
     [navigate, spaceHex]
   );
 
-  const handleGoToSpaces = useCallback(() => navigate(homePath), [navigate]);
+  const handleGoToSpaces = useCallback(() => navigate(spacesPath), [navigate]);
 
   return (
     <>
@@ -89,46 +67,13 @@ export const AppLayout = ({
         space={space}
         {...(isManagingSpace && { onClickGoToSpace: handleGoToSpace })}
         {...(space && { onClickGoToSpaces: handleGoToSpaces })}
-        onClickManageSpace={handleManageSpace}
+        {...(!suppressSpaceMenu && { onClickManageSpace: handleManageSpace })}
         onClickManageProfile={handleManageProfile}
       >
-        {space && (
-          <Heading className='w-min truncate font-normal text-base pointer-events-auto'>{humanize(space.key)}</Heading>
-        )}
+        {menubarContent}
       </Menubar>
       <StatusContainer />
       <main className='max-is-5xl mli-auto pli-7 pbs-16'>
-        {!space && (
-          <HeadingWithActions
-            className='flex-auto text-center mbe-4'
-            actions={
-              <>
-                <JoinDialog
-                  initialInvitationCode={invitationParam ?? undefined}
-                  parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                  onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
-                  acceptInvitation={acceptInvitation}
-                  dialogProps={{
-                    initiallyOpen: Boolean(invitationParam),
-                    openTrigger: (
-                      <Button className='grow flex gap-1'>
-                        <Rocket className={getSize(5)} />
-                        {t('join space label', { ns: 'uikit' })}
-                      </Button>
-                    )
-                  }}
-                />
-                <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
-                  <Plus className={getSize(5)} />
-                  {t('create space label', { ns: 'uikit' })}
-                </Button>
-              </>
-            }
-            heading={{
-              children: t('spaces label')
-            }}
-          />
-        )}
         <Outlet context={{ space }} />
       </main>
     </>
