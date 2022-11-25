@@ -17,7 +17,7 @@ import {
   defaultDisabled,
   Group,
   useTranslation
-} from '@dxos/react-utailikit';
+} from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
 export interface SpaceListProps {
