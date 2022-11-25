@@ -24,5 +24,9 @@
     "src",
     "types"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../sdk/assets"
+    }
+  ]
 }
