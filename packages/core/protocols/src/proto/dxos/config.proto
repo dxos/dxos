@@ -45,6 +45,7 @@ message Module {
     optional string tag = 4;
   }
 
+  // TODO(burdon): Requires publicKey.
   optional string name = 1;
   optional string type = 2;
   optional string display_name = 3;

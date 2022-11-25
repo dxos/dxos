@@ -14,3 +14,4 @@ export * from './RequireIdentity';
 export * from './ServiceWorkerToast';
 export * from './SpaceList';
 export * from './SpacesPage';
+export * from './StatusIndicator';

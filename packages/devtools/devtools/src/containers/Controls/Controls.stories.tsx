@@ -30,8 +30,8 @@ export const Primary = () => {
     setClient(client);
   }, []);
 
-  const onConfigChange = async (remoteSource?: string) => {
-    console.log({ remoteSource });
+  const onConfigChange = async (params: { remoteSource?: string }) => {
+    console.log(params);
 
     // Create new client instance on remote source change to simulate typical usage.
     const client = await initClient();

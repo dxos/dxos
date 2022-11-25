@@ -274,6 +274,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
@@ -295,6 +296,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-composer': link:../patterns/react-composer
@@ -322,6 +324,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -360,6 +363,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../../sdk/metagraph
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../patterns/react-appkit
@@ -543,6 +547,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-list': workspace:*
@@ -563,6 +568,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/log': link:../../common/log
       '@dxos/react-appkit': link:../patterns/react-appkit
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-list': link:../patterns/react-list
@@ -3400,6 +3406,9 @@ importers:
       '@dxos/async': link:../../common/async
       '@types/debug': 4.1.7
 
+  packages/sdk/assets:
+    specifiers: {}
+
   packages/sdk/client:
     specifiers:
       '@dxos/async': workspace:*
@@ -3574,6 +3583,27 @@ importers:
   packages/sdk/errors:
     specifiers: {}
 
+  packages/sdk/metagraph:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/node-fetch': ^2.5.10
+      node-fetch: ^2.6.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/config': link:../config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/errors': link:../errors
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      node-fetch: 2.6.7
+    devDependencies:
+      '@types/node-fetch': 2.6.2
+
   packages/sdk/react-client:
     specifiers:
       '@dxos/async': workspace:*
@@ -3585,6 +3615,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-ui': workspace:*
@@ -3616,6 +3647,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/metagraph': link:../metagraph
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/rpc': link:../../core/mesh/rpc
@@ -25389,7 +25421,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1

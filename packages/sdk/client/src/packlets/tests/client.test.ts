@@ -11,13 +11,13 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Client } from '../client';
-import { TestClientBuilder } from '../testing';
+import { TestBuilder } from '../testing';
 
 chai.use(chaiAsPromised);
 
 describe('Client', function () {
   it('creates client with embedded services', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
@@ -26,7 +26,7 @@ describe('Client', function () {
   });
 
   it('initialize and destroy multiple times', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
@@ -39,7 +39,7 @@ describe('Client', function () {
   });
 
   it('closes and reopens', async function () {
-    const testBuilder = new TestClientBuilder();
+    const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createClientServicesHost() });
     await client.initialize();
@@ -58,7 +58,7 @@ describe('Client', function () {
   // TODO(burdon): Memory store is reset on close (feed store is closed).
   it.skip('creates identity then resets the memory storage', async function () {
     const config = new Config();
-    const testBuilder = new TestClientBuilder(config);
+    const testBuilder = new TestBuilder(config);
     await runTest(testBuilder);
   });
 
@@ -69,7 +69,7 @@ describe('Client', function () {
     }
 
     const config = await getNodeConfig(true);
-    const testBuilder = new TestClientBuilder(config);
+    const testBuilder = new TestBuilder(config);
     await runTest(testBuilder);
   });
 });
@@ -100,7 +100,7 @@ const getNodeConfig = async (reset = false) => {
 };
 
 // TODO(burdon): Develop test-suite.
-const runTest = async (testBuilder: TestClientBuilder) => {
+const runTest = async (testBuilder: TestBuilder) => {
   const client = new Client({ services: testBuilder.createClientServicesHost() });
   const displayName = 'test-user';
 

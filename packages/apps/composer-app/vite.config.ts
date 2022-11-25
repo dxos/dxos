@@ -7,8 +7,6 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-import packageJson from './package.json';
-
 import { themePlugin } from '@dxos/react-ui/plugin';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
@@ -36,6 +34,7 @@ export default defineConfig({
     include: [
       '@dxos/client',
       '@dxos/config',
+      '@dxos/log',
       '@dxos/react-appkit',
       '@dxos/react-client',
       '@dxos/react-composer',
