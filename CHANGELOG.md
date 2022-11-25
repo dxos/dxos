@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.12](https://github.com/dxos/dxos/compare/v0.1.11...v0.1.12) (2022-11-25)
+
+
+### Features
+
+* add indicator to layout. ([#1989](https://github.com/dxos/dxos/issues/1989)) ([088782d](https://github.com/dxos/dxos/commit/088782dd78078d1d74549f82dcf39adfebdfadb1))
+* **halo-app:** Cleanup apps page ([#1984](https://github.com/dxos/dxos/issues/1984)) ([39d16df](https://github.com/dxos/dxos/commit/39d16dfa45a1ccaf0cebfc133e723cf8d8603fd1))
+* heartbeat indicator. ([#1981](https://github.com/dxos/dxos/issues/1981)) ([d77178b](https://github.com/dxos/dxos/commit/d77178bc27bbb89ae7245d231faf60314f834c3a))
+* **hello-template:** Add list as default component ([#1992](https://github.com/dxos/dxos/issues/1992)) ([ab90b1a](https://github.com/dxos/dxos/commit/ab90b1a0bdc5bdfba51bc88c7d25fb1b56af242d))
+* metagraph SDK ([#1975](https://github.com/dxos/dxos/issues/1975)) ([d8837f3](https://github.com/dxos/dxos/commit/d8837f325dc1f7fde7b46ba0cce6b00a2d2a172c))
+* **react-client:** Ensure client failing to initialize triggers error boundary ([#1982](https://github.com/dxos/dxos/issues/1982)) ([aa83711](https://github.com/dxos/dxos/commit/aa837119a34bf71bf3ebeef3a5a843e3ba69684b))
+
+
+### Bug Fixes
+
+* Demo feedback responses 3 ([#1968](https://github.com/dxos/dxos/issues/1968)) ([6da0161](https://github.com/dxos/dxos/commit/6da0161d29465de515cac74f79ac1c0798365146))
+* **halo-app:** Check for real device key for labelling 'this device' ([#1985](https://github.com/dxos/dxos/issues/1985)) ([67e532d](https://github.com/dxos/dxos/commit/67e532d6b76a00b08df49c5e20ed1ac171f0a2a3))
+* **halo-app:** Show member display names in member list ([#1987](https://github.com/dxos/dxos/issues/1987)) ([7f945c8](https://github.com/dxos/dxos/commit/7f945c8ae1815cebeb472fed31f3d11b1672716c))
+* Presence z-index. ([#1990](https://github.com/dxos/dxos/issues/1990)) ([ddcdcfb](https://github.com/dxos/dxos/commit/ddcdcfb4cafd4310f72301089911066ca0a363a1))
+
 ## [0.1.11](https://github.com/dxos/dxos/compare/v0.1.10...v0.1.11) (2022-11-24)
 
 
