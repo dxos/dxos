@@ -9,14 +9,21 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'rea
 
 import { ProfileMenu, ProfileMenuProps } from './ProfileMenu';
 import { SpaceLinkProps } from './SpaceLink';
-import { SpaceMenuProps } from './SpaceMenu';
+import { SpaceMenu, SpaceMenuProps } from './SpaceMenu';
 import { SpacesLink, SpacesLinkProps } from './SpacesLink';
 
 export interface MenubarProps extends ProfileMenuProps, SpaceLinkProps, Partial<SpaceMenuProps>, SpacesLinkProps {
   children?: ReactNode;
 }
 
-export const Menubar = ({ children, profile, onClickManageProfile, onClickGoToSpaces }: MenubarProps) => {
+export const Menubar = ({
+  children,
+  profile,
+  space,
+  onClickManageProfile,
+  onClickGoToSpaces,
+  onClickManageSpace
+}: MenubarProps) => {
   const [atTop, setAtTop] = useState(true);
 
   const handleScroll = useCallback(() => {
@@ -43,6 +50,7 @@ export const Menubar = ({ children, profile, onClickManageProfile, onClickGoToSp
       >
         {onClickGoToSpaces && <SpacesLink {...{ onClickGoToSpaces }} />}
         <ToolbarPrimitive.Separator className='grow' />
+        {space && <SpaceMenu {...{ space, onClickManageSpace }} />}
         <ToolbarPrimitive.Button asChild>
           <ProfileMenu {...{ profile, onClickManageProfile }} />
         </ToolbarPrimitive.Button>

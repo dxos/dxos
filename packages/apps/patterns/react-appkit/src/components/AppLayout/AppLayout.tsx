@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import cx from 'classnames';
 import { Plus, Rocket } from 'phosphor-react';
 import React, { useCallback } from 'react';
 import { generatePath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -89,48 +88,46 @@ export const AppLayout = ({
         profile={identity!}
         space={space}
         {...(isManagingSpace && { onClickGoToSpace: handleGoToSpace })}
+        {...(space && { onClickGoToSpaces: handleGoToSpaces })}
         onClickManageSpace={handleManageSpace}
         onClickManageProfile={handleManageProfile}
-        onClickGoToSpaces={handleGoToSpaces}
       >
         {space && (
           <Heading className='w-min truncate font-normal text-base pointer-events-auto'>{humanize(space.key)}</Heading>
         )}
       </Menubar>
       <StatusContainer />
-      <main className='max-is-5xl mli-auto pli-7 pbs-20'>
+      <main className='max-is-5xl mli-auto pli-7 pbs-16'>
         {!space && (
-          <div role='none' className={cx('flex items-center gap-x-2 gap-y-4 my-4')}>
-            <HeadingWithActions
-              className='flex-auto text-center'
-              actions={
-                <>
-                  <JoinDialog
-                    initialInvitationCode={invitationParam ?? undefined}
-                    parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
-                    onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
-                    acceptInvitation={acceptInvitation}
-                    dialogProps={{
-                      initiallyOpen: Boolean(invitationParam),
-                      openTrigger: (
-                        <Button className='grow flex gap-1'>
-                          <Rocket className={getSize(5)} />
-                          {t('join space label', { ns: 'uikit' })}
-                        </Button>
-                      )
-                    }}
-                  />
-                  <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
-                    <Plus className={getSize(5)} />
-                    {t('create space label', { ns: 'uikit' })}
-                  </Button>
-                </>
-              }
-              heading={{
-                children: t('spaces label')
-              }}
-            />
-          </div>
+          <HeadingWithActions
+            className='flex-auto text-center mbe-4'
+            actions={
+              <>
+                <JoinDialog
+                  initialInvitationCode={invitationParam ?? undefined}
+                  parseInvitation={(invitationCode) => invitationCodeFromUrl(invitationCode)}
+                  onJoin={({ spaceKey }) => navigate(generatePath(spacePath, { space: spaceKey!.toHex() }))}
+                  acceptInvitation={acceptInvitation}
+                  dialogProps={{
+                    initiallyOpen: Boolean(invitationParam),
+                    openTrigger: (
+                      <Button className='grow flex gap-1'>
+                        <Rocket className={getSize(5)} />
+                        {t('join space label', { ns: 'uikit' })}
+                      </Button>
+                    )
+                  }}
+                />
+                <Button variant='primary' onClick={handleCreateSpace} className='grow flex gap-1'>
+                  <Plus className={getSize(5)} />
+                  {t('create space label', { ns: 'uikit' })}
+                </Button>
+              </>
+            }
+            heading={{
+              children: t('spaces label')
+            }}
+          />
         )}
         <Outlet context={{ space }} />
       </main>

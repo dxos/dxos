@@ -17,7 +17,7 @@ export interface SpaceListProps {
 
 export const SpaceList = ({ spaces = [] }: SpaceListProps) => {
   return (
-    <div role='none' className='m-0 flex flex-col gap-2'>
+    <div role='none' className='flex flex-col gap-2'>
       {spaces.map((space) => {
         const keyHex = space.key.toHex();
         const title = space.properties.get('title') ?? humanize(keyHex);
