@@ -40,7 +40,7 @@ export class WebRTCTransport implements Transport {
 
     this._peer.on('signal', async (data) => {
       log('signal', data);
-      await this.params.sendSignal({ json: JSON.stringify(data) });
+      await this.params.sendSignal({ json: data });
     });
 
     this._peer.on('connect', () => {
@@ -72,7 +72,7 @@ export class WebRTCTransport implements Transport {
   signal(signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
-    this._peer.signal(JSON.parse(signal.json));
+    this._peer.signal(signal.json);
   }
 
   private async _disconnectStreams() {
