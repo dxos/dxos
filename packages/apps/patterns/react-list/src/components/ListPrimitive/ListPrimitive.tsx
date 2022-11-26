@@ -123,14 +123,12 @@ const ListItemPrimitive = ({
     [debouncedPropagateDescription]
   );
 
-  const [annotations, setAnnotations] = useState(listItem?.model.get('annotations') ?? {});
-  const isDone = annotations?.state === 'done';
+  const isDone = listItem?.model.get('annotations.state') === 'done';
 
   const onChangeCheckbox = useCallback(async () => {
-    const nextAnnotations = { ...annotations, state: isDone ? 'init' : 'done' };
-    setAnnotations(nextAnnotations);
+    const nextAnnotations = { ...(listItem?.model.get('annotations') ?? {}), state: isDone ? 'init' : 'done' };
     void updateListItem(listItem, { annotations: nextAnnotations });
-  }, [annotations, isDone]);
+  }, [updateListItem, listItem, isDone]);
 
   const onClickDelete = useCallback(async () => {
     void deleteListItem(listItemId, space);
@@ -169,7 +167,6 @@ const ListItemPrimitive = ({
       {...(description && { 'aria-describedby': descriptionId })}
     >
       <input
-        key={titleSession}
         {...{
           type: 'checkbox',
           id: checkId,
@@ -194,6 +191,7 @@ const ListItemPrimitive = ({
       </span>
       <div role='none' className='grow'>
         <Input
+          key={titleSession}
           spacing=''
           label={t('list item title label')}
           placeholder={t('list item title placeholder')}
@@ -324,7 +322,7 @@ export const ListPrimitive = ({
         item && setAutofocus(item.id);
       })
       .finally(() => setCreating(false));
-  }, [naturalCreateListItem]);
+  }, [naturalCreateListItem, space]);
 
   // Render
 
