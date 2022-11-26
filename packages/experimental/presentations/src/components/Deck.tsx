@@ -24,11 +24,12 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   //   setPage((page) => (page > 0 ? page - 1 : page));
   // };
 
-  // TODO(burdon): Rehype plugin using front matter for titles, etc.
+  // TODO(burdon): Form-factor (e.g., 16x9) with max dimensions.
 
   // prettier-ignore
   return (
     <div
+      // TODO(burdon): Use tailwind.
       style={{
         position: 'absolute',
         left: 0,
@@ -36,11 +37,11 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         top: 0,
         bottom: 0,
         display: 'flex',
-        flexDirection: 'column',
-        margin: 16
+        flexDirection: 'column'
       }}
       onClick={handlePageNext}
     >
+      {/* TODO(burdon): Add pager to slide (with React context). */}
       {/* <Pager page={page} length={slides.length} /> */}
 
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}

@@ -29,14 +29,16 @@ export const remarkDirectiveLayout = (options: Options) => (tree: any) => {
         return;
       }
 
-      const data = node.data || (node.data = {});
+      // TODO(burdon): Create flexbox layout (decorate children).
       const tagName = node.type === 'textDirective' ? 'span' : 'div';
+      const container = h(tagName, node.attributes);
 
-      console.log('>>>>>>>>>>>', node.attributes);
-
+      // Mutate directive node.
+      const data = node.data || (node.data = {});
       data.hName = tagName;
-      data.hProperties = h(tagName, node.attributes).properties;
-      // console.log(node, data);
+      data.hProperties = container.properties;
     }
   });
 };
+
+// TODO(burdon): Experiment with full bleed images, etc.

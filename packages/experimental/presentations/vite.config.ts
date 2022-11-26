@@ -17,33 +17,39 @@ import { remarkDirectiveLayout, remarkPluginPageLayout } from './src';
 // Rollup plugin (for Vite) to process MDX.
 // https://mdxjs.com/packages/rollup
 const mdxOptions: Options = {
-  // prettier-ignore
-
   // Remark transforms markdown.
   // https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins
   remarkPlugins: [
     // https://github.com/remarkjs/remark-frontmatter
     [remarkFrontmatter, 'yaml'],
-    [remarkUnwrapTexts],
-    [remarkParseFrontmatter, {
-      properties: {
-        title: { type: "string", required: true },
-        tags: { type: "array", maxItems: 4 },
-      }
-    }],
-    [remarkPluginPageLayout],
 
-    // TODO(burdon): Custom layout with directives:
-    //  https://github.com/remarkjs/remark-directive
-    //  Create custom plugin to process directives.
+    // TODO(burdon): Parsing works, but how to access parsed frontmatter?
+    // https://www.npmjs.com/package/remark-parse-frontmatter
+    [remarkUnwrapTexts],
+    [
+      remarkParseFrontmatter,
+      {
+        properties: {
+          title: { type: 'string', required: true },
+          subheading: { type: 'string' },
+          tags: { type: 'array', maxItems: 4 }
+        }
+      }
+    ],
+
+    // Custom page container using frontmatter.
+    [remarkPluginPageLayout, {}],
+
+    // Custom layout with directives:
+    // https://github.com/remarkjs/remark-directive
     [remarkDirective],
     [remarkDirectiveLayout, {}],
 
     // https://github.com/kevin940726/remark-code-import
     [codeImport]
-  ],
+  ]
 
-  // TODO(burdon): Mermaid transform:
+  // TODO(burdon): Mermaid:
   //  https://github.com/remcohaszing/remark-mermaidjs
   //  https://mermaid-js.github.io/mermaid/#/Setup
 
@@ -58,16 +64,13 @@ const mdxOptions: Options = {
 
   // Rehype transforms HTML.
   // https://github.com/rehypejs/rehype/blob/main/doc/plugins.md#list-of-plugins
-  rehypePlugins: []
+  // rehypePlugins: []
 };
 
-// TODO(burdon): Tailwind.
-//  https://tailwindcss.com/docs/guides/vite#vue
-
-// prettier-ignore
 // https://vitejs.dev/config
 export default defineConfig({
   plugins: [
+    // https://mdxjs.com/packages/remark-mdx
     mdx(mdxOptions),
     react()
   ]
