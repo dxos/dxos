@@ -7,16 +7,9 @@ import debounce from 'lodash.debounce';
 import { Minus, Plus } from 'phosphor-react';
 import React, { ComponentProps, useCallback, useMemo, useState, KeyboardEvent } from 'react';
 
-import {
-  defaultFocus,
-  Input,
-  useTranslation,
-  getSize,
-  Button,
-  randomString,
-  defaultGroup,
-  defaultHover
-} from '@dxos/react-uikit';
+import { Item, Space, ObjectModel, Selection, PublicKey } from '@dxos/client';
+import { useSelection, useSpace } from '@dxos/react-client';
+import { defaultFocus, Input, useTranslation, getSize, Button, defaultGroup, defaultHover } from '@dxos/react-uikit';
 
 import { usePropStatefully } from '../../hooks';
 
@@ -30,125 +23,118 @@ export interface ListItemProps {
   annotations?: Record<string, string | boolean>;
 }
 
-export type ListItems = Record<ListItemId, Omit<ListItemProps, 'id'>>;
-
-interface SharedListActionProps {
-  listId: ListId;
-}
-
-interface SharedListItemActionProps extends SharedListActionProps {
-  listItemId: ListItemId;
-}
-
-export interface ListItemChangedAction extends SharedListItemActionProps {
-  next: Partial<ListItemProps>;
-}
-
-export interface ListChangedAction extends SharedListActionProps {
-  next: Partial<ListPrimitiveProps>;
-}
-
-export interface ListItemCreatedAction extends SharedListActionProps {
-  created: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>;
-}
-
-export interface ListItemDeletedAction extends SharedListActionProps {
-  deleted: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>;
-}
-
-export type ListAction = ListItemChangedAction | ListChangedAction | ListItemCreatedAction | ListItemDeletedAction;
-
-export const isListItemChangedAction = (o: any): o is ListItemChangedAction => 'listItemId' in o;
-export const isListItemCreatedAction = (o: any): o is ListItemCreatedAction => 'created' in o;
-export const isListItemDeletedAction = (o: any): o is ListItemDeletedAction => 'deleted' in o;
-
 export interface ListPrimitiveProps {
-  id: ListId;
   title?: string;
   description?: string;
 }
 
-export interface ListPrimitiveComponentProps extends ListPrimitiveProps, Omit<ComponentProps<'div'>, 'id'> {
-  items: ListItems;
-  onAction?: (action: ListAction) => void;
-  createListItemId?: () => Promise<ListItemId>;
+export interface ListPrimitiveComponentProps extends Omit<ComponentProps<'div'>, 'id'> {
+  spaceKey: PublicKey;
+  listId: ListId;
+  selectList: (listId: ListId, space?: Space) => Selection<Item<ObjectModel>, void> | undefined;
+  selectListItem: (listItemId: ListItemId, space?: Space) => Selection<Item<any>, void> | undefined;
+  createListItem: (listId: ListId, space?: Space) => Promise<Item<ObjectModel> | undefined>;
+  updateList: (list: Item<ObjectModel>, updates: Record<string, string>) => Promise<void[]>;
+  updateListItem: (listItem: Item<ObjectModel>, updates: Record<string, string>) => Promise<void[]>;
+  selectListItems: (list?: Item<ObjectModel>) => Selection<Item<ObjectModel>, void> | undefined;
+  deleteListItem: (listItemId: ListItemId, space?: Space) => Promise<void>;
   onChangePeriod?: number;
 }
 
-export interface ListItemPrimitiveComponentProps extends ListItemProps, Omit<ComponentProps<'li'>, 'id' | 'title'> {
-  updateItem: (item: ListItemProps) => void;
-  updateOrder: (id: ListItemId, delta: number) => void;
-  deleteItem: (id: ListItemId) => void;
-  createItem: () => void;
+export interface ListItemPrimitiveComponentProps
+  extends Pick<
+      ListPrimitiveComponentProps,
+      'spaceKey' | 'updateListItem' | 'deleteListItem' | 'selectListItem' | 'onChangePeriod'
+    >,
+    ComponentProps<'li'> {
+  listItemId: ListItemId;
   orderIndex: number;
   isLast?: boolean;
   autoFocus?: boolean;
+  createListItem: () => Promise<void>;
 }
 
-const defaultCreateListItemId = async () => randomString(8);
-
 const ListItemPrimitive = ({
-  id,
-  title: propsTitle,
-  description: propsDescription,
-  annotations: propsAnnotations,
-  updateItem,
-  deleteItem,
-  createItem,
-  updateOrder,
+  spaceKey,
+  listItemId,
+  selectListItem,
+  updateListItem,
+  deleteListItem,
+  createListItem,
+  onChangePeriod,
   orderIndex,
   isLast,
   autoFocus
 }: ListItemPrimitiveComponentProps) => {
-  const checkId = `${id}__checkbox`;
-  const labelId = `${id}__title`;
-  const descriptionId = `${id}__description`;
+  const checkId = `${listItemId}__checkbox`;
+  const labelId = `${listItemId}__title`;
+  const descriptionId = `${listItemId}__description`;
+
+  const space = useSpace(spaceKey);
+  const listItem = (useSelection<Item<ObjectModel>>(selectListItem(listItemId, space)) ?? [])[0];
 
   const { t } = useTranslation('appkit');
 
   const rejectTextUpdatesWhenFocused = useCallback(
     (a: string, b: string) => {
-      return document.activeElement?.getAttribute('data-itemid') === id ? true : a === b;
+      return document.activeElement?.getAttribute('data-itemid') === listItemId ? true : a === b;
     },
-    [id]
+    [listItemId]
   );
 
-  const [title, setTitle, titleSession] = usePropStatefully<string>(propsTitle ?? '', rejectTextUpdatesWhenFocused);
-
-  const [description, _setDescription, _descriptionSession] = usePropStatefully<string>(
-    propsDescription ?? '',
+  const [title, setTitle, titleSession] = usePropStatefully<string>(
+    listItem?.model.get('title') ?? '',
     rejectTextUpdatesWhenFocused
   );
+  const propagateTitle = useCallback(
+    (nextValue: string) => {
+      void updateListItem(listItem, { title: nextValue });
+    },
+    [updateListItem, listItem]
+  );
+  const debouncedPropagateTitle = useMemo(() => debounce(propagateTitle, onChangePeriod), [propagateTitle]);
+  const onChangeTitle = useCallback(
+    (nextValue: string) => {
+      setTitle(nextValue);
+      debouncedPropagateTitle(nextValue);
+    },
+    [debouncedPropagateTitle]
+  );
 
-  const [annotations, setAnnotations] = useState(propsAnnotations ?? {});
+  const [description, _setDescription, _descriptionSession] = usePropStatefully<string>(
+    listItem?.model.get('description') ?? '',
+    rejectTextUpdatesWhenFocused
+  );
+  const propagateDescription = useCallback(
+    (nextValue: string) => {
+      void updateListItem(listItem, { description: nextValue });
+    },
+    [updateListItem, listItem]
+  );
+  const debouncedPropagateDescription = useMemo(
+    () => debounce(propagateDescription, onChangePeriod),
+    [propagateDescription]
+  );
+  const _onChangeDescription = useCallback(
+    (nextValue: string) => {
+      setTitle(nextValue);
+      debouncedPropagateDescription(nextValue);
+    },
+    [debouncedPropagateDescription]
+  );
+
+  const [annotations, setAnnotations] = useState(listItem?.model.get('annotations') ?? {});
   const isDone = annotations?.state === 'done';
 
-  const onChangeTitle = useCallback((nextValue: string) => {
-    setTitle(nextValue);
-    updateItem({ id, title: nextValue });
-  }, []);
-
-  const _onChangeDescription = useCallback((nextValue: string) => {
-    _setDescription(nextValue);
-    updateItem({ id, description: nextValue });
-  }, []);
-
-  const _onClickMoveUp = useCallback(() => {
-    updateOrder(id, -1);
-  }, [updateOrder, id]);
-  const _onClickMoveDown = useCallback(() => {
-    updateOrder(id, 1);
-  }, [updateOrder, id]);
-
-  const onChangeCheckbox = useCallback(() => {
+  const onChangeCheckbox = useCallback(async () => {
     const nextAnnotations = { ...annotations, state: isDone ? 'init' : 'done' };
     setAnnotations(nextAnnotations);
-    updateItem({ id, annotations: nextAnnotations });
+    void updateListItem(listItem, { annotations: nextAnnotations });
   }, [annotations, isDone]);
 
-  const onClickDelete = useCallback(() => {
-    deleteItem(id);
-  }, [deleteItem, id]);
+  const onClickDelete = useCallback(async () => {
+    void deleteListItem(listItemId, space);
+  }, [space, listItemId]);
 
   const onKeyUp = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -156,7 +142,7 @@ const ListItemPrimitive = ({
         case 'Enter':
           if (!e.shiftKey) {
             if (isLast) {
-              createItem();
+              void createListItem();
             } else {
               (
                 document.querySelector(`input[data-orderindex="${orderIndex + 1}"]`) as HTMLElement | undefined
@@ -177,7 +163,7 @@ const ListItemPrimitive = ({
 
   return (
     <li
-      key={id}
+      key={listItemId}
       className='flex items-center gap-2 pli-4 mbe-2'
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
@@ -214,7 +200,7 @@ const ListItemPrimitive = ({
           labelVisuallyHidden
           initialValue={title}
           onChange={onChangeTitle}
-          data-itemid={id}
+          data-itemid={listItemId}
           borders='border-0'
           rounding='rounded'
           autoFocus={autoFocus}
@@ -251,26 +237,17 @@ const ListItemPrimitive = ({
   );
 };
 
-const itemsEquivalent = (a: ListItems, b: ListItems) => {
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
-  for (let i = 0; i < aKeys.length; i++) {
-    const key = aKeys[i];
-    if (key !== bKeys[i] || a[key].title !== b[key].title || a[key].annotations?.state !== b[key].annotations?.state) {
-      return false;
-    }
-  }
-  return true;
-};
-
 export const ListPrimitive = ({
-  id: listId,
-  title: propsTitle,
-  description: propsDescription,
-  items: propsItems,
-  onAction,
-  createListItemId = defaultCreateListItemId,
+  spaceKey,
+  listId,
   onChangePeriod = 0,
+  selectList,
+  selectListItems,
+  selectListItem,
+  createListItem: naturalCreateListItem,
+  updateList,
+  updateListItem,
+  deleteListItem,
   ...divProps
 }: ListPrimitiveComponentProps) => {
   const { t } = useTranslation('appkit');
@@ -285,15 +262,24 @@ export const ListPrimitive = ({
     [listId]
   );
 
+  // Selection
+
+  const space = useSpace(spaceKey);
+  const list = (useSelection<Item<ObjectModel>>(selectList(listId, space)) ?? [])[0];
+  const listItems = useSelection<Item<ObjectModel>>(selectListItems(list)) ?? [];
+
   // Title
 
   const titleId = `${listId}__title`;
-  const [title, setTitle, titleSession] = usePropStatefully(propsTitle ?? '', rejectTextUpdatesWhenFocused);
+  const [title, setTitle, titleSession] = usePropStatefully(
+    list?.model.get('title') ?? '',
+    rejectTextUpdatesWhenFocused
+  );
   const propagateTitle = useCallback(
     (nextValue: string) => {
-      return onAction?.({ listId, next: { title: nextValue } });
+      void updateList(list, { title: nextValue });
     },
-    [onAction]
+    [updateList, list]
   );
   const debouncedPropagateTitle = useMemo(() => debounce(propagateTitle, onChangePeriod), [propagateTitle]);
   const onChangeTitle = useCallback(
@@ -301,19 +287,21 @@ export const ListPrimitive = ({
       setTitle(nextValue);
       debouncedPropagateTitle(nextValue);
     },
-    [onAction, listId]
+    [debouncedPropagateTitle]
   );
 
   // Description
 
   const descriptionId = `${listId}__description`;
   const [description, setDescription, _descriptionSession] = usePropStatefully(
-    propsDescription ?? '',
+    list?.model.get('description') ?? '',
     rejectTextUpdatesWhenFocused
   );
   const propagateDescription = useCallback(
-    (nextValue: string) => onAction?.({ listId, next: { description: nextValue } }),
-    [onAction]
+    (nextValue: string) => {
+      void updateList(list, { description: nextValue });
+    },
+    [updateList, list]
   );
   const debouncedPropagateDescription = useMemo(
     () => debounce(propagateDescription, onChangePeriod),
@@ -324,73 +312,19 @@ export const ListPrimitive = ({
       setDescription(nextValue);
       debouncedPropagateDescription(nextValue);
     },
-    [onAction, listId]
+    [debouncedPropagateDescription]
   );
 
   // Items & order
 
-  const [items, setItems, itemsSession] = usePropStatefully(propsItems ?? {}, itemsEquivalent);
-  const order = Object.keys(items);
-
-  const propagateItem = useCallback(
-    ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
-      return onAction?.({ listId, listItemId: id, next });
-    },
-    [listId, onAction]
-  );
-  const debouncedPropagateItem = useMemo(() => debounce(propagateItem, onChangePeriod), [propagateItem]);
-  const updateItem = useCallback(
-    ({ id, ...next }: Pick<ListItemProps, 'id'> & Partial<Omit<ListItemProps, 'id'>>) => {
-      setItems(Object.assign(items, { [id]: { ...items[id], ...next } }));
-      'title' in next && debouncedPropagateItem({ id, title: next.title });
-      'description' in next && debouncedPropagateItem({ id, description: next.description });
-      'annotations' in next && onAction?.({ listId, listItemId: id, next: { annotations: next.annotations } });
-    },
-    [items, listId, onAction]
-  );
-
-  const updateOrder = useCallback(
-    (id: ListItemId, delta: number) => {
-      const fromIndex = order.indexOf(id);
-      const toIndex = fromIndex + delta;
-      const nextOrder = Array.from(order);
-      nextOrder.splice(fromIndex, 1);
-      nextOrder.splice(toIndex, 0, id);
-      const nextItems = nextOrder.reduce((acc: ListItems, listItemId) => {
-        acc[listItemId] = items[listItemId];
-        return acc;
-      }, {});
-      setItems(nextItems);
-      onAction?.({ listId, next: {} });
-    },
-    [items, onAction]
-  );
-
-  const deleteItem = useCallback(
-    (id: ListItemId) => {
-      if (items[id]) {
-        const { [id]: deletedItem, ...nextItems } = items;
-        setItems(nextItems);
-        onAction?.({ listId, next: {}, deleted: { id, ...deletedItem } });
-      }
-    },
-    [items, onAction]
-  );
-
-  const createItem = useCallback(() => {
+  const createListItem = useCallback(() => {
     setCreating(true);
-    return createListItemId()
-      .then((id) => {
-        const next = {
-          items: { ...items, [id]: {} }
-        };
-        const created = { id };
-        setItems(next.items);
-        setAutofocus(id);
-        onAction?.({ listId, next: {}, created });
+    return naturalCreateListItem(listId, space)
+      .then((item) => {
+        item && setAutofocus(item.id);
       })
       .finally(() => setCreating(false));
-  }, [items, createListItemId, onAction]);
+  }, [naturalCreateListItem]);
 
   // Render
 
@@ -435,21 +369,30 @@ export const ListPrimitive = ({
       {/*  data-itemid={listId} */}
       {/* /> */}
       <ol className='contents'>
-        {order.map((listItemId, index) => {
-          return (
-            <ListItemPrimitive
-              key={`${itemsSession}__${listItemId}`}
-              orderIndex={index}
-              isLast={index === order.length - 1}
-              {...{ id: listItemId, updateItem, updateOrder, deleteItem, createItem }}
-              {...items[listItemId]}
-              autoFocus={listItemId === autoFocus}
-            />
-          );
-        })}
+        {listItems
+          .filter((listItem) => !listItem?.model.get('annotations.deleted'))
+          .map((listItem, index) => {
+            return (
+              <ListItemPrimitive
+                key={listItem.id}
+                {...{
+                  autoFocus: listItem.id === autoFocus,
+                  orderIndex: index,
+                  isLast: index === listItems.length - 1,
+                  listItemId: listItem.id,
+                  selectListItem,
+                  deleteListItem,
+                  createListItem,
+                  spaceKey,
+                  onChangePeriod,
+                  updateListItem
+                }}
+              />
+            );
+          })}
       </ol>
       <div role='none' className='mli-4 mlb-4'>
-        <Button className='is-full' onClick={createItem} disabled={creating}>
+        <Button className='is-full' onClick={createListItem} disabled={creating}>
           <Plus className={getSize(5)} />
           <span className='sr-only'>{t('add list item label')}</span>
         </Button>

@@ -6,107 +6,60 @@ import React, { useCallback } from 'react';
 
 import { Item, PublicKey, Space } from '@dxos/client';
 import { ObjectModel } from '@dxos/object-model';
-import { useSelection, useSpace } from '@dxos/react-client';
-import { Loading } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-uikit';
 
 import { LIST_ITEM_TYPE } from '../../model';
-import {
-  ListPrimitive,
-  ListAction,
-  ListItems,
-  isListItemChangedAction,
-  isListItemDeletedAction,
-  isListItemCreatedAction,
-  ListItemProps,
-  ListPrimitiveProps
-} from '../ListPrimitive';
-
-interface ListLoadedProps {
-  space: Space;
-  list: Item<ObjectModel>;
-  listItems: Item<ObjectModel>[];
-}
+import { ListPrimitive } from '../ListPrimitive';
 
 export interface ListProps {
   spaceKey: PublicKey;
   itemId: Item<ObjectModel>['id'];
 }
 
-const ListLoaded = ({ space, list, listItems: propsListItems }: ListLoadedProps) => {
-  const listItems = useSelection(list?.select().children().filter({ type: LIST_ITEM_TYPE })) ?? propsListItems;
-
-  const onAction = useCallback(
-    async (action: ListAction) => {
-      if (isListItemDeletedAction(action)) {
-        const subject = space.database.getItem(action.deleted.id);
-        // TODO(thure): use Echo’s native deletion
-        return subject?.model.set('annotations.deleted', true);
-      } else if (isListItemCreatedAction(action)) {
-        // do nothing?
-      } else if (isListItemChangedAction(action)) {
-        const subject = space.database.getItem(action.listItemId);
-        return Promise.all(
-          (Object.keys(action.next) as (keyof ListItemProps)[]).map((prop) => {
-            return subject?.model.set(prop, action.next[prop]);
-          })
-        );
-      } else {
-        return Promise.all(
-          (Object.keys(action.next) as (keyof ListPrimitiveProps)[]).map((prop) => {
-            return list?.model.set(prop, action.next[prop]);
-          })
-        );
-      }
-    },
-    [list, listItems]
+export const List = ({ spaceKey, itemId }: ListProps) => {
+  const selectItem = useCallback((itemId: string, space?: Space) => space?.database.select({ id: itemId }), []);
+  const selectListItems = useCallback(
+    (list?: Item<ObjectModel>) => list?.select().children().filter({ type: LIST_ITEM_TYPE }),
+    []
+  );
+  const createListItem = useCallback(
+    async (listId: string, space?: Space) =>
+      space?.database.createItem({
+        model: ObjectModel,
+        type: LIST_ITEM_TYPE,
+        parent: listId
+      }),
+    []
   );
 
-  const createListItemId = useCallback(async () => {
-    const listItem = await space?.database.createItem({
-      model: ObjectModel,
-      type: LIST_ITEM_TYPE,
-      parent: list.id
-    });
-    return listItem.id;
-  }, [space]);
+  const deleteListItem = useCallback(async (listItemId: string, space?: Space) => {
+    const item = await space?.database.getItem(listItemId);
+    return item?.model.set('annotations.deleted', true);
+  }, []);
+
+  const updateItem = useCallback(
+    (item: Item<ObjectModel>, updates: Record<string, string>) =>
+      Promise.all(
+        Object.keys(updates).map((prop) => {
+          return item?.model.set(prop, updates[prop]);
+        })
+      ),
+    []
+  );
 
   return (
     <ListPrimitive
       {...{
-        id: list.id,
-        title: list.model.get('title') ?? '',
-        description: list.model.get('description') ?? '',
-        items: (listItems ?? [])
-          // TODO(thure): use Echo’s native deletion
-          .filter((item) => !item.model.get('annotations.deleted'))
-          .reduce((acc: ListItems, item) => {
-            acc[item.id] = {
-              title: item.model.get('title'),
-              description: item.model.get('description'),
-              annotations: item.model.get('annotations')
-            };
-            return acc;
-          }, {}),
+        spaceKey,
+        listId: itemId,
+        selectList: selectItem,
+        updateList: updateItem,
+        selectListItems,
+        selectListItem: selectItem,
+        updateListItem: updateItem,
         onChangePeriod: 640,
-        onAction,
-        createListItemId
+        createListItem,
+        deleteListItem
       }}
     />
-  );
-};
-
-export const List = ({ spaceKey, itemId }: ListProps) => {
-  const { t } = useTranslation('uikit');
-
-  const space = useSpace(spaceKey);
-  const list = (useSelection(space?.database.select({ id: itemId })) ?? [])[0];
-  const listItems = useSelection(list?.select().children().filter({ type: LIST_ITEM_TYPE }));
-
-  // TODO(thure): this should become `Suspense` when the above hooks support it
-  return space && list && listItems ? (
-    <ListLoaded {...{ space, list, listItems }} />
-  ) : (
-    <Loading label={t('generic loading label')} />
   );
 };
