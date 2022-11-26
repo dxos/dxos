@@ -9,7 +9,8 @@ import { createKeyPair } from '@dxos/crypto';
 import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createDataItem, py } from './testing';
+import { createDataItem } from './testing';
+import { py } from './util';
 
 describe('HypercoreFactory', () => {
   test('appends to, and read from, multiple feeds', async () => {
