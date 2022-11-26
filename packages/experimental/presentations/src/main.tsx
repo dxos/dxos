@@ -5,20 +5,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-import MDXPresentation from './slides/main.mdx';
-// import Slide1 from './slides/slide-1.mdx';
-//       {/* <Slide1 /> */}
+import Index from './slides/index.mdx';
 
-const Index = () => {
-  return (
-    <div>
-      <MDXPresentation />
-    </div>
+// TODO(burdon): Tailwind.
+// TODO(burdon): Router (change URL).
+
+import './style.css';
+
+const start = async () => {
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <Index />
+    </React.StrictMode>
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <Index />
-  </React.StrictMode>
-);
+void start();

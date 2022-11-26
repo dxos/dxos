@@ -2,7 +2,7 @@
   "version": 2,
   "projects": {
     "apidoc": "tools/apidoc",
-    "assets": "packages/sdk/assets",
+    "assets": "packages/apps/patterns/assets",
     "async": "packages/common/async",
     "bare-template": "packages/apps/templates/bare-template",
     "beast": "tools/beast",
@@ -51,7 +51,7 @@
     "mesh-protocol": "packages/core/mesh/mesh-protocol",
     "messaging": "packages/core/mesh/messaging",
     "messenger-model": "packages/core/echo/messenger-model",
-    "metagraph": "packages/sdk/metagraph",
+    "metagraph": "packages/experimental/metagraph",
     "mocha": "tools/executors/mocha",
     "model-factory": "packages/core/echo/model-factory",
     "network-generator": "packages/core/mesh/network-generator",

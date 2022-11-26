@@ -25,10 +25,10 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../config"
+      "path": "../../sdk/config"
     },
     {
-      "path": "../errors"
+      "path": "../../sdk/errors"
     }
   ]
 }

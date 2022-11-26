@@ -1,0 +1,43 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import React, { ReactNode, useState } from 'react';
+
+export const Deck: React.FC<{ slides: ReactNode[] }> = ({ slides }) => {
+  const [page, setPage] = useState<number>(0);
+
+  const Page = () => slides[page];
+
+  const handlePageNext = () => {
+    setPage((page) => (page === slides.length - 1 ? 0 : page + 1));
+  };
+  const handlePagePrevious = () => {
+    setPage((page) => (page > 0 ? page - 1 : page));
+  };
+
+  // TODO(burdon): Rehype plugin using front matter for titles, etc.
+
+  // prettier-ignore
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        margin: 16
+      }}
+      onClick={handlePageNext}
+    >
+      <div style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>{page + 1}/{slides.length}</div>
+
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore */}
+      <Page />
+    </div>
+  );
+};

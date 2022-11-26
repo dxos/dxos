@@ -108,7 +108,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * Register an event listener.
-   *
    * If provided callback was already registered as once-listener, it is made permanent.
    *
    * @param callback
@@ -133,9 +132,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
-   *
-   * NOTE: It is recomended to use `Event.on`'s return value instead.
-   *
+   * NOTE: It is recommended to use `Event.on`'s return value instead.
    * If the callback is not subscribed this is no-op.
    *
    * @param callback
@@ -151,7 +148,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * Register a callback to be called only once when the next event is emitted.
-   *
    * If this callback is already registered as permanent listener, this is no-op.
    *
    * @param callback
@@ -184,7 +180,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * An async iterator that iterates over events.
-   *
    * This iterator runs indefinitely.
    */
   async *[Symbol.asyncIterator](): AsyncIterator<T> {
@@ -213,6 +208,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   /**
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
+   *
    * @param expectedCount
    */
   waitForCount(expectedCount: number): Promise<T> {
@@ -221,8 +217,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   }
 
   /**
-   * Similar to waitFor, but the promise resolves immediatelly if the condition is already true.
+   * Similar to waitFor, but the promise resolves immediately if the condition is already true.
    */
+  // TODO(burdon): Should pass event property to predicate.
   async waitForCondition(predicate: () => boolean): Promise<void> {
     if (!predicate()) {
       await this.waitFor(predicate);
@@ -296,7 +293,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
   }
 
   /**
-   * Overriden to not retun implementation details.
+   * Overridden to not return implementation details.
    */
   toJSON() {
     return {
@@ -321,13 +318,11 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
 /**
  * A version of Event class which only has subscribe methods.
- *
- * Usefull in cases where you want to explicitly prohibit calling `emit` method.
+ * Useful in cases where you want to explicitly prohibit calling `emit` method.
  */
 export interface ReadOnlyEvent<T = void> {
   /**
-   * Register an event listener.
-   *
+   * Registers an event listener.
    * If provided callback was already registered as once-listener, it is made permanent.
    *
    * @param callback
@@ -336,10 +331,8 @@ export interface ReadOnlyEvent<T = void> {
   on(callback: (data: T) => void): UnsubscribeCallback;
 
   /**
-   * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
-   *
-   * NOTE: It is recomended to us `Event.on`'s return value.
-   *
+   * Unsubscribes this callback from new events. Includes persistent and once-listeners.
+   * NOTE: It is recommended to us `Event.on`'s return value.
    * If the callback is not subscribed this is no-op.
    *
    * @param callback
@@ -348,7 +341,6 @@ export interface ReadOnlyEvent<T = void> {
 
   /**
    * Register a callback to be called only once when the next event is emitted.
-   *
    * If this callback is already registered as permanent listener, this is no-op.
    *
    * @param callback
@@ -357,7 +349,6 @@ export interface ReadOnlyEvent<T = void> {
 
   /**
    * An async iterator that iterates over events.
-   *
    * This iterator runs indefinitely.
    */
   [Symbol.asyncIterator](): AsyncIterator<T>;
@@ -371,6 +362,7 @@ export interface ReadOnlyEvent<T = void> {
 
   /**
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
+   *
    * @param expectedCount
    */
   waitForCount(expectedCount: number): Promise<T>;

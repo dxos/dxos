@@ -35,7 +35,7 @@ export const ProfileList = ({ profiles }: ProfileListProps) => {
               fallbackValue={profileHex}
               label={
                 <p>
-                  {humanize(profileHex)}
+                  {profile.displayName ?? humanize(profileHex)}
                   {profileHex === identityHex && (
                     <Tag valence='info' className='mli-2 align-middle'>
                       {t('current identity label')}

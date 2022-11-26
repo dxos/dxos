@@ -54,6 +54,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/metagraph"
+    },
+    {
       "path": "../../experimental/react-client-testing"
     },
     {
@@ -61,9 +64,6 @@
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/metagraph"
     },
     {
       "path": "../../sdk/react-client"

@@ -17,5 +17,12 @@ export const SpacePage = () => {
 
   const [item] = useSelection<Item<TextModel>>(space?.select().filter({ type: DOCUMENT_TYPE })) ?? [];
 
-  return item ? <Composer item={item} className='z-0' /> : <Loading label={t('generic loading label')} size='md' />;
+  return item ? (
+    <Composer
+      item={item}
+      className='z-0 rounded bg-white text-neutral-900 w-full p-4 dark:bg-neutral-850 dark:text-white min-bs-[12em]'
+    />
+  ) : (
+    <Loading label={t('generic loading label')} size='md' />
+  );
 };

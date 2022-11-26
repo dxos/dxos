@@ -3,10 +3,11 @@
 //
 
 import { UserPlus } from 'phosphor-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import urlJoin from 'url-join';
 
+import type { Profile } from '@dxos/client';
 import { useMembers, useSpace, useSpaceInvitations } from '@dxos/react-client';
 import { Button, getSize, useTranslation } from '@dxos/react-uikit';
 
@@ -35,6 +36,10 @@ export const ManageSpacePage = ({
   const spaceKey = useSafeSpaceKey(spaceHex, () => navigate(spacesPath));
   const space = useSpace(spaceKey);
   const members = useMembers(spaceKey);
+  const memberProfiles = useMemo(
+    () => members.map(({ profile }) => profile).filter((profile): profile is Profile => !!profile),
+    [members]
+  );
   const invitations = useSpaceInvitations(space?.key);
   const [creatingInvitation, setCreatingInvitation] = useState(false);
 
@@ -68,7 +73,7 @@ export const ManageSpacePage = ({
           </>
         }
       />
-      <ProfileList profiles={members} />
+      <ProfileList profiles={memberProfiles} />
       <InvitationList
         invitations={invitations}
         createInvitationUrl={createInvitationUrl}

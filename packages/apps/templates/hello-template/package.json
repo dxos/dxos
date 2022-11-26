@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "private": true,
   "description": "DXOS 'hello world' application template.",
   "homepage": "https://dxos.org",
@@ -22,6 +22,7 @@
     "@dxos/react-appkit": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-composer": "workspace:*",
+    "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",
     "@dxos/text-model": "workspace:*",

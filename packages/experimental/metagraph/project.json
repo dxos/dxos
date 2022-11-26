@@ -1,16 +1,16 @@
 {
-  "sourceRoot": "packages/sdk/metagraph/src",
+  "sourceRoot": "packages/experimental/metagraph/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/js:tsc",
       "options": {
-        "main": "packages/sdk/metagraph/src/index.ts",
-        "outputPath": "packages/sdk/metagraph/dist",
+        "main": "packages/experimental/metagraph/src/index.ts",
+        "outputPath": "packages/experimental/metagraph/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/sdk/metagraph/tsconfig.json"
+        "tsConfig": "packages/experimental/metagraph/tsconfig.json"
       },
       "outputs": [
         "{options.outputPath}"
@@ -21,7 +21,7 @@
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "packages/sdk/metagraph/**/*.{ts,js}"
+          "packages/experimental/metagraph/**/*.{ts,js}"
         ]
       },
       "outputs": [
@@ -31,14 +31,14 @@
     "test": {
       "executor": "@dxos/mocha:mocha",
       "options": {
-        "coveragePath": "coverage/packages/sdk/metagraph",
-        "outputPath": "tmp/mocha/packages/sdk/metagraph",
-        "resultsPath": "test-results/packages/sdk/metagraph",
+        "coveragePath": "coverage/packages/experimental/metagraph",
+        "outputPath": "tmp/mocha/packages/experimental/metagraph",
+        "resultsPath": "test-results/packages/experimental/metagraph",
         "testPatterns": [
-          "packages/sdk/metagraph/src/**/*.test.{ts,js}"
+          "packages/experimental/metagraph/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/sdk/metagraph/src/**/*"
+          "packages/experimental/metagraph/src/**/*"
         ]
       },
       "outputs": [

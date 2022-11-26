@@ -25,7 +25,6 @@ describe('Schemas', function () {
   });
 
   afterEach(async function () {
-    await space.destroy();
     await client.destroy();
   });
 

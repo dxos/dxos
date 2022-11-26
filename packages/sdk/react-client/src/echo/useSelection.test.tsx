@@ -15,7 +15,7 @@ const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
 const createTestComponents = async () => {
-  const client = new Client({ services: fromHost({}) });
+  const client = new Client({ services: fromHost() });
   await client.initialize();
   await client.halo.createProfile();
 
