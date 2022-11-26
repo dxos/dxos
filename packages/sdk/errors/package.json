@@ -1,6 +1,6 @@
 {
   "name": "@dxos/errors",
-  "version": "0.1.9",
+  "version": "0.1.13",
   "description": "Error definitions and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

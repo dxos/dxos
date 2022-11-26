@@ -23,12 +23,19 @@ export const useMetagraph = () => {
   return metagraph;
 };
 
+export type ModulesResult = {
+  modules: Module[];
+  isLoading: boolean;
+};
+
 /**
  * Query modules.
  */
-export const useModules = (tags: string[], pollingMs = -1): Module[] => {
+export const useModules = (tags: string[], pollingMs = -1): ModulesResult => {
   const metagraph = useMetagraph();
+  const [isLoading, setLoading] = useState(true);
   const [modules, setModules] = useState<Module[]>([]);
+
   useEffect(() => {
     if (!metagraph) {
       return;
@@ -39,6 +46,7 @@ export const useModules = (tags: string[], pollingMs = -1): Module[] => {
     setTimeout(async () => {
       const observable = await metagraph.modules.query({ tags });
       setModules(observable.results);
+      setLoading(false);
       unsubscribe = observable.subscribe({
         onUpdate: (modules) => {
           // TODO(burdon): Check still mounted.
@@ -49,6 +57,7 @@ export const useModules = (tags: string[], pollingMs = -1): Module[] => {
 
       const minPollingInterval = 1_000;
       if (pollingMs > minPollingInterval) {
+        // TODO(wittjosiah): More detailed status which takes into account subsequent loading states.
         interval = setInterval(() => observable.fetch());
       }
     });
@@ -59,5 +68,5 @@ export const useModules = (tags: string[], pollingMs = -1): Module[] => {
     };
   }, [metagraph]);
 
-  return modules;
+  return { modules, isLoading };
 };

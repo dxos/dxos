@@ -42,7 +42,6 @@ export class TestBuilder {
   async destroySpace(space: Space) {
     assert(this._client);
 
-    await space.destroy();
     // TODO(burdon): Space and Database doesn't match.
     //  space.destroy not called until ClientServicesProxy.
     // console.log(space.database.state);
