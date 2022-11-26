@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/tools/esbuild-plugins"
+    },
+    {
       "path": "../executors/protobuf-compiler"
     }
   ]

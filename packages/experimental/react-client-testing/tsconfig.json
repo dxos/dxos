@@ -38,6 +38,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../tools/esbuild-plugins"
+    },
+    {
       "path": "../client-testing"
     }
   ]

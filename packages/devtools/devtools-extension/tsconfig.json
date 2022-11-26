@@ -46,6 +46,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../tools/esbuild-plugins"
+    },
+    {
       "path": "../devtools"
     }
   ]

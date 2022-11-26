@@ -36,6 +36,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../tools/esbuild-plugins"
     }
   ]
 }

@@ -15,6 +15,9 @@
   "references": [
     {
       "path": "../../experimental/gem-core"
+    },
+    {
+      "path": "../../tools/esbuild-plugins"
     }
   ]
 }

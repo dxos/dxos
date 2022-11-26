@@ -43,6 +43,9 @@
     },
     {
       "path": "../../experimental/gem-spore"
+    },
+    {
+      "path": "../../tools/esbuild-plugins"
     }
   ]
 }

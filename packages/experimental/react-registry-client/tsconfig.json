@@ -25,6 +25,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../tools/esbuild-plugins"
+    },
+    {
       "path": "../registry-client"
     }
   ]
