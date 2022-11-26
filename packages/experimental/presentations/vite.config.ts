@@ -7,10 +7,12 @@ import react from '@vitejs/plugin-react';
 import remarkDirective from 'remark-directive';
 import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';
+import remarkParseFrontmatter from 'remark-parse-frontmatter';
+import remarkUnwrapTexts from 'remark-unwrap-texts';
 import { defineConfig } from 'vite';
 
 // @ts-ignore
-import { remarkLayoutDirective } from './src';
+import { remarkDirectiveLayout, remarkPluginPageLayout } from './src';
 
 // Rollup plugin (for Vite) to process MDX.
 // https://mdxjs.com/packages/rollup
@@ -21,14 +23,21 @@ const mdxOptions: Options = {
   // https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins
   remarkPlugins: [
     // https://github.com/remarkjs/remark-frontmatter
-    [remarkFrontmatter],
+    [remarkFrontmatter, 'yaml'],
+    [remarkUnwrapTexts],
+    [remarkParseFrontmatter, {
+      properties: {
+        title: { type: "string", required: true },
+        tags: { type: "array", maxItems: 4 },
+      }
+    }],
+    [remarkPluginPageLayout],
 
     // TODO(burdon): Custom layout with directives:
     //  https://github.com/remarkjs/remark-directive
     //  Create custom plugin to process directives.
     [remarkDirective],
-
-    [remarkLayoutDirective, {}],
+    [remarkDirectiveLayout, {}],
 
     // https://github.com/kevin940726/remark-code-import
     [codeImport]

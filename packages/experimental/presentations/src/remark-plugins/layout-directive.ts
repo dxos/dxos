@@ -15,14 +15,14 @@ export type Options = {};
  * https://github.com/micromark/micromark-extension-directive#syntax
  *
  * Unified plugins:
- * https://unifiedjs.com/learn/guide/create-a-plugin/
+ * https://unifiedjs.com/learn/guide/create-a-plugin
  *
  * ```
  *  [remarkLayoutPlugin, {}],
  * ```
  */
 // TODO(burdon): Only works with ":::" colons.
-export const remarkLayoutDirective = (options: Options) => (tree: any) => {
+export const remarkDirectiveLayout = (options: Options) => (tree: any) => {
   visit(tree, (node) => {
     if (node.type === 'textDirective' || node.type === 'leafDirective' || node.type === 'containerDirective') {
       if (node.name !== 'layout') {
@@ -32,10 +32,11 @@ export const remarkLayoutDirective = (options: Options) => (tree: any) => {
       const data = node.data || (node.data = {});
       const tagName = node.type === 'textDirective' ? 'span' : 'div';
 
+      console.log('>>>>>>>>>>>', node.attributes);
+
       data.hName = tagName;
       data.hProperties = h(tagName, node.attributes).properties;
-
-      console.log(node, data);
+      // console.log(node, data);
     }
   });
 };

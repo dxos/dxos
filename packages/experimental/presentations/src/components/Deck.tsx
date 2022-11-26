@@ -2,9 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { ReactNode, useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 
-export const Deck: React.FC<{ slides: ReactNode[] }> = ({ slides }) => {
+export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
+  return (
+    <div style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>
+      {page + 1}/{length}
+    </div>
+  );
+};
+
+export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   const [page, setPage] = useState<number>(0);
 
   const Page = () => slides[page];
@@ -12,9 +20,9 @@ export const Deck: React.FC<{ slides: ReactNode[] }> = ({ slides }) => {
   const handlePageNext = () => {
     setPage((page) => (page === slides.length - 1 ? 0 : page + 1));
   };
-  const handlePagePrevious = () => {
-    setPage((page) => (page > 0 ? page - 1 : page));
-  };
+  // const handlePagePrevious = () => {
+  //   setPage((page) => (page > 0 ? page - 1 : page));
+  // };
 
   // TODO(burdon): Rehype plugin using front matter for titles, etc.
 
@@ -33,7 +41,7 @@ export const Deck: React.FC<{ slides: ReactNode[] }> = ({ slides }) => {
       }}
       onClick={handlePageNext}
     >
-      <div style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>{page + 1}/{slides.length}</div>
+      {/* <Pager page={page} length={slides.length} /> */}
 
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
       {/* @ts-ignore */}
