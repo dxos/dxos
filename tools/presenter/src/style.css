@@ -5,6 +5,7 @@
 /**
  * Code highlight.
  * https://unifiedjs.com/explore/package/rehype-highlight
+ * https://tailwindcomponents.com/cheatsheet
  */
 @import 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github.min.css';
 
@@ -18,8 +19,42 @@
  */
 @layer base {
   /** https://tailwindcss.com/docs/preflight#lists-are-unstyled */
+  /** https://stackoverflow.com/questions/37793048/how-to-gain-hanging-indent-list-with-css-counters */
+  /* TODO(burdon): Numbered lists. */
+  /* content: ">" counter(paragraph) " "; */
   ul {
-    @apply list-square list-inside;
+    margin-left: 1.0em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+  ul > li {
+    position: relative;
+    line-height: 1.2;
+    margin-bottom: 0.3em;
+  }
+  ul > li::before {
+    left: -1.0em;
+    counter-increment: paragraph;
+    position: absolute;
+  }
+  ul > li::before {
+    /*content: "§";*/
+    content: "\203A";
+    @apply text-orange-600; /** TODO: Style. */
+  }
+  /*
+  ul > li > ul > li:first-of-type {
+    margin-top: 0.2em;
+  }
+  ul > li > ul > li:last-of-type {
+    margin-bottom: 0.2em;
+  }
+  */
+  ul > li > ul > li {
+    font-size: 80%;
+  }
+  ul > li > ul > li::before {
+    content: "\203A";
   }
 
   /** TODO(burdon): How to properly override hljs theme? */
@@ -28,4 +63,12 @@
     @apply mb-1 !important;
     @apply bg-slate-200 !important;
   }
+}
+
+/**
+ * Custom styles.
+ */
+
+.font-caps {
+  font-variant: all-petite-caps;
 }

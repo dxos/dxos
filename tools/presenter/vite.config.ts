@@ -11,6 +11,7 @@ import remarkParseFrontmatter from 'remark-parse-frontmatter';
 import remarkUnwrapTexts from 'remark-unwrap-texts';
 import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
+import { VitePluginFonts } from 'vite-plugin-fonts';
 
 // @ts-ignore
 import { remarkDirectiveTest, remarkPluginLayout } from './src';
@@ -77,6 +78,22 @@ export default defineConfig({
   plugins: [
     // https://mdxjs.com/packages/remark-mdx
     mdx(mdxOptions),
+
+    // https://www.npmjs.com/package/vite-plugin-fonts
+    VitePluginFonts({
+      custom: {
+        injectTo: 'head-prepend',
+        display: 'auto',
+        families: [
+          {
+            name: 'sharp-sans',
+            local: 'sharp-sans',
+            src: './assets/fonts/*.ttf'
+          }
+        ]
+      }
+    }),
+
     react()
   ]
 });

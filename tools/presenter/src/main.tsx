@@ -5,15 +5,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import 'tw-elements';
+import 'virtual:fonts.css';
 
 import Index from './slides/index.mdx';
 
-// TODO(burdon): Storybook/live components (task list, chess, kitchen sink).
 // TODO(burdon): Image layout plugin (sizing options).
-// TODO(burdon): Pager/Router (change URL).
+// TODO(burdon): Router for pager (change URL).
 // TODO(burdon): Form-factor (e.g., 16x9) with max dimensions.
 //  - https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag
 //  - Google slides creates an SVG.
+// TODO(burdon): Storybook/live components (task list, chess, kitchen sink).
 
 import './style.css';
 

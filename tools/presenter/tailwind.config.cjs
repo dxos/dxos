@@ -18,10 +18,12 @@ module.exports = {
   // https://tailwindcss.com/docs/plugins#adding-base-styles
   theme: {
     fontFamily: {
-      // body: ['Roboto FlexVariable']
+      // 'body': ['Roboto FlexVariable'],
+      'mono': ['monospace'],
     },
 
     // Referenced in style.css
+    // https://tailwindcss.com/docs/preflight#lists-are-unstyled
     listStyleType: {
       square: 'square'
     },
@@ -32,7 +34,7 @@ module.exports = {
       '2': '64px',
       '3': '128px',
       '4': '256px'
-    },
+    }
   },
 
   // https://tailwindcss.com/docs/plugins

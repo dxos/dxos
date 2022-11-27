@@ -52,7 +52,10 @@ const createLayout = (meta: Meta, children: Node[]) => {
   const { layout, title } = meta;
 
   const page = (body: Node) => {
-    const header = div({ className: 'flex p-1 bg-orange-400' }, [u('heading', { depth: 1 }, [u('text', title ?? '')])]);
+    const header = div({ className: 'flex pl-2 pr-2 bg-orange-400' }, [
+      u('heading', { depth: 1 }, [u('text', title ?? '')])
+    ]);
+
     return div({ className: 'flex flex-col flex-1 overflow-hidden' }, [header, body]);
   };
 
@@ -61,16 +64,15 @@ const createLayout = (meta: Meta, children: Node[]) => {
       return div({ className: 'flex flex-1 flex-col' }, children);
     }
 
-    case 'col':
+    // TODO(burdon): n columns.
     case 'col-2': {
-      // TODO(burdon): n columns.
       const sections = getSections(children);
-      const columns = sections.map((section) => div({ className: 'flex flex-col grow shrink-0' }, section));
-      return page(div({ className: 'flex flex-1 p-1' }, columns));
+      const columns = sections.map((section) => div({ className: 'pad-2' }, section));
+      return page(div({ className: 'flex m-2' }, [div({ className: 'grid grid-cols-2' }, columns)]));
     }
 
     default: {
-      return page(div({ className: 'flex flex-1 flex-col p-1' }, children));
+      return page(div({ className: 'flex flex-1 flex-col m-2' }, children));
     }
   }
 };
@@ -81,13 +83,12 @@ const createLayout = (meta: Meta, children: Node[]) => {
 const getSections = (children: Node[]): Node[][] => {
   let section: Node[] = [];
   const sections: Node[][] = [section];
-
-  for (const p of children) {
-    if ((p as any).type === 'mdxJsxFlowElement' && (p as any).name === 'br') {
+  for (const node of children) {
+    if ((node as any).type === 'mdxJsxFlowElement' && (node as any).name === 'br') {
       section = [];
       sections.push(section);
     } else {
-      section.push(p);
+      section.push(node);
     }
   }
 

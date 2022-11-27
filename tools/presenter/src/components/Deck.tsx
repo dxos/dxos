@@ -4,9 +4,10 @@
 
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
+// TODO(burdon): Add by template.
 export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
   return (
-    <div style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>
+    <div className='font-mono text-3xl' style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>
       {page + 1}/{length}
     </div>
   );

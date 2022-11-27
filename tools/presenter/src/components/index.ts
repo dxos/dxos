@@ -3,3 +3,4 @@
 //
 
 export * from './Deck';
+export * from './Test';
