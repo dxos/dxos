@@ -9,10 +9,11 @@ import { codeImport } from 'remark-code-import';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 import remarkUnwrapTexts from 'remark-unwrap-texts';
+import rehypeHighlight from 'rehype-highlight';
 import { defineConfig } from 'vite';
 
 // @ts-ignore
-import { remarkDirectiveLayout, remarkPluginPageLayout } from './src';
+import { remarkDirectiveTest, remarkPluginLayout } from './src';
 
 // Rollup plugin (for Vite) to process MDX.
 // https://mdxjs.com/packages/rollup
@@ -32,22 +33,23 @@ const mdxOptions: Options = {
         properties: {
           title: { type: 'string', required: true },
           subheading: { type: 'string' },
+          layout: { type: 'string' },
           tags: { type: 'array', maxItems: 4 }
         }
       }
     ],
 
     // Custom page container using frontmatter.
-    [remarkPluginPageLayout, {}],
+    [remarkPluginLayout, {}],
 
     // Custom layout with directives:
     // https://github.com/remarkjs/remark-directive
     [remarkDirective],
-    [remarkDirectiveLayout, {}],
+    [remarkDirectiveTest, {}],
 
     // https://github.com/kevin940726/remark-code-import
     [codeImport]
-  ]
+  ],
 
   // TODO(burdon): Mermaid:
   //  https://github.com/remcohaszing/remark-mermaidjs
@@ -64,7 +66,10 @@ const mdxOptions: Options = {
 
   // Rehype transforms HTML.
   // https://github.com/rehypejs/rehype/blob/main/doc/plugins.md#list-of-plugins
-  // rehypePlugins: []
+  rehypePlugins: [
+    // https://unifiedjs.com/explore/package/rehype-highlight
+    [rehypeHighlight]
+  ]
 };
 
 // https://vitejs.dev/config

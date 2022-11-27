@@ -40,7 +40,7 @@
     "remark-normalize-headings": "~3.0.1",
     "remark-rehype": "~10.1.0",
     "to-vfile": "~7.2.3",
-    "unist-builder": "~3.0.0",
+    "unist-builder": "^3.0.0",
     "unist-util-visit": "^4.1.0",
     "yargs": "~16.2.0"
   },

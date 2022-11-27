@@ -1,0 +1,31 @@
+/**
+ * Copyright 2022 DXOS.org
+ */
+
+/**
+ * Code highlight.
+ * https://unifiedjs.com/explore/package/rehype-highlight
+ */
+@import 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/github.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Base Style.
+ * https://tailwindcss.com/docs/adding-base-styles
+ */
+@layer base {
+  /** https://tailwindcss.com/docs/preflight#lists-are-unstyled */
+  ul {
+    @apply list-square list-inside;
+  }
+
+  /** TODO(burdon): How to properly override hljs theme? */
+  code {
+    @apply mt-1 !important;
+    @apply mb-1 !important;
+    @apply bg-slate-200 !important;
+  }
+}

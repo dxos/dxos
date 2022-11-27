@@ -1,5 +1,5 @@
 # MDX Presentations
 
 ```bash
-pnpm -w nx run presentations:dev
+pnpm -w nx run presenter:dev
 ```

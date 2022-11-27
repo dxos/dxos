@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
@@ -27,10 +27,10 @@
   ],
   "references": [
     {
-      "path": "../../apps/patterns/assets"
+      "path": "../../packages/apps/patterns/assets"
     },
     {
-      "path": "../../common/log"
+      "path": "../../packages/common/log"
     }
   ]
 }
