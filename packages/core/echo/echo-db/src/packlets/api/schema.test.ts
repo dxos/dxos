@@ -8,7 +8,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { describe, test, afterTest } from '@dxos/test';
 
-import { createInMemoryDatabase, Database } from '../database';
+import { Database } from '../database';
+import { createInMemoryDatabase } from '../testing';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';

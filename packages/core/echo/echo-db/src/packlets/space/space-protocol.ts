@@ -27,6 +27,9 @@ import { ComplexMap } from '@dxos/util';
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
 
+export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
+export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
+
 // TODO(burdon): Reconcile with SigningContext (define types together).
 export interface SwarmIdentity {
   peerKey: PublicKey;
