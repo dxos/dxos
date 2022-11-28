@@ -26,6 +26,10 @@ export const logInfo = (target: any, propertyKey: string, descriptor: PropertyDe
  * @param scope Class instance.
  */
 export const gatherLogInfoFromScope = (scope: any): Record<string, any> => {
+  if(!scope) {
+    return {};
+  }
+
   const res: Record<string, any> = {};
 
   const prototype = Object.getPrototypeOf(scope);
