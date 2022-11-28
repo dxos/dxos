@@ -52,10 +52,10 @@ module.exports = {
     tailwindcss(function({ addBase, theme }) {
       addBase({
         'h1': { fontSize: theme('fontSize.8xl') },
-        'h2': { fontSize: theme('fontSize.7xl') },
-        'h3': { fontSize: theme('fontSize.6xl') },
-        'body': { fontSize: theme('fontSize.6xl') },
-        'code': { fontSize: theme('fontSize.3xl') },
+        'h2': { fontSize: theme('fontSize.6xl') },
+        'h3': { fontSize: theme('fontSize.4xl') },
+        'body': { fontSize: theme('fontSize.4xl') },
+        'code': { fontSize: theme('fontSize.2xl') },
       })
     })
   ]
