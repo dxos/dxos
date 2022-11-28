@@ -36,10 +36,7 @@ export const encodeStructValue = (structValue: any): any => {
 };
 
 export const encodeStruct = (struct: Struct): any => ({
-  fields: Object.entries(struct).reduce((acc, [key, value]) => {
-    acc[key] = encodeStructValue(value);
-    return acc;
-  }, {} as Record<string, any>)
+  fields: Object.fromEntries(Object.entries(struct).map(([key, value]) => [key, encodeStructValue(value)]))
 });
 
 export const decodeStructValue = (value: any): any => {
@@ -69,10 +66,7 @@ export const decodeStructValue = (value: any): any => {
 };
 
 export const decodeStruct = (value: any): Struct =>
-  Object.entries(value.fields || {}).reduce((acc, [key, value]) => {
-    acc[key] = decodeStructValue(value);
-    return acc;
-  }, {} as Struct);
+  Object.fromEntries(Object.entries(value.fields || {}).map(([key, value]) => [key, decodeStructValue(value)]));
 
 export const structSubstitutions = {
   'google.protobuf.Struct': {
