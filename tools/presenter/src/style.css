@@ -19,8 +19,9 @@
  */
 @layer base {
   html {
-    font-family: DM Sans, ui-sans-serif;
-    font-weight: 100;
+    font-family: Montserrat, DM Sans, ui-sans-serif;
+    font-weight: 400;
+    @apply text-gray-800;
   }
 
   body {
@@ -81,7 +82,7 @@
   code {
     @apply mt-1 !important;
     @apply mb-1 !important;
-    @apply bg-slate-200 !important;
+    @apply bg-gray-100 !important;
   }
 }
 
@@ -92,7 +93,7 @@
  */
 
 .bg-slide-header {
-  @apply bg-emerald-600;
+  @apply bg-gray-200;
   font-weight: 100;
   font-family: Sharp Sans, ui-sans-serif;
 }

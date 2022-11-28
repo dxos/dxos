@@ -89,7 +89,8 @@ export default defineConfig({
           'Roboto',
           'Roboto Mono',
           'DM Sans',
-          'DM Mono'
+          'DM Mono',
+          'Montserrat'
         ]
       },
 
