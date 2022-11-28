@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
 import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
+import { describe, test } from '@dxos/test';
 
 const createTestComponents = async () => {
   const client = new Client();
@@ -61,7 +62,7 @@ const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList:
 };
 
 describe.skip('OrderedList', function () {
-  it('reorders', async function () {
+  test('reorders', async function () {
     const { space, items } = await createTestComponents();
     const list = await space.database.createItem({
       model: ObjectModel,
