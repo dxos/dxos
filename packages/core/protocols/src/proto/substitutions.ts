@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
+import { anySubstitutions, structSubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -34,6 +34,7 @@ export const substitutions = {
 
 export default {
   ...anySubstitutions,
+  ...structSubstitutions,
   ...substitutions,
   ...timestampSubstitutions
 };
