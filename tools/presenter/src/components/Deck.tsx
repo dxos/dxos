@@ -3,6 +3,7 @@
 //
 
 import React, { FC, ReactNode, useEffect, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 // TODO(burdon): Insert React control via remark layout plugin?
 export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
@@ -29,7 +30,7 @@ export const usePageHandler = (length: number) => {
           break;
         }
         default: {
-          console.log(ev.key);
+          // console.log(ev.key);
         }
       }
     };
@@ -43,11 +44,52 @@ export const usePageHandler = (length: number) => {
 
 export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
   const page = usePageHandler(slides.length);
+
+  // TODO(burdon): Debounce.
+  // TODO(burdon): Resize isn't called after size and scale is set.
+  const { ref, width, height } = useResizeDetector();
+
+  useEffect(() => {
+    console.log('!');
+    // TODO(burdon): Doesn't work.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Document/fullscreenchange_event
+    document.addEventListener('fullscreenchange', (event) => {
+      console.log('???');
+    });
+  }, []);
+
+  useEffect(() => {
+    return;
+
+    // NOTE: This trick doesn't work due to the notch.
+    // height: 1080 vs 1117 (36 + 1 pixels for notch).
+    const [maxX, maxY] = [1728, 1080];
+    console.log(window.innerHeight, window.screen.height);
+    console.log(document.fullscreenElement);
+
+    const scale = 0.9; // Scale when not maximized.
+    const fullScreen = !!(window.screenTop && window.screenY);
+
+    const ox = -(window.screen.availWidth - width) / 2;
+    const oy = -(window.screen.availHeight - height) / 2;
+
+    // TODO(burdon): Translate.
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform
+    // NOTE: Only transformable elements can be transformed (tables?)
+    Object.assign(document.body.style, {
+      width: `${window.screen.availWidth}px`,
+      height: `${window.screen.availHeight}px`,
+      transform: `scale(${scale})`
+    });
+  }, [width, height]);
+
   const Page = () => slides[page];
 
   // prettier-ignore
   return (
     <div
+      ref={ref}
+
       // TODO(burdon): Use tailwind.
       style={{
         position: 'absolute',
@@ -57,7 +99,8 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
         bottom: 0,
         display: 'flex',
         overflow: 'hidden',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        backgroundColor: 'white'
       }}
     >
       {/* TODO(burdon): Show/hide based on front-matter. */}

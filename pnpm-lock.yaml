@@ -3962,6 +3962,8 @@ importers:
       postcss: ^8.4.17
       react: ^18.2.0
       react-dom: ^18.2.0
+      react-resize-detector: ^7.1.2
+      react-router-dom: ^6.3.0
       rehype-highlight: ^6.0.0
       remark-code-import: ^1.1.1
       remark-directive: ^2.0.1
@@ -3984,6 +3986,8 @@ importers:
       '@types/react-dom': 18.0.9
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
+      react-resize-detector: 7.1.2_biqbaboplfbrettd7655fr4n2y
+      react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
       tailwindcss: 3.2.4
       tailwindcss-logical: 3.0.0_2lwn2upnx27dqeg6hqdu7sq75m
       tailwindcss-radix: 2.6.1
@@ -24222,7 +24226,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -27756,6 +27760,17 @@ packages:
       react: ^18.0.0
     dependencies:
       react: 18.2.0
+    dev: false
+
+  /react-resize-detector/7.1.2_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-zXnPJ2m8+6oq9Nn8zsep/orts9vQv3elrpA+R8XTcW7DVVUJ9vwDwMXaBtykAYjMnkCIaOoK9vObyR7ZgFNlOw==}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      lodash: 4.17.21
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /react-router-dom/6.4.3_biqbaboplfbrettd7655fr4n2y:

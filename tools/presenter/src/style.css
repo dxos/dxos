@@ -27,6 +27,7 @@
   body {
     /* Prevent bounce. */
     overflow: hidden;
+    background-color: #222;
   }
 
   /**
