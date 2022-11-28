@@ -1,6 +1,6 @@
-# @dxos/tasks-app
+# @dxos/gravity-agent
 
-DXOS tasks application.
+Core DXOS Client API.
 
 ## Dependency Graph
 
@@ -15,18 +15,10 @@ flowchart LR
 
 %% Nodes
 
-subgraph apps [apps]
-  style apps fill:transparent
-  dxos/tasks-app("@dxos/tasks-app"):::root
-  click dxos/tasks-app "dxos/dxos/tree/main/packages/apps/tasks-app/docs"
-
-  subgraph patterns [patterns]
-    style patterns fill:transparent
-    dxos/react-appkit("@dxos/react-appkit"):::def
-    click dxos/react-appkit "dxos/dxos/tree/main/packages/apps/patterns/react-appkit/docs"
-    dxos/react-list("@dxos/react-list"):::def
-    click dxos/react-list "dxos/dxos/tree/main/packages/apps/patterns/react-list/docs"
-  end
+subgraph gravity [gravity]
+  style gravity fill:transparent
+  dxos/gravity-agent("@dxos/gravity-agent"):::root
+  click dxos/gravity-agent "dxos/dxos/tree/main/packages/gravity/gravity-agent/docs"
 end
 
 subgraph sdk [sdk]
@@ -39,10 +31,6 @@ subgraph sdk [sdk]
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
   dxos/errors("@dxos/errors"):::def
   click dxos/errors "dxos/dxos/tree/main/packages/sdk/errors/docs"
-  dxos/react-client("@dxos/react-client"):::def
-  click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs"
-  dxos/react-uikit("@dxos/react-uikit"):::def
-  click dxos/react-uikit "dxos/dxos/tree/main/packages/sdk/react-uikit/docs"
 end
 
 subgraph common [common]
@@ -61,14 +49,6 @@ subgraph common [common]
   click dxos/timeframe "dxos/dxos/tree/main/packages/common/timeframe/docs"
   dxos/feed-store("@dxos/feed-store"):::def
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/react-async("@dxos/react-async"):::def
-  click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/react-ui("@dxos/react-ui"):::def
-  click dxos/react-ui "dxos/dxos/tree/main/packages/common/react-ui/docs"
-  dxos/sentry("@dxos/sentry"):::def
-  click dxos/sentry "dxos/dxos/tree/main/packages/common/sentry/docs"
-  dxos/telemetry("@dxos/telemetry"):::def
-  click dxos/telemetry "dxos/dxos/tree/main/packages/common/telemetry/docs"
 
   subgraph _ [ ]
     style _ fill:transparent
@@ -140,6 +120,7 @@ subgraph core [core]
 end
 
 %% Links
+dxos/gravity-agent --> dxos/client
 dxos/async --> dxos/context
 dxos/client --> dxos/client-services
 dxos/client-services --> dxos/config
@@ -184,15 +165,6 @@ dxos/client-services --> dxos/text-model
 dxos/text-model --> dxos/echo-db
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
-dxos/react-client --> dxos/client
-dxos/react-client --> dxos/react-async
-dxos/react-appkit --> dxos/react-uikit
-dxos/react-uikit --> dxos/react-client
-dxos/react-uikit --> dxos/react-ui
-dxos/react-appkit --> dxos/telemetry
-dxos/telemetry --> dxos/sentry
-dxos/tasks-app --> dxos/react-list
-dxos/react-list --> dxos/react-appkit
 ```
 
 ## Dependencies
@@ -202,7 +174,7 @@ dxos/react-list --> dxos/react-appkit
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
 | [`@dxos/broadcast`](../../../core/mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client`](../../../sdk/client/docs/README.md) | &check; |
-| [`@dxos/client-services`](../../../sdk/client-services/docs/README.md) |  |
+| [`@dxos/client-services`](../../../sdk/client-services/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) |  |
 | [`@dxos/config`](../../../sdk/config/docs/README.md) | &check; |
 | [`@dxos/context`](../../../common/context/docs/README.md) |  |
@@ -214,7 +186,7 @@ dxos/react-list --> dxos/react-appkit
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
 | [`@dxos/hypercore`](../../../common/hypercore/docs/README.md) |  |
 | [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md) |  |
-| [`@dxos/keys`](../../../common/keys/docs/README.md) |  |
+| [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../../core/mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../core/mesh/messaging/docs/README.md) |  |
@@ -227,16 +199,8 @@ dxos/react-list --> dxos/react-appkit
 | [`@dxos/protocol-plugin-rpc`](../../../core/mesh/protocol-plugin-rpc/docs/README.md) |  |
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/react-appkit`](../../patterns/react-appkit/docs/README.md) | &check; |
-| [`@dxos/react-async`](../../../common/react-async/docs/README.md) |  |
-| [`@dxos/react-client`](../../../sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-list`](../../patterns/react-list/docs/README.md) | &check; |
-| [`@dxos/react-ui`](../../../common/react-ui/docs/README.md) | &check; |
-| [`@dxos/react-uikit`](../../../sdk/react-uikit/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |
-| [`@dxos/sentry`](../../../common/sentry/docs/README.md) | &check; |
-| [`@dxos/telemetry`](../../../common/telemetry/docs/README.md) |  |
 | [`@dxos/teleport`](../../../core/mesh/teleport/docs/README.md) |  |
 | [`@dxos/teleport-plugin-replicator`](../../../core/mesh/teleport-plugin-replicator/docs/README.md) |  |
 | [`@dxos/text-model`](../../../core/echo/text-model/docs/README.md) |  |
