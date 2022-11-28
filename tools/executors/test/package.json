@@ -11,5 +11,8 @@
   "scripts": {
     "test": "mocha -r @swc-node/register ./src/**/*.test.ts"
   },
+  "devDependencies": {
+    "@types/mocha": "^8.2.2"
+  },
   "executors": "./executor.json"
 }

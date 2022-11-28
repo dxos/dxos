@@ -64,7 +64,6 @@ importers:
       '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/sharedworker': 0.0.80
@@ -159,7 +158,6 @@ importers:
       '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/sharedworker': 0.0.80
@@ -1042,7 +1040,6 @@ importers:
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pickby': ^4.6.7
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       chalk: ^4.1.0
       js-yaml: ^4.1.0
@@ -1064,7 +1061,6 @@ importers:
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pickby': 4.6.7
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       pirates: 4.0.5
       sorcery: 0.10.0
@@ -1627,12 +1623,10 @@ importers:
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       assert: ^2.0.0
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
-      mocha: ^8.4.0
       typescript: ^4.8.4
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
@@ -1650,10 +1644,8 @@ importers:
     devDependencies:
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../../common/testutils
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       earljs: 0.1.12_typescript@4.8.4
-      mocha: 8.4.0
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -2950,7 +2942,6 @@ importers:
       '@types/d3': ^7.1.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
@@ -2965,7 +2956,6 @@ importers:
       immutability-helper: ^3.0.2
       it-all: 1.0.6
       mobile-detect: ~1.4.5
-      mocha: ^8.4.0
       react: ^18.2.0
       react-dom: ^18.2.0
       robotjs: ~0.6.0
@@ -3013,7 +3003,6 @@ importers:
       '@types/d3': 7.4.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -3023,7 +3012,6 @@ importers:
       electron: 18.0.4
       esbuild-plugin-yaml: 0.0.1
       faker: 5.5.3
-      mocha: 8.4.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       robotjs: 0.6.0
@@ -3044,7 +3032,6 @@ importers:
       '@dxos/react-client': workspace:*
       '@types/copy-paste': ^1.1.30
       '@types/js-yaml': ^4.0.5
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/node-fetch': ^2.5.10
       '@types/qrcode-terminal': ^0.12.0
@@ -3062,7 +3049,6 @@ importers:
       ink-table: ~3.0.0
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
-      mocha: ^8.4.0
       node-fetch: ^2.6.0
       npm-api: ~1.0.1
       qrcode-terminal: ~0.12.0
@@ -3101,14 +3087,12 @@ importers:
     devDependencies:
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/node-fetch': 2.6.2
       '@types/qrcode-terminal': 0.12.0
       '@types/react': 18.0.21
       '@types/yargs': 16.0.4
       esbuild: 0.14.54
-      mocha: 8.4.0
       supervisor: 0.12.0
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
@@ -3379,7 +3363,6 @@ importers:
       assert: ^2.0.0
       faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
-      mocha: ^8.4.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
@@ -3399,7 +3382,6 @@ importers:
       '@types/isomorphic-fetch': 0.0.36
       '@types/node': 18.11.9
       faker: 5.5.3
-      mocha: 8.4.0
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
@@ -3892,7 +3874,6 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pick': ^4.4.7
       '@types/minimatch': ^5.1.2
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/yargs': ~16.0.1
       array-iterate: ~2.0.1
@@ -3903,7 +3884,6 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       minimatch: ^5.1.0
-      mocha: ^8.4.0
       ts-morph: ^16.0.0
       typescript: ^4.8.4
       yargs: ~16.2.0
@@ -3925,10 +3905,8 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pick': 4.4.7
       '@types/minimatch': 5.1.2
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/yargs': 16.0.4
-      mocha: 8.4.0
       typescript: 4.8.4
 
   tools/codemods:
@@ -4055,7 +4033,10 @@ importers:
       typescript: 4.8.4
 
   tools/executors/test:
-    specifiers: {}
+    specifiers:
+      '@types/mocha': ^8.2.2
+    devDependencies:
+      '@types/mocha': 8.2.3
 
   tools/executors/toolbox:
     specifiers:
@@ -4121,6 +4102,7 @@ importers:
       '@types/diff': ^5.0.2
       '@types/glob': ~7.1.3
       '@types/js-yaml': ^4.0.5
+      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/protocol-buffers-schema': ^3.4.1
       '@types/yargs': ~16.0.1
@@ -4173,6 +4155,7 @@ importers:
       '@types/diff': 5.0.2
       '@types/glob': 7.1.4
       '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
@@ -4191,7 +4174,6 @@ importers:
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.pick': ^4.4.7
       '@types/minimatch': ^5.1.2
-      '@types/mocha': ^8.2.2
       '@types/node': ^18.11.9
       '@types/react': ^18.0.21
       '@types/yargs': ~16.0.1
@@ -4209,7 +4191,6 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       log-update: ^4.0.0
-      mocha: ^8.4.0
       node-notifier: ^10.0.1
       react: ^18.2.0
       typescript: ^4.8.4
@@ -4243,11 +4224,9 @@ importers:
       '@types/lodash.defaultsdeep': 4.6.7
       '@types/lodash.pick': 4.4.7
       '@types/minimatch': 5.1.2
-      '@types/mocha': 8.2.3
       '@types/node': 18.11.9
       '@types/react': 18.0.21
       '@types/yargs': 16.0.4
-      mocha: 8.4.0
       typescript: 4.8.4
 
 packages:

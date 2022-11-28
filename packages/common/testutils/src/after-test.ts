@@ -2,6 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { afterEach } from '@dxos/test';
+
+// TODO(wittjosiah): Move to @dxos/test.
+
 let afterTestCallbacks: (() => any | Promise<any>)[] = [];
 
 /**
