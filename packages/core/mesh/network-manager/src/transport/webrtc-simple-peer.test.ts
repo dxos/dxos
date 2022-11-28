@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
+// @dxos/test platform=nodejs
 
 import wrtc from '@koush/wrtc';
 import SimplePeerConstructor from 'simple-peer';

@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Module } from '@dxos/protocols/proto/dxos/config';
-import { describe, test } from '@dxos/test';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { Metagraph } from './metagraph';
 import { TestServer } from './testing';
@@ -44,11 +44,11 @@ const modules: Module[] = [
 describe('Metagraph queries', function () {
   const testServer = new TestServer({ modules });
 
-  before(function () {
+  beforeAll(function () {
     testServer.start();
   });
 
-  after(function () {
+  afterAll(function () {
     testServer.stop();
   });
 

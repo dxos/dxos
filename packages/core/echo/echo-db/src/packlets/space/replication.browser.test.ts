@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha platform=browser
+// @dxos/test platform=browser
 
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
