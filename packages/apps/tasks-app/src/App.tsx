@@ -119,7 +119,7 @@ export const App = () => {
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' />
+                <ServiceWorkerToast variant='offlineReady' appNs='tasks' />
               ) : null}
             </HashRouter>
           </ClientProvider>

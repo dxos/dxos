@@ -14,6 +14,7 @@ interface NeedRefreshToastProps {
 }
 
 interface OfflineReadyToastProps {
+  appNs: string;
   variant: 'offlineReady';
 }
 
@@ -34,7 +35,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
             <span>{t('need refresh label')}</span>
           </>
         ) : (
-          t('offline ready label')
+          t('offline ready label', { appName: t('current app name', { ns: props.appNs }) })
         )
       }
       {...(isNeedRefreshToast(props) && {
