@@ -1,6 +1,17 @@
 {
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/esbuild/src/index.ts",
+        "outputPath": "tools/executors/esbuild/dist",
+        "tsConfig": "tools/executors/esbuild/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -11,20 +22,6 @@
       },
       "outputs": [
         "{options.outputFile}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "tools/executors/esbuild/src/index.ts",
-        "outputPath": "tools/executors/esbuild/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/executors/esbuild/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   },

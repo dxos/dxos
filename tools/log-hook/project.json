@@ -2,6 +2,17 @@
   "sourceRoot": "tools/log-hook/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/log-hook/src/index.ts",
+        "outputPath": "tools/log-hook/dist",
+        "tsConfig": "tools/log-hook/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -12,20 +23,6 @@
       },
       "outputs": [
         "{options.outputFile}"
-      ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "tools/log-hook/src/index.ts",
-        "outputPath": "tools/log-hook/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/log-hook/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
       ]
     }
   }

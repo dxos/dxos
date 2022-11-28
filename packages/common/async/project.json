@@ -2,6 +2,17 @@
   "sourceRoot": "packages/common/async/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": ["packages/common/async/src/index.ts"],
+        "outputPath": "packages/common/async/dist/lib",
+        "platforms": ["node", "browser"]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -37,7 +48,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/async/src/index.ts",
-        "outputPath": "packages/common/async/dist",
+        "outputPath": "packages/common/async/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
@@ -49,6 +60,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

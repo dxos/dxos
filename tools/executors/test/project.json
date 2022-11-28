@@ -2,6 +2,17 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/executors/mocha/src/main.ts",
+        "outputPath": "tools/executors/mocha/dist",
+        "tsConfig": "tools/executors/mocha/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -13,24 +24,11 @@
       "outputs": [
         "{options.outputFile}"
       ]
-    },
-    "types": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "tools/executors/test/src/main.ts",
-        "outputPath": "tools/executors/test/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/executors/test/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
     }
   },
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
+    "esbuild-plugins",
     "log-hook"
   ]
 }

@@ -9,7 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build": "tsc",
+    "types": "tsc",
     "bundle": "NODE_OPTIONS=\"--max-old-space-size=4096\" vite build",
     "deploy": "NODE_OPTIONS=\"--max-old-space-size=4096\" dx app publish",
     "preview": "vite preview",

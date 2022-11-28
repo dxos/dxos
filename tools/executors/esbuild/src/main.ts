@@ -3,17 +3,20 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import { build } from 'esbuild';
+import { build, Platform } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import { readFile } from 'node:fs/promises';
 import { join } from 'path';
+import * as ts from 'typescript';
 
-import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
+import { transformSourceFile } from '@dxos/log-hook';
 
 export interface EsbuildExecutorOptions {
+  bundle: boolean;
+  bundlePackages: string[];
   entryPoints: string[];
-  outdir?: string;
-  outfile?: string;
-  bundlePackages?: string[];
+  outputPath: string;
+  platforms: Platform[];
 }
 
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
@@ -24,28 +27,50 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
 
-  const result = await build({
-    entryPoints: options.entryPoints,
-    outdir: options.outdir,
-    outfile: options.outfile,
-    format: 'cjs',
-    write: true,
-    bundle: true,
-    // https://esbuild.github.io/api/#log-override
-    logOverride: {
-      // @polkadot/api/augment/rpc was generating this warning.
-      // It is specifically type related and has no effect on the final bundle behavior.
-      'ignored-bare-import': 'info'
-    },
-    plugins: [
-      nodeExternalsPlugin({
-        packagePath,
-        allowList: options.bundlePackages
-      }),
-      FixMemdownPlugin(),
-      NodeModulesPlugin()
-    ]
-  });
+  const results = await Promise.all(
+    options.platforms.map((platform) => {
+      const outdir = options.entryPoints.length > 1 ? `${options.outputPath}/${platform}` : undefined;
+      const outfile = options.entryPoints.length <= 1 ? `${options.outputPath}/${platform}.js` : undefined;
 
-  return { success: result.errors.length === 0 };
+      return build({
+        entryPoints: options.entryPoints,
+        outdir,
+        outfile,
+        format: 'cjs',
+        write: true,
+        bundle: options.bundle,
+        platform,
+        plugins: [
+          nodeExternalsPlugin({
+            packagePath,
+            allowList: options.bundlePackages
+          }),
+          {
+            name: 'log-transform',
+            setup: ({ onLoad }) => {
+              onLoad({ filter: /\.ts/ }, async (args) => {
+                const source = await readFile(args.path, 'utf8');
+                const sourceFile = ts.createSourceFile(
+                  args.path,
+                  source,
+                  ts.ScriptTarget.ESNext,
+                  false,
+                  ts.ScriptKind.TS
+                );
+                const transformed = transformSourceFile(sourceFile, (ts as any).nullTransformationContext);
+                return {
+                  contents: ts.createPrinter().printFile(transformed),
+                  loader: 'ts'
+                };
+              });
+            }
+          }
+        ]
+      });
+    })
+  );
+
+  const errors = results.map((result) => result.errors).flat();
+
+  return { success: errors.length === 0 };
 };

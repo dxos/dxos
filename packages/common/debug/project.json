@@ -2,6 +2,17 @@
   "sourceRoot": "packages/common/debug/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@dxos/esbuild:build",
+      "options": {
+        "entryPoints": ["packages/common/debug/src/index.ts"],
+        "outputPath": "packages/common/debug/dist/lib",
+        "platforms": ["node", "browser"]
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -37,7 +48,7 @@
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/common/debug/src/index.ts",
-        "outputPath": "packages/common/debug/dist",
+        "outputPath": "packages/common/debug/dist/types",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
@@ -49,6 +60,7 @@
     }
   },
   "implicitDependencies": [
+    "esbuild",
     "test"
   ]
 }

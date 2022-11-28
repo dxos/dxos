@@ -3,22 +3,29 @@
   "type": "object",
   "cli": "nx",
   "properties": {
+    "bundle": {
+      "type": "boolean",
+      "description": "",
+      "default": true
+    },
+    "bundlePackages": {
+      "type": "array",
+      "description": "",
+      "default": []
+    },
     "entryPoints": {
       "type": "array",
       "description": ""
     },
-    "outdir": {
+    "outputPath": {
       "type": "string",
       "description": ""
     },
-    "outfile": {
-      "type": "string",
-      "description": ""
-    },
-    "bundlePackages": {
+    "platforms": {
       "type": "array",
-      "description": ""
+      "description": "",
+      "default": ["neutral"]
     }
   },
-  "required": ["entryPoints"]
+  "required": ["entryPoints", "outputPath"]
 }
