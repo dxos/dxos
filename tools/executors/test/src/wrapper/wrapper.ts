@@ -105,5 +105,5 @@ export const test: TestFunction = testWrapper;
 export const describe: SuiteFunction = mocha.describe;
 export const afterAll: HookFunction = mocha.after;
 export const afterEach: HookFunction = mocha.afterEach;
-export const beforeAll: HookFunction = mocha.after;
+export const beforeAll: HookFunction = mocha.before;
 export const beforeEach: HookFunction = mocha.beforeEach;

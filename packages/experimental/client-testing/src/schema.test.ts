@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import columnify from 'columnify';
 import expect from 'expect';
 
-import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
+import { Item, ObjectModel, Space, Schema, SchemaField, TYPE_SCHEMA, Client, fromHost } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
@@ -18,7 +18,7 @@ let builder: SchemaBuilder;
 
 describe('Schemas', function () {
   beforeEach(async function () {
-    client = new Client();
+    client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
     space = await client.echo.createSpace();
