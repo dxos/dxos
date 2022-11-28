@@ -38,6 +38,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, translationResources]}
       fallback={<Fallback message='Loading...' />}
+      appNs='hello'
     >
       <ClientProvider config={configProvider} fallback={<GenericFallback />}>
         <HashRouter>
@@ -45,7 +46,7 @@ export const App = () => {
           {needRefresh ? (
             <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
           ) : offlineReady ? (
-            <ServiceWorkerToast variant='offlineReady' appNs='hello' />
+            <ServiceWorkerToast variant='offlineReady' />
           ) : null}
         </HashRouter>
       </ClientProvider>

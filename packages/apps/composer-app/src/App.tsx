@@ -94,6 +94,7 @@ export const App = () => {
     <UiKitProvider
       resourceExtensions={[translations, composerTranslations]}
       fallback={<Fallback message='Loading...' />}
+      appNs='composer'
     >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
@@ -108,7 +109,7 @@ export const App = () => {
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' appNs='composer' />
+                <ServiceWorkerToast variant='offlineReady' />
               ) : null}
             </HashRouter>
           </ClientProvider>

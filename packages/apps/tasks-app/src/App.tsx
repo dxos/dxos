@@ -105,7 +105,11 @@ export const App = () => {
   });
 
   return (
-    <UiKitProvider resourceExtensions={[translations, tasksTranslations]} fallback={<Fallback message='Loading...' />}>
+    <UiKitProvider
+      resourceExtensions={[translations, tasksTranslations]}
+      fallback={<Fallback message='Loading...' />}
+      appNs='halo'
+    >
       <ErrorProvider>
         {/* TODO(wittjosiah): Hook up user feedback mechanism. */}
         <ErrorBoundary fallback={({ error }) => <FatalError error={error} />}>
@@ -119,7 +123,7 @@ export const App = () => {
               {needRefresh ? (
                 <ServiceWorkerToast {...{ variant: 'needRefresh', updateServiceWorker }} />
               ) : offlineReady ? (
-                <ServiceWorkerToast variant='offlineReady' appNs='tasks' />
+                <ServiceWorkerToast variant='offlineReady' />
               ) : null}
             </HashRouter>
           </ClientProvider>

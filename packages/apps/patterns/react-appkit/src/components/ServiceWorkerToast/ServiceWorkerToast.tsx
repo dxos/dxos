@@ -6,7 +6,7 @@ import cx from 'classnames';
 import { Gift } from 'phosphor-react';
 import React from 'react';
 
-import { useTranslation, Toast, Button, getSize } from '@dxos/react-uikit';
+import { useTranslation, Toast, Button, getSize, useTranslationsContext } from '@dxos/react-uikit';
 
 interface NeedRefreshToastProps {
   variant: 'needRefresh';
@@ -14,7 +14,6 @@ interface NeedRefreshToastProps {
 }
 
 interface OfflineReadyToastProps {
-  appNs: string;
   variant: 'offlineReady';
 }
 
@@ -24,6 +23,7 @@ const isNeedRefreshToast = (props: any): props is NeedRefreshToastProps => props
 
 export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
   const { t } = useTranslation('appkit');
+  const { appNs } = useTranslationsContext();
   const { variant } = props;
   return (
     <Toast
@@ -35,7 +35,7 @@ export const ServiceWorkerToast = (props: ServiceWorkerToastProps) => {
             <span>{t('need refresh label')}</span>
           </>
         ) : (
-          t('offline ready label', { appName: t('current app name', { ns: props.appNs }) })
+          t('offline ready label', { appName: t('current app name', { ns: appNs }) })
         )
       }
       {...(isNeedRefreshToast(props) && {
