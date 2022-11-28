@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-
 export type Struct = Record<string, any>;
 
 export const encodeStructValue = (structValue: any): any => {
