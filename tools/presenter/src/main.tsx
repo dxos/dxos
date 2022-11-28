@@ -9,7 +9,7 @@ import 'virtual:fonts.css';
 
 import Index from './slides/index.mdx';
 
-// TODO(burdon): Image layout plugin (sizing options).
+// TODO(burdon): Image layout plugin (sizing, position, bleed options).
 // TODO(burdon): Router for pager (change URL).
 // TODO(burdon): Form-factor (e.g., 16x9) with max dimensions.
 //  - https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag

@@ -4,16 +4,17 @@
 
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
-// TODO(burdon): Add by template.
+// TODO(burdon): Insert React control via remark layout plugin?
 export const Pager: FC<{ page: number; length: number }> = ({ page, length }) => {
   return (
-    <div className='font-mono text-3xl' style={{ position: 'absolute', bottom: 0, right: 0, padding: 16 }}>
+    <div className='absolute bottom-1 right-1 font-mono text-3xl'>
       {page + 1}/{length}
     </div>
   );
 };
 
-export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
+// TODO(burdon): Factor out hooks.
+export const usePageHandler = (length: number) => {
   const [page, setPage] = useState<number>(0);
   useEffect(() => {
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
@@ -24,7 +25,7 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
           break;
         }
         case 'ArrowRight': {
-          setPage((page) => (page === slides.length - 1 ? page : page + 1));
+          setPage((page) => (page === length - 1 ? page : page + 1));
           break;
         }
         default: {
@@ -37,6 +38,11 @@ export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
     return () => window.removeEventListener('keydown', handler);
   });
 
+  return page;
+};
+
+export const Deck: FC<{ slides: ReactNode[] }> = ({ slides }) => {
+  const page = usePageHandler(slides.length);
   const Page = () => slides[page];
 
   // prettier-ignore

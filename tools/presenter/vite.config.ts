@@ -81,14 +81,25 @@ export default defineConfig({
 
     // https://www.npmjs.com/package/vite-plugin-fonts
     VitePluginFonts({
+      // TODO(burdon): https://fonts.google.com/specimen/DM+Sans
+      google: {
+        injectTo: 'head-prepend',
+        // prettier-ignore
+        families: [
+          'Roboto',
+          'Roboto Mono',
+          'DM Sans',
+          'DM Mono'
+        ]
+      },
+
       custom: {
         injectTo: 'head-prepend',
         display: 'auto',
         families: [
           {
-            name: 'sharp-sans',
-            local: 'sharp-sans',
-            src: './assets/fonts/*.ttf'
+            name: 'Sharp Sans',
+            src: 'node_modules/@dxos/assets/assets/fonts/sharp-sans/*.ttf'
           }
         ]
       }

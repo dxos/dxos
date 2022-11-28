@@ -18,10 +18,22 @@
  * https://tailwindcss.com/docs/adding-base-styles
  */
 @layer base {
-  /** https://tailwindcss.com/docs/preflight#lists-are-unstyled */
-  /** https://stackoverflow.com/questions/37793048/how-to-gain-hanging-indent-list-with-css-counters */
-  /* TODO(burdon): Numbered lists. */
-  /* content: ">" counter(paragraph) " "; */
+  html {
+    font-family: DM Sans, ui-sans-serif;
+    font-weight: 100;
+  }
+
+  body {
+    /* Prevent bounce. */
+    overflow: hidden;
+  }
+
+  /**
+   * Lists
+   * https://tailwindcss.com/docs/preflight#lists-are-unstyled
+   * https://stackoverflow.com/questions/37793048/how-to-gain-hanging-indent-list-with-css-counters
+   */
+
   ul {
     margin-left: 1.0em;
     margin-top: 0.4em;
@@ -34,27 +46,35 @@
   }
   ul > li::before {
     left: -1.0em;
-    counter-increment: paragraph;
     position: absolute;
-  }
-  ul > li::before {
-    /*content: "§";*/
     content: "\203A";
     @apply text-orange-600; /** TODO: Style. */
   }
-  /*
-  ul > li > ul > li:first-of-type {
-    margin-top: 0.2em;
-  }
-  ul > li > ul > li:last-of-type {
-    margin-bottom: 0.2em;
-  }
-  */
   ul > li > ul > li {
     font-size: 80%;
   }
   ul > li > ul > li::before {
     content: "\203A";
+  }
+
+  ol {
+    counter-reset: paragraph;
+    margin-left: 1.2em;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+  ol > li {
+    counter-increment: paragraph;
+    position: relative;
+    line-height: 1.2;
+    margin-bottom: 0.3em;
+  }
+  ol > li::before {
+    left: -1.2em;
+    position: absolute;
+    /*content: "§";*/
+    content: counter(paragraph) ". ";
+    @apply text-orange-600; /** TODO: Style. */
   }
 
   /** TODO(burdon): How to properly override hljs theme? */
@@ -67,7 +87,19 @@
 
 /**
  * Custom styles.
+ * TODO(burdon): Custom palette.
+ * https://tailwindcss.com/docs/background-color#changing-the-opacity
  */
+
+.bg-slide-header {
+  @apply bg-emerald-600;
+  font-weight: 100;
+  font-family: Sharp Sans, ui-sans-serif;
+}
+
+.bg-slide-header h3 {
+  font-variant: all-petite-caps;
+}
 
 .font-caps {
   font-variant: all-petite-caps;

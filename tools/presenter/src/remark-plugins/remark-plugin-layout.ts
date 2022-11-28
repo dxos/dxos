@@ -10,6 +10,7 @@ import { visit, Node } from 'unist-util-visit';
 type Meta = {
   layout?: string;
   title?: string;
+  subheading?: string;
 };
 
 type Matter = {
@@ -49,11 +50,12 @@ export const remarkPluginLayout = (options: Options) => (tree: any) => {
  * Create DOM layout.
  */
 const createLayout = (meta: Meta, children: Node[]) => {
-  const { layout, title } = meta;
+  const { layout, title, subheading } = meta;
 
   const page = (body: Node) => {
-    const header = div({ className: 'flex pl-2 pr-2 bg-orange-400' }, [
-      u('heading', { depth: 1 }, [u('text', title ?? '')])
+    const header = div({ className: 'flex flex-col pl-2 pr-2 pt-1 pb-1 bg-slide-header' }, [
+      u('heading', { depth: 1 }, [u('text', title ?? '')]),
+      u('heading', { depth: 3 }, [u('text', subheading ?? '')])
     ]);
 
     return div({ className: 'flex flex-col flex-1 overflow-hidden' }, [header, body]);
@@ -67,8 +69,12 @@ const createLayout = (meta: Meta, children: Node[]) => {
     // TODO(burdon): n columns.
     case 'col-2': {
       const sections = getSections(children);
-      const columns = sections.map((section) => div({ className: 'pad-2' }, section));
-      return page(div({ className: 'flex m-2' }, [div({ className: 'grid grid-cols-2' }, columns)]));
+      const columns = sections.map((section) => div({ className: 'flex flex-col m-2' }, section));
+      // prettier-ignore
+      return page(div({ className: 'flex flex-1' }, [
+        // TODO(burdon): No margin if full bleed image.
+        div({ className: 'flex flex-1 grid grid-cols-2' }, columns)
+      ]));
     }
 
     default: {

@@ -16,10 +16,12 @@ module.exports = {
 
   // https://tailwindcss.com/docs/theme#customizing-the-default-theme
   // https://tailwindcss.com/docs/plugins#adding-base-styles
+  // https://tailwindcss.com/docs/font-family#customizing-your-theme
+  // TODO(burdon): Default font-weight.
   theme: {
     fontFamily: {
-      // 'body': ['Roboto FlexVariable'],
-      'mono': ['monospace'],
+      'sans': ['"DM Mono"'],
+      'mono': ['"DM Mono"'],
     },
 
     // Referenced in style.css
