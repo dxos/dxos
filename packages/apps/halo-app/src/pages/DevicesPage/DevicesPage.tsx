@@ -32,9 +32,9 @@ export const DevicesPage = () => {
   }, []);
 
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
+    <>
       <HeadingWithActions
-        className='mbe-6'
+        className='mlb-4'
         heading={{ children: t('devices label') }}
         actions={
           <Button
@@ -57,6 +57,6 @@ export const DevicesPage = () => {
         createInvitationUrl={(invitationCode) => createInvitationUrl('/identity/join', invitationCode)}
         onClickRemove={handleRemove}
       />
-    </main>
+    </>
   );
 };

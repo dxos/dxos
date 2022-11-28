@@ -12,8 +12,9 @@ import { useTranslation, Button, getSize, defaultDisabled, Group } from '@dxos/r
 export const ContactsPage = () => {
   const { t } = useTranslation('halo');
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
+    <>
       <HeadingWithActions
+        className='mlb-4'
         heading={{ children: t('contacts label') }}
         actions={
           <Button variant='primary' className='grow flex gap-1'>
@@ -31,6 +32,6 @@ export const ContactsPage = () => {
         }}
         elevation={0}
       />
-    </main>
+    </>
   );
 };
