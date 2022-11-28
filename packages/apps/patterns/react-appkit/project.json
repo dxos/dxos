@@ -2,20 +2,6 @@
   "sourceRoot": "packages/apps/patterns/react-appkit/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/apps/patterns/react-appkit/src/index.ts",
-        "outputPath": "packages/apps/patterns/react-appkit/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/apps/patterns/react-appkit/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -41,6 +27,20 @@
         },
         "uiFramework": "@storybook/react"
       }
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/apps/patterns/react-appkit/src/index.ts",
+        "outputPath": "packages/apps/patterns/react-appkit/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/apps/patterns/react-appkit/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     }
   }
 }

@@ -2,20 +2,6 @@
   "sourceRoot": "packages/core/mesh/network-manager/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/network-manager/src/index.ts",
-        "outputPath": "packages/core/mesh/network-manager/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -52,6 +38,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/network-manager/src/index.ts",
+        "outputPath": "packages/core/mesh/network-manager/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/mesh/network-manager/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

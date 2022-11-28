@@ -2,20 +2,6 @@
   "sourceRoot": "packages/sdk/client-services/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/sdk/client-services/src/index.ts",
-        "outputPath": "packages/sdk/client-services/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/sdk/client-services/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -52,6 +38,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/client-services/src/index.ts",
+        "outputPath": "packages/sdk/client-services/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/sdk/client-services/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

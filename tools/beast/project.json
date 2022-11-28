@@ -2,20 +2,6 @@
   "sourceRoot": "tools/beast/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "tools/beast/src/index.ts",
-        "outputPath": "tools/beast/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/beast/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -48,6 +34,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/beast/src/index.ts",
+        "outputPath": "tools/beast/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/beast/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }

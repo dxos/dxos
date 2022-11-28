@@ -2,7 +2,19 @@
   "sourceRoot": "packages/gravity/orchestrator/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/gravity/orchestrator/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "types": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "assets": [
@@ -18,18 +30,6 @@
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/gravity/orchestrator/**/*.{ts,js}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
       ]
     }
   },

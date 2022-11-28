@@ -2,20 +2,6 @@
   "sourceRoot": "packages/core/mesh/protocol-plugin-presence/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts",
-        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -48,6 +34,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts",
+        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

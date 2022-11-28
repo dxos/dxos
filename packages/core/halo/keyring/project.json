@@ -2,20 +2,6 @@
   "sourceRoot": "packages/core/halo/keyring/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/core/halo/keyring/src/index.ts",
-        "outputPath": "packages/core/halo/keyring/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/core/halo/keyring/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -45,6 +31,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/core/halo/keyring/src/index.ts",
+        "outputPath": "packages/core/halo/keyring/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/core/halo/keyring/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

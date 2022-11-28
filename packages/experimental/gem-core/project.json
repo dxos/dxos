@@ -2,20 +2,6 @@
   "sourceRoot": "packages/experimental/gem-core/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/experimental/gem-core/src/index.ts",
-        "outputPath": "packages/experimental/gem-core/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/experimental/gem-core/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -36,6 +22,20 @@
       },
       "outputs": [
         "packages/experimental/gem-core/coverage"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/gem-core/src/index.ts",
+        "outputPath": "packages/experimental/gem-core/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/experimental/gem-core/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }

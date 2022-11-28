@@ -11,12 +11,12 @@
       "options": {
         "cacheableOperations": [
           "build",
-          "bundle",
           "e2e",
           "lint",
           "prebuild",
           "prerelease",
-          "test"
+          "test",
+          "types"
         ],
         "parallel": 6,
         "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
@@ -46,14 +46,6 @@
   },
   "targetDefaults": {
     "build": {
-      "inputs": ["production", "^production"],
-      "dependsOn": [
-        "^build",
-        "^bundle",
-        "prebuild"
-      ]
-    },
-    "bundle": {
       "inputs": [
         "production",
         "^production",
@@ -62,15 +54,14 @@
         }
       ],
       "dependsOn": [
-        "^bundle",
-        "build"
+        "^build",
+        "prebuild"
       ]
     },
     "e2e": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "build",
-        "bundle"
+        "build"
       ]
     },
     "lint": {
@@ -85,15 +76,13 @@
     "prerelease": {
       "inputs": ["default", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^build"
       ]
     },
     "serve": {
       "inputs": ["production", "^production"],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^build"
       ]
     },
     "test": {
@@ -111,8 +100,14 @@
         }
       ],
       "dependsOn": [
-        "^build",
-        "^bundle"
+        "^build"
+      ]
+    },
+    "types": {
+      "inputs": ["production", "^production"],
+      "dependsOn": [
+        "^types",
+        "prebuild"
       ]
     }
   },

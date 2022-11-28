@@ -2,20 +2,6 @@
   "sourceRoot": "packages/sdk/config/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/sdk/config/src/index.ts",
-        "outputPath": "packages/sdk/config/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/sdk/config/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -45,6 +31,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/config/src/index.ts",
+        "outputPath": "packages/sdk/config/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/sdk/config/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

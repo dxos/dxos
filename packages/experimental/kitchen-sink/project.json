@@ -2,20 +2,6 @@
   "sourceRoot": "packages/experimental/kitchen-sink/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/experimental/kitchen-sink/src/index.ts",
-        "outputPath": "packages/experimental/kitchen-sink/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/experimental/kitchen-sink/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "e2e": {
       "executor": "@dxos/playwright:playwright",
       "options": {
@@ -35,6 +21,20 @@
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/kitchen-sink/src/index.ts",
+        "outputPath": "packages/experimental/kitchen-sink/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/experimental/kitchen-sink/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   },

@@ -2,20 +2,6 @@
   "sourceRoot": "packages/sdk/react-uikit/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/sdk/react-uikit/src/index.ts",
-        "outputPath": "packages/sdk/react-uikit/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/sdk/react-uikit/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -41,6 +27,20 @@
         },
         "uiFramework": "@storybook/react"
       }
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/sdk/react-uikit/src/index.ts",
+        "outputPath": "packages/sdk/react-uikit/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/sdk/react-uikit/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
+      ]
     }
   }
 }

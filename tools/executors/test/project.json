@@ -2,7 +2,19 @@
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/executors/mocha/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "types": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/test/src/main.ts",
@@ -14,18 +26,6 @@
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/executors/test/**/*.{ts,js}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
       ]
     }
   },

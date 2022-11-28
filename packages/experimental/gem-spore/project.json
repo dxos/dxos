@@ -2,20 +2,6 @@
   "sourceRoot": "packages/experimental/gem-spore/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/experimental/gem-spore/src/index.ts",
-        "outputPath": "packages/experimental/gem-spore/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/experimental/gem-spore/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -36,6 +22,20 @@
       },
       "outputs": [
         "packages/experimental/gem-spore/coverage"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/experimental/gem-spore/src/index.ts",
+        "outputPath": "packages/experimental/gem-spore/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/experimental/gem-spore/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }

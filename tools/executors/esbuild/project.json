@@ -1,7 +1,19 @@
 {
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
-    "build": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "tools/executors/esbuild/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "types": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "tools/executors/esbuild/src/index.ts",
@@ -13,18 +25,6 @@
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "tools/executors/esbuild/**/*.{ts,js}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
       ]
     }
   },

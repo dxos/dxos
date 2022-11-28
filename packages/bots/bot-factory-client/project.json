@@ -2,7 +2,19 @@
   "sourceRoot": "packages/bots/bot-factory-client/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "packages/bots/bot-factory-client/**/*.{ts,js}"
+        ]
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
+    "types": {
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "packages/bots/bot-factory-client/src/index.ts",
@@ -14,18 +26,6 @@
       },
       "outputs": [
         "{options.outputPath}"
-      ]
-    },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "format": "unix",
-        "lintFilePatterns": [
-          "packages/bots/bot-factory-client/**/*.{ts,js}"
-        ]
-      },
-      "outputs": [
-        "{options.outputFile}"
       ]
     }
   },

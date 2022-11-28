@@ -1,20 +1,6 @@
 {
   "sourceRoot": "tools/apidoc/src",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "tools/apidoc/src/index.ts",
-        "outputPath": "tools/apidoc/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/apidoc/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "dev": {
       "dependsOn": [
         "^build"
@@ -34,6 +20,20 @@
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "tools/apidoc/src/index.ts",
+        "outputPath": "tools/apidoc/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "tools/apidoc/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }

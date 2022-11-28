@@ -11,20 +11,6 @@
         "script": "bin"
       }
     },
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/devtools/cli/src/index.ts",
-        "outputPath": "packages/devtools/cli/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/devtools/cli/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
@@ -89,6 +75,20 @@
         "{options.coveragePath}",
         "{options.outputPath}",
         "{options.resultsPath}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/cli/src/index.ts",
+        "outputPath": "packages/devtools/cli/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/devtools/cli/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }

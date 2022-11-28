@@ -1,20 +1,6 @@
 {
   "sourceRoot": "packages/devtools/plate/src",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "options": {
-        "main": "packages/devtools/plate/src/index.ts",
-        "outputPath": "packages/devtools/plate/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/devtools/plate/tsconfig.json"
-      },
-      "outputs": [
-        "{options.outputPath}"
-      ]
-    },
     "dev": {
       "dependsOn": [
         "^build"
@@ -34,6 +20,20 @@
       },
       "outputs": [
         "{options.outputFile}"
+      ]
+    },
+    "types": {
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "packages/devtools/plate/src/index.ts",
+        "outputPath": "packages/devtools/plate/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/devtools/plate/tsconfig.json"
+      },
+      "outputs": [
+        "{options.outputPath}"
       ]
     }
   }
