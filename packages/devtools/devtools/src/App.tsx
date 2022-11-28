@@ -15,7 +15,7 @@ import { ClientContext } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Controls, PanelsContainer } from './containers';
+import { PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
