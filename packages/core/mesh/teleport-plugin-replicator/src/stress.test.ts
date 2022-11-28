@@ -114,6 +114,7 @@ class CheckCommand implements fc.AsyncCommand<Model, Real> {
 }
 
 const factory = (keyring: Keyring): fc.ModelRunAsyncSetup<Model, Real> => async () => {
+  log('creating agents')
   const { peer1, peer2 } = await createStreamPair();
   return {
     model: {
@@ -167,8 +168,9 @@ describe('stress-tests', () => {
         try {
           await fc.asyncModelRun(() => system, cmds);
         } finally {
-          // await system.real.agent1.destroy();
-          // await system.real.agent2.destroy();
+          // TODO(dmaretskyi): Destroy breaks the test.
+          await system.real.agent1.destroy();
+          await system.real.agent2.destroy();
         }
       }
     ));

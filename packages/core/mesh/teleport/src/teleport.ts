@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
+import { createProtoRpcPeer, ProtoRpcPeer, RpcClosedError } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
 import { CreateChannelOpts, Muxer, RpcPort } from './muxing';
@@ -119,7 +119,14 @@ export class Teleport {
 
     // Perform the registration in a separate tick as this might block while the remote side is opening the extension.
     scheduleTask(this._ctx, async () => {
-      await this._control.registerExtension(name);
+      try {
+        await this._control.registerExtension(name);
+      } catch(err) {
+        if(err instanceof RpcClosedError) {
+          return;
+        }
+        throw err;
+      }
     });
 
     if (this._remoteExtensions.has(name)) {
