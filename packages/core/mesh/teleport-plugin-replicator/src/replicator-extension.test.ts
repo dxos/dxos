@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { Event, sleep } from '@dxos/async';
+
 import { createReplicatorPair, TestBuilder } from './testing';
 
 describe('ReplicatorExtension', function () {

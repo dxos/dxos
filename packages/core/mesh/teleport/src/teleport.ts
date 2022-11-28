@@ -121,8 +121,8 @@ export class Teleport {
     scheduleTask(this._ctx, async () => {
       try {
         await this._control.registerExtension(name);
-      } catch(err) {
-        if(err instanceof RpcClosedError) {
+      } catch (err) {
+        if (err instanceof RpcClosedError) {
           return;
         }
         throw err;

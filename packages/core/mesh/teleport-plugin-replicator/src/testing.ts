@@ -1,13 +1,19 @@
-import { FeedFactory, FeedStore } from "@dxos/feed-store";
-import { Keyring } from "@dxos/keyring";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
-import { createStorage, StorageType } from "@dxos/random-access-storage";
-import { Teleport } from "@dxos/teleport";
-import { afterTest } from "@dxos/testutils";
-import { range } from "@dxos/util";
-import { pipeline } from "stream";
-import { ReplicatorExtension } from "./replicator-extension";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { pipeline } from 'stream';
+
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Teleport } from '@dxos/teleport';
+import { afterTest } from '@dxos/testutils';
+import { range } from '@dxos/util';
+
+import { ReplicatorExtension } from './replicator-extension';
 
 export class TestBuilder {
   createAgent(): TestAgent {
@@ -15,6 +21,7 @@ export class TestBuilder {
   }
 }
 
+// TODO(dmaretskyi): Unify with the agent in stress.test.ts.
 export class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
   public keyring = new Keyring(this.storage.createDirectory('keyring'));
@@ -37,6 +44,9 @@ export class TestAgent {
   }
 }
 
+/**
+ * Simulates two peers connected via P2P network.
+ */
 export const createStreamPair = async () => {
   const peerId1 = PublicKey.random();
   const peerId2 = PublicKey.random();
@@ -60,8 +70,11 @@ export const createStreamPair = async () => {
   await Promise.all([peer1.open(), peer2.open()]);
 
   return { peer1, peer2 };
-}
+};
 
+/**
+ * Two peers with replicator extensions pre-registered.
+ */
 export const createReplicatorPair = async () => {
   const { peer1, peer2 } = await createStreamPair();
 

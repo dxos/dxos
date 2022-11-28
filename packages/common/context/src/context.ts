@@ -86,7 +86,7 @@ export class Context {
    */
   raise(error: Error): void {
     if (this._isDisposed) {
-      log.warn(`Error in disposed context`, error);
+      log.warn('Error in disposed context', error);
       return;
     }
 

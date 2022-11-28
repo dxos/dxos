@@ -9,7 +9,8 @@ filter:
   # - service-host:debug
   # - client:debug
   - warn
-  - replicator:debug
+  - info
+  # - replicator:debug
   # - teleport:debug
   # - member:debug
   # - deprecated/space:debug
