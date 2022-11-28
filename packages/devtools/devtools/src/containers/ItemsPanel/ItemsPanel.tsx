@@ -48,6 +48,7 @@ export const ItemsPanel = () => {
           keys={spaces.map(({ key }) => key)}
           selected={selectedSpaceKey}
           onChange={(key) => setSelectedSpaceKey(key)}
+          humanize={true}
         />
       }
     >
