@@ -1700,7 +1700,7 @@ importers:
       '@types/ws': ^7.4.0
       assert: ^2.0.0
       earljs: ~0.1.10
-      fast-check: ~2.14.0
+      fast-check: ~3.3.0
       isomorphic-ws: ^4.0.1
       nanomessage-rpc: ^3.0.0
       simple-peer: 9.11.0
@@ -1736,7 +1736,7 @@ importers:
       '@types/simple-peer': 9.11.3
       '@types/ws': 7.4.7
       earljs: 0.1.12_typescript@4.8.4
-      fast-check: 2.14.0
+      fast-check: 3.3.0
       typescript: 4.8.4
 
   packages/core/mesh/protocol-network-generator:
@@ -1979,7 +1979,7 @@ importers:
       '@dxos/util': workspace:*
       add: ^2.0.6
       assert: ^2.0.0
-      fast-check: ~2.14.0
+      fast-check: ~3.3.0
       typescript: ^4.8.4
       wait-for-expect: ^3.0.2
     dependencies:
@@ -1999,7 +1999,7 @@ importers:
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/testutils': link:../../../common/testutils
       add: 2.0.6
-      fast-check: 2.14.0
+      fast-check: 3.3.0
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -20261,11 +20261,11 @@ packages:
       count-trailing-zeros: 1.0.1
     dev: false
 
-  /fast-check/2.14.0:
-    resolution: {integrity: sha512-4hm0ioyEVCwgjBLBqriwAFYu3/yc7pNH9fBfvzi6JRWRs4R3mwZwrr/d4MHbY0fTBJ0Uakg4TaMAAQ8Cnt2+KQ==}
+  /fast-check/3.3.0:
+    resolution: {integrity: sha512-Zu6tZ4g0T4H9Tiz3tdNPEHrSbuICj7yhdOM9RCZKNMkpjZ9avDV3ORklXaEmh4zvkX24/bGZ9DxKKqWfXttUqw==}
     engines: {node: '>=8.0.0'}
     dependencies:
-      pure-rand: 4.2.1
+      pure-rand: 5.0.5
     dev: true
 
   /fast-clone/1.5.13:
@@ -28799,8 +28799,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /pure-rand/4.2.1:
-    resolution: {integrity: sha512-ESI2eqHP9JlrnTb7H7fgczRUWB6VxMMJ2m9870WCIBhYkBzSGd6gml6WhQVXHK+ZM8k70TqsyI28ixaLPaNz5g==}
+  /pure-rand/5.0.5:
+    resolution: {integrity: sha512-BwQpbqxSCBJVpamI6ydzcKqyFmnd5msMWUGvzXLm1aXvusbbgkbOto/EUPM00hjveJEaJtdbhUjKSzWRhQVkaw==}
     dev: true
 
   /qqjs/0.3.11:

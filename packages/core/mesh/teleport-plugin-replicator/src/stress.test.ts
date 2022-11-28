@@ -147,7 +147,7 @@ describe('stress-tests', () => {
     ])
   })
 
-  it.skip('generic', async () => {
+  it('generic (disable if flaky)', async () => {
     const keyring = new Keyring();
 
     const keys = await Promise.all(range(MAX_NUM_FEEDS).map(() => keyring.createKey()));
@@ -155,7 +155,8 @@ describe('stress-tests', () => {
 
     const allCommands = [
       fc.tuple(arbAgentName, arbFeedKey).map(([agent, feedKey]) => new OpenFeedCommand(agent, feedKey)),
-      fc.tuple(arbAgentName, arbFeedKey, fc.integer(1, 10)).map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
+      fc.tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
+        .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
       fc.constant(new CheckCommand()),
     ];
 
