@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './AppLayout';
 export * from './AppsPage';
 export * from './ContactsPage';
 export * from './CreateIdentityPage';

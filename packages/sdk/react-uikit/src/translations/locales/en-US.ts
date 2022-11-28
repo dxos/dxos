@@ -58,5 +58,6 @@ export const uikit = {
   'connecting status label': 'Connecting…',
   'connected status label': 'Enter the PIN for this invitation to continue',
   'authenticating status label': 'Checking PIN…',
-  'success status label': 'Successfully accepted invitation'
+  'success status label': 'Successfully accepted invitation',
+  'back to spaces label': 'Back to spaces'
 };

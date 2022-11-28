@@ -31,7 +31,7 @@ export const IdentityPage = () => {
   );
 
   return (
-    <main className='flex flex-col items-center gap-2 max-is-lg mli-auto pli-7'>
+    <div role='none' className='flex flex-col items-center gap-2 max-is-lg mli-auto pli-7 pbs-4'>
       {/* TODO(wittjosiah): Update with device invite. */}
       <Avatar
         size={32}
@@ -110,6 +110,6 @@ export const IdentityPage = () => {
           </Button>
         }
       />
-    </main>
+    </div>
   );
 };
