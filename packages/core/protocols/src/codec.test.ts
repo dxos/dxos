@@ -8,8 +8,8 @@ import { describe, test } from '@dxos/test';
 
 import { schema } from './proto';
 
-describe('Codec', function () {
-  test('encodes and decodes messages', async function () {
+describe('Codec', () => {
+  test('encodes and decodes messages', async () => {
     const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
 
     // TODO(burdon): Test substitutions.

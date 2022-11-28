@@ -10,13 +10,13 @@ import { PublicKey } from './public-key';
 
 const TEST_KEY_HEX = '2c28f0d08ccc5340aee02655675be5796227a28d27b9704df34b7d8b2d9fddc7';
 
-describe('PublicKey', function () {
-  test('Basic key operations', function () {
+describe('PublicKey', () => {
+  test('Basic key operations', () => {
     const publicKey = PublicKey.random().toString();
     expect(PublicKey.stringify(PublicKey.bufferize(publicKey))).to.equal(publicKey);
   });
 
-  test('formatting', function () {
+  test('formatting', () => {
     const key = PublicKey.fromHex(TEST_KEY_HEX);
 
     expect(PublicKey.isPublicKey(key)).to.equal(true);
@@ -24,7 +24,7 @@ describe('PublicKey', function () {
     expect(key.toHex()).to.equal(TEST_KEY_HEX);
   });
 
-  test('asBuffer', function () {
+  test('asBuffer', () => {
     const key = PublicKey.fromHex(TEST_KEY_HEX);
     const buffer = key.asBuffer();
 
@@ -32,7 +32,7 @@ describe('PublicKey', function () {
     expect(Buffer.from(TEST_KEY_HEX, 'hex').equals(buffer)).to.equal(true);
   });
 
-  test('asUint8Array', function () {
+  test('asUint8Array', () => {
     const key = PublicKey.fromHex(TEST_KEY_HEX);
 
     const array = key.asUint8Array();
@@ -41,7 +41,7 @@ describe('PublicKey', function () {
     expect(PublicKey.from(Buffer.from(TEST_KEY_HEX, 'hex')).asUint8Array()).to.be.instanceOf(Uint8Array);
   });
 
-  test('from', function () {
+  test('from', () => {
     expect(PublicKey.from(TEST_KEY_HEX).toHex()).to.equal(TEST_KEY_HEX);
 
     expect(PublicKey.from(Buffer.from(TEST_KEY_HEX, 'hex')).toHex()).to.equal(TEST_KEY_HEX);
@@ -51,13 +51,13 @@ describe('PublicKey', function () {
     );
   });
 
-  test('equals', function () {
+  test('equals', () => {
     expect(PublicKey.equals(PublicKey.from(TEST_KEY_HEX), PublicKey.from(TEST_KEY_HEX))).to.equal(true);
 
     expect(PublicKey.equals(PublicKey.random(), PublicKey.random())).to.equal(false);
   });
 
-  test('expect equality', function () {
+  test('expect equality', () => {
     const key = PublicKey.random();
     expect(PublicKey.equals(key, PublicKey.from(key.toHex()))).to.be.true;
   });

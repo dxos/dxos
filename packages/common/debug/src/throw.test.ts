@@ -6,7 +6,7 @@ import { test } from '@dxos/test';
 
 import { expectToThrow } from './throw';
 
-test('expectToThrow', async function () {
+test('expectToThrow', async () => {
   await expectToThrow(
     () =>
       new Promise((resolve, reject) => {

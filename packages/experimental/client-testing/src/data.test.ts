@@ -36,16 +36,16 @@ type DataType = {
 const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
 
-describe.skip('Builders', function () {
-  test('sanity', async function () {
+describe.skip('Builders', () => {
+  test('sanity', async () => {
     const builder = new TestBuilder();
     await builder.initialize();
     const space = await builder.createSpace();
     await builder.destroySpace(space);
   });
 
-  test('tree logger', function () {
-    return testCallback(async (client, space) => {
+  test('tree logger', () =>
+    testCallback(async (client, space) => {
       await buildTestSpace(new SpaceBuilder(space));
 
       const { entities } = await space.database
@@ -64,10 +64,9 @@ describe.skip('Builders', function () {
         const output = treeLogger(entities[0]);
         log(output, '\n');
       }
-    });
-  });
+    }));
 
-  test('import/export', async function () {
+  test('import/export', async () => {
     const dir = `/tmp/dxos/testing/${Date.now()}`;
     fs.mkdirSync(dir, { recursive: true });
     const filename = `${dir}/data.yml`;

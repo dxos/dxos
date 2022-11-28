@@ -11,8 +11,8 @@ import { ApiError } from './errors';
 
 chai.use(chaiAsPromised);
 
-describe('Errors', function () {
-  test('test', async function () {
+describe('Errors', () => {
+  test('test', async () => {
     const runTest = async () => {
       throw new ApiError('Test error');
     };

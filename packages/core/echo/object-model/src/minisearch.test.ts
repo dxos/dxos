@@ -7,8 +7,8 @@ import MiniSearch from 'minisearch';
 
 import { describe, test } from '@dxos/test';
 
-describe('Search', function () {
-  test('minisearch', async function () {
+describe('Search', () => {
+  test('minisearch', async () => {
     // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
     const miniSearch = new MiniSearch({
       idField: 'id',

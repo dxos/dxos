@@ -11,8 +11,8 @@ import { describe, test } from '@dxos/test';
 import { createCredential, verifyCredential } from '../credentials';
 import { SpaceStateMachine } from './space-state-machine';
 
-describe('SpaceStateMachine', function () {
-  test('basic space creation', async function () {
+describe('SpaceStateMachine', () => {
+  test('basic space creation', async () => {
     const keyring = new Keyring();
     const space = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -109,7 +109,7 @@ describe('SpaceStateMachine', function () {
     expect(spaceState.credentials).toHaveLength(3);
   });
 
-  test('admitting a member', async function () {
+  test('admitting a member', async () => {
     const keyring = new Keyring();
     const space = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -204,7 +204,7 @@ describe('SpaceStateMachine', function () {
     expect(spaceState.credentials).toHaveLength(3);
   });
 
-  test('storing device credentials and building a chain', async function () {
+  test('storing device credentials and building a chain', async () => {
     const keyring = new Keyring();
     const haloSpace = await keyring.createKey();
     const identity = await keyring.createKey();

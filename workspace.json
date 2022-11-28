@@ -93,7 +93,6 @@
     "teleport": "packages/core/mesh/teleport",
     "teleport-plugin-replicator": "packages/core/mesh/teleport-plugin-replicator",
     "test": "tools/executors/test",
-    "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "timeframe": "packages/common/timeframe",
     "toolbox": "tools/executors/toolbox",

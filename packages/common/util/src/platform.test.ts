@@ -8,7 +8,7 @@ import { test } from '@dxos/test';
 
 import { isNode } from './platform';
 
-test('knows when running in node', function () {
+test('knows when running in node', () => {
   if (mochaExecutor.environment === 'nodejs') {
     expect(isNode()).to.be.true;
   } else {

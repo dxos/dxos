@@ -11,8 +11,8 @@ import { describe, test } from '@dxos/test';
 import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem, py } from './testing';
 
-describe('HypercoreFactory', function () {
-  test('appends to, and read from, multiple feeds', async function () {
+describe('HypercoreFactory', () => {
+  test('appends to, and read from, multiple feeds', async () => {
     const factory = new HypercoreFactory();
 
     const numFeeds = 10;

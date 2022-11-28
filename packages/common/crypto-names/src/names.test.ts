@@ -14,7 +14,7 @@ const t = () => {
   return { key, name };
 };
 
-test('example', function () {
+test('example', () => {
   const examples = Array.from({ length: 5 }).map(() => {
     const { key, name } = t();
     const testKey = parseName(name);
@@ -28,7 +28,7 @@ test('example', function () {
   console.log(JSON.stringify(examples, undefined, 2));
 });
 
-test('name to be unique', function () {
+test('name to be unique', () => {
   Array.from({ length: 100 }).forEach(() => {
     const { key, name } = t();
     const testKey = parseName(name);

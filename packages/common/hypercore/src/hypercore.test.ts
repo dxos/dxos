@@ -25,8 +25,8 @@ const codec: Codec<TestItem> = {
 
 const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
-describe('Hypercore', function () {
-  test('create, append, and close a feed', async function () {
+describe('Hypercore', () => {
+  test('create, append, and close a feed', async () => {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
@@ -62,7 +62,7 @@ describe('Hypercore', function () {
     }
   });
 
-  test('encoding with typed hypercore', async function () {
+  test('encoding with typed hypercore', async () => {
     const factory = new HypercoreFactory<TestItem>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey, valueEncoding });

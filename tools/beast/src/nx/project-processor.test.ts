@@ -23,8 +23,8 @@ import { WorkspaceProcessor } from './workspace-processor';
 
 const baseDir = join(process.cwd());
 
-describe('Code analysis', function () {
-  test('Sanity', function () {
+describe('Code analysis', () => {
+  test('Sanity', () => {
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 
@@ -33,7 +33,7 @@ describe('Code analysis', function () {
     expect(root?.getName()).toBeTruthy();
   });
 
-  test('Create graph', function () {
+  test('Create graph', () => {
     const workspace = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(workspace, '@dxos/client');
 

@@ -10,7 +10,7 @@ import { test } from '@dxos/test';
 
 import { humanize } from './human-hash';
 
-test('Hashing', function () {
+test('Hashing', () => {
   const { publicKey, secretKey } = createKeyPair();
 
   expect(humanize(publicKey)).not.to.equal(humanize(secretKey));

@@ -4,4 +4,4 @@
 
 import { describe } from '@dxos/test';
 
-describe('FeedFactory', function () {});
+describe('FeedFactory', () => {});

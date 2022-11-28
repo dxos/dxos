@@ -10,8 +10,8 @@ import { describe, test } from '@dxos/test';
 
 import { Timeframe } from './timeframe';
 
-describe('spacetime', function () {
-  test('constructors', function () {
+describe('spacetime', () => {
+  test('constructors', () => {
     const feedKey = PublicKey.random();
 
     const tf1 = new Timeframe([[feedKey, 1]]);
@@ -19,7 +19,7 @@ describe('spacetime', function () {
     expect(tf1).to.exist;
   });
 
-  test('merge/subtract', function () {
+  test('merge/subtract', () => {
     const feedKey1 = PublicKey.random();
     const feedKey2 = PublicKey.random();
     const feedKey3 = PublicKey.random();
@@ -71,7 +71,7 @@ describe('spacetime', function () {
     }
   });
 
-  test('dependencies', function () {
+  test('dependencies', () => {
     const feedKey1 = PublicKey.random();
     const feedKey2 = PublicKey.random();
     const feedKey3 = PublicKey.random();

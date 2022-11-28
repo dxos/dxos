@@ -14,8 +14,8 @@ import { Matcher } from './matcher';
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
 
-describe('Matcher', function () {
-  test('Basic queries', function () {
+describe('Matcher', () => {
+  test('Basic queries', () => {
     const queries: Query[] = [
       {
         root: {

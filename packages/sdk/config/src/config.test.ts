@@ -10,14 +10,14 @@ import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import defaults from './testing/defaults.json';
 import envmap from './testing/envs-map.json';
 
-test('Empty config', function () {
+test('Empty config', () => {
   const config = new Config({});
 
   expect(config.values).toBeTruthy();
   expect(config.get('runtime.props.title')).toBeUndefined();
 });
 
-test('Basic config', function () {
+test('Basic config', () => {
   const config = new Config(
     {
       runtime: {
@@ -48,7 +48,7 @@ test('Basic config', function () {
   });
 });
 
-test('Runtime and module config', function () {
+test('Runtime and module config', () => {
   const config = new Config(
     {
       package: {
@@ -99,7 +99,7 @@ test('Runtime and module config', function () {
   });
 });
 
-test.skip('Mapping', function () {
+test.skip('Mapping', () => {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
@@ -135,7 +135,7 @@ test.skip('Mapping', function () {
   });
 });
 
-test.skip('mapToKeyValuesping', function () {
+test.skip('mapToKeyValuesping', () => {
   const config = new Config(
     {
       client: {

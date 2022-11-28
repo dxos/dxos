@@ -14,13 +14,13 @@ import { setupRegistryClient } from './utils';
 
 chai.use(chaiAsPromised);
 
-describe('Accounts Client', function () {
+describe('Accounts Client', () => {
   let apiPromise: ApiPromise;
   let accountsApi: AccountsClient;
   let alice: KeyringPair;
   let bob: KeyringPair;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     const setupResult = await setupRegistryClient();
     apiPromise = setupResult.apiPromise;
     accountsApi = setupResult.accountsClient;
@@ -28,12 +28,10 @@ describe('Accounts Client', function () {
     bob = setupResult.bob;
   });
 
-  afterEach(async function () {
-    return apiPromise.disconnect();
-  });
+  afterEach(async () => apiPromise.disconnect());
 
-  describe('Creating accounts', function () {
-    test('Can create a DXNS account', async function () {
+  describe('Creating accounts', () => {
+    test('Can create a DXNS account', async () => {
       const account = await accountsApi.createAccount();
 
       const accountRecord = await accountsApi.getAccount(account);
@@ -43,8 +41,8 @@ describe('Accounts Client', function () {
     });
   });
 
-  describe('Adding devices', function () {
-    test('Can add a second device', async function () {
+  describe('Adding devices', () => {
+    test('Can add a second device', async () => {
       const account = await accountsApi.createAccount();
       expect(await accountsApi.belongsToAccount(account, alice.address)).to.be.true;
       expect(await accountsApi.belongsToAccount(account, bob.address)).to.be.false;

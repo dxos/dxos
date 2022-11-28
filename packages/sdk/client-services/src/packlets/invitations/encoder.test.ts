@@ -10,8 +10,8 @@ import { describe, test } from '@dxos/test';
 
 import { InvitationEncoder } from './encoder';
 
-describe('Invitation utils', function () {
-  test('encodes and decodes an invitation', function () {
+describe('Invitation utils', () => {
+  test('encodes and decodes an invitation', () => {
     const invitation: Invitation = {
       swarmKey: PublicKey.random()
     };

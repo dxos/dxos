@@ -10,8 +10,8 @@ import { describe, test } from '@dxos/test';
 import { sleep } from './timeout';
 import { until } from './until';
 
-describe('until', function () {
-  test('success', async function () {
+describe('until', () => {
+  test('success', async () => {
     const value = await until<number>(async (resolve) => {
       await sleep(100);
       resolve(100);
@@ -21,7 +21,7 @@ describe('until', function () {
     expect(value).to.equal(100);
   });
 
-  test('error', async function () {
+  test('error', async () => {
     await expectToThrow(async () => {
       await until(async (resolve, reject) => {
         await sleep(100);
@@ -30,7 +30,7 @@ describe('until', function () {
     });
   });
 
-  test('catch', async function () {
+  test('catch', async () => {
     await expectToThrow(async () => {
       await until(async () => {
         await sleep(100);
@@ -39,7 +39,7 @@ describe('until', function () {
     });
   });
 
-  test('timeout', async function () {
+  test('timeout', async () => {
     await expectToThrow(async () => {
       await until(async (resolve) => {
         await sleep(500);

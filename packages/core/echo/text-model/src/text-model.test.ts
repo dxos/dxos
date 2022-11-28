@@ -12,8 +12,8 @@ import { describe, test } from '@dxos/test';
 
 import { TextModel } from './text-model';
 
-describe('TextModel', function () {
-  test('insert', async function () {
+describe('TextModel', () => {
+  test('insert', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -30,7 +30,7 @@ describe('TextModel', function () {
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
-  test('insert a new text node', async function () {
+  test('insert a new text node', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
@@ -49,7 +49,7 @@ describe('TextModel', function () {
     expect(strigified2).toBe(`"<paragraph>${text1}</paragraph><paragraph>${text2}</paragraph>"`);
   });
 
-  test('snapshot', async function () {
+  test('snapshot', async () => {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel<TextModel>(
       TextModel.meta.type,
@@ -73,7 +73,7 @@ describe('TextModel', function () {
     expect(model2.model.textContent).toBe(text);
   });
 
-  test('conflict', async function () {
+  test('conflict', async () => {
     const rig = new TestBuilder(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

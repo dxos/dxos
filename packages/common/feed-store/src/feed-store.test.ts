@@ -14,8 +14,8 @@ import { TestItemBuilder } from './testing';
 
 chai.use(chaiAsPromised);
 
-describe('FeedStore', function () {
-  test('creates feeds', async function () {
+describe('FeedStore', () => {
+  test('creates feeds', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
 
@@ -46,7 +46,7 @@ describe('FeedStore', function () {
     }
   });
 
-  test('gets an opened feed', async function () {
+  test('gets an opened feed', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const feedKey = PublicKey.random();
@@ -66,7 +66,7 @@ describe('FeedStore', function () {
     }
   });
 
-  test('tries to open an existing readable feed as writable', async function () {
+  test('tries to open an existing readable feed as writable', async () => {
     const builder = new TestItemBuilder();
     const feedStore = builder.createFeedStore();
     const feedKey = PublicKey.random();
@@ -84,7 +84,7 @@ describe('FeedStore', function () {
     }
   });
 
-  test('reopens a feed and reads data from storage', async function () {
+  test('reopens a feed and reads data from storage', async () => {
     const builder = new TestItemBuilder();
     const feedKey = await builder.keyring!.createKey();
 

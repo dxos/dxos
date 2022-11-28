@@ -8,8 +8,8 @@ import { describe, test } from '@dxos/test';
 
 import { Flowchart } from './flowchart';
 
-describe('Mermaid builder', function () {
-  test('Flowchart', function () {
+describe('Mermaid builder', () => {
+  test('Flowchart', () => {
     const flowchart = new Flowchart({
       linkStyle: { stroke: 'green' }
     });

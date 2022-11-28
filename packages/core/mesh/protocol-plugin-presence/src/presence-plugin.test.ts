@@ -52,7 +52,7 @@ const links = (graph: Graph) => {
   return links;
 };
 
-test('presence', async function () {
+test('presence', async () => {
   const topic = crypto.randomBytes(32);
   const network = await generator.balancedBinTree({
     topic,

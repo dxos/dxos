@@ -20,8 +20,8 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
-describe('DataMirror', function () {
-  test('basic', async function () {
+describe('DataMirror', () => {
+  test('basic', async () => {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();

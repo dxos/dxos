@@ -11,7 +11,7 @@ import { test } from '@dxos/test';
 
 import { ProtocolNetworkGenerator } from './protocol-network-generator';
 
-test('basic generator', async function () {
+test('basic generator', async () => {
   const generator = new ProtocolNetworkGenerator(async (topic, id) => ({
     id,
     createStream: ({ initiator }) =>

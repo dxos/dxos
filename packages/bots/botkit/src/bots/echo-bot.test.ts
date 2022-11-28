@@ -11,8 +11,8 @@ import { describe, test } from '@dxos/test';
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
-describe('Echo Bot', function () {
-  test('Starts a bot', async function () {
+describe('Echo Bot', () => {
+  test('Starts a bot', async () => {
     const { client, space, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 

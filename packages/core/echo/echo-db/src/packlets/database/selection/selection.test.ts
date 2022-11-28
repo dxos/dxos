@@ -89,37 +89,37 @@ const links: Link<any>[] = [
 
 // TODO(burdon): Test subscriptions/reactivity.
 
-describe('Selection', function () {
-  describe('root', function () {
-    test('all', function () {
+describe('Selection', () => {
+  describe('root', () => {
+    test('all', () => {
       expect(createRootSelection().exec().entities).toHaveLength(items.length);
     });
 
-    test('by id', function () {
+    test('by id', () => {
       expect(createRootSelection({ id: org1.id }).exec().entities).toEqual([org1]);
 
       expect(createRootSelection({ id: org2.id }).exec().entities).toEqual([org2]);
     });
 
-    test('single type', function () {
+    test('single type', () => {
       expect(createRootSelection({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
-    test('multiple types', function () {
+    test('multiple types', () => {
       expect(createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] }).exec().entities).toHaveLength(5);
     });
   });
 
-  describe('filter', function () {
-    test('invalid', function () {
+  describe('filter', () => {
+    test('invalid', () => {
       expect(createRootSelection().filter({ type: 'dxos:type/invalid' }).exec().entities).toHaveLength(0);
     });
 
-    test('single type', function () {
+    test('single type', () => {
       expect(createRootSelection().filter({ type: ITEM_PROJECT }).exec().entities).toHaveLength(3);
     });
 
-    test('multiple types', function () {
+    test('multiple types', () => {
       expect(
         createRootSelection()
           .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
@@ -127,7 +127,7 @@ describe('Selection', function () {
       ).toHaveLength(5);
     });
 
-    test('by function', function () {
+    test('by function', () => {
       expect(
         createRootSelection()
           .filter((item) => item.type === ITEM_ORG)
@@ -136,56 +136,56 @@ describe('Selection', function () {
     });
   });
 
-  describe('children', function () {
-    test('from multiple items', function () {
+  describe('children', () => {
+    test('from multiple items', () => {
       expect(
         ids(createRootSelection().filter({ type: ITEM_ORG }).children({ type: ITEM_PROJECT }).exec().entities)
       ).toStrictEqual(ids([project1, project2, project3]));
     });
 
-    test('from single item', function () {
+    test('from single item', () => {
       expect(ids(createRootSelection({ id: org1.id }).children().exec().entities)).toStrictEqual(
         ids([project1, project2, person1, person2])
       );
     });
   });
 
-  describe('parent', function () {
-    test('from multiple items', function () {
+  describe('parent', () => {
+    test('from multiple items', () => {
       expect(ids(createRootSelection().filter({ type: ITEM_PROJECT }).parent().exec().entities)).toStrictEqual(
         ids([org1, org2])
       );
     });
 
-    test('from single item', function () {
+    test('from single item', () => {
       expect(ids(createRootSelection({ id: project1.id }).parent().exec().entities)).toStrictEqual(ids([org1]));
     });
 
-    test('is empty', function () {
+    test('is empty', () => {
       expect(createRootSelection({ id: org1.id }).parent().exec().entities).toEqual([]);
     });
   });
 
-  describe('links', function () {
-    test('links from single item', function () {
+  describe('links', () => {
+    test('links from single item', () => {
       expect(ids(createRootSelection({ id: project1.id }).links().target().exec().entities)).toStrictEqual(
         ids([person1, person2])
       );
     });
 
-    test('links from multiple items', function () {
+    test('links from multiple items', () => {
       expect(createRootSelection({ type: ITEM_PROJECT }).links().exec().entities).toHaveLength(links.length);
     });
 
-    test('sources', function () {
+    test('sources', () => {
       expect(ids(createRootSelection({ type: ITEM_PERSON }).refs().source().exec().entities)).toStrictEqual(
         ids([project1, project2])
       );
     });
   });
 
-  describe('reducer', function () {
-    test('simple reducer', function () {
+  describe('reducer', () => {
+    test('simple reducer', () => {
       const query = createReducer(0)
         .call((items, count) => count + items.length)
         .exec();
@@ -193,7 +193,7 @@ describe('Selection', function () {
     });
 
     // TODO(burdon): Support nested traverals (context as third arg?)
-    test('complex reducer', function () {
+    test('complex reducer', () => {
       const query = createReducer({ numItems: 0, numLinks: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => ({
@@ -220,8 +220,8 @@ describe('Selection', function () {
     });
   });
 
-  describe('events', function () {
-    test('events get filtered correctly', async function () {
+  describe('events', () => {
+    test('events get filtered correctly', async () => {
       const update = new Event<Entity[]>();
 
       const query = createSelection<void>(

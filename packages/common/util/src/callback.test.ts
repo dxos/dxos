@@ -13,8 +13,8 @@ type Callback = {
   bar?: () => void;
 };
 
-describe('callbacks', function () {
-  test('calls array of callbacks', function () {
+describe('callbacks', () => {
+  test('calls array of callbacks', () => {
     const counters = {
       foo: 0,
       bar: 0

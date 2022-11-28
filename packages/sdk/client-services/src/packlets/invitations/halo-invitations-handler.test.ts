@@ -9,8 +9,7 @@ import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers, createServiceContext } from '../testing';
@@ -20,8 +19,8 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/halo', function () {
-  test('creates identity', async function () {
+describe('services/halo', () => {
+  test('creates identity', async () => {
     const peer = createServiceContext();
     await peer.open();
     afterTest(() => peer.close());
@@ -30,7 +29,7 @@ describe('services/halo', function () {
     expect(identity).not.to.be.undefined;
   });
 
-  test('creates and accepts invitation', async function () {
+  test('creates and accepts invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     const identity1 = await host.createIdentity();

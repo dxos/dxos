@@ -10,8 +10,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createIdentity, createPeers, syncItems } from '../testing';
@@ -21,8 +20,8 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/space-invitations-handler', function () {
-  test('genesis', async function () {
+describe('services/space-invitations-handler', () => {
+  test('genesis', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.spaceManager!.createSpace();
@@ -31,7 +30,7 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  test('genesis with database mutations', async function () {
+  test('genesis with database mutations', async () => {
     const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
     const space = await peer.spaceManager!.createSpace();
 
@@ -48,7 +47,7 @@ describe('services/space-invitations-handler', function () {
     await space.close();
   });
 
-  test('creates and accepts invitation', async function () {
+  test('creates and accepts invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const complete1 = new Trigger<PublicKey>();
@@ -105,7 +104,7 @@ describe('services/space-invitations-handler', function () {
     }
   });
 
-  test('cancels invitation', async function () {
+  test('cancels invitation', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const cancelled = new Trigger();

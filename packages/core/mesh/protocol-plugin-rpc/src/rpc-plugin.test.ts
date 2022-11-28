@@ -19,8 +19,7 @@ import {
 import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPort, ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { RpcPlugin } from './rpc-plugin';
 
@@ -52,8 +51,8 @@ const createPeer = async (topic: PublicKey, peerId: PublicKey, onConnect: (port:
   return { plugin, networkManager };
 };
 
-describe('Protocol plugin rpc', function () {
-  test('Works with rpc port', async function () {
+describe('Protocol plugin rpc', () => {
+  test('Works with rpc port', async () => {
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     let serverPort: RpcPort | undefined;
@@ -91,7 +90,7 @@ describe('Protocol plugin rpc', function () {
     await server.close();
   });
 
-  test('Works with protobuf service', async function () {
+  test('Works with protobuf service', async () => {
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     const connected = new Event();
@@ -137,7 +136,7 @@ describe('Protocol plugin rpc', function () {
     expect(response.data).toEqual('responseData');
   });
 
-  test('One server two clients', async function () {
+  test('One server two clients', async () => {
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();

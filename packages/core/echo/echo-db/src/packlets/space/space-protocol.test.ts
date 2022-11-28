@@ -8,17 +8,13 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
-import { SpaceProtocol, USE_TELEPORT } from './space-protocol';
+import { SpaceProtocol } from './space-protocol';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, TestAgentBuilder } from './testing';
 
-describe('space/space-protocol', function () {
-  test('two peers discover each other', async function () {
-    if (USE_TELEPORT) {
-      this.skip();
-    }
+describe('space/space-protocol', () => {
+  test.skip('two peers discover each other', async function () {
     const builder = new TestAgentBuilder();
     const topic = PublicKey.random();
 
@@ -40,10 +36,7 @@ describe('space/space-protocol', function () {
     });
   });
 
-  test('failing authentication', async function () {
-    if (USE_TELEPORT) {
-      this.skip();
-    }
+  test.skip('failing authentication', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 

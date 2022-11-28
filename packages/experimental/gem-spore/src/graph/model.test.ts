@@ -8,7 +8,7 @@ import faker from 'faker';
 import { TestNode } from '../testing';
 import { GraphBuilder } from './model';
 
-test('GraphBuilder', function () {
+test('GraphBuilder', () => {
   const model = new GraphBuilder<TestNode>()
     .addNode({ id: faker.datatype.uuid() })
     .addNode({ id: faker.datatype.uuid() })

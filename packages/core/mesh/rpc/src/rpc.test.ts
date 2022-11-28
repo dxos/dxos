@@ -21,9 +21,9 @@ const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => 
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 
-describe('RpcPeer', function () {
-  describe('handshake', function () {
-    test('can open', async function () {
+describe('RpcPeer', () => {
+  describe('handshake', () => {
+    test('can open', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -39,7 +39,7 @@ describe('RpcPeer', function () {
       await Promise.all([alice.open(), bob.open()]);
     });
 
-    test('open waits for the other peer to call open', async function () {
+    test('open waits for the other peer to call open', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -67,7 +67,7 @@ describe('RpcPeer', function () {
       expect(aliceOpen).toEqual(true);
     });
 
-    test('one peer can open before the other is created', async function () {
+    test('one peer can open before the other is created', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -86,7 +86,7 @@ describe('RpcPeer', function () {
       await Promise.all([aliceOpen, bob.open()]);
     });
 
-    test('handshake works with a port that is open later', async function () {
+    test('handshake works with a port that is open later', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let portOpen = false;
@@ -120,7 +120,7 @@ describe('RpcPeer', function () {
       await openPromise;
     });
 
-    test('open hangs on half-open streams', async function () {
+    test('open hangs on half-open streams', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -150,8 +150,8 @@ describe('RpcPeer', function () {
     });
   });
 
-  describe('one-off requests', function () {
-    test('can send a request', async function () {
+  describe('one-off requests', () => {
+    test('can send a request', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -173,7 +173,7 @@ describe('RpcPeer', function () {
       expect(response).toEqual(createPayload('response'));
     });
 
-    test('can send multiple requests', async function () {
+    test('can send multiple requests', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -209,7 +209,7 @@ describe('RpcPeer', function () {
       await expect(error).toBeRejected();
     });
 
-    test('errors get serialized', async function () {
+    test('errors get serialized', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -244,7 +244,7 @@ describe('RpcPeer', function () {
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);
     });
 
-    test('closing local endpoint stops pending requests', async function () {
+    test('closing local endpoint stops pending requests', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -269,7 +269,7 @@ describe('RpcPeer', function () {
       await expect(req).toBeRejected();
     });
 
-    test('closing remote endpoint stops pending requests on timeout', async function () {
+    test('closing remote endpoint stops pending requests on timeout', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -295,7 +295,7 @@ describe('RpcPeer', function () {
       await expect(req).toBeRejected();
     });
 
-    test('requests failing on timeout', async function () {
+    test('requests failing on timeout', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -320,8 +320,8 @@ describe('RpcPeer', function () {
     });
   });
 
-  describe('streaming responses', function () {
-    test('can transport multiple messages', async function () {
+  describe('streaming responses', () => {
+    test('can transport multiple messages', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -356,7 +356,7 @@ describe('RpcPeer', function () {
       ]);
     });
 
-    test('server closes with an error', async function () {
+    test('server closes with an error', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -387,7 +387,7 @@ describe('RpcPeer', function () {
       expect((msgs[0] as any).error.message).toEqual('Test error');
     });
 
-    test('client closes the stream', async function () {
+    test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let closeCalled = false;
@@ -415,7 +415,7 @@ describe('RpcPeer', function () {
       expect(closeCalled).toEqual(true);
     });
 
-    test('reports stream being ready', async function () {
+    test('reports stream being ready', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -446,7 +446,7 @@ describe('RpcPeer', function () {
       expect(await Stream.consume(stream)).toEqual([{ ready: true }, { closed: true }]);
     });
 
-    test('stream handlers throws', async function () {
+    test('stream handlers throws', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -473,8 +473,8 @@ describe('RpcPeer', function () {
     });
   });
 
-  describe('with disabled handshake', function () {
-    test('opens immediately', async function () {
+  describe('with disabled handshake', () => {
+    test('opens immediately', async () => {
       const [alicePort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -486,7 +486,7 @@ describe('RpcPeer', function () {
       await alice.open();
     });
 
-    test('can send a request', async function () {
+    test('can send a request', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({

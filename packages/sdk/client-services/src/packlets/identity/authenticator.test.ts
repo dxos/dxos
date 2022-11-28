@@ -13,8 +13,8 @@ import { ComplexSet } from '@dxos/util';
 
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 
-describe('identity/authenticator', function () {
-  test('verifies credentials', async function () {
+describe('identity/authenticator', () => {
+  test('verifies credentials', async () => {
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);

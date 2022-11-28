@@ -8,6 +8,6 @@ import { test } from '@dxos/test';
 
 import { createId } from './keys';
 
-test('Create id is unique', function () {
+test('Create id is unique', () => {
   expect(createId()).not.to.equal(createId());
 });

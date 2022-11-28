@@ -9,8 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { asyncChain, Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { Invitation, HaloInvitationsService } from '@dxos/protocols/proto/dxos/client/services';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { ServiceContext } from '../services';
 import { createPeers } from '../testing';
@@ -22,8 +21,8 @@ const closeAfterTest = async (peer: ServiceContext) => {
   return peer;
 };
 
-describe('services/halo-invitation-service', function () {
-  test('creates identity and invites peer', async function () {
+describe('services/halo-invitation-service', () => {
+  test('creates identity and invites peer', async () => {
     const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     await host.identityManager.createIdentity();

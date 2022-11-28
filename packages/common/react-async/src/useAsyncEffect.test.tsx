@@ -34,17 +34,17 @@ const Test = () => {
 
 let rootContainer: HTMLElement;
 
-describe('useAsyncEffect', function () {
-  beforeEach(function () {
+describe('useAsyncEffect', () => {
+  beforeEach(() => {
     rootContainer = document.createElement('div');
     document.body.appendChild(rootContainer);
   });
 
-  afterEach(function () {
+  afterEach(() => {
     document.body.removeChild(rootContainer!);
   });
 
-  test('gets async value.', async function () {
+  test('gets async value.', async () => {
     void act(() => {
       createRoot(rootContainer).render(<Test />);
     });

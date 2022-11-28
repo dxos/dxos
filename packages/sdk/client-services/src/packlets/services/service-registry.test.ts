@@ -25,8 +25,8 @@ const serviceBundle = createServiceBundle<TestServices>({
   SpaceInvitationsService: schema.getService('dxos.client.services.SpaceInvitationsService')
 });
 
-describe('service registry', function () {
-  test('builds a service registry', async function () {
+describe('service registry', () => {
+  test('builds a service registry', async () => {
     const serviceContext = createServiceContext();
     await serviceContext.open();
     await serviceContext.createIdentity();

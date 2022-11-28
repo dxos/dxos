@@ -16,14 +16,13 @@ import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe('WebRTCTransportProxy', function () {
+describe('WebRTCTransportProxy', () => {
   const setupProxy = async ({
     initiator = true,
     stream = new Duplex({ write: () => {}, read: () => {} }),
@@ -80,7 +79,7 @@ describe('WebRTCTransportProxy', function () {
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  test('open and close', async function () {
+  test('open and close', async () => {
     const { webRTCTransportProxy: connection } = await setupProxy();
 
     let callsCounter = 0;
@@ -99,7 +98,7 @@ describe('WebRTCTransportProxy', function () {
     .timeout(1_000)
     .retries(3);
 
-  test('establish connection and send data through with protocol', async function () {
+  test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -153,11 +152,11 @@ describe('WebRTCTransportProxy', function () {
     .timeout(2_000)
     .retries(3);
 
-  describe('Multiplexing', function () {
+  describe('Multiplexing', () => {
     let service: any;
     let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
 
-    before(async function () {
+    beforeAll(async () => {
       const [port1, port2] = createLinkedPorts();
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
@@ -187,12 +186,12 @@ describe('WebRTCTransportProxy', function () {
       await rpcClient.open();
     });
 
-    after(async function () {
+    afterAll(async () => {
       await service?.close();
       await rpcClient?.close();
     });
 
-    test('establish connection and send data through with protocol', async function () {
+    test('establish connection and send data through with protocol', async () => {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();

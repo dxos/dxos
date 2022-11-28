@@ -17,8 +17,8 @@ import { HypercoreFactory } from './hypercore-factory';
 // TODO(burdon): Test encoding.
 // TODO(burdon): Simulate multiple peers and broadcast.
 
-describe('ProtocolStream', function () {
-  test('protocol stream handshake completes', async function () {
+describe('ProtocolStream', () => {
+  test('protocol stream handshake completes', async () => {
     const [handshake, setHandshake] = latch({ count: 2 });
 
     const stream1 = new ProtocolStream(true, {
@@ -43,7 +43,7 @@ describe('ProtocolStream', function () {
     await closed();
   });
 
-  test('protocol stream handshake completes with feeds', async function () {
+  test('protocol stream handshake completes with feeds', async () => {
     //
     // Pipeline and handshake.
     //
@@ -158,7 +158,7 @@ describe('ProtocolStream', function () {
     expect(core2.closed).to.be.true;
   });
 
-  test('multi-feed multiplexing', async function () {
+  test('multi-feed multiplexing', async () => {
     //
     // Handshake.
     //

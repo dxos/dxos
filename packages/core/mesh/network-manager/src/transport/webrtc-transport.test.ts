@@ -10,15 +10,14 @@ import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing';
 import { WebRTCTransport } from './webrtc-transport';
 
-describe('WebRTCTransport', function () {
+describe('WebRTCTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  test('open and close', async function () {
+  test('open and close', async () => {
     const connection = new WebRTCTransport({
       initiator: true,
       stream: new Duplex(),
@@ -40,7 +39,7 @@ describe('WebRTCTransport', function () {
     .timeout(1_000)
     .retries(3);
 
-  test('establish connection and send data through with protocol', async function () {
+  test('establish connection and send data through with protocol', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();

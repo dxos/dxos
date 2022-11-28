@@ -8,8 +8,8 @@ import { describe, test } from '@dxos/test';
 
 import { ClassProcessor } from './class-processor';
 
-describe('Code analysis', function () {
-  test('traverses echo-db', function () {
+describe('Code analysis', () => {
+  test('traverses echo-db', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 
@@ -21,7 +21,7 @@ describe('Code analysis', function () {
     processor.processFile(join(baseDir, 'packages/core/echo/echo-db/src/packlets/database/database.ts'));
   });
 
-  test('traverses client', function () {
+  test('traverses client', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 
@@ -34,7 +34,7 @@ describe('Code analysis', function () {
     processor.processFile(join(baseDir, 'packages/sdk/client/src/packlets/client/client.ts'));
   });
 
-  it('traverses client-services', function () {
+  it('traverses client-services', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 

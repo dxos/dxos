@@ -53,8 +53,8 @@ const items = [
   }
 ];
 
-describe('TextIndex', function () {
-  test('indexer query', async function () {
+describe('TextIndex', () => {
+  test('indexer query', async () => {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -63,7 +63,7 @@ describe('TextIndex', function () {
     expect(results.filter((item) => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  test('indexer query with update cache', async function () {
+  test('indexer query with update cache', async () => {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -82,7 +82,7 @@ describe('TextIndex', function () {
     }
   });
 
-  test('simple text query', function () {
+  test('simple text query', () => {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],
@@ -104,7 +104,7 @@ describe('TextIndex', function () {
     expect(results.filter((item) => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  test('complex text query', function () {
+  test('complex text query', () => {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({
       fields: ['title', 'description'],

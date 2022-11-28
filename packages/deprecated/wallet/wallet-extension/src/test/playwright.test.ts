@@ -17,7 +17,7 @@ describe('Playwright tests for Wallet Extension', function () {
   let context: BrowserContext;
   let page: Page;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     const userDataDir = `/tmp/browser-mocha/${v4()}`;
     context = await chromium.launchPersistentContext(userDataDir, {
       headless: false, // Extensions do not work in headless mode.
@@ -26,12 +26,12 @@ describe('Playwright tests for Wallet Extension', function () {
     page = await context.newPage();
   });
 
-  test('Installs properly', async function () {
+  test('Installs properly', async () => {
     await page.goto(`chrome-extension://${await getExtensionId()}/popup/fullscreen.html`);
     await page.waitForSelector("//*[contains(text(),'Welcome to DXOS')]");
   });
 
-  afterAll(async function () {
+  afterAll(async () => {
     await page.close();
     await context.close();
   });

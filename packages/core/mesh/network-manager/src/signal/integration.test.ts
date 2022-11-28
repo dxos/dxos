@@ -15,14 +15,14 @@ import { afterAll, beforeAll, describe, test } from '@dxos/test';
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messenger';
 
-describe('Signal Integration Test', function () {
+describe('Signal Integration Test', () => {
   let broker: TestBroker;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     broker = await createTestBroker();
   });
 
-  afterAll(function () {
+  afterAll(() => {
     broker.stop();
   });
 
@@ -48,7 +48,7 @@ describe('Signal Integration Test', function () {
     };
   };
 
-  test('two peers connecting', async function () {
+  test('two peers connecting', async () => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();

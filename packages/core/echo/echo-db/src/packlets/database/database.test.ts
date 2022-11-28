@@ -7,8 +7,7 @@ import expect from 'expect';
 import { asyncTimeout } from '@dxos/async';
 import { ModelFactory, TestListModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { DataServiceHost } from './data-service-host';
 import { Item } from './item';
@@ -19,8 +18,8 @@ const OBJECT_ORG = 'example:object/org';
 const OBJECT_PERSON = 'example:object/person';
 const LINK_EMPLOYEE = 'example:link/employee';
 
-describe('Database', function () {
-  describe('remote', function () {
+describe('Database', () => {
+  describe('remote', () => {
     const setupBackend = async (modelFactory: ModelFactory) => {
       const backend = await createInMemoryDatabase(modelFactory);
       afterTest(() => backend.destroy());
@@ -40,7 +39,7 @@ describe('Database', function () {
       return { backend, frontend };
     };
 
-    test('gets items synced from backend', async function () {
+    test('gets items synced from backend', async () => {
       const { backend, frontend } = await setupDatabase();
 
       const [, backendItem] = await Promise.all([
@@ -59,7 +58,7 @@ describe('Database', function () {
       expect(item!.model.get('foo')).toEqual('bar');
     });
 
-    test('gets items synced from backend that were created before frontend was connected', async function () {
+    test('gets items synced from backend that were created before frontend was connected', async () => {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const backend = await setupBackend(modelFactory);
 
@@ -71,7 +70,7 @@ describe('Database', function () {
       expect(item.model).toBeInstanceOf(ObjectModel);
     });
 
-    test('create item', async function () {
+    test('create item', async () => {
       const { frontend: database } = await setupDatabase();
 
       const item = await database.createItem({ model: ObjectModel });
@@ -82,7 +81,7 @@ describe('Database', function () {
       expect(result.expectOne()).toBeTruthy();
     });
 
-    test('mutate item with object model', async function () {
+    test('mutate item with object model', async () => {
       const { frontend: database } = await setupDatabase();
 
       const item = await database.createItem({ model: ObjectModel });
@@ -92,7 +91,7 @@ describe('Database', function () {
       expect(item.model.get('foo')).toEqual('bar');
     });
 
-    test('creates two items with ObjectModel', async function () {
+    test('creates two items with ObjectModel', async () => {
       const { frontend: database } = await setupDatabase();
 
       const item1 = await database.createItem({
@@ -109,7 +108,7 @@ describe('Database', function () {
       expect(item1.model.get('prop1')).toEqual('x');
     });
 
-    test('parent & child items', async function () {
+    test('parent & child items', async () => {
       const { frontend: database } = await setupDatabase();
 
       const parent = await database.createItem({ model: ObjectModel });
@@ -126,7 +125,7 @@ describe('Database', function () {
       expect(parent.children[0] === child).toBeTruthy();
     });
 
-    test('delete & restore an item', async function () {
+    test('delete & restore an item', async () => {
       const { backend: database } = await setupDatabase(); // TODO(dmaretskyi): Make work in remote mode.
 
       const item = await database.createItem({ model: ObjectModel });
@@ -139,7 +138,7 @@ describe('Database', function () {
       expect(item.deleted).toBeFalsy();
     });
 
-    test('link', async function () {
+    test('link', async () => {
       const { frontend: database } = await setupDatabase();
 
       const source = await database.createItem({ model: ObjectModel });
@@ -151,7 +150,7 @@ describe('Database', function () {
       expect(link.target).toBe(target);
     });
 
-    test('directed links', async function () {
+    test('directed links', async () => {
       const { frontend: database } = await setupDatabase();
 
       const p1 = await database.createItem({
@@ -205,8 +204,8 @@ describe('Database', function () {
       ]);
     });
 
-    describe('non-idempotent models', function () {
-      test('messages written from frontend', async function () {
+    describe('non-idempotent models', () => {
+      test('messages written from frontend', async () => {
         const { frontend: database } = await setupDatabase();
 
         const item = await database.createItem({ model: TestListModel });
@@ -219,7 +218,7 @@ describe('Database', function () {
         expect(item.model.messages).toHaveLength(2);
       });
 
-      test('messages written from backend', async function () {
+      test('messages written from backend', async () => {
         const { frontend, backend } = await setupDatabase();
 
         const backendItem = await backend.createItem({ model: TestListModel });
@@ -234,8 +233,8 @@ describe('Database', function () {
       });
     });
 
-    describe('queries', function () {
-      test('wait for item', async function () {
+    describe('queries', () => {
+      test('wait for item', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
@@ -258,7 +257,7 @@ describe('Database', function () {
         }
       });
 
-      test('query deleted items', async function () {
+      test('query deleted items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
@@ -288,7 +287,7 @@ describe('Database', function () {
         }
       });
 
-      test('link between items generates updates to items', async function () {
+      test('link between items generates updates to items', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
@@ -312,7 +311,7 @@ describe('Database', function () {
         await asyncTimeout(update, 100, new Error('timeout'));
       });
 
-      test('adding an item emits update for parent', async function () {
+      test('adding an item emits update for parent', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel).registerModel(TestListModel);
         const database = await setupBackend(modelFactory);
 
@@ -330,8 +329,8 @@ describe('Database', function () {
       });
     });
 
-    describe('reducer', function () {
-      test('simple counter', async function () {
+    describe('reducer', () => {
+      test('simple counter', async () => {
         const modelFactory = new ModelFactory().registerModel(ObjectModel);
         const database = await setupBackend(modelFactory);
 

@@ -16,8 +16,8 @@ import { HypercoreFactory } from './hypercore-factory';
 import { Multiplexer } from './multiplexer';
 import { noop, py } from './testing';
 
-describe('Multiplexing', function () {
-  test('multiplexes feeds', async function () {
+describe('Multiplexing', () => {
+  test('multiplexes feeds', async () => {
     const plex1 = new Multiplexer('A');
     const plex2 = new Multiplexer('B');
 
@@ -83,7 +83,7 @@ describe('Multiplexing', function () {
     expect(count).to.eq(numMessages);
   });
 
-  test('pipelines', async function () {
+  test('pipelines', async () => {
     const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
     const core1 = factory.createFeed(publicKey, { secretKey });

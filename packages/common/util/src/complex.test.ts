@@ -11,7 +11,7 @@ import { makeSet, makeMap } from './complex';
 
 const PulicKeySet = makeSet<PublicKey>(PublicKey.hash);
 
-test('ComplexSet', function () {
+test('ComplexSet', () => {
   const key1 = PublicKey.random();
   const key2 = PublicKey.random();
   const key3 = PublicKey.random();
@@ -42,7 +42,7 @@ test('ComplexSet', function () {
 
 const PulicKeyMap = makeMap<PublicKey>(PublicKey.hash);
 
-test('ComplexMap', function () {
+test('ComplexMap', () => {
   const key1 = PublicKey.random();
   const key2 = PublicKey.random();
   const key3 = PublicKey.random();

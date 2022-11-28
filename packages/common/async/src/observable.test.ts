@@ -16,7 +16,7 @@ interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
 
 type ConnectionObservable = CancellableObservable<ConnectionEvents>;
 
-describe('observable', function () {
+describe('observable', () => {
   /**
    * Sets up a race between:
    * a) succeeding
@@ -56,7 +56,7 @@ describe('observable', function () {
         connected = true;
         setDone();
       },
-      onCancelled() {
+      onCancelled: () => {
         cancelled = true;
         setDone();
       },
@@ -85,21 +85,21 @@ describe('observable', function () {
     return { connected, cancelled, failed };
   };
 
-  test('succeeds before cancelled', async function () {
+  test('succeeds before cancelled', async () => {
     const { connected, cancelled, failed } = await runTest(20, 50, 100);
     expect(failed).to.be.undefined;
     expect(connected).to.be.true;
     expect(cancelled).to.be.false;
   });
 
-  test('cancelled before succeeds', async function () {
+  test('cancelled before succeeds', async () => {
     const { connected, cancelled, failed } = await runTest(50, 20, 100);
     expect(failed).to.be.undefined;
     expect(connected).to.be.false;
     expect(cancelled).to.be.true;
   });
 
-  test('times out', async function () {
+  test('times out', async () => {
     const { connected, cancelled, failed } = await runTest(50, 30, 20);
     expect(failed).to.exist;
     expect(connected).to.be.false;

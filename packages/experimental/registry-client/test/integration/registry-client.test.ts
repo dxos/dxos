@@ -20,13 +20,13 @@ const protoSchema = protobuf.Root.fromJSON(schemaJson);
 
 const randomName = () => `r${Math.random().toString(36).substring(2)}`;
 
-describe('Registry Client', function () {
+describe('Registry Client', () => {
   let registryBackend: PolkadotRegistry;
   let registryClient: RegistryClient;
   let apiPromise: ApiPromise;
   let account: AccountKey;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     const setupResult = await setupRegistryClient();
     apiPromise = setupResult.apiPromise;
     registryBackend = setupResult.registryBackend;
@@ -34,22 +34,22 @@ describe('Registry Client', function () {
     account = await setupResult.accountsClient.createAccount();
   });
 
-  afterEach(async function () {
+  afterEach(async () => {
     await apiPromise.disconnect();
   });
 
-  describe('Types', function () {
-    test('Adds type to registry', async function () {
+  describe('Types', () => {
+    test('Adds type to registry', async () => {
       const hash = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
       expect(hash.value.length).to.be.greaterThan(0);
     });
 
-    test('Retrieves a list of types', async function () {
+    test('Retrieves a list of types', async () => {
       const types = await registryClient.listTypeRecords();
       expect(types.length).to.be.greaterThan(0);
     });
 
-    test('Retrieves type details', async function () {
+    test('Retrieves type details', async () => {
       const domainKey = await registryClient.registerAuthority(account);
       const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), typeCid, account);
@@ -60,20 +60,20 @@ describe('Registry Client', function () {
     });
   });
 
-  describe('Domains', function () {
-    test('Retrieves a list of domains', async function () {
+  describe('Domains', () => {
+    test('Retrieves a list of domains', async () => {
       const domains = await registryClient.listAuthorities();
       expect(domains.length).to.be.greaterThan(0);
     });
   });
 
-  describe('Resources', function () {
+  describe('Resources', () => {
     let appTypeCid: CID;
     let contentCid: CID;
     const appResourceName = 'app';
     let domainKey: DomainKey;
 
-    beforeEach(async function () {
+    beforeEach(async () => {
       appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       contentCid = await registryClient.registerRecord(
@@ -93,44 +93,44 @@ describe('Registry Client', function () {
       );
     });
 
-    test('Retrieves a list of resources', async function () {
+    test('Retrieves a list of resources', async () => {
       const resources = await registryClient.listResources();
       expect(resources.length).to.be.greaterThan(0);
     });
 
-    test('Queries by type, when matching, returns matching items', async function () {
+    test('Queries by type, when matching, returns matching items', async () => {
       const resources = await registryClient.listResources({
         text: appResourceName
       });
       expect(resources.length).to.be.greaterThan(0);
     });
 
-    test('Queries by type, when not matching, returns empty', async function () {
+    test('Queries by type, when not matching, returns empty', async () => {
       const resources = await registryClient.listResources({ text: 'mybot' });
       expect(resources).to.be.empty;
     });
 
-    test('Retrieves a single resource', async function () {
+    test('Retrieves a single resource', async () => {
       const id = DXN.fromDomainKey(domainKey, appResourceName);
       const resource = await registryClient.getResource(id);
       expect(resource!.toString()).to.be.equal(contentCid.toString());
     });
 
-    test('Deletes a single resource', async function () {
+    test('Deletes a single resource', async () => {
       const name = DXN.fromDomainKey(domainKey, appResourceName, 'latest');
       await registryClient.registerResource(name, undefined, account);
       const resource = await registryClient.getResource(name);
       expect(resource).to.be.undefined;
     });
 
-    describe('Tags and versions', function () {
+    describe('Tags and versions', () => {
       const versionedName = 'versionedApp';
       let version2: CID;
       let version3: CID;
       let version4: CID;
       let name: DXN;
 
-      beforeEach(async function () {
+      beforeEach(async () => {
         version2 = await registryClient.registerRecord(
           {
             appName: 'Versioned App',
@@ -162,7 +162,7 @@ describe('Registry Client', function () {
         await registryClient.registerResource(name.with({ tag: 'alpha' }), version3, account);
       });
 
-      test('Properly Registers resource with tags and versions', async function () {
+      test('Properly Registers resource with tags and versions', async () => {
         const latestCid = await registryClient.getResource(name);
         expect(latestCid!.toString()).to.be.equal(version4.toString());
         const alphaCid = await registryClient.getResource(name.with({ tag: 'alpha' }));
@@ -171,7 +171,7 @@ describe('Registry Client', function () {
         expect(betaCid!.toString()).to.be.equal(version2.toString());
       });
 
-      test('queries by tag', async function () {
+      test('queries by tag', async () => {
         const taggedDxn = DXN.fromDomainKey(domainKey, versionedName, 'alpha');
         const record = await registryClient.getRecordByName(taggedDxn);
         expect(record).to.not.be.undefined;
@@ -179,8 +179,8 @@ describe('Registry Client', function () {
     });
   });
 
-  describe('Data records', function () {
-    test('Register a record of your custom type', async function () {
+  describe('Data records', () => {
+    test('Register a record of your custom type', async () => {
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
 
       const appData: App = {
@@ -198,7 +198,7 @@ describe('Registry Client', function () {
       });
     });
 
-    test('Register a record with nested extensions', async function () {
+    test('Register a record with nested extensions', async () => {
       const serviceTypeCid = await registryClient.registerTypeRecord('.dxos.type.Service', protoSchema);
       const ipfsTypeCid = await registryClient.registerTypeRecord('.dxos.type.IPFS', protoSchema);
 
@@ -220,7 +220,7 @@ describe('Registry Client', function () {
       });
     });
 
-    test('invalid records are ignored by list methods', async function () {
+    test('invalid records are ignored by list methods', async () => {
       const cid = await registryBackend.registerRecordBytes(Buffer.from('10200300040000', 'hex'));
 
       const records = await registryClient.listRecords();
@@ -235,17 +235,17 @@ describe('Registry Client', function () {
       ).to.be.true;
     });
 
-    test('Records has date fields decoded properly', async function () {
+    test('Records has date fields decoded properly', async () => {
       for (const record of await registryClient.listRecords()) {
         expect(record.created?.toString()).to.not.equal('Invalid Date');
       }
     });
 
-    describe('Querying', function () {
+    describe('Querying', () => {
       let appTypeCid: CID;
       let botTypeCid: CID;
 
-      beforeEach(async function () {
+      beforeEach(async () => {
         appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
         botTypeCid = await registryClient.registerTypeRecord('.dxos.type.Bot', protoSchema);
 
@@ -260,12 +260,12 @@ describe('Registry Client', function () {
         await registryClient.getRecord(appCid);
       });
 
-      test('Queries records by type, when matching, returns matching items', async function () {
+      test('Queries records by type, when matching, returns matching items', async () => {
         const records = await registryClient.listRecords({ type: appTypeCid });
         expect(records.length).to.be.equal(1);
       });
 
-      test('Queries records by type, when not matching, returns empty', async function () {
+      test('Queries records by type, when not matching, returns empty', async () => {
         const resources = await registryClient.listRecords({
           type: botTypeCid
         });
@@ -274,8 +274,8 @@ describe('Registry Client', function () {
     });
   });
 
-  describe('Register name', function () {
-    test('Assigns a name to a type', async function () {
+  describe('Register name', () => {
+    test('Assigns a name to a type', async () => {
       const domainKey = await registryClient.registerAuthority(account);
 
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.App', protoSchema);
@@ -285,7 +285,7 @@ describe('Registry Client', function () {
       ).to.be.fulfilled;
     });
 
-    test('Does allow to overwrite already registered name', async function () {
+    test('Does allow to overwrite already registered name', async () => {
       const domainKey = await registryClient.registerAuthority(account);
 
       const appTypeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
@@ -300,8 +300,8 @@ describe('Registry Client', function () {
     });
   });
 
-  describe('Register domain', function () {
-    test('Allows to register a free domain without a vanity name', async function () {
+  describe('Register domain', () => {
+    test('Allows to register a free domain without a vanity name', async () => {
       await expect(registryClient.registerAuthority(account)).to.be.fulfilled;
     });
   });

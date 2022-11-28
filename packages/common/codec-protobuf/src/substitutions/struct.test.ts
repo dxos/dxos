@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { decodeStruct, encodeStruct } from './struct';
 
-describe('structSubstitutions', function () {
+describe('structSubstitutions', () => {
   const dummyStruct = {
     first: 1,
     second: 2,
@@ -54,18 +54,18 @@ describe('structSubstitutions', function () {
     }
   };
 
-  it('can encode and decode a struct', async function () {
+  it('can encode and decode a struct', async () => {
     const encoded = encodeStruct(dummyStruct);
     const decoded = decodeStruct(encoded);
     expect(decoded).to.deep.equal(dummyStruct);
   });
 
-  it('can encode a struct', async function () {
+  it('can encode a struct', async () => {
     const encoded = encodeStruct(dummyStruct);
     expect(encoded).to.deep.equal(encodedStruct);
   });
 
-  it('can decode a struct', async function () {
+  it('can decode a struct', async () => {
     const decoded = decodeStruct(encodedStruct);
     expect(decoded).to.deep.equal(dummyStruct);
   });

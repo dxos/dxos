@@ -8,8 +8,8 @@ import { describe, test } from '@dxos/test';
 
 import { Context } from './context';
 
-describe('Context', function () {
-  test('dispose calls dispose hooks', function () {
+describe('Context', () => {
+  test('dispose calls dispose hooks', () => {
     const ctx = new Context();
 
     let called = false;
@@ -25,7 +25,7 @@ describe('Context', function () {
 
   test('error in dispose callbacks are not propagated', () => {});
 
-  test('raised errors are propagated to the error handler', function () {
+  test('raised errors are propagated to the error handler', () => {
     let error!: Error;
     const ctx = new Context({
       onError: (err) => {
@@ -37,7 +37,7 @@ describe('Context', function () {
     expect(error.message).toEqual('test');
   });
 
-  test('instanceof', function () {
+  test('instanceof', () => {
     const ctx = new Context();
     expect(ctx instanceof Context).toBeTruthy();
 

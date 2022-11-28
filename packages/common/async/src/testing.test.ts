@@ -9,15 +9,15 @@ import { describe, test } from '@dxos/test';
 
 import { waitForCondition } from './testing';
 
-describe('waitForCondition', function () {
-  test('succeeds', async function () {
+describe('waitForCondition', () => {
+  test('succeeds', async () => {
     const stop = Date.now() + 100;
     const value = await waitForCondition(() => Date.now() > stop, 200);
     expect(value).to.be.true;
     expect(Date.now()).to.be.greaterThanOrEqual(stop);
   });
 
-  test('fails', async function () {
+  test('fails', async () => {
     const stop = Date.now() + 200;
     await expectToThrow(() => waitForCondition(() => Date.now() > stop, 100));
   });

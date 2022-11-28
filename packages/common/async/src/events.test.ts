@@ -10,8 +10,8 @@ import { describe, test } from '@dxos/test';
 import { Event } from './events';
 import { sleep } from './timeout';
 
-describe('Event', function () {
-  test('#debounce', async function () {
+describe('Event', () => {
+  test('#debounce', async () => {
     const event = new Event<boolean>();
 
     let pureCount = 0;
@@ -48,7 +48,7 @@ describe('Event', function () {
     expect(debounceCount).to.equal(1);
   });
 
-  test('subscribe context', async function () {
+  test('subscribe context', async () => {
     const event = new Event<number>();
     const ctx = new Context();
 
@@ -68,7 +68,7 @@ describe('Event', function () {
     expect(received).to.deep.equal([1, 2]);
   });
 
-  test('errors are propagated to context', async function () {
+  test('errors are propagated to context', async () => {
     const event = new Event<number>();
     let error!: Error;
     const ctx = new Context({

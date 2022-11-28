@@ -41,18 +41,18 @@ const modules: Module[] = [
   }
 ];
 
-describe('Metagraph queries', function () {
+describe('Metagraph queries', () => {
   const testServer = new TestServer({ modules });
 
-  beforeAll(function () {
+  beforeAll(() => {
     testServer.start();
   });
 
-  afterAll(function () {
+  afterAll(() => {
     testServer.stop();
   });
 
-  test('basic module queries', async function () {
+  test('basic module queries', async () => {
     const metagraph = new Metagraph(
       new Config({
         runtime: {
@@ -76,7 +76,7 @@ describe('Metagraph queries', function () {
       const trigger = new Trigger<number>();
       const observable = await metagraph.modules.query({ tags: ['prod'] });
       const unsubscribe = observable.subscribe({
-        onUpdate(results: Module[]) {
+        onUpdate: (results: Module[]) => {
           trigger.wake(results.length);
         }
       });

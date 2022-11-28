@@ -10,13 +10,13 @@ import { describe, test } from '@dxos/test';
 import { createCID, createMockTypes } from '../testing';
 import { decodeExtensionPayload, encodeExtensionPayload } from './encoding';
 
-describe('Record encoding', function () {
+describe('Record encoding', () => {
   const mockTypes = createMockTypes();
   const serviceType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.Service') ?? raise(new Error());
   const ipfsType = mockTypes.find(({ type }) => type?.messageName === '.dxos.type.IPFS') ?? raise(new Error());
   const lookupType = async (cid) => mockTypes.find((type) => type.cid.equals(cid)) ?? raise(new Error('Not found.'));
 
-  test('record without extensions', async function () {
+  test('record without extensions', async () => {
     const data = {
       '@type': serviceType.cid,
       type: 'foo',
@@ -32,7 +32,7 @@ describe('Record encoding', function () {
     expect(decoded).to.deep.eq(data);
   });
 
-  test('record with extensions', async function () {
+  test('record with extensions', async () => {
     const data = {
       '@type': serviceType.cid,
       type: 'ipfs',

@@ -10,8 +10,8 @@ import { describe, test } from '@dxos/test';
 import { ModelFactory } from './model-factory';
 import { TestModel } from './testing';
 
-describe('model factory', function () {
-  test('model constructor', async function () {
+describe('model factory', () => {
+  test('model constructor', async () => {
     const itemId = PublicKey.random().toHex();
 
     // Create model.

@@ -11,8 +11,8 @@ import { describe, test } from '@dxos/test';
 
 import { Keyring } from './keyring';
 
-describe('Keyring', function () {
-  test('sign & verify', async function () {
+describe('Keyring', () => {
+  test('sign & verify', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -22,7 +22,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, signature)).toBeTruthy();
   });
 
-  test('signature verification fails on invalid signature', async function () {
+  test('signature verification fails on invalid signature', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -32,7 +32,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, Buffer.from([1, 2, 3]))).toBeFalsy();
   });
 
-  test('signature verification fails on invalid input data', async function () {
+  test('signature verification fails on invalid input data', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -42,7 +42,7 @@ describe('Keyring', function () {
     expect(await verifySignature(key, Buffer.from([1, 2, 3]), signature)).toBeFalsy();
   });
 
-  test('signature verification fails on invalid key', async function () {
+  test('signature verification fails on invalid key', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
 
     const key = await keyring.createKey();
@@ -52,7 +52,7 @@ describe('Keyring', function () {
     expect(await verifySignature(PublicKey.random(), message, signature)).toBeFalsy();
   });
 
-  test('reload from storage', async function () {
+  test('reload from storage', async () => {
     const storage = createStorage({ type: StorageType.RAM }).createDirectory('keyring');
 
     const keyring1 = new Keyring(storage);

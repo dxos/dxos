@@ -38,8 +38,8 @@ const testShutdown = async (network: Network) => {
   expect(network.connections.length).to.equal(0);
 };
 
-describe('NetworkGenerator', function () {
-  test('generate a grid topology', async function () {
+describe('NetworkGenerator', () => {
+  test('generate a grid topology', async () => {
     const generator = new NetworkGenerator({
       createPeer: async (id) => ({ id, name: `peer${id}` })
     });
@@ -52,7 +52,7 @@ describe('NetworkGenerator', function () {
     await testShutdown(network);
   });
 
-  test('generate a balancedBinTree of 2 n', async function () {
+  test('generate a balancedBinTree of 2 n', async () => {
     const generator = new NetworkGenerator({
       createPeer: async (id) => ({ id, name: `peer${id}` }),
       createConnection: async (fromPeer, toPeer) => new PassThrough()
@@ -66,7 +66,7 @@ describe('NetworkGenerator', function () {
     await testShutdown(network);
   });
 
-  test('insert pre-made peers', async function () {
+  test('insert pre-made peers', async () => {
     let createPeerCalledCount = 0;
     const generator = new NetworkGenerator({
       createPeer: async (id) => {

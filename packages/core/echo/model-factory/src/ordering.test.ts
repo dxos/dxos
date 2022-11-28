@@ -11,12 +11,12 @@ import { Timeframe } from '@dxos/timeframe';
 import { getInsertionIndex } from './ordering';
 import { ModelMessage } from './types';
 
-describe('Ordering', function () {
+describe('Ordering', () => {
   // feedA < feedB
   const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
   const feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
 
-  test('mutations from a single feed get inserted at the end', function () {
+  test('mutations from a single feed get inserted at the end', () => {
     expect(
       getInsertionIndex(
         [createMutation(feedA, 0, new Timeframe()), createMutation(feedA, 1, new Timeframe())],
@@ -25,19 +25,19 @@ describe('Ordering', function () {
     ).toEqual(2);
   });
 
-  test('mutations with higher feed key go after ones with lower feed key', function () {
+  test('mutations with higher feed key go after ones with lower feed key', () => {
     expect(
       getInsertionIndex([createMutation(feedA, 0, new Timeframe())], createMutation(feedB, 0, new Timeframe()))
     ).toEqual(1);
   });
 
-  test('mutations with lower feed key go before ones with higher feed key', function () {
+  test('mutations with lower feed key go before ones with higher feed key', () => {
     expect(
       getInsertionIndex([createMutation(feedB, 0, new Timeframe())], createMutation(feedA, 0, new Timeframe()))
     ).toEqual(0);
   });
 
-  test('dependant mutations with higher feed key get inserted at the end', function () {
+  test('dependant mutations with higher feed key get inserted at the end', () => {
     expect(
       getInsertionIndex(
         [createMutation(feedA, 0, new Timeframe())],
@@ -46,7 +46,7 @@ describe('Ordering', function () {
     ).toEqual(1);
   });
 
-  test('dependant mutations with lower feed key get inserted at the end', function () {
+  test('dependant mutations with lower feed key get inserted at the end', () => {
     expect(
       getInsertionIndex(
         [createMutation(feedB, 0, new Timeframe())],
@@ -55,7 +55,7 @@ describe('Ordering', function () {
     ).toEqual(1);
   });
 
-  test('same base', function () {
+  test('same base', () => {
     expect(
       getInsertionIndex(
         [createMutation(feedB, 0, new Timeframe()), createMutation(feedB, 1, new Timeframe())],

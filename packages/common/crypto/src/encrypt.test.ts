@@ -40,7 +40,7 @@ Key":"4f5e87626c62c5f61873d1e7c995c1b7e7e66e7600b454fa370a93d18f4a9a6f","secretK
 8c13d81376b61fb252db32d1002bba4f5e87626c62c5f61873d1e7c995c1b7e7e66e7600b454fa370a93d18f4a9a6f","trusted":true,"type":"
 UNKNOWN"}]}';`;
 
-test('Bulk encryption/decryption', function () {
+test('Bulk encryption/decryption', () => {
   const original = testJsonData;
 
   const origCrypt = encrypt(original, 'secret12');

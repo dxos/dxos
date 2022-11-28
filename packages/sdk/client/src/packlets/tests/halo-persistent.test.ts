@@ -9,14 +9,13 @@ import { expect } from 'chai';
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
 
-describe('Halo', function () {
-  test('reopens with persistent storage', async function () {
+describe('Halo', () => {
+  test('reopens with persistent storage', async () => {
     const config = new Config({
       version: 1,
       runtime: {

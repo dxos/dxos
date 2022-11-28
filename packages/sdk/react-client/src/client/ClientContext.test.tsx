@@ -56,7 +56,7 @@ describe('Client hook', function () {
     expect(result).not.toBeDefined();
   });
 
-  test('should return client when used properly in a context', function () {
+  test('should return client when used properly in a context', () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -75,20 +75,20 @@ describe('Client hook', function () {
   });
 });
 
-describe('ClientProvider', function () {
+describe('ClientProvider', () => {
   let client: Client;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
   });
 
-  afterAll(async function () {
+  afterAll(async () => {
     await client.destroy();
   });
 
-  test('Renders with children', async function () {
+  test('Renders with children', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />
@@ -98,7 +98,7 @@ describe('ClientProvider', function () {
     expect(() => screen.getByText('Hello World')).not.toThrow();
   });
 
-  test('Provides the client', async function () {
+  test('Provides the client', async () => {
     render(
       <ClientProvider client={client}>
         <TestComponent />

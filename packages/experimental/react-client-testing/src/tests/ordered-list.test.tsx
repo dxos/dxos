@@ -61,8 +61,8 @@ const Test = ({ items, orderedList }: { items: Item<ObjectModel>[]; orderedList:
   );
 };
 
-describe.skip('OrderedList', function () {
-  test('reorders', async function () {
+describe.skip('OrderedList', () => {
+  test('reorders', async () => {
     const { space, items } = await createTestComponents();
     const list = await space.database.createItem({
       model: ObjectModel,

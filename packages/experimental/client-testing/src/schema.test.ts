@@ -16,8 +16,8 @@ let client: Client;
 let space: Space;
 let builder: SchemaBuilder;
 
-describe('Schemas', function () {
-  beforeEach(async function () {
+describe('Schemas', () => {
+  beforeEach(async () => {
     client = new Client({ services: fromHost() });
     await client.initialize();
     await client.halo.createProfile({ displayName: 'test-user' });
@@ -25,17 +25,17 @@ describe('Schemas', function () {
     builder = new SchemaBuilder(space.database);
   });
 
-  afterEach(async function () {
+  afterEach(async () => {
     await client.destroy();
   });
 
-  test('creation of Schema', async function () {
+  test('creation of Schema', async () => {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  test('add Schema field', async function () {
+  test('add Schema field', async () => {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -47,7 +47,7 @@ describe('Schemas', function () {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  test('add Schema linked field', async function () {
+  test('add Schema linked field', async () => {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -77,7 +77,7 @@ describe('Schemas', function () {
     });
   });
 
-  test('Use schema to validate the fields of an item', async function () {
+  test('Use schema to validate the fields of an item', async () => {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,

@@ -12,8 +12,8 @@ import { describe, test } from '@dxos/test';
 import { HypercoreFactory } from './hypercore-factory';
 import { createAsyncIterator, createReadable } from './iterator';
 
-describe('AsyncIterator', function () {
-  test('iterates a feed until stopped', async function () {
+describe('AsyncIterator', () => {
+  test('iterates a feed until stopped', async () => {
     const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });

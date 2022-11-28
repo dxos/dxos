@@ -14,8 +14,8 @@ const { testkit, sentryTransport } = sentryTestkit<TransportFunction>();
 
 const MOCK_DESTINATION = 'https://acacaeaccacacacabcaacdacdacadaca@sentry.io/000001';
 
-describe('Error reporting', function () {
-  beforeAll(function () {
+describe('Error reporting', () => {
+  beforeAll(() => {
     Sentry.init({
       destination: MOCK_DESTINATION,
       release: 'test',
@@ -23,11 +23,11 @@ describe('Error reporting', function () {
     });
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     testkit.reset();
   });
 
-  test('should capture errors', async function () {
+  test('should capture errors', async () => {
     const err = new Error('error to look for');
     Sentry.captureException(err);
     await waitForExpect(() => {

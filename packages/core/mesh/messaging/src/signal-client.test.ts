@@ -10,8 +10,7 @@ import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { SignalClient } from './signal-client';
 
@@ -21,22 +20,22 @@ const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   value: Buffer.from('1')
 };
 
-describe('SignalClient', function () {
+describe('SignalClient', () => {
   let broker1: TestBroker;
 
   let broker2: TestBroker;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     broker1 = await createTestBroker();
     // broker2 = await await createTestBroker(signalApiPort2);
   });
 
-  afterAll(function () {
+  afterAll(() => {
     broker1.stop();
     // code await broker2.stop();
   });
 
-  test('message between 2 clients', async function () {
+  test('message between 2 clients', async () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
@@ -61,7 +60,7 @@ describe('SignalClient', function () {
     }, 4_000);
   }).timeout(500);
 
-  test('join', async function () {
+  test('join', async () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
@@ -84,7 +83,7 @@ describe('SignalClient', function () {
     await promise2;
   }).timeout(500);
 
-  test('signal to self', async function () {
+  test('signal to self', async () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
@@ -108,7 +107,7 @@ describe('SignalClient', function () {
   }).timeout(500);
 
   test
-    .skip('join across multiple signal servers', async function () {
+    .skip('join across multiple signal servers', async () => {
       const topic = PublicKey.random();
       const peer1 = PublicKey.random();
       const peer2 = PublicKey.random();
@@ -135,7 +134,7 @@ describe('SignalClient', function () {
 
   // Skip because communication between signal servers is not yet implemented.
   test
-    .skip('newly joined peer can receive signals from other signal servers', async function () {
+    .skip('newly joined peer can receive signals from other signal servers', async () => {
       const topic = PublicKey.random();
       const peer1 = PublicKey.random();
       const peer2 = PublicKey.random();

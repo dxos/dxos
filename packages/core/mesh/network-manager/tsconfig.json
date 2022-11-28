@@ -34,9 +34,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/testutils"
-    },
-    {
       "path": "../../../common/util"
     },
     {

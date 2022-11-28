@@ -32,26 +32,22 @@ const write = async (file: File, data = 'test') => {
 /**
  * Node file system specific tests.
  */
-describe('testing node storage types', function () {
-  before(function () {
-    return del(ROOT_DIRECTORY);
-  });
+describe('testing node storage types', () => {
+  before(() => del(ROOT_DIRECTORY));
 
-  after(function () {
-    return del(ROOT_DIRECTORY);
-  });
+  after(() => del(ROOT_DIRECTORY));
 
   for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
   }
 
-  test('create storage with node file by default', async function () {
+  test('create storage with node file by default', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     expect(storage.type).toBe(StorageType.NODE);
   });
 
-  test('create file', async function () {
+  test('create file', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -62,7 +58,7 @@ describe('testing node storage types', function () {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
   });
 
-  test('delete directory', async function () {
+  test('delete directory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -75,7 +71,7 @@ describe('testing node storage types', function () {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  test('destroy storage', async function () {
+  test('destroy storage', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -88,11 +84,11 @@ describe('testing node storage types', function () {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  test('should throw an assert error if invalid type for platform', function () {
+  test('should throw an assert error if invalid type for platform', () => {
     expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
   });
 
-  test('file exists and destroys in subDirectory', async function () {
+  test('file exists and destroys in subDirectory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -106,7 +102,7 @@ describe('testing node storage types', function () {
   });
 
   // TODO(burdon): Factor out into suites of blueprints.
-  test('persistence', async function () {
+  test('persistence', async () => {
     const filename = randomText();
     const data = Buffer.from(randomText());
 

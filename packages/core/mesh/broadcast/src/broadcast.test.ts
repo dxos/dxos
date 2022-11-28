@@ -96,7 +96,7 @@ const publishAndSync = async (peers: any, message: any, opts?: any) => {
   return packet;
 };
 
-test('balancedBinTree: broadcast a message.', async function () {
+test('balancedBinTree: broadcast a message.', async () => {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id),
     createConnection: (peerFrom: any, peerTo: any) => {
@@ -119,7 +119,7 @@ test('balancedBinTree: broadcast a message.', async function () {
   network.peers.forEach((peer: any) => peer.close());
 });
 
-test('complete: broadcast a message.', async function () {
+test('complete: broadcast a message.', async () => {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id, { maxAge: 1000, maxSize: 2 }),
     createConnection: (peerFrom: any, peerTo: any) => {

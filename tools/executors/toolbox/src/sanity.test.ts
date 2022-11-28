@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-describe('Test', function () {
-  test('checks sanity', async function () {
+describe('Test', () => {
+  test('checks sanity', async () => {
     expect(true).to.be.true;
   });
 });

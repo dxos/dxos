@@ -16,8 +16,8 @@ import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
 
-describe('replication', function () {
-  test('replicates a feed through a direct stream', async function () {
+describe('replication', () => {
+  test('replicates a feed through a direct stream', async () => {
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
 

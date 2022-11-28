@@ -12,8 +12,8 @@ import { describe, test } from '@dxos/test';
 
 import { HypercoreFactory } from './hypercore-factory';
 
-describe('Streams', function () {
-  test('reads from stream', async function () {
+describe('Streams', () => {
+  test('reads from stream', async () => {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });
@@ -53,7 +53,7 @@ describe('Streams', function () {
     }
   });
 
-  test('feed closed while stream is open', async function () {
+  test('feed closed while stream is open', async () => {
     const factory = new HypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
     const core = factory.createFeed(publicKey, { secretKey });

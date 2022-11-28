@@ -31,7 +31,6 @@
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@dxos/testutils": "workspace:*",
     "@types/node": "^18.11.9",
     "earljs": "~0.1.10",
     "typescript": "^4.8.4",

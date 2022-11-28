@@ -12,10 +12,10 @@ import { describe, test } from '@dxos/test';
 import { NodeContainer } from '../bot-container';
 import { BotFactory } from './bot-factory';
 
-describe('BotFactory', function () {
-  describe('with NodeContainer', function () {
+describe('BotFactory', () => {
+  describe('with NodeContainer', () => {
     // TODO(egorgripasov): Redo test with Bots auto-restart in mind.
-    test.skip('crashed bots get their status updated', async function () {
+    test.skip('crashed bots get their status updated', async () => {
       const container = new NodeContainer(['@swc-node/register']);
       const botFactory = new BotFactory({
         botContainer: container,

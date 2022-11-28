@@ -12,26 +12,25 @@ import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test } from '@dxos/test';
-import { afterTest } from '@dxos/testutils';
+import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
 
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messenger';
 
-describe('MessageRouter', function () {
+describe('MessageRouter', () => {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     broker1 = await createTestBroker();
   });
 
-  beforeEach(function () {
+  beforeEach(() => {
     topic = PublicKey.random();
   });
 
-  afterAll(function () {
+  afterAll(() => {
     broker1.stop();
   });
 

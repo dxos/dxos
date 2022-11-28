@@ -149,14 +149,14 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
   const topic = crypto.randomBytes(32);
   let network: any;
 
-  beforeAll(async function () {
+  beforeAll(async () => {
     network = await generator.balancedBinTree({
       topic,
       parameters: [3]
     });
   });
 
-  test('feed synchronization', async function () {
+  test('feed synchronization', async () => {
     expect(network.peers.length).to.equal(15);
     await waitForExpect(
       () => {
@@ -171,7 +171,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', f
     );
   });
 
-  test('message synchronization', async function () {
+  test('message synchronization', async () => {
     const wait: any[] = [];
     const messages: any[] = [];
     network.peers.forEach((peer: any) => {

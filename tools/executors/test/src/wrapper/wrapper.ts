@@ -64,6 +64,7 @@ interface TestFunction {
 interface Test {
   timeout(length: number): Test;
   retries(count: number): Test;
+  // TODO(wittjosiah): Support on describe as well.
   tag(...tags: string[]): Test;
   onlyEnvironments(...environments: string[]): Test;
   skipEnvironments(...environments: string[]): Test;

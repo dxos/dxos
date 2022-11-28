@@ -9,12 +9,12 @@ import { describe, test } from '@dxos/test';
 
 import { DomainKey } from './domain-key';
 
-describe('DomainKey', function () {
-  test('has key length of 32 bytes', function () {
+describe('DomainKey', () => {
+  test('has key length of 32 bytes', () => {
     expect(() => new DomainKey(randomBytes(32))).to.not.throw();
   });
 
-  test('throws with invalid key length', function () {
+  test('throws with invalid key length', () => {
     expect(() => new DomainKey(randomBytes(24))).to.throw();
   });
 });
