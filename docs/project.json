@@ -13,6 +13,19 @@
         "{options.outputFile}"
       ]
     },
+    "bundle": {
+      "dependsOn": [
+        "^bundle",
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "bundle"
+      },
+      "outputs": [
+        "{options.outputFile}"
+      ]
+    },
     "generate:api": {
       "dependsOn": [
         "^build"
