@@ -38,5 +38,5 @@ message Answer {
 }
 
 message Signal {
-  google.protobuf.Struct json = 1;
+  google.protobuf.Struct payload = 1;
 }

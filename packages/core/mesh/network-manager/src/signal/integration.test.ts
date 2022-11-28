@@ -99,7 +99,7 @@ describe('Signal Integration Test', function () {
         recipient: peer2,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: { message: 'Hello world!' } }
+          signal: { payload: { message: 'Hello world!' } }
         }
       };
       await peerNetworking1.messageRouter.signal(message);
@@ -116,7 +116,7 @@ describe('Signal Integration Test', function () {
         recipient: peer1,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: { foo: 'bar' } }
+          signal: { payload: { foo: 'bar' } }
         }
       };
       await peerNetworking2.messageRouter.signal(message);

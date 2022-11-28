@@ -99,7 +99,7 @@ describe('MessageRouter', function () {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: { msg: 'Some info' } } }
+      data: { signal: { payload: { msg: 'Some info' } } }
     };
     await router2.signal(msg);
 
@@ -192,7 +192,7 @@ describe('MessageRouter', function () {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: { msg: '1to3' } } }
+      data: { signal: { payload: { msg: '1to3' } } }
     };
     await router1.signal(msg1to3);
     await waitForExpect(() => {
@@ -205,7 +205,7 @@ describe('MessageRouter', function () {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: { msg: '2to3' } } }
+      data: { signal: { payload: { msg: '2to3' } } }
     };
     await router2.signal(msg2to3);
     await waitForExpect(() => {
@@ -218,7 +218,7 @@ describe('MessageRouter', function () {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: { msg: '3to1' } } }
+      data: { signal: { payload: { msg: '3to1' } } }
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
