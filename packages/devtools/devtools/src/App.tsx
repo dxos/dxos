@@ -19,6 +19,8 @@ import { Controls, PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
+const DEFAULT_TARGET = `vault:${DEFAULT_CLIENT_ORIGIN}`;
+
 export const Telemetry = () => {
   useTelemetry({ namespace: 'devtools', router: false });
   return null;
@@ -59,7 +61,24 @@ export const App = () => {
   };
 
   useAsyncEffect(async () => {
-    await onConfigChange({ remoteSource: DEFAULT_CLIENT_ORIGIN });
+    const targetResolvers: Record<string, (remoteSource?: string) => Promise<void>> = {
+      local: () => onConfigChange(),
+      vault: (remoteSource) => {
+        if (!remoteSource) {
+          throw new Error('Vault URL is required target=vault:<vault URL>');
+        }
+        return onConfigChange({ remoteSource });
+      }
+    };
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const target = searchParams.get('target') ?? DEFAULT_TARGET;
+    const [protocol, ...rest] = target.split(':');
+    const remoteSource = rest.join(':');
+    if (!(protocol in targetResolvers)) {
+      throw new Error(`Unknown target: ${target}. Available targets are: ${Object.keys(targetResolvers).join(', ')}`);
+    }
+    await targetResolvers[protocol](remoteSource);
   }, []);
 
   if (!client) {

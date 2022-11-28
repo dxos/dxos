@@ -3,12 +3,14 @@
 //
 
 import Collaboration from '@tiptap/extension-collaboration';
+import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import cx from 'classnames';
 import React from 'react';
 
 import { Item } from '@dxos/client';
+import { useTranslation } from '@dxos/react-uikit';
 import { TextModel } from '@dxos/text-model';
 
 export interface ComposerProps {
@@ -17,18 +19,20 @@ export interface ComposerProps {
 }
 
 export const Composer = ({ item, className }: ComposerProps) => {
+  const { t } = useTranslation('appkit');
   const editor = useEditor(
     {
       extensions: [
         StarterKit.configure({ history: false }),
-        Collaboration.configure({ document: item?.model.doc, field: 'content' })
+        Collaboration.configure({ document: item?.model.doc, field: 'content' }),
+        Placeholder.configure({
+          placeholder: t('composer placeholder'),
+          emptyEditorClass: 'before:content-[attr(data-placeholder)] before:absolute opacity-50 cursor-text'
+        })
       ],
       editorProps: {
         attributes: {
-          class: cx(
-            'bg-neutral-50/25 border border-neutral-300 text-neutral-900 text-md rounded-lg block w-full p-4 dark:bg-neutral-700/25 dark:border-neutral-600 dark:text-white',
-            className
-          )
+          class: cx('focus:outline-none focus-visible:outline-none', className)
         }
       }
     },

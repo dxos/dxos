@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/metagraph",
+  "version": "0.1.13",
+  "private": true,
+  "description": "Decentralized metagraph (DMG).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "testing.d.ts",
+    "testing.js",
+    "dist"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.5.10"
+  }
+}

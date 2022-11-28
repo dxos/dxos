@@ -5,26 +5,26 @@
 import React, { Component, PropsWithChildren } from 'react';
 
 interface ErrorBoundaryState {
-  hasError: boolean
-  error?: any
+  hasError: boolean;
+  error?: any;
 }
 
 // NOTE: Has to be Component, not arrow function.
 export class ErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundaryState> {
-  constructor (props: {}) {
+  constructor(props: {}) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError (error: any) {
+  static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
   }
 
-  override componentDidCatch (err: any, info: any) {
+  override componentDidCatch(err: any, info: any) {
     console.error(err, info);
   }
 
-  override render () {
+  override render() {
     if (this.state.hasError) {
       return (
         <div style={{ height: '100vh', background: 'white' }}>
@@ -36,10 +36,6 @@ export class ErrorBoundary extends Component<PropsWithChildren<{}>, ErrorBoundar
       );
     }
 
-    return (
-      <>
-        {this.props.children}
-      </>
-    );
+    return <>{this.props.children}</>;
   }
 }

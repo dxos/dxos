@@ -67,7 +67,7 @@ export class MemoryTransport implements Transport {
       setTimeout(async () => {
         log('sending signal', { transportId: this._id });
         void this.options.sendSignal({
-          json: JSON.stringify({ transportId: this._id.toHex() })
+          payload: { transportId: this._id.toHex() }
         });
     });
     } else {
@@ -143,10 +143,10 @@ export class MemoryTransport implements Transport {
   }
 
   signal(signal: Signal) {
-    const { json } = signal;
-    if (json) {
+    const { payload: json } = signal;
+    if (json && json.transportId) {
       // TODO(burdon): Check open?
-      const { transportId } = JSON.parse(json);
+      const transportId = json.transportId as string;
       if (transportId) {
         const remoteId = PublicKey.fromHex(transportId);
         log('received signal', { id: this._id, remoteId });

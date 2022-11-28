@@ -4,7 +4,10 @@ package:
   modules:
     - name: tasks
       type: dxos:type/app
-      display_name: Tasks
+      displayName: Tasks
+      description: Simple task management.
+      tags:
+        - showcase
       build:
         command: pnpm -w nx bundle tasks-app
 

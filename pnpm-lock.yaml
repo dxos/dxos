@@ -324,6 +324,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
+      '@dxos/metagraph': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-appkit': workspace:*
@@ -362,6 +363,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
+      '@dxos/metagraph': link:../../experimental/metagraph
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-appkit': link:../patterns/react-appkit
@@ -395,6 +397,9 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.8_f7se6o6eqkwcix4u3svh6mkvda
       workbox-window: 6.5.4
+
+  packages/apps/patterns/assets:
+    specifiers: {}
 
   packages/apps/patterns/react-appkit:
     specifiers:
@@ -462,6 +467,7 @@ importers:
       '@dxos/vite-plugin': workspace:*
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
+      '@tiptap/extension-placeholder': 2.0.0-beta.199
       '@tiptap/react': 2.0.0-beta.199
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
@@ -485,6 +491,7 @@ importers:
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
+      '@tiptap/extension-placeholder': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
       classnames: 2.3.2
@@ -511,11 +518,11 @@ importers:
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/vite-plugin': workspace:*
-      '@types/lodash.throttle': ^4.1.1
+      '@types/lodash.debounce': ^4.0.7
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       classnames: ^2.3.2
-      lodash.throttle: ^4.1.1
+      lodash.debounce: ^4.0.8
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -529,14 +536,14 @@ importers:
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       classnames: 2.3.2
-      lodash.throttle: 4.1.1
+      lodash.debounce: 4.0.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/debug': link:../../../common/debug
       '@dxos/vite-plugin': link:../../../sdk/vite-plugin
-      '@types/lodash.throttle': 4.1.7
+      '@types/lodash.debounce': 4.0.7
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       phosphor-react: 1.4.1_react@18.2.0
@@ -612,6 +619,7 @@ importers:
       '@dxos/react-appkit': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-composer': workspace:*
+      '@dxos/react-list': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/text-model': workspace:*
@@ -648,6 +656,7 @@ importers:
       '@dxos/react-appkit': link:../../patterns/react-appkit
       '@dxos/react-client': link:../../../sdk/react-client
       '@dxos/react-composer': link:../../patterns/react-composer
+      '@dxos/react-list': link:../../patterns/react-list
       '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       '@dxos/text-model': link:../../../core/echo/text-model
@@ -3088,6 +3097,27 @@ importers:
       ts-node: 10.9.1_cbe7ovvae6zqfnmtgctpgpys54
       typescript: 4.8.4
 
+  packages/experimental/metagraph:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/errors': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/node-fetch': ^2.5.10
+      node-fetch: ^2.6.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/errors': link:../../sdk/errors
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      node-fetch: 2.6.7
+    devDependencies:
+      '@types/node-fetch': 2.6.2
+
   packages/experimental/react-client-testing:
     specifiers:
       '@babel/core': ^7.18.13
@@ -3479,9 +3509,6 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@types/debug': 4.1.7
-
-  packages/sdk/assets:
-    specifiers: {}
 
   packages/sdk/client:
     specifiers:
@@ -12042,6 +12069,17 @@ packages:
       '@tiptap/core': 2.0.0-beta.199
     dev: false
 
+  /@tiptap/extension-placeholder/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
+    resolution: {integrity: sha512-Tdq0r9XQ6hcu4ASvw2Xko6h8uS/xONmMmOFiTkK/54REB3RRQpkdCtXrhFn/T4DunJVBf6FUOLTjYN3SONhuew==}
+    peerDependencies:
+      '@tiptap/core': ^2.0.0-beta.193
+    dependencies:
+      '@tiptap/core': 2.0.0-beta.199
+      prosemirror-model: 1.18.1
+      prosemirror-state: 1.4.2
+      prosemirror-view: 1.29.0
+    dev: false
+
   /@tiptap/extension-strike/2.0.0-beta.199_4focsuckzeocqotdxlryrtksam:
     resolution: {integrity: sha512-KyN5+d9o9FGvrSiSuh81oo4+XjMDsZVY4UHc9lBY0nAzaGAkJOwkCjk40RfyO5ZJ2GdEEQ6Nh/3YqVMcJTY+rA==}
     peerDependencies:
@@ -12651,6 +12689,12 @@ packages:
       '@types/lodash': 4.14.186
     dev: true
 
+  /@types/lodash.debounce/4.0.7:
+    resolution: {integrity: sha512-X1T4wMZ+gT000M2/91SYj0d/7JfeNZ9PeeOldSNoE/lunLeQXKvkmIumI29IaKMotU/ln/McOIvgzZcQ/3TrSA==}
+    dependencies:
+      '@types/lodash': 4.14.186
+    dev: true
+
   /@types/lodash.defaultsdeep/4.6.7:
     resolution: {integrity: sha512-D+AUxs64qehDMkbfFoskG0XsIOh2CHBGqYfcQcubLbZSFCGKJKS885su3a97huqBNHj+p9of9UZ/uUIP46wUGQ==}
     dependencies:
@@ -12713,12 +12757,6 @@ packages:
 
   /@types/lodash.sortby/4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
-    dependencies:
-      '@types/lodash': 4.14.186
-    dev: true
-
-  /@types/lodash.throttle/4.1.7:
-    resolution: {integrity: sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==}
     dependencies:
       '@types/lodash': 4.14.186
     dev: true
@@ -24953,10 +24991,6 @@ packages:
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
-
-  /lodash.throttle/4.1.1:
-    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
-    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}

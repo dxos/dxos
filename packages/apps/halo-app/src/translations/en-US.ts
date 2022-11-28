@@ -17,6 +17,7 @@ export const halo = {
   'apps label': 'Apps',
   'contacts label': 'Contacts',
   'reset device label': 'Reset this device',
+  'refresh app list label': 'Refresh',
   'join label': 'Join',
   'manage label': 'Manage',
   'confirm reset device label': 'Type your identity’s short handle ({{confirmString}}) to confirm:',
