@@ -15,7 +15,7 @@ import { ClientContext } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Controls, PanelsContainer } from './containers';
+import { PanelsContainer } from './containers';
 import { sections } from './sections';
 import { theme } from './theme';
 
@@ -89,16 +89,12 @@ export const App = () => {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <FullScreen sx={{ flexDirection: 'row' }}>
+        <FullScreen>
           <ClientContext.Provider value={{ client, services: servicesProvider?.services }}>
             <Telemetry />
 
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               <PanelsContainer sections={sections} />
-            </Box>
-
-            <Box id={'controls'} sx={{ display: 'flex', flexShrink: 0 }}>
-              <Controls onConfigChange={onConfigChange} />
             </Box>
           </ClientContext.Provider>
         </FullScreen>
