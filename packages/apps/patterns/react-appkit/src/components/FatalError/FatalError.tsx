@@ -41,7 +41,7 @@ export const FatalError = ({ error }: FatalErrorProps) => {
         <p>{t('fatal error message')}</p>
       )}
       <div role='none' className='flex'>
-        <Tooltip content={t('copy error label')}>
+        <Tooltip content={t('copy error label')} zIndex={'z-[21]'}>
           <Button onClick={onCopyError}>
             <Clipboard weight='duotone' size='1em' />
           </Button>
