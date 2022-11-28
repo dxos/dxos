@@ -9,6 +9,7 @@ import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
+import { test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TestBuilder } from '../testing';
@@ -25,7 +26,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     return;
   }
 
-  it('joins swarm, sends messages, and cleanly exits', async () => {
+  test('joins swarm, sends messages, and cleanly exits', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -37,7 +38,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
-  it('joins swarm with star topology', async () => {
+  test('joins swarm with star topology', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -49,7 +50,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
-  it('joins swarm multiple times', async () => {
+  test('joins swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -75,7 +76,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     }
   });
 
-  it.skip('joins multiple swarms', async () => {
+  test.skip('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
@@ -90,7 +91,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
   // TODO(burdon): Fails with WebRTC.
   // TODO(burdon): This just tests multiple swarms (not peers in the same swarm)?
   //  Generalize for n swarms and factor into other tests; configure message activity.
-  it.skip('joins multiple swarms concurrently', async () => {
+  test.skip('joins multiple swarms concurrently', async () => {
     const createSwarm = async (messages: any[], label: string) => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -125,7 +126,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
   // TODO(burdon): Fails with WebRTC.
   // TODO(burdon): Factor out components of test.
-  it.skip('many peers and connections', async () => {
+  test.skip('many peers and connections', async () => {
     const numTopics = 5;
     const peersPerTopic = 5;
 

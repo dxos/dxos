@@ -10,7 +10,7 @@ import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 
-import { describe, test } from '@dxos/test';
+import { afterAll, beforeAll, describe, test } from '@dxos/test';
 
 import { File, StorageType } from '../common';
 import { randomText, storageTests } from '../testing';
@@ -33,9 +33,9 @@ const write = async (file: File, data = 'test') => {
  * Node file system specific tests.
  */
 describe('testing node storage types', () => {
-  before(() => del(ROOT_DIRECTORY));
+  beforeAll(() => del(ROOT_DIRECTORY));
 
-  after(() => del(ROOT_DIRECTORY));
+  afterAll(() => del(ROOT_DIRECTORY));
 
   for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
     storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));

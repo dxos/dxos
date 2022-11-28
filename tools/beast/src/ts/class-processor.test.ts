@@ -34,7 +34,7 @@ describe('Code analysis', () => {
     processor.processFile(join(baseDir, 'packages/sdk/client/src/packlets/client/client.ts'));
   });
 
-  it('traverses client-services', () => {
+  test('traverses client-services', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 

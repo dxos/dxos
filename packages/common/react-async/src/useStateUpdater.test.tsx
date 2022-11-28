@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
-import { afterEach, beforeEach, describe } from '@dxos/test';
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
 import { useStateUpdater } from './useStateUpdater';
 
@@ -46,7 +46,7 @@ describe('useStateMutator', () => {
     document.body.removeChild(rootContainer);
   });
 
-  it('udpates the value.', async () => {
+  test('udpates the value.', async () => {
     void act(() => {
       createRoot(rootContainer).render(<Test />);
     });

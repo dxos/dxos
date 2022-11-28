@@ -4,6 +4,8 @@
 
 import { expect } from 'chai';
 
+import { describe, test } from '@dxos/test';
+
 import { decodeStruct, encodeStruct } from './struct';
 
 describe('structSubstitutions', () => {
@@ -54,18 +56,18 @@ describe('structSubstitutions', () => {
     }
   };
 
-  it('can encode and decode a struct', async () => {
+  test('can encode and decode a struct', async () => {
     const encoded = encodeStruct(dummyStruct);
     const decoded = decodeStruct(encoded);
     expect(decoded).to.deep.equal(dummyStruct);
   });
 
-  it('can encode a struct', async () => {
+  test('can encode a struct', async () => {
     const encoded = encodeStruct(dummyStruct);
     expect(encoded).to.deep.equal(encodedStruct);
   });
 
-  it('can decode a struct', async () => {
+  test('can decode a struct', async () => {
     const decoded = decodeStruct(encodedStruct);
     expect(decoded).to.deep.equal(dummyStruct);
   });
