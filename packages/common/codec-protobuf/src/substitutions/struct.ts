@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 export type Struct = Record<string, any>;
 
 export const encodeStructValue = (structValue: any): any => {
@@ -40,7 +42,7 @@ export const encodeStruct = (struct: Struct): any => ({
 });
 
 export const decodeStructValue = (value: any): any => {
-  const [key, v] = Object.entries(value)[0];
+  const [key, v]: [string, any] = Object.entries(value)[0];
   switch (key) {
     case 'nullValue': {
       return null;
@@ -61,7 +63,7 @@ export const decodeStructValue = (value: any): any => {
       return v.values.map(decodeStructValue);
     }
     default:
-      throw new Error(`Unsupported type: ${valueType}`);
+      throw new Error(`Unsupported type: ${key}`);
   }
 };
 
