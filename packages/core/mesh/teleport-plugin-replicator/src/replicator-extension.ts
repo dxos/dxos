@@ -51,7 +51,8 @@ export class ReplicatorExtension implements TeleportExtension {
     return {
       initiator: this._extensionContext?.initiator,
       localPeerId: this._extensionContext?.localPeerId,
-      remotePeerId: this._extensionContext?.remotePeerId
+      remotePeerId: this._extensionContext?.remotePeerId,
+      feeds: Array.from(this._feeds.keys()),
     };
   }
 
@@ -149,6 +150,7 @@ export class ReplicatorExtension implements TeleportExtension {
 
   @synchronized
   private async _reevaluateFeeds() {
+    log('reevaluateFeeds');
     for (const feedKey of this._feeds.keys()) {
       if (this._ctx.disposed) {
         return;

@@ -1977,7 +1977,9 @@ importers:
       '@dxos/teleport': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
+      add: ^2.0.6
       assert: ^2.0.0
+      fast-check: ~2.14.0
       typescript: ^4.8.4
       wait-for-expect: ^3.0.2
     dependencies:
@@ -1996,6 +1998,8 @@ importers:
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/random-access-storage': link:../../../common/random-access-storage
       '@dxos/testutils': link:../../../common/testutils
+      add: 2.0.6
+      fast-check: 2.14.0
       typescript: 4.8.4
       wait-for-expect: 3.0.2
 
@@ -14184,6 +14188,10 @@ packages:
     resolution: {integrity: sha512-QOxyigPVrpZ2GXT+PFyZTl6TtOFc5egxHIP9IlQ+RbupQuX4RkT/Bee4/kQuC02Xkzg84JcT7oLYtDIQxp+v7w==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  /add/2.0.6:
+    resolution: {integrity: sha512-j5QzrmsokwWWp6kUcJQySpbG+xfOBqqKnup3OIk1pz+kB/80SLorZ9V8zHFLO92Lcd+hbvq8bT+zOGoPkmBV0Q==}
+    dev: true
 
   /addons-linter/4.4.0_k5m3pyij6ftsjglkv3cqpdg7bi:
     resolution: {integrity: sha512-2N8oo97y2w2MJX/bcvnSb5BG2s+0BOlOu/0Q06wp5bnyEwWbfKFOVX/CorivGkRteY0fbSUWvU55LXgIiLyH5w==}

@@ -10,7 +10,8 @@ filter:
   # - client:debug
   - warn
   - replicator:debug
-  - teleport:debug
-  - member:debug
-  - deprecated/space:debug
-  - space-proxy:debug
+  # - teleport:debug
+  # - member:debug
+  # - deprecated/space:debug
+  # - space-proxy:debug
+  - stress:debug
