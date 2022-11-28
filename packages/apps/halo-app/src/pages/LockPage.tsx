@@ -20,8 +20,8 @@ import {
 } from '@dxos/react-uikit';
 import { humanize } from '@dxos/util';
 
-import lightThemeLogo from '../../assets/icon-halo-black.png';
-import darkThemeLogo from '../../assets/icon-halo-white.png';
+import lightThemeLogo from '../assets/icon-halo-black.png';
+import darkThemeLogo from '../assets/icon-halo-white.png';
 
 export interface RegistrationPageProps {
   onRegister?: (client: Client) => Promise<Space>;
@@ -30,7 +30,7 @@ export interface RegistrationPageProps {
 /**
  * Allows user to create an identity, join an existing identity or unlock their current identity.
  */
-export const LockPage = () => {
+const LockPage = () => {
   const { t } = useTranslation('halo');
   const profile = useIdentity();
 
@@ -102,3 +102,5 @@ export const LockPage = () => {
     </main>
   );
 };
+
+export default LockPage;

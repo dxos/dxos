@@ -63,7 +63,8 @@
       ],
       "options": {
         "configFile": "packages/apps/halo-app/vite.config.ts",
-        "outputPath": "packages/apps/halo-app/out/halo"
+        "outputPath": "packages/apps/halo-app/out/halo",
+        "sourcemaps": true
       },
       "outputs": [
         "{options.outputPath}"

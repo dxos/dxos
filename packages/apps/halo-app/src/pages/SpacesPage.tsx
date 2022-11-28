@@ -19,3 +19,5 @@ export const SpacesPage = () => {
     </>
   );
 };
+
+export default SpacesPage;

@@ -11,10 +11,10 @@ import { useClient, useDevices, useHaloInvitations, useIdentity } from '@dxos/re
 import { Heading } from '@dxos/react-ui';
 import { Button, useTranslation, getSize } from '@dxos/react-uikit';
 
-import { DeviceList } from '../../components';
-import { createInvitationUrl } from '../../util';
+import { DeviceList } from '../components';
+import { createInvitationUrl } from '../util';
 
-export const DevicesPage = () => {
+const DevicesPage = () => {
   const { t } = useTranslation('halo');
   const client = useClient();
   const identity = useIdentity();
@@ -60,3 +60,5 @@ export const DevicesPage = () => {
     </>
   );
 };
+
+export default DevicesPage;

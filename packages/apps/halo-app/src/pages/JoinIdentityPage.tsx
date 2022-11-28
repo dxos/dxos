@@ -9,9 +9,9 @@ import type { Invitation } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Heading, JoinPanel, useTranslation } from '@dxos/react-uikit';
 
-import { invitationCodeFromUrl } from '../../util';
+import { invitationCodeFromUrl } from '../util';
 
-export const JoinIdentityPage = () => {
+const JoinIdentityPage = () => {
   const client = useClient();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -39,3 +39,5 @@ export const JoinIdentityPage = () => {
     </main>
   );
 };
+
+export default JoinIdentityPage;

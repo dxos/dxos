@@ -11,7 +11,7 @@ import { useTranslation, Button, getSize, Input, AlertDialog, Avatar, defaultGro
 import * as Telemetry from '@dxos/telemetry';
 import { humanize } from '@dxos/util';
 
-export const IdentityPage = () => {
+const IdentityPage = () => {
   const client = useClient();
   const profile = useIdentity();
   const profileHex = profile!.identityKey.toHex();
@@ -113,3 +113,5 @@ export const IdentityPage = () => {
     </div>
   );
 };
+
+export default IdentityPage;

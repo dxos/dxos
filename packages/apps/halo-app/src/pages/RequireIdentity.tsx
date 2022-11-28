@@ -15,7 +15,7 @@ export interface RequireProfileProps {
  * Prevents child routes from rendering if identity does not exist.
  * Redirects if identity is not present.
  */
-export const RequireIdentity = ({ redirect: to }: RequireProfileProps) => {
+const RequireIdentity = ({ redirect: to }: RequireProfileProps) => {
   const { pathname, search } = useLocation();
   const identity = useIdentity();
 
@@ -25,3 +25,5 @@ export const RequireIdentity = ({ redirect: to }: RequireProfileProps) => {
 
   return <Outlet />;
 };
+
+export default RequireIdentity;
