@@ -71,11 +71,11 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout onSpaceCreate={handleSpaceCreate} />,
+          element: <AppLayout spacesPath='/' />,
           children: [
             {
               path: '/',
-              element: <SpacesPage />
+              element: <SpacesPage onSpaceCreate={handleSpaceCreate} />
             },
             {
               path: '/spaces/:space',

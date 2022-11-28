@@ -11,6 +11,7 @@ import { fromHost, fromIFrame } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { log } from '@dxos/log';
 import {
+  AppLayout,
   ErrorProvider,
   Fallback,
   FatalError,
@@ -24,8 +25,8 @@ import { ClientProvider, useStatus } from '@dxos/react-client';
 import { UiKitProvider } from '@dxos/react-uikit';
 import { captureException } from '@dxos/sentry';
 
+import { NavMenu } from './components';
 import {
-  AppLayout,
   AppsPage,
   ContactsPage,
   CreateIdentityPage,
@@ -79,7 +80,7 @@ const Routes = () => {
       children: [
         {
           path: '/',
-          element: <AppLayout />,
+          element: <AppLayout menubarContent={<NavMenu />} suppressSpaceMenu manageProfilePath='/identity' />,
           children: [
             { path: '/devices', element: <DevicesPage /> },
             { path: '/identity', element: <IdentityPage /> },
