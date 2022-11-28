@@ -23,9 +23,9 @@ export const AppsPage = () => {
   );
 
   return (
-    <main className='max-is-5xl mli-auto pli-7'>
-      <Heading className='mbe-6'>{t('apps label')}</Heading>
+    <>
+      <Heading className='mlb-4'>{t('apps label')}</Heading>
       {isLoading ? <Loading label={t('generic loading label')} size='md' /> : <AppList apps={apps} />}
-    </main>
+    </>
   );
 };

@@ -12,19 +12,18 @@ import { humanize } from '@dxos/util';
 
 import { templateForComponent } from '../../testing';
 import { SingleInputStep } from '../SingleInputStep';
-import { Presence, PresenceProps } from './Presence';
+import { Menubar, MenubarProps } from './Menubar';
 
 export default {
-  title: 'react-uikit/Presence',
-  component: Presence,
+  title: 'react-uikit/Menubar',
+  component: Menubar,
   argTypes: {}
 };
 
-const Template = (args: Omit<PresenceProps, 'profile'>) => {
+const Template = (args: Omit<MenubarProps, 'profile'>) => {
   const client = useClient();
-  const [profile, setProfile] = useState(() => client.halo.profile);
+  const profile = useIdentity();
 
-  useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
   useEffect(() => {
     if (client && !profile) {
       void client.halo.createProfile();
@@ -33,7 +32,7 @@ const Template = (args: Omit<PresenceProps, 'profile'>) => {
 
   return (
     <main className='flex justify-end'>
-      {profile ? <Presence {...args} profile={profile} /> : <Loading label='Loading…' />}
+      {profile ? <Menubar {...args} profile={profile} /> : <Loading label='Loading…' />}
     </main>
   );
 };
