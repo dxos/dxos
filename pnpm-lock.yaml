@@ -2334,6 +2334,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/timeframe': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -2378,6 +2379,7 @@ importers:
       '@dxos/registry-client': link:../../experimental/registry-client
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/timeframe': link:../../common/timeframe
+      '@dxos/util': link:../../common/util
       '@emotion/react': 11.10.5_cuziicjcvwawlf5iuhzacuhqcy
       '@emotion/styled': 11.10.5_hmjty4frusbltjhl3xd7udcm2y
       '@mui/icons-material': 5.10.14_edp4dc7hnxdrqofuyrrjp2id7y

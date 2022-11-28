@@ -52,7 +52,8 @@ export default defineConfig({
       '@dxos/react-toolkit',
       '@dxos/registry-client',
       '@dxos/text-model',
-      '@dxos/timeframe'
+      '@dxos/timeframe',
+      '@dxos/util'
     ]
   },
   build: {
