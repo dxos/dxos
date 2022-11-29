@@ -237,11 +237,27 @@ export class SpaceInvitationsHandler extends AbstractInvitationsHandler<Space> {
         // 2. Get authentication code.
         // TODO(burdon): Test timeout (options for timeouts at different steps).
         if (invitation.type === undefined || invitation.type === Invitation.Type.INTERACTIVE) {
-          log('guest waiting for authentication code...');
-          observable.callback.onAuthenticating?.(invitation);
-          const authenticationCode = await authenticated.wait({ timeout });
-          log('sending authentication request');
-          await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+          const tryAuthentication = async () => {
+            for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+              log('guest waiting for authentication code...');
+              observable.callback.onAuthenticating?.(invitation);
+              const authenticationCode = await authenticated.wait({ timeout });
+
+              log('sending authentication request');
+              const response = await peer.rpc.SpaceHostService.authenticate({ authenticationCode });
+              if (response.error === undefined || response.error === Invitation.Error.OK) {
+                return;
+              }
+
+              if (response.error !== Invitation.Error.INVALID_OTP: {
+                throw new Error(`Authentication failed: ${response.error}`);
+              }
+            }
+
+            throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+          }
+
+          await tryAuthentication();
         }
 
         // 3. Create local space.
