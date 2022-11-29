@@ -41,6 +41,7 @@ class TestAgent {
  * The simplified model of the system.
  */
 interface Model {
+  feedOwner: ComplexMap<PublicKey, AgentName>
   feeds: ComplexMap<PublicKey, number>;
   agent1: ComplexSet<PublicKey>;
   agent2: ComplexSet<PublicKey>;
@@ -57,23 +58,49 @@ interface Real {
 type AgentName = 'agent1' | 'agent2';
 const arbAgentName = fc.constantFrom<AgentName[]>('agent1', 'agent2');
 
+const assertState = async (model: Model, real: Real) => {
+  for (const agent of ['agent1', 'agent2'] as AgentName[]) {
+    for (const feedKey of model[agent].keys()) {
+      const expectedLength = model.feeds.get(feedKey)!;
+      const feed = await real[agent].feedStore.openFeed(feedKey, { writable: true });
+
+      log('check', { agent, feedKey: feedKey.truncate(), expectedLength, actualLength: feed.length });
+      if (feed.length !== expectedLength) {
+        log('waiting for feed', {
+          agent,
+          feedKey,
+          expectedLength,
+          feedLength: feed.length
+        });
+        await asyncTimeout(
+          Event.wrap(feed, 'download').waitForCondition(() => feed.length === expectedLength),
+          100
+        );
+      }
+    }
+  }
+}
+
 class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
   constructor(readonly agent: AgentName, readonly feedKey: PublicKey) {}
 
   toString = () => `OpenFeedCommand(${this.agent}, ${this.feedKey.truncate()})`;
 
-  check = (m: Readonly<Model>) => m[this.agent].has(this.feedKey) === false;
+  check = (model: Readonly<Model>) => model[this.agent].has(this.feedKey) === false;
 
   // TODO(dmaretskyi): model, real.
-  run = async (m: Model, r: Real) => {
-    if (!m.feeds.has(this.feedKey)) {
-      m.feeds.set(this.feedKey, 0);
+  run = async (model: Model, real: Real) => {
+    if (!model.feeds.has(this.feedKey)) {
+      model.feeds.set(this.feedKey, 0);
+      model.feedOwner.set(this.feedKey, this.agent);
     }
 
-    m[this.agent].add(this.feedKey);
+    model[this.agent].add(this.feedKey);
 
-    const feed = await r[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
-    r[this.agent].replicator.addFeed(feed);
+    const feed = await real[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
+    real[this.agent].replicator.addFeed(feed);
+
+    await assertState(model, real);
   };
 }
 
@@ -82,47 +109,18 @@ class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
 
   toString = () => `WriteToFeedCommand(${this.agent}, ${this.feedKey.truncate()}, ${this.count})`;
 
-  check = (m: Readonly<Model>) => m[this.agent].has(this.feedKey) === true;
+  check = (model: Readonly<Model>) => model[this.agent].has(this.feedKey) === true && model.feedOwner.get(this.feedKey) === this.agent;
 
-  run = async (m: Model, r: Real) => {
-    m.feeds.set(this.feedKey, m.feeds.get(this.feedKey)! + this.count);
+  run = async (model: Model, real: Real) => {
+    model.feeds.set(this.feedKey, model.feeds.get(this.feedKey)! + this.count);
 
-    const feed = await r[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
+    const feed = await real[this.agent].feedStore.openFeed(this.feedKey, { writable: true });
     for (const _ of range(this.count)) {
       await feed.append('testing');
     }
+
+    await assertState(model, real);
   };
-}
-
-/**
- * Checks that the real agents are eventually consistent with the model.
- */
-class CheckCommand implements fc.AsyncCommand<Model, Real> {
-  check = () => true;
-  run = async (m: Model, r: Real) => {
-    for (const agent of ['agent1', 'agent2'] as AgentName[]) {
-      for (const feedKey of m[agent].keys()) {
-        const expectedLength = m.feeds.get(feedKey)!;
-        const feed = await r[agent].feedStore.openFeed(feedKey, { writable: true });
-
-        log('check', { agent, feedKey: feedKey.truncate(), expectedLength, actualLength: feed.length });
-        if (feed.length !== expectedLength) {
-          log('waiting for feed', {
-            agent,
-            feedKey,
-            expectedLength,
-            feedLength: feed.length
-          });
-          await asyncTimeout(
-            Event.wrap(feed, 'download').waitForCondition(() => feed.length === expectedLength),
-            100
-          );
-        }
-      }
-    }
-  };
-
-  toString = () => 'CheckCommand';
 }
 
 const factory =
@@ -132,6 +130,7 @@ const factory =
     const { peer1, peer2 } = await createStreamPair();
     return {
       model: {
+        feedOwner: new ComplexMap(PublicKey.hash),
         feeds: new ComplexMap(PublicKey.hash),
         agent1: new ComplexSet(PublicKey.hash),
         agent2: new ComplexSet(PublicKey.hash)
@@ -160,7 +159,6 @@ describe('stress-tests', function () {
         new OpenFeedCommand('agent1', feedKey),
         new OpenFeedCommand('agent2', feedKey),
         new WriteToFeedCommand('agent1', feedKey, 10),
-        new CheckCommand()
       ]
     );
   });
@@ -185,7 +183,6 @@ describe('stress-tests', function () {
         new OpenFeedCommand('agent1', feedKey2),
         new OpenFeedCommand('agent2', feedKey2),
         new WriteToFeedCommand('agent1', feedKey2, 10),
-        new CheckCommand()
       ]
     );
   });
@@ -206,17 +203,16 @@ describe('stress-tests', function () {
       fc
         .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
         .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
-
-      fc.constant(new CheckCommand())
     ];
 
     await fc.assert(
       fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
+        console.log('\n=====')
         console.log([...cmds].map((c) => c.toString()).join('\n'));
 
         const system = await factory(keyring)();
         try {
-          await fc.asyncModelRun(() => system, [...cmds, new CheckCommand()]);
+          await fc.asyncModelRun(() => system, cmds);
         } finally {
           // TODO(dmaretskyi): Destroy breaks the test.
           await system.real.agent1.destroy();
