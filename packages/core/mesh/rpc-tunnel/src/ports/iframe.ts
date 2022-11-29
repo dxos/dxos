@@ -107,5 +107,9 @@ export const createIFrame = (source: string, id: string) => {
     'DXOS Client is communicating with the shared worker.\nInspect the worker using: chrome://inspect/#workers (URL must be copied manually).'
   );
 
+  console.log(
+    `To inspect internals of ECHO, HALO and MESH use the following URL: https://devtools.dxos.org/?target=vault:${source}`
+  );
+
   return (document.getElementById(id) as HTMLIFrameElement) ?? create();
 };

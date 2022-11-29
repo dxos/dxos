@@ -21,12 +21,13 @@ export const appkit = {
   'refresh alt': 'Click your browser’s refresh button or use the refresh keyboard shortcut.',
   'offline ready label': 'HALO is ready to use offline.',
   'spaces label': 'Spaces',
-  'back to spaces label': 'Back to spaces',
   'empty invitations message': 'No pending invitations',
   'invitations label': 'Invitations',
   'create invitation label': 'Invite',
   'current identity label': 'You',
   'empty members message': 'No members in this space',
   'composer placeholder': 'Write something…',
-  'heartbeat stalled': 'Heartbeat stalled'
+  'heartbeat stalled': 'Heartbeat stalled',
+  'empty spaces label': 'No spaces here',
+  'empty spaces message': 'Why not try creating or joining one?'
 };
