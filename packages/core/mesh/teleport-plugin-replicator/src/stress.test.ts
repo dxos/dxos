@@ -41,7 +41,7 @@ class TestAgent {
  * The simplified model of the system.
  */
 interface Model {
-  feedOwner: ComplexMap<PublicKey, AgentName>
+  feedOwner: ComplexMap<PublicKey, AgentName>;
   feeds: ComplexMap<PublicKey, number>;
   agent1: ComplexSet<PublicKey>;
   agent2: ComplexSet<PublicKey>;
@@ -79,7 +79,7 @@ const assertState = async (model: Model, real: Real) => {
       }
     }
   }
-}
+};
 
 class OpenFeedCommand implements fc.AsyncCommand<Model, Real> {
   constructor(readonly agent: AgentName, readonly feedKey: PublicKey) {}
@@ -109,7 +109,8 @@ class WriteToFeedCommand implements fc.AsyncCommand<Model, Real> {
 
   toString = () => `WriteToFeedCommand(${this.agent}, ${this.feedKey.truncate()}, ${this.count})`;
 
-  check = (model: Readonly<Model>) => model[this.agent].has(this.feedKey) === true && model.feedOwner.get(this.feedKey) === this.agent;
+  check = (model: Readonly<Model>) =>
+    model[this.agent].has(this.feedKey) === true && model.feedOwner.get(this.feedKey) === this.agent;
 
   run = async (model: Model, real: Real) => {
     model.feeds.set(this.feedKey, model.feeds.get(this.feedKey)! + this.count);
@@ -158,7 +159,7 @@ describe('stress-tests', function () {
       [
         new OpenFeedCommand('agent1', feedKey),
         new OpenFeedCommand('agent2', feedKey),
-        new WriteToFeedCommand('agent1', feedKey, 10),
+        new WriteToFeedCommand('agent1', feedKey, 10)
       ]
     );
   });
@@ -182,7 +183,7 @@ describe('stress-tests', function () {
         new WriteToFeedCommand('agent1', feedKey1, 10),
         new OpenFeedCommand('agent1', feedKey2),
         new OpenFeedCommand('agent2', feedKey2),
-        new WriteToFeedCommand('agent1', feedKey2, 10),
+        new WriteToFeedCommand('agent1', feedKey2, 10)
       ]
     );
   });
@@ -202,12 +203,12 @@ describe('stress-tests', function () {
 
       fc
         .tuple(arbAgentName, arbFeedKey, fc.integer({ min: 1, max: 10 }))
-        .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count)),
+        .map(([agent, feedKey, count]) => new WriteToFeedCommand(agent, feedKey, count))
     ];
 
     await fc.assert(
       fc.asyncProperty(fc.commands(allCommands, { maxCommands: 100 }), async (cmds) => {
-        console.log('\n=====')
+        console.log('\n=====');
         console.log([...cmds].map((c) => c.toString()).join('\n'));
 
         const system = await factory(keyring)();
