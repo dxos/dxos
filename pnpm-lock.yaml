@@ -410,7 +410,6 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
-      '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
       '@dxos/sentry': workspace:*
       '@dxos/telemetry': workspace:*
@@ -419,7 +418,6 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
-      classnames: ^2.3.2
       phosphor-react: ^1.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -434,12 +432,10 @@ importers:
       '@dxos/log': link:../../../common/log
       '@dxos/react-async': link:../../../common/react-async
       '@dxos/react-client': link:../../../sdk/react-client
-      '@dxos/react-ui': link:../../../common/react-ui
       '@dxos/react-uikit': link:../../../sdk/react-uikit
       '@dxos/sentry': link:../../../common/sentry
       '@dxos/telemetry': link:../../../common/telemetry
       '@dxos/util': link:../../../common/util
-      classnames: 2.3.2
       url-join: 5.0.0
     devDependencies:
       '@dxos/react-client-testing': link:../../../experimental/react-client-testing
