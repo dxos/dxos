@@ -64,7 +64,15 @@ describe('Keyring', function () {
     expect(await verifySignature(key, message, signature)).toBeTruthy();
   });
 
-  it('list keys');
+  it('list keys', async function () {
+    const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
+    const count = 10;
+    const hexKeys: string[] = [];
+    for (let i = 0; i < count; i++) {
+      hexKeys.push((await keyring.createKey()).toHex());
+    }
+    expect(keyring.list().every((key) => hexKeys.includes(key.toHex()))).toBeTruthy();
+  });
 
   it('delete key');
 });
